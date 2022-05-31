@@ -1,4 +1,5 @@
 @echo off
+if not exist out mkdir out
 
 echo. Assembling .asm files
 rgbasm --preserve-ld -o out/game.o -i SRC/ SRC/game.asm
