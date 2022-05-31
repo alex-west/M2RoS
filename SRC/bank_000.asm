@@ -322,8 +322,8 @@ Jump_000_02cd:
     call handleAudio
     call Call_000_239c
     ldh a, [hInputPressed]
-    and $0f
-    cp $0f
+    and PADF_START | PADF_SELECT | PADF_B | PADF_A ;$0f
+    cp PADF_START | PADF_SELECT | PADF_B | PADF_A
     jp z, bootRoutine
 
     call Call_000_031c
@@ -663,7 +663,7 @@ gameMode_Main:
     res 7, a
     ld [samusPose], a
     ldh a, [hInputRisingEdge]
-    bit 2, a
+    bit PADB_SELECT, a
     call nz, Call_000_2212
     jr jr_000_053e
 
@@ -1808,9 +1808,10 @@ jr_000_0c4e:
     and a
     ret z
 
+    ; Check if either A or Start is pressed
     ldh a, [hInputPressed]
-    and $0f
-    cp $06
+    and PADF_START | PADF_SELECT | PADF_B | PADF_A ;$0f
+    cp PADF_SELECT | PADF_B ;$06
     ret nz
 
     ld a, $9d
@@ -2056,7 +2057,7 @@ jr_000_0e12:
 
 jr_000_0e26:
     ldh a, [hInputRisingEdge]
-    bit 5, a
+    bit PADB_LEFT, a
     ret z
 
     ld a, $1a
@@ -2175,7 +2176,7 @@ jr_000_0ec6:
 
 
     ldh a, [hInputRisingEdge]
-    bit 7, a
+    bit PADB_DOWN, a
     jr z, jr_000_0ee7
 
     ld a, [samusItems]
@@ -2193,7 +2194,7 @@ jr_000_0ec6:
 
 jr_000_0ee7:
     ldh a, [hInputRisingEdge]
-    bit 6, a
+    bit PADB_UP, a
     jr z, jr_000_0f6c
 
     call Call_000_1bb3
@@ -2241,7 +2242,7 @@ jr_000_0f2e:
 
 
     ldh a, [hInputRisingEdge]
-    bit 6, a
+    bit PADB_UP, a
     jp z, Jump_000_0f47
 
     call Call_000_1bb3
@@ -2254,7 +2255,7 @@ Jump_000_0f47:
     jr z, jr_000_0f6c
 
     ldh a, [hInputRisingEdge]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_0f6c
 
     xor a
@@ -2299,7 +2300,7 @@ jr_000_0f8b:
     jr c, jr_000_0fac
 
     ldh a, [hInputPressed]
-    bit 4, a
+    bit PADB_RIGHT, a
     jr z, jr_000_0fa1
 
     ld a, $01
@@ -2307,7 +2308,7 @@ jr_000_0f8b:
 
 jr_000_0fa1:
     ldh a, [hInputPressed]
-    bit 5, a
+    bit PADB_LEFT, a
     jr z, jr_000_0fac
 
     ld a, $ff
@@ -2380,7 +2381,7 @@ jr_000_0fc0:
     db $03, $03, $80
 
     ldh a, [hInputRisingEdge]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_103a
 
     ld a, $05
@@ -2403,12 +2404,12 @@ jr_000_103a:
 
 jr_000_104d:
     ldh a, [hInputRisingEdge]
-    and $f0
+    and PADF_DOWN | PADF_UP | PADF_LEFT | PADF_RIGHT ;$f0
     ret z
 
     call Call_000_1a42
     ldh a, [hInputRisingEdge]
-    and $f0
+    and PADF_DOWN | PADF_UP | PADF_LEFT | PADF_RIGHT ;$f0
     swap a
     jr z, jr_000_107d
 
@@ -2437,7 +2438,7 @@ jr_000_107d:
 
 
     ldh a, [hInputRisingEdge]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_1094
 
     ld a, $05
@@ -2449,7 +2450,7 @@ jr_000_107d:
 
 jr_000_1094:
     ldh a, [hInputPressed]
-    and $f0
+    and PADF_DOWN | PADF_UP | PADF_LEFT | PADF_RIGHT ;$f0
     jr nz, jr_000_10a4
 
     ld a, $0e
@@ -2582,7 +2583,7 @@ Call_000_1152:
 
 
     ldh a, [hInputRisingEdge]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_1181
 
     ld a, $06
@@ -2598,7 +2599,7 @@ jr_000_1181:
     jr nc, jr_000_1197
 
     ldh a, [hInputPressed]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_1192
 
     ld a, $fe
@@ -2631,7 +2632,7 @@ jr_000_11a5:
     inc a
     ld [$d026], a
     ldh a, [hInputPressed]
-    bit 4, a
+    bit PADB_RIGHT, a
     jr z, jr_000_11c6
 
     call Call_000_1132
@@ -2640,7 +2641,7 @@ jr_000_11a5:
 
 jr_000_11c6:
     ldh a, [hInputPressed]
-    bit 5, a
+    bit PADB_LEFT, a
     jr z, jr_000_11d0
 
     call Call_000_1cc9
@@ -2664,7 +2665,7 @@ jr_000_11d1:
 
 
     ldh a, [hInputRisingEdge]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_11f5
 
     ld a, $08
@@ -2676,7 +2677,7 @@ jr_000_11d1:
 
 jr_000_11f5:
     ldh a, [hInputPressed]
-    bit 4, a
+    bit PADB_RIGHT, a
     jr z, jr_000_1200
 
     call Call_000_1132
@@ -2684,7 +2685,7 @@ jr_000_11f5:
 
 jr_000_1200:
     ldh a, [hInputPressed]
-    bit 5, a
+    bit PADB_LEFT, a
     jr z, jr_000_1209
 
     call Call_000_113c
@@ -2738,7 +2739,7 @@ jr_000_1241:
 
 
     ldh a, [hInputRisingEdge]
-    bit 7, a
+    bit PADB_DOWN, a
     jr z, jr_000_1267
 
     ld a, [samusItems]
@@ -2756,7 +2757,7 @@ jr_000_1241:
 
 jr_000_1267:
     ldh a, [hInputRisingEdge]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_1285
 
     ld a, [$d062]
@@ -2775,7 +2776,7 @@ jr_000_1267:
 
 jr_000_1285:
     ldh a, [hInputRisingEdge]
-    bit 6, a
+    bit PADB_UP, a
     jr z, jr_000_1295
 
     call Call_000_1bb3
@@ -2785,7 +2786,7 @@ jr_000_1285:
 
 jr_000_1295:
     ldh a, [hInputPressed]
-    bit 4, a
+    bit PADB_RIGHT, a
     jr z, jr_000_12aa
 
     call Call_000_1cf5
@@ -2798,7 +2799,7 @@ jr_000_1295:
 
 jr_000_12aa:
     ldh a, [hInputPressed]
-    bit 5, a
+    bit PADB_LEFT, a
     jr z, jr_000_12bd
 
     call Call_000_1d22
@@ -2848,7 +2849,7 @@ jr_000_12de:
 
 
     ldh a, [hInputRisingEdge]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_1335
 
     ld a, [$d062]
@@ -2890,7 +2891,7 @@ jr_000_1327:
 
 jr_000_1335:
     ldh a, [hInputPressed]
-    bit 4, a
+    bit PADB_RIGHT, a
     jr z, jr_000_1340
 
     call Call_000_1cf5
@@ -2898,7 +2899,7 @@ jr_000_1335:
 
 jr_000_1340:
     ldh a, [hInputPressed]
-    bit 5, a
+    bit PADB_LEFT, a
     jr z, jr_000_1349
 
     call Call_000_1d22
@@ -2953,7 +2954,7 @@ jr_000_1374:
 Jump_000_139d:
     call Call_000_1f0f
     ldh a, [hInputRisingEdge]
-    bit 0, a
+    bit PADB_A, a
     jp nz, Jump_000_13ac
 
     ld hl, $d02c
@@ -2981,11 +2982,11 @@ jr_000_13c7:
     xor a
     ld [$d022], a
     ldh a, [hInputRisingEdge]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_1421
 
     ldh a, [hInputPressed]
-    and $30
+    and PADF_LEFT | PADF_RIGHT ;$30
     jr z, jr_000_1421
 
     ld a, [samusItems]
@@ -3033,7 +3034,7 @@ jr_000_140c:
 
 jr_000_1421:
     ldh a, [hInputPressed]
-    bit 4, a
+    bit PADB_RIGHT, a
     jr z, jr_000_1452
 
     ld a, [$d02b]
@@ -3064,7 +3065,7 @@ jr_000_1443:
 
 jr_000_1452:
     ldh a, [hInputPressed]
-    bit 5, a
+    bit PADB_LEFT, a
     jr z, jr_000_1483
 
     ld a, [$d02b]
@@ -3095,7 +3096,7 @@ jr_000_1474:
 
 jr_000_1483:
     ldh a, [hInputRisingEdge]
-    bit 7, a
+    bit PADB_DOWN, a
     jr z, jr_000_1498
 
     xor a
@@ -3109,7 +3110,7 @@ jr_000_1483:
 
 jr_000_1498:
     ldh a, [hInputRisingEdge]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_14d5
 
 Jump_000_149e:
@@ -3166,11 +3167,11 @@ jr_000_14e6:
     inc [hl]
     inc [hl]
     ldh a, [hInputRisingEdge]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_153b
 
     ldh a, [hInputPressed]
-    and $30
+    and PADF_LEFT | PADF_RIGHT ;$30
     jr z, jr_000_153b
 
     call Call_000_1e88
@@ -3215,7 +3216,7 @@ jr_000_1526:
 
 jr_000_153b:
     ldh a, [hInputPressed]
-    bit 4, a
+    bit PADB_RIGHT, a
     jr z, jr_000_1566
 
     ld a, [$d02b]
@@ -3244,7 +3245,7 @@ jr_000_155d:
 
 jr_000_1566:
     ldh a, [hInputPressed]
-    bit 5, a
+    bit PADB_LEFT, a
     jr z, jr_000_1591
 
     ld a, [$d02b]
@@ -3275,7 +3276,7 @@ jr_000_1591:
     xor a
     ld [samusPose], a
     ldh a, [hInputRisingEdge]
-    bit 7, a
+    bit PADB_DOWN, a
     jr z, jr_000_15aa
 
     xor a
@@ -3289,7 +3290,7 @@ jr_000_1591:
 
 jr_000_15aa:
     ldh a, [hInputRisingEdge]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_15f3
 
     ldh a, [hSamusYPixel]
@@ -3346,7 +3347,7 @@ jr_000_15f3:
 
 jr_000_1604:
     ldh a, [hInputPressed]
-    bit 4, a
+    bit PADB_RIGHT, a
     jr z, jr_000_163b
 
     ld a, [$d022]
@@ -3356,7 +3357,7 @@ jr_000_1604:
     jr nc, jr_000_161b
 
     ldh a, [hInputRisingEdge]
-    bit 4, a
+    bit PADB_RIGHT, a
     jr z, jr_000_163b
 
 jr_000_161b:
@@ -3384,7 +3385,7 @@ jr_000_1635:
 
 jr_000_163b:
     ldh a, [hInputPressed]
-    bit 5, a
+    bit PADB_LEFT, a
     jr z, jr_000_1671
 
     ld a, [$d022]
@@ -3394,7 +3395,7 @@ jr_000_163b:
     jr nc, jr_000_1652
 
     ldh a, [hInputRisingEdge]
-    bit 5, a
+    bit PADB_LEFT, a
     jr z, jr_000_1671
 
 jr_000_1652:
@@ -3422,7 +3423,7 @@ jr_000_166b:
 
 jr_000_1671:
     ldh a, [hInputRisingEdge]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_16c4
 
     ld a, [samusItems]
@@ -3431,7 +3432,7 @@ jr_000_1671:
     inc a
     ld [$cec0], a
     ldh a, [hInputPressed]
-    and $30
+    and PADF_LEFT | PADF_RIGHT ;$30
     jr z, jr_000_169b
 
     ld a, $02
@@ -3475,7 +3476,7 @@ jr_000_16bf:
 
 jr_000_16c4:
     ldh a, [hInputRisingEdge]
-    bit 7, a
+    bit PADB_DOWN, a
     jr z, jr_000_16ce
 
     call Call_000_1ba4
@@ -3484,7 +3485,7 @@ jr_000_16c4:
 
 jr_000_16ce:
     ldh a, [hInputPressed]
-    bit 7, a
+    bit PADB_DOWN, a
     jr z, jr_000_16e2
 
     ld a, [$d022]
@@ -3499,7 +3500,7 @@ jr_000_16ce:
 
 jr_000_16e2:
     ldh a, [hInputRisingEdge]
-    bit 6, a
+    bit PADB_UP, a
     jr z, jr_000_16ec
 
     call Call_000_1b37
@@ -3508,7 +3509,7 @@ jr_000_16e2:
 
 jr_000_16ec:
     ldh a, [hInputPressed]
-    bit 6, a
+    bit PADB_UP, a
     jr z, jr_000_1700
 
     ld a, [$d022]
@@ -3537,11 +3538,11 @@ jr_000_1700:
 
 jr_000_1711:
     ldh a, [hInputRisingEdge]
-    bit 7, a
+    bit PADB_DOWN, a
     jr nz, jr_000_1785
 
     ldh a, [hInputRisingEdge]
-    bit 6, a
+    bit PADB_UP, a
     jr z, jr_000_1721
 
     call Call_000_1b2e
@@ -3550,7 +3551,7 @@ jr_000_1711:
 
 jr_000_1721:
     ldh a, [hInputPressed]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_1742
 
     ld a, [samusItems]
@@ -3574,7 +3575,7 @@ jr_000_1742:
     jr c, jr_000_1768
 
     ldh a, [hInputPressed]
-    bit 7, a
+    bit PADB_DOWN, a
     jp nz, Jump_000_1785
 
     ld a, $06
@@ -3598,7 +3599,7 @@ jr_000_1768:
     xor a
     ld [$d033], a
     ldh a, [hInputPressed]
-    bit 4, a
+    bit PADB_RIGHT, a
     jr z, jr_000_1779
 
     call Call_000_1c98
@@ -3608,7 +3609,7 @@ jr_000_1768:
 
 jr_000_1779:
     ldh a, [hInputPressed]
-    bit 5, a
+    bit PADB_LEFT, a
     ret z
 
     call Call_000_1cc9
@@ -3634,7 +3635,7 @@ jr_000_1785:
 
 
     ldh a, [hInputRisingEdge]
-    bit 7, a
+    bit PADB_DOWN, a
     jr z, jr_000_17bb
 
     ld a, [samusItems]
@@ -3656,7 +3657,7 @@ jr_000_17bb:
     jr nc, jr_000_17da
 
     ldh a, [hInputPressed]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_17d5
 
     ld a, [samusItems]
@@ -3707,7 +3708,7 @@ jr_000_17ff:
     jr nz, jr_000_181b
 
     ldh a, [hInputRisingEdge]
-    bit 6, a
+    bit PADB_UP, a
     jr z, jr_000_181b
 
     call Call_000_1bb3
@@ -3716,14 +3717,14 @@ jr_000_17ff:
 
 jr_000_181b:
     ldh a, [hInputPressed]
-    bit 4, a
+    bit PADB_RIGHT, a
     jr z, jr_000_1824
 
     call Call_000_1cf5
 
 jr_000_1824:
     ldh a, [hInputPressed]
-    bit 5, a
+    bit PADB_LEFT, a
     jr z, jr_000_182d
 
     call Call_000_1d22
@@ -3815,7 +3816,7 @@ jr_000_1844:
     add b
 
     ldh a, [hInputRisingEdge]
-    bit 1, a
+    bit PADB_B, a
     jr z, jr_000_18f3
 
     ld a, $01
@@ -3827,7 +3828,7 @@ jr_000_18f3:
     jr nc, jr_000_1912
 
     ldh a, [hInputPressed]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_190d
 
     ld a, [samusItems]
@@ -3847,7 +3848,7 @@ jr_000_1912:
     ld e, a
     ld d, $00
     ldh a, [hInputRisingEdge]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_195f
 
     ld hl, $1899
@@ -3898,7 +3899,7 @@ jr_000_195f:
     jr nz, jr_000_1970
 
     ldh a, [hInputPressed]
-    bit 6, a
+    bit PADB_UP, a
     jr z, jr_000_1970
 
     ldh a, [$97]
@@ -3939,7 +3940,7 @@ jr_000_1994:
     inc a
     ld [$d026], a
     ldh a, [hInputPressed]
-    bit 4, a
+    bit PADB_RIGHT, a
     jr z, jr_000_19a6
 
     ld a, $01
@@ -3947,7 +3948,7 @@ jr_000_1994:
 
 jr_000_19a6:
     ldh a, [hInputPressed]
-    bit 5, a
+    bit PADB_LEFT, a
     jr z, jr_000_19b1
 
     ld a, $ff
@@ -3993,7 +3994,7 @@ jr_000_19d3:
 
 
     ldh a, [hInputPressed]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_1a1b
 
     ldh a, [$97]
@@ -4017,7 +4018,7 @@ jr_000_19fb:
     jr nc, jr_000_1a1b
 
     ldh a, [hInputPressed]
-    bit 4, a
+    bit PADB_RIGHT, a
     jr z, jr_000_1a10
 
     call Call_000_1cf5
@@ -4026,7 +4027,7 @@ jr_000_19fb:
 
 jr_000_1a10:
     ldh a, [hInputPressed]
-    bit 5, a
+    bit PADB_LEFT, a
     jr z, jr_000_1a1a
 
     call Call_000_1d22
@@ -4049,7 +4050,7 @@ jr_000_1a1b:
 
 jr_000_1a28:
     ldh a, [hInputPressed]
-    and $30
+    and PADF_LEFT | PADF_RIGHT
     swap a
     ld e, a
     ld d, $00
@@ -4176,7 +4177,7 @@ jr_000_1b20:
     ret z
 
     ldh a, [hInputPressed]
-    bit 0, a
+    bit PADB_A, a
     ret z
 
     ret
@@ -5185,7 +5186,7 @@ Call_000_21fb:
     jp z, Jump_000_3daf
 
     ldh a, [hInputRisingEdge]
-    bit 2, a
+    bit PADB_SELECT, a
     jp z, Jump_000_3daf
 
 Call_000_2212:
@@ -5284,7 +5285,7 @@ main_readInput:
     ldh [hInputPressed], a
     ld a, $30
     ldh [rP1], a
-    ret
+ret
 
 
 Call_000_22bc:
@@ -6770,7 +6771,7 @@ jr_000_2c64:
 
 Call_000_2c79:
     ldh a, [hInputRisingEdge]
-    cp $08
+    cp PADF_START
     ret nz
 
     ld a, [$d08b]
@@ -6869,7 +6870,7 @@ jr_000_2cf7:
     jr nz, jr_000_2d1b
 
     ldh a, [hInputRisingEdge]
-    bit 3, a
+    bit PADB_START, a
     ret z
 
     ld a, $93
@@ -6885,7 +6886,7 @@ jr_000_2cf7:
 jr_000_2d1b:
     call Call_000_3e9e
     ldh a, [hInputRisingEdge]
-    cp $08
+    cp PADF_START
     jr nz, jr_000_2d39
 
     ld a, $93
@@ -6901,11 +6902,11 @@ jr_000_2d1b:
 
 jr_000_2d39:
     ldh a, [hInputRisingEdge]
-    bit 4, a
+    bit PADB_RIGHT, a
     jr z, jr_000_2d7a
 
     ldh a, [hInputPressed]
-    bit 1, a
+    bit PADB_B, a
     jr nz, jr_000_2d50
 
     ld a, [$d046]
@@ -6941,11 +6942,11 @@ jr_000_2d68:
 
 jr_000_2d7a:
     ldh a, [hInputRisingEdge]
-    bit 5, a
+    bit PADB_LEFT, a
     jr z, jr_000_2dbc
 
     ldh a, [hInputPressed]
-    bit 1, a
+    bit PADB_B, a
     jr nz, jr_000_2d91
 
     ld a, [$d046]
@@ -6981,7 +6982,7 @@ jr_000_2da9:
 
 jr_000_2dbc:
     ldh a, [hInputRisingEdge]
-    bit 0, a
+    bit PADB_A, a
     jr z, jr_000_2dd7
 
     ld b, $01
@@ -7002,11 +7003,11 @@ jr_000_2dd0:
 
 jr_000_2dd7:
     ldh a, [hInputRisingEdge]
-    bit 6, a
+    bit PADB_UP, a
     jr z, jr_000_2e07
 
     ldh a, [hInputPressed]
-    bit 1, a
+    bit PADB_B, a
     jr nz, jr_000_2def
 
     ld a, [$d04d]
@@ -7029,11 +7030,11 @@ jr_000_2def:
 
 jr_000_2e07:
     ldh a, [hInputRisingEdge]
-    bit 7, a
+    bit PADB_DOWN, a
     jr z, jr_000_2e31
 
     ldh a, [hInputPressed]
-    bit 1, a
+    bit PADB_B, a
     jr nz, jr_000_2e1f
 
     ld a, [$d04d]
@@ -7119,11 +7120,11 @@ jr_000_2e31:
     ldh a, [hOamBufferIndex]
     ld [$d06e], a
     ldh a, [hInputRisingEdge]
-    cp $04
+    cp PADF_SELECT
     ret nz
 
     ldh a, [hInputPressed]
-    cp $04
+    cp PADF_SELECT
     ret nz
 
     ld a, [samusPose]
@@ -8587,7 +8588,7 @@ jr_000_36f5:
     jr z, jr_000_372c
 
     ldh a, [hInputRisingEdge]
-    cp $08
+    cp PADF_START
     ret nz
 
 jr_000_372c:
@@ -9118,7 +9119,7 @@ jr_000_3b0a:
     jr z, jr_000_3b40
 
     ldh a, [hInputRisingEdge]
-    cp $08
+    cp PADF_START
     ret nz
 
 jr_000_3b40:
@@ -9184,7 +9185,7 @@ jr_000_3b7f:
     jr z, jr_000_3baf
 
     ldh a, [hInputRisingEdge]
-    cp $08
+    cp PADF_START
     ret nz
 
 jr_000_3baf:

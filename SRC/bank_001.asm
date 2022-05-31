@@ -524,7 +524,7 @@ jr_001_4c05:
 
 jr_001_4c10:
     ldh a, [hInputPressed]
-    and $f0
+    and PADF_DOWN | PADF_UP | PADF_LEFT | PADF_RIGHT ;$f0
     swap a
     or b
     ldh [$98], a
@@ -788,7 +788,7 @@ jr_001_4d94:
     ld d, $00
     ld hl, $4dc7
     ldh a, [hInputPressed]
-    bit 6, a
+    bit PADB_UP, a
     jr z, jr_001_4db7
 
     ld hl, $4dd7
@@ -796,7 +796,7 @@ jr_001_4d94:
 
 jr_001_4db7:
     ldh a, [hInputPressed]
-    bit 1, a
+    bit PADB_B, a
     jr z, jr_001_4dc0
 
     ld hl, $4dcf
@@ -955,11 +955,11 @@ jr_001_4e51:
 
 
     ldh a, [hInputRisingEdge]
-    bit 1, a
+    bit PADB_B, a
     jr nz, jr_001_4e9f
 
     ldh a, [hInputPressed]
-    bit 1, a
+    bit PADB_B, a
     ret z
 
     ld a, [$d00d]
@@ -1899,7 +1899,7 @@ Jump_001_53d9:
     ret z
 
     ldh a, [hInputRisingEdge]
-    bit 1, a
+    bit PADB_B, a
     ret z
 
     ld hl, $dd30
@@ -2745,7 +2745,7 @@ jr_001_582a:
     jr nz, jr_001_5843
 
     ldh a, [hInputRisingEdge]
-    cp $08
+    cp PADF_START
     jr nz, jr_001_5843
 
     ld a, $09

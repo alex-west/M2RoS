@@ -315,7 +315,7 @@ jr_005_4189:
 jr_005_41cf:
     call clearUnusedOamSlots
     ldh a, [hInputRisingEdge]
-    cp $04
+    cp PADF_SELECT
     jr nz, jr_005_41e5
 
     ld a, $15
@@ -326,11 +326,11 @@ jr_005_41cf:
 
 jr_005_41e5:
     ldh a, [hInputRisingEdge]
-    cp $10
+    cp PADF_RIGHT
     jr nz, jr_005_4205
 
     ldh a, [hInputPressed]
-    cp $10
+    cp PADF_RIGHT;$10
     jr nz, jr_005_4205
 
     ld a, $15
@@ -346,11 +346,11 @@ jr_005_41e5:
 
 jr_005_4205:
     ldh a, [hInputRisingEdge]
-    cp $20
+    cp PADF_LEFT
     jr nz, jr_005_4226
 
     ldh a, [hInputPressed]
-    cp $20
+    cp PADF_LEFT
     jr nz, jr_005_4226
 
     ld a, $15
@@ -372,13 +372,13 @@ jr_005_4226:
     jr z, jr_005_4246
 
     ldh a, [hInputPressed]
-    bit 7, a
+    bit PADB_DOWN, a
     jr z, jr_005_4246
 
     ld a, $01
     ld [$d07a], a
     ldh a, [hInputRisingEdge]
-    bit 7, a
+    bit PADB_DOWN, a
     jr z, jr_005_4246
 
     ld a, $15
@@ -386,7 +386,7 @@ jr_005_4226:
 
 jr_005_4246:
     ldh a, [hInputRisingEdge]
-    cp $08
+    cp PADF_START
     ret nz
 
     xor a

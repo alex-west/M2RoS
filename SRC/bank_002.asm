@@ -2842,7 +2842,7 @@ arachnus_51FB:
 
 jr_002_521b:
     ld a, [hInputPressed]
-    and $02
+    and PADF_B
     jr nz, jr_002_5249
 
     call Call_002_529a
