@@ -6,14 +6,17 @@ all: out/M2RoS.gb
 #%.1bpp: %.png
 #	rgbgfx -d 1 -o $@ $<
 
-out/game.o: SRC/game.asm SRC/bank_*.asm
+out/game.o: SRC/game.asm SRC/bank_*.asm out
 	rgbasm  -L -o out/game.o -i SRC/ SRC/game.asm
 
-out/M2RoS.gb: out/game.o
+out/M2RoS.gb: out/game.o out
 	rgblink -n out/M2RoS.sym -m out/M2RoS.map -o $@ $<
 	#rgbfix -v -p 255 $@ #Nope
 
-	md5 $@
+	md5sum $@
+
+out:
+	mkdir $@
 
 clean:
 #	rm -f game.o game.gb game.sym game.map
