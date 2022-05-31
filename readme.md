@@ -13,11 +13,19 @@ The resultant file should have this hash: `md5: 9639948ad274fa15281f549e5f9c4d87
 ## How to Contribute
 
 1. Fork this repository.
-2. Make something better/clearer (a function or variable that needs a name, a pointer that needs a label, code that needs comments, etc.)
+2. Make something better. Perhaps start by doing something like:
+   - Giving a function or variable a (better) name.
+   - Properly defining a RAM address (eg. labelName: ds 1).
+   - Turning a raw pointer (eg. $4242) into a proper label (eg. enemyAI_squeek).
+   - Adding a missing label
+   - Adding informative comments
+   - etc.
 3. Verify that your changes still result in a byte-for-byte identical game.
 4. Submit a pull request.
 
-If you wish the move a chunk of code or data out into a separate file, please make sure it encapsulates a reasonably scoped unit, and that all references in and out of it are properly defined.
+At the current phase of this project, please refrain from moving any chunk of code into a separate file.
+
+If you have questions or comments, please drop by the #metroid-ii channel on the [MetConst Discord](https://discord.gg/xDwaaqa).
 
 ## Directory Structure
 
