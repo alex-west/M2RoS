@@ -523,7 +523,7 @@ jr_001_4c05:
     jr jr_001_4c19
 
 jr_001_4c10:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     and $f0
     swap a
     or b
@@ -787,7 +787,7 @@ jr_001_4d94:
     ld e, a
     ld d, $00
     ld hl, $4dc7
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 6, a
     jr z, jr_001_4db7
 
@@ -795,7 +795,7 @@ jr_001_4d94:
     jr jr_001_4dc0
 
 jr_001_4db7:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 1, a
     jr z, jr_001_4dc0
 
@@ -954,11 +954,11 @@ jr_001_4e51:
 	db $39       ; Number of Metroids remaining
 
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 1, a
     jr nz, jr_001_4e9f
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 1, a
     ret z
 
@@ -989,7 +989,7 @@ jr_001_4e9f:
     ld b, a
     xor a
     ld [$d00d], a
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     swap a
     and b
     jr nz, jr_001_4ecf
@@ -1898,7 +1898,7 @@ Jump_001_53d9:
     bit itemBit_bomb, a
     ret z
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 1, a
     ret z
 
@@ -2744,7 +2744,7 @@ jr_001_582a:
     and a
     jr nz, jr_001_5843
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     cp $08
     jr nz, jr_001_5843
 

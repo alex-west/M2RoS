@@ -321,7 +321,7 @@ Jump_000_02cd:
     call main_handleGameMode
     call handleAudio
     call Call_000_239c
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     and $0f
     cp $0f
     jp z, bootRoutine
@@ -662,7 +662,7 @@ gameMode_Main:
     ld a, [samusPose]
     res 7, a
     ld [samusPose], a
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 2, a
     call nz, Call_000_2212
     jr jr_000_053e
@@ -1808,7 +1808,7 @@ jr_000_0c4e:
     and a
     ret z
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     and $0f
     cp $06
     ret nz
@@ -1898,8 +1898,8 @@ Jump_000_0d21:
     jr z, jr_000_0d3a
 
     xor a
-    ldh [$81], a
-    ldh [$80], a
+    ldh [hInputRisingEdge], a
+    ldh [hInputPressed], a
 
 jr_000_0d3a:
     ld a, [$d00e]
@@ -2055,7 +2055,7 @@ jr_000_0e12:
 
 
 jr_000_0e26:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 5, a
     ret z
 
@@ -2164,7 +2164,7 @@ jr_000_0ebc:
     and a
     jr nz, jr_000_0ec6
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     and a
     ret z
 
@@ -2174,7 +2174,7 @@ jr_000_0ec6:
     ret
 
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 7, a
     jr z, jr_000_0ee7
 
@@ -2192,7 +2192,7 @@ jr_000_0ec6:
 
 
 jr_000_0ee7:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 6, a
     jr z, jr_000_0f6c
 
@@ -2201,7 +2201,7 @@ jr_000_0ee7:
     ld [$d049], a
     jr jr_000_0f6c
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 0, a
     jr z, jr_000_0f6c
 
@@ -2240,7 +2240,7 @@ jr_000_0f2e:
     ret
 
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 6, a
     jp z, Jump_000_0f47
 
@@ -2253,7 +2253,7 @@ Jump_000_0f47:
     bit itemBit_spring, a
     jr z, jr_000_0f6c
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 0, a
     jr z, jr_000_0f6c
 
@@ -2298,7 +2298,7 @@ jr_000_0f8b:
     cp $56
     jr c, jr_000_0fac
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 4, a
     jr z, jr_000_0fa1
 
@@ -2306,7 +2306,7 @@ jr_000_0f8b:
     ld [$d00f], a
 
 jr_000_0fa1:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 5, a
     jr z, jr_000_0fac
 
@@ -2379,7 +2379,7 @@ jr_000_0fc0:
     db $01, $02, $02, $01, $02, $02, $02, $02, $02, $02, $03, $02, $03, $02, $03, $03
     db $03, $03, $80
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 0, a
     jr z, jr_000_103a
 
@@ -2402,12 +2402,12 @@ jr_000_103a:
     ld [$d024], a
 
 jr_000_104d:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     and $f0
     ret z
 
     call Call_000_1a42
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     and $f0
     swap a
     jr z, jr_000_107d
@@ -2421,7 +2421,7 @@ jr_000_104d:
     ld a, $06
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    ld hl, spiderBallTable ;$7e03
+    ld hl, spiderBallTable ; 06:7E03
     add hl, de
     ld a, [hl]
     ld [$d044], a
@@ -2436,7 +2436,7 @@ jr_000_107d:
     ret
 
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 0, a
     jr z, jr_000_1094
 
@@ -2448,7 +2448,7 @@ jr_000_107d:
 
 
 jr_000_1094:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     and $f0
     jr nz, jr_000_10a4
 
@@ -2581,7 +2581,7 @@ Call_000_1152:
     ret
 
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 0, a
     jr z, jr_000_1181
 
@@ -2597,7 +2597,7 @@ jr_000_1181:
     cp $40
     jr nc, jr_000_1197
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 0, a
     jr z, jr_000_1192
 
@@ -2630,7 +2630,7 @@ jr_000_11a5:
     ld a, [$d026]
     inc a
     ld [$d026], a
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 4, a
     jr z, jr_000_11c6
 
@@ -2639,7 +2639,7 @@ jr_000_11a5:
 
 
 jr_000_11c6:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 5, a
     jr z, jr_000_11d0
 
@@ -2663,7 +2663,7 @@ jr_000_11d1:
     ret
 
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 0, a
     jr z, jr_000_11f5
 
@@ -2675,7 +2675,7 @@ jr_000_11d1:
 
 
 jr_000_11f5:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 4, a
     jr z, jr_000_1200
 
@@ -2683,7 +2683,7 @@ jr_000_11f5:
     jr jr_000_1209
 
 jr_000_1200:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 5, a
     jr z, jr_000_1209
 
@@ -2737,7 +2737,7 @@ jr_000_1241:
     ret
 
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 7, a
     jr z, jr_000_1267
 
@@ -2755,7 +2755,7 @@ jr_000_1241:
 
 
 jr_000_1267:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 0, a
     jr z, jr_000_1285
 
@@ -2774,7 +2774,7 @@ jr_000_1267:
 
 
 jr_000_1285:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 6, a
     jr z, jr_000_1295
 
@@ -2784,7 +2784,7 @@ jr_000_1285:
     jr jr_000_12dd
 
 jr_000_1295:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 4, a
     jr z, jr_000_12aa
 
@@ -2797,7 +2797,7 @@ jr_000_1295:
     jr jr_000_12bd
 
 jr_000_12aa:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 5, a
     jr z, jr_000_12bd
 
@@ -2847,7 +2847,7 @@ jr_000_12de:
     ret
 
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 0, a
     jr z, jr_000_1335
 
@@ -2889,7 +2889,7 @@ jr_000_1327:
 
 
 jr_000_1335:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 4, a
     jr z, jr_000_1340
 
@@ -2897,7 +2897,7 @@ jr_000_1335:
     jr jr_000_1349
 
 jr_000_1340:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 5, a
     jr z, jr_000_1349
 
@@ -2952,7 +2952,7 @@ jr_000_1374:
 
 Jump_000_139d:
     call Call_000_1f0f
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 0, a
     jp nz, Jump_000_13ac
 
@@ -2980,11 +2980,11 @@ Jump_000_13ac:
 jr_000_13c7:
     xor a
     ld [$d022], a
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 0, a
     jr z, jr_000_1421
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     and $30
     jr z, jr_000_1421
 
@@ -3032,7 +3032,7 @@ jr_000_140c:
 
 
 jr_000_1421:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 4, a
     jr z, jr_000_1452
 
@@ -3063,7 +3063,7 @@ jr_000_1443:
 
 
 jr_000_1452:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 5, a
     jr z, jr_000_1483
 
@@ -3094,7 +3094,7 @@ jr_000_1474:
 
 
 jr_000_1483:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 7, a
     jr z, jr_000_1498
 
@@ -3108,7 +3108,7 @@ jr_000_1483:
 
 
 jr_000_1498:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 0, a
     jr z, jr_000_14d5
 
@@ -3165,11 +3165,11 @@ jr_000_14e6:
     inc [hl]
     inc [hl]
     inc [hl]
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 0, a
     jr z, jr_000_153b
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     and $30
     jr z, jr_000_153b
 
@@ -3214,7 +3214,7 @@ jr_000_1526:
 
 
 jr_000_153b:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 4, a
     jr z, jr_000_1566
 
@@ -3243,7 +3243,7 @@ jr_000_155d:
 
 
 jr_000_1566:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 5, a
     jr z, jr_000_1591
 
@@ -3274,7 +3274,7 @@ jr_000_1588:
 jr_000_1591:
     xor a
     ld [samusPose], a
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 7, a
     jr z, jr_000_15aa
 
@@ -3288,7 +3288,7 @@ jr_000_1591:
 
 
 jr_000_15aa:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 0, a
     jr z, jr_000_15f3
 
@@ -3345,7 +3345,7 @@ jr_000_15f3:
 
 
 jr_000_1604:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 4, a
     jr z, jr_000_163b
 
@@ -3355,7 +3355,7 @@ jr_000_1604:
     cp $08
     jr nc, jr_000_161b
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 4, a
     jr z, jr_000_163b
 
@@ -3383,7 +3383,7 @@ jr_000_1635:
 
 
 jr_000_163b:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 5, a
     jr z, jr_000_1671
 
@@ -3393,7 +3393,7 @@ jr_000_163b:
     cp $08
     jr nc, jr_000_1652
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 5, a
     jr z, jr_000_1671
 
@@ -3421,7 +3421,7 @@ jr_000_166b:
 
 
 jr_000_1671:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 0, a
     jr z, jr_000_16c4
 
@@ -3430,7 +3430,7 @@ jr_000_1671:
     srl a
     inc a
     ld [$cec0], a
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     and $30
     jr z, jr_000_169b
 
@@ -3474,7 +3474,7 @@ jr_000_16bf:
 
 
 jr_000_16c4:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 7, a
     jr z, jr_000_16ce
 
@@ -3483,7 +3483,7 @@ jr_000_16c4:
 
 
 jr_000_16ce:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 7, a
     jr z, jr_000_16e2
 
@@ -3498,7 +3498,7 @@ jr_000_16ce:
 
 
 jr_000_16e2:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 6, a
     jr z, jr_000_16ec
 
@@ -3507,7 +3507,7 @@ jr_000_16e2:
 
 
 jr_000_16ec:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 6, a
     jr z, jr_000_1700
 
@@ -3536,11 +3536,11 @@ jr_000_1700:
 
 
 jr_000_1711:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 7, a
     jr nz, jr_000_1785
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 6, a
     jr z, jr_000_1721
 
@@ -3549,7 +3549,7 @@ jr_000_1711:
 
 
 jr_000_1721:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 0, a
     jr z, jr_000_1742
 
@@ -3573,7 +3573,7 @@ jr_000_1742:
     cp $02
     jr c, jr_000_1768
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 7, a
     jp nz, Jump_000_1785
 
@@ -3597,7 +3597,7 @@ jr_000_1762:
 jr_000_1768:
     xor a
     ld [$d033], a
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 4, a
     jr z, jr_000_1779
 
@@ -3607,7 +3607,7 @@ jr_000_1768:
 
 
 jr_000_1779:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 5, a
     ret z
 
@@ -3633,7 +3633,7 @@ jr_000_1785:
     ret
 
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 7, a
     jr z, jr_000_17bb
 
@@ -3655,7 +3655,7 @@ jr_000_17bb:
     cp $40
     jr nc, jr_000_17da
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 0, a
     jr z, jr_000_17d5
 
@@ -3706,7 +3706,7 @@ jr_000_17ff:
     cp $06
     jr nz, jr_000_181b
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 6, a
     jr z, jr_000_181b
 
@@ -3715,14 +3715,14 @@ jr_000_17ff:
     ld [$d049], a
 
 jr_000_181b:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 4, a
     jr z, jr_000_1824
 
     call Call_000_1cf5
 
 jr_000_1824:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 5, a
     jr z, jr_000_182d
 
@@ -3814,7 +3814,7 @@ jr_000_1844:
 
     add b
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 1, a
     jr z, jr_000_18f3
 
@@ -3826,7 +3826,7 @@ jr_000_18f3:
     cp $40
     jr nc, jr_000_1912
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 0, a
     jr z, jr_000_190d
 
@@ -3846,7 +3846,7 @@ jr_000_1912:
     sub $40
     ld e, a
     ld d, $00
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 0, a
     jr z, jr_000_195f
 
@@ -3897,7 +3897,7 @@ jr_000_195f:
     and a
     jr nz, jr_000_1970
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 6, a
     jr z, jr_000_1970
 
@@ -3938,7 +3938,7 @@ jr_000_1994:
     ld a, [$d026]
     inc a
     ld [$d026], a
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 4, a
     jr z, jr_000_19a6
 
@@ -3946,7 +3946,7 @@ jr_000_1994:
     ld [$d00f], a
 
 jr_000_19a6:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 5, a
     jr z, jr_000_19b1
 
@@ -3992,7 +3992,7 @@ jr_000_19d3:
     ret
 
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 0, a
     jr z, jr_000_1a1b
 
@@ -4016,7 +4016,7 @@ jr_000_19fb:
     cp $06
     jr nc, jr_000_1a1b
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 4, a
     jr z, jr_000_1a10
 
@@ -4025,7 +4025,7 @@ jr_000_19fb:
 
 
 jr_000_1a10:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 5, a
     jr z, jr_000_1a1a
 
@@ -4048,7 +4048,7 @@ jr_000_1a1b:
 
 
 jr_000_1a28:
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     and $30
     swap a
     ld e, a
@@ -4175,7 +4175,7 @@ jr_000_1b20:
     cp $05
     ret z
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 0, a
     ret z
 
@@ -5184,7 +5184,7 @@ Call_000_21fb:
     cp $22
     jp z, Jump_000_3daf
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 2, a
     jp z, Jump_000_3daf
 
@@ -5276,12 +5276,12 @@ main_readInput:
     and $0f
     or b
     ld c, a
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     xor c
     and c
-    ldh [$81], a
+    ldh [hInputRisingEdge], a
     ld a, c
-    ldh [$80], a
+    ldh [hInputPressed], a
     ld a, $30
     ldh [rP1], a
     ret
@@ -6769,7 +6769,7 @@ jr_000_2c64:
 
 
 Call_000_2c79:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     cp $08
     ret nz
 
@@ -6868,7 +6868,7 @@ jr_000_2cf7:
     and a
     jr nz, jr_000_2d1b
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 3, a
     ret z
 
@@ -6884,7 +6884,7 @@ jr_000_2cf7:
 
 jr_000_2d1b:
     call Call_000_3e9e
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     cp $08
     jr nz, jr_000_2d39
 
@@ -6900,11 +6900,11 @@ jr_000_2d1b:
 
 
 jr_000_2d39:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 4, a
     jr z, jr_000_2d7a
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 1, a
     jr nz, jr_000_2d50
 
@@ -6940,11 +6940,11 @@ jr_000_2d68:
     ld [$d051], a
 
 jr_000_2d7a:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 5, a
     jr z, jr_000_2dbc
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 1, a
     jr nz, jr_000_2d91
 
@@ -6980,7 +6980,7 @@ jr_000_2da9:
     ld [$d051], a
 
 jr_000_2dbc:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 0, a
     jr z, jr_000_2dd7
 
@@ -7001,11 +7001,11 @@ jr_000_2dd0:
     ld [samusItems], a
 
 jr_000_2dd7:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 6, a
     jr z, jr_000_2e07
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 1, a
     jr nz, jr_000_2def
 
@@ -7028,11 +7028,11 @@ jr_000_2def:
     ld [$d054], a
 
 jr_000_2e07:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 7, a
     jr z, jr_000_2e31
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 1, a
     jr nz, jr_000_2e1f
 
@@ -7118,11 +7118,11 @@ jr_000_2e31:
     call $4afc
     ldh a, [hOamBufferIndex]
     ld [$d06e], a
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     cp $04
     ret nz
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     cp $04
     ret nz
 
@@ -8586,7 +8586,7 @@ jr_000_36f5:
     and a
     jr z, jr_000_372c
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     cp $08
     ret nz
 
@@ -9117,7 +9117,7 @@ jr_000_3b0a:
     and a
     jr z, jr_000_3b40
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     cp $08
     ret nz
 
@@ -9183,7 +9183,7 @@ jr_000_3b7f:
     and a
     jr z, jr_000_3baf
 
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     cp $08
     ret nz
 

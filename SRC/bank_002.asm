@@ -2841,7 +2841,7 @@ arachnus_51FB:
     jr z, jr_002_5256
 
 jr_002_521b:
-    ld a, [$ff80]
+    ld a, [hInputPressed]
     and $02
     jr nz, jr_002_5249
 

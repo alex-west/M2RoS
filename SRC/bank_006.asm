@@ -99,10 +99,9 @@ gfx_surfaceSPR:: include "gfx/enemies/gfx_surfaceSPR.asm"
 creditsText: ; TODO: Find the code that points to this
     include "data/credits.asm"
 
-; 06:7E03
 ; spider ball stuff
 ; uncertain about its purpose
-spiderBallTable::
+spiderBallTable:: ; 06:7E03
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     db $00, $02, $00, $00, $01, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     db $00, $01, $00, $00, $00, $00, $00, $00, $02, $00, $00, $00, $00, $00, $00, $00

@@ -314,7 +314,7 @@ jr_005_4189:
 
 jr_005_41cf:
     call clearUnusedOamSlots
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     cp $04
     jr nz, jr_005_41e5
 
@@ -325,11 +325,11 @@ jr_005_41cf:
     ld [$d0a4], a
 
 jr_005_41e5:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     cp $10
     jr nz, jr_005_4205
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     cp $10
     jr nz, jr_005_4205
 
@@ -345,11 +345,11 @@ jr_005_41e5:
     ld [$d0a3], a
 
 jr_005_4205:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     cp $20
     jr nz, jr_005_4226
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     cp $20
     jr nz, jr_005_4226
 
@@ -371,13 +371,13 @@ jr_005_4226:
     and a
     jr z, jr_005_4246
 
-    ldh a, [$80]
+    ldh a, [hInputPressed]
     bit 7, a
     jr z, jr_005_4246
 
     ld a, $01
     ld [$d07a], a
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     bit 7, a
     jr z, jr_005_4246
 
@@ -385,7 +385,7 @@ jr_005_4226:
     ld [$cec0], a
 
 jr_005_4246:
-    ldh a, [$81]
+    ldh a, [hInputRisingEdge]
     cp $08
     ret nz
 
