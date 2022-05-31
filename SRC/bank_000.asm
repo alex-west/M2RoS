@@ -5,280 +5,51 @@
 
 SECTION "ROM Bank $000", ROM0[$0]
 
-RST_00::
-    db $c3, $fb, $01, $00, $00, $00, $00, $00
+; Note: RSTs 10, 18, 20, 30, and 38 are unused
+RST_00:: jp bootRoutine
+    db $00,$00,$00,$00,$00
 
-RST_08::
-    jp Jump_000_01fb
+RST_08:: jp bootRoutine
+    db $00,$00,$00,$00,$00
+    db $00,$00,$00,$00,$00,$00,$00,$00
+    db $00,$00,$00,$00,$00,$00,$00,$00
+    db $00,$00,$00,$00,$00,$00,$00,$00
 
-
-    nop
-    nop
-    nop
-    nop
-    nop
-
-RST_10::
-    db $00, $00, $00, $00, $00, $00, $00, $00
-
-RST_18::
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-
-RST_20::
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-
-RST_28::
+RST_28:: ; Jump table routine (index = a)
+    ; HL = PC + A*2
     add a
-    pop hl
+    pop hl ; Grab the program counter from the stack
     ld e, a
     ld d, $00
     add hl, de
     ld e, [hl]
     inc hl
-
-RST_30::
     ld d, [hl]
     push de
     pop hl
     jp hl
 
+    db $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 
-    nop
-    nop
-    nop
-    nop
+VBlankInterrupt:: jp VBlankHandler
+    db $00,$00,$00,$00,$00
 
-RST_38::
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+LCDCInterrupt:: jp LCDCInterruptHandler
+    db $00,$00,$00,$00,$00
 
-VBlankInterrupt::
-    jp VBlankHandler
+TimerOverflowInterrupt:: jp TimerOverflowInterruptStub
+    db $00,$00,$00,$00,$00
 
+SerialTransferCompleteInterrupt:: jp SerialTransferInterruptStub
+    db $00,$00,$00,$00,$00
 
-    nop
-    nop
-    nop
-    nop
-    nop
+JoypadTransitionInterrupt:: nop
 
-LCDCInterrupt::
-    jp LCDCInterruptHandler
+SECTION "ROM Header", ROM0[$0100]
 
-
+Boot:: ; 00:0100
     nop
-    nop
-    nop
-    nop
-    nop
-
-TimerOverflowInterrupt::
-    jp Jump_000_039b
-
-
-    nop
-    nop
-    nop
-    nop
-    nop
-
-SerialTransferCompleteInterrupt::
-    jp Jump_000_0153
-
-    nop
-    nop
-    nop
-    nop
-    nop
-
-JoypadTransitionInterrupt::
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-
-    db $00
-
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-
-    db $00, $00
-
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-
-    db $00, $00, $00
-
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-
-    db $00, $00, $00
-
-Boot::
-    nop
-    jp Jump_000_0150
+    jp jumpToBoot
 
 HeaderLogo:: NINTENDO_LOGO
 HeaderTitle:: db "METROID2", $00, $00, $00, $00, $00, $00, $00, $00
@@ -293,15 +64,13 @@ HeaderMaskROMVersion::  db $00
 HeaderComplementCheck:: db $97
 HeaderGlobalChecksum::  db $58, $1f
 
-Jump_000_0150:
-    jp Jump_000_01fb
+jumpToBoot: ; 00:0150
+    jp bootRoutine
 
-
-Jump_000_0153:
+SerialTransferInterruptStub:
     reti
 
-
-VBlankHandler:
+VBlankHandler: ; 00:0154
     di
     push af
     push bc
@@ -398,18 +167,17 @@ jr_000_01d9:
     reti
 
 
-Jump_000_01fb:
+bootRoutine: ; 00:01fB
     xor a
     ld hl, $dfff
     ld c, $10
     ld b, $00
 
-jr_000_0203:
-    ld [hl-], a
-    dec b
-    jr nz, jr_000_0203
-
-    dec c
+    jr_000_0203:
+            ld [hl-], a
+            dec b
+        jr nz, jr_000_0203
+        dec c
     jr nz, jr_000_0203
 
     ld a, $01
@@ -556,7 +324,7 @@ Jump_000_02cd:
     ldh a, [$80]
     and $0f
     cp $0f
-    jp z, Jump_000_01fb
+    jp z, bootRoutine
 
     call Call_000_031c
     jp Jump_000_02cd
@@ -696,7 +464,7 @@ jr_000_0393:
     inc de
     jr jr_000_0393
 
-Jump_000_039b:
+TimerOverflowInterruptStub:
     reti
 
 
@@ -8823,7 +8591,7 @@ jr_000_36f5:
     ret nz
 
 jr_000_372c:
-    jp Jump_000_01fb
+    jp bootRoutine
 
 ; Handle item pick-up
 handleItemPickup:
@@ -9354,7 +9122,7 @@ jr_000_3b0a:
     ret nz
 
 jr_000_3b40:
-    jp Jump_000_01fb
+    jp bootRoutine
 
 ; 00:3B43
     call Call_000_2390
