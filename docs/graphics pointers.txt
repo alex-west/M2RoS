@@ -1,0 +1,78 @@
+Graphics Pointers Referenced by Room Transition Scripts
+
+Source Pointers: (GB bank format)
+065920 - gfx_enemiesA
+065D20 - gfx_enemiesB
+066120 - gfx_enemiesC
+066520 - gfx_enemiesD
+066920 - gfx_enemiesE
+066D20 - gfx_enemiesF
+067120 - gfx_arachnus
+067520 - gfx_surfaceSPR
+
+074000 - gfx_plantBubbles
+074800 - gfx_ruinsInside
+075000 - gfx_queenBG
+075800 - gfx_caveFirst
+076000 - gfx_surfaceBG
+076800 - gfx_lavaCavesA
+076D30 - gfx_lavaCavesB
+077260 - gfx_lavaCavesC
+077A90 - gfx_commonItems
+
+084000 - bg_queenHead
+084020 - (bg_queenHead+0x20) (row2)
+084040 - (bg_queenHead+0x40) (row3)
+084060 - (bg_queenHead+0x60) (row4)
+0859BC - gfx_metAlpha
+085DBC - gfx_metGamma
+0861BC - gfx_metZeta
+0865BC - gfx_metOmega
+0869BC - gfx_ruinsExt
+0871BC - gfx_finalLab
+0879BC - gfx_queenSPR (16x5 tiles)
+
+Source Pointers: (ROM offsets)
+019920 - gfx_enemiesA
+019D20 - gfx_enemiesB
+01A120 - gfx_enemiesC
+01A520 - gfx_enemiesD
+01A920 - gfx_enemiesE
+01AD20 - gfx_enemiesF
+01B120 - gfx_arachnus
+01B520 - gfx_surfaceSPR
+
+01C000 - gfx_plantBubbles
+01C800 - gfx_ruinsInside
+01D000 - gfx_queenBG
+01D800 - gfx_caveFirst
+01E000 - gfx_surfaceBG
+01E800 - gfx_lavaCavesA
+01ED30 - gfx_lavaCavesB
+01F260 - gfx_lavaCavesC
+01FA90 - gfx_commonItems
+
+020000 - bg_queenHead
+020020 - (bg_queenHead+0x20)
+020040 - (bg_queenHead+0x40)
+020060 - (bg_queenHead+0x60)
+0219BC - gfx_metAlpha
+021DBC - gfx_metGamma
+0221BC - gfx_metZeta
+0225BC - gfx_metOmega
+0229BC - gfx_ruinsExt
+0231BC - gfx_finalLab
+0239BC - gfx_queenSPR (16x5 tiles)
+
+Destination Pointers:
+8B00 - _VRAM_sprTiles
+8F00 - _VRAM_bgTiles
+9C00 - _SCRN1
+9C20 - (_SCRN1+0x20)
+9C40 - (_SCRN1+0x40)
+9C60 - (_SCRN1+0x60)
+
+Other Destination Pointers: (not from transitions)
+9200 - Credits font
+
+9A00 - Queen's Feet Base Address
