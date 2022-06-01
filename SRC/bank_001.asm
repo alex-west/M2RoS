@@ -9,6 +9,7 @@ SECTION "ROM Bank $001", ROMX[$4000], BANK[$1]
 include "data/sprites_samus.asm"
 
 ; 01:493E: Update status bar
+updateStatusBar:
     ld a, [$c3ca]
     and a
     ret nz
@@ -129,7 +130,7 @@ jr_001_498e:
     and $0f
     add $a0
     ld [hl], a
-    ret
+ret
 
 
 jr_001_49f2:
@@ -3830,8 +3831,8 @@ Call_001_7a45:
     ld d, $00
     add hl, de
     ld a, [hl]
-    ld [$d07e], a
-    ld [$d07f], a
+    ld [bg_palette], a
+    ld [ob_palette0], a
     ld a, [$d09b]
     dec a
     ld [$d09b], a

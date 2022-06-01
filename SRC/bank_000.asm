@@ -76,17 +76,18 @@ VBlankHandler: ; 00:0154
     push bc
     push de
     push hl
+    ; Update scrolling
     ld a, [$c205]
     ldh [rSCY], a
     ld a, [$c206]
     ldh [rSCX], a
-    ld a, [$d07e]
+    ; Update palettes
+    ld a, [bg_palette]
     ldh [rBGP], a
-    ld a, [$d07f]
+    ld a, [ob_palette0]
     ldh [rOBP0], a
-    ld a, [$d080]
-    ldh [rOBP1], a
-    
+    ld a, [ob_palette1]
+    ldh [rOBP1], a    
     ; Decrement countdown timer every frame
     ld a, [countdownTimerLow]
     sub $01
@@ -100,15 +101,17 @@ VBlankHandler: ; 00:0154
         ld [countdownTimerLow], a
         ld [countdownTimerHigh], a
     jr_000_018b:
-    
+; Various different update handlers
+;  Looks like 
+    ; Credits drawing routine
     ld a, [credits_nextLineReady]
     and a
     jp nz, VBlank_drawCreditsLine_longJump
-
+    ; Death sequence drawing routine
     ld a, [$d059]
     and a
     jp nz, Jump_000_2fe1
-
+    ; Some other VRAM 
     ld a, [$d047]
     and a
     jp nz, Jump_000_2ba3
@@ -149,9 +152,9 @@ reti
 
 
 jr_000_01d9:
-    ld a, $01
+    ld a, BANK(updateStatusBar)
     ld [rMBC_BANK_REG], a
-    call $493e
+    call updateStatusBar
     call OAM_DMA
     ld a, $03
     ld [rMBC_BANK_REG], a
@@ -160,11 +163,12 @@ jr_000_01d9:
     ld [rMBC_BANK_REG], a
     ld a, $01
     ldh [$82], a
+    ; Return from interrupt
     pop hl
     pop de
     pop bc
     pop af
-    reti
+reti
 
 
 bootRoutine: ; 00:01fB
@@ -201,11 +205,11 @@ jr_000_0220:
     ld a, $03
     ldh [rLCDC], a
     ld a, $93
-    ld [$d07e], a
+    ld [bg_palette], a
     ld a, $93
-    ld [$d07f], a
+    ld [ob_palette0], a
     ld a, $43
-    ld [$d080], a
+    ld [ob_palette1], a
     ld sp, $dfff
     call Call_000_2378
     ld a, $0a
@@ -312,25 +316,28 @@ jr_000_02c4:
     ld a, $00
     ld [$0000], a
 
-Jump_000_02cd:
+mainGameLoop: ; 00:02CD
+    ; Clear vram update flag
     xor a
     ld [$de01], a
+    ; Update buttons if not disabled
     ld a, [$d00e]
     and a
     call z, main_readInput
+    ; Do imporatant stuff
     call main_handleGameMode
     call handleAudio
-    call Call_000_239c
+    call executeDoorScript
     ldh a, [hInputPressed]
+    ; Soft reset
     and PADF_START | PADF_SELECT | PADF_B | PADF_A ;$0f
     cp PADF_START | PADF_SELECT | PADF_B | PADF_A
-    jp z, bootRoutine
+        jp z, bootRoutine
+    call waitForNextFrame
+jp mainGameLoop
 
-    call Call_000_031c
-    jp Jump_000_02cd
 
-; 0:02F0
-main_handleGameMode:
+main_handleGameMode: ; 0:02F0
     ldh a, [gameMode]
     rst $28
         dw gameMode_Boot
@@ -358,24 +365,27 @@ gameMode_None:
     ret
 
 
-Call_000_031c:
-    db $76
+waitForNextFrame: ; 00:031C
+    db $76 ; HALT
 
-jr_000_031d:
-    ldh a, [$82]
-    and a
-    jr z, jr_000_031d
+    .vBlankNotDone:
+        ldh a, [$82]
+        and a
+    jr z, .vBlankNotDone
 
+    ; Increment frame counter
     ldh a, [$97]
     inc a
     ldh [$97], a
     and a
     jr nz, jr_000_0365
 
+    ; Check if ingame
     ldh a, [gameMode]
     cp $04
     jr nz, jr_000_0365
 
+    ; Increment in-game timer
     ld a, [$d0a2]
     inc a
     ld [$d0a2], a
@@ -411,7 +421,7 @@ jr_000_0365:
     ldh [$8c], a
     xor a
     ldh [hOamBufferIndex], a
-    ret
+ret
 
 
 Call_000_0370:
@@ -1748,7 +1758,7 @@ jr_000_0c24:
     xor a
     ld [$d00e], a
     ld [$c463], a
-    ld a, [$d07e]
+    ld a, [bg_palette]
     cp $93
     ret z
 
@@ -5450,11 +5460,10 @@ Call_000_2390:
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     call $4003
-    ret
+ret
 
 ; Screen Transition decoder
-Call_000_239c:
-Jump_000_239c:
+executeDoorScript: ; 00:239C
     ld a, [$d08e]
     ld b, a
     ld a, [$d08f]
@@ -5723,7 +5732,7 @@ jr_000_2552:
     ld [$d08e], a
     ld a, [hl]
     ld [$d08f], a
-    jp Jump_000_239c
+    jp executeDoorScript
 
 
 jr_000_255d:
@@ -5748,8 +5757,8 @@ jr_000_2574:
     ld d, $00
     add hl, de
     ld a, [hl]
-    ld [$d07e], a
-    ld [$d07f], a
+    ld [bg_palette], a
+    ld [ob_palette0], a
     call waitOneFrame
     ld a, [countdownTimerLow]
     cp $0e
@@ -6271,7 +6280,7 @@ Call_000_2887:
     ld [$d00e], a
     ld [$c205], a
     ldh [rSCY], a
-    ld a, [$d07e]
+    ld a, [bg_palette]
     cp $93
     jr z, jr_000_28f9
 
@@ -6863,8 +6872,8 @@ gameMode_Paused:
 
 jr_000_2cf7:
     ld a, b
-    ld [$d07e], a
-    ld [$d07f], a
+    ld [bg_palette], a
+    ld [ob_palette0], a
     ld a, [$d0a0]
     and a
     jr nz, jr_000_2d1b
@@ -6874,8 +6883,8 @@ jr_000_2cf7:
     ret z
 
     ld a, $93
-    ld [$d07e], a
-    ld [$d07f], a
+    ld [bg_palette], a
+    ld [ob_palette0], a
     ld a, $02
     ld [$cfc7], a
     ld a, $04
@@ -6890,8 +6899,8 @@ jr_000_2d1b:
     jr nz, jr_000_2d39
 
     ld a, $93
-    ld [$d07e], a
-    ld [$d07f], a
+    ld [bg_palette], a
+    ld [ob_palette0], a
     call Call_000_3e88
     ld a, $02
     ld [$cfc7], a
@@ -7296,8 +7305,8 @@ Call_000_2fa2:
     ld [$d05b], a
     ret
 
-
-Jump_000_2fe1:
+; Vblank routine for death
+Jump_000_2fe1: ; 00:2FE1
     ld a, [$d063]
     and a
     jr z, jr_000_3062
@@ -7306,7 +7315,7 @@ Jump_000_2fe1:
     and $03
     jr nz, jr_000_3019
 
-    ld hl, twoTiles
+    ld hl, deathAnimationTable
     ld a, [$d059]
     dec a
     ld e, a
@@ -7350,14 +7359,14 @@ jr_000_3019:
     ld [rMBC_BANK_REG], a
     ld a, $01
     ldh [$82], a
+    ; Return from interrupt
     pop hl
     pop de
     pop bc
     pop af
-    reti
+reti
 
-
-twoTiles::
+deathAnimationTable:: ; 00:3042
     db $00, $04, $08, $0c, $10, $14, $18, $1c, $01, $05, $09, $0d, $11, $15, $19, $1d
     db $02, $06, $0a, $0e, $12, $16, $1a, $1e, $03, $07, $0b, $0f, $13, $17, $1b, $1f
 
@@ -8523,7 +8532,7 @@ Jump_000_3698:
 
 jr_000_36b0:
     call handleAudio
-    call Call_000_031c
+    call waitForNextFrame
     ld a, [$ced6]
     cp $0b
     jr z, jr_000_36b0
@@ -8582,7 +8591,7 @@ jr_000_36f5:
     db $56, $50, $5c, $54, $ff, $5e, $65, $54, $61, $80
 
     call handleAudio
-    call Call_000_031c
+    call waitForNextFrame
     ld a, [countdownTimerLow]
     and a
     jr z, jr_000_372c
@@ -8962,7 +8971,7 @@ jr_000_3a01:
     ldh [rWY], a
 
 jr_000_3a23:
-    call Call_000_031c
+    call waitForNextFrame
     ld a, [countdownTimerHigh]
     and a
     jr nz, jr_000_3a01
@@ -9004,7 +9013,7 @@ jr_000_3a60:
     call $4000
     call handleAudio
     call Call_000_3e88
-    call Call_000_031c
+    call waitForNextFrame
     ld a, [$d06d]
     and a
     jr nz, jr_000_3a60
@@ -9113,7 +9122,7 @@ jr_000_3b0a:
 
 ; 00:3B2F
     call handleAudio
-    call Call_000_031c
+    call waitForNextFrame
     ld a, [countdownTimerLow]
     and a
     jr z, jr_000_3b40
@@ -9179,7 +9188,7 @@ jr_000_3b7f:
     db $56, $50, $5C, $54, $FF, $52, $5B, $54, $50, $61, $54, $53, $80
 
 ; 00:3BA1 
-    call Call_000_031c
+    call waitForNextFrame
     ld a, [countdownTimerLow]
     and a
     jr z, jr_000_3baf

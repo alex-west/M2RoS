@@ -207,7 +207,7 @@ saveTextTilemap: ; 05:4104
 titleScreenRoutine: ; 05: 4118
     call $0370
     ld a, $93
-    ld [$d07e], a
+    ld [bg_palette], a
     ; Handle flashing
     ld a, [countdownTimerHigh]
     and $03
@@ -221,7 +221,7 @@ titleScreenRoutine: ; 05: 4118
     jr z, jr_005_4137
     ; Flash
     ld a, $90
-    ld [$d07e], a
+    ld [bg_palette], a
 
 jr_005_4137:
     ld a, [$d07c]
@@ -392,7 +392,7 @@ jr_005_4246:
     xor a
     ld [$d0a0], a
     ld a, $93
-    ld [$d07e], a
+    ld [bg_palette], a
     ld a, [$d07a]
     and a
     jr nz, jr_005_42a6
@@ -990,9 +990,9 @@ prepareCreditsRoutine: ; 05:587F
     ld d, $00
     add hl, de
     ld a, [hl]
-    ld [$d07e], a
-    ld [$d07f], a
-    ld [$d080], a
+    ld [bg_palette], a
+    ld [ob_palette0], a
+    ld [ob_palette1], a
     ld a, [countdownTimerLow]
     cp $0e
     ret nc
@@ -1006,11 +1006,11 @@ jr_005_58ab:
     ld a, $03
     ldh [rLCDC], a
     ld a, $93
-    ld [$d07e], a
+    ld [bg_palette], a
     ld a, $93
-    ld [$d07f], a
+    ld [ob_palette0], a
     ld a, $43
-    ld [$d080], a
+    ld [ob_palette1], a
     call $037b
     ld hl, $c0ff
     ld a, $ff

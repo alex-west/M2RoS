@@ -770,9 +770,9 @@ def spikeDamageValue = $D078 ; Spike damage. Saved to SRAM
 ;    0: Not on save pillar
 ;    FFh: On save pillar
 ;}
-;$D07E: BG palette
-;$D07F: Object 0 palette
-;$D080: Object 1 palette
+def bg_palette  = $D07E ; BG palette
+def ob_palette0 = $D07F ; Object 0 palette
+def ob_palette1 = $D080 ; Object 1 palette
 ;$D081: Samus' max missiles, mirror of $D81A?
 ;$D083: Earthquake timer
 ;$D084: Samus' health for display,   mirror of $D051/$D818?
