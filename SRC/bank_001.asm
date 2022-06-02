@@ -232,7 +232,7 @@ jr_001_4a6b:
     and a
     jr nz, jr_001_4ab3
 
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $03
     jr nz, jr_001_4ab3
 
@@ -253,7 +253,7 @@ jr_001_4a90:
     and a
     jr nz, jr_001_4ab3
 
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $03
     jr nz, jr_001_4ab3
 
@@ -289,7 +289,7 @@ jr_001_4acc:
     adc $00
     daa
     ld [$d087], a
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $03
     ret nz
 
@@ -368,7 +368,7 @@ jr_001_4b4b:
     ldh [hSpriteXPixel], a
     ld a, $01
     ld [$d057], a
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $10
     swap a
     add $3f
@@ -489,7 +489,7 @@ jr_001_4bd1:
 
     dec a
     ld [$d04f], a
-    ldh a, [$97]
+    ldh a, [frameCounter]
     bit 2, a
     ret z
 
@@ -498,7 +498,7 @@ jr_001_4be8:
     and a
     jr z, jr_001_4bf3
 
-    ldh a, [$97]
+    ldh a, [frameCounter]
     bit 2, a
     ret z
 
@@ -705,7 +705,7 @@ Jump_001_4d33:
     and a
     jr z, jr_001_4d3e
 
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $03
     ret z
 
@@ -897,7 +897,7 @@ jr_001_4e28:
 
     ld a, $0a
     ld [$0000], a
-    ld a, [$d0a3]
+    ld a, [activeSaveSlot]
     sla a
     sla a
     swap a
@@ -1092,7 +1092,7 @@ jr_001_4f44:
     ldh a, [hSamusXPixel]
     add b
     ld [hl+], a
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $10
     srl a
     ld [hl+], a
@@ -1167,7 +1167,7 @@ jr_001_4fad:
     ldh a, [hSamusXPixel]
     add b
     ld [hl+], a
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $10
     srl a
     ld [hl+], a
@@ -1454,7 +1454,7 @@ jr_001_513c:
     ld [$c204], a
     ldh a, [$ba]
     ld [hl], a
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $01
     jp z, Jump_001_52e0
 
@@ -1650,7 +1650,7 @@ jr_001_5282:
     ld [hl+], a
     ldh a, [$bb]
     ld [hl], a
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $01
     jr z, jr_001_52e0
 
@@ -2771,7 +2771,7 @@ jr_001_5843:
 jr_001_585a:
     xor a
     ld [$d07d], a
-    ldh a, [$97]
+    ldh a, [frameCounter]
     bit 3, a
     jr z, jr_001_5873
 
@@ -2784,7 +2784,7 @@ jr_001_585a:
     call Call_001_4b62
 
 jr_001_5873:
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and a
     jr nz, jr_001_589a
 
@@ -2856,7 +2856,7 @@ jr_001_58d8:
     and a
     jr z, jr_001_58f0
 
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $7f
     jr nz, jr_001_58f0
 
@@ -3769,7 +3769,7 @@ include "data/sprites_credits.asm" ; Also title
     ld a, [$c205]
     add b
     ld [$c205], a
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $01
     ret nz
 
@@ -3885,7 +3885,7 @@ jr_001_7a93:
     ld a, $0a
     ld [$0000], a
     ld de, $b000
-    ld a, [$d0a3]
+    ld a, [activeSaveSlot]
     add a
     add d
     ld d, a
@@ -3911,7 +3911,7 @@ jr_001_7aac:
     ld de, $c900
     ld bc, $01c0
     ld hl, $b000
-    ld a, [$d0a3]
+    ld a, [activeSaveSlot]
     add a
     add h
     ld h, a
@@ -3935,7 +3935,7 @@ jr_001_7acd:
     ld a, $0a
     ld [$0000], a
     ld hl, $2083
-    ld a, [$d0a3]
+    ld a, [activeSaveSlot]
     sla a
     sla a
     swap a
@@ -3950,7 +3950,7 @@ jr_001_7af5:
     dec b
     jr nz, jr_001_7af5
 
-    ld a, [$d0a3]
+    ld a, [activeSaveSlot]
     sla a
     sla a
     swap a

@@ -763,8 +763,8 @@ def spikeDamageValue = $D078 ; Spike damage. Saved to SRAM
 ;    0: Start
 ;    1: Clear
 ;}
-;$D07B: Used in title. Y position of stars?
-;$D07C: Used in title. X position of stars?
+def titleStarY = $D07B ; Star Y position
+def titleStarX = $D07C ; Star X position
 ;$D07D: On save pillar flag
 ;{
 ;    0: Not on save pillar
@@ -816,7 +816,7 @@ def gameTimeHours   = $D099 ; In-game timer, hours
 ;$D0A0: Debug flag
 ;$D0A1: Previous low health
 ;$D0A2: In-game timer, 256-frame periods (roughly 14ths of a minute)
-;$D0A3: Save slot
+def activeSaveSlot = $D0A3 ; Save slot
 ;$D0A4: Show clear save slot option flag
 ;$D0A5: Song to play after earthquake
 ;$D0A6: Enable Baby Metroid cry

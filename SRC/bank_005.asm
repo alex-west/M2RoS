@@ -205,80 +205,95 @@ saveTextTilemap: ; 05:4104
 
 ;------------------------------------------------------------------------------
 titleScreenRoutine: ; 05: 4118
-    call $0370
+    call OAM_clearTable
+
+    ; Handle flashing
+    ; Set default palette
     ld a, $93
     ld [bg_palette], a
-    ; Handle flashing
+    ; Jump ahead if the lower 2 bits of the high byte aren't clear
     ld a, [countdownTimerHigh]
-    and $03
-    jr nz, jr_005_4137
-
+    and %00000011 ;$03
+    jr nz, .handleTitleStar
+    ; Jump ahead if the lower byte isn't less than $10
     ld a, [countdownTimerLow]
     cp $10
-    jr nc, jr_005_4137
-
+    jr nc, .handleTitleStar
+    ; Only set the palette every other frame
     bit 1, a
-    jr z, jr_005_4137
+    jr z, .handleTitleStar
     ; Flash
     ld a, $90
     ld [bg_palette], a
 
-jr_005_4137:
-    ld a, [$d07c]
+    ; Handle logic and drawing of the title star
+.handleTitleStar:
+    ld a, [titleStarX]
+    ; if starX < 3 then don't move it
     cp $03
-    jr c, jr_005_414d
-
+    jr c, .titleStarTryRespawn
+    ; Move left fast
     sub $02
-    ld [$d07c], a
-    ld a, [$d07b]
+    ld [titleStarX], a
+    ; Move down slow
+    ld a, [titleStarY]
     add $01
-    ld [$d07b], a
-    jr jr_005_414d
+    ld [titleStarY], a
+    jr .titleStarTryRespawn ; Pointless relative jump?
 
-jr_005_414d:
+.titleStarTryRespawn:
+    ; if rDIV != frameCounter, skip ahead
     ldh a, [rDIV]
     ld b, a
-    ldh a, [$97]
+    ldh a, [frameCounter]
     cp b
-    jr nz, jr_005_4162
-
+    jr nz, .titleStarDraw
+    ; If frame is odd, skip ahead
     and $01
-    jr nz, jr_005_4162
-
+    jr nz, .titleStarDraw
+    ; Reset position of star
+    ; Y position is essentially random
     ld a, b
-    ld [$d07b], a
+    ld [titleStarY], a
+    ; Move to right side
     ld a, $ff
-    ld [$d07c], a
+    ld [titleStarX], a
 
-jr_005_4162:
-    ld a, [$d07b]
+.titleStarDraw:
+    ld a, [titleStarY]
     ldh [hSpriteYPixel], a
-    ld a, [$d07c]
+    ld a, [titleStarX]
     ldh [hSpriteXPixel], a
     ld a, $06
     ldh [hSpriteId], a
-    ldh a, [$97]
-    and $02
+    ; Make star flicker
+    ldh a, [frameCounter]
+    and %00000010
     srl a
     ldh [hSpriteAttr], a
     call drawNonGameSprite_longCall
+
+; Draw cursor
+    ; Set Y position
+    ; Aligned with START text (normal height)
     ld a, $74
     ldh [hSpriteYPixel], a
     ld a, [$d07a]
     and a
-    jr z, jr_005_4189
+    jr z, .normalHeight
+        ; Aligned with CLEAR text
+        ld a, $80
+        ldh [hSpriteYPixel], a
+    .normalHeight:
 
-    ld a, $80
-    ldh [hSpriteYPixel], a
-
-jr_005_4189:
-
+    ; Set x position and attributes
     ld a, $38
     ldh [hSpriteXPixel], a
     xor a
     ldh [hSpriteAttr], a
-    ldh a, [$97]
-    and $0c
+    ; Get animation frame for cursor
+    ldh a, [frameCounter]
+    and %00001100
     srl a
     srl a
     ld e, a
@@ -288,8 +303,9 @@ jr_005_4189:
     ld a, [hl]
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    
-    ld a, [$d0a3]
+
+    ; Draw sprite for save number
+    ld a, [activeSaveSlot]
     add $23
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
@@ -305,94 +321,104 @@ jr_005_4189:
     ld a, [$d0a4]
     and a
     jr z, jr_005_41cf
-    ; then show "Clear" text
-    ld a, $80
-    ldh [hSpriteYPixel], a
-    ld a, $01
-    ldh [hSpriteId], a
-    call drawNonGameSprite_longCall
-
-jr_005_41cf:
+        ; Show "Clear" text
+        ld a, $80
+        ldh [hSpriteYPixel], a
+        ld a, $01
+        ldh [hSpriteId], a
+        call drawNonGameSprite_longCall
+    jr_005_41cf:
+    ; End of display logic for title
     call clearUnusedOamSlots
+    
+    ; Title input logic
     ldh a, [hInputRisingEdge]
     cp PADF_SELECT
     jr nz, jr_005_41e5
-
-    ld a, $15
-    ld [$cec0], a
-    ld a, [$d0a4]
-    xor $ff
-    ld [$d0a4], a
-
-jr_005_41e5:
+        ; Play sound effect
+        ld a, $15
+        ld [$cec0], a
+        ; Toggle flag
+        ld a, [$d0a4]
+        xor $ff
+        ld [$d0a4], a
+    jr_005_41e5:
+    
+    ; If right is pressed, increment save slot
     ldh a, [hInputRisingEdge]
     cp PADF_RIGHT
-    jr nz, jr_005_4205
+    jr nz, .handleLeftInput
+        ldh a, [hInputPressed]
+        cp PADF_RIGHT
+        jr nz, .handleLeftInput
+            ; Play sound effect
+            ld a, $15
+            ld [$cec0], a
+            ; Increment slot number
+            ld a, [activeSaveSlot]
+            inc a
+            ld [activeSaveSlot], a
+            ; Wrap back to zero
+            cp $03
+            jr nz, .handleLeftInput
+                xor a
+                ld [activeSaveSlot], a
+    .handleLeftInput:
 
-    ldh a, [hInputPressed]
-    cp PADF_RIGHT;$10
-    jr nz, jr_005_4205
-
-    ld a, $15
-    ld [$cec0], a
-    ld a, [$d0a3]
-    inc a
-    ld [$d0a3], a
-    cp $03
-    jr nz, jr_005_4205
-
-    xor a
-    ld [$d0a3], a
-
-jr_005_4205:
+    ; If left is pressed, decrement save slot
     ldh a, [hInputRisingEdge]
     cp PADF_LEFT
     jr nz, jr_005_4226
-
-    ldh a, [hInputPressed]
-    cp PADF_LEFT
-    jr nz, jr_005_4226
-
-    ld a, $15
-    ld [$cec0], a
-    ld a, [$d0a3]
-    dec a
-    ld [$d0a3], a
-    cp $ff
-    jr nz, jr_005_4226
-
-    ld a, $02
-    ld [$d0a3], a
-
-jr_005_4226:
+        ldh a, [hInputPressed]
+        cp PADF_LEFT
+        jr nz, jr_005_4226
+            ; Play sound effect
+            ld a, $15
+            ld [$cec0], a
+            ; Decrement slot number
+            ld a, [activeSaveSlot]
+            dec a
+            ld [activeSaveSlot], a
+            ; Wrap around to slot 3
+            cp $ff
+            jr nz, jr_005_4226
+                ld a, $02
+                ld [activeSaveSlot], a
+    jr_005_4226:
+    
     xor a
     ld [$d07a], a
+
     ld a, [$d0a4]
     and a
     jr z, jr_005_4246
+        ldh a, [hInputPressed]
+        bit PADB_DOWN, a
+        jr z, jr_005_4246
+            ; Set sound effect
+            ld a, $01
+            ld [$d07a], a
+            ; Check edge of input
+            ldh a, [hInputRisingEdge]
+            bit PADB_DOWN, a
+            jr z, jr_005_4246
+                ; Play sound effect
+                ld a, $15
+                ld [$cec0], a
+    jr_005_4246:
 
-    ldh a, [hInputPressed]
-    bit PADB_DOWN, a
-    jr z, jr_005_4246
-
-    ld a, $01
-    ld [$d07a], a
-    ldh a, [hInputRisingEdge]
-    bit PADB_DOWN, a
-    jr z, jr_005_4246
-
-    ld a, $15
-    ld [$cec0], a
-
-jr_005_4246:
+    ; Exit title routine if start is not pressed
     ldh a, [hInputRisingEdge]
     cp PADF_START
-    ret nz
+        ret nz
 
+    ; Clear debug flag
     xor a
     ld [$d0a0], a
+    ; Flash
     ld a, $93
     ld [bg_palette], a
+
     ld a, [$d07a]
     and a
     jr nz, jr_005_42a6
@@ -406,32 +432,33 @@ jr_005_4246:
     ; Enable SRAM
     ld a, $0a
     ld [$0000], a
+    
     ld hl, saveFile_magicNumber
-    ld a, [$d0a3]
+    ; de = $A000 + (activeSaveSlot * $40)
+    ld a, [activeSaveSlot]
     sla a
     sla a
     swap a
     ld e, a
-    ld d, $a0
+    ld d, HIGH(saveData_baseAddr) ;$A0
 
-jr_005_427c:
-    ld a, [hl+]
-    ld b, a
-    ld a, [de]
-    inc de
-    cp b
+    jr_005_427c:
+        ld a, [hl+]
+        ld b, a
+        ld a, [de]
+        inc de
+        cp b
     jr z, jr_005_427c
 
     ld a, b
     cp $08
     jr c, jr_005_428d
-
-    ld a, $ff
-    ld [$d079], a
-
-jr_005_428d:
-    ld a, [$d0a3]
-    ld [$a0c0], a
+        ld a, $ff
+        ld [$d079], a
+    jr_005_428d:
+    
+    ld a, [activeSaveSlot]
+    ld [saveLastSlot], a
     ; Disable SRAM
     ld a, $00
     ld [$0000], a
@@ -448,18 +475,20 @@ ret
 
 ; Clear file
 jr_005_42a6:
+    ; Play sound effect
     ld a, $0f
     ld [$ced5], a
-    ld a, [$d0a3]
+    ; de = $A000 + (activeSaveSlot * $40)
+    ld a, [activeSaveSlot]
     sla a
     sla a
     swap a
     ld l, a
-    ld h, $a0
+    ld h, HIGH(saveData_baseAddr) ; $A0
     ; Enable SRAM
     ld a, $0a
     ld [$0000], a
-    ; Erase first two bytes (w/part of the magic number)
+    ; Erase first two bytes (part w/the magic number)
     xor a
     ld [hl+], a
     ld [hl], a
@@ -547,7 +576,7 @@ credits_moveStars:
     ld b, $10
 
     .starLoop:
-        ldh a, [$97]
+        ldh a, [frameCounter]
         and $03
         jr nz, .moveLeft
         ;moveDown
@@ -630,7 +659,7 @@ credits_animateSamus:
         dw func_5650 ; 15
 
 func_5650: ; Animate Suitless Samus's hair flowing
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $10
     swap a
     add $13
@@ -854,7 +883,7 @@ func_57B4: ; Draw Samus spin jumping (falling)
     ldh a, [hSamusYPixel]
     add $03
     ldh [hSamusYPixel], a
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $03
     add $04
     call credits_drawSamus
@@ -891,7 +920,7 @@ func_57E4: ; Draw Samus spin jumping (rising)
     ldh [hSamusYPixel], a
 
 jr_005_57f2:
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $03
     add $04
     call credits_drawSamus
@@ -1115,7 +1144,7 @@ credits_scrollHandler: ; 05:593E
 ret
 
 jr_005_595d:
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $03
     ret nz
     

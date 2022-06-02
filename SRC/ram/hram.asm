@@ -25,7 +25,7 @@ hInputRisingEdge::
 ; FF8D: OAM buffer index
 def hOamBufferIndex = $FF8D
 ;
-;$FF97: Frame counter
+def frameCounter =  $FF97 ; Frame counter
 ;$FF98:
 ;{
 ;    Sprite tile number (see $5:4015)

@@ -303,12 +303,12 @@ jr_000_0280:
     ld a, $0a
     ld [$0000], a
     xor a
-    ld [$d0a3], a
-    ld a, [$a0c0]
+    ld [activeSaveSlot], a
+    ld a, [saveLastSlot]
     cp $03
     jr nc, jr_000_02c4
 
-    ld [$d0a3], a
+    ld [activeSaveSlot], a
 
 jr_000_02c4:
     ld a, $00
@@ -374,9 +374,9 @@ waitForNextFrame: ; 00:031C
     jr z, .vBlankNotDone
 
     ; Increment frame counter
-    ldh a, [$97]
+    ldh a, [frameCounter]
     inc a
-    ldh [$97], a
+    ldh [frameCounter], a
     and a
     jr nz, jr_000_0365
 
@@ -424,17 +424,16 @@ jr_000_0365:
 ret
 
 
-Call_000_0370:
+OAM_clearTable: ; 00:0370
     xor a
     ld hl, $c000
     ld b, $a0
 
-jr_000_0376:
-    ld [hl+], a
-    dec b
+    jr_000_0376:
+        ld [hl+], a
+        dec b
     jr nz, jr_000_0376
-
-    ret
+ret
 
 
 Call_000_037b:
@@ -875,7 +874,7 @@ Call_000_0698:
     ldh [$b0], a
     xor a
     ld [$d04c], a
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $03
     jr z, jr_000_06c1
 
@@ -1705,7 +1704,7 @@ jr_000_0bb5:
     ld [$d022], a
     ld a, $40
     ld [$d023], a
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $01
     add $01
     ld b, a
@@ -1739,7 +1738,7 @@ jr_000_0bee:
     ld [$d022], a
     ld a, $80
     ld [$d023], a
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $01
     add $01
     ld b, a
@@ -3912,7 +3911,7 @@ jr_000_195f:
     bit PADB_UP, a
     jr z, jr_000_1970
 
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $03
     ret nz
 
@@ -4007,7 +4006,7 @@ jr_000_19d3:
     bit PADB_A, a
     jr z, jr_000_1a1b
 
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $02
     srl a
     ld b, a
@@ -4338,7 +4337,7 @@ Call_000_1c0d:
     jr jr_000_1c2c
 
 jr_000_1c25:
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $01
     add $01
     ld b, a
@@ -4384,7 +4383,7 @@ Call_000_1c51:
     jr jr_000_1c6f
 
 jr_000_1c68:
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $01
     add $01
     ld b, a
@@ -6680,7 +6679,7 @@ jr_000_2be5:
 
 
 Jump_000_2bf4:
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $01
     jr nz, jr_000_2c42
 
@@ -6766,9 +6765,9 @@ jr_000_2c64:
     and a
     jr z, jr_000_2c64
 
-    ldh a, [$97]
+    ldh a, [frameCounter]
     inc a
-    ldh [$97], a
+    ldh [frameCounter], a
     xor a
     ldh [$82], a
     ld a, $c0
@@ -6864,7 +6863,7 @@ jr_000_2ce3:
 
 gameMode_Paused:
     ld b, $e7
-    ldh a, [$97]
+    ldh a, [frameCounter]
     bit 4, a
     jr z, jr_000_2cf7
 
@@ -7190,13 +7189,13 @@ jr_000_2f1f:
 
 
 Call_000_2f29:
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $07
     ret nz
 
     ld a, $07
     ld [$ced5], a
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $0f
     ret nz
 
@@ -7205,7 +7204,7 @@ Call_000_2f29:
 
 Call_000_2f3c:
     ld b, $03
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $07
     ret nz
 
@@ -7215,7 +7214,7 @@ Call_000_2f3c:
 
 Call_000_2f4a:
     ld b, a
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $0f
     ret nz
 
@@ -7311,7 +7310,7 @@ Jump_000_2fe1: ; 00:2FE1
     and a
     jr z, jr_000_3062
 
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $03
     jr nz, jr_000_3019
 
@@ -7371,7 +7370,7 @@ deathAnimationTable:: ; 00:3042
     db $02, $06, $0a, $0e, $12, $16, $1a, $1e, $03, $07, $0b, $0f, $13, $17, $1b, $1f
 
 jr_000_3062:
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $01
     jr nz, jr_000_309f
 
@@ -9322,8 +9321,7 @@ jr_000_3c5d:
     ld a, c
     or b
     jr nz, jr_000_3c5d
-
-    ret
+ret
 
 ; 00:3C6A - Load credits to SRAM
 loadCreditsText:
@@ -9587,19 +9585,19 @@ gameMode_Credits: ; 00:3E34
 
 gameMode_Boot: ; 00:3E3F
     call Call_000_039c
-    call Call_000_0370
+    call OAM_clearTable
     xor a
     ldh [hOamBufferIndex], a
     call Call_000_3e88
     call Call_000_2390
-    ld a, $05
+    ld a, BANK(loadTitleScreen)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp loadTitleScreen
 
 gameMode_Title: ; 00:3E59
-    call Call_000_0370
-    ld a, $05
+    call OAM_clearTable
+    ld a, BANK(titleScreenRoutine)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp titleScreenRoutine
@@ -9698,7 +9696,7 @@ Call_000_3eca:
 
 ; 00:3F07
 ; unused
-    ldh a, [$97]
+    ldh a, [frameCounter]
     and $01
     jr nz, jr_000_3f44
 
