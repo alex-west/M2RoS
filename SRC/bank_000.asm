@@ -288,7 +288,7 @@ jr_000_0280:
         dec b
     jr nz, jr_000_0294
 
-    call Call_000_037b
+    call clearTilemaps
     ld a, $01
     ldh [rIE], a
     ld a, $07
@@ -435,20 +435,18 @@ OAM_clearTable: ; 00:0370
     jr nz, jr_000_0376
 ret
 
-
-Call_000_037b:
+; Clears both the BG and window tilemaps
+clearTilemaps: ; 00:037B
     ld hl, $9fff
     ld bc, $0800
-
-jr_000_0381:
-    ld a, $ff
-    ld [hl-], a
-    dec bc
-    ld a, b
-    or c
-    jr nz, jr_000_0381
-
-    ret
+    .loop:
+        ld a, $ff
+        ld [hl-], a
+        dec bc
+        ld a, b
+        or c
+    jr nz, .loop
+ret
 
 
 Call_000_038a:
@@ -8539,7 +8537,7 @@ jr_000_36b0:
     xor a
     ld [$d08b], a
     call Call_000_039c
-    call Call_000_037b
+    call clearTilemaps
     xor a
     ldh [hOamBufferIndex], a
     call Call_000_3eca
@@ -9069,7 +9067,7 @@ jr_000_3abe:
     ld a, $ff
     ld [$cfe5], a
     call Call_000_039c
-    call Call_000_037b
+    call clearTilemaps
     xor a
     ldh [hOamBufferIndex], a
     call Call_000_3eca
@@ -9138,7 +9136,7 @@ jr_000_3b40:
     ld a, $ff
     ld [$cfe5], a
     call Call_000_039c
-    call Call_000_037b
+    call clearTilemaps
     xor a
     ldh [hOamBufferIndex], a
     call Call_000_3eca

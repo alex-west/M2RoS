@@ -751,8 +751,8 @@ countdownTimerHigh = $D067; ;  various events
 ;$D06F: Mirror of $C46D? $C466?
 ;$D070: Mirror of $FFFC? $C467?
 ;$D072: Incremented by $0D21 and $08FE
-;$D073: Two byte pointer, data for [$C215] before subtracting 21h, pointer to SRAM? Compared with F0h to enable $D09F, probably credits text
-;
+def credits_textPointerLow  = $D073 ; Pointer to the working copy of the credits in SRAM. Stops being incremented when it hits the byte $F0. Character data is subtracted by $21 to adjust to almost-ASCII
+def credits_textPointerHigh = $D074 ;
 def credits_nextLineReady = $D076 ; Flag to indicate that the next line of the credits is ready to be uploaded
 
 def acidDamageValue = $D077 ; Acid damage. Saved to SRAM
@@ -804,15 +804,17 @@ def earthquakeTimer = $D091 ;Metroid earthquake timer. Counts down in $100h fram
 ;$D092: Song for room
 ;$D093: Mirror of $D06C?
 ;$D094: Mirror of $FFE1?
+;$D095
 ;$D096: Metroids remaining shuffle timer
-;$D097: Index for $5:5620 jump table (first call in credits)
+def credits_samusAnimState = $D097 ; Samus' animation state during the credits
 def gameTimeMinutes = $D098 ; In-game timer, minutes
 def gameTimeHours   = $D099 ; In-game timer, hours
 ;$D09A: Number of Metroids remaining
 ;$D09B: Fade in timer. Max value of 3Fh, is set to zero when Dh reached
-;
+def credits_runAnimFrame   = $D09C ; Tracks current animation frame of run animation
+def credits_runAnimCounter = $D09D ; Counts video frames between animation frames
 ;$D09E: Flag to play room song
-;$D09F: Flag to display in-game time in credits
+def credits_scrollingDone  = $D09F ; Flag to indicate if credits stopped scrolling (allows timer to display)
 ;$D0A0: Debug flag
 ;$D0A1: Previous low health
 ;$D0A2: In-game timer, 256-frame periods (roughly 14ths of a minute)

@@ -67,9 +67,9 @@ VBlank_drawCreditsLine: ; 05:403D
     ld a, $05
     ld [rMBC_BANK_REG], a
     ; Load credits text pointer
-    ld a, [$d073]
+    ld a, [credits_textPointerLow]
     ld l, a
-    ld a, [$d074]
+    ld a, [credits_textPointerHigh]
     ld h, a
     ; Load tilemap destination pointer
     ld a, [$c215]
@@ -113,9 +113,9 @@ VBlank_drawCreditsLine: ; 05:403D
     ld [$0000], a
     ; Store new value of credits text pointer
     ld a, l
-    ld [$d073], a
+    ld [credits_textPointerLow], a
     ld a, h
-    ld [$d074], a
+    ld [credits_textPointerHigh], a
     ; Clear ready flag
     xor a
     ld [credits_nextLineReady], a
@@ -425,6 +425,7 @@ titleScreenRoutine: ; 05: 4118
 
     ld a, $15
     ld [$cec0], a
+    ; Play Samus fanfare
     ld a, $12
     ld [$cedc], a
     xor a
@@ -553,7 +554,7 @@ ret
 ;------------------------------------------------------------------------------
 credits_drawTimer:
     ; Check if credits are done
-    ld a, [$d09f]
+    ld a, [credits_scrollingDone]
     and a
         ret z
     ; Draw hours
@@ -633,14 +634,15 @@ ret
 ;------------------------------------------------------------------------------
 ; animateSamus
 credits_animateSamus:
-    ld a, [$d097]
+    ld a, [credits_samusAnimState]
     rst $28
-        dw func_5808 ; 00
-        dw func_5835 ; 01
-        dw func_5877 ; 02 - Unused?
-        dw func_57E4 ; 03
-        dw func_57B4 ; 04
-        dw func_579D ; 05
+        dw creditsAnim_standingStart ; 00
+        dw creditsAnim_samusRun ; 01
+        dw creditsAnim_unused ; 02 - Unused stub
+        dw creditsAnim_spinRising ; 03
+        dw creditsAnim_spinFalling ; 04
+        dw creditsAnim_kneelingSuitless ; 05
+        ; States $6-$12 are Samus untying her hair
         dw func_5679 ; 06
         dw func_5690 ; 07
         dw func_56A7 ; 08
@@ -654,11 +656,12 @@ credits_animateSamus:
         dw func_575F ; 10
         dw func_5776 ; 11
         dw func_578D ; 12
-        dw func_5662 ; 13
-        dw func_565C ; 14
-        dw func_5650 ; 15
+        
+        dw creditsAnim_kneelingSuited ; 13
+        dw creditsAnim_standingEnd ; 14
+        dw creditsAnim_samusHairWaving ; 15
 
-func_5650: ; Animate Suitless Samus's hair flowing
+creditsAnim_samusHairWaving: ; Animate Suitless Samus's hair flowing
     ldh a, [frameCounter]
     and $10
     swap a
@@ -666,12 +669,12 @@ func_5650: ; Animate Suitless Samus's hair flowing
     call credits_drawSamus
 ret
 
-func_565C: ; Draw Suited Samus standing
+creditsAnim_standingEnd: ; Draw Suited Samus standing
     ld a, $0a
     call credits_drawSamus
 ret
 
-func_5662: ; Draw Suited? Samus kneeling
+creditsAnim_kneelingSuited: ; Draw Suited? Samus kneeling
     ld a, $08
     call credits_drawSamus
     ld a, [countdownTimerLow]
@@ -680,9 +683,9 @@ func_5662: ; Draw Suited? Samus kneeling
 
     ld a, $30
     ld [countdownTimerLow], a
-    ld a, [$d097]
+    ld a, [credits_samusAnimState]
     inc a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
 func_5679: ; Draw Suitless Samus standing (hair up, hands down)
@@ -694,9 +697,9 @@ func_5679: ; Draw Suitless Samus standing (hair up, hands down)
 
     ld a, $08
     ld [countdownTimerLow], a
-    ld a, [$d097]
+    ld a, [credits_samusAnimState]
     inc a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
 func_5690: ; Draw suitless Samus reaching up to her hair
@@ -708,9 +711,9 @@ func_5690: ; Draw suitless Samus reaching up to her hair
 
     ld a, $10
     ld [countdownTimerLow], a
-    ld a, [$d097]
+    ld a, [credits_samusAnimState]
     inc a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
 func_56A7: ; Draw suitless Samus untying her hair
@@ -722,9 +725,9 @@ func_56A7: ; Draw suitless Samus untying her hair
 
     ld a, $08
     ld [countdownTimerLow], a
-    ld a, [$d097]
+    ld a, [credits_samusAnimState]
     inc a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
 func_56BE: ; Draw suitless Samus reaching up to her hair (lower her hand, I guess)
@@ -736,9 +739,9 @@ func_56BE: ; Draw suitless Samus reaching up to her hair (lower her hand, I gues
 
     ld a, $08
     ld [countdownTimerLow], a
-    ld a, [$d097]
+    ld a, [credits_samusAnimState]
     inc a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
 func_56D5: ; Draw suitless Samus standing (hair up, hands down)
@@ -750,9 +753,9 @@ func_56D5: ; Draw suitless Samus standing (hair up, hands down)
 
     ld a, $08
     ld [countdownTimerLow], a
-    ld a, [$d097]
+    ld a, [credits_samusAnimState]
     inc a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
 func_56EC: ; Draw suitless Samus turning her head left
@@ -764,9 +767,9 @@ func_56EC: ; Draw suitless Samus turning her head left
 
     ld a, $08
     ld [countdownTimerLow], a
-    ld a, [$d097]
+    ld a, [credits_samusAnimState]
     inc a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
 func_5703: ; Draw suitless Samus standing (hair up, hands down)
@@ -778,9 +781,9 @@ func_5703: ; Draw suitless Samus standing (hair up, hands down)
 
     ld a, $08
     ld [countdownTimerLow], a
-    ld a, [$d097]
+    ld a, [credits_samusAnimState]
     inc a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
 func_571A: ; Draw suitless Samus turning her head right
@@ -792,9 +795,9 @@ func_571A: ; Draw suitless Samus turning her head right
 
     ld a, $08
     ld [countdownTimerLow], a
-    ld a, [$d097]
+    ld a, [credits_samusAnimState]
     inc a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
 func_5731: ; Draw suitless Samus standing (hair up, hands down)
@@ -806,9 +809,9 @@ func_5731: ; Draw suitless Samus standing (hair up, hands down)
 
     ld a, $0a
     ld [countdownTimerLow], a
-    ld a, [$d097]
+    ld a, [credits_samusAnimState]
     inc a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
 func_5748: ; Draw suitless Samus turning her head left
@@ -820,9 +823,9 @@ func_5748: ; Draw suitless Samus turning her head left
 
     ld a, $0a
     ld [countdownTimerLow], a
-    ld a, [$d097]
+    ld a, [credits_samusAnimState]
     inc a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
 func_575F: ; Draw suitless Samus unfurling her hair (frame 1)
@@ -834,9 +837,9 @@ func_575F: ; Draw suitless Samus unfurling her hair (frame 1)
 
     ld a, $0a
     ld [countdownTimerLow], a
-    ld a, [$d097]
+    ld a, [credits_samusAnimState]
     inc a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
 func_5776: ; Draw suitless Samus unfurling her hair (frame 2)
@@ -848,9 +851,9 @@ func_5776: ; Draw suitless Samus unfurling her hair (frame 2)
 
     ld a, $20
     ld [countdownTimerLow], a
-    ld a, [$d097]
+    ld a, [credits_samusAnimState]
     inc a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
 func_578D: ; Draw suitless Samus unfurling her hair (frame 3)
@@ -862,10 +865,10 @@ func_578D: ; Draw suitless Samus unfurling her hair (frame 3)
 
     ; Set next state to hair waving
     ld a, $15
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
-func_579D: ; Draw suitless Samus kneeling
+creditsAnim_kneelingSuitless: ; Draw suitless Samus kneeling
     ld a, $09
     call credits_drawSamus
     ld a, [countdownTimerLow]
@@ -874,12 +877,12 @@ func_579D: ; Draw suitless Samus kneeling
 
     ld a, $30
     ld [countdownTimerLow], a
-    ld a, [$d097]
+    ld a, [credits_samusAnimState]
     inc a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
-func_57B4: ; Draw Samus spin jumping (falling)
+creditsAnim_spinFalling: ; Draw Samus spin jumping (falling)
     ldh a, [hSamusYPixel]
     add $03
     ldh [hSamusYPixel], a
@@ -898,108 +901,117 @@ func_57B4: ; Draw Samus spin jumping (falling)
     ld a, [gameTimeHours]
     cp $03
     jr nc, jr_005_57de
-    ; Best ending (suitless)
-    ld a, [$d097]
-    inc a
-    ld [$d097], a
-ret
-    ; Second best (suited kneeling animation)
+        ; Best ending (suitless)
+        ld a, [credits_samusAnimState]
+        inc a
+        ld [credits_samusAnimState], a
+            ret
     jr_005_57de:
+    ; Second best (suited kneeling animation)
     ld a, $13
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
-func_57E4: ; Draw Samus spin jumping (rising)
+creditsAnim_spinRising: ; Draw Samus spin jumping (rising)
     ldh a, [hSamusYPixel]
     and $f0
     cp $e0
     jr z, jr_005_57f2
+        ldh a, [hSamusYPixel]
+        sub $03
+        ldh [hSamusYPixel], a
+    jr_005_57f2:
 
-    ldh a, [hSamusYPixel]
-    sub $03
-    ldh [hSamusYPixel], a
-
-jr_005_57f2:
     ldh a, [frameCounter]
     and $03
     add $04
     call credits_drawSamus
     ld a, [countdownTimerLow]
     and a
-    ret nz
+        ret nz
 
-    ld a, [$d097]
+    ld a, [credits_samusAnimState]
     inc a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
-func_5808: ; Draw suited Samus standing
+creditsAnim_standingStart: ; Draw suited Samus standing
     ld a, $0a
     call credits_drawSamus
-    ld a, [gameTimeHours]
     ; Worst ending (>= 7 hours) - Samus only stands
+    ld a, [gameTimeHours]
     cp $07
-    ret nc
+        ret nc
 
     ld a, [countdownTimerLow]
     and a
-    ret nz
+        ret nz
 
+    ; Initialize counters for running animation
     xor a
-    ld [$d09d], a
+    ld [credits_runAnimCounter], a
     xor a
-    ld [$d09c], a
-    ld [$d09f], a
+    ld [credits_runAnimFrame], a
+    ; Pointlessly reset the scrolling done value
+    ld [credits_scrollingDone], a
+    ; Set timer to $1200 (4608 frames, or 76.8 seconds)
     ld a, $00
-    ld [countdownTimerHigh], a
+    ld [countdownTimerHigh], a ; Shouldn't this be countdownTimerLow?
     ld a, $12
     ld [countdownTimerHigh], a
-    ld a, [$d097]
+    ; Start running
+    ld a, [credits_samusAnimState]
     inc a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
-func_5835: ; Draw Samus running (?)
-    ld a, [$d09d]
+creditsAnim_samusRun: ; Draw Samus running
+    ; Increment counter between animation frames
+    ld a, [credits_runAnimCounter]
     inc a
-    ld [$d09d], a
+    ld [credits_runAnimCounter], a
     cp $06
-    jr c, jr_005_5854
+    jr c, .endIf
+        ; Reset counter
+        xor a
+        ld [credits_runAnimCounter], a
+        ; Increment frame being displayed (in range 0-3)
+        ld a, [credits_runAnimFrame]
+        inc a
+        ld [credits_runAnimFrame], a
+        cp $04
+        jr nz, .endIf
+            ld a, $00
+            ld [credits_runAnimFrame], a
+    .endIf:
 
-    xor a
-    ld [$d09d], a
-    ld a, [$d09c]
-    inc a
-    ld [$d09c], a
-    cp $04
-    jr nz, jr_005_5854
-
-    ld a, $00
-    ld [$d09c], a
-
-jr_005_5854:
-    ld a, [$d09c]
+    ld a, [credits_runAnimFrame]
     call credits_drawSamus
+
+    ; Second-worst ending: (between 5 and 7 hours)
+    ; - Samus never stops running, so we never move on from this animation procedure
     ld a, [gameTimeHours]
-    ; Second-worst ending (between 5 and 7 hours) - Samus never stops running
     cp $05
-    ret nc
-
-    ld a, [$d09f]
+        ret nc
+    ; Keep running until credits stop
+    ld a, [credits_scrollingDone]
     and a
-    ret z
+        ret z
 
+    ; ...I think they meant to clear countdownTimerHigh
     xor a
     ld [countdownTimerLow], a
+    ; Set duration for next state
     ld a, $40
     ld [countdownTimerLow], a
-    ld a, [$d097]
+    ; Set anim state to jumping
+    ld a, [credits_samusAnimState]
     inc a
     inc a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
 ret
 
-func_5877:
+creditsAnim_unused:
     ; Unused? Falls through to this table:
 
 ;------------------------------------------------------------------------------
@@ -1024,10 +1036,11 @@ prepareCreditsRoutine: ; 05:587F
     ld [ob_palette1], a
     ld a, [countdownTimerLow]
     cp $0e
-    ret nc
+        ret nc
 
     xor a
     ld [countdownTimerLow], a
+    ; Remove the low health beep sound
     ld a, $ff
     ld [$cfe5], a
 
@@ -1040,18 +1053,18 @@ jr_005_58ab:
     ld [ob_palette0], a
     ld a, $43
     ld [ob_palette1], a
-    call $037b
+    call clearTilemaps
+    
+    ; Clear OAM buffer ?
     ld hl, $c0ff
     ld a, $ff
     ld c, $01
     ld b, $00
-
-jr_005_58ca:
-    ld [hl-], a
-    dec b
-    jr nz, jr_005_58ca
-
-    dec c
+    jr_005_58ca:
+            ld [hl-], a
+            dec b
+        jr nz, jr_005_58ca
+        dec c
     jr nz, jr_005_58ca
 
     call credits_loadFont
@@ -1072,9 +1085,9 @@ jr_005_58ca:
     call $038a
     
     ld a, LOW(creditsTextBuffer)
-    ld [$d073], a
+    ld [credits_textPointerLow], a
     ld a, HIGH(creditsTextBuffer)
-    ld [$d074], a
+    ld [credits_textPointerHigh], a
     
     ; Clear unused variable?
     xor a
@@ -1091,7 +1104,8 @@ jr_005_58ca:
     jr nz, jr_005_590e
 
     call loadCreditsText
-    
+
+    ; Initialize scroll
     xor a
     ld [$c205], a
     ld [$c206], a
@@ -1099,6 +1113,7 @@ jr_005_58ca:
     ld a, $c3
     ldh [rLCDC], a
 
+    ; Set timer for initial animation state (standing still in suit)
     ld a, $ff
     ld [countdownTimerLow], a
     ; Set Samus' position
@@ -1106,12 +1121,12 @@ jr_005_58ca:
     ldh [hSamusYPixel], a
     ld a, $88
     ldh [hSamusXPixel], a
-
+    ; Play credits music
     ld a, $13
     ld [$cedc], a
-
+    ; Init animation state
     xor a
-    ld [$d097], a
+    ld [credits_samusAnimState], a
     ; Move to credits game mode
     ldh a, [gameMode]
     inc a
@@ -1121,9 +1136,9 @@ ret
 ;------------------------------------------------------------------------------
 credits_scrollHandler: ; 05:593E
     ; Load
-    ld a, [$d073]
+    ld a, [credits_textPointerLow]
     ld l, a
-    ld a, [$d074]
+    ld a, [credits_textPointerHigh]
     ld h, a
     ; Enable SRAM
     ld a, $0a
@@ -1138,12 +1153,11 @@ credits_scrollHandler: ; 05:593E
     ld a, b
     cp $f0
     jr nz, jr_005_595d
-
-    ld a, $01
-    ld [$d09f], a
-ret
-
-jr_005_595d:
+        ld a, $01
+        ld [credits_scrollingDone], a
+            ret
+    jr_005_595d:
+    
     ldh a, [frameCounter]
     and $03
     ret nz
