@@ -1273,18 +1273,18 @@ jr_003_6d4f:
     ld a, $37
     ld [$c3a2], a
     ld a, $44
-    ld [$ff41], a
+    ld [rSTAT], a
     ld a, $5c
     ld [$c3a1], a
     ld a, [$c206]
     ld [$c3c6], a
     ld a, $03
-    ld [$ff4b], a
+    ld [rWX], a
     ld [$c3a8], a
     ld a, [$c205]
     ld [$c3c7], a
     ld a, $70
-    ld [$ff4a], a
+    ld [rWY], a
     ld [$c3a9], a
     ld hl, $c3ad
     ld [hl], $ff
@@ -3212,7 +3212,7 @@ jr_003_78c5:
     jr z, jr_003_78dd
 
     ld b, $02
-    ld a, [$ff04]
+    ld a, [rDIV]
     and $03
     jr z, jr_003_78e4
 
@@ -3483,7 +3483,7 @@ Call_003_7aa8:
     ld hl, $9b0e
 
 jr_003_7aab:
-    ld a, [$ff41]
+    ld a, [rSTAT]
     and $03
     jr nz, jr_003_7aab
 
@@ -3491,7 +3491,7 @@ jr_003_7aab:
     inc l
 
 jr_003_7ab5:
-    ld a, [$ff41]
+    ld a, [rSTAT]
     and $03
     jr nz, jr_003_7ab5
 
@@ -3658,14 +3658,14 @@ jr_003_7b91:
     ld b, $0b
 
 jr_003_7ba7:
-    ld a, [$ff41]
+    ld a, [rSTAT]
     and $03
     jr nz, jr_003_7ba7
 
     ld [hl], $ff
 
 jr_003_7bb0:
-    ld a, [$ff41]
+    ld a, [rSTAT]
     and $03
     jr nz, jr_003_7bb0
 
@@ -3797,9 +3797,9 @@ jr_003_7c8b:
     res 5, [hl]
     pop hl
     xor a
-    ld [$ff43], a
+    ld [rSCX], a
     ld a, $70
-    ld [$ff42], a
+    ld [rSCY], a
     inc l
     jr jr_003_7ce3
 
@@ -3812,19 +3812,19 @@ jr_003_7cb1:
 
 jr_003_7cba:
     ld a, [$c3a1]
-    ld [$ff43], a
+    ld [rSCX], a
     ld a, [$c3d2]
     and a
     jr z, jr_003_7cd6
 
-    ld [$ff47], a
+    ld [rBGP], a
     jr jr_003_7cd6
 
 jr_003_7ccb:
     ld a, [$c206]
-    ld [$ff43], a
+    ld [rSCX], a
     ld a, $93
-    ld [$ff47], a
+    ld [rBGP], a
 
 jr_003_7cd6:
     bit 7, [hl]
@@ -3837,7 +3837,7 @@ jr_003_7cd6:
 jr_003_7cde:
     inc l
     ld a, [hl+]
-    ld [$ff45], a
+    ld [rLYC], a
 
 jr_003_7ce3:
     ld a, l
@@ -3854,9 +3854,9 @@ jr_003_7ce3:
     call queenDrawFeet
     call Call_003_7b69
     ld a, [$c206]
-    ld [$ff43], a
+    ld [rSCX], a
     ld a, [$c205]
-    ld [$ff42], a
+    ld [rSCY], a
     ld a, [$c3a8]
     cp $a6
     jr nz, jr_003_7d0b
@@ -3864,9 +3864,9 @@ jr_003_7ce3:
     ld a, $a7
 
 jr_003_7d0b:
-    ld [$ff4b], a
+    ld [rWX], a
     ld a, [$c3a9]
-    ld [$ff4a], a
+    ld [rWY], a
     add $26
     cp $90
     jr c, jr_003_7d1c
@@ -3971,7 +3971,7 @@ jr_003_7d90:
     ld [hl], $ff
     ld hl, $c3ad
     ld a, [hl+]
-    ld [$ff45], a
+    ld [rLYC], a
     ld a, l
     ld [$c3aa], a
     ld a, h

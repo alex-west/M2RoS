@@ -84,7 +84,7 @@ jr_002_4063:
     ld [$c44b], a
 
 jr_002_4077:
-    ld a, [$ff44]
+    ld a, [rLY]
     cp $70
     ret nc
 
@@ -100,7 +100,7 @@ jr_002_408b:
     call $3dba
     call Call_002_409e
     call Call_002_45ca
-    ld a, [$ff44]
+    ld a, [rLY]
     cp $70
     ret nc
 
@@ -160,7 +160,7 @@ jr_002_40d8:
     ld l, a
     ldh a, [$fd]
     ld h, a
-    ld a, [$ff44]
+    ld a, [rLY]
     cp $58
     jr nc, jr_002_4101
 
@@ -201,7 +201,7 @@ jr_002_4124:
     inc [hl]
 
 jr_002_4125:
-    ld a, [$ff44]
+    ld a, [rLY]
     cp $6c
     ret nc
 
@@ -3623,7 +3623,7 @@ jr_002_56e7:
     cp $fd
     jr z, jr_002_5727
 
-    ld a, [$ff04]
+    ld a, [rDIV]
     and $01
     jr nz, jr_002_571f
 
@@ -4391,7 +4391,7 @@ enAI_5AE2:
     and a
     jr nz, jr_002_5b3b
 
-    ld a, [$ff04]
+    ld a, [rDIV]
     and $0f
     jr z, jr_002_5b37
 
@@ -5964,7 +5964,7 @@ enAI_638C:
     dec a
     jr z, jr_002_63b4
 
-    ld a, [$ff04]
+    ld a, [rDIV]
     and $1f
     jr z, jr_002_63e1
 
@@ -6075,7 +6075,7 @@ Jump_002_6441:
     and a
     jr nz, jr_002_644d
 
-    ld a, [$ff04]
+    ld a, [rDIV]
     and $1f
     jr z, jr_002_6483
 
@@ -6249,7 +6249,7 @@ enAI_6540:
     and $0f
     jr z, jr_002_659b
 
-    ld a, [$ff04]
+    ld a, [rDIV]
     and $1f
     jr z, jr_002_657a
 
@@ -7802,7 +7802,7 @@ jr_002_6d27:
     ldh [hEnemyYPos], a
 
 jr_002_6d2f:
-    ld a, [$ff04]
+    ld a, [rDIV]
     and $01
     jr z, jr_002_6d39
 
@@ -7833,7 +7833,7 @@ jr_002_6d46:
     jr jr_002_6d54
 
 jr_002_6d54:
-    ld a, [$ff04]
+    ld a, [rDIV]
     and $01
     jr z, jr_002_6d5e
 
@@ -8453,7 +8453,7 @@ jr_002_709a:
     set 1, [hl]
 
 jr_002_70af:
-    ld a, [$ff04]
+    ld a, [rDIV]
     and $01
     jr z, jr_002_70b9
 
@@ -8502,7 +8502,7 @@ jr_002_70dd:
     jr jr_002_70f8
 
 jr_002_70f8:
-    ld a, [$ff04]
+    ld a, [rDIV]
     and $01
     jr z, jr_002_7102
 
@@ -9071,7 +9071,7 @@ jr_002_741a:
     ldh a, [hEnemyYPos]
     add $05
     ldh [hEnemyYPos], a
-    ld a, [$ff04]
+    ld a, [rDIV]
     and $01
     jr z, jr_002_742c
 
@@ -9101,7 +9101,7 @@ jr_002_7439:
     set 2, [hl]
 
 jr_002_7445:
-    ld a, [$ff04]
+    ld a, [rDIV]
     and $01
     jr z, jr_002_744f
 
