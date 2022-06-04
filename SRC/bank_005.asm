@@ -123,7 +123,7 @@ VBlank_drawCreditsLine: ; 05:403D
     call OAM_DMA
 
     ld a, $01
-    ldh [$82], a
+    ldh [hVBlankDoneFlag], a
     ; Return from interrupt
     pop hl
     pop de
@@ -1207,6 +1207,7 @@ credits_drawSamusJumpTable:
         dw func_5A2F ; 08 - Suited Samus kneeling (ready to jump)
         dw func_5A37 ; 09 - Suitless Samus kneeling
         dw func_5A27 ; 0A - Suited Samus standing
+        
         dw func_5A3F ; 0B - Suitless Samus hair up, hand down
         dw func_5A55 ; 0C - Suitless Samus reaching up to hair
         dw func_5A6B ; 0D - Suitless Samus untying bun
@@ -1215,6 +1216,7 @@ credits_drawSamusJumpTable:
         dw func_5AA6 ; 10 - Suitless Samus hair unfurling 1
         dw func_5ABC ; 11 - Suitless Samus hair unfurling 2
         dw func_5AD2 ; 12 - Suitless Samus hair unfurling 3
+        
         dw func_5AE8 ; 13 - Suitless Samus hair waving 1
         dw func_5AFE ; 14 - Suitless Samus hair waving 2
 

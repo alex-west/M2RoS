@@ -76,7 +76,7 @@ Call_003_4014:
     cp $0f
     jr nz, jr_003_408a
 
-    ld a, [$ffc9]
+    ld a, [hCameraYScreen]
     cp b
     jr z, jr_003_4082
 
@@ -104,7 +104,7 @@ jr_003_408a:
     cp $0f
     jr nz, jr_003_40b4
 
-    ld a, [$ffcb]
+    ld a, [hCameraXScreen]
     cp b
     jr z, jr_003_40ac
 
@@ -1414,7 +1414,7 @@ jr_003_6e2c:
 
 
 jr_003_6e4a:
-    ld a, [$ff97]
+    ld a, [frameCounter]
     and $03
     jr nz, jr_003_6e6b
 
@@ -1862,7 +1862,7 @@ queenFrontFootOffsets:
 
 Call_003_7140:
     ld hl, $c308
-    ld a, [$ff8d]
+    ld a, [hOamBufferIndex]
     ld e, a
     ld d, $c0
     ld c, $06
@@ -1897,7 +1897,7 @@ jr_003_7163:
     jr nz, jr_003_7163
 
     ld a, e
-    ld [$ff8d], a
+    ld [hOamBufferIndex], a
     ret
 
 
@@ -2313,7 +2313,7 @@ jr_003_73a2:
     jr jr_003_7399
 
 Jump_003_73b1:
-    ld a, [$ff97]
+    ld a, [frameCounter]
     and $01
     ret z
 

@@ -49,7 +49,7 @@ jr_002_4039:
     cp $90
     jr z, jr_002_404b
 
-    ld a, [$ff97]
+    ld a, [frameCounter]
     and $01
     jr nz, jr_002_4063
 
@@ -2244,7 +2244,7 @@ enAI_4DD3:
     bit 0, a
     jr z, jr_002_4de6
 
-    ld a, [$ff97]
+    ld a, [frameCounter]
     and $06
     jr nz, jr_002_4de6
 
@@ -2387,7 +2387,7 @@ jr_002_4e80:
     ret
 
 enAI_4EA1:
-    ld a, [$ff97]
+    ld a, [frameCounter]
     and $0e
     jr nz, jr_002_4ec6
 
@@ -2705,7 +2705,7 @@ arachnus_5152:
     ld [hl], a
 
 jr_002_5161:
-    ld a, [$ff97]
+    ld a, [frameCounter]
     and $06
         ret nz
     ldh a, [$e3]
@@ -2985,7 +2985,7 @@ jr_002_52eb:
     ld a, [hl]
     add b
     ld [hl], a
-    ld a, [$ff97]
+    ld a, [frameCounter]
     and $06
     ret nz
 

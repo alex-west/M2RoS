@@ -817,7 +817,7 @@ def credits_runAnimCounter = $D09D ; Counts video frames between animation frame
 def credits_scrollingDone  = $D09F ; Flag to indicate if credits stopped scrolling (allows timer to display)
 ;$D0A0: Debug flag
 ;$D0A1: Previous low health
-;$D0A2: In-game timer, 256-frame periods (roughly 14ths of a minute)
+def gameTimeSeconds = $D0A2 ; 256-frames long (~1/14 of a minute), not 60 frames long. In-game time, but not saved
 def activeSaveSlot = $D0A3 ; Save slot
 ;$D0A4: Show clear save slot option flag
 ;$D0A5: Song to play after earthquake

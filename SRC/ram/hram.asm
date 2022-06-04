@@ -1,13 +1,8 @@
 section "HRAM", HRAM[$ff80]
 
 ;;;; $FF80..FFFE: Hi-RAM ;;;
-;{
-;$FF80: Input
-hInputPressed::
-	ds 1
-;$FF81: New input
-hInputRisingEdge::
-	ds 1
+hInputPressed::    ds 1 ;$FF80: Input
+hInputRisingEdge:: ds 1 ;$FF81: New input
 ;{
 ;    1: A
 ;    2: B
@@ -18,15 +13,19 @@ hInputRisingEdge::
 ;    40h: Up
 ;    80h: Down
 ;}
-;$FF82: V-blank handled flag
-;
-;$FF8C: Set to C0h by update in-game timer and wait a frame. Otherwise unused
+hVBlankDoneFlag:: ds 1 ;$FF82: V-blank handled flag
 
-; FF8D: OAM buffer index
-def hOamBufferIndex = $FF8D
-;
-def frameCounter =  $FF97 ; Frame counter
-;$FF98:
+hUnusedHRAM_1::   ds 9 ; $FF83-$FF8B - 9 unused bytes!?
+hUnusedFlag_1::   ds 1 ; $FF8C: Set to C0h by update in-game timer and wait a frame. Otherwise unused
+
+hOamBufferIndex:: ds 1 ; FF8D: OAM buffer index
+
+hUnusedHRAM_2::   ds 9 ; $FF8E-$FF96 - 9 more unused bytes!?
+
+frameCounter::    ds 1 ; $FF97: Frame counter (used by IGT, but not tied to IGT)
+
+hTemp:: ; Temp variables? Uncertain. Don't use these names in code until we have a better understanding of them
+.a:: ds 1 ;$FF98:
 ;{
 ;    Sprite tile number (see $5:4015)
 ;    Bomb Y position (see $30BB)
@@ -35,7 +34,7 @@ def frameCounter =  $FF97 ; Frame counter
 ;    Working projectile direction (see $1:500D)
 ;    Projectile X offset from Samus (see $1:4E8A)
 ;}
-;$FF99:
+.b: ds 1 ;$FF99:
 ;{
 ;    Two sprite tile numbers (see $5:4000)
 ;    Bomb X position (see $30BB)
@@ -46,13 +45,13 @@ def frameCounter =  $FF97 ; Frame counter
 ;    Working projectile Y position (see $1:500D)
 ;    Projectile direction (see $1:4E8A)
 ;}
-;$FF9A:
+.c: ds 1 ;$FF9A:
 ;{
 ;    Bomb X position (see $1:53AF)
 ;    Working projectile X position (see $1:500D)
 ;    Projectile Y offset from Samus (see $1:4E8A)
 ;}
-def gameMode = $FF9B ; Game mode
+gameMode:: ds 1 ; $FF9B ; Game mode
 ;{
 ;    0: Boot
 ;    1: Title screen
@@ -75,16 +74,18 @@ def gameMode = $FF9B ; Game mode
 ;    12h: Reached the gunship
 ;    13h: Credits
 ;}
-;
-section "HRAM OAM DMA Routine", HRAM[$ffa0]
-OAM_DMA:: ds $0a ;$FFA0..A9: OAM DMA routine
+
+hUnusedHRAM_3:: ds 4 ; $FF9C-$FF9F - 4 unused bytes
+
+OAM_DMA:: ds $0a ; $FFA0-$FFA9: OAM DMA routine
 
 ;$FFAA: VRAM tilemap metatile update address. $FFAA = $9800 + ([row block to update] * 32 + [column block to update]) * 2
+;$FFAB
 ;$FFAC: Index of screen for metatile update. $FFAC = [row screen to update] * 16 + [column screen to update]
 ;$FFAD: Index of block for metatile update. $FFAD = [row block to update] * 16 + [column block to update]
 ;$FFAE: Number of blocks to update
 ;$FFAF: Stack pointer for metatile update entries
-
+;$FFB0
 ;$FFB1: VRAM tiles update source address
 ;$FFB2:
 ;$FFB3: VRAM tiles update dest address, also source offset from $CE20 when [$D08C] is set

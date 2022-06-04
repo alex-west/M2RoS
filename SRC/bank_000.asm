@@ -143,7 +143,7 @@ jr_000_01c7:
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
     ld a, $01
-    ldh [$82], a
+    ldh [hVBlankDoneFlag], a
     pop hl
     pop de
     pop bc
@@ -162,7 +162,7 @@ jr_000_01d9:
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
     ld a, $01
-    ldh [$82], a
+    ldh [hVBlankDoneFlag], a
     ; Return from interrupt
     pop hl
     pop de
@@ -369,7 +369,7 @@ waitForNextFrame: ; 00:031C
     db $76 ; HALT
 
     .vBlankNotDone:
-        ldh a, [$82]
+        ldh a, [hVBlankDoneFlag]
         and a
     jr z, .vBlankNotDone
 
@@ -378,45 +378,44 @@ waitForNextFrame: ; 00:031C
     inc a
     ldh [frameCounter], a
     and a
-    jr nz, jr_000_0365
-
-    ; Check if ingame
-    ldh a, [gameMode]
-    cp $04
-    jr nz, jr_000_0365
-
-    ; Increment in-game timer
-    ld a, [$d0a2]
-    inc a
-    ld [$d0a2], a
-    cp $0e
-    jr nz, jr_000_0365
-
+    jr nz, .endIf
+        ; Increment in-game timer
+        ; Check if ingame
+        ldh a, [gameMode]
+        cp $04
+        jr nz, .endIf
+            ; Increment "seconds" (actually 256-frame periods (not saved))
+            ld a, [gameTimeSeconds]
+            inc a
+            ld [gameTimeSeconds], a
+            cp $0e
+            jr nz, .endIf
+                ; Increment minutes
+                xor a
+                ld [gameTimeSeconds], a
+                ld a, [gameTimeMinutes]
+                add $01
+                daa
+                ld [gameTimeMinutes], a
+                cp $60
+                jr c, .endIf
+                    ; Increment hours
+                    xor a
+                    ld [gameTimeMinutes], a
+                    ld a, [gameTimeHours]
+                    add $01
+                    daa
+                    ld [gameTimeHours], a
+                    jr nz, .endIf
+                        ; Clamp to max IGT (59:99)
+                        ld a, $59
+                        ld [gameTimeMinutes], a
+                        ld a, $99
+                        ld [gameTimeHours], a
+    .endIf:
+    
     xor a
-    ld [$d0a2], a
-    ld a, [gameTimeMinutes]
-    add $01
-    daa
-    ld [gameTimeMinutes], a
-    cp $60
-    jr c, jr_000_0365
-
-    xor a
-    ld [gameTimeMinutes], a
-    ld a, [gameTimeHours]
-    add $01
-    daa
-    ld [gameTimeHours], a
-    jr nz, jr_000_0365
-
-    ld a, $59
-    ld [gameTimeMinutes], a
-    ld a, $99
-    ld [gameTimeHours], a
-
-jr_000_0365:
-    xor a
-    ldh [$82], a
+    ldh [hVBlankDoneFlag], a
     ld a, $c0
     ldh [$8c], a
     xor a
@@ -6666,7 +6665,7 @@ jr_000_2bc2:
 
 jr_000_2be5:
     ld a, $01
-    ldh [$82], a
+    ldh [hVBlankDoneFlag], a
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
     pop hl
@@ -6744,7 +6743,7 @@ jr_000_2c42:
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
     ld a, $01
-    ldh [$82], a
+    ldh [hVBlankDoneFlag], a
     pop hl
     pop de
     pop bc
@@ -6758,21 +6757,21 @@ waitOneFrame: ; 00:2C5E
     pop hl
     db $76 ; halt
 
-jr_000_2c64:
-    ldh a, [$82]
-    and a
-    jr z, jr_000_2c64
+    .vBlankNotDone:
+        ldh a, [hVBlankDoneFlag]
+        and a
+    jr z, .vBlankNotDone
 
     ldh a, [frameCounter]
     inc a
     ldh [frameCounter], a
     xor a
-    ldh [$82], a
+    ldh [hVBlankDoneFlag], a
     ld a, $c0
-    ldh [$8c], a
+    ldh [hUnusedFlag_1], a
     xor a
     ldh [hOamBufferIndex], a
-    ret
+ret
 
 
 Call_000_2c79:
@@ -7355,7 +7354,7 @@ jr_000_3019:
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
     ld a, $01
-    ldh [$82], a
+    ldh [hVBlankDoneFlag], a
     ; Return from interrupt
     pop hl
     pop de
@@ -7422,12 +7421,12 @@ jr_000_309f:
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
     ld a, $01
-    ldh [$82], a
+    ldh [hVBlankDoneFlag], a
     pop hl
     pop de
     pop bc
     pop af
-    reti
+reti
 
 
     ldh a, [hSpriteYPixel]
@@ -9748,7 +9747,7 @@ jr_000_3f44:
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
     ld a, $01
-    ldh [$82], a
+    ldh [hVBlankDoneFlag], a
     pop hl
     pop de
     pop bc
