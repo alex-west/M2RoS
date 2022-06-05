@@ -676,9 +676,13 @@ def debugItemIndex = $D046 ; Debug screen selector index
 ;}
 def bankRegMirror = $D04E ;Bank
 ;$D04F: Invincibility timer
-;$D050: Samus' energy tanks, mirror of $D817?
-;$D051: Samus' health,       mirror of $D818?
-;$D053: Samus' missiles,     mirror of $D81C?
+def samusEnergyTanks   = $D050 ; Samus' max health, in tanks,     see also $D817
+def samusCurHealthLow  = $D051 ; Samus' current health,           see also $D818/$D084
+def samusCurHealthHigh = $D052 ; Samus' current health (in tanks) see also $D819/$D085
+
+def samusCurMissilesLow  = $D053 ; Samus' missiles (low byte)     see also $D81C
+def samusCurMissilesHigh = $D054 ; Samus' missiles (high byte)
+
 ;$D055: Samus' beam. Saved to SRAM, mirror of $D04D/$D816?
 ;{
 ;    0: Normal
@@ -775,8 +779,10 @@ def ob_palette0 = $D07F ; Object 0 palette
 def ob_palette1 = $D080 ; Object 1 palette
 ;$D081: Samus' max missiles, mirror of $D81A?
 ;$D083: Earthquake timer
-;$D084: Samus' health for display,   mirror of $D051/$D818?
-;$D086: Samus' missiles for display, mirror of $D053/$D81C?
+def samusDispHealthLow  = $D084 ; Samus' health for display,   see also $D051/$D818
+def samusDispHealthHigh = $D085 ; Samus' energy tanks for display, see also $D052/$D819
+def samusDispMissilesLow  = $D086 ; Samus' missiles for display, see also $D053/$D81C
+def samusDispMissilesHigh = $D087 ; Samus' missiles for display (high byte)
 ;$D088: Game save cooldown timer
 def metroidCountReal = $D089 ;Real number of metroids remaining (BCD)
 ;$D08A: Projectile solid block threshold
@@ -858,10 +864,13 @@ saveBuf_cameraXScreen: ds 1 ; $D807: Camera X position
 ;    $D814: Projectile solid block threshold
 ;    $D815: Samus' equipment
 ;    $D816: Samus' beam
-;    $D817: Samus' energy tanks
-;    $D818: Samus' health
-;    $D81A: Samus' max missiles
-;    $D81C: Samus' missiles
+;    $D817: Samus' max health in energy tanks
+;    $D818: Samus' current health (low byte)
+;    $D819: Samus' current health (energy tanks)
+;    $D81A: Samus' max missiles (low byte)
+;    $D81B: Samus' max missiles (high byte)
+;    $D81C: Samus' missiles (low byte)
+;    $D81D: Samus' missiles (high byte)
 ;    $D81E: Direction Samus is facing
 ;    $D81F: Acid damage
 ;    $D820: Spike damage

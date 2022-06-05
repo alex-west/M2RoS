@@ -437,7 +437,7 @@ jr_002_426f:
     ld [$cec0], a
 
 jr_002_4276:
-    ld hl, $d051
+    ld hl, samusCurHealthLow
     ld a, [hl]
     add b
     daa
@@ -445,7 +445,7 @@ jr_002_4276:
     ld a, [hl]
     adc $00
     ld [hl], a
-    ld a, [$d050]
+    ld a, [samusEnergyTanks]
     sub [hl]
     jr nc, jr_002_428b
 
@@ -471,7 +471,7 @@ jr_002_428b:
 jr_002_42a2:
     ld a, $0c
     ld [$cec0], a
-    ld hl, $d053
+    ld hl, samusCurMissilesLow
     ld a, [hl]
     add $05
     daa
@@ -2309,13 +2309,13 @@ jr_002_4e29:
     cp $9b
     jr nz, jr_002_4e46
 
-    ld a, [$d051]
+    ld a, [samusCurHealthLow]
     cp $99
     jr nz, jr_002_4e5d
 
-    ld a, [$d050]
+    ld a, [samusEnergyTanks]
     ld b, a
-    ld a, [$d052]
+    ld a, [samusCurHealthHigh]
     cp b
     jr nz, jr_002_4e5d
 
@@ -2326,13 +2326,13 @@ jr_002_4e46:
     cp $9d
     jr nz, jr_002_4e5d
 
-    ld a, [$d053]
+    ld a, [samusCurMissilesLow]
     ld b, a
     ld a, [$d081]
     cp b
     jr nz, jr_002_4e5d
 
-    ld a, [$d054]
+    ld a, [samusCurMissilesHigh]
     ld b, a
     ld a, [$d082]
     cp b
@@ -10120,7 +10120,7 @@ Call_002_79a8:
 
 jr_002_79b2:
     ld [hl], $00
-    ld hl, $d051
+    ld hl, samusCurHealthLow
     ld a, [$c470]
     sub [hl]
     cp $30
@@ -10164,7 +10164,7 @@ jr_002_79e4:
 
 jr_002_79e6:
     ldh [$e7], a
-    ld a, [$d051]
+    ld a, [samusCurHealthLow]
     ld [$c470], a
     ld a, $10
     ldh [$e9], a

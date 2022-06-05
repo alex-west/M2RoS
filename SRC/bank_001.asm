@@ -29,7 +29,7 @@ updateStatusBar:
     ld [hl+], a
     ld [hl+], a
     ld [hl], a
-    ld a, [$d050]
+    ld a, [samusEnergyTanks]
     and a
     jr z, jr_001_4979
 
@@ -42,7 +42,7 @@ jr_001_4963:
     dec b
     jr nz, jr_001_4963
 
-    ld a, [$d085]
+    ld a, [samusDispHealthHigh]
     and a
     jr z, jr_001_497d
 
@@ -84,28 +84,28 @@ jr_001_498e:
     ld [hl+], a
     ld a, $9e
     ld [hl+], a
-    ld a, [$d084]
+    ld a, [samusDispHealthLow]
     and $f0
     swap a
     add $a0
     ld [hl+], a
-    ld a, [$d084]
+    ld a, [samusDispHealthLow]
     and $0f
     add $a0
     ld [hl+], a
     inc hl
     inc hl
     inc hl
-    ld a, [$d087]
+    ld a, [samusDispMissilesHigh]
     and $0f
     add $a0
     ld [hl+], a
-    ld a, [$d086]
+    ld a, [samusDispMissilesLow]
     and $f0
     swap a
     add $a0
     ld [hl+], a
-    ld a, [$d086]
+    ld a, [samusDispMissilesLow]
     and $0f
     add $a0
     ld [hl+], a
@@ -177,138 +177,141 @@ jr_001_4a26:
     ld [hl], a
     ret
 
-
-    ld a, [$d051]
+;------------------------------------------------------------------------------
+adjustHudValues:: ; 01:4A2B - Adjusts displayed health and missiles
+    ; Clamp ones digit of health to decimal range
+    ld a, [samusCurHealthLow]
     and $0f
     cp $0a
-    jr c, jr_001_4a3e
+    jr c, .endIf_A
+        ld a, [samusCurHealthLow]
+        and $f0
+        add $09
+        ld [samusCurHealthLow], a
+    .endIf_A:
 
-    ld a, [$d051]
-    and $f0
-    add $09
-    ld [$d051], a
-
-jr_001_4a3e:
-    ld a, [$d051]
+    ; Clamp tens digit of health to decimal range
+    ld a, [samusCurHealthLow]
     and $f0
     cp $a0
-    jr c, jr_001_4a51
+    jr c, .endIf_B
+        ld a, [samusCurHealthLow]
+        and $0f
+        add $90
+        ld [samusCurHealthLow], a
+    .endIf_B:
 
-    ld a, [$d051]
-    and $0f
-    add $90
-    ld [$d051], a
-
-jr_001_4a51:
-    ld a, [$d052]
+    ; Check health high byte
+    ld a, [samusCurHealthHigh]
     ld b, a
-    ld a, [$d085]
+    ld a, [samusDispHealthHigh]
     cp b
-    jr z, jr_001_4a5f
+    jr z, .checkHealthLowByte
+    jr nc, .decrementDisplayedHealth
+    jr .incrementDisplayedHealth
 
-    jr nc, jr_001_4a90
-
-    jr jr_001_4a6b
-
-jr_001_4a5f:
-    ld a, [$d051]
+.checkHealthLowByte: ; Check health low byte
+    ld a, [samusCurHealthLow]
     ld b, a
-    ld a, [$d084]
+    ld a, [samusDispHealthLow]
     cp b
-    jr z, jr_001_4ab3
+    jr z, .checkMissileHighByte
+    jr nc, .decrementDisplayedHealth
 
-    jr nc, jr_001_4a90
-
-jr_001_4a6b:
-    ld a, [$d084]
+.incrementDisplayedHealth: ; Increment displayed health
+    ld a, [samusDispHealthLow]
     add $01
     daa
-    ld [$d084], a
-    ld a, [$d085]
+    ld [samusDispHealthLow], a
+    
+    ld a, [samusDispHealthHigh]
     adc $00
     daa
-    ld [$d085], a
+    ld [samusDispHealthHigh], a
+    ; Check if no sound effect is playing
     ld a, [$cec1]
     and a
-    jr nz, jr_001_4ab3
+    jr nz, .checkMissileHighByte
+        ; Play sound every 4 frames
+        ldh a, [frameCounter]
+        and $03
+        jr nz, .checkMissileHighByte
+            ld a, $18
+            ld [$cec0], a
+        jr .checkMissileHighByte
 
-    ldh a, [frameCounter]
-    and $03
-    jr nz, jr_001_4ab3
-
-    ld a, $18
-    ld [$cec0], a
-    jr jr_001_4ab3
-
-jr_001_4a90:
-    ld a, [$d084]
+.decrementDisplayedHealth: ; Decrement displayed health
+    ld a, [samusDispHealthLow]
     sub $01
     daa
-    ld [$d084], a
-    ld a, [$d085]
+    ld [samusDispHealthLow], a
+    
+    ld a, [samusDispHealthHigh]
     sbc $00
     daa
-    ld [$d085], a
+    ld [samusDispHealthHigh], a
+    ; Check if no sound effect is playing
     ld a, [$cec1]
     and a
-    jr nz, jr_001_4ab3
+    jr nz, .checkMissileHighByte
+        ; Play sound every 4 frames
+        ldh a, [frameCounter]
+        and $03
+        jr nz, .checkMissileHighByte
+            ld a, $18
+            ld [$cec0], a
 
-    ldh a, [frameCounter]
-    and $03
-    jr nz, jr_001_4ab3
-
-    ld a, $18
-    ld [$cec0], a
-
-jr_001_4ab3:
-    ld a, [$d054]
+.checkMissileHighByte: ; Check missile high byte
+    ld a, [samusCurMissilesHigh]
     ld b, a
-    ld a, [$d087]
+    ld a, [samusDispMissilesHigh]
     cp b
-    jr z, jr_001_4ac1
+    jr z, .checkMissileLowByte
 
-    jr nc, jr_001_4ae9
+    jr nc, .decrementDisplayedMissiles
 
-    jr jr_001_4acc
+    jr .incrementDisplayedMissiles
 
-jr_001_4ac1:
-    ld a, [$d053]
+.checkMissileLowByte: ; Check missile low byte
+    ld a, [samusCurMissilesLow]
     ld b, a
-    ld a, [$d086]
+    ld a, [samusDispMissilesLow]
     cp b
     ret z
+        jr nc, .decrementDisplayedMissiles
 
-    jr nc, jr_001_4ae9
-
-jr_001_4acc:
-    ld a, [$d086]
+.incrementDisplayedMissiles: ; Increment displayed missile count
+    ld a, [samusDispMissilesLow]
     add $01
     daa
-    ld [$d086], a
-    ld a, [$d087]
+    ld [samusDispMissilesLow], a
+    
+    ld a, [samusDispMissilesHigh]
     adc $00
     daa
-    ld [$d087], a
+    ld [samusDispMissilesHigh], a
+
+    ; Play sound every 4 frames
     ldh a, [frameCounter]
     and $03
     ret nz
+        ld a, $0c
+        ld [$cec0], a
+ret
 
-    ld a, $0c
-    ld [$cec0], a
-    ret
-
-
-jr_001_4ae9:
-    ld a, [$d086]
+.decrementDisplayedMissiles: ; Decrement displayed missile count
+    ld a, [samusDispMissilesLow]
     sub $01
     daa
-    ld [$d086], a
-    ld a, [$d087]
+    ld [samusDispMissilesLow], a
+    
+    ld a, [samusDispMissilesHigh]
     sbc $00
     daa
-    ld [$d087], a
-    ret
+    ld [samusDispMissilesHigh], a
+ret
 
+;------------------------------------------------------------------------------
 ; 01:4AFC - Display a two-sprite number
     ldh [$99], a
     swap a
@@ -320,7 +323,7 @@ jr_001_4ae9:
     and $0f
     add $a0
     call Call_001_4b11
-    ret
+ret
 
 
 Call_001_4b11:
@@ -1060,9 +1063,9 @@ jr_001_4ed8:
     cp $08
     jr nz, jr_001_4f44
 
-    ld a, [$d053]
+    ld a, [samusCurMissilesLow]
     ld b, a
-    ld a, [$d054]
+    ld a, [samusCurMissilesHigh]
     or b
     jr nz, jr_001_4f32
 
@@ -1072,14 +1075,14 @@ jr_001_4ed8:
 
 
 jr_001_4f32:
-    ld a, [$d053]
+    ld a, [samusCurMissilesLow]
     sub $01
     daa
-    ld [$d053], a
-    ld a, [$d054]
+    ld [samusCurMissilesLow], a
+    ld a, [samusCurMissilesHigh]
     sbc $00
     daa
-    ld [$d054], a
+    ld [samusCurMissilesHigh], a
 
 jr_001_4f44:
     ld a, [$d04d]
@@ -2823,11 +2826,11 @@ jr_001_589a:
     jr nz, jr_001_58d8
 
 jr_001_58ab:
-    ld a, [$d052]
+    ld a, [samusCurHealthHigh]
     and a
     jr nz, jr_001_58cd
 
-    ld a, [$d051]
+    ld a, [samusCurHealthLow]
     cp $50
     jr nc, jr_001_58cd
 
@@ -3991,19 +3994,19 @@ jr_001_7b26:
     ld [hl+], a
     ld a, [$d055]
     ld [hl+], a
-    ld a, [$d050]
+    ld a, [samusEnergyTanks]
     ld [hl+], a
-    ld a, [$d051]
+    ld a, [samusCurHealthLow]
     ld [hl+], a
-    ld a, [$d052]
+    ld a, [samusCurHealthHigh]
     ld [hl+], a
     ld a, [$d081]
     ld [hl+], a
     ld a, [$d082]
     ld [hl+], a
-    ld a, [$d053]
+    ld a, [samusCurMissilesLow]
     ld [hl+], a
-    ld a, [$d054]
+    ld a, [samusCurMissilesHigh]
     ld [hl+], a
     ld a, [$d02b]
     ld [hl+], a
@@ -4030,6 +4033,6 @@ jr_001_7b26:
     ld [$cec0], a
     ld a, $04
     ldh [gameMode], a
-    ret
+ret
 
 ; 1:7B87 - Freespace (filled with $00)

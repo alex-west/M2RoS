@@ -197,9 +197,9 @@ bootRoutine: ; 00:01fB
     ld a, $80
     ldh [rLCDC], a
 
-jr_000_0220:
-    ldh a, [rLY]
-    cp $94
+    jr_000_0220:
+        ldh a, [rLY]
+        cp $94
     jr nz, jr_000_0220
 
     ld a, $03
@@ -218,21 +218,20 @@ jr_000_0220:
     ld hl, $dfff
     ld b, $00
 
-jr_000_024a:
-    ld [hl-], a
-    dec b
+    jr_000_024a:
+        ld [hl-], a
+        dec b
     jr nz, jr_000_024a
 
     ld hl, $cfff
     ld c, $10
     ld b, $00
 
-jr_000_0255:
-    ld [hl-], a
-    dec b
-    jr nz, jr_000_0255
-
-    dec c
+    jr_000_0255:
+            ld [hl-], a
+            dec b
+            jr nz, jr_000_0255
+        dec c
     jr nz, jr_000_0255
 
     ld a, $ff
@@ -240,12 +239,11 @@ jr_000_0255:
     ld c, $06
     ld b, $00
 
-jr_000_0265:
-    ld [hl-], a
-    dec b
-    jr nz, jr_000_0265
-
-    dec c
+    jr_000_0265:
+            ld [hl-], a
+            dec b
+            jr nz, jr_000_0265
+        dec c
     jr nz, jr_000_0265
 
     xor a
@@ -253,20 +251,19 @@ jr_000_0265:
     ld c, $20
     ld b, $00
 
-jr_000_0274:
-    ld [hl-], a
-    dec b
-    jr nz, jr_000_0274
-
-    dec c
+    jr_000_0274:
+            ld [hl-], a
+            dec b
+            jr nz, jr_000_0274
+        dec c
     jr nz, jr_000_0274
 
     ld hl, $feff
     ld b, $00
 
-jr_000_0280:
-    ld [hl-], a
-    dec b
+    jr_000_0280:
+        ld [hl-], a
+        dec b
     jr nz, jr_000_0280
 
     ld hl, $fffe
@@ -307,10 +304,9 @@ jr_000_0280:
     ld a, [saveLastSlot]
     cp $03
     jr nc, jr_000_02c4
+        ld [activeSaveSlot], a
+    jr_000_02c4:
 
-    ld [activeSaveSlot], a
-
-jr_000_02c4:
     ld a, $00
     ldh [gameMode], a
     ld a, $00
@@ -649,9 +645,10 @@ gameMode_Main:
     jp nc, Jump_000_0578
 
     call Call_000_3d6d
-    ld a, [$d084]
+    ; Check if dead (when displayed health is zero)
+    ld a, [samusDispHealthLow]
     ld b, a
-    ld a, [$d085]
+    ld a, [samusDispHealthHigh]
     or b
     call z, Call_000_2fa2
     ldh a, [hSamusYPixel]
@@ -696,7 +693,7 @@ jr_000_053e:
     call Call_000_3e93 ; Draw Samus
     call Call_000_3da4 ; Draw projectiles
     call Call_000_3d83 ; Handle respawning blocks
-    call Call_000_3d78 ; Handle missile/energy counters
+    call adjustHudValues_longJump ; Handle missile/energy counters
     ld a, [$d049]
     and a
     jr z, jr_000_0560
@@ -722,9 +719,9 @@ jr_000_0571:
 
 Jump_000_0578:
     call Call_000_3d6d
-    ld a, [$d084]
+    ld a, [samusDispHealthLow]
     ld b, a
-    ld a, [$d085]
+    ld a, [samusDispHealthHigh]
     or b
     call z, Call_000_2fa2
     ldh a, [hSamusYPixel]
@@ -748,7 +745,7 @@ Jump_000_0578:
     call Call_000_3e93
     call Call_000_3da4
     call Call_000_3d83
-    call Call_000_3d78
+    call adjustHudValues_longJump
     ld a, [$d049]
     and a
     jr z, jr_000_05cc
@@ -1858,15 +1855,15 @@ Call_000_0ca3:
     ld [$d02b], a
     
     ld a, [$d817]
-    ld [$d050], a
+    ld [samusEnergyTanks], a
     
     ld a, [$d818]
-    ld [$d051], a
-    ld [$d084], a
+    ld [samusCurHealthLow], a
+    ld [samusDispHealthLow], a
     
     ld a, [$d819]
-    ld [$d052], a
-    ld [$d085], a
+    ld [samusCurHealthHigh], a
+    ld [samusDispHealthHigh], a
     
     ld a, [$d81a]
     ld [$d081], a
@@ -1875,12 +1872,12 @@ Call_000_0ca3:
     ld [$d082], a
     
     ld a, [$d81c]
-    ld [$d053], a
-    ld [$d086], a
+    ld [samusCurMissilesLow], a
+    ld [samusDispMissilesLow], a
     
     ld a, [$d81d]
-    ld [$d054], a
-    ld [$d087], a
+    ld [samusCurMissilesHigh], a
+    ld [samusDispMissilesHigh], a
     
     ld a, $13
     ld [samusPose], a
@@ -6940,14 +6937,14 @@ debugPauseMenu:
         jr_000_2d68:
     
         ; Decrease Samus' energy tanks (minimum of zero)
-        ld a, [$d050]
+        ld a, [samusEnergyTanks]
         and a
         jr z, jr_000_2d7a
             dec a
-            ld [$d050], a
-            ld [$d052], a
+            ld [samusEnergyTanks], a
+            ld [samusCurHealthHigh], a
             ld a, $99
-            ld [$d051], a
+            ld [samusCurHealthLow], a
     jr_000_2d7a:
 
     ; Handle left input
@@ -6980,14 +6977,14 @@ debugPauseMenu:
         jr_000_2da9:
     
         ; Increase Samus' energy tanks (max 5)
-        ld a, [$d050]
+        ld a, [samusEnergyTanks]
         cp $05
         jr z, jr_000_2dbc
             inc a
-            ld [$d050], a
-            ld [$d052], a
+            ld [samusEnergyTanks], a
+            ld [samusCurHealthHigh], a
             ld a, $99
-            ld [$d051], a
+            ld [samusCurHealthLow], a
     jr_000_2dbc:
 
     ; Handle A press
@@ -7031,12 +7028,12 @@ debugPauseMenu:
             add $10
             daa
             ld [$d081], a
-            ld [$d053], a
+            ld [samusCurMissilesLow], a
             ld a, [$d082]
             adc $00
             daa
             ld [$d082], a
-            ld [$d054], a
+            ld [samusCurMissilesHigh], a
     jr_000_2e07:
 
     ; Handle down input
@@ -7052,14 +7049,14 @@ debugPauseMenu:
             ld [$d055], a
             jr jr_000_2e31
         jr_000_2e1f:
-            ld a, [$d053]
+            ld a, [samusCurMissilesLow]
             sub $10
             daa
-            ld [$d053], a
-            ld a, [$d054]
+            ld [samusCurMissilesLow], a
+            ld a, [samusCurMissilesHigh]
             sbc $00
             daa
-            ld [$d054], a
+            ld [samusCurMissilesHigh], a
     jr_000_2e31:
 
     ; Render logic
@@ -7250,20 +7247,20 @@ jr_000_2f60:
     srl b
 
 jr_000_2f69:
-    ld a, [$d051]
+    ld a, [samusCurHealthLow]
     sub b
     daa
-    ld [$d051], a
-    ld a, [$d052]
+    ld [samusCurHealthLow], a
+    ld a, [samusCurHealthHigh]
     sbc $00
     daa
-    ld [$d052], a
+    ld [samusCurHealthHigh], a
     cp $99
     jr nz, jr_000_2f85
 
     xor a
-    ld [$d051], a
-    ld [$d052], a
+    ld [samusCurHealthLow], a
+    ld [samusCurHealthHigh], a
 
 jr_000_2f85:
     ret
@@ -8891,22 +8888,22 @@ pickup_3963:
     jp Jump_000_3a01
 
 pickup_397A:
-    ld a, [$d050]
+    ld a, [samusEnergyTanks]
     cp $05 ; Max Energy tanks
     jr z, jr_000_3985
         inc a
-        ld [$d050], a
+        ld [samusEnergyTanks], a
     jr_000_3985:
-    ld [$d052], a
+    ld [samusCurHealthHigh], a
     ld a, $99
-    ld [$d051], a
+    ld [samusCurHealthLow], a
     jr jr_000_3a01
 
 pickup_398F:
-    ld a, [$d050]
-    ld [$d052], a
+    ld a, [samusEnergyTanks]
+    ld [samusCurHealthHigh], a
     ld a, $99
-    ld [$d051], a
+    ld [samusCurHealthLow], a
     jr jr_000_3a01
 
 pickup_399C:
@@ -8923,9 +8920,9 @@ pickup_399C:
         ret
 jr_000_39b1:
     ld a, [$d081]
-    ld [$d053], a
+    ld [samusCurMissilesLow], a
     ld a, [$d082]
-    ld [$d054], a
+    ld [samusCurMissilesHigh], a
     jr jr_000_3a01
 
 pickup_39BF:
@@ -8946,21 +8943,21 @@ pickup_39BF:
         ld [$d082], a
 jr_000_39df:
     ; Add 10 to current missiles
-    ld a, [$d053]
+    ld a, [samusCurMissilesLow]
     add $10
     daa
-    ld [$d053], a
-    ld a, [$d054]
+    ld [samusCurMissilesLow], a
+    ld a, [samusCurMissilesHigh]
     adc $00
     daa
-    ld [$d054], a
+    ld [samusCurMissilesHigh], a
     ; Clamp current missiles to 999
     cp $10
     jr c, jr_000_3a01
         ld a, $99
-        ld [$d053], a
+        ld [samusCurMissilesLow], a
         ld a, $09
-        ld [$d054], a
+        ld [samusCurMissilesHigh], a
     jr jr_000_3a01
 
 ; Common routine for all pickups
@@ -9484,11 +9481,11 @@ Call_000_3d6d:
     jp $57f2
 
 
-Call_000_3d78:
-    ld a, $01
+adjustHudValues_longJump:
+    ld a, BANK(adjustHudValues)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    jp $4a2b
+    jp adjustHudValues
 
 
 Call_000_3d83:

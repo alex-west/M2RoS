@@ -3546,10 +3546,10 @@ jr_003_7ab5:
     cp $4c
     ret nz
 
-    ld a, [$d050]
-    ld [$d052], a
+    ld a, [samusEnergyTanks]
+    ld [samusCurHealthHigh], a
     ld a, $99
-    ld [$d051], a
+    ld [samusCurHealthLow], a
     ret
 
 
