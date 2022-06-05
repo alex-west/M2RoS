@@ -414,7 +414,7 @@ titleScreenRoutine: ; 05: 4118
 
     ; Clear debug flag
     xor a
-    ld [$d0a0], a
+    ld [debugFlag], a
     ; Flash
     ld a, $93
     ld [bg_palette], a

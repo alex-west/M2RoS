@@ -7513,7 +7513,7 @@ enAI_6B83:
     dec a
     ret nz
 
-    ld hl, $d09a
+    ld hl, metroidCountDisplayed
     ld a, [hl]
     add $08
     daa
@@ -7866,7 +7866,7 @@ jr_002_6d61:
     sub $01
     daa
     ld [hl], a
-    ld hl, $d09a
+    ld hl, metroidCountDisplayed
     ld a, [hl]
     sub $01
     daa
@@ -8535,7 +8535,7 @@ Jump_002_7105:
     sub $01
     daa
     ld [hl], a
-    ld hl, $d09a
+    ld hl, metroidCountDisplayed
     ld a, [hl]
     sub $01
     daa
@@ -9134,7 +9134,7 @@ jr_002_7452:
     sub $01
     daa
     ld [hl], a
-    ld hl, $d09a
+    ld hl, metroidCountDisplayed
     ld a, [hl]
     sub $01
     daa
@@ -9629,7 +9629,7 @@ jr_002_76e1:
     sub $01
     daa
     ld [hl], a
-    ld hl, $d09a
+    ld hl, metroidCountDisplayed
     ld a, [hl]
     sub $01
     daa
@@ -10410,7 +10410,7 @@ jr_002_7b14:
     sub $01
     daa
     ld [hl], a
-    ld hl, $d09a
+    ld hl, metroidCountDisplayed
     ld a, [hl]
     sub $01
     daa

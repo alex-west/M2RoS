@@ -3689,7 +3689,7 @@ jr_003_7bb0:
 jr_003_7bce:
     xor a
     ld [$d090], a
-    ld [$d09a], a
+    ld [metroidCountDisplayed], a
     ld [metroidCountReal], a
     ld a, $16
     ld [$c3c3], a

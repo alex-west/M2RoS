@@ -121,12 +121,12 @@ jr_001_498e:
     and a
     jr nz, jr_001_49f2
 
-    ld a, [$d09a]
+    ld a, [metroidCountDisplayed]
     and $f0
     swap a
     add $a0
     ld [hl+], a
-    ld a, [$d09a]
+    ld a, [metroidCountDisplayed]
     and $0f
     add $a0
     ld [hl], a
@@ -309,13 +309,14 @@ jr_001_4ae9:
     ld [$d087], a
     ret
 
-
+; 01:4AFC - Display a two-sprite number
     ldh [$99], a
     swap a
     and $0f
     add $a0
     call Call_001_4b11
     ldh a, [$99]
+; 01:4B09 - Display a one-sprite number
     and $0f
     add $a0
     call Call_001_4b11
@@ -341,40 +342,43 @@ Call_001_4b11:
     ldh [hOamBufferIndex], a
     ret
 
-
+; 01:4B2C - Render Metroid sprite on the HUD
+drawHudMetroid::
     ld a, $98
     ldh [hSpriteYPixel], a
+    ; Check if in queen fight
     ld a, [$d08b]
     cp $11
-    jr z, jr_001_4b4b
+    jr z, .endIf_A
+        ; If standing on save point
+        ld a, [$d07d]
+        and a
+        jr nz, .endIf_B
+            ; or if a major item is being collected
+            ld a, [$d093]
+            and a
+            jr z, .endIf_A
+                cp $0b
+                jr nc, .endIf_A
+        .endIf_B:
+            ; Then render the metroid counter 8 pixels up
+            ld a, $90
+            ldh [hSpriteYPixel], a
+    .endIf_A:
 
-    ld a, [$d07d]
-    and a
-    jr nz, jr_001_4b47
-
-    ld a, [$d093]
-    and a
-    jr z, jr_001_4b4b
-
-    cp $0b
-    jr nc, jr_001_4b4b
-
-jr_001_4b47:
-    ld a, $90
-    ldh [hSpriteYPixel], a
-
-jr_001_4b4b:
     ld a, $80
     ldh [hSpriteXPixel], a
     ld a, $01
     ld [$d057], a
+    ; Animate the counter
     ldh a, [frameCounter]
     and $10
     swap a
     add $3f
     ldh [hSpriteId], a
+    ; Draw the sprite
     call Call_001_4b62
-    ret
+ret
 
 
 Call_001_4b62:
@@ -4015,7 +4019,7 @@ jr_001_7b26:
     ld [hl+], a
     ld a, [gameTimeHours]
     ld [hl+], a
-    ld a, [$d09a]
+    ld a, [metroidCountDisplayed]
     ld [hl], a
     ld a, $00
     ld [$0000], a

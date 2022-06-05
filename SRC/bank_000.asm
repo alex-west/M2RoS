@@ -345,19 +345,19 @@ main_handleGameMode: ; 0:02F0
         dw gameMode_LoadA
         dw gameMode_LoadB
         dw gameMode_Main
-        dw $36B0
-        dw $2F86
-        dw $371B
+        dw $36B0 ; Dead
+        dw $2F86 ; Dying
+        dw $371B ; Game Over
         dw gameMode_Paused
-        dw $3CE2
-        dw $3ACE
-        dw $3E67
-        dw $3E72
+        dw $3CE2 ; Save to SRAM
+        dw $3ACE ; Game Saved screen (unused)
+        dw $3E67 ; New game
+        dw $3E72 ; Load save
         dw gameMode_None
         dw gameMode_None
-        dw $3B2F
-        dw $3B43
-        dw $3BA1
+        dw $3B2F ; from "Game Saved" mode
+        dw $3B43 ; Game cleared
+        dw $3BA1 ; Game cleared (press button to restart)
         dw gameMode_prepareCredits
         dw gameMode_Credits
 
@@ -546,7 +546,7 @@ jr_000_03db:
     ld a, [$d824]
     ld [gameTimeHours], a
     ld a, [$d825]
-    ld [$d09a], a
+    ld [metroidCountDisplayed], a
     xor a
     ld [$d00e], a
     ld [$d059], a
@@ -644,6 +644,7 @@ ret
 gameMode_Main:
     ld a, [samusPose]
     and $7f
+    ; Jump ahead if being eaten by the Queen
     cp $18
     jp nc, Jump_000_0578
 
@@ -680,22 +681,22 @@ jr_000_0522:
 
     xor a
     ld [$d05c], a
-    call Call_000_2ee3
-    call Call_000_0d21
-    call Call_000_32ab
-    call Call_000_21fb
-    call Call_000_3d8e
-    call Call_000_3d99
+    call Call_000_2ee3 ; Damage Samus
+    call Call_000_0d21 ; Samus pose handler
+    call Call_000_32ab ; ? Handle spawning enemies
+    call Call_000_21fb ; Handle toggling cannon
+    call Call_000_3d8e ; Handle projectiles
+    call Call_000_3d99 ; Handle bombs
 
 jr_000_053e:
-    call Call_000_0698
-    call Call_000_08fe
-    call Call_000_2366
+    call Call_000_0698 ; Handle loading blocks
+    call Call_000_08fe ; Handle scrolling/triggering door transitions
+    call Call_000_2366 ; Calculate scroll offsets
     call handleItemPickup
-    call Call_000_3e93
-    call Call_000_3da4
-    call Call_000_3d83
-    call Call_000_3d78
+    call Call_000_3e93 ; Draw Samus
+    call Call_000_3da4 ; Draw projectiles
+    call Call_000_3d83 ; Handle respawning blocks
+    call Call_000_3d78 ; Handle missile/energy counters
     ld a, [$d049]
     and a
     jr z, jr_000_0560
@@ -704,18 +705,18 @@ jr_000_053e:
     ld [$d049], a
 
 jr_000_0560:
-    call Call_000_3e9e
+    call drawHudMetroid_longJump
     ldh a, [hOamBufferIndex]
     ld [$d064], a
     ld a, [$d08e]
     and a
     jr nz, jr_000_0571
 
-    call Call_000_05de
+    call Call_000_05de ; Handle enemies
 
 jr_000_0571:
-    call Call_000_3e88
-    call Call_000_2c79
+    call Call_000_3e88 ; Clear unused OAM
+    call Call_000_2c79 ; Handle pausing ?
     ret
 
 
@@ -756,7 +757,7 @@ Jump_000_0578:
     ld [$d049], a
 
 jr_000_05cc:
-    call Call_000_3e9e
+    call drawHudMetroid_longJump
     ldh a, [hOamBufferIndex]
     ld [$d064], a
     call Call_000_05de
@@ -1810,7 +1811,7 @@ jr_000_0c4e:
     ld [$c458], a
     xor a
     ld [$d09b], a
-    ld a, [$d0a0]
+    ld a, [debugFlag]
     and a
     ret z
 
@@ -6815,7 +6816,7 @@ jr_000_2cae:
     ld [$d0a7], a
 
 jr_000_2cb2:
-    ld a, [$d0a0]
+    ld a, [debugFlag]
     and a
     jr z, jr_000_2cbe
 
@@ -6825,7 +6826,7 @@ jr_000_2cb2:
 
 jr_000_2cbe:
     xor a
-    ld [$d046], a
+    ld [debugItemIndex], a
     ld [$d011], a
     ld hl, $c002
 
@@ -6859,25 +6860,28 @@ jr_000_2ce3:
     ret
 
 gameMode_Paused:
+    ; Change palette on a 32 frame cycle (16 frame light/dark phases)
     ld b, $e7
     ldh a, [frameCounter]
     bit 4, a
-    jr z, jr_000_2cf7
+    jr z, .endIf
+        ld b, $93
+    .endIf:
 
-    ld b, $93
-
-jr_000_2cf7:
     ld a, b
     ld [bg_palette], a
     ld [ob_palette0], a
-    ld a, [$d0a0]
+    
+    ld a, [debugFlag]
     and a
-    jr nz, jr_000_2d1b
+        jr nz, .debugBranch
 
+    ; Unpause if start is pressed
     ldh a, [hInputRisingEdge]
     bit PADB_START, a
-    ret z
+        ret z
 
+    ; Return to main game mode if start is pressed
     ld a, $93
     ld [bg_palette], a
     ld [ob_palette0], a
@@ -6885,15 +6889,15 @@ jr_000_2cf7:
     ld [$cfc7], a
     ld a, $04
     ldh [gameMode], a
-    ret
+ret
 
-
-jr_000_2d1b:
-    call Call_000_3e9e
+.debugBranch:
+    call drawHudMetroid_longJump
     ldh a, [hInputRisingEdge]
     cp PADF_START
-    jr nz, jr_000_2d39
+        jr nz, debugPauseMenu
 
+    ; Return to main game mode if start is pressed
     ld a, $93
     ld [bg_palette], a
     ld [ob_palette0], a
@@ -6902,247 +6906,258 @@ jr_000_2d1b:
     ld [$cfc7], a
     ld a, $04
     ldh [gameMode], a
-    ret
+ret
 
 
-jr_000_2d39:
+debugPauseMenu:
+    ; Handle right input
     ldh a, [hInputRisingEdge]
     bit PADB_RIGHT, a
     jr z, jr_000_2d7a
+        ldh a, [hInputPressed]
+        bit PADB_B, a
+        jr nz, jr_000_2d50
+            ; Move debug cursor right
+            ld a, [debugItemIndex]
+            dec a
+            and $07
+            ld [debugItemIndex], a
+            jr jr_000_2d7a
+        jr_000_2d50:
+    
+        bit PADB_A, a
+        jr z, jr_000_2d68
+            ; Decrement metroid count
+            ld a, [metroidCountReal]
+            sub $01
+            daa
+            ld [metroidCountReal], a
+            ld a, [metroidCountDisplayed]
+            sub $01
+            daa
+            ld [metroidCountDisplayed], a
+            jr jr_000_2d7a
+        jr_000_2d68:
+    
+        ; Decrease Samus' energy tanks (minimum of zero)
+        ld a, [$d050]
+        and a
+        jr z, jr_000_2d7a
+            dec a
+            ld [$d050], a
+            ld [$d052], a
+            ld a, $99
+            ld [$d051], a
+    jr_000_2d7a:
 
-    ldh a, [hInputPressed]
-    bit PADB_B, a
-    jr nz, jr_000_2d50
-
-    ld a, [$d046]
-    dec a
-    and $07
-    ld [$d046], a
-    jr jr_000_2d7a
-
-jr_000_2d50:
-    bit 0, a
-    jr z, jr_000_2d68
-
-    ld a, [metroidCountReal]
-    sub $01
-    daa
-    ld [metroidCountReal], a
-    ld a, [$d09a]
-    sub $01
-    daa
-    ld [$d09a], a
-    jr jr_000_2d7a
-
-jr_000_2d68:
-    ld a, [$d050]
-    and a
-    jr z, jr_000_2d7a
-
-    dec a
-    ld [$d050], a
-    ld [$d052], a
-    ld a, $99
-    ld [$d051], a
-
-jr_000_2d7a:
+    ; Handle left input
     ldh a, [hInputRisingEdge]
     bit PADB_LEFT, a
     jr z, jr_000_2dbc
+        ldh a, [hInputPressed]
+        bit PADB_B, a
+        jr nz, jr_000_2d91
+            ; Move debug cursor left
+            ld a, [debugItemIndex]
+            inc a
+            and $07
+            ld [debugItemIndex], a
+            jr jr_000_2dbc
+        jr_000_2d91:
+    
+        bit PADB_A, a
+        jr z, jr_000_2da9
+            ; Decrement metroid count
+            ld a, [metroidCountReal]
+            add $01
+            daa
+            ld [metroidCountReal], a
+            ld a, [metroidCountDisplayed]
+            add $01
+            daa
+            ld [metroidCountDisplayed], a
+            jr jr_000_2dbc
+        jr_000_2da9:
+    
+        ; Increase Samus' energy tanks (max 5)
+        ld a, [$d050]
+        cp $05
+        jr z, jr_000_2dbc
+            inc a
+            ld [$d050], a
+            ld [$d052], a
+            ld a, $99
+            ld [$d051], a
+    jr_000_2dbc:
 
-    ldh a, [hInputPressed]
-    bit PADB_B, a
-    jr nz, jr_000_2d91
-
-    ld a, [$d046]
-    inc a
-    and $07
-    ld [$d046], a
-    jr jr_000_2dbc
-
-jr_000_2d91:
-    bit 0, a
-    jr z, jr_000_2da9
-
-    ld a, [metroidCountReal]
-    add $01
-    daa
-    ld [metroidCountReal], a
-    ld a, [$d09a]
-    add $01
-    daa
-    ld [$d09a], a
-    jr jr_000_2dbc
-
-jr_000_2da9:
-    ld a, [$d050]
-    cp $05
-    jr z, jr_000_2dbc
-
-    inc a
-    ld [$d050], a
-    ld [$d052], a
-    ld a, $99
-    ld [$d051], a
-
-jr_000_2dbc:
+    ; Handle A press
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
     jr z, jr_000_2dd7
+        ; Toggle item bit 
+        ld b, %00000001 ; Initial bitmask
+        ld a, [debugItemIndex]
+    
+        .bitmaskLoop:
+            dec a
+            cp $ff
+                jr z, .exitLoop
+            sla b
+        jr .bitmaskLoop
+        
+        .exitLoop:
+        
+        ld a, [samusItems]
+        xor b
+        ld [samusItems], a
+    jr_000_2dd7:
 
-    ld b, $01
-    ld a, [$d046]
-
-jr_000_2dc7:
-    dec a
-    cp $ff
-    jr z, jr_000_2dd0
-
-    sla b
-    jr jr_000_2dc7
-
-jr_000_2dd0:
-    ld a, [samusItems]
-    xor b
-    ld [samusItems], a
-
-jr_000_2dd7:
+    ; Handle up input
     ldh a, [hInputRisingEdge]
     bit PADB_UP, a
     jr z, jr_000_2e07
+        ldh a, [hInputPressed]
+        bit PADB_B, a
+        jr nz, jr_000_2def
+            ; Increment weapon equipped
+            ld a, [$d04d]
+            inc a
+            ld [$d04d], a
+            ld [$d055], a
+            jr jr_000_2e07
+        jr_000_2def:
+            ; Increment missiles
+            ld a, [$d081]
+            add $10
+            daa
+            ld [$d081], a
+            ld [$d053], a
+            ld a, [$d082]
+            adc $00
+            daa
+            ld [$d082], a
+            ld [$d054], a
+    jr_000_2e07:
 
-    ldh a, [hInputPressed]
-    bit PADB_B, a
-    jr nz, jr_000_2def
-
-    ld a, [$d04d]
-    inc a
-    ld [$d04d], a
-    ld [$d055], a
-    jr jr_000_2e07
-
-jr_000_2def:
-    ld a, [$d081]
-    add $10
-    daa
-    ld [$d081], a
-    ld [$d053], a
-    ld a, [$d082]
-    adc $00
-    daa
-    ld [$d082], a
-    ld [$d054], a
-
-jr_000_2e07:
+    ; Handle down input
     ldh a, [hInputRisingEdge]
     bit PADB_DOWN, a
     jr z, jr_000_2e31
+        ldh a, [hInputPressed]
+        bit PADB_B, a
+        jr nz, jr_000_2e1f
+            ld a, [$d04d]
+            dec a
+            ld [$d04d], a
+            ld [$d055], a
+            jr jr_000_2e31
+        jr_000_2e1f:
+            ld a, [$d053]
+            sub $10
+            daa
+            ld [$d053], a
+            ld a, [$d054]
+            sbc $00
+            daa
+            ld [$d054], a
+    jr_000_2e31:
 
-    ldh a, [hInputPressed]
-    bit PADB_B, a
-    jr nz, jr_000_2e1f
-
-    ld a, [$d04d]
-    dec a
-    ld [$d04d], a
-    ld [$d055], a
-    jr jr_000_2e31
-
-jr_000_2e1f:
-    ld a, [$d053]
-    sub $10
-    daa
-    ld [$d053], a
-    ld a, [$d054]
-    sbc $00
-    daa
-    ld [$d054], a
-
-jr_000_2e31:
+    ; Render logic
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
+    ; Display debug cursor
     ld a, $58
     ldh [hSpriteYPixel], a
-    ld a, [$d046]
+    ld a, [debugItemIndex]
     swap a
     srl a
     xor $ff
     add $69
     ldh [hSpriteXPixel], a
-    ld a, [$d046]
+    ld a, [debugItemIndex]
     call $4b09
+    ; Display item toggle bits
     ld a, $54
     ldh [hSpriteYPixel], a
     ld a, $36
     ldh [hSpriteId], a
+    
     ld a, $34
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_UNUSED, a
     call nz, $4b62
+    
     ld a, $3c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_varia, a
     call nz, $4b62
+
     ld a, $44
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_spider, a
     call nz, $4b62
+
     ld a, $4c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_spring, a
     call nz, $4b62
+
     ld a, $54
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_space, a
     call nz, $4b62
+
     ld a, $5c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_screw, a
     call nz, $4b62
+
     ld a, $64
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_hiJump, a
     call nz, $4b62
+
     ld a, $6c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_bomb, a
     call nz, $4b62
+    
     ld a, $68
     ldh [hSpriteYPixel], a
     ld a, $50
     ldh [hSpriteXPixel], a
     ld a, [$d04d]
     call $4afc
+    
     ldh a, [hOamBufferIndex]
     ld [$d06e], a
+
+    ; Save if pressing select and standing or morphing
     ldh a, [hInputRisingEdge]
     cp PADF_SELECT
-    ret nz
-
+        ret nz
     ldh a, [hInputPressed]
     cp PADF_SELECT
-    ret nz
-
+        ret nz
     ld a, [samusPose]
     and a
-    jr z, jr_000_2ede
-
+        jr z, jr_000_2ede
     cp $05
-    ret nz
-
+        ret nz
+        
 jr_000_2ede:
     ld a, $09
     ldh [gameMode], a
-    ret
+ret
 
 
 Call_000_2ee3:
@@ -7259,7 +7274,7 @@ jr_000_2f85:
     jr nz, jr_000_2fa1
 
     call Call_000_3e93
-    call Call_000_3e9e
+    call drawHudMetroid_longJump
     ld a, $03
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -8952,7 +8967,7 @@ jr_000_39df:
 Jump_000_3a01:
 jr_000_3a01:
     call Call_000_3e93
-    call Call_000_3e9e
+    call drawHudMetroid_longJump
     ld a, $02
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9001,7 +9016,7 @@ jr_000_3a45:
 
 jr_000_3a60:
     call Call_000_3e93
-    call Call_000_3e9e
+    call drawHudMetroid_longJump
     call Call_000_32ab
     ld a, $02
     ld [bankRegMirror], a
@@ -9569,7 +9584,7 @@ VBlank_drawCreditsLine_longJump:
     jp VBlank_drawCreditsLine
 
 gameMode_prepareCredits: ; 00:3E29
-    ld a, $05
+    ld a, BANK(prepareCreditsRoutine)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp prepareCreditsRoutine
@@ -9632,11 +9647,11 @@ Call_000_3e93:
     jp $4bd9
 
 
-Call_000_3e9e:
-    ld a, $01
+drawHudMetroid_longJump:
+    ld a, BANK(drawHudMetroid)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    jp $4b2c
+    jp drawHudMetroid
 
 
     ld a, $01

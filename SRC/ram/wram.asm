@@ -659,7 +659,7 @@ def samusItems = $D045 ; Samus' equipment
 	def itemBit_varia  = 6
 	def itemBit_UNUSED = 7
 
-;$D046: Debug screen selector index
+def debugItemIndex = $D046 ; Debug screen selector index
 ;$D047: VRAM tiles update flag (see $FFB1..B6, $2BA3, $27BA)
 ;$D048: Cleared by $0D21
 ;$D049: Timer for something
@@ -778,7 +778,7 @@ def ob_palette1 = $D080 ; Object 1 palette
 ;$D084: Samus' health for display,   mirror of $D051/$D818?
 ;$D086: Samus' missiles for display, mirror of $D053/$D81C?
 ;$D088: Game save cooldown timer
-def metroidCountReal = $D089 ;Real number of metroids remaining (BCD... why?)
+def metroidCountReal = $D089 ;Real number of metroids remaining (BCD)
 ;$D08A: Projectile solid block threshold
 ;$D08B: Metroid Queen's room flag. 11h: In Metroid Queen's room (set by screen transition command 8)
 ;$D08C: Would have guessed a flag for 'can do tiles update' or 'is lag frame'
@@ -809,13 +809,13 @@ def earthquakeTimer = $D091 ;Metroid earthquake timer. Counts down in $100h fram
 def credits_samusAnimState = $D097 ; Samus' animation state during the credits
 def gameTimeMinutes = $D098 ; In-game timer, minutes
 def gameTimeHours   = $D099 ; In-game timer, hours
-;$D09A: Number of Metroids remaining
+def metroidCountDisplayed = $D09A ; Number of Metroids remaining (displayed, not real)
 ;$D09B: Fade in timer. Max value of 3Fh, is set to zero when Dh reached
 def credits_runAnimFrame   = $D09C ; Tracks current animation frame of run animation
 def credits_runAnimCounter = $D09D ; Counts video frames between animation frames
 ;$D09E: Flag to play room song
 def credits_scrollingDone  = $D09F ; Flag to indicate if credits stopped scrolling (allows timer to display)
-;$D0A0: Debug flag
+def debugFlag = $D0A0 ; Activates debug pause menu and other stuff
 ;$D0A1: Previous low health
 def gameTimeSeconds = $D0A2 ; 256-frames long (~1/14 of a minute), not 60 frames long. In-game time, but not saved
 def activeSaveSlot = $D0A3 ; Save slot
