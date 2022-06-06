@@ -48,3 +48,9 @@ Subject to change.
 - [MetConst Wiki](https://wiki.metroidconstruction.com/doku.php?id=return_of_samus) - Some of the information here is outdated.
 - [M2 Music Tools](https://github.com/kkzero241/M2MusicTools) - A song extractor written by kkzero.
 - [LA DX Disassembly](https://github.com/zladx/LADX-Disassembly) - A disassembly project of another game that also uses rgbds.
+
+### Editors
+
+- [M2Edit](https://m2sw.zophar.net/m2edit/) - Abandoned editor from 2004. Stable, but closed source and lacks enemy and door editing capabilities.
+- [ROSE](https://github.com/liamnajor/ROSE) - WIP editor. Web based.
+- [YAM2E](https://github.com/ConConner/YAM2E) - Very early WIP editor.
