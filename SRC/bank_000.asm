@@ -443,18 +443,17 @@ clearTilemaps: ; 00:037B
     jr nz, .loop
 ret
 
-
-Call_000_038a:
-jr_000_038a:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    dec bc
-    ld a, b
-    or c
-    jr nz, jr_000_038a
-
-    ret
+; hl: source, de: destination, bc: length
+copyToVram:
+    .loop:
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        dec bc
+        ld a, b
+        or c
+    jr nz, .loop
+ret
 
 
 jr_000_0393:
@@ -470,18 +469,15 @@ TimerOverflowInterruptStub:
     reti
 
 
-Call_000_039c:
+disableLCD:
     ldh a, [rIE]
     ldh [$99], a
     res 0, a
     ldh [rIE], a
-
-jr_000_03a4:
-    ldh a, [rLY]
-    cp $91
+    jr_000_03a4:
+        ldh a, [rLY]
+        cp $91
     jr nz, jr_000_03a4
-
-
     ldh a, [rLCDC]
     and $7f
     ldh [rLCDC], a
@@ -576,9 +572,9 @@ jr_000_044b:
     ret
 
 gameMode_LoadB:
-    call Call_000_039c
-    call Call_000_05fd
-    call Call_000_3bb4
+    call disableLCD
+    call loadGame_loadGraphics
+    call loadGame_SamusItemGraphics
     
     ld a, [saveBuf_cameraYPixel]
     ldh [hCameraYPixel], a
@@ -592,25 +588,25 @@ gameMode_LoadB:
     ld a, [currentLevelBank]
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-
-jr_000_048a:
-    ld a, $00
-    ldh [$af], a
-    ld a, $de
-    ldh [$b0], a
-    call Call_000_06cc
-    call Call_000_08cf
-    ldh a, [hCameraYPixel]
-    add $10
-    ldh [hCameraYPixel], a
-    ldh a, [hCameraYScreen]
-    adc $00
-    and $0f
-    ldh [hCameraYScreen], a
-    ldh a, [hCameraYPixel]
-    ld b, a
-    ld a, [saveBuf_cameraYPixel]
-    cp b
+    ; Render map
+    jr_000_048a:
+        ld a, $00
+        ldh [$af], a
+        ld a, $de
+        ldh [$b0], a
+        call Call_000_06cc
+        call Call_000_08cf
+        ldh a, [hCameraYPixel]
+        add $10
+        ldh [hCameraYPixel], a
+        ldh a, [hCameraYScreen]
+        adc $00
+        and $0f
+        ldh [hCameraYScreen], a
+        ldh a, [hCameraYPixel]
+        ld b, a
+        ld a, [saveBuf_cameraYPixel]
+        cp b
     jr nz, jr_000_048a
 
     ld a, [saveBuf_cameraYPixel]
@@ -628,6 +624,7 @@ jr_000_048a:
     ldh a, [hCameraXPixel]
     sub $30
     ld [$c206], a
+    ; Enable LCD
     ld a, $e3
     ldh [rLCDC], a
     xor a
@@ -783,22 +780,24 @@ jr_000_05f1:
     ret
 
 
-Call_000_05fd:
-    ld a, $07
+loadGame_loadGraphics:
+    ld a, BANK(gfx_commonItems)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     ld bc, $0100
-    ld hl, $7a90
-    ld de, $8f00
-    call Call_000_038a
-    ld a, $06
+    ld hl, gfx_commonItems
+    ld de, vramDest_commonItems
+    call copyToVram
+    
+    ld a, BANK(gfx_samusPowerSuit)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     ld bc, $0b00
-    ld hl, $4320
-    ld de, $8000
-    call Call_000_038a
-    ld a, $06
+    ld hl, gfx_samusPowerSuit
+    ld de, vramDest_samus
+    call copyToVram
+
+    ld a, BANK(gfx_enemiesA)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     ld bc, $0400
@@ -806,21 +805,21 @@ Call_000_05fd:
     ld l, a
     ld a, [$d809]
     ld h, a
-    ld de, $8b00
-    call Call_000_038a
+    ld de, vramDest_enemies
+    call copyToVram
+
     ld a, [$d079]
     and a
     jr z, jr_000_0658
+        ld a, BANK(gfx_itemFont)
+        ld [bankRegMirror], a
+        ld [rMBC_BANK_REG], a
+        ld bc, $0200
+        ld hl, gfx_itemFont
+        ld de, vramDest_itemFont
+        call copyToVram
+    jr_000_0658:
 
-    ld a, BANK(gfx_itemFont)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    ld bc, $0200
-    ld hl, gfx_itemFont
-    ld de, $8c00
-    call Call_000_038a
-
-jr_000_0658:
     ld a, [$d80a]
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -829,9 +828,9 @@ jr_000_0658:
     ld l, a
     ld a, [$d80c]
     ld h, a
-    ld de, $9000
-    call Call_000_038a
-    ret
+    ld de, vramDest_bgTiles
+    call copyToVram
+ret
 
 
 Call_000_0673:
@@ -1870,10 +1869,10 @@ Call_000_0ca3:
     ld [samusDispHealthHigh], a
     
     ld a, [$d81a]
-    ld [$d081], a
+    ld [samusMaxMissilesLow], a
     
     ld a, [$d81b]
-    ld [$d082], a
+    ld [samusMaxMissilesHigh], a
     
     ld a, [$d81c]
     ld [samusCurMissilesLow], a
@@ -5216,14 +5215,16 @@ jr_000_222b:
     ld [$d055], a
     ld a, $08
     ld [$d04d], a
-    ld hl, $2242
+    ld hl, addr2242
     call Call_000_2753
     ld a, $15
     ld [$cec0], a
     ret
 
-
-    db $06, $20, $40, $80, $80, $20, $00, $06, $00, $40, $80, $80, $20, $00
+addr2242: db BANK(gfx_cannonMissile)
+    dw gfx_cannonMissile, vramDest_cannon, $0020
+addr2249: db BANK(gfx_cannonBeam)
+    dw gfx_cannonBeam, vramDest_cannon, $0020
 
     ld a, [$c205]
     ld b, a
@@ -6234,7 +6235,7 @@ Call_000_2887:
     ld a, [hl+]
     ldh [hSamusXScreen], a
     push hl
-    call Call_000_039c
+    call disableLCD
     call Call_000_0673
     ld a, $03
     ld [bankRegMirror], a
@@ -7011,15 +7012,15 @@ debugPauseMenu:
             jr jr_000_2e07
         jr_000_2def:
             ; Increment missiles
-            ld a, [$d081]
+            ld a, [samusMaxMissilesLow]
             add $10
             daa
-            ld [$d081], a
+            ld [samusMaxMissilesLow], a
             ld [samusCurMissilesLow], a
-            ld a, [$d082]
+            ld a, [samusMaxMissilesHigh]
             adc $00
             daa
-            ld [$d082], a
+            ld [samusMaxMissilesHigh], a
             ld [samusCurMissilesHigh], a
     jr_000_2e07:
 
@@ -8534,7 +8535,7 @@ jr_000_36b0:
 
     xor a
     ld [$d08b], a
-    call Call_000_039c
+    call disableLCD
     call clearTilemaps
     xor a
     ldh [hOamBufferIndex], a
@@ -8598,6 +8599,7 @@ jr_000_36f5:
 jr_000_372c:
     jp bootRoutine
 
+;------------------------------------------------------------------------------
 ; Handle item pick-up
 handleItemPickup:
     ld a, [$d06c]
@@ -8612,73 +8614,78 @@ handleItemPickup:
     ld a, [$d06c]
     ld [$d093], a
     ld b, a
+    ; Unused SFX?
     ld a, $12
     ld [$cec0], a
+    ; Play item get jingle
     ld a, $01
     ld [$cede], a
+    ; Set timer for duration of item get jingle
     ld a, $01
     ld [countdownTimerHigh], a
     ld a, $60
     ld [countdownTimerLow], a
     ld a, b
     cp $0d
-    jr c, jr_000_378b
+    jr c, .endIf
+        cp $0e
+        jr nc, .refillBranch
+            ; Play missile get jingle
+            ld a, $05
+            ld [$cede], a
+            ; Set 1 second timer
+            xor a
+            ld [countdownTimerHigh], a
+            ld a, $60
+            ld [countdownTimerLow], a
+            jr .endIf
+    
+        .refillBranch:
+            ; Do not play jingle
+            ld a, $00
+            ld [$cede], a
+            ; No delay
+            ld [countdownTimerHigh], a
+            ld [countdownTimerLow], a
+            ld a, $0e
+            ld [$cec0], a
+            jr z, .endIf
+                ; Play sound effect
+                ld a, $0c
+                ld [$cec0], a
+    .endIf:
 
-    cp $0e
-    jr nc, jr_000_3774
-
-    ld a, $05
-    ld [$cede], a
-    xor a
-    ld [countdownTimerHigh], a
-    ld a, $60
-    ld [countdownTimerLow], a
-    jr jr_000_378b
-
-jr_000_3774:
-    ld a, $00
-    ld [$cede], a
-    ld [countdownTimerHigh], a
-    ld [countdownTimerLow], a
-    ld a, $0e
-    ld [$cec0], a
-    jr z, jr_000_378b
-
-    ld a, $0c
-    ld [$cec0], a
-
-jr_000_378b:
     ld a, [$cedf]
     cp $0e
-    jr nz, jr_000_3797
+    jr nz, .endIf_B
+        ; Do not play jingle
+        ld a, $00
+        ld [$cede], a
+    .endIf_B:
 
-    ld a, $00
-    ld [$cede], a
-
-jr_000_3797:
     ld a, b
     dec a
     rst $28
-        dw pickup_37B8
-        dw pickup_37DD
-        dw pickup_3802
-        dw pickup_3827
-        dw pickup_3845
-        dw pickup_3850
-        dw pickup_38B9
-        dw pickup_3923
-        dw pickup_392E
-        dw pickup_3958
-        dw pickup_3963
-        dw pickup_397A
-        dw pickup_39BF
-        dw pickup_398F
-        dw pickup_399C
+        dw pickup_plasmaBeam
+        dw pickup_iceBeam
+        dw pickup_waveBeam
+        dw pickup_spazer
+        dw pickup_bombs
+        dw pickup_screwAttack
+        dw pickup_variaSuit
+        dw pickup_hiJump
+        dw pickup_spaceJump
+        dw pickup_spiderBall
+        dw pickup_springBall
+        dw pickup_energyTank
+        dw pickup_missileTank
+        dw pickup_energyRefill
+        dw pickup_missileRefill
 
-pickup_37B8:
+pickup_plasmaBeam:
     ld a, $04
     ld [$d055], a
-    ld hl, $37d6
+    ld hl, gfxInfo_plasma
     call Call_000_2753
     ld a, [$d04d]
     cp $08
@@ -8688,13 +8695,14 @@ pickup_37B8:
     ld [$d04d], a
     ld [$d055], a
     jp Jump_000_3a01
+    
+gfxInfo_plasma: db BANK(gfx_beamPlasma)
+    dw gfx_beamPlasma, vramDest_beam, $0020
 
-    db $06, $80, $40, $e0, $87, $20, $00
-
-pickup_37DD:
+pickup_iceBeam:
     ld a, $01
     ld [$d055], a
-    ld hl, $37fb
+    ld hl, gfxInfo_ice
     call Call_000_2753
     ld a, [$d04d]
     cp $08
@@ -8705,12 +8713,13 @@ pickup_37DD:
     ld [$d055], a
     jp Jump_000_3a01
 
-    db $06, $40, $40, $e0, $87, $20, $00
+gfxInfo_ice: db BANK(gfx_beamIce)
+    dw gfx_beamIce, vramDest_beam, $0020
 
-pickup_3802:
+pickup_waveBeam:
     ld a, $02
     ld [$d055], a
-    ld hl, $3820
+    ld hl, gfxInfo_wave
     call Call_000_2753
     ld a, [$d04d]
     cp $08
@@ -8721,12 +8730,13 @@ pickup_3802:
     ld [$d055], a
     jp Jump_000_3a01
 
-    db $06, $60, $40, $e0, $87, $20, $00
+gfxInfo_wave: db BANK(gfx_beamWave)
+    dw gfx_beamWave, vramDest_beam, $0020
 
-pickup_3827:
+pickup_spazer:
     ld a, $03
     ld [$d055], a
-    ld hl, $37d6
+    ld hl, gfxInfo_plasma
     call Call_000_2753
     ld a, [$d04d]
     cp $08
@@ -8738,73 +8748,76 @@ pickup_3827:
     jp Jump_000_3a01
 
 
-pickup_3845:
+pickup_bombs:
     ld a, [samusItems]
     set itemBit_bomb, a
     ld [samusItems], a
     jp Jump_000_3a01
 
-pickup_3850:
+pickup_screwAttack:
     ld a, [samusItems]
     set itemBit_screw, a
     ld [samusItems], a
     bit itemBit_space, a
     jr nz, jr_000_386b
 
-    ld hl, $388f
+    ld hl, gfxInfo_spinScrewTop
     call Call_000_2753
-    ld hl, $3896
+    ld hl, gfxInfo_spinScrewBottom
     call Call_000_2753
     jp Jump_000_3a01
 
 
 jr_000_386b:
-    ld hl, $389d
+    ld hl, gfxInfo_spinSpaceScrewTop
     call Call_000_2753
-    ld hl, $38a4
+    ld hl, gfxInfo_spinSpaceScrewBottom
     call Call_000_2753
     jp Jump_000_3a01
 
 
-; VRAM Update Lists
-    db $06, $20, $4e, $00, $80, $b0, $07, $06, $a0, $40, $00, $85, $70, $00, $06, $10
-    db $41, $00, $86, $50, $00
+; VRAM Update Lists - 00:387A
+gfxInfo_variaSuit: db BANK(gfx_samusVariaSuit)
+    dw gfx_samusVariaSuit, vramDest_samus, $07B0
 
-    ld b, $60
-    ld b, c
-    nop
-    add l
-    ld [hl], b
-    nop
-    ld b, $d0
-    ld b, c
-    nop
-    add [hl]
-    ld d, b
-    nop
+gfxInfo_spinSpaceTop: db BANK(gfx_spinSpaceTop)
+    dw gfx_spinSpaceTop, vramDest_spinTop, $0070
+gfxInfo_spinSpaceBottom: db BANK(gfx_spinSpaceBottom)
+    dw gfx_spinSpaceBottom, vramDest_spinBottom, $0050
 
-    db $06, $20, $42, $00, $85, $70, $00, $06, $90, $42, $00, $86, $50, $00, $06, $e0
-    db $42, $90, $85, $20, $00, $06, $00, $43, $90, $86, $20, $00
+gfxInfo_spinScrewTop: db BANK(gfx_spinScrewTop)
+    dw gfx_spinScrewTop, vramDest_spinTop, $0070
+gfxInfo_spinScrewBottom: db BANK(gfx_spinScrewBottom)
+    dw gfx_spinScrewBottom, vramDest_spinBottom, $0050
 
-pickup_38B9:
-jr_000_38b9:
-    call Call_000_3e93
-    call Call_000_05de
-    ld a, BANK(drawHudMetroid)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call drawHudMetroid
-    call Call_000_3e88
-    ld a, $80
-    ldh [rWY], a
-    call waitOneFrame
-    ld a, [countdownTimerHigh]
-    and a
-    jr nz, jr_000_38b9
+gfxInfo_spinSpaceScrewTop: db BANK(gfx_spinSpaceScrewTop)
+    dw gfx_spinSpaceScrewTop, vramDest_spinTop, $0070
+gfxInfo_spinSpaceScrewBottom: db BANK(gfx_spinSpaceScrewBottom)
+    dw gfx_spinSpaceScrewBottom, vramDest_spinBottom, $0050
 
-    ld a, [countdownTimerLow]
-    and a
-    jr nz, jr_000_38b9
+gfxInfo_springBallTop: db BANK(gfx_springBallTop)
+    dw gfx_springBallTop, vramDest_ballTop, $0020
+gfxInfo_springBallBottom: db BANK(gfx_springBallBottom)
+    dw gfx_springBallBottom, vramDest_ballBottom, $0020
+
+pickup_variaSuit:
+    .loop:
+            call Call_000_3e93 ; Draw Samus
+            call Call_000_05de ; Handle enemies
+            ld a, BANK(drawHudMetroid)
+            ld [bankRegMirror], a
+            ld [rMBC_BANK_REG], a
+            call drawHudMetroid
+            call Call_000_3e88 ; Clear unused OAM entries
+            ld a, $80
+            ldh [rWY], a
+            call waitOneFrame
+            ld a, [countdownTimerHigh]
+            and a
+        jr nz, .loop
+        ld a, [countdownTimerLow]
+        and a
+    jr nz, .loop
 
     ld a, [samusItems]
     set itemBit_varia, a
@@ -8819,62 +8832,62 @@ jr_000_38b9:
     ld [$cec0], a
     ld a, $ff
     ld [$d08c], a
-    ld hl, $387a
+    ld hl, gfxInfo_variaSuit
     call Call_000_27e3
     xor a
     ld [$d08c], a
-    ld hl, $387a
+    ld hl, gfxInfo_variaSuit
     call Call_000_2753
-    ld hl, $2242
+    ld hl, addr2242
     ld a, [$d04d]
     cp $08
     call z, Call_000_2753
-    call Call_000_3a84
+    call loadExtraSuitGraphics
     jp Jump_000_3a01
 
-pickup_3923:
+pickup_hiJump:
     ld a, [samusItems]
     set itemBit_hiJump, a
     ld [samusItems], a
     jp Jump_000_3a01
 
-pickup_392E:
+pickup_spaceJump:
     ld a, [samusItems]
     set itemBit_space, a
     ld [samusItems], a
     bit itemBit_screw, a
     jr nz, jr_000_3949
 
-    ld hl, $3881
+    ld hl, gfxInfo_spinSpaceTop
     call Call_000_2753
-    ld hl, $3888
+    ld hl, gfxInfo_spinSpaceBottom
     call Call_000_2753
     jp Jump_000_3a01
 
 jr_000_3949:
-    ld hl, $389d
+    ld hl, gfxInfo_spinSpaceScrewTop
     call Call_000_2753
-    ld hl, $38a4
+    ld hl, gfxInfo_spinSpaceScrewBottom
     call Call_000_2753
     jp Jump_000_3a01
 
-pickup_3958:
+pickup_spiderBall:
     ld a, [samusItems]
     set itemBit_spider, a
     ld [samusItems], a
     jp Jump_000_3a01
 
-pickup_3963:
+pickup_springBall:
     ld a, [samusItems]
     set itemBit_spring, a
     ld [samusItems], a
-    ld hl, $38ab
+    ld hl, gfxInfo_springBallTop
     call Call_000_2753
-    ld hl, $38b2
+    ld hl, gfxInfo_springBallBottom
     call Call_000_2753
     jp Jump_000_3a01
 
-pickup_397A:
+pickup_energyTank:
     ld a, [samusEnergyTanks]
     cp $05 ; Max Energy tanks
     jr z, jr_000_3985
@@ -8886,14 +8899,14 @@ pickup_397A:
     ld [samusCurHealthLow], a
     jr jr_000_3a01
 
-pickup_398F:
+pickup_energyRefill:
     ld a, [samusEnergyTanks]
     ld [samusCurHealthHigh], a
     ld a, $99
     ld [samusCurHealthLow], a
     jr jr_000_3a01
 
-pickup_399C:
+pickup_missileRefill:
     ld a, [metroidCountReal]
     and a
     jr nz, jr_000_39b1
@@ -8905,30 +8918,33 @@ pickup_399C:
         ld a, $12
         ldh [gameMode], a
         ret
-jr_000_39b1:
-    ld a, [$d081]
+    jr_000_39b1:
+
+    ld a, [samusMaxMissilesLow]
     ld [samusCurMissilesLow], a
-    ld a, [$d082]
+    ld a, [samusMaxMissilesHigh]
     ld [samusCurMissilesHigh], a
     jr jr_000_3a01
 
-pickup_39BF:
-    ld a, [$d081]
+pickup_missileTank:
+    ; Add 10 to max missiles
+    ld a, [samusMaxMissilesLow]
     add $10
     daa
-    ld [$d081], a
-    ld a, [$d082]
+    ld [samusMaxMissilesLow], a
+    ld a, [samusMaxMissilesHigh]
     adc $00
     daa
-    ld [$d082], a
-    ; Max Missiles = 999
+    ld [samusMaxMissilesHigh], a
+    ; Clamp max missiles at 999
     cp $10
     jr c, jr_000_39df
         ld a, $99
-        ld [$d081], a
+        ld [samusMaxMissilesLow], a
         ld a, $09
-        ld [$d082], a
-jr_000_39df:
+        ld [samusMaxMissilesHigh], a
+    jr_000_39df:
+    
     ; Add 10 to current missiles
     ld a, [samusCurMissilesLow]
     add $10
@@ -8949,44 +8965,40 @@ jr_000_39df:
 
 ; Common routine for all pickups
 Jump_000_3a01:
-jr_000_3a01:
-    call Call_000_3e93
-    call drawHudMetroid_longJump
-    ld a, $02
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $4000
-    call handleAudio
-    call Call_000_3e88
-    ld a, [$d093]
-    cp $0b
-    jr nc, jr_000_3a23
-
-    ld a, $80
-    ldh [rWY], a
-
-jr_000_3a23:
-    call waitForNextFrame
-    ld a, [countdownTimerHigh]
-    and a
-    jr nz, jr_000_3a01
-
-    ld a, [countdownTimerLow]
-    and a
+    jr_000_3a01:
+            call Call_000_3e93
+            call drawHudMetroid_longJump
+            ld a, $02
+            ld [bankRegMirror], a
+            ld [rMBC_BANK_REG], a
+            call $4000
+            call handleAudio
+            call Call_000_3e88
+            ld a, [$d093]
+            cp $0b
+            jr nc, jr_000_3a23
+                ld a, $80
+                ldh [rWY], a
+            jr_000_3a23:
+            
+            call waitForNextFrame
+            ld a, [countdownTimerHigh]
+            and a
+        jr nz, jr_000_3a01
+        ld a, [countdownTimerLow]
+        and a
     jr nz, jr_000_3a01
 
     ld a, [$d093]
     cp $0e
     jr nc, jr_000_3a45
+        ld a, [$cedf]
+        cp $0e
+        jr z, jr_000_3a45
+            ld a, $03
+            ld [$cede], a
+    jr_000_3a45:
 
-    ld a, [$cedf]
-    cp $0e
-    jr z, jr_000_3a45
-
-    ld a, $03
-    ld [$cede], a
-
-jr_000_3a45:
     xor a
     ld [$d093], a
     ld a, $03
@@ -8998,73 +9010,67 @@ jr_000_3a45:
     ld a, [$d071]
     ld [$c468], a
 
-jr_000_3a60:
-    call Call_000_3e93
-    call drawHudMetroid_longJump
-    call Call_000_32ab
-    ld a, $02
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $4000
-    call handleAudio
-    call Call_000_3e88
-    call waitForNextFrame
-    ld a, [$d06d]
-    and a
+    jr_000_3a60:
+        call Call_000_3e93
+        call drawHudMetroid_longJump
+        call Call_000_32ab
+        ld a, $02
+        ld [bankRegMirror], a
+        ld [rMBC_BANK_REG], a
+        call $4000
+        call handleAudio
+        call Call_000_3e88
+        call waitForNextFrame
+        ld a, [$d06d]
+        and a
     jr nz, jr_000_3a60
+ret
 
-    ret
-
-
-Call_000_3a84:
+; Called by the Varia Suit collection routine
+loadExtraSuitGraphics:
     ld a, [samusItems]
     bit itemBit_spring, a
     jr z, jr_000_3a97
+        ld hl, gfxInfo_springBallTop
+        call Call_000_2753
+        ld hl, gfxInfo_springBallBottom
+        call Call_000_2753
+    jr_000_3a97:
 
-    ld hl, $38ab
-    call Call_000_2753
-    ld hl, $38b2
-    call Call_000_2753
-
-jr_000_3a97:
     ld a, [samusItems]
     and itemMask_space | itemMask_screw
     cp itemMask_space | itemMask_screw
     jr nz, jr_000_3aad
+        ld hl, gfxInfo_spinSpaceScrewTop
+        call Call_000_2753
+        ld hl, gfxInfo_spinSpaceScrewBottom
+        call Call_000_2753
+            ret
+    jr_000_3aad:
 
-    ld hl, $389d
-    call Call_000_2753
-    ld hl, $38a4
-    call Call_000_2753
-    ret
-
-
-jr_000_3aad:
     cp $08
     jr nz, jr_000_3abe
+        ld hl, gfxInfo_spinSpaceTop
+        call Call_000_2753
+        ld hl, gfxInfo_spinSpaceBottom
+        call Call_000_2753
+            ret
+    jr_000_3abe:
 
-    ld hl, $3881
-    call Call_000_2753
-    ld hl, $3888
-    call Call_000_2753
-    ret
-
-
-jr_000_3abe:
     cp $04
-    ret nz
+        ret nz
 
-    ld hl, $388f
+    ld hl, gfxInfo_spinScrewTop
     call Call_000_2753
-    ld hl, $3896
+    ld hl, gfxInfo_spinScrewBottom
     call Call_000_2753
-    ret
+ret
 
 ; 00:3ACE
     call Call_000_2390
     ld a, $ff
     ld [$cfe5], a
-    call Call_000_039c
+    call disableLCD
     call clearTilemaps
     xor a
     ldh [hOamBufferIndex], a
@@ -9133,7 +9139,7 @@ jr_000_3b40:
     call Call_000_2390
     ld a, $ff
     ld [$cfe5], a
-    call Call_000_039c
+    call disableLCD
     call clearTilemaps
     xor a
     ldh [hOamBufferIndex], a
@@ -9198,86 +9204,78 @@ jr_000_3baf:
     ret
 
 
-Call_000_3bb4:
+; Loads graphics depending on Samus' loadout
+loadGame_SamusItemGraphics: ; 00:3BB4
     ld a, [samusItems]
     bit itemBit_varia, a
     jr z, jr_000_3bc1
-
-    ld hl, $387a
-    call Call_000_3c3f
-
-jr_000_3bc1:
+        ld hl, gfxInfo_variaSuit
+        call Call_000_3c3f
+    jr_000_3bc1:
+    
     ld a, [samusItems]
     bit itemBit_spring, a
     jr z, jr_000_3bd4
-
-    ld hl, $38ab
-    call Call_000_3c3f
-    ld hl, $38b2
-    call Call_000_3c3f
-
-jr_000_3bd4:
+        ld hl, gfxInfo_springBallTop
+        call Call_000_3c3f
+        ld hl, gfxInfo_springBallBottom
+        call Call_000_3c3f
+    jr_000_3bd4:
+    
     ld a, [samusItems]
     and itemMask_space | itemMask_screw
     cp itemMask_space | itemMask_screw
     jr nz, jr_000_3beb
-
-    ld hl, $389d
-    call Call_000_3c3f
-    ld hl, $38a4
-    call Call_000_3c3f
-    jr jr_000_3c0d
-
-jr_000_3beb:
-    cp $08
+        ld hl, gfxInfo_spinSpaceScrewTop
+        call Call_000_3c3f
+        ld hl, gfxInfo_spinSpaceScrewBottom
+        call Call_000_3c3f
+        jr jr_000_3c0d
+    jr_000_3beb:
+    
+    cp itemMask_space
     jr nz, jr_000_3bfd
+        ld hl, gfxInfo_spinSpaceTop
+        call Call_000_3c3f
+        ld hl, gfxInfo_spinSpaceBottom
+        call Call_000_3c3f
+        jr jr_000_3c0d
+    jr_000_3bfd:
 
-    ld hl, $3881
-    call Call_000_3c3f
-    ld hl, $3888
-    call Call_000_3c3f
-    jr jr_000_3c0d
-
-jr_000_3bfd:
-    cp $04
+    cp itemMask_screw
     jr nz, jr_000_3c0d
+        ld hl, gfxInfo_spinScrewTop
+        call Call_000_3c3f
+        ld hl, gfxInfo_spinScrewBottom
+        call Call_000_3c3f
+    jr_000_3c0d:
 
-    ld hl, $388f
-    call Call_000_3c3f
-    ld hl, $3896
-    call Call_000_3c3f
-
-jr_000_3c0d:
     ld a, [$d04d]
     cp $01
     jr nz, jr_000_3c1c
+        ld hl, gfxInfo_ice
+        call Call_000_3c3f
+        jr jr_000_3c3e
+    jr_000_3c1c:
 
-    ld hl, $37fb
-    call Call_000_3c3f
-    jr jr_000_3c3e
-
-jr_000_3c1c:
     cp $03
     jr nz, jr_000_3c28
+        ld hl, gfxInfo_plasma
+        call Call_000_3c3f
+        jr jr_000_3c3e
+    jr_000_3c28:
 
-    ld hl, $37d6
-    call Call_000_3c3f
-    jr jr_000_3c3e
-
-jr_000_3c28:
     cp $02
     jr nz, jr_000_3c34
+        ld hl, gfxInfo_wave
+        call Call_000_3c3f
+        jr jr_000_3c3e
+    jr_000_3c34:
 
-    ld hl, $3820
-    call Call_000_3c3f
-    jr jr_000_3c3e
-
-jr_000_3c34:
     cp $04
     jr nz, jr_000_3c3e
-
-    ld hl, $37d6
-    call Call_000_3c3f
+        ld hl, gfxInfo_plasma
+        call Call_000_3c3f
 
 jr_000_3c3e:
     ret
@@ -9306,7 +9304,7 @@ Call_000_3c3f:
     ld h, a
 
 jr_000_3c5d:
-    call Call_000_038a
+    call copyToVram
     ret
 
 
@@ -9580,7 +9578,7 @@ gameMode_Credits: ; 00:3E34
     jp creditsRoutine
 
 gameMode_Boot: ; 00:3E3F
-    call Call_000_039c
+    call disableLCD
     call OAM_clearTable
     xor a
     ldh [hOamBufferIndex], a

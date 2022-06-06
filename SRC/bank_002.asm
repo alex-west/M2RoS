@@ -479,25 +479,25 @@ jr_002_42a2:
     ld a, [hl]
     adc $00
     ld [hl], a
-    ld a, [$d082]
+    ld a, [samusMaxMissilesHigh]
     sub [hl]
     jr c, jr_002_42c4
 
     jr nz, jr_002_428b
 
     dec hl
-    ld a, [$d081]
+    ld a, [samusMaxMissilesLow]
     sub [hl]
     jr nc, jr_002_428b
 
     jr jr_002_42c8
 
 jr_002_42c4:
-    ld a, [$d082]
+    ld a, [samusMaxMissilesHigh]
     ld [hl-], a
 
 jr_002_42c8:
-    ld a, [$d081]
+    ld a, [samusMaxMissilesLow]
     ld [hl], a
     jr jr_002_428b
 
@@ -2328,13 +2328,13 @@ jr_002_4e46:
 
     ld a, [samusCurMissilesLow]
     ld b, a
-    ld a, [$d081]
+    ld a, [samusMaxMissilesLow]
     cp b
     jr nz, jr_002_4e5d
 
     ld a, [samusCurMissilesHigh]
     ld b, a
-    ld a, [$d082]
+    ld a, [samusMaxMissilesHigh]
     cp b
     ret z
 

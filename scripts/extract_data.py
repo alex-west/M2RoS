@@ -45,14 +45,20 @@ def printLevelBank(bankNum):
     for screen in range(0x45, 0x80):
         print("; Screen ${:02X}00".format(screen) )
         printBytes(0x100,16)
-    
+
+def printVRAMUpdateEntries(numEntries):
+    for x in range(0, numEntries):
+        print("addr{:04X}: db ${:02X}".format(rom.tell(), romRead(1)))
+        print("    dw ${:04X}, ${:04X}, ${:04X}".format( romRead(2), romRead(2), romRead(2) ))
+
 #TODO: Make this take commandline arguments rather than editing these parameters every time
 rom = open("../Metroid2.gb", "rb")
-source = gb2hex(0x037490)
-#source = 0x0D4B
+#source = gb2hex(0x037490)
+source = 0x2242
 length = 0x30
 columns = 1
 
 rom.seek(source)
 print("; Table")
-printWords(length, columns)
+#printWords(length, columns)
+printVRAMUpdateEntries(3)

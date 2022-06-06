@@ -648,7 +648,7 @@ def samusItems = $D045 ; Samus' equipment
 	def itemMask_spring = %00010000 ; 10: Spring ball
 	def itemMask_spider = %00100000 ; 20: Spider ball
 	def itemMask_varia  = %01000000 ; 40: Varia suit
-	def itemMask_UNUSED = %10000000 ; 40: Varia suit
+	def itemMask_UNUSED = %10000000 ; 80: Unused
 	; For BIT instructions
 	def itemBit_bomb   = 0
 	def itemBit_hiJump = 1
@@ -777,7 +777,9 @@ def titleStarX = $D07C ; Star X position
 def bg_palette  = $D07E ; BG palette
 def ob_palette0 = $D07F ; Object 0 palette
 def ob_palette1 = $D080 ; Object 1 palette
-;$D081: Samus' max missiles, mirror of $D81A?
+
+def samusMaxMissilesLow  = $D081 ; Samus' max missiles, see also $D81A
+def samusMaxMissilesHigh = $D082 ; Samus' max missiles (high byte)
 ;$D083: Earthquake timer
 def samusDispHealthLow  = $D084 ; Samus' health for display,   see also $D051/$D818
 def samusDispHealthHigh = $D085 ; Samus' energy tanks for display, see also $D052/$D819

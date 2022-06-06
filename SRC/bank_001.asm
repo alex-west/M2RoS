@@ -453,7 +453,7 @@ jr_001_4bab:
 jr_001_4bb2:
     ret
 
-
+; 01:4BB3
     ldh a, [hOamBufferIndex]
     ld b, a
     ld a, [$d06e]
@@ -4000,9 +4000,9 @@ jr_001_7b26:
     ld [hl+], a
     ld a, [samusCurHealthHigh]
     ld [hl+], a
-    ld a, [$d081]
+    ld a, [samusMaxMissilesLow]
     ld [hl+], a
-    ld a, [$d082]
+    ld a, [samusMaxMissilesHigh]
     ld [hl+], a
     ld a, [samusCurMissilesLow]
     ld [hl+], a
