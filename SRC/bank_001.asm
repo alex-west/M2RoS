@@ -460,22 +460,21 @@ jr_001_4bb2:
     ld c, a
     cp b
     jr c, jr_001_4bc8
+        ld h, HIGH(wram_oamBuffer)
+        ldh a, [hOamBufferIndex]
+        ld l, a
+    
+        jr_001_4bc2:
+            xor a
+            ld [hl+], a
+            ld a, l
+            cp c
+        jr c, jr_001_4bc2
 
-    ld h, $c0
-    ldh a, [hOamBufferIndex]
-    ld l, a
-
-jr_001_4bc2:
-    xor a
-    ld [hl+], a
-    ld a, l
-    cp c
-    jr c, jr_001_4bc2
-
-jr_001_4bc8:
+    jr_001_4bc8:
     ldh a, [hOamBufferIndex]
     ld [$d06e], a
-    ret
+ret
 
 
     ld hl, $c000
@@ -2875,6 +2874,7 @@ jr_001_58f0:
 
 ; Item message pointers and strings:
 ; 01:58F1
+itemTextPointerTable:
     dw $5911
     dw $5921
     dw $5931

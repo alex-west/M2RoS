@@ -116,7 +116,7 @@ VBlankHandler: ; 00:0154
     and a
     jp nz, Jump_000_2ba3
 
-    ld a, [$d08e]
+    ld a, [doorIndexLow]
     and a
     jp nz, Jump_000_2b8f
 
@@ -316,8 +316,8 @@ mainGameLoop: ; 00:02CD
     ; Clear vram update flag
     xor a
     ld [$de01], a
-    ; Update buttons if not disabled
-    ld a, [$d00e]
+    ; Update buttons if not in a door transition
+    ld a, [doorScrollDirection]
     and a
     call z, main_readInput
     ; Do imporatant stuff
@@ -498,7 +498,7 @@ gameMode_LoadA:
     ld l, a
     ld a, [$d80e]
     ld h, a
-    ld de, $da00
+    ld de, tiletableArray
 
 jr_000_03cb:
     ld a, [hl+]
@@ -544,7 +544,7 @@ jr_000_03db:
     ld a, [$d825]
     ld [metroidCountDisplayed], a
     xor a
-    ld [$d00e], a
+    ld [doorScrollDirection], a
     ld [$d059], a
     ld [$d063], a
     ld [$d047], a
@@ -672,7 +672,7 @@ gameMode_Main:
     jr jr_000_053e
 
 jr_000_0522:
-    ld a, [$d00e]
+    ld a, [doorScrollDirection]
     and a
     jr nz, jr_000_053e
 
@@ -705,7 +705,7 @@ jr_000_0560:
     call drawHudMetroid_longJump
     ldh a, [hOamBufferIndex]
     ld [$d064], a
-    ld a, [$d08e]
+    ld a, [doorIndexLow]
     and a
     jr nz, jr_000_0571
 
@@ -1176,7 +1176,7 @@ Call_000_0886:
     rl d
     sla e
     rl d
-    ld hl, $da00
+    ld hl, tiletableArray
     add hl, de
     ld a, [hl+]
     ld [$d008], a
@@ -1254,17 +1254,20 @@ jr_000_08f9:
 
 
 Call_000_08fe:
-    ld a, [$d00e]
+    ld a, [doorScrollDirection]
     and a
     jp nz, Jump_000_0b44
 
+    ; Get screen index from coordinates
     ldh a, [hCameraYScreen]
     swap a
     ld b, a
     ldh a, [hCameraXScreen]
     or b
-    ld e, a
+    ld e, a    
     ld d, $00
+    
+    ; Load scroll data for screen
     ld hl, $4200
     add hl, de
     ld a, [hl]
@@ -1282,7 +1285,7 @@ Call_000_08fe:
     jr c, jr_000_0991
 
     ld a, $01
-    ld [$d00e], a
+    ld [doorScrollDirection], a
     call Call_000_0c37
     jp Jump_000_0991
 
@@ -1359,7 +1362,7 @@ jr_000_0991:
     jp nc, Jump_000_0a18
 
     ld a, $02
-    ld [$d00e], a
+    ld [doorScrollDirection], a
     ld a, $00
     ldh [hSamusXPixel], a
     ldh a, [hSamusXScreen]
@@ -1476,7 +1479,7 @@ jr_000_0a5e:
     jp c, Jump_000_0b2c
 
     ld a, $08
-    ld [$d00e], a
+    ld [doorScrollDirection], a
     call Call_000_0c37
     jp Jump_000_0ab6
 
@@ -1546,7 +1549,7 @@ Jump_000_0ab6:
     jr nc, jr_000_0b2c
 
     ld a, $04
-    ld [$d00e], a
+    ld [doorScrollDirection], a
     ld a, $00
     ldh [hSamusYPixel], a
     ldh a, [hCameraYScreen]
@@ -1620,7 +1623,7 @@ Jump_000_0b44:
     ld a, [$d072]
     inc a
     ld [$d072], a
-    ld a, [$d00e]
+    ld a, [doorScrollDirection]
     bit 0, a
     jr z, jr_000_0b82
 
@@ -1750,7 +1753,7 @@ jr_000_0bee:
 Jump_000_0c24:
 jr_000_0c24:
     xor a
-    ld [$d00e], a
+    ld [doorScrollDirection], a
     ld [$c463], a
     ld a, [bg_palette]
     cp $93
@@ -1788,6 +1791,7 @@ jr_000_0c4e:
     ld hl, $dd50
     ld [hl], a
     ld [$d09e], a
+    ; Get screen ID from coordinates
     ldh a, [hCameraYScreen]
     swap a
     ld e, a
@@ -1797,13 +1801,13 @@ jr_000_0c4e:
     ld d, $00
     sla e
     rl d
-    ld hl, $4300
+    ld hl, $4300 ; Door transition table
     add hl, de
     ld a, [hl+]
-    ld [$d08e], a
+    ld [doorIndexLow], a
     ld a, [hl]
-    res 3, a
-    ld [$d08f], a
+    res 3, a ; Remove sprite priority bit from door index in ROM
+    ld [doorIndexHigh], a
     ld a, $02
     ld [$c458], a
     xor a
@@ -1817,12 +1821,12 @@ jr_000_0c4e:
     and PADF_START | PADF_SELECT | PADF_B | PADF_A ;$0f
     cp PADF_SELECT | PADF_B ;$06
     ret nz
-
+    ; Force transition to queen
     ld a, $9d
-    ld [$d08e], a
+    ld [doorIndexLow], a
     ld a, $01
-    ld [$d08f], a
-    ret
+    ld [doorIndexHigh], a
+ret
 
 
 Call_000_0ca3:
@@ -1907,7 +1911,7 @@ Jump_000_0d21:
     ldh [hInputPressed], a
 
 jr_000_0d3a:
-    ld a, [$d00e]
+    ld a, [doorScrollDirection]
     and a
     ret nz
 
@@ -5456,39 +5460,43 @@ Call_000_2390:
     call $4003
 ret
 
+;------------------------------------------------------------------------------
 ; Screen Transition decoder
 executeDoorScript: ; 00:239C
-    ld a, [$d08e]
+    ; Check if a door script is queued up
+    ld a, [doorIndexLow]
     ld b, a
-    ld a, [$d08f]
+    ld a, [doorIndexHigh]
     or b
-    jp z, Jump_000_26d7
+    jp z, .endDoorScript
 
     ld a, [$d064]
     ldh [hOamBufferIndex], a
-    call Call_000_3e88
+    call Call_000_3e88 ; Clear unused OAM
     call waitOneFrame
     call OAM_DMA
 	
 	; From the door index, get the pointer and load the script
-    ld a, $05
+    ld a, BANK(doorPointerTable)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    ld a, [$d08e]
+    ; Get index to door script pointer
+    ld a, [doorIndexLow]
     ld e, a
-    ld a, [$d08f]
+    ld a, [doorIndexHigh]
     ld d, a
     sla e
     rl d
     ld hl, doorPointerTable
     add hl, de
+    ; Load door script pointer into HL
     ld a, [hl+]
     ld e, a
     ld a, [hl]
     ld h, a
     ld a, e
     ld l, a
-	
+	; Load door script into buffer
     ld b, doorScriptBufferSize
     ld de, doorScriptBuffer
     .loadDoor:
@@ -5500,523 +5508,497 @@ executeDoorScript: ; 00:239C
 
     ld hl, doorScriptBuffer
 
-Jump_000_23e1:
+.readOneToken:
     ld a, [hl]
-    cp $ff
-    jp nz, Jump_000_23eb
+    cp $ff ; END_DOOR
+    jp nz, .doorToken_load
+        inc hl
+        jp .endDoorScript
 
-    inc hl
-    jp Jump_000_26d7
-
-
-Jump_000_23eb:
+    .doorToken_load:
     and $f0
-    cp $b0
-    jr nz, jr_000_2402
+    cp $b0 ; LOAD_BG/LOAD_SPR
+    jr nz, .doorToken_copy
+        xor a
+        ld [$d088], a
+        ld [$d07d], a
+        ld a, $88
+        ldh [rWY], a
+        call door_loadGraphics
+        jp .nextToken
+        
+    .doorToken_copy:
+    cp $00 ; COPY_DATA/COPY_BG/COPY_SPR
+    jr nz, .doorToken_tiletable
+        xor a
+        ld [$d088], a
+        ld [$d07d], a
+        ld a, $88
+        ldh [rWY], a
+        call door_copyData
+        jp .nextToken
 
-    xor a
-    ld [$d088], a
-    ld [$d07d], a
-    ld a, $88
-    ldh [rWY], a
-    call Call_000_26eb
-    jp Jump_000_26d1
+    .doorToken_tiletable:
+    cp $10 ; TILETABLE
+    jr nz, .doorToken_collision
+        call door_loadTiletable
+        jp .nextToken
 
+    .doorToken_collision:
+    cp $20 ; COLLISION
+    jr nz, .doorToken_solidity
+        call door_loadCollision
+        jp .nextToken
 
-jr_000_2402:
-    cp $00
-    jr nz, jr_000_2417
+    .doorToken_solidity:
+    cp $30 ; SOLIDITY
+    jr nz, .doorToken_warp
+        ld a, [hl+]
+        push hl
+            ; Extract table index from token and get the base address in the solidity table
+            and $0f
+            ld e, a
+            ld d, $00
+            sla e
+            sla e
+            ld a, BANK(solidityIndexTable)
+            ld [bankRegMirror], a
+            ld [rMBC_BANK_REG], a
+            ld hl, solidityIndexTable
+            add hl, de
+            ; Update solidity indexes (working and save buffer copies)
+            ld a, [hl+]
+            ld [$d056], a
+            ld [$d812], a
+            ld a, [hl+]
+            ld [$d069], a
+            ld [$d813], a
+            ld a, [hl+]
+            ld [$d08a], a
+            ld [$d814], a
+        pop hl
+        jp .nextToken
 
-    xor a
-    ld [$d088], a
-    ld [$d07d], a
-    ld a, $88
-    ldh [rWY], a
-    call Call_000_2747
-    jp Jump_000_26d1
+    .doorToken_warp:
+    cp $40 ; WARP
+    jr nz, .doorToken_escapeQueen
+        call door_warp
+        ld a, $01
+        ld [$c458], a
+        ld a, [$d08b]
+        and $0f
+        ld [$d08b], a
+        jp .nextToken
 
+    .doorToken_escapeQueen:
+    cp $50 ; ESCAPE QUEEN
+    jr nz, .doorToken_damage
+        inc hl
+        ldh a, [rIE]
+        res 1, a
+        ldh [rIE], a
+        ld a, $d7
+        ldh [hSamusYPixel], a
+        ld a, $78
+        ldh [hSamusXPixel], a
+        ld a, $c0
+        ldh [hCameraYPixel], a
+        ld a, $80
+        ldh [hCameraXPixel], a
+        ; Source
+        ld a, LOW(hudBaseTilemap) ; bank 5
+        ldh [$b1], a
+        ld a, HIGH(hudBaseTilemap)
+        ldh [$b2], a
+        ; Dest
+        ld a, LOW(vramDest_statusBar)
+        ldh [$b3], a
+        ld a, HIGH(vramDest_statusBar)
+        ldh [$b4], a
+        ; Length
+        ld a, $14
+        ldh [$b5], a
+        ld a, $00
+        ldh [$b6], a
+        
+        ld a, $05
+        ld [$d065], a
+        call Call_000_27ba
+        xor a
+        ld [$c436], a
+        jp .nextToken
 
-jr_000_2417:
-    cp $10
-    jr nz, jr_000_2421
+    .doorToken_damage:
+    cp $60 ; DAMAGE
+    jr nz, .doorToken_exitQueen
+        inc hl
+        ld a, [hl+]
+        ld [acidDamageValue], a
+        ld [$d81f], a
+        ld a, [hl+]
+        ld [spikeDamageValue], a
+        ld [$d820], a
+        jp .nextToken
 
-    call Call_000_282a
-    jp Jump_000_26d1
+    .doorToken_exitQueen:
+    cp $70 ; EXIT_QUEEN
+    jr nz, .doorToken_enterQueen
+        inc hl
+        push hl
+            xor a
+            ld [$d08b], a
+            ld a, $88
+            ldh [rWY], a
+            ld a, $07
+            ldh [rWX], a
+            ldh a, [rIE]
+            res 1, a
+            ldh [rIE], a
+            
+            ld a, LOW(hudBaseTilemap) ; bank 5
+            ldh [$b1], a
+            ld a, HIGH(hudBaseTilemap)
+            ldh [$b2], a
+            
+            ld a, LOW(vramDest_statusBar)
+            ldh [$b3], a
+            ld a, HIGH(vramDest_statusBar)
+            ldh [$b4], a
+            
+            ld a, $14
+            ldh [$b5], a
+            ld a, $00
+            ldh [$b6], a
+            
+            ld a, $05
+            ld [$d065], a
+            call Call_000_27ba
+        pop hl
+        jp .nextToken
 
+    .doorToken_enterQueen:
+    cp $80 ; ENTER_QUEEN
+    jr nz, .doorToken_compare
+        xor a
+        ld [$d03b], a
+        ld [$d03c], a
+        ldh [hOamBufferIndex], a
+        ld [$d0a6], a
+        ld a, $02
+        ld [$cedc], a
+        push hl
+        call Call_000_3eca
+        pop hl
+        call waitOneFrame
+        call OAM_DMA
+        call Call_000_2887
+        ld a, $01
+        ld [$c458], a
+        ld a, $11
+        ld [$d08b], a
+        ldh a, [rIE]
+        set 1, a
+        ldh [rIE], a
+        jp .nextToken
 
-jr_000_2421:
-    cp $20
-    jr nz, jr_000_242b
+    .doorToken_compare:
+    cp $90 ; IF_MET_LESS - comparison operator
+    jr nz, .doorToken_fadeout
+        inc hl
+        ; Compare metroid count to operand
+        ld a, [metroidCountReal]
+        ld b, a
+        ld a, [hl+]
+        cp b
+        jr nc, .loadNewScript
+            inc hl
+            inc hl
+            jp .nextToken
+    
+        .loadNewScript:
+        ld a, [hl+]
+        ld [doorIndexLow], a
+        ld a, [hl]
+        ld [doorIndexHigh], a
+        jp executeDoorScript
 
-    call Call_000_2859
-    jp Jump_000_26d1
+    .doorToken_fadeout:
+    cp $a0 ; FADEOUT
+    jr nz, .doorToken_song
 
+        inc hl
+        push hl
+        call waitOneFrame
+        call waitOneFrame
+        call waitOneFrame
+        call waitOneFrame
+        ld a, $2f
+        ld [countdownTimerLow], a
+    
+        .fadeLoop:
+            ld hl, .fadePaletteTable
+            ld a, [countdownTimerLow]
+            and $f0
+            swap a
+            ld e, a
+            ld d, $00
+            add hl, de
+            ld a, [hl]
+            ld [bg_palette], a
+            ld [ob_palette0], a
+            call waitOneFrame
+            ld a, [countdownTimerLow]
+            cp $0e
+        jr nc, .fadeLoop
+    
+        pop hl
+        xor a
+        ld [countdownTimerLow], a
+        jp .nextToken
+    
+    .fadePaletteTable: db $ff, $fb, $e7 ; 00:259B
 
-jr_000_242b:
-    cp $30
-    jr nz, jr_000_245f
+.doorToken_song:
+    cp $c0 ; SONG
+    jr nz, .doorToken_item
+        ; What the heck is this spaghetti code?
+        ld a, [$cedf]
+        cp $0e
+        jr z, .song_branchC
+            ld a, [hl+]
+            and $0f
+            cp $0a
+            jr z, .song_branchB    
+                ld [$cedc], a
+                ld [$d092], a
+                cp $0b
+                jr nz, .song_branchA
+                    ld a, $ff
+                    ld [$d0a6], a
+                    xor a
+                    ld [$d0a5], a
+                    jp .nextToken
+            
+                .song_branchA:
+                xor a
+                ld [$d0a5], a
+                ld [$d0a6], a
+                jp .nextToken
+        
+            .song_branchB:
+            ld a, $ff
+            ld [$cedc], a
+            ld [$d092], a
+            xor a
+            ld [$d0a5], a
+            ld a, $ff
+            ld [$d0a6], a
+            jp .nextToken
+    
+        .song_branchC:
+        ld a, [hl+]
+        and $0f
+        cp $0a
+        jr z, .song_branchE
+            ld [$d0a5], a
+            cp $0b
+            jr nz, .song_branchD
+                ld a, $ff
+                ld [$d0a6], a
+                jp .nextToken
+        
+            .song_branchD:
+            xor a
+            ld [$d0a6], a
+            jp .nextToken
+    
+        .song_branchE:
+        ld a, $ff
+        ld [$d0a5], a
+        ld [$d0a6], a
+        jp .nextToken
+        
+    .unreferencedTable: db $04, $05, $06, $07, $08, $09, $10, $12 ; 00:260C
 
-    ld a, [hl+]
-    push hl
-    and $0f
-    ld e, a
-    ld d, $00
-    sla e
-    sla e
-    ld a, BANK(solidityIndexTable)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    ld hl, solidityIndexTable
-    add hl, de
-    ld a, [hl+]
-    ld [$d056], a
-    ld [$d812], a
-    ld a, [hl+]
-    ld [$d069], a
-    ld [$d813], a
-    ld a, [hl+]
-    ld [$d08a], a
-    ld [$d814], a
-    pop hl
-    jp Jump_000_26d1
+    .doorToken_item:
+    cp $d0 ; ITEM
+    jp nz, .nextToken
+        ; Load item graphics
+        ld a, BANK(gfx_items)
+        ld [bankRegMirror], a
+        ld [$d065], a
+        ld [rMBC_BANK_REG], a
+        ld a, [hl]
+        push hl
+        dec a
+        and $0f
+        swap a
+        ld e, a
+        ld d, $00
+        sla e
+        rl d
+        sla e
+        rl d
+        ld hl, gfx_items
+        add hl, de
+        ld a, l
+        ldh [$b1], a
+        ld a, h
+        ldh [$b2], a
 
+        ld a, LOW(vramDest_item)
+        ldh [$b3], a
+        ld a, HIGH(vramDest_item)
 
-jr_000_245f:
-    cp $40
-    jr nz, jr_000_2476
+        ldh [$b4], a
+        ld a, $40
+        ldh [$b5], a
+        ld a, $00
+        ldh [$b6], a
+        call Call_000_27ba
+        ; Load item orb
+        ld a, LOW(gfx_itemOrb)
+        ldh [$b1], a
+        ld a, HIGH(gfx_itemOrb)
+        ldh [$b2], a
+        ld a, $00
+        ldh [$b3], a
+        ld a, $8b
+        ldh [$b4], a
+        ld a, $40
+        ldh [$b5], a
+        ld a, $00
+        ldh [$b6], a
+        call Call_000_27ba
+        ; Load item font text
+        ld a, BANK(gfx_itemFont)
+        ld [bankRegMirror], a
+        ld [$d065], a
+        ld [rMBC_BANK_REG], a
+        ld a, LOW(gfx_itemFont) ;$34
+        ldh [$b1], a
+        ld a, HIGH(gfx_itemFont) ;$6c
+        ldh [$b2], a
+        ; VRAM Dest
+        ld a, LOW(vramDest_itemFont)
+        ldh [$b3], a
+        ld a, HIGH(vramDest_itemFont)
+        ldh [$b4], a
+        ; Write length
+        ld a, $30
+        ldh [$b5], a
+        ld a, $02
+        ldh [$b6], a
+        call Call_000_27ba
+    
+        pop hl
+        ld a, BANK(itemTextPointerTable)
+        ld [bankRegMirror], a
+        ld [$d065], a
+        ld [rMBC_BANK_REG], a
+        ld a, [hl+]
+        push hl
+        and $0f
+        ld e, a
+        ld d, $00
+        sla e
+        rl d
+        ld hl, itemTextPointerTable
+        add hl, de
+        ld a, [hl+]
+        ld e, a
+        ld a, [hl]
+        ld h, a
+        ld a, e
+        ld l, a
+        ld a, l
+        ldh [$b1], a
+        ld a, h
+        ldh [$b2], a
+        
+        ld a, LOW(vramDest_itemText)
+        ldh [$b3], a
+        ld a, HIGH(vramDest_itemText)
+        ldh [$b4], a
+        ld a, $10
+        ldh [$b5], a
+        ld a, $00
+        ldh [$b6], a
+        call Call_000_27ba
+        pop hl
+        jr .nextToken
 
-    call Call_000_28fb
-    ld a, $01
-    ld [$c458], a
-    ld a, [$d08b]
-    and $0f
-    ld [$d08b], a
-    jp Jump_000_26d1
-
-
-jr_000_2476:
-    cp $50
-    jr nz, jr_000_24b8
-
-    inc hl
-    ldh a, [rIE]
-    res 1, a
-    ldh [rIE], a
-    ld a, $d7
-    ldh [hSamusYPixel], a
-    ld a, $78
-    ldh [hSamusXPixel], a
-    ld a, $c0
-    ldh [hCameraYPixel], a
-    ld a, $80
-    ldh [hCameraXPixel], a
-    ld a, $f0
-    ldh [$b1], a
-    ld a, $40
-    ldh [$b2], a
-    ld a, $00
-    ldh [$b3], a
-    ld a, $9c
-    ldh [$b4], a
-    ld a, $14
-    ldh [$b5], a
-    ld a, $00
-    ldh [$b6], a
-    ld a, $05
-    ld [$d065], a
-    call Call_000_27ba
-    xor a
-    ld [$c436], a
-    jp Jump_000_26d1
-
-
-jr_000_24b8:
-    cp $60
-    jr nz, jr_000_24ce
-
-    inc hl
-    ld a, [hl+]
-    ld [acidDamageValue], a
-    ld [$d81f], a
-    ld a, [hl+]
-    ld [spikeDamageValue], a
-    ld [$d820], a
-    jp Jump_000_26d1
-
-
-jr_000_24ce:
-    cp $70
-    jr nz, jr_000_250a
-
-    inc hl
-    push hl
-    xor a
-    ld [$d08b], a
-    ld a, $88
-    ldh [rWY], a
-    ld a, $07
-    ldh [rWX], a
-    ldh a, [rIE]
-    res 1, a
-    ldh [rIE], a
-    ld a, $f0
-    ldh [$b1], a
-    ld a, $40
-    ldh [$b2], a
-    ld a, $00
-    ldh [$b3], a
-    ld a, $9c
-    ldh [$b4], a
-    ld a, $14
-    ldh [$b5], a
-    ld a, $00
-    ldh [$b6], a
-    ld a, $05
-    ld [$d065], a
-    call Call_000_27ba
-    pop hl
-    jp Jump_000_26d1
-
-
-jr_000_250a:
-    cp $80
-    jr nz, jr_000_2540
-
-    xor a
-    ld [$d03b], a
-    ld [$d03c], a
-    ldh [hOamBufferIndex], a
-    ld [$d0a6], a
-    ld a, $02
-    ld [$cedc], a
-    push hl
-    call Call_000_3eca
-    pop hl
+.nextToken:
     call waitOneFrame
-    call OAM_DMA
-    call Call_000_2887
-    ld a, $01
-    ld [$c458], a
-    ld a, $11
-    ld [$d08b], a
-    ldh a, [rIE]
-    set 1, a
-    ldh [rIE], a
-    jp Jump_000_26d1
+    jp .readOneToken
 
-
-jr_000_2540:
-    cp $90
-    jr nz, jr_000_255d
-
-    inc hl
-    ld a, [metroidCountReal]
-    ld b, a
-    ld a, [hl+]
-    cp b
-    jr nc, jr_000_2552
-
-    inc hl
-    inc hl
-    jp Jump_000_26d1
-
-
-jr_000_2552:
-    ld a, [hl+]
-    ld [$d08e], a
-    ld a, [hl]
-    ld [$d08f], a
-    jp executeDoorScript
-
-
-jr_000_255d:
-    cp $a0
-    jr nz, jr_000_259e
-
-    inc hl
-    push hl
-    call waitOneFrame
-    call waitOneFrame
-    call waitOneFrame
-    call waitOneFrame
-    ld a, $2f
-    ld [countdownTimerLow], a
-
-jr_000_2574:
-    ld hl, $259b
-    ld a, [countdownTimerLow]
-    and $f0
-    swap a
-    ld e, a
-    ld d, $00
-    add hl, de
-    ld a, [hl]
-    ld [bg_palette], a
-    ld [ob_palette0], a
-    call waitOneFrame
-    ld a, [countdownTimerLow]
-    cp $0e
-    jr nc, jr_000_2574
-
-    pop hl
-    xor a
-    ld [countdownTimerLow], a
-    jp Jump_000_26d1
-
-
-    db $ff, $fb, $e7
-
-jr_000_259e:
-    cp $c0
-    jr nz, jr_000_2614
-
-    ld a, [$cedf]
-    cp $0e
-    jr z, jr_000_25e4
-
-    ld a, [hl+]
-    and $0f
-    cp $0a
-    jr z, jr_000_25d0
-
-    ld [$cedc], a
-    ld [$d092], a
-    cp $0b
-    jr nz, jr_000_25c6
-
-    ld a, $ff
-    ld [$d0a6], a
-    xor a
-    ld [$d0a5], a
-    jp Jump_000_26d1
-
-
-jr_000_25c6:
-    xor a
-    ld [$d0a5], a
-    ld [$d0a6], a
-    jp Jump_000_26d1
-
-
-jr_000_25d0:
-    ld a, $ff
-    ld [$cedc], a
-    ld [$d092], a
-    xor a
-    ld [$d0a5], a
-    ld a, $ff
-    ld [$d0a6], a
-    jp Jump_000_26d1
-
-
-jr_000_25e4:
-    ld a, [hl+]
-    and $0f
-    cp $0a
-    jr z, jr_000_2601
-
-    ld [$d0a5], a
-    cp $0b
-    jr nz, jr_000_25fa
-
-    ld a, $ff
-    ld [$d0a6], a
-    jp Jump_000_26d1
-
-
-jr_000_25fa:
-    xor a
-    ld [$d0a6], a
-    jp Jump_000_26d1
-
-
-jr_000_2601:
-    ld a, $ff
-    ld [$d0a5], a
-    ld [$d0a6], a
-    jp Jump_000_26d1
-
-
-    inc b
-    dec b
-    ld b, $07
-    ld [$1009], sp
-    ld [de], a
-
-jr_000_2614:
-    cp $d0
-    jp nz, Jump_000_26d1
-
-    ; Load item graphics
-    ld a, BANK(gfx_items)
-    ld [bankRegMirror], a
-    ld [$d065], a
-    ld [rMBC_BANK_REG], a
-    ld a, [hl]
-    push hl
-    dec a
-    and $0f
-    swap a
-    ld e, a
-    ld d, $00
-    sla e
-    rl d
-    sla e
-    rl d
-    ld hl, gfx_items
-    add hl, de
-    ld a, l
-    ldh [$b1], a
-    ld a, h
-    ldh [$b2], a
-    ld a, $40
-    ldh [$b3], a
-    ld a, $8b
-    ldh [$b4], a
-    ld a, $40
-    ldh [$b5], a
-    ld a, $00
-    ldh [$b6], a
-    call Call_000_27ba
-	; Load item orb
-    ld a, LOW(gfx_itemOrb)
-    ldh [$b1], a
-    ld a, HIGH(gfx_itemOrb)
-    ldh [$b2], a
-    ld a, $00
-    ldh [$b3], a
-    ld a, $8b
-    ldh [$b4], a
-    ld a, $40
-    ldh [$b5], a
-    ld a, $00
-    ldh [$b6], a
-    call Call_000_27ba
-	; Load item font text
-    ld a, BANK(gfx_itemFont)
-    ld [bankRegMirror], a
-    ld [$d065], a
-    ld [rMBC_BANK_REG], a
-    ld a, LOW(gfx_itemFont) ;$34
-    ldh [$b1], a
-    ld a, HIGH(gfx_itemFont) ;$6c
-    ldh [$b2], a
-	; VRAM Dest
-    ld a, $00
-    ldh [$b3], a
-    ld a, $8c
-    ldh [$b4], a
-	; Write length
-    ld a, $30
-    ldh [$b5], a
-    ld a, $02
-    ldh [$b6], a
-    call Call_000_27ba
-
-    pop hl
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [$d065], a
-    ld [rMBC_BANK_REG], a
-    ld a, [hl+]
-    push hl
-    and $0f
-    ld e, a
-    ld d, $00
-    sla e
-    rl d
-    ld hl, $58f1
-    add hl, de
-    ld a, [hl+]
-    ld e, a
-    ld a, [hl]
-    ld h, a
-    ld a, e
-    ld l, a
-    ld a, l
-    ldh [$b1], a
-    ld a, h
-    ldh [$b2], a
-    ld a, $20
-    ldh [$b3], a
-    ld a, $9c
-    ldh [$b4], a
-    ld a, $10
-    ldh [$b5], a
-    ld a, $00
-    ldh [$b6], a
-    call Call_000_27ba
-    pop hl
-    jr jr_000_26d1
-
-Jump_000_26d1:
-jr_000_26d1:
-    call waitOneFrame
-    jp Jump_000_23e1
-
-
-Jump_000_26d7:
+.endDoorScript:
     ld a, [$c458]
     ld [$c44b], a
     xor a
-    ld [$d08e], a
-    ld [$d08f], a
+    ld [doorIndexLow], a
+    ld [doorIndexHigh], a
     ld [$c458], a
     ld [$d0a8], a
-    ret
+ret
 
 
-Call_000_26eb:
+door_loadGraphics: ; door script load graphics routine
     ld a, [hl+]
     and $0f
     ld b, a
     cp $01
     jr z, jr_000_271c
+        ld a, [hl+]
+        ld [bankRegMirror], a
+        ld [$d065], a
+        ld [rMBC_BANK_REG], a
+        
+        ld a, [hl+]
+        ldh [$b1], a
+        ld [$d808], a
+        
+        ld a, [hl+]
+        ldh [$b2], a
+        ld [$d809], a
+        
+        ld a, LOW(vramDest_enemies)
+        ldh [$b3], a
+        ld a, HIGH(vramDest_enemies)
+        ldh [$b4], a
 
-    ld a, [hl+]
-    ld [bankRegMirror], a
-    ld [$d065], a
-    ld [rMBC_BANK_REG], a
-    ld a, [hl+]
-    ldh [$b1], a
-    ld [$d808], a
-    ld a, [hl+]
-    ldh [$b2], a
-    ld [$d809], a
-    ld a, $00
-    ldh [$b3], a
-    ld a, $8b
-    ldh [$b4], a
-    ld a, $00
-    ldh [$b5], a
-    ld a, $04
-    ldh [$b6], a
+        ld a, $00
+        ldh [$b5], a
+        ld a, $04
+        ldh [$b6], a
     jp Jump_000_27ba
 
-
-jr_000_271c:
-    ld a, [hl+]
-    ld [bankRegMirror], a
-    ld [$d065], a
-    ld [$d80a], a
-    ld [rMBC_BANK_REG], a
-    ld a, [hl+]
-    ldh [$b1], a
-    ld [$d80b], a
-    ld a, [hl+]
-    ldh [$b2], a
-    ld [$d80c], a
-    ld a, $00
-    ldh [$b3], a
-    ld a, $90
-    ldh [$b4], a
-    ld a, $00
-    ldh [$b5], a
-    ld a, $08
-    ldh [$b6], a
+    jr_000_271c:
+        ld a, [hl+]
+        ld [bankRegMirror], a
+        ld [$d065], a
+        ld [$d80a], a
+        ld [rMBC_BANK_REG], a
+        
+        ld a, [hl+]
+        ldh [$b1], a
+        ld [$d80b], a
+        ld a, [hl+]
+        ldh [$b2], a
+        ld [$d80c], a
+        
+        ld a, LOW(vramDest_bgTiles)
+        ldh [$b3], a
+        ld a, HIGH(vramDest_bgTiles)
+        ldh [$b4], a
+        
+        ld a, $00
+        ldh [$b5], a
+        ld a, $08
+        ldh [$b6], a
     jr jr_000_27ba
 
-Call_000_2747:
+door_copyData: ; door script copy data routine
     ld a, [hl+]
     and $0f
     ld b, a
@@ -6031,14 +6013,17 @@ Call_000_2753:
     ld [bankRegMirror], a
     ld [$d065], a
     ld [rMBC_BANK_REG], a
+    
     ld a, [hl+]
     ldh [$b1], a
     ld a, [hl+]
     ldh [$b2], a
+    
     ld a, [hl+]
     ldh [$b3], a
     ld a, [hl+]
     ldh [$b4], a
+    
     ld a, [hl+]
     ldh [$b5], a
     ld a, [hl+]
@@ -6100,10 +6085,10 @@ jr_000_27bf:
 
     call Call_000_3e93
     call Call_000_05de
-    ld a, $01
+    ld a, BANK(drawHudMetroid)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    call $4b2c
+    call drawHudMetroid
     call Call_000_3e88
 
 jr_000_27d9:
@@ -6140,10 +6125,10 @@ jr_000_2804:
     ldh [rWY], a
     call Call_000_3e93
     call Call_000_05de
-    ld a, $01
+    ld a, BANK(drawHudMetroid)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    call $4b2c
+    call drawHudMetroid
     call Call_000_3e88
     call waitOneFrame
     ldh a, [$b4]
@@ -6155,7 +6140,7 @@ jr_000_2804:
     ret
 
 
-Call_000_282a:
+door_loadTiletable:
     ld a, BANK(metatilePointerTable)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -6175,51 +6160,50 @@ Call_000_282a:
     ld h, a
     ld a, b
     ld l, a
-    ld de, $da00
+    ld de, tiletableArray
 
-jr_000_284e:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    ld a, d
-    cp $dc
-    jr nz, jr_000_284e
+    .loop:
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        ld a, d
+        cp $dc
+    jr nz, .loop
 
     jp Jump_000_2918
 
 
-Call_000_2859:
+door_loadCollision:
     ld a, BANK(collisionPointerTable)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     ld a, [hl+]
     push hl
-    and $0f
-    sla a
-    ld e, a
-    ld d, $00
-    ld hl, collisionPointerTable
-    add hl, de
-    ld a, [hl+]
-    ld [$d80f], a
-    ld b, a
-    ld a, [hl+]
-    ld [$d810], a
-    ld h, a
-    ld a, b
-    ld l, a
-    ld de, $dc00
-
-jr_000_287d:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    ld a, d
-    cp $dd
-    jr nz, jr_000_287d
-
+        and $0f
+        sla a
+        ld e, a
+        ld d, $00
+        ld hl, collisionPointerTable
+        add hl, de
+        ld a, [hl+]
+        ld [$d80f], a
+        ld b, a
+        ld a, [hl+]
+        ld [$d810], a
+        ld h, a
+        ld a, b
+        ld l, a
+        ld de, collisionArray
+    
+        .loop:
+            ld a, [hl+]
+            ld [de], a
+            inc de
+            ld a, d
+            cp $dd
+        jr nz, .loop
     pop hl
-    ret
+ret
 
 
 Call_000_2887:
@@ -6271,7 +6255,7 @@ Call_000_2887:
     ld a, $e3
     ldh [rLCDC], a
     xor a
-    ld [$d00e], a
+    ld [doorScrollDirection], a
     ld [$c205], a
     ldh [rSCY], a
     ld a, [bg_palette]
@@ -6286,16 +6270,18 @@ jr_000_28f9:
     ret
 
 
-Call_000_28fb:
+door_warp:
     ld a, [hl+]
     and $0f
     ld [currentLevelBank], a
     ld [$d811], a
+    
     ld a, [hl]
     swap a
     and $0f
     ldh [hCameraYScreen], a
     ldh [hSamusYScreen], a
+    
     ld a, [hl+]
     and $0f
     ldh [hCameraXScreen], a
@@ -6303,23 +6289,24 @@ Call_000_28fb:
     push hl
     call waitOneFrame
 
-Jump_000_2918:
-    ld a, [$d00e]
+Jump_000_2918: ; Rerender screen ahead of Samus
+    ; Right
+    ld a, [doorScrollDirection]
     cp $01
     jr z, jr_000_2939
-
-    ld a, [$d00e]
+    ; Left
+    ld a, [doorScrollDirection]
     cp $02
     jp z, Jump_000_29c4
-
-    ld a, [$d00e]
+    ; Up
+    ld a, [doorScrollDirection]
     cp $04
     jp z, Jump_000_2b04
-
-    ld a, [$d00e]
+    ; Down
+    ld a, [doorScrollDirection]
     cp $08
     jp z, Jump_000_2a4f
-
+    ; None
     pop hl
     ret
 
@@ -6785,7 +6772,7 @@ Call_000_2c79:
     cp $13
     ret z
 
-    ld a, [$d00e]
+    ld a, [doorScrollDirection]
     and a
     ret nz
 
@@ -8803,10 +8790,10 @@ pickup_38B9:
 jr_000_38b9:
     call Call_000_3e93
     call Call_000_05de
-    ld a, $01
+    ld a, BANK(drawHudMetroid)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    call $4b2c
+    call drawHudMetroid
     call Call_000_3e88
     ld a, $80
     ldh [rWY], a

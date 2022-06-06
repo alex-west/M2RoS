@@ -528,7 +528,7 @@ def queenAnimFootDelay = $C3C9;
 ;$D00B: Metatile bottom-right
 ;$D00C: Samus' previous Y position. Used for scrolling, low byte only
 ;$D00D: Auto-fire cooldown counter
-;$D00E: Door transition direction
+def doorScrollDirection = $D00E ; Door transition direction
 ;{
 ;    1: Right
 ;    2: Left
@@ -789,7 +789,8 @@ def metroidCountReal = $D089 ;Real number of metroids remaining (BCD)
 ;$D08B: Metroid Queen's room flag. 11h: In Metroid Queen's room (set by screen transition command 8)
 ;$D08C: Would have guessed a flag for 'can do tiles update' or 'is lag frame'
 ;$D08D: Value for $D05D in $31F1. Projectile type in $1:500D
-;$D08E: Index of screen transition command set. Set to [$4300 + ([screen Y position high] * 10h + [screen X position high]) * 2] & ~800h by set up door transition
+def doorIndexLow  = $D08E ; Index of screen transition command set. Set to [$4300 + ([screen Y position high] * 10h + [screen X position high]) * 2] & ~800h by set up door transition
+def doorIndexHigh = $D08F
 ;$D090: Metroid Queen eating pose
 ;{
 ;    Sets Samus pose = escaping Metroid Queen when 7, checked for 5/20h and set to 6 in in Metroid Queen's mouth
@@ -887,8 +888,9 @@ saveBuf_cameraXScreen: ds 1 ; $D807: Camera X position
 ;    + 1: Y position
 ;    + 2: X position
 ;}
-;$DA00..DBFF: Metatile definitions
-;$DC00..FF: Tile properties. Indexed by tilemap value. Note that tilemap value < 4 is a respawning shot block
+section "Tiletable Array", wramx[$da00]
+tiletableArray:: ds $200 ;$DA00..DBFF: Metatile definitions
+collisionArray:: ds $100 ;$DC00..FF: Tile properties. Indexed by tilemap value. Note that tilemap value < 4 is a respawning shot block
 ;{
 ;    1: Water (also causes morph ball sound effect glitch)
 ;    2: Half-solid floor (can jump through)
