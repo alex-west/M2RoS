@@ -698,7 +698,7 @@ def samusCurMissilesHigh = $D054 ; Samus' missiles (high byte)
 ;    1: BG over sprites
 ;}
 def currentLevelBank = $D058 ; Bank for current room
-;$D059: Death sequence timer
+def deathAnimTimer = $D059 ; Death sequence timer
 ;$D05A: Base address of pixels to clear in Samus' VRAM tiles
 ;$D05C: $32AB acknowledgement flag. $32AB acknowledges this when it executes, cleared every in-game frame. $32AB is called by in-game and item pickup sequence.
 ;$D05D..60: Values for $C466..69 in $2:438F. Guess: generic collision information
@@ -709,7 +709,7 @@ def currentLevelBank = $D058 ; Bank for current room
 ;}
 ;
 ;$D062: Value for $D026 (weird air time variable), set to 40h
-;$D063: Dying flag
+def deathFlag = $D063 ; Dying flag
 ;{
 ;    0: Not dying
 ;    1: Dying
@@ -751,7 +751,7 @@ countdownTimerHigh = $D067; ;  various events
 ;    Fh: Missile refill
 ;}
 ;$D06D: Cleared by loading save. Stop the status bar from updating
-;$D06E: Highest OAM stack pointer
+def maxOamPrevFrame = $D06E ; OAM slots used in by the previous frame
 ;$D06F: Mirror of $C46D? $C466?
 ;$D070: Mirror of $FFFC? $C467?
 ;$D072: Incremented by $0D21 and $08FE
@@ -780,7 +780,7 @@ def ob_palette1 = $D080 ; Object 1 palette
 
 def samusMaxMissilesLow  = $D081 ; Samus' max missiles, see also $D81A
 def samusMaxMissilesHigh = $D082 ; Samus' max missiles (high byte)
-;$D083: Earthquake timer
+;$D083: Earthquake timer (how long the earthquake itself lasts)
 def samusDispHealthLow  = $D084 ; Samus' health for display,   see also $D051/$D818
 def samusDispHealthHigh = $D085 ; Samus' energy tanks for display, see also $D052/$D819
 def samusDispMissilesLow  = $D086 ; Samus' missiles for display, see also $D053/$D81C
@@ -809,7 +809,7 @@ def doorIndexHigh = $D08F
 ;    20h:
 ;    22h: Dying
 ;}
-def earthquakeTimer = $D091 ;Metroid earthquake timer. Counts down in $100h frame intervals after killing a metroid.
+def earthquakeTimer = $D091 ; Time until next Metroid earthquake. Counts down in $100h frame intervals after killing a metroid.
 ;$D092: Song for room
 ;$D093: Mirror of $D06C?
 ;$D094: Mirror of $FFE1?

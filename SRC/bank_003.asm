@@ -1400,8 +1400,8 @@ jr_003_6e2c:
 
     ret
 
-
-    ld a, [$d063]
+queenHandler: ; 03:6E36
+    ld a, [deathFlag]
     and a
     jr z, jr_003_6e4a
 
@@ -3848,9 +3848,10 @@ jr_003_7ce3:
     pop de
     pop bc
     pop af
-    ret
+ret
 
 
+VBlank_drawQueen: ; 03:7CF0
     call queenDrawFeet
     call Call_003_7b69
     ld a, [$c206]
@@ -3978,6 +3979,6 @@ jr_003_7d90:
     ld [$c3ab], a
     ld hl, $ff40
     set 5, [hl]
-    ret
+ret
 
 ; 3:7DAD -- Freespace filled with $00 (nop)

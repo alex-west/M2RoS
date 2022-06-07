@@ -453,27 +453,29 @@ jr_001_4bab:
 jr_001_4bb2:
     ret
 
-; 01:4BB3
+
+clearUnusedOamSlots: ; 01:4BB3
     ldh a, [hOamBufferIndex]
     ld b, a
-    ld a, [$d06e]
+    ld a, [maxOamPrevFrame]
     ld c, a
     cp b
-    jr c, jr_001_4bc8
+    ; Jump ahead if we used more sprites on the previous frame
+    jr c, .endIf
         ld h, HIGH(wram_oamBuffer)
         ldh a, [hOamBufferIndex]
         ld l, a
-    
-        jr_001_4bc2:
+        ; Loop until we reach the max index from the previous frame
+        .loop:
             xor a
             ld [hl+], a
             ld a, l
             cp c
-        jr c, jr_001_4bc2
-
-    jr_001_4bc8:
+        jr c, .loop
+    .endIf:
+    ; Update max index
     ldh a, [hOamBufferIndex]
-    ld [$d06e], a
+    ld [maxOamPrevFrame], a
 ret
 
 

@@ -108,9 +108,9 @@ VBlankHandler: ; 00:0154
     and a
     jp nz, VBlank_drawCreditsLine_longJump
     ; Death sequence drawing routine
-    ld a, [$d059]
+    ld a, [deathAnimTimer]
     and a
-    jp nz, Jump_000_2fe1
+    jp nz, VBlank_deathSequence
     ; Some other VRAM 
     ld a, [$d047]
     and a
@@ -120,6 +120,7 @@ VBlankHandler: ; 00:0154
     and a
     jp nz, Jump_000_2b8f
 
+    ; Branch for queen fight
     ld a, [$d08b]
     cp $11
     jr z, jr_000_01d9
@@ -156,9 +157,11 @@ jr_000_01d9:
     ld [rMBC_BANK_REG], a
     call updateStatusBar
     call OAM_DMA
-    ld a, $03
+    
+    ld a, BANK(VBlank_drawQueen)
     ld [rMBC_BANK_REG], a
-    call $7cf0
+    call VBlank_drawQueen
+    
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
     ld a, $01
@@ -336,26 +339,26 @@ jp mainGameLoop
 main_handleGameMode: ; 0:02F0
     ldh a, [gameMode]
     rst $28
-        dw gameMode_Boot
-        dw gameMode_Title
-        dw gameMode_LoadA
-        dw gameMode_LoadB
-        dw gameMode_Main
-        dw $36B0 ; Dead
-        dw $2F86 ; Dying
-        dw $371B ; Game Over
-        dw gameMode_Paused
-        dw $3CE2 ; Save to SRAM
-        dw $3ACE ; Game Saved screen (unused)
-        dw $3E67 ; New game
-        dw $3E72 ; Load save
-        dw gameMode_None
-        dw gameMode_None
-        dw $3B2F ; from "Game Saved" mode
-        dw $3B43 ; Game cleared
-        dw $3BA1 ; Game cleared (press button to restart)
-        dw gameMode_prepareCredits
-        dw gameMode_Credits
+        dw gameMode_Boot           ; $00
+        dw gameMode_Title          ; $01
+        dw gameMode_LoadA          ; $02
+        dw gameMode_LoadB          ; $03
+        dw gameMode_Main           ; $04
+        dw $36B0                   ; $05 Dead
+        dw gameMode_dying          ; $06 Dying
+        dw $371B                   ; $07 Game Over
+        dw gameMode_Paused         ; $08
+        dw $3CE2                   ; $09 Save to SRAM
+        dw $3ACE                   ; $0A Game Saved screen (unused)
+        dw $3E67                   ; $0B New game
+        dw $3E72                   ; $0C Load save
+        dw gameMode_None           ; $0D
+        dw gameMode_None           ; $0E
+        dw $3B2F                   ; $0F from "Game Saved" mode
+        dw $3B43                   ; $10 Game cleared
+        dw $3BA1                   ; $11 Game cleared (press button to restart)
+        dw gameMode_prepareCredits ; $12
+        dw gameMode_Credits        ; $13
 
 gameMode_None:
     ret
@@ -455,15 +458,15 @@ copyToVram:
     jr nz, .loop
 ret
 
-
-jr_000_0393:
-    ld a, [de]
-    cp $ff
-    ret z
-
-    ld [hl+], a
-    inc de
-    jr jr_000_0393
+; de: source, hl: destination, $FF terminated
+unusedCopyRoutine:
+    .loop:
+        ld a, [de]
+        cp $ff
+            ret z
+        ld [hl+], a
+        inc de
+    jr .loop
 
 TimerOverflowInterruptStub:
     reti
@@ -541,13 +544,13 @@ jr_000_03db:
     ld [metroidCountDisplayed], a
     xor a
     ld [doorScrollDirection], a
-    ld [$d059], a
-    ld [$d063], a
+    ld [deathAnimTimer], a
+    ld [deathFlag], a
     ld [$d047], a
     ld [$d06b], a
     ld [$d06c], a
     ld [$d06d], a
-    ld [$d06e], a
+    ld [maxOamPrevFrame], a
     ld a, $01
     ld [$d08b], a
     ld a, $ff
@@ -709,7 +712,7 @@ jr_000_0560:
     call Call_000_05de ; Handle enemies
 
 jr_000_0571:
-    call Call_000_3e88 ; Clear unused OAM
+    call clearUnusedOamSlots_longJump ; Clear unused OAM
     call Call_000_2c79 ; Handle pausing ?
     ret
 
@@ -755,7 +758,7 @@ jr_000_05cc:
     ldh a, [hOamBufferIndex]
     ld [$d064], a
     call Call_000_05de
-    call Call_000_3e88
+    call clearUnusedOamSlots_longJump
     call Call_000_2c79
     ret
 
@@ -773,10 +776,10 @@ Call_000_05de:
 
 
 jr_000_05f1:
-    ld a, $03
+    ld a, BANK(queenHandler)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    call $6e36
+    call queenHandler
     ret
 
 
@@ -1901,7 +1904,7 @@ Jump_000_0d21:
     ld a, [$d072]
     inc a
     ld [$d072], a
-    ld a, [$d063]
+    ld a, [deathFlag]
     and a
     jr z, jr_000_0d3a
 
@@ -5473,7 +5476,7 @@ executeDoorScript: ; 00:239C
 
     ld a, [$d064]
     ldh [hOamBufferIndex], a
-    call Call_000_3e88 ; Clear unused OAM
+    call clearUnusedOamSlots_longJump ; Clear unused OAM
     call waitOneFrame
     call OAM_DMA
 	
@@ -6090,7 +6093,7 @@ jr_000_27bf:
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     call drawHudMetroid
-    call Call_000_3e88
+    call clearUnusedOamSlots_longJump
 
 jr_000_27d9:
     call waitOneFrame
@@ -6130,7 +6133,7 @@ jr_000_2804:
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     call drawHudMetroid
-    call Call_000_3e88
+    call clearUnusedOamSlots_longJump
     call waitOneFrame
     ldh a, [$b4]
     cp $85
@@ -6658,7 +6661,7 @@ jr_000_2be5:
     pop de
     pop bc
     pop af
-    reti
+reti
 
 
 Jump_000_2bf4:
@@ -6718,7 +6721,7 @@ jr_000_2c34:
     jr nz, jr_000_2c42
 
     xor a
-    ld [$d059], a
+    ld [deathAnimTimer], a
 
 jr_000_2c42:
     ld a, [$c205]
@@ -6807,7 +6810,7 @@ jr_000_2cb2:
 
     xor a
     ldh [hOamBufferIndex], a
-    call Call_000_3e88
+    call clearUnusedOamSlots_longJump
 
 jr_000_2cbe:
     xor a
@@ -6842,7 +6845,7 @@ jr_000_2ce3:
     ld [$cfc7], a
     ld a, $08
     ldh [gameMode], a
-    ret
+ret
 
 gameMode_Paused:
     ; Change palette on a 32 frame cycle (16 frame light/dark phases)
@@ -6886,7 +6889,7 @@ ret
     ld a, $93
     ld [bg_palette], a
     ld [ob_palette0], a
-    call Call_000_3e88
+    call clearUnusedOamSlots_longJump
     ld a, $02
     ld [$cfc7], a
     ld a, $04
@@ -7124,7 +7127,7 @@ debugPauseMenu:
     call $4afc
     
     ldh a, [hOamBufferIndex]
-    ld [$d06e], a
+    ld [maxOamPrevFrame], a
 
     ; Save if pressing select and standing or morphing
     ldh a, [hInputRisingEdge]
@@ -7253,21 +7256,21 @@ jr_000_2f69:
 jr_000_2f85:
     ret
 
-
+gameMode_dying: ; 00:2F86
     ld a, [$d08b]
     cp $11
-    jr nz, jr_000_2fa1
-
-    call Call_000_3e93
-    call drawHudMetroid_longJump
-    ld a, $03
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $6e36
-    call Call_000_3e88
-
-jr_000_2fa1:
-    ret
+    jr nz, .endIf
+        call Call_000_3e93 ; Draw Samus
+        call drawHudMetroid_longJump
+        
+        ld a, BANK(queenHandler)
+        ld [bankRegMirror], a
+        ld [rMBC_BANK_REG], a
+        call queenHandler
+        
+        call clearUnusedOamSlots_longJump
+    .endIf:
+ret
 
 
 Call_000_2fa2:
@@ -7277,16 +7280,16 @@ Call_000_2fa2:
     call waitOneFrame
     call Call_000_3ebf
     ld a, $20
-    ld [$d059], a
+    ld [deathAnimTimer], a
     xor a
     ld [$d05a], a
     ld a, $80
     ld [$d05b], a
     ld a, $01
-    ld [$d063], a
+    ld [deathFlag], a
     ld a, $06
     ldh [gameMode], a
-    ret
+ret
 
 
     ld a, $a0
@@ -7294,7 +7297,7 @@ Call_000_2fa2:
     ld a, $80
     ld [samusPose], a
     ld a, $20
-    ld [$d059], a
+    ld [deathAnimTimer], a
     xor a
     ld [$d05a], a
     ld a, $80
@@ -7302,55 +7305,64 @@ Call_000_2fa2:
     ret
 
 ; Vblank routine for death
-Jump_000_2fe1: ; 00:2FE1
-    ld a, [$d063]
+VBlank_deathSequence: ; 00:2FE1
+    ld a, [deathFlag]
     and a
-    jr z, jr_000_3062
+    jr z, unusedDeathAnimation
 
+    ; Animate once every 4 frames
     ldh a, [frameCounter]
     and $03
-    jr nz, jr_000_3019
+    jr nz, .endIf
+    
+        ; Get starting offset for the erase loop
+        ld hl, deathAnimationTable
+        ld a, [deathAnimTimer]
+        dec a
+        ld e, a
+        ld d, $00
+        add hl, de
+        ld a, [hl]
+        ld l, a
+        ld h, $80
+        ; Increment value
+        ld de, $0020
+    
+        ; Erase one byte of every two tiles for the first 8 rows of VRAM
+        .eraseLoop:
+            xor a
+            ld [hl], a
+            add hl, de
+            ld a, h
+            cp $88
+        jr nz, .eraseLoop
+    
+        ; Decrement death timer
+        ld a, [deathAnimTimer]
+        dec a
+        ld [deathAnimTimer], a
+    
+        jr nz, .endIf
+            ; Officially dead
+            ld a, $ff
+            ld [deathFlag], a
+            ld a, $05
+            ldh [gameMode], a
+    .endIf:
 
-    ld hl, deathAnimationTable
-    ld a, [$d059]
-    dec a
-    ld e, a
-    ld d, $00
-    add hl, de
-    ld a, [hl]
-    ld l, a
-    ld h, $80
-    ld de, $0020
-
-jr_000_2fff:
-    xor a
-    ld [hl], a
-    add hl, de
-    ld a, h
-    cp $88
-    jr nz, jr_000_2fff
-
-    ld a, [$d059]
-    dec a
-    ld [$d059], a
-    jr nz, jr_000_3019
-
-    ld a, $ff
-    ld [$d063], a
-    ld a, $05
-    ldh [gameMode], a
-
-jr_000_3019:
     ld a, [$c205]
     ldh [rSCY], a
     ld a, [$c206]
     ldh [rSCX], a
     call OAM_DMA
-    ld a, $03
+
+    ; Queen vblank handler if necessary
+    ld a, BANK(VBlank_drawQueen)
     ld [rMBC_BANK_REG], a
     ld a, [$d08b]
     cp $11
-    call z, $7cf0
+    call z, VBlank_drawQueen
+
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
     ld a, $01
@@ -7366,53 +7378,53 @@ deathAnimationTable:: ; 00:3042
     db $00, $04, $08, $0c, $10, $14, $18, $1c, $01, $05, $09, $0d, $11, $15, $19, $1d
     db $02, $06, $0a, $0e, $12, $16, $1a, $1e, $03, $07, $0b, $0f, $13, $17, $1b, $1f
 
-jr_000_3062:
+; Only jumped to if the death animation vblank handler is called, but the death flag is not set
+; Which is impossible
+; Possibly not intended as a death animation
+unusedDeathAnimation: ; 00:3062
     ldh a, [frameCounter]
     and $01
-    jr nz, jr_000_309f
+    jr nz, .endIf_A
+        ld a, [$d05a]
+        ld l, a
+        ld a, [$d05b]
+        ld h, a
+        ld de, $0010
+    
+        .eraseLoop:
+            xor a
+            ld [hl], a
+            add hl, de
+            ld a, l
+            and $f0
+        jr nz, .eraseLoop
+    
+        ld a, l
+        sub $ff
+        ld l, a
+        ld a, h
+        sbc $00
+        ld h, a
+        ld a, l
+        cp $10
+        jr nz, .endIf_B
+            add $f0
+            ld l, a
+            ld a, h
+            adc $00
+            ld h, a
+        .endIf_B:
+    
+        ld a, l
+        ld [$d05a], a
+        ld a, h
+        ld [$d05b], a
+        cp $85
+        jr nz, .endIf_A
+            xor a
+            ld [deathAnimTimer], a
+    .endIf_A:
 
-    ld a, [$d05a]
-    ld l, a
-    ld a, [$d05b]
-    ld h, a
-    ld de, $0010
-
-jr_000_3073:
-    xor a
-    ld [hl], a
-    add hl, de
-    ld a, l
-    and $f0
-    jr nz, jr_000_3073
-
-    ld a, l
-    sub $ff
-    ld l, a
-    ld a, h
-    sbc $00
-    ld h, a
-    ld a, l
-    cp $10
-    jr nz, jr_000_308f
-
-    add $f0
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-
-jr_000_308f:
-    ld a, l
-    ld [$d05a], a
-    ld a, h
-    ld [$d05b], a
-    cp $85
-    jr nz, jr_000_309f
-
-    xor a
-    ld [$d059], a
-
-jr_000_309f:
     ld a, [$c205]
     ldh [rSCY], a
     ld a, [$c206]
@@ -7797,7 +7809,7 @@ Call_000_32ab:
     cp $18
     jp nc, Jump_000_3698
 
-    ld a, [$d063]
+    ld a, [deathFlag]
     and a
     jp nz, Jump_000_3698
 
@@ -7818,11 +7830,11 @@ Call_000_32cf:
     cp $18
     jp nc, Jump_000_3698
 
-    ld a, [$d063]
+    ld a, [deathFlag]
     and a
     jp nz, Jump_000_3698
 
-    ld a, [$d059]
+    ld a, [deathAnimTimer]
     and a
     jp nz, Jump_000_3698
 
@@ -8140,7 +8152,7 @@ Call_000_348d:
     cp $18
     jp nc, Jump_000_3698
 
-    ld a, [$d063]
+    ld a, [deathFlag]
     and a
     jp nz, Jump_000_3698
 
@@ -8206,7 +8218,7 @@ Call_000_34ef:
     cp $18
     jp nc, Jump_000_3698
 
-    ld a, [$d063]
+    ld a, [deathFlag]
     and a
     jp nz, Jump_000_3698
 
@@ -8808,7 +8820,7 @@ pickup_variaSuit:
             ld [bankRegMirror], a
             ld [rMBC_BANK_REG], a
             call drawHudMetroid
-            call Call_000_3e88 ; Clear unused OAM entries
+            call clearUnusedOamSlots_longJump ; Clear unused OAM entries
             ld a, $80
             ldh [rWY], a
             call waitOneFrame
@@ -8973,7 +8985,7 @@ Jump_000_3a01:
             ld [rMBC_BANK_REG], a
             call $4000
             call handleAudio
-            call Call_000_3e88
+            call clearUnusedOamSlots_longJump
             ld a, [$d093]
             cp $0b
             jr nc, jr_000_3a23
@@ -9019,7 +9031,7 @@ Jump_000_3a01:
         ld [rMBC_BANK_REG], a
         call $4000
         call handleAudio
-        call Call_000_3e88
+        call clearUnusedOamSlots_longJump
         call waitForNextFrame
         ld a, [$d06d]
         and a
@@ -9582,7 +9594,7 @@ gameMode_Boot: ; 00:3E3F
     call OAM_clearTable
     xor a
     ldh [hOamBufferIndex], a
-    call Call_000_3e88
+    call clearUnusedOamSlots_longJump
     call Call_000_2390
     ld a, BANK(loadTitleScreen)
     ld [bankRegMirror], a
@@ -9615,11 +9627,11 @@ gameMode_Title: ; 00:3E59
     jp $4b62
 
 
-Call_000_3e88:
-    ld a, $01
+clearUnusedOamSlots_longJump:
+    ld a, BANK(clearUnusedOamSlots)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    jp $4bb3
+    jp clearUnusedOamSlots
 
 
 Call_000_3e93:
@@ -9733,7 +9745,7 @@ jr_000_3f34:
     jr nz, jr_000_3f44
 
     xor a
-    ld [$d059], a
+    ld [deathAnimTimer], a
 
 jr_000_3f44:
     ld a, [$c205]

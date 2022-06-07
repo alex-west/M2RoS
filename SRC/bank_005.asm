@@ -329,7 +329,7 @@ titleScreenRoutine: ; 05: 4118
         call drawNonGameSprite_longCall
     jr_005_41cf:
     ; End of display logic for title
-    call clearUnusedOamSlots
+    call title_clearUnusedOamSlots
     
     ; Title input logic
     ldh a, [hInputRisingEdge]
@@ -508,7 +508,8 @@ title_loadGraphics: ; 5:42C7
 ret
 
 ;------------------------------------------------------------------------------
-clearUnusedOamSlots: ; 05:42D4
+; This doesn't contain the weird bookkeeping optimization that the OAM clearing routine in bank 1 has
+title_clearUnusedOamSlots: ; 05:42D4
     ld h, HIGH(wram_oamBuffer)
     ldh a, [hOamBufferIndex]
     ld l, a
@@ -548,7 +549,7 @@ creditsRoutine::
     call credits_moveStars
     call credits_drawStars
     
-    call clearUnusedOamSlots
+    call title_clearUnusedOamSlots
 ret
 
 ;------------------------------------------------------------------------------
