@@ -341,17 +341,17 @@ main_handleGameMode: ; 0:02F0
     rst $28
         dw gameMode_Boot           ; $00
         dw gameMode_Title          ; $01
-        dw gameMode_LoadA          ; $02
-        dw gameMode_LoadB          ; $03
-        dw gameMode_Main           ; $04
+        dw gameMode_LoadA          ; $02 Setup for playing the game
+        dw gameMode_LoadB          ; $03  More setup
+        dw gameMode_Main           ; $04 Actually playing the game
         dw gameMode_dead           ; $05 Dead (prep Game Over screen)
         dw gameMode_dying          ; $06 Dying
         dw gameMode_gameOver       ; $07 Game Over (press button to restart)
         dw gameMode_Paused         ; $08
-        dw $3CE2                   ; $09 Save to SRAM
+        dw gameMode_saveGame       ; $09 Save to SRAM
         dw gameMode_unusedA        ; $0A Prep "Game Saved" screen (unused)
-        dw $3E67                   ; $0B New game
-        dw $3E72                   ; $0C Load save
+        dw gameMode_newGame        ; $0B New game
+        dw gameMode_loadSave       ; $0C Load save
         dw gameMode_None           ; $0D
         dw gameMode_None           ; $0E
         dw gameMode_unusedB        ; $0F from $0A, displays "Game Saved" (unused)
@@ -9201,7 +9201,7 @@ gameMode_unusedC: ; 00:3B43
     ld [countdownTimerLow], a
     ld a, $11
     ldh [gameMode], a
-    ret
+ret
 
 gameClearedText: ; 00:3B94 - "GAME CLEARED"
     db $56, $50, $5C, $54, $FF, $52, $5B, $54, $50, $61, $54, $53, $80
@@ -9294,9 +9294,8 @@ loadGame_SamusItemGraphics: ; 00:3BB4
     jr nz, jr_000_3c3e
         ld hl, gfxInfo_plasma
         call Call_000_3c3f
-
-jr_000_3c3e:
-    ret
+    jr_000_3c3e:
+ret
 
 
 Call_000_3c3f:
@@ -9362,7 +9361,9 @@ loadCreditsText:
     ld [rMBC_BANK_REG], a
 ret
 
+; External Calls
 
+; 00:3C92
     ld a, BANK(earthquakeCheck)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9372,7 +9373,7 @@ ret
     ld [rMBC_BANK_REG], a
 ret
 
-
+; 00:3CA6
     ld a, $03
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9382,7 +9383,7 @@ ret
     ld [rMBC_BANK_REG], a
     ret
 
-
+; 00:3CBA
     ld a, $03
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9392,7 +9393,7 @@ ret
     ld [rMBC_BANK_REG], a
     ret
 
-
+; 00:3CCE
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9402,14 +9403,14 @@ ret
     ld [rMBC_BANK_REG], a
     ret
 
-
+gameMode_saveGame: ; 00:3CE2
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp $7adf
 
 
-Call_000_3ced:
+Call_000_3ced: ; 00:3CED
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9425,7 +9426,7 @@ drawNonGameSprite_longCall: ; 00:3CF8
     ld [rMBC_BANK_REG], a
     ret
 
-
+; 00:3D0C
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9435,7 +9436,7 @@ drawNonGameSprite_longCall: ; 00:3CF8
     ld [rMBC_BANK_REG], a
     ret
 
-
+; 00:3D20
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9445,7 +9446,7 @@ drawNonGameSprite_longCall: ; 00:3CF8
     ld [rMBC_BANK_REG], a
     ret
 
-
+; 00:3D34
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9455,7 +9456,7 @@ drawNonGameSprite_longCall: ; 00:3CF8
     ld [rMBC_BANK_REG], a
     ret
 
-
+; 00:3D48
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9466,7 +9467,7 @@ drawNonGameSprite_longCall: ; 00:3CF8
     ret
 
 
-LCDCInterruptHandler:
+LCDCInterruptHandler: ; 00:3D5C
     push af
     ld a, $03
     ld [rMBC_BANK_REG], a
@@ -9477,55 +9478,55 @@ LCDCInterruptHandler:
 reti
 
 
-Call_000_3d6d:
+Call_000_3d6d: ; 00:3D6D
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp $57f2
 
 
-adjustHudValues_longJump:
+adjustHudValues_longJump: ; 00:3D78
     ld a, BANK(adjustHudValues)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp adjustHudValues
 
 
-Call_000_3d83:
+Call_000_3d83: ; 00:3D83
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp $5692
 
 
-Call_000_3d8e:
+Call_000_3d8e: ; 00:3D8E
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp $500d
 
 
-Call_000_3d99:
+Call_000_3d99: ; 00:3D99
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp $549d
 
 
-Call_000_3da4:
+Call_000_3da4: ; 00:3DA4
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp $5300
 
 
-Jump_000_3daf:
+Jump_000_3daf: ; 00:3DAF
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp $4e8a
 
-
+; 00:3DBA
     ld a, $03
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9535,7 +9536,7 @@ Jump_000_3daf:
     ld [rMBC_BANK_REG], a
     ret
 
-
+; 00:3DCE
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9545,7 +9546,7 @@ Jump_000_3daf:
     ld [rMBC_BANK_REG], a
     ret
 
-
+; 00:3DE2
     ld a, $03
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9555,7 +9556,7 @@ Jump_000_3daf:
     ld [rMBC_BANK_REG], a
     ret
 
-
+; 00:3DF6
     ld a, $03
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9566,7 +9567,7 @@ Jump_000_3daf:
     ret
 
 
-; 3E0A
+; 00:3E0A
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9577,7 +9578,7 @@ Jump_000_3daf:
     ret
 
 
-VBlank_drawCreditsLine_longJump:
+VBlank_drawCreditsLine_longJump: ; 00:3E1E
     ld a, BANK(VBlank_drawCreditsLine)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9615,65 +9616,70 @@ gameMode_Title: ; 00:3E59
     jp titleScreenRoutine
 
 
+gameMode_newGame: ; 00:3E67 - New Game
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp $4e1c
 
 
+gameMode_loadSave: ; 00:3E72 - Load Save
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp $4e33
 
 
+; 00:3E7D
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp $4b62
 
 
-clearUnusedOamSlots_longJump:
+clearUnusedOamSlots_longJump: ; 00:3E88
     ld a, BANK(clearUnusedOamSlots)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp clearUnusedOamSlots
 
 
-Call_000_3e93:
+Call_000_3e93: ; 00:3E93
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp $4bd9
 
 
-drawHudMetroid_longJump:
+drawHudMetroid_longJump: ; 00:3E9E
     ld a, BANK(drawHudMetroid)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp drawHudMetroid
 
 
+; 00:3EA9
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp $4b09
 
 
+; 00:3EB4
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp $4afc
 
 
-Call_000_3ebf:
+Call_000_3ebf: ; 00:3EBF
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     jp $4bf3
 
 
-clearAllOam_longJump:
+clearAllOam_longJump: ; 00:3ECA
     ld a, BANK(clearAllOam)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
