@@ -478,39 +478,35 @@ clearUnusedOamSlots: ; 01:4BB3
     ld [maxOamPrevFrame], a
 ret
 
+clearAllOam: ; 00:4BCE
+    ld hl, wram_oamBuffer
+    .clearLoop:
+        xor a
+        ld [hl+], a
+        ld a, l
+        cp OAM_MAX
+    jr c, .clearLoop
+ret
 
-    ld hl, $c000
-
-jr_001_4bd1:
-    xor a
-    ld [hl+], a
-    ld a, l
-    cp $a0
-    jr c, jr_001_4bd1
-
-    ret
-
-
-    ld a, [$d04f]
+; 01:4BD9: Draw Samus
+    ld a, [samusInvulnerableTimer]
     and a
     jr z, jr_001_4be8
-
-    dec a
-    ld [$d04f], a
-    ldh a, [frameCounter]
-    bit 2, a
-    ret z
-
-jr_001_4be8:
+        dec a
+        ld [samusInvulnerableTimer], a
+        ldh a, [frameCounter]
+        bit 2, a
+        ret z
+    jr_001_4be8:
+    
     ld a, [$d062]
     and a
     jr z, jr_001_4bf3
+        ldh a, [frameCounter]
+        bit 2, a
+        ret z
+    jr_001_4bf3:
 
-    ldh a, [frameCounter]
-    bit 2, a
-    ret z
-
-jr_001_4bf3:
     ld a, [samusPose]
     bit 7, a
     jp nz, Jump_001_4d33
@@ -842,7 +838,7 @@ jr_001_4dc0:
     nop
 
 Jump_001_4ddf:
-    call $3ed5
+    call loadScreenSpritePriorityBit
     ldh a, [hCameraXPixel]
     ld b, a
     ldh a, [hSamusXPixel]
@@ -863,7 +859,7 @@ Jump_001_4ddf:
     and a
     jr nz, jr_001_4e0b
 
-    ld a, [$d04f]
+    ld a, [samusInvulnerableTimer]
     and a
     jr z, jr_001_4e0f
 
@@ -2560,7 +2556,7 @@ jr_001_572a:
     ld [hl+], a
     inc a
     ld [hl], a
-    ld a, [$d04f]
+    ld a, [samusInvulnerableTimer]
     and a
     ret nz
 

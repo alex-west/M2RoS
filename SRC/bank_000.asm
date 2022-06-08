@@ -344,19 +344,19 @@ main_handleGameMode: ; 0:02F0
         dw gameMode_LoadA          ; $02
         dw gameMode_LoadB          ; $03
         dw gameMode_Main           ; $04
-        dw $36B0                   ; $05 Dead
+        dw gameMode_dead           ; $05 Dead (prep Game Over screen)
         dw gameMode_dying          ; $06 Dying
-        dw $371B                   ; $07 Game Over
+        dw gameMode_gameOver       ; $07 Game Over (press button to restart)
         dw gameMode_Paused         ; $08
         dw $3CE2                   ; $09 Save to SRAM
-        dw $3ACE                   ; $0A Game Saved screen (unused)
+        dw gameMode_unusedA        ; $0A Prep "Game Saved" screen (unused)
         dw $3E67                   ; $0B New game
         dw $3E72                   ; $0C Load save
         dw gameMode_None           ; $0D
         dw gameMode_None           ; $0E
-        dw $3B2F                   ; $0F from "Game Saved" mode
-        dw $3B43                   ; $10 Game cleared
-        dw $3BA1                   ; $11 Game cleared (press button to restart)
+        dw gameMode_unusedB        ; $0F from $0A, displays "Game Saved" (unused)
+        dw gameMode_unusedC        ; $10 Prep "Game Cleared" screen (unused)
+        dw gameMode_unusedD        ; $11 from $10, displays "Game Cleared" (unused)
         dw gameMode_prepareCredits ; $12
         dw gameMode_Credits        ; $13
 
@@ -650,7 +650,7 @@ gameMode_Main:
     ld b, a
     ld a, [samusDispHealthHigh]
     or b
-    call z, Call_000_2fa2
+    call z, killSamus
     ldh a, [hSamusYPixel]
     ld [$d029], a
     ldh a, [hSamusYScreen]
@@ -680,7 +680,7 @@ jr_000_0522:
     ld [$d05c], a
     call Call_000_2ee3 ; Damage Samus
     call Call_000_0d21 ; Samus pose handler
-    call Call_000_32ab ; ? Handle spawning enemies
+    call Call_000_32ab ; ? Samus/enemy collision logic
     call Call_000_21fb ; Handle toggling cannon
     call Call_000_3d8e ; Handle projectiles
     call Call_000_3d99 ; Handle bombs
@@ -723,7 +723,7 @@ Jump_000_0578:
     ld b, a
     ld a, [samusDispHealthHigh]
     or b
-    call z, Call_000_2fa2
+    call z, killSamus
     ldh a, [hSamusYPixel]
     ld [$d029], a
     ldh a, [hSamusYScreen]
@@ -1848,7 +1848,7 @@ Call_000_0ca3:
     ldh [hSamusYScreen], a
     
     xor a
-    ld [$d04f], a
+    ld [samusInvulnerableTimer], a
     
     ld a, [$d815]
     ld [samusItems], a
@@ -2220,7 +2220,7 @@ jr_000_0ee7:
     ret c
 
     xor a
-    ld [$d04f], a
+    ld [samusInvulnerableTimer], a
     ld a, $21
     ld [$d026], a
     ld a, $02
@@ -2269,7 +2269,7 @@ Jump_000_0f47:
     jr z, jr_000_0f6c
 
     xor a
-    ld [$d04f], a
+    ld [samusInvulnerableTimer], a
     ld a, $2e
     ld [$d026], a
     ld a, $06
@@ -5041,7 +5041,7 @@ jr_000_200d:
     ld a, [hl]
     and b
     ld b, a
-    ld a, [$d04f]
+    ld a, [samusInvulnerableTimer]
     and a
     jr nz, jr_000_2039
 
@@ -5691,7 +5691,7 @@ executeDoorScript: ; 00:239C
         ld a, $02
         ld [$cedc], a
         push hl
-        call Call_000_3eca
+        call clearAllOam_longJump
         pop hl
         call waitOneFrame
         call OAM_DMA
@@ -7155,14 +7155,15 @@ Call_000_2ee3:
 
     xor a
     ld [$c422], a
-    ld a, [$d04f]
+    ld a, [samusInvulnerableTimer]
     and a
     ret nz
 
     ld a, [$c424]
     call Call_000_2f57
+    ; Give Samus i-frames
     ld a, $33
-    ld [$d04f], a
+    ld [samusInvulnerableTimer], a
     ld a, [samusPose]
     res 7, a
     ld e, a
@@ -7273,14 +7274,18 @@ gameMode_dying: ; 00:2F86
 ret
 
 
-Call_000_2fa2:
-    call Call_000_2390
+killSamus: ; Kill Samus
+    call Call_000_2390 ; Music related
+
     ld a, $0b
     ld [$ced5], a
     call waitOneFrame
-    call Call_000_3ebf
+    call Call_000_3ebf ; Draw Samus regardless of i-frames
+
+    ; Set timer
     ld a, $20
     ld [deathAnimTimer], a
+
     xor a
     ld [$d05a], a
     ld a, $80
@@ -7379,7 +7384,7 @@ deathAnimationTable:: ; 00:3042
     db $02, $06, $0a, $0e, $12, $16, $1a, $1e, $03, $07, $0b, $0f, $13, $17, $1b, $1f
 
 ; Only jumped to if the death animation vblank handler is called, but the death flag is not set
-; Which is impossible
+;  which is impossible
 ; Possibly not intended as a death animation
 unusedDeathAnimation: ; 00:3062
     ldh a, [frameCounter]
@@ -7440,7 +7445,7 @@ unusedDeathAnimation: ; 00:3062
     pop af
 reti
 
-
+; 00:30BB - Bomb-enemy collision detection
     ldh a, [hSpriteYPixel]
     ldh [$98], a
     ldh a, [hSpriteXPixel]
@@ -7804,7 +7809,8 @@ jr_000_32a7:
     ret
 
 
-Call_000_32ab:
+Call_000_32ab: ; Samus enemy collision detection ?
+    ; Conditions for exiting early early
     ld a, [samusPose]
     cp $18
     jp nc, Jump_000_3698
@@ -7813,7 +7819,7 @@ Call_000_32ab:
     and a
     jp nz, Jump_000_3698
 
-    ld a, [$d04f]
+    ld a, [samusInvulnerableTimer]
     and a
     jp nz, Jump_000_3698
 
@@ -7838,7 +7844,7 @@ Call_000_32cf:
     and a
     jp nz, Jump_000_3698
 
-    ld a, [$d04f]
+    ld a, [samusInvulnerableTimer]
     and a
     jp nz, Jump_000_3698
 
@@ -8156,7 +8162,7 @@ Call_000_348d:
     and a
     jp nz, Jump_000_3698
 
-    ld a, [$d04f]
+    ld a, [samusInvulnerableTimer]
     and a
     jp nz, Jump_000_3698
 
@@ -8222,7 +8228,7 @@ Call_000_34ef:
     and a
     jp nz, Jump_000_3698
 
-    ld a, [$d04f]
+    ld a, [samusInvulnerableTimer]
     and a
     jp nz, Jump_000_3698
 
@@ -8529,21 +8535,18 @@ Jump_000_3698:
     ret
 
 
+; 00: 369B
     db $ec, $f4, $fc, $ec, $f6, $04, $04, $ec, $04, $ec, $ec, $04, $04, $04, $04, $ec
+    db $04, $ec, $04, $ec, $04
 
-    inc b
-
-    db $ec, $04
-
-    db $ec
-    inc b
-
-jr_000_36b0:
-    call handleAudio
-    call waitForNextFrame
-    ld a, [$ced6]
-    cp $0b
-    jr z, jr_000_36b0
+gameMode_dead: ; 00:36B0
+    ; Wait until the death sound ends
+    .loopWaitSilence:
+        call handleAudio
+        call waitForNextFrame
+        ld a, [$ced6]
+        cp $0b
+    jr z, .loopWaitSilence
 
     xor a
     ld [$d08b], a
@@ -8551,36 +8554,38 @@ jr_000_36b0:
     call clearTilemaps
     xor a
     ldh [hOamBufferIndex], a
-    call Call_000_3eca
-    ld a, $05
+    call clearAllOam_longJump
+
+    ; Load graphics for Game Over screen
+    ld a, BANK(gfx_titleScreen)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    ld hl, $5f34
+    ld hl, gfx_titleScreen
     ld de, $8800
     ld bc, $1000
 
-jr_000_36de:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    dec bc
-    ld a, b
-    or c
-    jr nz, jr_000_36de
+    .loadGfxLoop:
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        dec bc
+        ld a, b
+        or c
+    jr nz, .loadGfxLoop
 
-    ld hl, $3711
-    ld de, $9906
+    ld hl, gameOverText
+    ld de, $9800 + (8*$20) + $6 ; Tilemap address for text
 
-jr_000_36ec:
-    ld a, [hl+]
-    cp $80
-    jr z, jr_000_36f5
+    .loadTextLoop:
+        ld a, [hl+]
+        cp $80
+            jr z, .exitLoop
+        ld [de], a
+        inc de
+    jr .loadTextLoop
+    
+    .exitLoop:
 
-    ld [de], a
-    inc de
-    jr jr_000_36ec
-
-jr_000_36f5:
     xor a
     ld [$c205], a
     ld [$c206], a
@@ -8589,27 +8594,28 @@ jr_000_36f5:
     ld a, $c3
     ld [$c219], a
     ldh [rLCDC], a
+    ; Set timer for Game Over screen
     ld a, $ff
     ld [countdownTimerLow], a
     ld a, $07
     ldh [gameMode], a
-    ret
+ret
 
-
+gameOverText: ; 00:3711 - "GAME OVER"
     db $56, $50, $5c, $54, $ff, $5e, $65, $54, $61, $80
 
+; Reboot game if a certain amount of time has elapsed, or if start is pressed
+gameMode_gameOver: ; 00:371B
     call handleAudio
     call waitForNextFrame
     ld a, [countdownTimerLow]
     and a
-    jr z, jr_000_372c
-
-    ldh a, [hInputRisingEdge]
-    cp PADF_START
-    ret nz
-
-jr_000_372c:
-    jp bootRoutine
+    jr z, .reboot
+        ldh a, [hInputRisingEdge]
+        cp PADF_START
+            ret nz
+    .reboot:
+jp bootRoutine
 
 ;------------------------------------------------------------------------------
 ; Handle item pick-up
@@ -9078,7 +9084,7 @@ loadExtraSuitGraphics:
     call Call_000_2753
 ret
 
-; 00:3ACE
+gameMode_unusedA: ; 00:3ACE
     call Call_000_2390
     ld a, $ff
     ld [$cfe5], a
@@ -9086,36 +9092,37 @@ ret
     call clearTilemaps
     xor a
     ldh [hOamBufferIndex], a
-    call Call_000_3eca
-    ld a, $05
+    call clearAllOam_longJump
+    
+    ld a, BANK(gfx_titleScreen)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    ld hl, $5f34
-    ld de, $8000
+    ld hl, gfx_titleScreen
+    ld de, $8000 ; Should be $8800
     ld bc, $1800
 
-jr_000_3af3:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    dec bc
-    ld a, b
-    or c
-    jr nz, jr_000_3af3
+    .loadGfxLoop:
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        dec bc
+        ld a, b
+        or c
+    jr nz, .loadGfxLoop
 
-    ld hl, $3b24
-    ld de, $9905
+    ld hl, gameSavedText
+    ld de, $9800 + (8*$20) + $5 ; Tilemap address for text destination
 
-jr_000_3b01:
-    ld a, [hl+]
-    cp $80
-    jr z, jr_000_3b0a
+    .loadTextLoop:
+        ld a, [hl+]
+        cp $80
+            jr z, .exitLoop
+        ld [de], a
+        inc de
+    jr .loadTextLoop
 
-    ld [de], a
-    inc de
-    jr jr_000_3b01
+    .exitLoop:
 
-jr_000_3b0a:
     xor a
     ld [$c205], a
     ld [$c206], a
@@ -9123,31 +9130,29 @@ jr_000_3b0a:
     ldh [rLCDC], a
     ld a, $a0
     ld [countdownTimerLow], a
+    ; Game mode $F doesn't even read this
     ld a, $01
     ld [countdownTimerHigh], a
     ld a, $0f
     ldh [gameMode], a
-    ret
+ret
 
-; 00:3B24
-; "GAME SAVED"
+gameSavedText: ; 00:3B24 - "GAME SAVED"
     db $56, $50, $5C, $54, $FF, $62, $50, $65, $54, $53, $80
 
-; 00:3B2F
+gameMode_unusedB: ; 00:3B2F
     call handleAudio
     call waitForNextFrame
     ld a, [countdownTimerLow]
     and a
-    jr z, jr_000_3b40
+    jr z, .reboot
+        ldh a, [hInputRisingEdge]
+        cp PADF_START
+            ret nz
+    .reboot:
+jp bootRoutine
 
-    ldh a, [hInputRisingEdge]
-    cp PADF_START
-    ret nz
-
-jr_000_3b40:
-    jp bootRoutine
-
-; 00:3B43
+gameMode_unusedC: ; 00:3B43
     call Call_000_2390
     ld a, $ff
     ld [$cfe5], a
@@ -9155,36 +9160,38 @@ jr_000_3b40:
     call clearTilemaps
     xor a
     ldh [hOamBufferIndex], a
-    call Call_000_3eca
-    ld a, $05
+    call clearAllOam_longJump
+
+    ld a, BANK(gfx_titleScreen)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    ld hl, $5f34
+    ld hl, gfx_titleScreen
     ld de, $8800
     ld bc, $1000
 
-jr_000_3b68:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    dec bc
-    ld a, b
-    or c
-    jr nz, jr_000_3b68
+    .loadGfxLoop:
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        dec bc
+        ld a, b
+        or c
+    jr nz, .loadGfxLoop
 
-    ld hl, $3b94
-    ld de, $9904
+    ld hl, gameClearedText
+    ld de, $9800 + (8*$20) + $4 ; Tilemap address for text
 
-jr_000_3b76:
-    ld a, [hl+]
-    cp $80
-    jr z, jr_000_3b7f
+    .loadTextLoop:
+        ld a, [hl+]
+        cp $80
+        jr z, .exitLoop
+    
+        ld [de], a
+        inc de
+    jr .loadTextLoop
 
-    ld [de], a
-    inc de
-    jr jr_000_3b76
+    .exitLoop:
 
-jr_000_3b7f:
     xor a
     ld [$c205], a
     ld [$c206], a
@@ -9196,24 +9203,23 @@ jr_000_3b7f:
     ldh [gameMode], a
     ret
 
-; "GAME CLEARED" ?
-; 00:3B94
+gameClearedText: ; 00:3B94 - "GAME CLEARED"
     db $56, $50, $5C, $54, $FF, $52, $5B, $54, $50, $61, $54, $53, $80
 
-; 00:3BA1 
+gameMode_unusedD: ; 00:3BA1
+    ; call handleAudio ; This ain't called here
     call waitForNextFrame
     ld a, [countdownTimerLow]
     and a
-    jr z, jr_000_3baf
-
-    ldh a, [hInputRisingEdge]
-    cp PADF_START
-    ret nz
-
-jr_000_3baf:
+    jr z, .reboot
+        ldh a, [hInputRisingEdge]
+        cp PADF_START
+            ret nz
+    .reboot:
+    ; The other two routines like this do this instead: jp bootRoutine
     ld a, $00
     ldh [gameMode], a
-    ret
+ret
 
 
 ; Loads graphics depending on Samus' loadout
@@ -9667,41 +9673,49 @@ Call_000_3ebf:
     jp $4bf3
 
 
-Call_000_3eca:
-    ld a, $01
+clearAllOam_longJump:
+    ld a, BANK(clearAllOam)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    jp $4bce
+    jp clearAllOam
 
 
+; Extracts the sprite priority bit that is bit-packed with the door transition index using the bitmask (0x0800)
+; (I don't know why they didn't store these bits with the scroll bytes)
+loadScreenSpritePriorityBit: ; 00:3ED5
     ld a, [currentLevelBank]
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
+    ; Get screen index from coordinates
     ldh a, [hSamusYScreen]
     swap a
     ld e, a
     ldh a, [hSamusXScreen]
     add e
+    ; Get the address of the door transition index
     ld e, a
     ld d, $00
     sla e
     rl d
-    ld hl, $4300
+    ld hl, $4300 ; Base address for door transition indexes
     add hl, de
+    ; Load the high byte of the transition index
     inc hl
     ld a, [hl]
+    ; Rotate the relavent bit to the LSB and store it
     swap a
     rlc a
     and $01
     xor $01
     ld [$d057], a
+    ; Return to the callee
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    ret
+ret
 
 ; 00:3F07
-; unused
+; unused (duplicate of the routine at 00:3062)
     ldh a, [frameCounter]
     and $01
     jr nz, jr_000_3f44

@@ -675,7 +675,8 @@ def debugItemIndex = $D046 ; Debug screen selector index
 ;    8: Missile
 ;}
 def bankRegMirror = $D04E ;Bank
-;$D04F: Invincibility timer
+def samusInvulnerableTimer = $D04F ; Invincibility timer
+def samusEnergyTanks   = $D050 ; Samus' max health, in tanks,     see also $D817
 def samusEnergyTanks   = $D050 ; Samus' max health, in tanks,     see also $D817
 def samusCurHealthLow  = $D051 ; Samus' current health,           see also $D818/$D084
 def samusCurHealthHigh = $D052 ; Samus' current health (in tanks) see also $D819/$D085
