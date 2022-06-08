@@ -9048,34 +9048,34 @@ ret
 loadExtraSuitGraphics:
     ld a, [samusItems]
     bit itemBit_spring, a
-    jr z, jr_000_3a97
+    jr z, .endIf_spring
         ld hl, gfxInfo_springBallTop
         call Call_000_2753
         ld hl, gfxInfo_springBallBottom
         call Call_000_2753
-    jr_000_3a97:
+    .endIf_spring:
 
     ld a, [samusItems]
     and itemMask_space | itemMask_screw
     cp itemMask_space | itemMask_screw
-    jr nz, jr_000_3aad
+    jr nz, .endIf_spinBoth
         ld hl, gfxInfo_spinSpaceScrewTop
         call Call_000_2753
         ld hl, gfxInfo_spinSpaceScrewBottom
         call Call_000_2753
             ret
-    jr_000_3aad:
+    .endIf_spinBoth:
 
-    cp $08
-    jr nz, jr_000_3abe
+    cp itemMask_space
+    jr nz, .endIf_space
         ld hl, gfxInfo_spinSpaceTop
         call Call_000_2753
         ld hl, gfxInfo_spinSpaceBottom
         call Call_000_2753
             ret
-    jr_000_3abe:
+    .endIf_space:
 
-    cp $04
+    cp itemMask_screw
         ret nz
 
     ld hl, gfxInfo_spinScrewTop
@@ -9226,75 +9226,77 @@ ret
 loadGame_SamusItemGraphics: ; 00:3BB4
     ld a, [samusItems]
     bit itemBit_varia, a
-    jr z, jr_000_3bc1
+    jr z, .endIf_varia
         ld hl, gfxInfo_variaSuit
         call Call_000_3c3f
-    jr_000_3bc1:
+    .endIf_varia:
     
     ld a, [samusItems]
     bit itemBit_spring, a
-    jr z, jr_000_3bd4
+    jr z, .endIf_spring
         ld hl, gfxInfo_springBallTop
         call Call_000_3c3f
         ld hl, gfxInfo_springBallBottom
         call Call_000_3c3f
-    jr_000_3bd4:
+    .endIf_spring:
     
-    ld a, [samusItems]
-    and itemMask_space | itemMask_screw
-    cp itemMask_space | itemMask_screw
-    jr nz, jr_000_3beb
-        ld hl, gfxInfo_spinSpaceScrewTop
-        call Call_000_3c3f
-        ld hl, gfxInfo_spinSpaceScrewBottom
-        call Call_000_3c3f
-        jr jr_000_3c0d
-    jr_000_3beb:
+    ld a, [samusItems] ; Load spin jump graphics
+        and itemMask_space | itemMask_screw
+        cp itemMask_space | itemMask_screw
+        jr nz, .endIf_spinBoth
+            ld hl, gfxInfo_spinSpaceScrewTop
+            call Call_000_3c3f
+            ld hl, gfxInfo_spinSpaceScrewBottom
+            call Call_000_3c3f
+            jr .endSpinBranch
+        .endIf_spinBoth:
+        
+        cp itemMask_space
+        jr nz, .endIf_space
+            ld hl, gfxInfo_spinSpaceTop
+            call Call_000_3c3f
+            ld hl, gfxInfo_spinSpaceBottom
+            call Call_000_3c3f
+            jr .endSpinBranch
+        .endIf_space:
     
-    cp itemMask_space
-    jr nz, jr_000_3bfd
-        ld hl, gfxInfo_spinSpaceTop
-        call Call_000_3c3f
-        ld hl, gfxInfo_spinSpaceBottom
-        call Call_000_3c3f
-        jr jr_000_3c0d
-    jr_000_3bfd:
+        cp itemMask_screw
+        jr nz, .endIf_screw
+            ld hl, gfxInfo_spinScrewTop
+            call Call_000_3c3f
+            ld hl, gfxInfo_spinScrewBottom
+            call Call_000_3c3f
+        .endIf_screw:
+    .endSpinBranch:
 
-    cp itemMask_screw
-    jr nz, jr_000_3c0d
-        ld hl, gfxInfo_spinScrewTop
-        call Call_000_3c3f
-        ld hl, gfxInfo_spinScrewBottom
-        call Call_000_3c3f
-    jr_000_3c0d:
-
-    ld a, [$d04d]
-    cp $01
-    jr nz, jr_000_3c1c
-        ld hl, gfxInfo_ice
-        call Call_000_3c3f
-        jr jr_000_3c3e
-    jr_000_3c1c:
-
-    cp $03
-    jr nz, jr_000_3c28
-        ld hl, gfxInfo_plasma
-        call Call_000_3c3f
-        jr jr_000_3c3e
-    jr_000_3c28:
-
-    cp $02
-    jr nz, jr_000_3c34
-        ld hl, gfxInfo_wave
-        call Call_000_3c3f
-        jr jr_000_3c3e
-    jr_000_3c34:
-
-    cp $04
-    jr nz, jr_000_3c3e
-        ld hl, gfxInfo_plasma
-        call Call_000_3c3f
-    jr_000_3c3e:
+    ld a, [$d04d] ; Load beam graphics
+        cp $01
+        jr nz, .endIf_ice
+            ld hl, gfxInfo_ice
+            call Call_000_3c3f
+            jr .endBeamBranch
+        .endIf_ice:
+    
+        cp $03
+        jr nz, .endIf_spazer
+            ld hl, gfxInfo_plasma
+            call Call_000_3c3f
+            jr .endBeamBranch
+        .endIf_spazer:
+    
+        cp $02
+        jr nz, .endIf_wave
+            ld hl, gfxInfo_wave
+            call Call_000_3c3f
+            jr .endBeamBranch
+        .endIf_wave:
+    
+        cp $04
+        jr nz, .endIf_plasma
+            ld hl, gfxInfo_plasma
+            call Call_000_3c3f
+        .endIf_plasma:
+    .endBeamBranch:
 ret
 
 
