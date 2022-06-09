@@ -537,38 +537,38 @@ jr_001_4c10:
 jr_001_4c19:
     ld a, [samusPose]
     rst $28
-        dw $4D45
-        dw $4CBD
-        dw $4CEE
-        dw $4D77
-        dw $4D65
-        dw $4C94
-        dw $4C94
-        dw $4CBD
-        dw $4C94
-        dw $4CCC
-        dw $4CCC
-        dw $4C6B
-        dw $4C6B
-        dw $4C6B
-        dw $4C6B
-        dw $4C59
-        dw $4C94
-        dw $4C59
-        dw $4C94
-        dw $4D33
-        dw $4D33
-        dw $4D33
-        dw $4D33
-        dw $4D33
-        dw $4C94
-        dw $4C94
-        dw $4C94
-        dw $4C94
-        dw $4C94
-        dw $4C94
+        dw drawSamus_4D45 ; $00
+        dw drawSamus_4CBD ; $01
+        dw drawSamus_4CEE ; $02
+        dw drawSamus_4D77 ; $03
+        dw drawSamus_4D65 ; $04
+        dw drawSamus_4C94 ; $05
+        dw drawSamus_4C94 ; $06
+        dw drawSamus_4CBD ; $07
+        dw drawSamus_4C94 ; $08
+        dw drawSamus_4CCC ; $09
+        dw drawSamus_4CCC ; $0A
+        dw drawSamus_4C6B ; $0B
+        dw drawSamus_4C6B ; $0C
+        dw drawSamus_4C6B ; $0D
+        dw drawSamus_4C6B ; $0E
+        dw drawSamus_4C59 ; $0F
+        dw drawSamus_4C94 ; $10
+        dw drawSamus_4C59 ; $11
+        dw drawSamus_4C94 ; $12
+        dw drawSamus_4D33 ; $13
+        dw drawSamus_4D33 ; $14
+        dw drawSamus_4D33 ; $15
+        dw drawSamus_4D33 ; $16
+        dw drawSamus_4D33 ; $17
+        dw drawSamus_4C94 ; $18
+        dw drawSamus_4C94 ; $19
+        dw drawSamus_4C94 ; $1A
+        dw drawSamus_4C94 ; $1B
+        dw drawSamus_4C94 ; $1C
+        dw drawSamus_4C94 ; $1D
 
-
+drawSamus_4C59: ; $0F, $11
     ld d, $00
     ld a, [$d02b]
     ld e, a
@@ -578,9 +578,9 @@ jr_001_4c19:
     ldh [hSpriteId], a
     jp Jump_001_4ddf
 
-
     db $16, $09
 
+drawSamus_4C6B: ; $0B-$0E
     ld a, [$d02b]
     and $01
     sla a
@@ -599,9 +599,9 @@ jr_001_4c19:
     ldh [hSpriteId], a
     jp Jump_001_4ddf
 
-
     db $37, $38, $39, $3a, $3b, $3c, $3d, $3e
 
+drawSamus_4C94: ; Morph poses
     ld a, [$d02b]
     and $01
     sla a
@@ -620,9 +620,9 @@ jr_001_4c19:
     ldh [hSpriteId], a
     jp Jump_001_4ddf
 
-
     db $1e, $1f, $20, $21, $26, $27, $28, $29
 
+drawSamus_4CBD: ; $01, $07
     ld d, $00
     ldh a, [$98]
     ld e, a
@@ -633,6 +633,7 @@ jr_001_4c19:
     jp Jump_001_4ddf
 
 
+drawSamus_4CCC: ; %09, $0A
     ld a, $03
     ldh [hSpriteId], a
     ld a, [$d02b]
@@ -644,23 +645,10 @@ jr_001_4c19:
     jp Jump_001_4ddf
 
 
-    nop
+    db $00, $09, $16, $00, $00, $0a, $17, $00
+    db $00, $0c, $19, $00, $00, $00, $00, $00
 
-    db $09, $16, $00
-
-    nop
-
-    db $0a, $17, $00
-
-    nop
-
-    db $0c, $19, $00
-
-    nop
-    nop
-    nop
-    nop
-
+drawSamus_4CEE: ; $02
     ld a, [$d02b]
     and a
     jp z, Jump_001_4cfb
@@ -701,9 +689,9 @@ jr_001_4d1a:
     ldh [hSpriteId], a
     jp Jump_001_4ddf
 
-
     db $1a, $1b, $1c, $1d, $22, $23, $24, $25
 
+drawSamus_4D33: ; $13-$17
 Jump_001_4d33:
     ld a, [countdownTimerLow]
     and a
@@ -719,6 +707,7 @@ jr_001_4d3e:
     jp Jump_001_4ddf
 
 
+drawSamus_4D45: ; $00
     ld d, $00
     ldh a, [$98]
     ld e, a
@@ -728,27 +717,11 @@ jr_001_4d3e:
     ldh [hSpriteId], a
     jp Jump_001_4ddf
 
+    db $00, $01, $0e, $00, $00, $02, $0f, $00
+    db $00, $01, $0e, $00, $00, $00, $00, $00, $00
 
-    nop
 
-    db $01, $0e, $00
-
-    nop
-
-    db $02, $0f
-
-    nop
-    nop
-
-    db $01, $0e
-
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-
+drawSamus_4D65: ; $04
     ld a, $0b
     ldh [hSpriteId], a
     ld a, [$d02b]
@@ -759,7 +732,7 @@ jr_001_4d3e:
     ldh [hSpriteId], a
     jp Jump_001_4ddf
 
-
+drawSamus_4D77: ; $03
     ld a, [$d022]
     cp $30
     jr c, jr_001_4d82
