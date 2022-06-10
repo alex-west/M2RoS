@@ -1438,7 +1438,7 @@ jr_001_513c:
     jp z, Jump_001_52e0
 
     call $2266
-    ld hl, $d08a
+    ld hl, beamSolidityIndex
     cp [hl]
     jp nc, Jump_001_52e0
 
@@ -1634,7 +1634,7 @@ jr_001_5282:
     jr z, jr_001_52e0
 
     call $2266
-    ld hl, $d08a
+    ld hl, beamSolidityIndex
     cp [hl]
     jr nc, jr_001_52e0
 
@@ -2472,7 +2472,7 @@ jr_001_56df:
 
 Call_001_56e9:
 jr_001_56e9:
-    call $22bc
+    call getTilemapAddress
     ld a, [$c215]
     and $de
     ld l, a
@@ -2504,7 +2504,7 @@ jr_001_56ff:
 jr_001_5712:
     xor a
     ld [hl], a
-    call $22bc
+    call getTilemapAddress
     ld a, [$c215]
     and $de
     ld l, a
@@ -2541,7 +2541,7 @@ jr_001_572a:
 
 Jump_001_5742:
 jr_001_5742:
-    call $22bc
+    call getTilemapAddress
     ld a, [$c215]
     and $de
     ld l, a
@@ -2572,7 +2572,7 @@ jr_001_5758:
 
 
 Jump_001_5769:
-    call $22bc
+    call getTilemapAddress
     ld a, [$c215]
     and $de
     ld l, a

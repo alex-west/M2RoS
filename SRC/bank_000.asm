@@ -523,11 +523,11 @@ jr_000_03db:
     ld a, [$d811]
     ld [currentLevelBank], a
     ld a, [$d812]
-    ld [$d056], a
+    ld [samusSolidityIndex], a
     ld a, [$d813]
-    ld [$d069], a
+    ld [enemySolidityIndex_canon], a
     ld a, [$d814]
-    ld [$d08a], a
+    ld [beamSolidityIndex], a
     ld a, [$d81f]
     ld [acidDamageValue], a
     ld a, [$d820]
@@ -4168,7 +4168,7 @@ jr_000_1af2:
     add $0f
     ld [$c204], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
     jr nc, jr_000_1b13
 
@@ -4214,7 +4214,7 @@ Call_000_1b37:
     add $10
     ld [$c203], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
     ret c
 
@@ -4222,7 +4222,7 @@ Call_000_1b37:
     add $14
     ld [$c204], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
     ret c
 
@@ -4238,7 +4238,7 @@ jr_000_1b6b:
     add $18
     ld [$c203], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1b9a
 
@@ -4246,7 +4246,7 @@ jr_000_1b6b:
     add $14
     ld [$c204], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1b9a
 
@@ -4285,7 +4285,7 @@ Call_000_1bb3:
     add $0b
     ld [$c204], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1c0c
 
@@ -4293,7 +4293,7 @@ Call_000_1bb3:
     add $14
     ld [$c204], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1c0c
 
@@ -4304,7 +4304,7 @@ Call_000_1bb3:
     add $0b
     ld [$c204], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1c0c
 
@@ -4312,7 +4312,7 @@ Call_000_1bb3:
     add $14
     ld [$c204], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1c0c
 
@@ -4701,7 +4701,7 @@ jr_000_1dec:
     add b
     ld [$c203], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1e84
 
@@ -4712,7 +4712,7 @@ jr_000_1e38:
     add b
     ld [$c203], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1e84
 
@@ -4723,7 +4723,7 @@ jr_000_1e4b:
     add b
     ld [$c203], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1e84
 
@@ -4734,7 +4734,7 @@ jr_000_1e5e:
     add b
     ld [$c203], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1e84
 
@@ -4745,7 +4745,7 @@ jr_000_1e71:
     add b
     ld [$c203], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1e84
 
@@ -4778,9 +4778,9 @@ Call_000_1e88:
     add b
     ld [$c203], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
-    ld h, $dc
+    ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
     bit 0, a
@@ -4812,19 +4812,18 @@ Call_000_1e88:
     add $14
     ld [$c204], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
-    ld h, $dc
+    ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
     bit 0, a
     jr z, jr_000_1ef4
-
-    ld a, $ff
-    ld [$d048], a
-    ld a, [hl]
-
-jr_000_1ef4:
+        ld a, $ff
+        ld [$d048], a
+        ld a, [hl]
+    jr_000_1ef4:
+    
     bit 1, a
     jr z, jr_000_1ef9
 
@@ -4876,18 +4875,17 @@ jr_000_1f2c:
     add $2c
     ld [$c203], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
-    ld h, $dc
+    ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
     bit 0, a
     jr z, jr_000_1f4e
+        ld a, $31
+        ld [$d048], a
+    jr_000_1f4e:
 
-    ld a, $31
-    ld [$d048], a
-
-jr_000_1f4e:
     ld a, [hl]
     bit 7, a
     jr z, jr_000_1f58
@@ -4923,18 +4921,17 @@ jr_000_1f74:
     add $14
     ld [$c204], a
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
-    ld h, $dc
+    ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
     bit 0, a
     jr z, jr_000_1f91
+        ld a, $ff
+        ld [$d048], a
+    jr_000_1f91:
 
-    ld a, $ff
-    ld [$d048], a
-
-jr_000_1f91:
     ld a, [hl]
     bit 7, a
     jr z, jr_000_1f9b
@@ -4978,11 +4975,11 @@ jr_000_1fbb:
 
 Call_000_1fbf:
     call Call_000_1ff5
-    ld hl, $d056
+    ld hl, samusSolidityIndex
     cp [hl]
     jr nc, jr_000_1fe0
 
-    ld h, $dc
+    ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
     bit 4, a
@@ -5005,7 +5002,7 @@ jr_000_1fdd:
 
 
 jr_000_1fe0:
-    ld h, $dc
+    ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
     bit 4, a
@@ -5016,55 +5013,62 @@ jr_000_1fe0:
         call applyAcidDamage
     jr jr_000_1fdd
 
-Call_000_1ff5:
-    call Call_000_22bc
+
+Call_000_1ff5: ; Collision related
+    call getTilemapAddress
+
+    ; Adjust base address for collision depending on the tilemap being used
     ld a, [$c219]
     and $08
-    jr z, jr_000_2006
+    jr z, .endIf_A
+        ld a, $04
+        add h
+        ld h, a
+        ld [$c216], a
+    .endIf_A
 
-    ld a, $04
-    add h
-    ld h, a
-    ld [$c216], a
-
-jr_000_2006:
-    ldh a, [rSTAT]
-    and $03
-    jr nz, jr_000_2006
+    ; What's with this double read from VRAM? Insurance?
+    .waitLoop_A: ; Wait for h-blank
+        ldh a, [rSTAT]
+        and $03
+    jr nz, .waitLoop_A
 
     ld b, [hl]
 
-jr_000_200d:
-    ldh a, [rSTAT]
-    and $03
-    jr nz, jr_000_200d
+    .waitLoop_B: ; Wait for h-blank
+        ldh a, [rSTAT]
+        and $03
+    jr nz, .waitLoop_B
 
     ld a, [hl]
     and b
     ld b, a
+    
     ld a, [samusInvulnerableTimer]
     and a
-    jr nz, jr_000_2039
+    jr nz, .endIf_B
+        ld h, HIGH(collisionArray)
+        ld a, b
+        ld l, a
+        ld a, [hl]
+        bit 3, a
+        jr z, .endIf_B
+            ; Play sfx
+            ld a, $04
+            ld [$cec0], a
+            ; Samus damaged flag
+            ld a, $01
+            ld [$c422], a
+            ; Damage boost up
+            xor a
+            ld [$c423], a
+            ; Samus damage
+            ld a, [spikeDamageValue]
+            ld [$c424], a
+    .endIf_B:
 
-    ld h, $dc
     ld a, b
-    ld l, a
-    ld a, [hl]
-    bit 3, a
-    jr z, jr_000_2039
-
-    ld a, $04
-    ld [$cec0], a
-    ld a, $01
-    ld [$c422], a
-    xor a
-    ld [$c423], a
-    ld a, [spikeDamageValue]
-    ld [$c424], a
-
-jr_000_2039:
-    ld a, b
-    ret
+ret
 
 ; 0:203B - Metroids remaining (L counter)
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00, $00, $00, $00, $00, $00
@@ -5230,6 +5234,7 @@ addr2242: db BANK(gfx_cannonMissile)
 addr2249: db BANK(gfx_cannonBeam)
     dw gfx_cannonBeam, vramDest_cannon, $0020
 
+func_2250: ; 00:2250 - Called by enemy routines
     ld a, [$c205]
     ld b, a
     ld a, [$c44d]
@@ -5240,31 +5245,33 @@ addr2249: db BANK(gfx_cannonBeam)
     ld a, [$c44e]
     add b
     ld [$c204], a
-    call Call_000_22bc
+    
+func_2266: ; 00:2266 - Called by beam routines
+    call getTilemapAddress
     ld a, [$c219]
     and $08
-    jr z, jr_000_2277
-
+    jr z, .endIf
     ld a, $04
     add h
     ld h, a
     ld [$c216], a
+    .endIf
 
-jr_000_2277:
-    ldh a, [rSTAT]
-    and $03
-    jr nz, jr_000_2277
+    .waitLoop_A:
+        ldh a, [rSTAT]
+        and $03
+    jr nz, .waitLoop_A
 
     ld b, [hl]
 
-jr_000_227e:
-    ldh a, [rSTAT]
-    and $03
-    jr nz, jr_000_227e
+    .waitLoop_B:
+        ldh a, [rSTAT]
+        and $03
+    jr nz, .waitLoop_B
 
     ld a, [hl]
     and b
-    ret
+ret
 
 ; 0:2287 - Read Input
 main_readInput:
@@ -5300,19 +5307,21 @@ main_readInput:
     ldh [rP1], a
 ret
 
-
-Call_000_22bc:
+; Given pixels coordinates in y:[$C203], x:[$C204]
+;  returns the tilemap address in [$C215] and [$C216]
+getTilemapAddress: ; 00:22BC
     ld a, [$c203]
     sub $10
     ld b, $08
     ld de, $0020
-    ld hl, $97e0
+    ld hl, $9800 - $20 ;$97e0
 
-jr_000_22c9:
-    add hl, de
-    sub b
-    jr nc, jr_000_22c9
+    .loop:
+        add hl, de
+        sub b
+    jr nc, .loop
 
+    ; subtract 8 and divide by 8
     ld a, [$c204]
     sub b
     srl a
@@ -5323,7 +5332,7 @@ jr_000_22c9:
     ld [$c215], a
     ld a, h
     ld [$c216], a
-    ret
+ret
 
 
     ld a, [$c216]
@@ -5573,13 +5582,13 @@ executeDoorScript: ; 00:239C
             add hl, de
             ; Update solidity indexes (working and save buffer copies)
             ld a, [hl+]
-            ld [$d056], a
+            ld [samusSolidityIndex], a
             ld [$d812], a
             ld a, [hl+]
-            ld [$d069], a
+            ld [enemySolidityIndex_canon], a
             ld [$d813], a
             ld a, [hl+]
-            ld [$d08a], a
+            ld [beamSolidityIndex], a
             ld [$d814], a
         pop hl
         jp .nextToken

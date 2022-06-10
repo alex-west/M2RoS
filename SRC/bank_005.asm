@@ -1178,7 +1178,7 @@ credits_scrollHandler: ; 05:593E
     ld [$c203], a
     ld a, $08
     ld [$c204], a
-    call $22bc
+    call getTilemapAddress
     ; Signal that the next line is ready to be drawn
     ld a, $ff
     ld [credits_nextLineReady], a

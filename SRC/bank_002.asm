@@ -72,8 +72,8 @@ jr_002_4059:
     ld [$c465], a
 
 jr_002_4063:
-    ld a, [$d069]
-    ld [$c407], a
+    ld a, [enemySolidityIndex_canon]
+    ld [enemySolidityIndex], a
     ld hl, $c44b
     ld a, [hl]
     and a
@@ -1187,7 +1187,7 @@ Call_002_4608:
     add $03
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1195,7 +1195,7 @@ Call_002_4608:
     add $06
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1210,7 +1210,7 @@ Call_002_4608:
     add $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1218,7 +1218,7 @@ Call_002_4608:
     add $06
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1235,7 +1235,7 @@ Call_002_4662:
     ld [$c44e], a
     call $2250
     ld [$c417], a
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1244,7 +1244,7 @@ Call_002_4662:
     ld [$c44d], a
     call $2250
     ld [$c417], a
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1253,7 +1253,7 @@ Call_002_4662:
     ld [$c44d], a
     call $2250
     ld [$c417], a
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1273,7 +1273,7 @@ Call_002_46ac:
     add $0b
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1281,7 +1281,7 @@ Call_002_46ac:
     add $07
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1289,7 +1289,7 @@ Call_002_46ac:
     add $07
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1304,7 +1304,7 @@ Call_002_46ac:
     add $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1312,7 +1312,7 @@ Call_002_46ac:
     add $08
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1320,7 +1320,7 @@ Call_002_46ac:
     add $06
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1328,7 +1328,7 @@ Call_002_46ac:
     add $08
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1344,7 +1344,7 @@ Call_002_4736:
     add $0b
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1352,7 +1352,7 @@ Call_002_4736:
     add $08
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1360,7 +1360,7 @@ Call_002_4736:
     add $06
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1368,7 +1368,7 @@ Call_002_4736:
     add $08
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1384,7 +1384,7 @@ Call_002_4783:
     add $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1392,7 +1392,7 @@ Call_002_4783:
     add $0f
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1412,7 +1412,7 @@ Call_002_47b4:
     add $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1420,7 +1420,7 @@ Call_002_47b4:
     add $0f
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1436,7 +1436,7 @@ Call_002_47e1:
     sub $03
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1444,7 +1444,7 @@ Call_002_47e1:
     add $06
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1459,7 +1459,7 @@ Call_002_47e1:
     sub $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1467,7 +1467,7 @@ Call_002_47e1:
     add $06
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1484,7 +1484,7 @@ Call_002_483b:
     ld [$c44e], a
     call $2250
     ld [$c417], a
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1493,7 +1493,7 @@ Call_002_483b:
     ld [$c44d], a
     call $2250
     ld [$c417], a
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1502,7 +1502,7 @@ Call_002_483b:
     ld [$c44d], a
     call $2250
     ld [$c417], a
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1522,7 +1522,7 @@ Call_002_4885:
     sub $0b
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1530,7 +1530,7 @@ Call_002_4885:
     add $07
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1538,7 +1538,7 @@ Call_002_4885:
     add $07
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1553,7 +1553,7 @@ Call_002_4885:
     sub $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1561,7 +1561,7 @@ Call_002_4885:
     add $08
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1569,7 +1569,7 @@ Call_002_4885:
     add $06
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1577,7 +1577,7 @@ Call_002_4885:
     add $08
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1593,7 +1593,7 @@ Call_002_490f:
     sub $0b
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1601,7 +1601,7 @@ Call_002_490f:
     add $08
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1609,7 +1609,7 @@ Call_002_490f:
     add $06
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1617,7 +1617,7 @@ Call_002_490f:
     add $08
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1633,7 +1633,7 @@ Call_002_495c:
     sub $09
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1641,7 +1641,7 @@ Call_002_495c:
     add $0f
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1661,7 +1661,7 @@ Call_002_498d:
     sub $09
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1669,7 +1669,7 @@ Call_002_498d:
     add $0f
     ld [$c44d], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1685,7 +1685,7 @@ Call_002_49ba:
     sub $03
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1693,7 +1693,7 @@ Call_002_49ba:
     add $06
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1708,7 +1708,7 @@ Call_002_49ba:
     sub $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1716,7 +1716,7 @@ Call_002_49ba:
     add $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1724,7 +1724,7 @@ Call_002_49ba:
     add $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1745,7 +1745,7 @@ Call_002_4a28:
     ld [$c44e], a
     call $2250
     ld [$c417], a
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1754,7 +1754,7 @@ Call_002_4a28:
     ld [$c44e], a
     call $2250
     ld [$c417], a
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1763,7 +1763,7 @@ Call_002_4a28:
     ld [$c44e], a
     call $2250
     ld [$c417], a
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1778,7 +1778,7 @@ Call_002_4a28:
     sub $0b
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1786,7 +1786,7 @@ Call_002_4a28:
     add $08
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1794,7 +1794,7 @@ Call_002_4a28:
     add $06
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1802,7 +1802,7 @@ Call_002_4a28:
     add $08
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1817,7 +1817,7 @@ Call_002_4abb:
     ldh a, [hEnemyXPos]
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1833,7 +1833,7 @@ Call_002_4ad6:
     sub $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1841,7 +1841,7 @@ Call_002_4ad6:
     add $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1849,7 +1849,7 @@ Call_002_4ad6:
     add $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1869,7 +1869,7 @@ Call_002_4b17:
     sub $0b
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1877,7 +1877,7 @@ Call_002_4b17:
     add $08
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1885,7 +1885,7 @@ Call_002_4b17:
     add $06
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1893,7 +1893,7 @@ Call_002_4b17:
     add $08
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1909,7 +1909,7 @@ Call_002_4b64:
     sub $08
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1917,7 +1917,7 @@ Call_002_4b64:
     add $0f
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1933,7 +1933,7 @@ Call_002_4b91:
     sub $09
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1941,7 +1941,7 @@ Call_002_4b91:
     add $0f
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1961,7 +1961,7 @@ Call_002_4bc2:
     sub $03
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1969,7 +1969,7 @@ Call_002_4bc2:
     add $06
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1984,7 +1984,7 @@ Call_002_4bc2:
     sub $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -1992,7 +1992,7 @@ Call_002_4bc2:
     add $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2000,7 +2000,7 @@ Call_002_4bc2:
     add $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2021,7 +2021,7 @@ Call_002_4c30:
     ld [$c44e], a
     call $2250
     ld [$c417], a
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2030,7 +2030,7 @@ Call_002_4c30:
     ld [$c44e], a
     call $2250
     ld [$c417], a
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2039,7 +2039,7 @@ Call_002_4c30:
     ld [$c44e], a
     call $2250
     ld [$c417], a
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2054,7 +2054,7 @@ Call_002_4c30:
     sub $0b
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2062,7 +2062,7 @@ Call_002_4c30:
     add $08
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2070,7 +2070,7 @@ Call_002_4c30:
     add $06
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2078,7 +2078,7 @@ Call_002_4c30:
     add $08
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2093,7 +2093,7 @@ Call_002_4c30:
     sub $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2101,7 +2101,7 @@ Call_002_4c30:
     add $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2109,7 +2109,7 @@ Call_002_4c30:
     add $07
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2129,7 +2129,7 @@ Call_002_4d04:
     sub $0b
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2137,7 +2137,7 @@ Call_002_4d04:
     add $08
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2145,7 +2145,7 @@ Call_002_4d04:
     add $06
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2153,7 +2153,7 @@ Call_002_4d04:
     add $08
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2169,7 +2169,7 @@ Call_002_4d51:
     sub $09
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2177,7 +2177,7 @@ Call_002_4d51:
     add $0f
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2193,7 +2193,7 @@ Call_002_4d7f:
     sub $08
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
@@ -2201,7 +2201,7 @@ Call_002_4d7f:
     add $0f
     ld [$c44e], a
     call $2250
-    ld hl, $c407
+    ld hl, enemySolidityIndex
     cp [hl]
     ret c
 

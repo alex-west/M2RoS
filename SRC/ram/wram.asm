@@ -96,7 +96,7 @@ def queenAnimFootDelay = $C3C9;
 ;$C3F2: Metroid Queen's head lower half tilemap VRAM address low byte
 ;$C3F3: Metroid Queen's head lower half tilemap source address (bank 3)
 ;
-;$C407: Set to [enemy solid block threshold] in $2:4000
+enemySolidityIndex = $C407 ; Copy of enemySolidityIndex_canon (actually used by enemy code)
 ;$C408: Scroll Y three frames ago (according to $2:45CA)
 ;$C409: Scroll X three frames ago (according to $2:45CA)
 ;$C40A: Scroll Y two frames ago (according to $2:45CA)
@@ -692,7 +692,7 @@ def samusCurMissilesHigh = $D054 ; Samus' missiles (high byte)
 ;    3: Spazer
 ;    4: Plasma
 ;}
-;$D056: Samus solid block threshold
+samusSolidityIndex = $D056 ; Samus solid block threshold
 ;$D057: Room sprite priority
 ;{
 ;    0: Sprites over BG
@@ -730,7 +730,7 @@ countdownTimerHigh = $D067; ;  various events
 ;    Used in many other places in bank 5
 ;}
 ;
-;$D069: Enemy solid block threshold
+enemySolidityIndex_canon = $D069 ; Canonicaly copy of the enemy solid block threshold (not used by enemy code, however)
 ;
 ;$D06B: Unused. Cleared by loading save
 ;$D06C: Item pickup. Set to ([enemy sprite ID] - 81h) / 2 + 1 by $2:4DD3
@@ -787,8 +787,8 @@ def samusDispHealthHigh = $D085 ; Samus' energy tanks for display, see also $D05
 def samusDispMissilesLow  = $D086 ; Samus' missiles for display, see also $D053/$D81C
 def samusDispMissilesHigh = $D087 ; Samus' missiles for display (high byte)
 ;$D088: Game save cooldown timer
-def metroidCountReal = $D089 ;Real number of metroids remaining (BCD)
-;$D08A: Projectile solid block threshold
+def metroidCountReal = $D089 ; Real number of metroids remaining (BCD)
+def beamSolidityIndex = $D08A ; Projectile solid block threshold
 ;$D08B: Metroid Queen's room flag. 11h: In Metroid Queen's room (set by screen transition command 8)
 ;$D08C: Would have guessed a flag for 'can do tiles update' or 'is lag frame'
 ;$D08D: Value for $D05D in $31F1. Projectile type in $1:500D
