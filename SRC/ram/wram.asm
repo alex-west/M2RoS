@@ -709,7 +709,7 @@ def deathAnimTimer = $D059 ; Death sequence timer
 ;    $D060: Set to [$D012] if shot
 ;}
 ;
-;$D062: Value for $D026 (weird air time variable), set to 40h
+def acidContactFlag = $D062 ; Flag set every frame if Samus is touching acid.
 def deathFlag = $D063 ; Dying flag
 ;{
 ;    0: Not dying

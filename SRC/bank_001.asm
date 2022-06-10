@@ -499,7 +499,7 @@ ret
         ret z
     jr_001_4be8:
     
-    ld a, [$d062]
+    ld a, [acidContactFlag]
     and a
     jr z, jr_001_4bf3
         ldh a, [frameCounter]
@@ -691,7 +691,7 @@ jr_001_4d1a:
 
     db $1a, $1b, $1c, $1d, $22, $23, $24, $25
 
-drawSamus_4D33: ; $13-$17
+drawSamus_4D33: ; $13-$17: Facing the screen
 Jump_001_4d33:
     ld a, [countdownTimerLow]
     and a
@@ -812,6 +812,7 @@ jr_001_4dc0:
 
 Jump_001_4ddf:
     call loadScreenSpritePriorityBit
+    ; Set x pos
     ldh a, [hCameraXPixel]
     ld b, a
     ldh a, [hSamusXPixel]
@@ -819,6 +820,7 @@ Jump_001_4ddf:
     add $60
     ldh [hSpriteXPixel], a
     ld [$d03c], a
+    ; Set y pos
     ldh a, [hCameraYPixel]
     ld b, a
     ldh a, [hSamusYPixel]
@@ -826,27 +828,27 @@ Jump_001_4ddf:
     add $62
     ldh [hSpriteYPixel], a
     ld [$d03b], a
+    
     xor a
     ldh [hSpriteAttr], a
-    ld a, [$d062]
+    ld a, [acidContactFlag]
     and a
     jr nz, jr_001_4e0b
+        ld a, [samusInvulnerableTimer]
+        and a
+        jr z, jr_001_4e0f
 
-    ld a, [samusInvulnerableTimer]
-    and a
-    jr z, jr_001_4e0f
+        jr_001_4e0b:
+            ld a, $01
+            ldh [hSpriteAttr], a
+    jr_001_4e0f:
 
-jr_001_4e0b:
-    ld a, $01
-    ldh [hSpriteAttr], a
-
-jr_001_4e0f:
     call Call_001_7a34
     call Call_001_4b62
     xor a
     ldh [hSpriteAttr], a
     ld [$d057], a
-    ret
+ret
 
 
 jr_001_4e1c:

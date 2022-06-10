@@ -1900,7 +1900,7 @@ Call_000_0d21:
 Jump_000_0d21:
     xor a
     ld [$d048], a
-    ld [$d062], a
+    ld [acidContactFlag], a
     ld a, [$d072]
     inc a
     ld [$d072], a
@@ -2772,7 +2772,7 @@ jr_000_1267:
     bit PADB_A, a
     jr z, jr_000_1285
 
-    ld a, [$d062]
+    ld a, [acidContactFlag]
     and a
     jr z, jr_000_1285
 
@@ -2864,7 +2864,7 @@ poseFunc_12F5: ; $07
     bit PADB_A, a
     jr z, jr_000_1335
 
-    ld a, [$d062]
+    ld a, [acidContactFlag]
     and a
     jr z, jr_000_1306
 
@@ -3698,7 +3698,7 @@ jr_000_17da:
     bit 7, a
     jr nz, jr_000_17f3
 
-    ld a, [$d062]
+    ld a, [acidContactFlag]
     and a
     jr nz, jr_000_182e
 
@@ -3934,7 +3934,7 @@ jr_000_197b:
     bit 7, a
     jr nz, jr_000_1986
 
-    ld a, [$d062]
+    ld a, [acidContactFlag]
     and a
     jr nz, jr_000_19c7
 
@@ -4785,30 +4785,27 @@ Call_000_1e88:
     ld a, [hl]
     bit 0, a
     jr z, jr_000_1ebf
+        ld a, $ff
+        ld [$d048], a
+        ld a, [hl]
+    jr_000_1ebf:
 
-    ld a, $ff
-    ld [$d048], a
-    ld a, [hl]
-
-jr_000_1ebf:
     bit 1, a
     jr z, jr_000_1ec4
+        ccf
+    jr_000_1ec4:
 
-    ccf
-
-jr_000_1ec4:
     ld a, [hl]
     bit 4, a
     jr z, jr_000_1ed6
+        ld a, $40
+        ld [acidContactFlag], a
+        push af
+        ld a, [acidDamageValue]
+        call applyAcidDamage
+        pop af
+    jr_000_1ed6:
 
-    ld a, $40
-    ld [$d062], a
-    push af
-    ld a, [acidDamageValue]
-    call Call_000_2f4a
-    pop af
-
-jr_000_1ed6:
     jr c, jr_000_1f0b
 
     ldh a, [hSamusXPixel]
@@ -4839,10 +4836,10 @@ jr_000_1ef9:
     jr z, jr_000_1f0b
 
     ld a, $40
-    ld [$d062], a
+    ld [acidContactFlag], a
     push af
     ld a, [acidDamageValue]
-    call Call_000_2f4a
+    call applyAcidDamage
     pop af
 
 Jump_000_1f0b:
@@ -4913,10 +4910,10 @@ jr_000_1f62:
     jr z, jr_000_1f74
 
     ld a, $40
-    ld [$d062], a
+    ld [acidContactFlag], a
     push af
     ld a, [acidDamageValue]
-    call Call_000_2f4a
+    call applyAcidDamage
     pop af
 
 jr_000_1f74:
@@ -4959,10 +4956,10 @@ jr_000_1fa2:
     jr z, jr_000_1fb4
 
     ld a, $40
-    ld [$d062], a
+    ld [acidContactFlag], a
     push af
     ld a, [acidDamageValue]
-    call Call_000_2f4a
+    call applyAcidDamage
     pop af
 
 jr_000_1fb4:
@@ -4992,9 +4989,9 @@ Call_000_1fbf:
     jr z, jr_000_1fdb
 
     ld a, $40
-    ld [$d062], a
+    ld [acidContactFlag], a
     ld a, [acidDamageValue]
-    call Call_000_2f4a
+    call applyAcidDamage
 
 jr_000_1fdb:
     scf
@@ -5013,11 +5010,10 @@ jr_000_1fe0:
     ld a, [hl]
     bit 4, a
     jr z, jr_000_1fdd
-
-    ld a, $40
-    ld [$d062], a
-    ld a, [acidDamageValue]
-    call Call_000_2f4a
+        ld a, $40
+        ld [acidContactFlag], a
+        ld a, [acidDamageValue]
+        call applyAcidDamage
     jr jr_000_1fdd
 
 Call_000_1ff5:
@@ -7218,7 +7214,7 @@ Call_000_2f3c:
     ld [$ced5], a
     jr jr_000_2f60
 
-Call_000_2f4a:
+applyAcidDamage: ; 00:2F4A
     ld b, a
     ldh a, [frameCounter]
     and $0f
