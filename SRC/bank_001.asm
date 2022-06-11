@@ -3828,38 +3828,34 @@ Call_001_7a45:
 
 Call_001_7a6c:
     ld d, $00
-    ld a, [$c459]
+    ld a, [previousLevelBank]
     sub $09
     swap a
     add a
     add a
     ld e, a
     rl d
-    ld hl, $c900
+    ld hl, saveBuf_enemySaveFlags
     add hl, de
-    ld de, $c540
+    ld de, enemySaveFlags
     ld b, $40
 
-jr_001_7a83:
-    ld a, [de]
-    cp $02
-    jr z, jr_001_7a92
-
-    cp $fe
-    jr z, jr_001_7a92
-
-    cp $04
-    jr nz, jr_001_7a93
-
-    ld a, $fe
-
-jr_001_7a92:
-    ld [hl], a
-
-jr_001_7a93:
-    inc l
-    inc e
-    dec b
+    jr_001_7a83:
+        ld a, [de]
+        cp $02
+            jr z, jr_001_7a92
+        cp $fe
+            jr z, jr_001_7a92
+        cp $04
+            jr nz, jr_001_7a93
+        ld a, $fe
+    
+        jr_001_7a92:
+            ld [hl], a
+        jr_001_7a93:
+            inc l
+            inc e
+            dec b
     jr nz, jr_001_7a83
 
     ld a, $0a
@@ -3896,20 +3892,20 @@ jr_001_7aac:
     add h
     ld h, a
 
-jr_001_7acd:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    dec bc
-    ld a, b
-    or c
+    jr_001_7acd:
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        dec bc
+        ld a, b
+        or c
     jr nz, jr_001_7acd
 
     ld a, $00
     ld [$0000], a
     xor a
     ld [$c436], a
-    ret
+ret
 
 
     ld a, $0a

@@ -5,6 +5,7 @@
 
 SECTION "ROM Bank $002", ROMX[$4000], BANK[$2]
 
+; 02:4000
     ld e, $00
     ld a, [currentLevelBank]
     inc a
@@ -12,24 +13,23 @@ SECTION "ROM Bank $002", ROMX[$4000], BANK[$2]
     ld a, [$d09e]
     and a
     jr z, jr_002_4029
+        ld e, a
+        xor a
+        ld [$c474], a
+        ld [$c475], a
+        ld [$d09e], a
+        ld a, $ff
+        ld hl, $c466
+        ld [hl+], a
+        ld [hl+], a
+        ld [hl], a
+        ld hl, $d05d
+        ld [hl+], a
+        ld [hl+], a
+        ld [hl+], a
+        ld [hl], a
+    jr_002_4029:
 
-    ld e, a
-    xor a
-    ld [$c474], a
-    ld [$c475], a
-    ld [$d09e], a
-    ld a, $ff
-    ld hl, $c466
-    ld [hl+], a
-    ld [hl+], a
-    ld [hl], a
-    ld hl, $d05d
-    ld [hl+], a
-    ld [hl+], a
-    ld [hl+], a
-    ld [hl], a
-
-jr_002_4029:
     ld a, [$c465]
     and a
     jr z, jr_002_4063
@@ -60,12 +60,12 @@ jr_002_404b:
     ld a, [metroidCountReal]
     and a
     jr z, jr_002_4059
+        ; Resume music unless all metroids are dead
+        ld a, [$d092]
+        add $11
+        ld [$cedc], a
+    jr_002_4059:
 
-    ld a, [$d092]
-    add $11
-    ld [$cedc], a
-
-jr_002_4059:
     xor a
     ld [$c41b], a
     ld [$c41c], a
@@ -78,12 +78,11 @@ jr_002_4063:
     ld a, [hl]
     and a
     jr z, jr_002_4077
+        call Call_002_418c ; Save and then load enemy spawn/save flags
+        xor a
+        ld [$c44b], a
+    jr_002_4077:
 
-    call Call_002_418c
-    xor a
-    ld [$c44b], a
-
-jr_002_4077:
     ld a, [rLY]
     cp $70
     ret nc
@@ -91,21 +90,20 @@ jr_002_4077:
     ld a, [$c436]
     and a
     jr nz, jr_002_408b
+        call Call_002_412f ; Load enemy save flags without saving them
+        ld a, $01
+        ld [$c436], a
+    jr_002_408b:
 
-    call Call_002_412f
-    ld a, $01
-    ld [$c436], a
-
-jr_002_408b:
     call $3dba
     call Call_002_409e
     call Call_002_45ca
     ld a, [rLY]
     cp $70
-    ret nc
+        ret nc
 
     call $3dce
-    ret
+ret
 
 
 Call_002_409e:
@@ -209,26 +207,26 @@ jr_002_4125:
     ret
 
 
-Call_002_412f:
+Call_002_412f: ; Loads enemy save flags without saving them
     ld d, $00
     ld a, [currentLevelBank]
-    ld [$c459], a
+    ld [previousLevelBank], a
     sub $09
     swap a
     add a
     add a
     ld e, a
     rl d
-    ld hl, $c900
+    ld hl, saveBuf_enemySaveFlags
     add hl, de
-    ld de, $c540
+    ld de, enemySaveFlags
     ld b, $40
 
-jr_002_4149:
-    ld a, [hl+]
-    ld [de], a
-    inc e
-    dec b
+    jr_002_4149: ; Load enemySaveFlags from buffer
+        ld a, [hl+]
+        ld [de], a
+        inc e
+        dec b
     jr nz, jr_002_4149
 
     ld a, $c6
@@ -255,83 +253,78 @@ jr_002_4149:
     ld [hl+], a
     ld [hl], a
     call Call_002_4db1
-    ret
+ret
 
 
 Call_002_418c:
-    ld hl, $c500
+    ; Clear first $40 enemy spawn flags
+    ld hl, enemySpawnFlags
     ld b, $40
     ld a, $ff
-
-jr_002_4193:
-    ld [hl+], a
-    dec b
+    jr_002_4193:
+        ld [hl+], a
+        dec b
     jr nz, jr_002_4193
 
+    ; Save the enemySaveFlags to the save buffer
     ld d, $00
     ld a, [currentLevelBank]
     ld c, a
-    ld a, [$c459]
+    ld a, [previousLevelBank]
     and a
     jr z, jr_002_41ce
+        sub $09
+        swap a
+        add a
+        add a
+        ld e, a
+        rl d
+        ld hl, saveBuf_enemySaveFlags
+        add hl, de
+        ld de, enemySaveFlags
+        ld b, $40
+    
+        jr_002_41b5:
+            ld a, [de]
+            cp $02
+                jr z, jr_002_41c8        
+            cp $fe
+                jr z, jr_002_41c8
+            cp $04
+                jr z, jr_002_41c6
+            cp $05
+                jr nz, jr_002_41c9
+        
+            jr_002_41c6:
+                ld a, $fe
+            jr_002_41c8:
+                ld [hl], a
+            jr_002_41c9:
+                inc l
+                inc e
+                dec b
+        jr nz, jr_002_41b5
+    jr_002_41ce:
 
-    sub $09
-    swap a
-    add a
-    add a
-    ld e, a
-    rl d
-    ld hl, $c900
-    add hl, de
-    ld de, $c540
-    ld b, $40
-
-jr_002_41b5:
-    ld a, [de]
-    cp $02
-    jr z, jr_002_41c8
-
-    cp $fe
-    jr z, jr_002_41c8
-
-    cp $04
-    jr z, jr_002_41c6
-
-    cp $05
-    jr nz, jr_002_41c9
-
-jr_002_41c6:
-    ld a, $fe
-
-jr_002_41c8:
-    ld [hl], a
-
-jr_002_41c9:
-    inc l
-    inc e
-    dec b
-    jr nz, jr_002_41b5
-
-jr_002_41ce:
     ld d, $00
     ld a, c
-    ld [$c459], a
+    ld [previousLevelBank], a ; Update previousLevelBank to current now that the enemySaveFlags are saved
     sub $09
     swap a
     add a
     add a
     ld e, a
     rl d
-    ld hl, $c900
+    ld hl, saveBuf_enemySaveFlags
     add hl, de
-    ld de, $c540
+    ld de, enemySaveFlags
     ld b, $40
-
-jr_002_41e6:
-    ld a, [hl+]
-    ld [de], a
-    inc e
-    dec b
+    ; Copy enemySaveFlags from save buffer
+    jr_002_41e6:
+        ld a, [hl+]
+        ld [de], a
+        inc e
+        dec b
     jr nz, jr_002_41e6
 
     xor a
@@ -352,7 +345,7 @@ jr_002_41e6:
     ld [hl+], a
     ld [hl], a
     call Call_002_4217
-    ret
+ret
 
 
 Call_002_4217:
@@ -361,30 +354,29 @@ Call_002_4217:
     ld c, $20
     ld d, $10
 
-jr_002_4220:
-    ld [hl], a
-    add hl, bc
-    dec d
+    jr_002_4220:
+        ld [hl], a
+        add hl, bc
+        dec d
     jr nz, jr_002_4220
 
     ld b, $16
     ld hl, $ffe0
 
-jr_002_422a:
-    ld [hl+], a
-    dec b
+    jr_002_422a: ; Clear enemy temps in HRAM
+        ld [hl+], a
+        dec b
     jr nz, jr_002_422a
 
     xor a
     ld hl, $c425
     ld b, $03
 
-jr_002_4234:
-    ld [hl+], a
-    dec b
+    jr_002_4234:
+        ld [hl+], a
+        dec b
     jr nz, jr_002_4234
-
-    ret
+ret
 
 
 Call_002_4239:
@@ -795,6 +787,7 @@ jr_002_442c:
     ld l, a
     ld a, [de]
     ld [hl+], a
+    
     inc e
     ld a, [de]
     ld [hl+], a
@@ -803,7 +796,8 @@ jr_002_442c:
     ld [hl+], a
     ldh a, [$f2]
     ld [hl], a
-    ld hl, $c500
+    
+    ld hl, enemySpawnFlags
     ld l, b
     dec e
     ld a, [de]
@@ -3476,13 +3470,13 @@ Call_002_5630:
 
 Jump_002_5648:
 jr_002_5648:
-    ld bc, $fff2
+    ld bc, hEnemyAI_high ;$fff2
     ld a, [bc]
     ld h, a
     dec c
     ld a, [bc]
     ld l, a
-    jp hl
+    jp hl ; Jump to enemy AI!
 
 
 enAI_NULL:
@@ -4596,7 +4590,7 @@ jr_002_5c1a:
     ld a, $01
     ld [hl+], a
     ld a, [hl]
-    ld hl, $c500
+    ld hl, enemySpawnFlags
     ld l, a
     ld [hl], $01
 
@@ -5199,7 +5193,7 @@ jr_002_5fe1:
     dec l
     dec l
     ld a, [hl]
-    ld hl, $c500
+    ld hl, enemySpawnFlags
     ld l, a
     ld a, [$c477]
     ld [hl], a
@@ -5326,7 +5320,7 @@ jr_002_6084:
     ld a, $01
     ld [hl+], a
     ld a, [hl]
-    ld hl, $c500
+    ld hl, enemySpawnFlags
     ld l, a
     ld [hl], $01
 
@@ -7503,31 +7497,30 @@ jr_002_6b7b:
     ld [hl], a
     ret
 
-enAI_6B83:
+enAI_6B83: ; Baby egg?
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $8a
     jr z, jr_002_6ba6
+        dec a
+            ret nz
+        ; 
+        ld hl, metroidCountDisplayed
+        ld a, [hl]
+        add $08
+        daa
+        ld [hl], a
+        ld a, $ca
+        ld [$d096], a
+        ; Play metroid hive song with intro
+        ld a, $1f
+        ld [$cedc], a
+        ld a, $01
+        ld [$c463], a
+        ret
+    jr_002_6ba6:
 
-    dec a
-    ret nz
-
-    ld hl, metroidCountDisplayed
-    ld a, [hl]
-    add $08
-    daa
-    ld [hl], a
-    ld a, $ca
-    ld [$d096], a
-    ld a, $1f
-    ld [$cedc], a
-    ld a, $01
-    ld [$c463], a
-    ret
-
-
-jr_002_6ba6:
     call $3ca6
     ld a, $02
     ldh [$ef], a
@@ -7616,6 +7609,7 @@ jr_002_6c15:
     cp $0c
     ret z
 
+    ; Trigger Metroid fight music
     ld a, $0c
     ld [$cedc], a
     ret
@@ -7637,10 +7631,12 @@ jr_002_6c2e:
     ldh [$e6], a
     ret
 
-enAI_6C44:
+;------------------------------------------------------------------------------
+enAI_6C44: ; Alpha metroid ?
     ld a, [$c465]
     and a
-    jp nz, Jump_002_6bb2
+    jp nz, Jump_002_6bb2 ; Jump to actual AI?
+    ; Routine for before it attacks
 
     ld a, $04
     ldh [$ef], a
@@ -7652,11 +7648,10 @@ jr_002_6c4f:
     ld a, [$d03c]
     sub [hl]
     jr nc, jr_002_6c5e
+        cpl
+        inc a
+    jr_002_6c5e:
 
-    cpl
-    inc a
-
-jr_002_6c5e:
     cp $50
     ret nc
 
@@ -7669,7 +7664,7 @@ jr_002_6c5e:
     ld a, [$cedd]
     cp $0c
     jr z, jr_002_6c93
-
+    ; Trigger Metroid fight music
     ld a, $0c
     ld [$cedc], a
     jr jr_002_6c93
@@ -7856,6 +7851,7 @@ jr_002_6d61:
     ldh [$e3], a
     ld a, $0d
     ld [$ced5], a
+    ; Play metroid killed jingle
     ld a, $0f
     ld [$cedc], a
     ld a, $02
@@ -8288,6 +8284,7 @@ jr_002_6fb0:
 
     ld a, $01
     ld [$c463], a
+    ; Trigger Metroid fight music
     ld a, $0c
     ld [$cedc], a
     ld a, $01
@@ -8335,6 +8332,7 @@ jr_002_6fe7:
     cp $0c
     ret z
 
+    ; Trigger Metroid fight music
     ld a, $0c
     ld [$cedc], a
     ret
@@ -8525,6 +8523,7 @@ Jump_002_7105:
     ldh [$e3], a
     ld a, $0d
     ld [$ced5], a
+    ; Play "killed metroid" jingle
     ld a, $0f
     ld [$cedc], a
     ld a, $02
@@ -8749,18 +8748,18 @@ jr_002_7241:
     ld [hl+], a
     ld b, $03
 
-jr_002_7250:
-    ld a, [de]
-    ld [hl+], a
-    inc de
-    dec b
+    jr_002_7250:
+        ld a, [de]
+        ld [hl+], a
+        inc de
+        dec b
     jr nz, jr_002_7250
 
     dec l
     dec l
     dec l
     ld a, [hl]
-    ld hl, $c500
+    ld hl, enemySpawnFlags
     ld l, a
     ld a, [$c477]
     ld [hl], a
@@ -8868,6 +8867,7 @@ jr_002_72ee:
 
     ld a, $01
     ld [$c463], a
+    ; Play Metroid fight song
     ld a, $0c
     ld [$cedc], a
     ld a, $01
@@ -8920,6 +8920,7 @@ jr_002_7326:
     cp $0c
     jr z, jr_002_734b
 
+    ; Play metroid fight song
     ld a, $0c
     ld [$cedc], a
     jr jr_002_734b
@@ -9124,6 +9125,7 @@ jr_002_7452:
     ldh [$e3], a
     ld a, $0d
     ld [$ced5], a
+    ; Play metroid killed jingle
     ld a, $0f
     ld [$cedc], a
     ld a, $02
@@ -9619,6 +9621,7 @@ jr_002_76e1:
     ldh [$e3], a
     ld a, $0e
     ld [$ced5], a
+    ; Play metroid killed jingle
     ld a, $0f
     ld [$cedc], a
     ld a, $02
@@ -9998,6 +10001,7 @@ jr_002_78fa:
 
     ld a, $01
     ld [$c463], a
+    ; Trigger Metroid fight music
     ld a, $0c
     ld [$cedc], a
     ld a, $01
@@ -10087,6 +10091,7 @@ jr_002_795f:
     cp $0c
     ret z
 
+    ; Trigger Metroid fight music
     ld a, $0c
     ld [$cedc], a
     ret

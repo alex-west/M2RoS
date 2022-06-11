@@ -447,8 +447,8 @@ Call_003_422f:
     ld l, a
     dec de
     ld a, [de]
-    ld [hl], a
-    ld hl, $c500
+    ld [hl], a ; Write enemy spawn number to enemy entry in RAM
+    ld hl, enemySpawnFlags
     ld l, a
     ld a, [hl]
     cp $ff
@@ -887,7 +887,7 @@ jr_003_6b17:
     ld [hl+], a
     ld b, a
     ld a, [hl]
-    ld hl, $c500
+    ld hl, enemySpawnFlags
     ld l, a
     ld [hl], b
 

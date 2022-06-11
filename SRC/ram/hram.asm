@@ -162,7 +162,8 @@ hEnemyXPos: ds 1 ;    $FFE2: Enemy X position
 ;    $FFEE: Tested in $2:4239
 ;    $FFEF: Compared with 3 in places in bank 2
 ;
-;    $FFF1: Jump target via $2:5648
+def hEnemyAI_low  = $FFF1 ; Enemy AI pointer (low byte)
+def hEnemyAI_high = $FFF2 ; Enemy AI pointer (high byte)
 ;}
 ;
 ;$FFFC: Enemy address in $2:409E

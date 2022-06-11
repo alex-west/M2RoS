@@ -138,7 +138,7 @@ enemySolidityIndex = $C407 ; Copy of enemySolidityIndex_canon (actually used by 
 ;$C438: Enemy handling incomplete flag. In $2:409E, if 0: sets $C439 = [number of enemies]
 ;$C439: Current enemy index
 ;
-;$C44B: Request to execute $2:418C. Previous value for $C458 in $239C
+;$C44B: Request to execute $2:418C (save/load spawn/save flags). Set by doorExitStatus in the door script function
 ;
 ;$C44D: Tile Y relative to scroll Y (see $2250)
 ;$C44E: Tile X relative to scroll X (see $2250)
@@ -146,8 +146,8 @@ enemySolidityIndex = $C407 ; Copy of enemySolidityIndex_canon (actually used by 
 ;$C452: Enemy data address in $2:409E
 ;$C454: Enemy data address in $1:5A11
 ;
-;$C458: Used by $239C
-;$C459: Used by $1:7A6C (when saving to SRAM), decides where in $C540.. to process for $C900
+;$C458: doorExitStatus - $2 is normal, $1 is if WARP or ENTER_QUEEN is used. Value is written to $C44B and then cleared
+def previousLevelBank = $C459 ; Previous level bank --- used during door transitions to make sure that the enemySaveFlags are saved to the correct location
 ;
 ;$C45C: Used as index for table at $1:729C, value for $FFEA
 ;
@@ -163,8 +163,10 @@ enemySolidityIndex = $C407 ; Copy of enemySolidityIndex_canon (actually used by 
 ;
 ;$C477: Set to 6 in $2:4F97
 ;
-;$C500..3F: Filled with FFh by $2:418C. Apparently off-screen enemy bytes for current map
-;$C540..7F: Working copy of $C900 data for room bank. Apparently item/Metroid data bytes for current map
+
+; These two arrays follow the same format, but one is saved and the other is not.
+def enemySpawnFlags = $C500 ;$C500..3F: Filled with FFh by $2:418C. Apparently off-screen enemy bytes for current map
+def enemySaveFlags  = $C540 ;$C540..7F: Working copy of $C900 data for room bank. Apparently item/Metroid data bytes for current map
 ;{
 ;    For metroid:
 ;        1: Hatching
@@ -221,7 +223,7 @@ enemySolidityIndex = $C407 ; Copy of enemySolidityIndex_canon (actually used by 
 ;    + 1Eh: AI pointer(?)
 ;}
 ;
-;$C900..CABF: Copied to/from SRAM ($B000 + [save slot] * 200h). 40h byte slots, one for each level data bank
+saveBuf_enemySaveFlags = $C900 ;$C900..CABF: Copied to/from SRAM ($B000 + [save slot] * 200h). 40h byte slots, one for each level data bank
 ;
 ;$CEC0..CFFF: Audio data
 ;{
