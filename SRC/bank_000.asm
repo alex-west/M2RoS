@@ -668,7 +668,7 @@ gameMode_Main:
     ld [samusPose], a
     ldh a, [hInputRisingEdge]
     bit PADB_SELECT, a
-    call nz, Call_000_2212
+    call nz, toggleMissiles
     jr jr_000_053e
 
 jr_000_0522:
@@ -5204,34 +5204,40 @@ Call_000_21fb:
     bit PADB_SELECT, a
     jp z, Jump_000_3daf
 
-Call_000_2212:
+; Switch between missiles and beams
+toggleMissiles: ; 00:2212
+    ; Check if missiles are active
     ld a, [samusActiveWeapon]
     cp $08
-    jr nz, jr_000_222b
-
-    ld a, [samusBeam]
-    ld [samusActiveWeapon], a
-    ld hl, $2249
-    call Call_000_2753
-    ld a, $15
-    ld [$cec0], a
-    ret
-
-
-jr_000_222b:
+    jr nz, .endIf
+        ; Switch to beam
+        ld a, [samusBeam]
+        ld [samusActiveWeapon], a
+        ld hl, gfxInfo_cannonBeam
+        call Call_000_2753
+        ; Play sound effect
+        ld a, $15
+        ld [$cec0], a
+            ret
+    .endIf:
+    ; Save current beam (unnecessary code?)
     ld a, [samusActiveWeapon]
     ld [samusBeam], a
+    ; Switch to missiles
     ld a, $08
     ld [samusActiveWeapon], a
-    ld hl, addr2242
+    ld hl, gfxInfo_cannonMissile
     call Call_000_2753
+    ; Play sound effect
     ld a, $15
     ld [$cec0], a
-    ret
+ret
 
-addr2242: db BANK(gfx_cannonMissile)
+; 00:2242
+gfxInfo_cannonMissile: db BANK(gfx_cannonMissile)
     dw gfx_cannonMissile, vramDest_cannon, $0020
-addr2249: db BANK(gfx_cannonBeam)
+; 00:2249
+gfxInfo_cannonBeam: db BANK(gfx_cannonBeam) 
     dw gfx_cannonBeam, vramDest_cannon, $0020
 
 func_2250: ; 00:2250 - Called by enemy routines
@@ -8866,7 +8872,7 @@ pickup_variaSuit:
     ld [$d08c], a
     ld hl, gfxInfo_variaSuit
     call Call_000_2753
-    ld hl, addr2242
+    ld hl, gfxInfo_cannonMissile
     ld a, [samusActiveWeapon]
     cp $08
     call z, Call_000_2753
