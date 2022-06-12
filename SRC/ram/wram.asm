@@ -590,7 +590,7 @@ def samusPose = $D020 ; Samus' pose
 ;$D026: Weird air time variable, set to 40h by $2EE3, set to 50h when escaping Metroid Queen's mouth
 ;$D027: Samus' previous X position
 ;$D029: Samus' previous Y position
-;$D02B: Direction Samus is facing. Saved to SRAM, mirror of $D81E?
+def samusFacingDirection = $D02B ; Direction Samus is facing. Saved to SRAM, mirror of $D81E?
 ;{
 ;    0: Left
 ;    1: Right
@@ -667,7 +667,7 @@ def debugItemIndex = $D046 ; Debug screen selector index
 ;$D049: Timer for something
 ;
 ;$D04C: Cleared by handle loading blocks due to scrolling, set to FFh in a few places. Never read
-;$D04D: Weapon equipped.  Mirror of $D816?
+def samusActiveWeapon = $D04D ; Weapon equipped.  See also $D055
 ;{
 ;    0: Normal
 ;    1: Ice
@@ -686,7 +686,7 @@ def samusCurHealthHigh = $D052 ; Samus' current health (in tanks) see also $D819
 def samusCurMissilesLow  = $D053 ; Samus' missiles (low byte)     see also $D81C
 def samusCurMissilesHigh = $D054 ; Samus' missiles (high byte)
 
-;$D055: Samus' beam. Saved to SRAM, mirror of $D04D/$D816?
+def samusBeam = $D055 ; Current beam that Samus owns. See also $D04D/$D816
 ;{
 ;    0: Normal
 ;    1: Ice
@@ -813,7 +813,7 @@ def doorIndexHigh = $D08F
 ;    22h: Dying
 ;}
 def earthquakeTimer = $D091 ; Time until next Metroid earthquake. Counts down in $100h frame intervals after killing a metroid.
-;$D092: Song for room
+def currentRoomSong = $D092 ; Song for room. Used when restoring song when loading a save and after some other events
 ;$D093: Mirror of $D06C?
 ;$D094: Mirror of $FFE1?
 ;$D095

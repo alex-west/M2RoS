@@ -512,7 +512,7 @@ ret
     jp nz, Jump_001_4d33
 
     ld b, $01
-    ld a, [$d02b]
+    ld a, [samusFacingDirection]
     and a
     jr nz, jr_001_4c05
 
@@ -570,7 +570,7 @@ jr_001_4c19:
 
 drawSamus_4C59: ; $0F, $11
     ld d, $00
-    ld a, [$d02b]
+    ld a, [samusFacingDirection]
     ld e, a
     ld hl, $4c69
     add hl, de
@@ -581,7 +581,7 @@ drawSamus_4C59: ; $0F, $11
     db $16, $09
 
 drawSamus_4C6B: ; $0B-$0E
-    ld a, [$d02b]
+    ld a, [samusFacingDirection]
     and $01
     sla a
     sla a
@@ -602,7 +602,7 @@ drawSamus_4C6B: ; $0B-$0E
     db $37, $38, $39, $3a, $3b, $3c, $3d, $3e
 
 drawSamus_4C94: ; Morph poses
-    ld a, [$d02b]
+    ld a, [samusFacingDirection]
     and $01
     sla a
     sla a
@@ -636,7 +636,7 @@ drawSamus_4CBD: ; $01, $07
 drawSamus_4CCC: ; %09, $0A
     ld a, $03
     ldh [hSpriteId], a
-    ld a, [$d02b]
+    ld a, [samusFacingDirection]
     and a
     jp nz, Jump_001_4ddf
 
@@ -649,7 +649,7 @@ drawSamus_4CCC: ; %09, $0A
     db $00, $0c, $19, $00, $00, $00, $00, $00
 
 drawSamus_4CEE: ; $02
-    ld a, [$d02b]
+    ld a, [samusFacingDirection]
     and a
     jp z, Jump_001_4cfb
 
@@ -724,7 +724,7 @@ drawSamus_4D45: ; $00
 drawSamus_4D65: ; $04
     ld a, $0b
     ldh [hSpriteId], a
-    ld a, [$d02b]
+    ld a, [samusFacingDirection]
     and a
     jp nz, Jump_001_4ddf
 
@@ -753,7 +753,7 @@ jr_001_4d82:
     ld [$ced5], a
 
 jr_001_4d94:
-    ld a, [$d02b]
+    ld a, [samusFacingDirection]
     and $01
     sla a
     sla a
@@ -981,7 +981,7 @@ jr_001_4e9f:
     jr nz, jr_001_4ecf
 
     ld c, $01
-    ld a, [$d02b]
+    ld a, [samusFacingDirection]
     and a
     jr nz, jr_001_4ed8
 
@@ -1018,7 +1018,7 @@ jr_001_4ed8:
     ldh [$9a], a
     ld hl, $55fb
     sla c
-    ld a, [$d02b]
+    ld a, [samusFacingDirection]
     add c
     srl c
     ld e, a
@@ -1027,7 +1027,7 @@ jr_001_4ed8:
     ld a, [hl]
     sub $04
     ldh [$98], a
-    ld a, [$d04d]
+    ld a, [samusActiveWeapon]
     cp $04
     jp z, Jump_001_4f7e
 
@@ -1037,7 +1037,7 @@ jr_001_4ed8:
     cp $03
     ret z
 
-    ld a, [$d04d]
+    ld a, [samusActiveWeapon]
     cp $08
     jr nz, jr_001_4f44
 
@@ -1063,7 +1063,7 @@ jr_001_4f32:
     ld [samusCurMissilesHigh], a
 
 jr_001_4f44:
-    ld a, [$d04d]
+    ld a, [samusActiveWeapon]
     ld [hl+], a
     ldh a, [$99]
     ld [hl+], a
@@ -1083,7 +1083,7 @@ jr_001_4f44:
     ld [hl+], a
     xor a
     ld [hl], a
-    ld a, [$d04d]
+    ld a, [samusActiveWeapon]
     cp $03
     jr nz, jr_001_4f6f
 
@@ -1093,7 +1093,7 @@ jr_001_4f44:
 
 jr_001_4f6f:
     ld hl, $4fe5
-    ld a, [$d04d]
+    ld a, [samusActiveWeapon]
     ld e, a
     ld d, $00
     add hl, de
@@ -1138,7 +1138,7 @@ jr_001_4f9d:
     ldh [$9a], a
 
 jr_001_4fad:
-    ld a, [$d04d]
+    ld a, [samusActiveWeapon]
     ld [hl+], a
     ldh a, [$99]
     ld [hl+], a
@@ -1166,7 +1166,7 @@ jr_001_4fad:
     jp c, Jump_001_4f85
 
     ld hl, $4fe5
-    ld a, [$d04d]
+    ld a, [samusActiveWeapon]
     ld e, a
     ld d, $00
     add hl, de
@@ -1185,7 +1185,7 @@ jr_001_4fad:
 
 Call_001_4fee:
     ld hl, $dd00
-    ld a, [$d04d]
+    ld a, [samusActiveWeapon]
     cp $08
     jr nz, jr_001_4ffd
 
@@ -3775,7 +3775,7 @@ include "data/sprites_credits.asm" ; Also title
     jr z, jr_001_7a28
 
     ld [$cedc], a
-    ld [$d092], a
+    ld [currentRoomSong], a
     xor a
     ld [$d0a5], a
     ret
@@ -3829,10 +3829,11 @@ Call_001_7a45:
     ld [$d09b], a
     ret
 
-
+; 01:7A69
     db $93, $e7, $fb
 
-Call_001_7a6c:
+
+saveEnemyFlagsToSRAM: ; 01:7A6C
     ld d, $00
     ld a, [previousLevelBank]
     sub $09
@@ -3846,46 +3847,50 @@ Call_001_7a6c:
     ld de, enemySaveFlags
     ld b, $40
 
-    jr_001_7a83:
+    ; Save active enemy save flags to save buffer
+    .bufferLoop:
         ld a, [de]
         cp $02
-            jr z, jr_001_7a92
+            jr z, .case_A
         cp $fe
-            jr z, jr_001_7a92
+            jr z, .case_A
         cp $04
-            jr nz, jr_001_7a93
+            jr nz, .case_B
         ld a, $fe
     
-        jr_001_7a92:
+        .case_A:
             ld [hl], a
-        jr_001_7a93:
+        .case_B:
             inc l
             inc e
             dec b
-    jr nz, jr_001_7a83
+    jr nz, .bufferLoop
 
+    ; Enable SRAM
     ld a, $0a
     ld [$0000], a
-    ld de, $b000
+
+    ld de, saveData_objList_baseAddr
     ld a, [activeSaveSlot]
     add a
     add d
     ld d, a
-    ld hl, $c900
+    ld hl, saveBuf_enemySaveFlags
     ld bc, $01c0
 
-jr_001_7aac:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    dec bc
-    ld a, b
-    or c
-    jr nz, jr_001_7aac
+    .saveLoop:
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        dec bc
+        ld a, b
+        or c
+    jr nz, .saveLoop
 
+    ; Disable SRAM
     xor a
     ld [$0000], a
-    ret
+ret
 
 ; Loads enemy save flags from SRAM to a WRAM buffer.
 loadEnemySaveFlags: ; 01:7AB9
@@ -3910,28 +3915,31 @@ loadEnemySaveFlags: ; 01:7AB9
 
     ld a, $00
     ld [$0000], a
+    
     xor a
     ld [$c436], a
 ret
 
-
+saveFileToSRAM: ; 01:7ADF
+    ; Enable SRAM
     ld a, $0a
     ld [$0000], a
-    ld hl, $2083
+
+    ld hl, saveFile_magicNumber
     ld a, [activeSaveSlot]
     sla a
     sla a
     swap a
     ld e, a
-    ld d, $a0
+    ld d, HIGH(saveData_baseAddr)
     ld b, $08
 
-jr_001_7af5:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    dec b
-    jr nz, jr_001_7af5
+    .loop_A: ; Copy magic number to save file
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        dec b
+    jr nz, .loop_A
 
     ld a, [activeSaveSlot]
     sla a
@@ -3939,7 +3947,8 @@ jr_001_7af5:
     swap a
     add $08
     ld l, a
-    ld h, $a0
+    ld h, HIGH(saveData_baseAddr)
+    
     ldh a, [hSamusYPixel]
     ld [hl+], a
     ldh a, [hSamusYScreen]
@@ -3956,19 +3965,19 @@ jr_001_7af5:
     ld [hl+], a
     ldh a, [hCameraXScreen]
     ld [hl+], a
-    ld de, $d808
-    ld b, $0d
 
-jr_001_7b26:
-    ld a, [de]
-    inc de
-    ld [hl+], a
-    dec b
-    jr nz, jr_001_7b26
+    ld de, saveBuffer + $08
+    ld b, $0d
+    .loop_B: ; Save graphics pointers and such
+        ld a, [de]
+        inc de
+        ld [hl+], a
+        dec b
+    jr nz, .loop_B
 
     ld a, [samusItems]
     ld [hl+], a
-    ld a, [$d055]
+    ld a, [samusBeam]
     ld [hl+], a
     ld a, [samusEnergyTanks]
     ld [hl+], a
@@ -3984,7 +3993,7 @@ jr_001_7b26:
     ld [hl+], a
     ld a, [samusCurMissilesHigh]
     ld [hl+], a
-    ld a, [$d02b]
+    ld a, [samusFacingDirection]
     ld [hl+], a
     ld a, [acidDamageValue]
     ld [hl+], a
@@ -3992,7 +4001,7 @@ jr_001_7b26:
     ld [hl+], a
     ld a, [metroidCountReal]
     ld [hl+], a
-    ld a, [$d092]
+    ld a, [currentRoomSong]
     ld [hl+], a
     ld a, [gameTimeMinutes]
     ld [hl+], a
@@ -4000,13 +4009,19 @@ jr_001_7b26:
     ld [hl+], a
     ld a, [metroidCountDisplayed]
     ld [hl], a
+    ; Disable SRAM
     ld a, $00
     ld [$0000], a
-    call Call_001_7a6c
+
+    call saveEnemyFlagsToSRAM
+    
+    ; Play save sound effect
     ld a, $1c
     ld [$cec0], a
+    ; But why write to this twice?
     ld a, $1c
     ld [$cec0], a
+    ; Turn game mode back to main
     ld a, $04
     ldh [gameMode], a
 ret

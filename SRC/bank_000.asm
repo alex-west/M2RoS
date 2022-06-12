@@ -535,7 +535,7 @@ jr_000_03db:
     ld a, [$d821]
     ld [metroidCountReal], a
     ld a, [$d822]
-    ld [$d092], a
+    ld [currentRoomSong], a
     ld a, [$d823]
     ld [gameTimeMinutes], a
     ld a, [$d824]
@@ -1854,11 +1854,11 @@ Call_000_0ca3:
     ld [samusItems], a
     
     ld a, [$d816]
-    ld [$d04d], a
-    ld [$d055], a
+    ld [samusActiveWeapon], a
+    ld [samusBeam], a
     
     ld a, [$d81e]
-    ld [$d02b], a
+    ld [samusFacingDirection], a
     
     ld a, [$d817]
     ld [samusEnergyTanks], a
@@ -2164,7 +2164,7 @@ poseFunc_0EA5: ; $13-$17
 
     ld a, [$cedd]
     ld b, a
-    ld a, [$d092]
+    ld a, [currentRoomSong]
     cp b
     jr z, jr_000_0ebc
 
@@ -3050,14 +3050,14 @@ jr_000_1421:
     bit PADB_RIGHT, a
     jr z, jr_000_1452
 
-    ld a, [$d02b]
+    ld a, [samusFacingDirection]
     cp $01
     jr z, jr_000_1443
 
     ld a, $83
     ld [samusPose], a
     ld a, $01
-    ld [$d02b], a
+    ld [samusFacingDirection], a
     ld a, $02
     ld [$d02c], a
     ld a, $04
@@ -3070,7 +3070,7 @@ jr_000_1443:
     ret c
 
     ld a, $01
-    ld [$d02b], a
+    ld [samusFacingDirection], a
     ld a, $03
     ld [samusPose], a
     ret
@@ -3081,14 +3081,14 @@ jr_000_1452:
     bit PADB_LEFT, a
     jr z, jr_000_1483
 
-    ld a, [$d02b]
+    ld a, [samusFacingDirection]
     cp $00
     jr z, jr_000_1474
 
     ld a, $83
     ld [samusPose], a
     ld a, $00
-    ld [$d02b], a
+    ld [samusFacingDirection], a
     ld a, $02
     ld [$d02c], a
     ld a, $04
@@ -3101,7 +3101,7 @@ jr_000_1474:
     ret c
 
     ld a, $00
-    ld [$d02b], a
+    ld [samusFacingDirection], a
     ld a, $03
     ld [samusPose], a
     ret
@@ -3232,14 +3232,14 @@ jr_000_153b:
     bit PADB_RIGHT, a
     jr z, jr_000_1566
 
-    ld a, [$d02b]
+    ld a, [samusFacingDirection]
     cp $01
     jr z, jr_000_155d
 
     ld a, $83
     ld [samusPose], a
     ld a, $01
-    ld [$d02b], a
+    ld [samusFacingDirection], a
     ld a, $02
     ld [$d02c], a
     ld a, $04
@@ -3261,14 +3261,14 @@ jr_000_1566:
     bit PADB_LEFT, a
     jr z, jr_000_1591
 
-    ld a, [$d02b]
+    ld a, [samusFacingDirection]
     cp $00
     jr z, jr_000_1588
 
     ld a, $83
     ld [samusPose], a
     ld a, $00
-    ld [$d02b], a
+    ld [samusFacingDirection], a
     ld a, $02
     ld [$d02c], a
     ld a, $04
@@ -3376,7 +3376,7 @@ jr_000_1604:
 jr_000_161b:
     xor a
     ld [$d022], a
-    ld a, [$d02b]
+    ld a, [samusFacingDirection]
     cp $01
     jr nz, jr_000_1635
 
@@ -3392,7 +3392,7 @@ jr_000_161b:
 
 jr_000_1635:
     ld a, $01
-    ld [$d02b], a
+    ld [samusFacingDirection], a
     ret
 
 
@@ -3414,7 +3414,7 @@ jr_000_163b:
 jr_000_1652:
     xor a
     ld [$d022], a
-    ld a, [$d02b]
+    ld a, [samusFacingDirection]
     and a
     jr nz, jr_000_166b
 
@@ -3430,7 +3430,7 @@ jr_000_1652:
 
 jr_000_166b:
     ld a, $00
-    ld [$d02b], a
+    ld [samusFacingDirection], a
     ret
 
 
@@ -3904,7 +3904,7 @@ jr_000_1953:
 
     inc a
     srl a
-    ld [$d02b], a
+    ld [samusFacingDirection], a
     ret
 
 
@@ -4329,7 +4329,7 @@ jr_000_1c0c:
 
 Call_000_1c0d:
     ld a, $01
-    ld [$d02b], a
+    ld [samusFacingDirection], a
     ld b, $01
     ld a, [$d048]
     and a
@@ -4375,7 +4375,7 @@ jr_000_1c4c:
 
 Call_000_1c51:
     xor a
-    ld [$d02b], a
+    ld [samusFacingDirection], a
     ld b, $01
     ld a, [$d048]
     and a
@@ -4429,7 +4429,7 @@ Call_000_1c98:
 jr_000_1c9a:
     ld b, a
     ld a, $01
-    ld [$d02b], a
+    ld [samusFacingDirection], a
     ldh a, [hSamusXPixel]
     add b
     ldh [hSamusXPixel], a
@@ -4464,7 +4464,7 @@ Call_000_1cc9:
 jr_000_1ccb:
     ld b, a
     xor a
-    ld [$d02b], a
+    ld [samusFacingDirection], a
     ldh a, [hSamusXPixel]
     sub b
     ldh [hSamusXPixel], a
@@ -4491,7 +4491,7 @@ jr_000_1cf0:
 
 Call_000_1cf5:
     ld a, $01
-    ld [$d02b], a
+    ld [samusFacingDirection], a
 
 Call_000_1cfa:
     ld a, $01
@@ -4522,7 +4522,7 @@ jr_000_1d1d:
 
 Call_000_1d22:
     xor a
-    ld [$d02b], a
+    ld [samusFacingDirection], a
 
 Call_000_1d26:
     ld a, $01
@@ -5205,12 +5205,12 @@ Call_000_21fb:
     jp z, Jump_000_3daf
 
 Call_000_2212:
-    ld a, [$d04d]
+    ld a, [samusActiveWeapon]
     cp $08
     jr nz, jr_000_222b
 
-    ld a, [$d055]
-    ld [$d04d], a
+    ld a, [samusBeam]
+    ld [samusActiveWeapon], a
     ld hl, $2249
     call Call_000_2753
     ld a, $15
@@ -5219,10 +5219,10 @@ Call_000_2212:
 
 
 jr_000_222b:
-    ld a, [$d04d]
-    ld [$d055], a
+    ld a, [samusActiveWeapon]
+    ld [samusBeam], a
     ld a, $08
-    ld [$d04d], a
+    ld [samusActiveWeapon], a
     ld hl, addr2242
     call Call_000_2753
     ld a, $15
@@ -5784,7 +5784,7 @@ executeDoorScript: ; 00:239C
             cp $0a
             jr z, .song_branchB    
                 ld [$cedc], a
-                ld [$d092], a
+                ld [currentRoomSong], a
                 cp $0b
                 jr nz, .song_branchA
                     ld a, $ff
@@ -5802,7 +5802,7 @@ executeDoorScript: ; 00:239C
             .song_branchB:
             ld a, $ff
             ld [$cedc], a
-            ld [$d092], a
+            ld [currentRoomSong], a
             xor a
             ld [$d0a5], a
             ld a, $ff
@@ -7018,10 +7018,10 @@ debugPauseMenu:
         bit PADB_B, a
         jr nz, jr_000_2def
             ; Increment weapon equipped
-            ld a, [$d04d]
+            ld a, [samusActiveWeapon]
             inc a
-            ld [$d04d], a
-            ld [$d055], a
+            ld [samusActiveWeapon], a
+            ld [samusBeam], a
             jr jr_000_2e07
         jr_000_2def:
             ; Increment missiles
@@ -7044,10 +7044,10 @@ debugPauseMenu:
         ldh a, [hInputPressed]
         bit PADB_B, a
         jr nz, jr_000_2e1f
-            ld a, [$d04d]
+            ld a, [samusActiveWeapon]
             dec a
-            ld [$d04d], a
-            ld [$d055], a
+            ld [samusActiveWeapon], a
+            ld [samusBeam], a
             jr jr_000_2e31
         jr_000_2e1f:
             ld a, [samusCurMissilesLow]
@@ -7133,7 +7133,7 @@ debugPauseMenu:
     ldh [hSpriteYPixel], a
     ld a, $50
     ldh [hSpriteXPixel], a
-    ld a, [$d04d]
+    ld a, [samusActiveWeapon]
     call $4afc
     
     ldh a, [hOamBufferIndex]
@@ -8712,16 +8712,16 @@ handleItemPickup:
 
 pickup_plasmaBeam:
     ld a, $04
-    ld [$d055], a
+    ld [samusBeam], a
     ld hl, gfxInfo_plasma
     call Call_000_2753
-    ld a, [$d04d]
+    ld a, [samusActiveWeapon]
     cp $08
     jp z, Jump_000_3a01
 
     ld a, $04
-    ld [$d04d], a
-    ld [$d055], a
+    ld [samusActiveWeapon], a
+    ld [samusBeam], a
     jp Jump_000_3a01
     
 gfxInfo_plasma: db BANK(gfx_beamPlasma)
@@ -8729,16 +8729,16 @@ gfxInfo_plasma: db BANK(gfx_beamPlasma)
 
 pickup_iceBeam:
     ld a, $01
-    ld [$d055], a
+    ld [samusBeam], a
     ld hl, gfxInfo_ice
     call Call_000_2753
-    ld a, [$d04d]
+    ld a, [samusActiveWeapon]
     cp $08
     jp z, Jump_000_3a01
 
     ld a, $01
-    ld [$d04d], a
-    ld [$d055], a
+    ld [samusActiveWeapon], a
+    ld [samusBeam], a
     jp Jump_000_3a01
 
 gfxInfo_ice: db BANK(gfx_beamIce)
@@ -8746,16 +8746,16 @@ gfxInfo_ice: db BANK(gfx_beamIce)
 
 pickup_waveBeam:
     ld a, $02
-    ld [$d055], a
+    ld [samusBeam], a
     ld hl, gfxInfo_wave
     call Call_000_2753
-    ld a, [$d04d]
+    ld a, [samusActiveWeapon]
     cp $08
     jp z, Jump_000_3a01
 
     ld a, $02
-    ld [$d04d], a
-    ld [$d055], a
+    ld [samusActiveWeapon], a
+    ld [samusBeam], a
     jp Jump_000_3a01
 
 gfxInfo_wave: db BANK(gfx_beamWave)
@@ -8763,16 +8763,16 @@ gfxInfo_wave: db BANK(gfx_beamWave)
 
 pickup_spazer:
     ld a, $03
-    ld [$d055], a
+    ld [samusBeam], a
     ld hl, gfxInfo_plasma
     call Call_000_2753
-    ld a, [$d04d]
+    ld a, [samusActiveWeapon]
     cp $08
     jp z, Jump_000_3a01
 
     ld a, $03
-    ld [$d04d], a
-    ld [$d055], a
+    ld [samusActiveWeapon], a
+    ld [samusBeam], a
     jp Jump_000_3a01
 
 
@@ -8867,7 +8867,7 @@ pickup_variaSuit:
     ld hl, gfxInfo_variaSuit
     call Call_000_2753
     ld hl, addr2242
-    ld a, [$d04d]
+    ld a, [samusActiveWeapon]
     cp $08
     call z, Call_000_2753
     call loadExtraSuitGraphics
@@ -9279,7 +9279,7 @@ loadGame_SamusItemGraphics: ; 00:3BB4
         .endIf_screw:
     .endSpinBranch:
 
-    ld a, [$d04d] ; Load beam graphics
+    ld a, [samusActiveWeapon] ; Load beam graphics
         cp $01
         jr nz, .endIf_ice
             ld hl, gfxInfo_ice
@@ -9419,7 +9419,7 @@ gameMode_saveGame: ; 00:3CE2
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    jp $7adf
+    jp saveFileToSRAM
 
 
 Call_000_3ced: ; 00:3CED

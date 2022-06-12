@@ -61,7 +61,7 @@ jr_002_404b:
     and a
     jr z, jr_002_4059
         ; Resume music unless all metroids are dead
-        ld a, [$d092]
+        ld a, [currentRoomSong]
         add $11
         ld [$cedc], a
     jr_002_4059:
