@@ -850,30 +850,33 @@ Jump_001_4ddf:
     ld [$d057], a
 ret
 
-
-jr_001_4e1c:
+; New game
+; - Transfers initial savegame to save buffer
+createNewSave: ; 01:4E1C
     xor a
     ld [$d079], a
-    ld hl, $4e64
+    ld hl, initialSaveFile
     ld de, saveBuffer
     ld b, $26
 
-jr_001_4e28:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    dec b
-    jr nz, jr_001_4e28
+    .loadLoop:
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        dec b
+    jr nz, .loadLoop
 
-    ld a, $02
+    ld a, $02 ; "gameMode_LoadA"
     ldh [gameMode], a
-    ret
+ret
 
-
+; Copies savegame from SRAM to save buffer in WRAM
+loadSaveFile: ; 01:4E33
     ld a, [$d079]
     and a
-    jr z, jr_001_4e1c
+        jr z, createNewSave
 
+    ; Enable SRAM
     ld a, $0a
     ld [$0000], a
     ld a, [activeSaveSlot]
@@ -882,25 +885,28 @@ jr_001_4e28:
     swap a
     add $08
     ld l, a
-    ld h, $a0
+    ld h, HIGH(saveData_baseAddr)
     ld de, saveBuffer
     ld b, $26
 
-jr_001_4e51:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    dec b
-    jr nz, jr_001_4e51
+    .loadLoop:
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        dec b
+    jr nz, .loadLoop
 
+    ; Disable SRAM
     ld a, $00
     ld [$0000], a
-    call $3e0a
-    ld a, $02
+    
+    call loadEnemySaveFlags_longJump ; Indirect call to 01:7AB9 (in this same bank!)
+    ld a, $02 ; for "gameMode_LoadA"
     ldh [gameMode], a
-    ret
+ret
 
 ; Initial savegame
+initialSaveFile:
 	dw $07D4     ; Samus' Y position
 	dw $0648     ; Samus' X position
 	dw $07C0     ; Screen Y position
@@ -3881,25 +3887,26 @@ jr_001_7aac:
     ld [$0000], a
     ret
 
-
+; Loads enemy save flags from SRAM to a WRAM buffer.
+loadEnemySaveFlags: ; 01:7AB9
     ld a, $0a
     ld [$0000], a
-    ld de, $c900
+    ld de, saveBuf_enemySaveFlags
     ld bc, $01c0
-    ld hl, $b000
+    ld hl, saveData_objList_baseAddr
     ld a, [activeSaveSlot]
     add a
     add h
     ld h, a
 
-    jr_001_7acd:
+    .loadLoop:
         ld a, [hl+]
         ld [de], a
         inc de
         dec bc
         ld a, b
         or c
-    jr nz, jr_001_7acd
+    jr nz, .loadLoop
 
     ld a, $00
     ld [$0000], a

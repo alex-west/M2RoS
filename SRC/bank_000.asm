@@ -9579,12 +9579,13 @@ Jump_000_3daf: ; 00:3DAF
     ret
 
 
-; 00:3E0A
-    ld a, $01
+loadEnemySaveFlags_longJump: ; 00:3E0A
+    ld a, BANK(loadEnemySaveFlags)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    call $7ab9
-    ld a, $01
+    call loadEnemySaveFlags
+    ; Return to our singular callee (same bank at the function we longjumped too)
+    ld a, BANK(loadSaveFile)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     ret
@@ -9629,17 +9630,17 @@ gameMode_Title: ; 00:3E59
 
 
 gameMode_newGame: ; 00:3E67 - New Game
-    ld a, $01
+    ld a, BANK(createNewSave)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    jp $4e1c
+    jp createNewSave
 
 
 gameMode_loadSave: ; 00:3E72 - Load Save
-    ld a, $01
+    ld a, BANK(loadSaveFile)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    jp $4e33
+    jp loadSaveFile
 
 
 ; 00:3E7D
