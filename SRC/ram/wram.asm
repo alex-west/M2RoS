@@ -859,40 +859,63 @@ saveBuf_cameraYScreen: ds 1 ; $D805: Camera Y position
 saveBuf_cameraXPixel:  ds 1 ; $D806: Camera X position
 saveBuf_cameraXScreen: ds 1 ; $D807: Camera X position
 
-;    $D808: Enemy tiles source address (2 bytes)
-;    $D80A: Background tiles source bank
-;    $D80B: Background tiles source address (2 bytes)
-;    $D80D: Metatile definitions source address (bank 8, 2 bytes)
-;    $D80F: Tile properties source address (bank 8, 2 bytes)
-;    $D811: Bank for current room
-;    $D812: Samus solid block threshold
-;    $D813: Enemy solid block threshold
-;    $D814: Projectile solid block threshold
-;    $D815: Samus' equipment
-;    $D816: Samus' beam
-;    $D817: Samus' max health in energy tanks
-;    $D818: Samus' current health (low byte)
-;    $D819: Samus' current health (energy tanks)
-;    $D81A: Samus' max missiles (low byte)
-;    $D81B: Samus' max missiles (high byte)
-;    $D81C: Samus' missiles (low byte)
-;    $D81D: Samus' missiles (high byte)
-;    $D81E: Direction Samus is facing
-;    $D81F: Acid damage
-;    $D820: Spike damage
-;    $D821: Real number of Metroids remaining
-;    $D822: Song for room
-;    $D823: In-game timer, minutes
-;    $D824: In-game timer, hours
-;    $D825: Number of Metroids remaining
+; Implicitly bank 6
+saveBuf_enGfxSrcLow:  ds 1 ; $D808: Enemy tiles source address (low byte)
+saveBuf_enGfxSrcHigh: ds 1 ; $D809: Enemy tiles source address (high byte)
+
+saveBuf_bgGfxSrcBank: ds 1 ; $D80A: Background tiles source bank
+saveBuf_bgGfxSrcLow:  ds 1 ; $D80B: Background tiles source address (low byte)
+saveBuf_bgGfxSrcHigh: ds 1 ; $D80C: Background tiles source address (high byte)
+
+; Implicitly bank 8
+saveBuf_tiletableSrcLow:  ds 1 ; $D80D: Metatile definitions source address (low byte)
+saveBuf_tiletableSrcHigh: ds 1 ; $D80E: Metatile definitions source address (high byte)
+
+; Implicitly bank 8
+saveBuf_collisionSrcLow:  ds 1 ; $D80F: Tile properties source address (low byte)
+saveBuf_collisionSrcHigh: ds 1 ; $D810: Tile properties source address (high byte)
+
+saveBuf_currentLevelBank: ds 1 ; $D811: Bank for current room
+
+saveBuf_samusSolidityIndex: ds 1 ; $D812: Samus solid block threshold
+saveBuf_enemySolidityIndex: ds 1 ; $D813: Enemy solid block threshold
+saveBuf_beamSolidityIndex:  ds 1 ; $D814: Projectile solid block threshold
+
+saveBuf_samusItems: ds 1 ; $D815: Samus' equipment
+saveBuf_samusBeam:  ds 1 ; $D816: Samus' beam
+
+saveBuf_samusEnergyTanks: ds 1 ; $D817: Samus' max health in energy tanks
+saveBuf_samusHealthLow:   ds 1 ; $D818: Samus' current health (low byte)
+saveBuf_samusHealthHigh:  ds 1 ; $D819: Samus' current health (energy tanks)
+
+saveBuf_samusMaxMissilesLow:  ds 1 ; $D81A: Samus' max missiles (low byte)
+saveBuf_samusMaxMissilesHigh: ds 1 ; $D81B: Samus' max missiles (high byte)
+saveBuf_samusCurMissilesLow:  ds 1 ; $D81C: Samus' missiles (low byte)
+saveBuf_samusCurMissilesHigh: ds 1 ; $D81D: Samus' missiles (high byte)
+
+saveBuf_samusFacingDirection: ds 1 ; $D81E: Direction Samus is facing
+
+saveBuf_acidDamageValue:  ds 1 ; $D81F: Acid damage
+saveBuf_spikeDamageValue: ds 1 ; $D820: Spike damage
+
+saveBuf_metroidCountReal: ds 1 ; $D821: Real number of Metroids remaining
+
+saveBuf_currentRoomSong: ds 1 ; $D822: Song for room
+
+; Frames and seconds are not saved
+saveBuf_gameTimeMinutes: ds 1 ; $D823: In-game timer, minutes
+saveBuf_gameTimeHours:   ds 1 ; $D824: In-game timer, hours
+
+saveBuf_metroidCountDisplayed: ds 1 ; $D825: Number of Metroids remaining
 ;}
-;
+
 ;$D900..FF: Respawning block data. 10h byte slots
 ;{
 ;    + 0: Frame counter
 ;    + 1: Y position
 ;    + 2: X position
 ;}
+
 section "Tiletable Array", wramx[$da00]
 tiletableArray:: ds $200 ;$DA00..DBFF: Metatile definitions
 collisionArray:: ds $100 ;$DC00..FF: Tile properties. Indexed by tilemap value. Note that tilemap value < 4 is a respawning shot block

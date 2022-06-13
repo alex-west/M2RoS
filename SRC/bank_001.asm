@@ -851,7 +851,7 @@ Jump_001_4ddf:
 ret
 
 ; New game
-; - Transfers initial savegame to save buffer
+; - Transfers initial savegame from ROM to save buffer in WRAM
 createNewSave: ; 01:4E1C
     xor a
     ld [$d079], a

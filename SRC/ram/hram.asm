@@ -122,9 +122,9 @@ hCameraYScreen:: ds 1 ;$FFC9: Camera Y position
 hCameraXPixel::  ds 1 ;$FFCA: Camera X position
 hCameraXScreen:: ds 1 ;$FFCB: Camera X position
 ;$FFCC: Row to update    (in pixels)
-;$FFCD
+;$FFCD  (in screens)
 ;$FFCE: Column to update (in pixels)
-;$FFCF
+;$FFCF  (in screens)
 ;
 ;$FFE0..F5: Working enemy data (see $C600..C7FF)
 section "HRAM part enemy local", HRAM[$ffE0]

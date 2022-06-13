@@ -477,71 +477,78 @@ disableLCD:
     ldh [$99], a
     res 0, a
     ldh [rIE], a
-    jr_000_03a4:
+    .waitLoop:
         ldh a, [rLY]
         cp $91
-    jr nz, jr_000_03a4
+    jr nz, .waitLoop
     ldh a, [rLCDC]
     and $7f
     ldh [rLCDC], a
     ldh a, [$99]
     ldh [rIE], a
-    ret
+ret
 
 gameMode_LoadA:
-    call Call_000_0ca3
+    call loadGame_samusData
     ld a, $08
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    ld a, [$d80d]
+    ld a, [saveBuf_tiletableSrcLow]
     ld l, a
-    ld a, [$d80e]
+    ld a, [saveBuf_tiletableSrcHigh]
     ld h, a
     ld de, tiletableArray
 
-jr_000_03cb:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    ld a, d
-    cp $dc
-    jr nz, jr_000_03cb
+    .tiletableLoop:
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        ld a, d
+        cp $dc
+    jr nz, .tiletableLoop
 
-    ld a, [$d80f]
+    ld a, [saveBuf_collisionSrcLow]
     ld l, a
-    ld a, [$d810]
+    ld a, [saveBuf_collisionSrcHigh]
     ld h, a
 
-jr_000_03db:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    ld a, d
-    cp $dd
-    jr nz, jr_000_03db
+    .collisionLoop:
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        ld a, d
+        cp $dd
+    jr nz, .collisionLoop
 
-    ld a, [$d811]
+    ld a, [saveBuf_currentLevelBank]
     ld [currentLevelBank], a
-    ld a, [$d812]
+    
+    ld a, [saveBuf_samusSolidityIndex]
     ld [samusSolidityIndex], a
-    ld a, [$d813]
+    ld a, [saveBuf_enemySolidityIndex]
     ld [enemySolidityIndex_canon], a
-    ld a, [$d814]
+    ld a, [saveBuf_beamSolidityIndex]
     ld [beamSolidityIndex], a
-    ld a, [$d81f]
+    
+    ld a, [saveBuf_acidDamageValue]
     ld [acidDamageValue], a
-    ld a, [$d820]
+    ld a, [saveBuf_spikeDamageValue]
     ld [spikeDamageValue], a
-    ld a, [$d821]
+    
+    ld a, [saveBuf_metroidCountReal]
     ld [metroidCountReal], a
-    ld a, [$d822]
+    
+    ld a, [saveBuf_currentRoomSong]
     ld [currentRoomSong], a
-    ld a, [$d823]
+    
+    ld a, [saveBuf_gameTimeMinutes]
     ld [gameTimeMinutes], a
-    ld a, [$d824]
+    ld a, [saveBuf_gameTimeHours]
     ld [gameTimeHours], a
-    ld a, [$d825]
+    
+    ld a, [saveBuf_metroidCountDisplayed]
     ld [metroidCountDisplayed], a
+    
     xor a
     ld [doorScrollDirection], a
     ld [deathAnimTimer], a
@@ -551,28 +558,31 @@ jr_000_03db:
     ld [$d06c], a
     ld [$d06d], a
     ld [maxOamPrevFrame], a
+
     ld a, $01
     ld [$d08b], a
     ld a, $ff
     ld [$d05d], a
+    
+    ; Clear respawning block table
     ld hl, $d900
-
-jr_000_044b:
-    xor a
-    ld [hl], a
-    ld a, l
-    add $10
-    ld l, a
-    jr nz, jr_000_044b
+    .clearLoop:
+        xor a
+        ld [hl], a
+        ld a, l
+        add $10
+        ld l, a
+    jr nz, .clearLoop
 
     ld a, $02
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     call $418c
+    ; Increment gameMode to gameMode_loadB
     ldh a, [gameMode]
     inc a
     ldh [gameMode], a
-    ret
+ret
 
 gameMode_LoadB:
     call disableLCD
@@ -632,6 +642,7 @@ gameMode_LoadB:
     ldh [rLCDC], a
     xor a
     ld [$d011], a
+    ; Increment game mode to main
     ldh a, [gameMode]
     inc a
     ldh [gameMode], a
@@ -804,9 +815,9 @@ loadGame_loadGraphics:
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     ld bc, $0400
-    ld a, [$d808]
+    ld a, [saveBuf_enGfxSrcLow]
     ld l, a
-    ld a, [$d809]
+    ld a, [saveBuf_enGfxSrcHigh]
     ld h, a
     ld de, vramDest_enemies
     call copyToVram
@@ -823,13 +834,13 @@ loadGame_loadGraphics:
         call copyToVram
     jr_000_0658:
 
-    ld a, [$d80a]
+    ld a, [saveBuf_bgGfxSrcBank]
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     ld bc, $0800
-    ld a, [$d80b]
+    ld a, [saveBuf_bgGfxSrcLow]
     ld l, a
-    ld a, [$d80c]
+    ld a, [saveBuf_bgGfxSrcHigh]
     ld h, a
     ld de, vramDest_bgTiles
     call copyToVram
@@ -1830,9 +1841,9 @@ jr_000_0c4e:
     ld [doorIndexHigh], a
 ret
 
-
-Call_000_0ca3:
-    call Call_000_21ef
+; Loads Samus' information from the WRAM save buffer to working locations in RAM
+loadGame_samusData:
+    call clearProjectileArray
     
     ld a, [saveBuf_samusXPixel]
     ldh [hSamusXPixel], a
@@ -1850,38 +1861,38 @@ Call_000_0ca3:
     xor a
     ld [samusInvulnerableTimer], a
     
-    ld a, [$d815]
+    ld a, [saveBuf_samusItems]
     ld [samusItems], a
     
-    ld a, [$d816]
+    ld a, [saveBuf_samusBeam]
     ld [samusActiveWeapon], a
     ld [samusBeam], a
     
-    ld a, [$d81e]
+    ld a, [saveBuf_samusFacingDirection]
     ld [samusFacingDirection], a
     
-    ld a, [$d817]
+    ld a, [saveBuf_samusEnergyTanks]
     ld [samusEnergyTanks], a
     
-    ld a, [$d818]
+    ld a, [saveBuf_samusHealthLow]
     ld [samusCurHealthLow], a
     ld [samusDispHealthLow], a
     
-    ld a, [$d819]
+    ld a, [saveBuf_samusHealthHigh]
     ld [samusCurHealthHigh], a
     ld [samusDispHealthHigh], a
     
-    ld a, [$d81a]
+    ld a, [saveBuf_samusMaxMissilesLow]
     ld [samusMaxMissilesLow], a
     
-    ld a, [$d81b]
+    ld a, [saveBuf_samusMaxMissilesHigh]
     ld [samusMaxMissilesHigh], a
     
-    ld a, [$d81c]
+    ld a, [saveBuf_samusCurMissilesLow]
     ld [samusCurMissilesLow], a
     ld [samusDispMissilesLow], a
     
-    ld a, [$d81d]
+    ld a, [saveBuf_samusCurMissilesHigh]
     ld [samusCurMissilesHigh], a
     ld [samusDispMissilesHigh], a
     
@@ -1891,9 +1902,10 @@ Call_000_0ca3:
     ld [countdownTimerLow], a
     ld a, $01
     ld [countdownTimerHigh], a
+    ; Play Samus' appearance fanfare
     ld a, $12
     ld [$cedc], a
-    ret
+ret
 
 
 Call_000_0d21:
@@ -5179,7 +5191,7 @@ saveFile_magicNumber:
 
 
 ; Clear Projectile RAM
-Call_000_21ef: ; 00:21EF
+clearProjectileArray: ; 00:21EF
     ld h, $dd
     ld l, $00
     .loop:
@@ -5589,13 +5601,13 @@ executeDoorScript: ; 00:239C
             ; Update solidity indexes (working and save buffer copies)
             ld a, [hl+]
             ld [samusSolidityIndex], a
-            ld [$d812], a
+            ld [saveBuf_samusSolidityIndex], a
             ld a, [hl+]
             ld [enemySolidityIndex_canon], a
-            ld [$d813], a
+            ld [saveBuf_enemySolidityIndex], a
             ld a, [hl+]
             ld [beamSolidityIndex], a
-            ld [$d814], a
+            ld [saveBuf_beamSolidityIndex], a
         pop hl
         jp .nextToken
 
@@ -5654,10 +5666,10 @@ executeDoorScript: ; 00:239C
         inc hl
         ld a, [hl+]
         ld [acidDamageValue], a
-        ld [$d81f], a
+        ld [saveBuf_acidDamageValue], a
         ld a, [hl+]
         ld [spikeDamageValue], a
-        ld [$d820], a
+        ld [saveBuf_spikeDamageValue], a
         jp .nextToken
 
     .doorToken_exitQueen:
@@ -5976,11 +5988,11 @@ door_loadGraphics: ; door script load graphics routine
         
         ld a, [hl+]
         ldh [$b1], a
-        ld [$d808], a
+        ld [saveBuf_enGfxSrcLow], a
         
         ld a, [hl+]
         ldh [$b2], a
-        ld [$d809], a
+        ld [saveBuf_enGfxSrcHigh], a
         
         ld a, LOW(vramDest_enemies)
         ldh [$b3], a
@@ -5997,15 +6009,15 @@ door_loadGraphics: ; door script load graphics routine
         ld a, [hl+]
         ld [bankRegMirror], a
         ld [$d065], a
-        ld [$d80a], a
+        ld [saveBuf_bgGfxSrcBank], a
         ld [rMBC_BANK_REG], a
         
         ld a, [hl+]
         ldh [$b1], a
-        ld [$d80b], a
+        ld [saveBuf_bgGfxSrcLow], a
         ld a, [hl+]
         ldh [$b2], a
-        ld [$d80c], a
+        ld [saveBuf_bgGfxSrcHigh], a
         
         ld a, LOW(vramDest_bgTiles)
         ldh [$b3], a
@@ -6054,14 +6066,14 @@ jr_000_2771:
     ld a, [hl+]
     ld [bankRegMirror], a
     ld [$d065], a
-    ld [$d80a], a
+    ld [saveBuf_bgGfxSrcBank], a
     ld [rMBC_BANK_REG], a
     ld a, [hl+]
     ldh [$b1], a
-    ld [$d80b], a
+    ld [saveBuf_bgGfxSrcLow], a
     ld a, [hl+]
     ldh [$b2], a
-    ld [$d80c], a
+    ld [saveBuf_bgGfxSrcHigh], a
     ld a, [hl+]
     ldh [$b3], a
     ld a, [hl+]
@@ -6079,10 +6091,10 @@ jr_000_2798:
     ld [rMBC_BANK_REG], a
     ld a, [hl+]
     ldh [$b1], a
-    ld [$d808], a
+    ld [saveBuf_enGfxSrcLow], a
     ld a, [hl+]
     ldh [$b2], a
-    ld [$d809], a
+    ld [saveBuf_enGfxSrcHigh], a
     ld a, [hl+]
     ldh [$b3], a
     ld a, [hl+]
@@ -6173,10 +6185,10 @@ door_loadTiletable:
     ld hl, metatilePointerTable
     add hl, de
     ld a, [hl+]
-    ld [$d80d], a
+    ld [saveBuf_tiletableSrcLow], a
     ld b, a
     ld a, [hl+]
-    ld [$d80e], a
+    ld [saveBuf_tiletableSrcHigh], a
     ld h, a
     ld a, b
     ld l, a
@@ -6206,10 +6218,10 @@ door_loadCollision:
         ld hl, collisionPointerTable
         add hl, de
         ld a, [hl+]
-        ld [$d80f], a
+        ld [saveBuf_collisionSrcLow], a
         ld b, a
         ld a, [hl+]
-        ld [$d810], a
+        ld [saveBuf_collisionSrcHigh], a
         ld h, a
         ld a, b
         ld l, a
@@ -6230,7 +6242,7 @@ Call_000_2887:
     ld a, [hl+]
     and $0f
     ld [currentLevelBank], a
-    ld [$d811], a
+    ld [saveBuf_currentLevelBank], a
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     ld a, [hl+]
@@ -6294,7 +6306,7 @@ door_warp:
     ld a, [hl+]
     and $0f
     ld [currentLevelBank], a
-    ld [$d811], a
+    ld [saveBuf_currentLevelBank], a
     
     ld a, [hl]
     swap a
