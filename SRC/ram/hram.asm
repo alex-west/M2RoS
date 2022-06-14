@@ -167,5 +167,5 @@ def hEnemyAI_high = $FFF2 ; Enemy AI pointer (high byte)
 ;}
 ;
 ;$FFFC: Enemy address in $2:409E
-;$FFFE: Enemy frame counter (animation?)
+def hEnemy_frameCounter = $FFFE ; Frame counter, used by enemies
 ;}

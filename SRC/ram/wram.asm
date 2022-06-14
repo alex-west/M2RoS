@@ -96,6 +96,9 @@ def queenAnimFootDelay = $C3C9;
 ;$C3F2: Metroid Queen's head lower half tilemap VRAM address low byte
 ;$C3F3: Metroid Queen's head lower half tilemap source address (bank 3)
 ;
+
+en_bgCollisionResult = $C402 ; Enemy tilemap collision routine return value (initialized to $11, $22, $44, or $88)
+
 enemySolidityIndex = $C407 ; Copy of enemySolidityIndex_canon (actually used by enemy code)
 ;$C408: Scroll Y three frames ago (according to $2:45CA)
 ;$C409: Scroll X three frames ago (according to $2:45CA)

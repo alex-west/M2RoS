@@ -5252,7 +5252,10 @@ gfxInfo_cannonMissile: db BANK(gfx_cannonMissile)
 gfxInfo_cannonBeam: db BANK(gfx_cannonBeam) 
     dw gfx_cannonBeam, vramDest_cannon, $0020
 
+; Function returns the tile number for a particular x-y tile on the tilemap
+enemy_getTileIndex:
 func_2250: ; 00:2250 - Called by enemy routines
+    ; Adjust enemy coordinates (in camera-space) to map-space coordinates
     ld a, [$c205]
     ld b, a
     ld a, [$c44d]

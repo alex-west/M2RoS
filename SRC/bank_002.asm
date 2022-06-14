@@ -115,14 +115,13 @@ Call_002_409e:
     ld a, [$c438]
     and a
     jr nz, jr_002_40ba
+        ldh a, [hEnemy_frameCounter]
+        inc a
+        ldh [hEnemy_frameCounter], a
+        ld a, [$c425]
+        ld [$c439], a
+    jr_002_40ba:
 
-    ldh a, [$fe]
-    inc a
-    ldh [$fe], a
-    ld a, [$c425]
-    ld [$c439], a
-
-jr_002_40ba:
     ld a, [$c439]
     and a
     jp z, Jump_002_4110
@@ -204,7 +203,7 @@ jr_002_4125:
     ret nc
 
     call $3de2
-    ret
+ret
 
 
 Call_002_412f: ; Loads enemy save flags without saving them
@@ -1171,16 +1170,17 @@ jr_002_4605:
     ret
 
 
+; Beginning of apparent enemy tilemap collision routines
 Call_002_4608:
     ld a, $11
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $03
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     add $03
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1188,7 +1188,7 @@ Call_002_4608:
     ld a, [$c44d]
     add $06
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1196,14 +1196,14 @@ Call_002_4608:
     jr jr_002_46a6
 
     ld a, $11
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $03
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     add $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1211,7 +1211,7 @@ Call_002_4608:
     ld a, [$c44d]
     add $06
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1220,14 +1220,14 @@ Call_002_4608:
 
 Call_002_4662:
     ld a, $11
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $06
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     add $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -1236,7 +1236,7 @@ Call_002_4662:
     ld a, [$c44d]
     add $06
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -1245,28 +1245,28 @@ Call_002_4662:
     ld a, [$c44d]
     add $06
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
 jr_002_46a6:
-    ld hl, $c402
+    ld hl, en_bgCollisionResult
     res 0, [hl]
     ret
 
 
 Call_002_46ac:
     ld a, $11
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $07
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     add $0b
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1274,7 +1274,7 @@ Call_002_46ac:
     ld a, [$c44d]
     add $07
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1282,7 +1282,7 @@ Call_002_46ac:
     ld a, [$c44d]
     add $07
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1290,14 +1290,14 @@ Call_002_46ac:
     jr jr_002_46a6
 
     ld a, $11
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $0b
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     add $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1305,7 +1305,7 @@ Call_002_46ac:
     ld a, [$c44d]
     add $08
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1313,7 +1313,7 @@ Call_002_46ac:
     ld a, [$c44d]
     add $06
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1321,7 +1321,7 @@ Call_002_46ac:
     ld a, [$c44d]
     add $08
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1330,14 +1330,14 @@ Call_002_46ac:
 
 Call_002_4736:
     ld a, $11
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $0b
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     add $0b
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1345,7 +1345,7 @@ Call_002_4736:
     ld a, [$c44d]
     add $08
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1353,7 +1353,7 @@ Call_002_4736:
     ld a, [$c44d]
     add $06
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1361,7 +1361,7 @@ Call_002_4736:
     ld a, [$c44d]
     add $08
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1370,14 +1370,14 @@ Call_002_4736:
 
 Call_002_4783:
     ld a, $11
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $08
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     add $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1385,27 +1385,27 @@ Call_002_4783:
     ld a, [$c44d]
     add $0f
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
 jr_002_47ae:
-    ld hl, $c402
+    ld hl, en_bgCollisionResult
     res 0, [hl]
     ret
 
 
 Call_002_47b4:
     ld a, $11
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $07
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     add $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1413,7 +1413,7 @@ Call_002_47b4:
     ld a, [$c44d]
     add $0f
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1422,14 +1422,14 @@ Call_002_47b4:
 
 Call_002_47e1:
     ld a, $44
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $03
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $03
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1437,7 +1437,7 @@ Call_002_47e1:
     ld a, [$c44d]
     add $06
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1445,14 +1445,14 @@ Call_002_47e1:
     jr jr_002_487f
 
     ld a, $44
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $03
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1460,7 +1460,7 @@ Call_002_47e1:
     ld a, [$c44d]
     add $06
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1469,14 +1469,14 @@ Call_002_47e1:
 
 Call_002_483b:
     ld a, $44
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $06
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -1485,7 +1485,7 @@ Call_002_483b:
     ld a, [$c44d]
     add $06
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -1494,28 +1494,28 @@ Call_002_483b:
     ld a, [$c44d]
     add $06
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
 jr_002_487f:
-    ld hl, $c402
+    ld hl, en_bgCollisionResult
     res 2, [hl]
     ret
 
 
 Call_002_4885:
     ld a, $44
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $07
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $0b
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1523,7 +1523,7 @@ Call_002_4885:
     ld a, [$c44d]
     add $07
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1531,7 +1531,7 @@ Call_002_4885:
     ld a, [$c44d]
     add $07
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1539,14 +1539,14 @@ Call_002_4885:
     jr jr_002_487f
 
     ld a, $44
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $0b
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1554,7 +1554,7 @@ Call_002_4885:
     ld a, [$c44d]
     add $08
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1562,7 +1562,7 @@ Call_002_4885:
     ld a, [$c44d]
     add $06
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1570,7 +1570,7 @@ Call_002_4885:
     ld a, [$c44d]
     add $08
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1579,14 +1579,14 @@ Call_002_4885:
 
 Call_002_490f:
     ld a, $44
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $0b
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $0b
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1594,7 +1594,7 @@ Call_002_490f:
     ld a, [$c44d]
     add $08
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1602,7 +1602,7 @@ Call_002_490f:
     ld a, [$c44d]
     add $06
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1610,7 +1610,7 @@ Call_002_490f:
     ld a, [$c44d]
     add $08
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1619,14 +1619,14 @@ Call_002_490f:
 
 Call_002_495c:
     ld a, $44
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $07
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $09
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1634,27 +1634,27 @@ Call_002_495c:
     ld a, [$c44d]
     add $0f
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
 jr_002_4987:
-    ld hl, $c402
+    ld hl, en_bgCollisionResult
     res 2, [hl]
     ret
 
 
 Call_002_498d:
     ld a, $44
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $08
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $09
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1662,7 +1662,7 @@ Call_002_498d:
     ld a, [$c44d]
     add $0f
     ld [$c44d], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1671,14 +1671,14 @@ Call_002_498d:
 
 Call_002_49ba:
     ld a, $22
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $03
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $03
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1686,22 +1686,23 @@ Call_002_49ba:
     ld a, [$c44e]
     add $06
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
     jr jr_002_4a22
 
+; 02:49E7 - Unused?
     ld a, $22
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $03
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1709,7 +1710,7 @@ Call_002_49ba:
     ld a, [$c44e]
     add $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1717,27 +1718,27 @@ Call_002_49ba:
     ld a, [$c44e]
     add $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
 jr_002_4a22:
-    ld hl, $c402
+    ld hl, en_bgCollisionResult
     res 1, [hl]
 ret
 
 
 Call_002_4a28:
     ld a, $22
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $07
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $06
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -1746,7 +1747,7 @@ Call_002_4a28:
     ld a, [$c44e]
     add $06
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -1755,7 +1756,7 @@ Call_002_4a28:
     ld a, [$c44e]
     add $06
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -1764,14 +1765,14 @@ Call_002_4a28:
     jr jr_002_4a22
 
     ld a, $22
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $07
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $0b
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1779,7 +1780,7 @@ Call_002_4a28:
     ld a, [$c44e]
     add $08
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1787,7 +1788,7 @@ Call_002_4a28:
     ld a, [$c44e]
     add $06
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1795,7 +1796,7 @@ Call_002_4a28:
     ld a, [$c44e]
     add $08
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1804,13 +1805,13 @@ Call_002_4a28:
 
 Call_002_4abb:
     ld a, $22
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $0b
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1819,14 +1820,14 @@ Call_002_4abb:
 
 Call_002_4ad6:
     ld a, $22
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $0b
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1834,7 +1835,7 @@ Call_002_4ad6:
     ld a, [$c44e]
     add $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1842,27 +1843,27 @@ Call_002_4ad6:
     ld a, [$c44e]
     add $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
 jr_002_4b11:
-    ld hl, $c402
+    ld hl, en_bgCollisionResult
     res 1, [hl]
     ret
 
 
 Call_002_4b17:
     ld a, $22
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $0b
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $0b
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1870,7 +1871,7 @@ Call_002_4b17:
     ld a, [$c44e]
     add $08
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1878,7 +1879,7 @@ Call_002_4b17:
     ld a, [$c44e]
     add $06
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1886,7 +1887,7 @@ Call_002_4b17:
     ld a, [$c44e]
     add $08
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1895,14 +1896,14 @@ Call_002_4b17:
 
 Call_002_4b64:
     ld a, $22
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $08
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $08
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1910,7 +1911,7 @@ Call_002_4b64:
     ld a, [$c44e]
     add $0f
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1919,14 +1920,14 @@ Call_002_4b64:
 
 Call_002_4b91:
     ld a, $22
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $08
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $09
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1934,27 +1935,27 @@ Call_002_4b91:
     ld a, [$c44e]
     add $0f
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
 jr_002_4bbc:
-    ld hl, $c402
+    ld hl, en_bgCollisionResult
     res 1, [hl]
     ret
 
 
 Call_002_4bc2:
     ld a, $88
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $03
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $03
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1962,7 +1963,7 @@ Call_002_4bc2:
     ld a, [$c44e]
     add $06
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1970,14 +1971,14 @@ Call_002_4bc2:
     jr jr_002_4c2a
 
     ld a, $88
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $03
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1985,7 +1986,7 @@ Call_002_4bc2:
     ld a, [$c44e]
     add $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -1993,27 +1994,27 @@ Call_002_4bc2:
     ld a, [$c44e]
     add $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
 jr_002_4c2a:
-    ld hl, $c402
+    ld hl, en_bgCollisionResult
     res 3, [hl]
     ret
 
 
 Call_002_4c30:
     ld a, $88
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $07
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $06
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -2022,7 +2023,7 @@ Call_002_4c30:
     ld a, [$c44e]
     add $06
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -2031,7 +2032,7 @@ Call_002_4c30:
     ld a, [$c44e]
     add $06
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -2040,14 +2041,14 @@ Call_002_4c30:
     jr jr_002_4c2a
 
     ld a, $88
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $07
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $0b
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -2055,7 +2056,7 @@ Call_002_4c30:
     ld a, [$c44e]
     add $08
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -2063,7 +2064,7 @@ Call_002_4c30:
     ld a, [$c44e]
     add $06
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -2071,7 +2072,7 @@ Call_002_4c30:
     ld a, [$c44e]
     add $08
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -2079,14 +2080,14 @@ Call_002_4c30:
     jr jr_002_4cfe
 
     ld a, $88
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $0b
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -2094,7 +2095,7 @@ Call_002_4c30:
     ld a, [$c44e]
     add $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -2102,27 +2103,27 @@ Call_002_4c30:
     ld a, [$c44e]
     add $07
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
 jr_002_4cfe:
-    ld hl, $c402
+    ld hl, en_bgCollisionResult
     res 3, [hl]
     ret
 
 
 Call_002_4d04:
     ld a, $88
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $0b
     ld [$c44d], a
     ldh a, [hEnemyXPos]
     sub $0b
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -2130,7 +2131,7 @@ Call_002_4d04:
     ld a, [$c44e]
     add $08
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -2138,7 +2139,7 @@ Call_002_4d04:
     ld a, [$c44e]
     add $06
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -2146,7 +2147,7 @@ Call_002_4d04:
     ld a, [$c44e]
     add $08
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -2155,14 +2156,14 @@ Call_002_4d04:
 
 Call_002_4d51:
     ld a, $88
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $08
     ld [$c44d], a
     ld a, [$c41f]
     sub $09
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -2170,7 +2171,7 @@ Call_002_4d51:
     ld a, [$c44e]
     add $0f
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -2179,14 +2180,14 @@ Call_002_4d51:
 
 Call_002_4d7f:
     ld a, $88
-    ld [$c402], a
+    ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $08
     ld [$c44d], a
     ld a, [$c41f]
     sub $08
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
@@ -2194,16 +2195,17 @@ Call_002_4d7f:
     ld a, [$c44e]
     add $0f
     ld [$c44e], a
-    call $2250
+    call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
     ret c
 
 jr_002_4dab:
-    ld hl, $c402
+    ld hl, en_bgCollisionResult
     res 3, [hl]
     ret
 
+; End of apparent enemy tilemap collision routines
 
 Call_002_4db1:
     ld hl, $4ffe
@@ -2741,7 +2743,7 @@ jr_002_5190:
     ld a, c
     ld [$c393], a
     call Call_002_4a28
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     and $02
     ret z
 
@@ -2895,7 +2897,7 @@ arachnus_526E:
 
     call Call_002_4662
     ld b, $01
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     and $01
     jr z, jr_002_5281
 
@@ -2914,7 +2916,7 @@ jr_002_5286:
 jr_002_528c:
     call Call_002_483b
     ld b, $ff
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     and $04
     jr z, jr_002_5281
 
@@ -3002,7 +3004,7 @@ jr_002_52eb:
     db $81 ;add c
 
 ; 02:536F - Unreferenced code?
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     ld b, a
     and $01
     ret nz
@@ -3186,7 +3188,7 @@ Call_002_54e4:
     jr nz, jr_002_5508
 
     call Call_002_4608
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 0, a
     ret z
 
@@ -3208,7 +3210,7 @@ jr_002_54f2:
 
 jr_002_5508:
     call Call_002_47e1
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 2, a
     ret z
 
@@ -3227,7 +3229,7 @@ jr_002_5508:
 
 
 Call_002_5524:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $07
     ret nz
 
@@ -3279,7 +3281,7 @@ ret
     ; set the sprite ID
     ld a, $34
     ldh [$e3], a
-    ; inc the frame counter
+    ; inc the animation counter
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
@@ -3303,7 +3305,7 @@ ret
 
 
 .case_1:
-    ; inc the frame counter
+    ; inc the animation counter
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
@@ -3315,7 +3317,7 @@ ret
     ldh a, [$ea]
     inc a
     ldh [$ea], a
-    ; clear the counter
+    ; clear the animation counter
     ld hl, $ffe9
     ld a, [hl]
     xor a
@@ -3324,48 +3326,53 @@ ret
 
 
 .case_2:
-    ldh a, [$fe]
-    and $03
-    ret nz
+    ldh a, [hEnemy_frameCounter]
+    and $03 ; Act 1 out of 4 frames
+        ret nz
 
-    call .subroutine_1
-    call .subroutine_2
-    cp $04
-    ret nz
+    call .animate
+    call .moveOnePixel
+    cp $04 ; Move to next state after moving 4 pixels
+        ret nz
 
     ld a, $36
     ldh [$e3], a
+    ; inc to next state
     ldh a, [$ea]
     inc a
     ldh [$ea], a
 ret
 
-    ; Unreferenced?
-    ret
+    ret ; Unreferenced return
 
-
-.subroutine_2:
+.moveOnePixel:
+    ; Move one pixel
     ld hl, hEnemyYPos
     ld a, [hl]
     inc a
     ld [hl], a
+    ; Increment distance travelled
     ldh a, [$e7]
     inc a
     ldh [$e7], a
+    ; Return distance travelled
     ldh a, [$e7]
 ret
 
 
 .case_4:
-    call .subroutine_1
+    call .animate
+    ; inc animation counter
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
-    cp $10
-    ret nz
+    cp $10 ; Wait until 16 frames have elapsed
+        ret nz
 
+    ; clear animation counter
     xor a
     ld [hl], a
+    ; inc the state
     ldh a, [$ea]
     inc a
     ldh [$ea], a
@@ -3373,82 +3380,85 @@ ret
 
 
 .case_3:
-    call .subroutine_1
-    ldh a, [$fe]
+    call .animate
+    ldh a, [hEnemy_frameCounter]
     and $05
-    ret nz
+        ret nz
 
+    ; inc to next state
     ldh a, [$ea]
     inc a
     ldh [$ea], a
 ret
 
 
-.case_5:
-    call .subroutine_1
+.case_5: ; Falling
+    call .animate
+    ; Move enemy down
     ld hl, hEnemyYPos
     ld a, [hl]
     add $04
     ld [hl], a
+    ; Increment distance travelled
     ldh a, [$e7]
     add $04
     ldh [$e7], a
-    call Call_002_49ba
-    ld a, [$c402]
-    bit 1, a
-    jr nz, .branch_A
 
-    ldh a, [hEnemyYPos]
-    cp $a0
-    ret c
-
-.branch_A:
+    call Call_002_49ba ; Tilemap collision routine
+    ld a, [en_bgCollisionResult]
+    bit 1, a ; Bit 1 being set indicates a collision
+    jr nz, .endIf_A
+        ldh a, [hEnemyYPos]
+        cp $a0
+            ret c
+        ; Reset back to home if it falls off the bottom of the screen
+    .endIf_A:
+    
+    ; Play sound effect
     ld a, $11
     ld [$ced5], a
+    
+    ; Return to home y-position
+    ; yPos = yPos - distance travelled
     ld hl, $ffe7
     ld de, hEnemyYPos
     ld a, [de]
     sub [hl]
     ld [de], a
+
     xor a
-    ldh [$e7], a
-    ldh [$ea], a
+    ldh [$e7], a ; Reset distance travelled
+    ldh [$ea], a ; Reset state to 0
     ld a, $34
     ldh [$e3], a
 ret
 
-
-
-.subroutine_1:
-    ldh a, [$fe]
+.animate: ; Animates by flipping between sprites $36 and $37
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
     ldh a, [$e3]
     cp $36
-    jr nz, .branch_B
-
-    inc a
-    ldh [$e3], a
-    ret
-
-
-.branch_B:
+    jr nz, .endIf_B
+        inc a
+        ldh [$e3], a
+            ret
+    .endIf_B:
+    
     ldh a, [$e3]
     cp $37
-    jr nz, .branch_C
-
-    dec a
-    ldh [$e3], a
-    ret
-
-
-.branch_C:
+    jr nz, .endIf_C
+        dec a
+        ldh [$e3], a
+            ret
+    .endIf_C:
+    
     ld a, $36
     ldh [$e3], a
-    ret
+ret
 
-; pretty sure this is the end of the rock icicle's code
+; End of the rock icicle's code
 ;------------------------------------------------------------------------------
 
 Call_002_5630:
@@ -3495,7 +3505,7 @@ jr_002_5652:
     jr z, jr_002_5648
 
 Call_002_565f:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
@@ -3548,14 +3558,14 @@ jr_002_5692:
     cp $80
     jr nc, jr_002_56a6
 
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
     jr jr_002_56ab
 
 jr_002_56a6:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
@@ -3822,7 +3832,7 @@ jr_002_57e0:
 
 jr_002_57e6:
     call Call_002_587e
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
@@ -3843,7 +3853,7 @@ jr_002_57f5:
     jr z, jr_002_582a
 
     call Call_002_4d51
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 3, a
     jr z, jr_002_57e6
 
@@ -3853,7 +3863,7 @@ jr_002_57f5:
 
 jr_002_580e:
     call Call_002_4783
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 0, a
     jr z, jr_002_57e6
 
@@ -3863,7 +3873,7 @@ jr_002_580e:
 
 jr_002_581c:
     call Call_002_4b64
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     jr z, jr_002_57e6
 
@@ -3873,7 +3883,7 @@ jr_002_581c:
 
 jr_002_582a:
     call Call_002_495c
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 2, a
     jr z, jr_002_57e6
 
@@ -3893,7 +3903,7 @@ jr_002_5838:
     jr z, jr_002_586f
 
     call Call_002_4783
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 0, a
     jr nz, jr_002_57e0
 
@@ -3903,7 +3913,7 @@ jr_002_5838:
 
 jr_002_5851:
     call Call_002_4b64
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     jp nz, Jump_002_57e0
 
@@ -3913,7 +3923,7 @@ jr_002_5851:
 
 jr_002_5860:
     call Call_002_495c
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 2, a
     jp nz, Jump_002_57e0
 
@@ -3923,7 +3933,7 @@ jr_002_5860:
 
 jr_002_586f:
     call Call_002_4d51
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 3, a
     jp nz, Jump_002_57e0
 
@@ -4020,7 +4030,7 @@ Jump_002_58e0:
 
 jr_002_58e6:
     call Call_002_587e
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
@@ -4040,7 +4050,7 @@ jr_002_58f2:
     jp z, Jump_002_5938
 
     call Call_002_4d7f
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 3, a
     jr z, jr_002_58e6
 
@@ -4052,7 +4062,7 @@ jr_002_58f2:
 
 jr_002_5912:
     call Call_002_47b4
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 0, a
     jr z, jr_002_58e6
 
@@ -4064,7 +4074,7 @@ jr_002_5912:
 
 Jump_002_5925:
     call Call_002_4b91
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     jr z, jr_002_58e6
 
@@ -4076,7 +4086,7 @@ Jump_002_5925:
 
 Jump_002_5938:
     call Call_002_498d
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 2, a
     jr z, jr_002_58e6
 
@@ -4098,7 +4108,7 @@ jr_002_594b:
     jr z, jr_002_5992
 
     call Call_002_498d
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 2, a
     jp nz, Jump_002_58e0
 
@@ -4110,7 +4120,7 @@ jr_002_594b:
 
 jr_002_596a:
     call Call_002_4d7f
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 3, a
     jp nz, Jump_002_58e0
 
@@ -4122,7 +4132,7 @@ jr_002_596a:
 
 jr_002_597e:
     call Call_002_47b4
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 0, a
     jp nz, Jump_002_58e0
 
@@ -4134,7 +4144,7 @@ jr_002_597e:
 
 jr_002_5992:
     call Call_002_4b91
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     jp nz, Jump_002_58e0
 
@@ -4324,7 +4334,7 @@ Call_002_5aa8:
     cp $03
     ret z
 
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -4515,7 +4525,7 @@ jr_002_5bc7:
     pop af
 
 jr_002_5bc8:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
@@ -4534,7 +4544,7 @@ jr_002_5bc8:
 
     jr nc, jr_002_5bff
 
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -4547,7 +4557,7 @@ jr_002_5be5:
     inc [hl]
     call Call_002_6a7b
     call Call_002_49ba
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     ret z
 
@@ -4559,7 +4569,7 @@ jr_002_5be5:
 
 
 jr_002_5bff:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -4619,7 +4629,7 @@ jr_002_5c46:
     cp $50
     jr c, jr_002_5c75
 
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
@@ -4648,7 +4658,7 @@ jr_002_5c64:
 
 
 jr_002_5c6d:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -4746,7 +4756,7 @@ jr_002_5cb9:
 
 
 Call_002_5cc7:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
@@ -5543,7 +5553,7 @@ jr_002_6165:
 
 
 jr_002_616c:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $0f
     ret nz
 
@@ -5584,7 +5594,7 @@ jr_002_618c:
     ld [$ced5], a
 
 jr_002_61a9:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $0f
     ret nz
 
@@ -5699,7 +5709,7 @@ jr_002_6229:
     jr nz, jr_002_6255
 
     call Call_002_4a28
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     jr nz, jr_002_6242
 
@@ -5737,7 +5747,7 @@ jr_002_6255:
     push de
     call Call_002_4a28
     pop de
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     jr nz, jr_002_6242
 
@@ -5899,7 +5909,7 @@ jr_002_633a:
     add $04
     ld [hl], a
     call Call_002_4608
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 0, a
     ret z
 
@@ -5916,7 +5926,7 @@ jr_002_6365:
     sub $04
     ld [hl], a
     call Call_002_47e1
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 2, a
     ret z
 
@@ -6029,7 +6039,7 @@ jr_002_63e1:
 
 
 jr_002_6409:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $1f
     jr nz, jr_002_63b4
 
@@ -6164,7 +6174,7 @@ Jump_002_64a7:
     sub $02
     ld [hl], a
     call Call_002_49ba
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     ret z
 
@@ -6207,7 +6217,7 @@ jr_002_64ed:
     sub $03
     ld [hl], a
     call Call_002_47e1
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 2, a
     ret z
 
@@ -6228,7 +6238,7 @@ jr_002_650f:
     db $00, $00, $00, $fe, $03, $8c, $63
 
 Call_002_6538:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $07
     ret nz
 
@@ -6465,7 +6475,7 @@ jr_002_6673:
 jr_002_6676:
     call Call_002_66c0
     call Call_002_4a28
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     ret z
 
@@ -6523,7 +6533,7 @@ jr_002_66b8:
 
 
 Call_002_66c0:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -6577,7 +6587,7 @@ jr_002_66e5:
 
 enAI_66F3:
     call Call_002_6726
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
@@ -6593,7 +6603,7 @@ enAI_66F3:
 
 jr_002_6709:
     call Call_002_4abb
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     ret nz
 
@@ -6615,7 +6625,7 @@ jr_002_6721:
     jr jr_002_6709
 
 Call_002_6726:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
@@ -6654,7 +6664,7 @@ enAI_6746:
 
     call Call_002_67d9
     call Call_002_4885
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 2, a
     ret z
 
@@ -6668,7 +6678,7 @@ enAI_6746:
 jr_002_6766:
     call Call_002_6803
     call Call_002_46ac
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 0, a
     ret z
 
@@ -6845,7 +6855,7 @@ enAI_6841:
     add b
     ld [hl], a
     call Call_002_4ad6
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     jr z, jr_002_686c
 
@@ -7194,7 +7204,7 @@ Jump_002_69f8:
 
 
 Call_002_6a04:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
@@ -7421,13 +7431,13 @@ jr_002_6b2f:
 
 
 Call_002_6b33:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
     jr enemy_flipSpriteId
 
 Call_002_6b3a:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -7440,14 +7450,14 @@ enemy_flipSpriteId: ; 02:6B3F
 
 
 Call_002_6b47:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
     jr jr_002_6b53
 
 Call_002_6b4e:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
@@ -7460,14 +7470,14 @@ jr_002_6b53:
 
 
 Call_002_6b5b:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
     jr enemy_flipHorizontal
 
 Call_002_6b62:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -7480,13 +7490,13 @@ enemy_flipHorizontal:
 
 
 Call_002_6b6f:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
     jr jr_002_6b7b
 
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -7582,7 +7592,7 @@ jr_002_6bdc:
     and a
     jr nz, jr_002_6c2e
 
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -7616,7 +7626,7 @@ jr_002_6c15:
 
 
 jr_002_6c2e:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -7897,7 +7907,7 @@ Jump_002_6dac:
 
 Jump_002_6db5:
     call Call_002_75ec
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $07
     ret nz
 
@@ -7932,7 +7942,7 @@ Call_002_6dd4:
     sub b
     ld [hl], a
     call Call_002_4d04
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 3, a
     jr z, jr_002_6e08
 
@@ -7945,7 +7955,7 @@ jr_002_6df6:
     add b
     ld [hl], a
     call Call_002_4b17
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     jr z, jr_002_6e08
 
@@ -7967,7 +7977,7 @@ jr_002_6e08:
     sub c
     ld [hl], a
     call Call_002_490f
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 2, a
     ret z
 
@@ -7981,7 +7991,7 @@ jr_002_6e27:
     add c
     ld [hl], a
     call Call_002_4736
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 0, a
     ret z
 
@@ -8089,7 +8099,7 @@ jr_002_6e8e:
 
     ld [hl], a
     call Call_002_4d04
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 3, a
     ret z
 
@@ -8106,7 +8116,7 @@ jr_002_6eb4:
 
     ld [hl], a
     call Call_002_490f
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 2, a
     ret z
 
@@ -8120,7 +8130,7 @@ jr_002_6eca:
     add $05
     ld [hl], a
     call Call_002_4736
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 0, a
     ret z
 
@@ -8134,7 +8144,7 @@ jr_002_6edd:
     add $05
     ld [hl], a
     call Call_002_4b17
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     ret z
 
@@ -8154,7 +8164,7 @@ Call_002_6ef0:
 
     call Call_002_6f53
     call Call_002_4d04
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 3, a
     jr z, jr_002_6f23
 
@@ -8165,7 +8175,7 @@ Call_002_6ef0:
 jr_002_6f11:
     call Call_002_6f5b
     call Call_002_4b17
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     jr z, jr_002_6f23
 
@@ -8183,7 +8193,7 @@ jr_002_6f23:
 
     call Call_002_6f53
     call Call_002_490f
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 2, a
     ret z
 
@@ -8195,7 +8205,7 @@ jr_002_6f23:
 jr_002_6f41:
     call Call_002_6f5b
     call Call_002_4736
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 0, a
     ret z
 
@@ -8291,7 +8301,7 @@ jr_002_6fb0:
     ld [$c465], a
 
 jr_002_6fc2:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -8424,7 +8434,7 @@ jr_002_704d:
 
     ldh [hEnemyYPos], a
     call Call_002_4d04
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 3, a
     jr nz, jr_002_7090
 
@@ -8443,7 +8453,7 @@ jr_002_709a:
     add $05
     ldh [hEnemyYPos], a
     call Call_002_4b17
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     jr nz, jr_002_7090
 
@@ -8469,7 +8479,7 @@ jr_002_70bc:
     add $05
     ldh [hEnemyXPos], a
     call Call_002_4736
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 0, a
     jr nz, jr_002_70d3
 
@@ -8491,7 +8501,7 @@ jr_002_70dd:
     sub $05
     ldh [hEnemyXPos], a
     call Call_002_490f
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 2, a
     jr nz, jr_002_70d3
 
@@ -8651,7 +8661,7 @@ jr_002_71b0:
     db $00, $00, $ff, $00, $00, $00, $ff, $07, $60, $6f
 
 Call_002_71da:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
@@ -8724,20 +8734,20 @@ Call_002_7231:
 Call_002_7235:
     ld b, $0a
 
-jr_002_7237:
-    ld a, [de]
-    ld [hl+], a
-    inc de
-    dec b
+    jr_002_7237:
+        ld a, [de]
+        ld [hl+], a
+        inc de
+        dec b
     jr nz, jr_002_7237
 
     ld c, a
     xor a
     ld b, $04
 
-jr_002_7241:
-    ld [hl+], a
-    dec b
+    jr_002_7241:
+        ld [hl+], a
+        dec b
     jr nz, jr_002_7241
 
     ld [hl], c
@@ -8846,7 +8856,7 @@ jr_002_72b1:
     and a
     jr nz, jr_002_7301
 
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -8876,7 +8886,7 @@ jr_002_72ee:
 
 
 jr_002_7301:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -9155,7 +9165,7 @@ Jump_002_748a:
     cp $06
     jr z, jr_002_74fe
 
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
@@ -9342,7 +9352,7 @@ Jump_002_757f:
     ret nz
 
     call Call_002_75ec
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $07
     ret nz
 
@@ -9404,7 +9414,7 @@ jr_002_75c9:
     db $00, $00, $ff, $00, $00, $00, $ff, $08, $76, $72
 
 Call_002_75ec:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret z
 
@@ -9427,7 +9437,7 @@ jr_002_75fc:
 
 
 Call_002_75ff:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret z
 
@@ -9452,7 +9462,7 @@ jr_002_7610:
 
 
 Call_002_7614:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -9497,7 +9507,7 @@ enAI_7631:
     dec [hl]
     jr z, jr_002_7660
 
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
@@ -9894,7 +9904,7 @@ jr_002_7861:
     sub b
     ld [hl], a
     call Call_002_4bc2
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 3, a
     jr nz, jr_002_78a9
 
@@ -9906,7 +9916,7 @@ jr_002_7880:
     add b
     ld [hl], a
     call Call_002_49ba
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     jr nz, jr_002_78a9
 
@@ -9926,7 +9936,7 @@ jr_002_789d:
 
 jr_002_789f:
     ld [hl], a
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -9935,7 +9945,7 @@ jr_002_789f:
 
 
 jr_002_78a9:
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     ld [$c42d], a
     xor a
     ldh [$e9], a
@@ -9951,7 +9961,7 @@ jr_002_78b9:
     cp $cc
     jr z, jr_002_78c8
 
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
@@ -10008,7 +10018,7 @@ jr_002_78fa:
     ld [$c465], a
 
 jr_002_790c:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -10250,7 +10260,7 @@ jr_002_7a40:
     ldh [$e5], a
 
 Call_002_7a42:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -10300,7 +10310,7 @@ jr_002_7a71:
 
     ldh [hEnemyYPos], a
     call Call_002_4d04
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 3, a
     jr z, jr_002_7a98
 
@@ -10315,7 +10325,7 @@ jr_002_7a98:
 
     ldh [hEnemyXPos], a
     call Call_002_490f
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 2, a
     ret z
 
@@ -10529,7 +10539,7 @@ jr_002_7bc0:
 
 
 Call_002_7bcc:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -10695,7 +10705,7 @@ Call_002_7ca7:
 
 
 Call_002_7caf:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
@@ -10707,7 +10717,7 @@ Call_002_7caf:
 
 
 Call_002_7cbc:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
@@ -10743,7 +10753,7 @@ Call_002_7cdd:
     jr c, jr_002_7cf4
 
     call Call_002_4b17
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     jr z, jr_002_7d04
 
@@ -10758,7 +10768,7 @@ jr_002_7cf4:
     jr c, jr_002_7ced
 
     call Call_002_4d04
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 3, a
     jr nz, jr_002_7ced
 
@@ -10768,7 +10778,7 @@ jr_002_7d04:
     jr c, jr_002_7d19
 
     call Call_002_4736
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 0, a
     ret z
 
@@ -10784,7 +10794,7 @@ jr_002_7d19:
     jr c, jr_002_7d13
 
     call Call_002_490f
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 2, a
     jr nz, jr_002_7d13
 
@@ -10802,7 +10812,7 @@ Call_002_7d2a:
     jr c, jr_002_7d54
 
     call Call_002_4a28
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 1, a
     jr z, jr_002_7d64
 
@@ -10822,7 +10832,7 @@ jr_002_7d54:
     jr c, jr_002_7d4d
 
     call Call_002_4c30
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 3, a
     jr nz, jr_002_7d45
 
@@ -10834,7 +10844,7 @@ jr_002_7d64:
     jr c, jr_002_7d86
 
     call Call_002_4662
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 0, a
     ret z
 
@@ -10855,7 +10865,7 @@ jr_002_7d86:
     jr c, jr_002_7d80
 
     call Call_002_483b
-    ld a, [$c402]
+    ld a, [en_bgCollisionResult]
     bit 2, a
     jr nz, jr_002_7d78
 
@@ -10962,7 +10972,7 @@ jr_002_7df4:
 
 
 Call_002_7df8:
-    ldh a, [$fe]
+    ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
