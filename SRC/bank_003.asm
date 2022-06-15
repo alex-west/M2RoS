@@ -477,20 +477,20 @@ jr_003_4274:
     pop hl
     ld b, $09
 
-jr_003_4289:
-    ld a, [de]
-    ld [hl+], a
-    inc de
-    dec b
+    jr_003_4289:
+        ld a, [de]
+        ld [hl+], a
+        inc de
+        dec b
     jr nz, jr_003_4289
 
     ld c, a
     xor a
     ld b, $04
 
-jr_003_4293:
-    ld [hl+], a
-    dec b
+    jr_003_4293:
+        ld [hl+], a
+        dec b
     jr nz, jr_003_4293
 
     ld [hl], c
@@ -616,10 +616,10 @@ en652A: ; Enemy 9 (drivel)
     dw enAI_5AE2
 en6535: ; Enemy 12h (yumbo)
     db $00,$00,$00,$00,$00,$00,$00,$00,$01
-    dw enemy_smallBugAI ; The things the flit back and forth
+    dw enAI_smallBug ; The things the flit back and forth
 en6540: ; Enemy 14h (hornoad)
     db $00,$20,$00,$00,$00,$00,$02,$00,$02
-    dw enAI_61DB
+    dw enAI_hopper
 en654B: ; Enemy 16h (senjoo)
     db $00,$00,$00,$00,$00,$00,$00,$00,$06
     dw enAI_5C36
@@ -661,7 +661,7 @@ en65CF: ; Enemy 41h (autrack)
     dw enAI_6145
 en65DA: ; Enemy 46h (autoad)
     db $00,$20,$00,$00,$00,$00,$02,$00,$0E
-    dw enAI_61DB
+    dw enAI_hopper
 en65E5: ; Enemy 4Ah (wallfire)
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_62B4
@@ -685,7 +685,7 @@ en6627: ; Enemy 6Ah (halzyn)
     dw enAI_6746
 en6632: ; Enemy 6Bh (ramulken)
     db $00,$20,$00,$00,$B0,$00,$02,$00,$0C
-    dw enAI_61DB
+    dw enAI_hopper
 en663D: ; Enemy 6Dh
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_6B83
@@ -748,7 +748,7 @@ en670E: ; Enemy 2Ch (glow fly)
     dw enAI_54A1
 en6719: ; Enemy 34h (rock icicle)
     db $00,$00,$00,$00,$00,$00,$00,$00,$01
-    dw enAI_5542
+    dw enAI_rockIcicle
 en6724: ; Enemy 76h..7Ah (Arachnus)
     db $00,$00,$00,$00,$00,$00,$00,$00,$FD
     dw enAI_arachnus

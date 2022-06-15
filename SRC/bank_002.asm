@@ -770,11 +770,11 @@ Call_002_4421:
     ldh a, [$fd]
     ld h, a
 
-jr_002_442c:
-    ld a, [de]
-    ld [hl+], a
-    inc e
-    dec b
+    jr_002_442c:
+        ld a, [de]
+        ld [hl+], a
+        inc e
+        dec b
     jr nz, jr_002_442c
 
     ldh a, [$f3]
@@ -3258,9 +3258,8 @@ jr_002_553d:
     ret
 
 ;------------------------------------------------------------------------------
-; 02:5542
 ; Rock Icicle (discount skree)
-enAI_5542:
+enAI_rockIcicle: ; 02:5542
     ldh a, [$ea] ; state
     cp $00
         jp z, .case_0
@@ -4356,7 +4355,7 @@ jr_002_5abc:
 ; Yumbos, Meboids, Mumbos, Pincher Flies, Seerooks, and TPOs
 ; (TODO: verify they all actually use this)
 ; Uses spritemaps 12h and 13h
-enemy_smallBugAI: ; 02:5ABF
+enAI_smallBug: ; 02:5ABF
     call enemy_flipSpriteId ; Animate
     call .smallBug_act ; Act
 ret
@@ -5634,106 +5633,111 @@ jr_002_61cc:
 ; -----------------------------------------------------------------------------
 ; hornoad/autotoad/ramulken AI (enemy 14h)
 ; various hoppers
-enAI_61DB: ; 02:61DB
+enAI_hopper: ; 02:61DB
     ld bc, hEnemyYPos
+    ; Check state
     ldh a, [$ea]
     dec a
-    jr z, jr_002_6229
-
+        jr z, .case_pastApex ; if state = 1
     dec a
-    jp z, Jump_002_6287
-
+        jp z, .case_faceSamus  ; if state = 2
     ldh a, [$e9]
     cp $10
-    jr nz, jr_002_61f8
-
+        jr nz, .case_jumpUp
+    ; Fall-through case
+    ; Clear animation counter
     xor a
     ldh [$e9], a
+    ; Set state to 1
     inc a
     ldh [$ea], a
+    ; Decrement sprite ID
     ld hl, $ffe3
     dec [hl]
 ret
 
-; jump up
-jr_002_61f8:
+.case_jumpUp: ; Handles upward movement of the jump
+    ; DE = [$E9]
     ld e, a
     ld d, $00
     ld hl, hopper_jumpYSpeedTable
     add hl, de
-    ld a, [bc]
-    sub [hl]
-    ld [bc], a
-    inc c
-    
-; handle x movement ?
+    ld a, [bc] ; BC is the y position
+    sub [hl]   ; subtraction is upwards movement
+    ld [bc], a ; save the yPos
+
+    ; Handle x movement
+    inc c ; BC now refers to the x position
     ld hl, hopper_jumpXSpeedTable
     add hl, de
     ldh a, [$e5]
     and a
-    jr z, jr_002_6210
+    jr z, .else_A
+        ; move right
+        ld a, [bc]
+        add [hl]
+        jr .endIf_A
+    .else_A:
+        ; move left
+        ld a, [bc]
+        sub [hl]
+    .endIf_A:
+    ld [bc], a ; save the xPos
 
-    ; move right
-    ld a, [bc]
-    add [hl]
-    jr jr_002_6212
-
-    ; move left
-jr_002_6210:
-    ld a, [bc]
-    sub [hl]
-
-jr_002_6212:
-    ld [bc], a
+    ; Increment animation counter
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $05
-    ret nz
-
+        ret nz
+    ; Animate on the 5th frame of the jump
     ld hl, $ffe3
     inc [hl]
     ld a, [hl]
     cp $47
-    ret nz
-
-    ; Play jumping SFX
+        ret nz
+    ; Play jumping SFX if a certain enemy type
     ld a, $1a
     ld [$ced5], a
 ret
 
 
-jr_002_6229:
+.case_pastApex: ; Handles downward movement in general
     ldh a, [$e9]
     cp $10
-    jr nz, jr_002_6255
+    jr nz, .moveDown
 
     call Call_002_4a28
     ld a, [en_bgCollisionResult]
     bit 1, a
-    jr nz, jr_002_6242
+    jr nz, .prepNextJump
 
+    ; Force downward movement to be ySpeedTable[0]
     ld a, $0f
     ldh [$e9], a
     ld bc, hEnemyYPos
-    jr jr_002_6255
+jr .moveDown
 
-jr_002_6242:
+.prepNextJump:
+    ; Clear animation counter and state
     xor a
     ldh [$e9], a
     ldh [$ea], a
+    ; Increment jump counter
     ld hl, $ffe7
     inc [hl]
     ld a, [hl]
     cp $03
-    ret nz
-
+        ret nz
+    ; Every 4 jumps, reset jump counter and flip around
     ld [hl], $00
     call enemy_flipHorizontal
 ret
 
 
-jr_002_6255:
+.moveDown: ; Handle downward half of jumping arc
+    ; yPos = yPos + ySpeedTable[$0F-[$E9]]
+    ;  Function iterates through the speed table backwards
     ld e, a
     ld a, $0f
     sub e
@@ -5744,47 +5748,45 @@ jr_002_6255:
     ld a, [bc]
     add [hl]
     ld [bc], a
+
     push de
-    call Call_002_4a28
+    call Call_002_4a28 ; BG collision function
     pop de
     ld a, [en_bgCollisionResult]
-    bit 1, a
-    jr nz, jr_002_6242
+    bit 1, a ; Exit if we've hit ground (don't move forward)
+        jr nz, .prepNextJump
 
-; Handle X movemnt
+    ; Handle X movemnt
     ld bc, hEnemyXPos
     ld hl, hopper_jumpXSpeedTable
     add hl, de
     ldh a, [$e5]
     and a
-    jr z, jr_002_627f
+    jr z, .else_B
+        ;move right
+        ld a, [bc]
+        add [hl]
+        jr .endIf_B
+    .else_B:
+        ; move left
+        ld a, [bc]
+        sub [hl]
+    .endIf_B:
+    ld [bc], a ; save the xPos
 
-    ;move right
-    ld a, [bc]
-    add [hl]
-    jr jr_002_6281
-
-; move left
-jr_002_627f:
-    ld a, [bc]
-    sub [hl]
-
-; apply x velocity
-jr_002_6281:
-    ld [bc], a
+    ; inc the animation counter
     ld hl, $ffe9
     inc [hl]
 ret
 
-
-Jump_002_6287:
+; Only used if you approach it from the right side, so it ends up facing you
+.case_faceSamus:
     ldh a, [hEnemyXPos]
     cp $c8
-    jr nc, jr_002_6290
-
-    call enemy_flipHorizontal
-
-jr_002_6290:
+    jr nc, .endIf_C
+        call enemy_flipHorizontal
+    .endIf_C:
+    ; Clear state
     xor a
     ldh [$ea], a
 ret
@@ -5796,7 +5798,7 @@ hopper_jumpYSpeedTable:
 hopper_jumpXSpeedTable:
     db $00, $01, $01, $01, $01, $01, $02, $01, $01, $01, $01, $01, $01, $01, $01, $01
 
-; -----------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 
 enAI_62B4:
     ld hl, $ffe3
