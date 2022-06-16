@@ -4776,161 +4776,84 @@ jr_002_5cdc:
     ld [hl], a
     ret
 
-
-; gullugg AI
-enAI_5CE0:
-    call Call_002_5dfe
+;------------------------------------------------------------------------------
+; gullugg AI - Thing that flies in a circle
+enAI_gullugg: ; 02:5CE0
+    call .animate
+    ; [$E9] appears to be an animation counter
     ld hl, $ffe9
     ld c, [hl]
     ld b, $00
 
-jr_002_5ce9:
-    ld hl, $5d85
-    add hl, bc
-    ld a, [hl]
-    cp $80
-    jr nz, jr_002_5cf9
+    ; Read next value from a looping, $80-terminated table
+    .loop:
+        ld hl, .ySpeedTable_cw ; yPos table
+        add hl, bc
+        ld a, [hl]
+        cp $80 
+            jr nz, .break
+    
+        ; If the table gave us a value of $80, reset the counter try again at the beginning
+        ld c, $00
+        xor a
+        ldh [$e9], a
+    jr .loop
 
-    ld c, $00
-    xor a
-    ldh [$e9], a
-    jr jr_002_5ce9
-
-jr_002_5cf9:
+.break:
+    ; Handle y movement
     ldh a, [hEnemyYPos]
     add [hl]
     ldh [hEnemyYPos], a
-    ld hl, $5dc2
+    ; Index the x speed table
+    ld hl, .xSpeedTable_cw
     add hl, bc
+    ; Handle x movement
     ldh a, [hEnemyXPos]
     add [hl]
     ldh [hEnemyXPos], a
+    ; Increment the counter
     ld hl, $ffe9
     inc [hl]
-    ret
+ret
 
-; 02:5D0C
-    ld bc, $0100
-    ld [bc], a
-    ld bc, $0302
-    ld [bc], a
-    inc bc
-    inc bc
-    inc b
-    inc bc
-    inc b
-    inc b
-    inc bc
-    inc b
-    inc b
-    inc b
-    inc bc
-    inc bc
-    inc b
-    inc bc
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld bc, $0102
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    cp $ff
-    cp $fd
-    cp $fd
-    db $fc
-    db $fd
-    db $fd
-    db $fc
-    db $fc
-    db $fc
-    db $fd
-    db $fc
-    db $fc
-    db $fd
-    db $fc
-    db $fd
-    db $fd
-    cp $fd
-    cp $ff
-    cp $ff
-    nop
-    rst $38
-    add b
-    db $fd
-    db $fc
-    db $fc
-    db $fd
-    db $fc
-    db $fd
-    db $fd
-    cp $fd
-    cp $ff
-    cp $ff
-    nop
-    rst $38
-    ld bc, $0100
-    ld [bc], a
-    ld bc, $0302
-    ld [bc], a
-    inc bc
-    inc bc
-    inc b
-    inc bc
-    inc b
-    inc b
-    inc bc
-    inc b
-    inc b
-    inc b
-    inc bc
-    inc bc
-    inc b
-    inc bc
-    ld [bc], a
-    inc bc
-    ld [bc], a
-    ld bc, $0102
-    nop
-    nop
-    nop
-    nop
-    rst $38
-    cp $ff
-    cp $fd
-    cp $fd
-    db $fc
-    db $fd
-    db $fd
-    db $fc
-    db $fc
-    db $fc
+; Tables for counter-clockwise circular motion (unused)
+.ySpeedTable_ccw: ; 02:5D0C
+    db $01, $00, $01, $02, $01, $02, $03, $02, $03, $03, $04, $03, $04, $04, $03, $04
+    db $04, $04, $03, $03, $04, $03, $02, $03, $02, $01, $02, $01, $00, $00, $00, $00
+    db $FF, $FE, $FF, $FE, $FD, $FE, $FD, $FC, $FD, $FD, $FC, $FC, $FC, $FD, $FC, $FC
+    db $FD, $FC, $FD, $FD, $FE, $FD, $FE, $FF, $FE, $FF, $00, $FF, $80
+.xSpeedTable_ccw: ; 02:5D49
+    db $FD, $FC, $FC, $FD, $FC, $FD, $FD, $FE, $FD, $FE, $FF, $FE, $FF, $00, $FF, $01
+    db $00, $01, $02, $01, $02, $03, $02, $03, $03, $04, $03, $04, $04, $03, $04, $04
+    db $04, $03, $03, $04, $03, $02, $03, $02, $01, $02, $01, $00, $00, $00, $00, $FF
+    db $FE, $FF, $FE, $FD, $FE, $FD, $FC, $FD, $FD, $FC, $FC, $FC
 
+; Tables for clockwise circle motion
+.ySpeedTable_cw: ; 02:5D85
     db $01, $00, $01, $01, $01, $02, $02, $02, $02, $02, $03, $03, $03, $03, $02, $03
     db $03, $03, $03, $02, $03, $02, $02, $02, $02, $01, $01, $01, $00, $00, $00, $00
     db $ff, $ff, $ff, $fe, $fe, $fe, $fe, $fd, $fe, $fd, $fd, $fd, $fd, $fe, $fd, $fd
-    db $fd, $fd, $fe, $fe, $fe, $fe, $fe, $ff, $ff, $ff, $00, $ff, $80, $02, $03, $03
-    db $03, $03, $02, $02, $02, $02, $02, $01, $01, $01, $00, $01, $ff, $00, $ff, $ff
-    db $ff, $fe, $fe, $fe, $fe, $fe, $fd, $fd, $fd, $fd, $fe, $fd, $fd, $fd, $fd, $fe
-    db $fd, $fe, $fe, $fe, $fe, $ff, $ff, $ff, $00, $00, $00, $00, $01, $01, $01, $02
-    db $02, $02, $02, $03, $02, $03, $03, $03, $03
+    db $fd, $fd, $fe, $fe, $fe, $fe, $fe, $ff, $ff, $ff, $00, $ff, $80
+.xSpeedTable_cw: ; 02:5DC2
+    db $02, $03, $03, $03, $03, $02, $02, $02, $02, $02, $01, $01, $01, $00, $01, $FF
+    db $00, $FF, $FF, $FF, $FE, $FE, $FE, $FE, $FE, $FD, $FD, $FD, $FD, $FE, $FD, $FD
+    db $FD, $FD, $FE, $FD, $FE, $FE, $FE, $FE, $FF, $FF, $FF, $00, $00, $00, $00, $01
+    db $01, $01, $02, $02, $02, $02, $03, $02, $03, $03, $03, $03
 
-Call_002_5dfe:
+.animate:
+    ; Three-frame animation cycling from $D8->$D9->$DA->$D9, etc.
     ld hl, $ffe3
     ld a, [hl]
     cp $da
-    jr z, jr_002_5e08
-
-    inc [hl]
-    ret
-
-
-jr_002_5e08:
+    jr z, .endIf
+        inc [hl]
+            ret
+    .endIf:
     ld [hl], $d8
-    ret
+ret
+; End of gullugg code
 
+;------------------------------------------------------------------------------
 enAI_5E0B: ; enemy octroll
     ldh a, [$ea]
     dec a

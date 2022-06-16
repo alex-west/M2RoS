@@ -709,7 +709,7 @@ en667F: ; Enemy D3h (gravitt)
     dw enAI_659F
 en668A: ; Enemy D8h (gullugg)
     db $00,$00,$00,$00,$00,$00,$00,$00,$04
-    dw enAI_5CE0
+    dw enAI_gullugg
 en6695: ; Enemy F8h
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_6A14
