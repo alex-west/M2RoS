@@ -628,7 +628,7 @@ en6556: ; Enemy 19h/1Ah/3Ch/3Dh (gawron/yumee spawner)
     dw enAI_5F67
 en6561: ; Enemy 1Bh (chute leech)
     db $00,$00,$00,$00,$00,$00,$00,$00,$03
-    dw enAI_5E0B
+    dw enAI_chuteLeech
 en656C: ; Enemy 1Eh
     db $00,$20,$00,$00,$08,$00,$00,$00,$0F
     dw enAI_6145
@@ -655,7 +655,7 @@ en65B9: ; Enemy 31h (moheek facing left)
     dw enAI_58DE
 en65C4: ; Enemy 40h (octroll)
     db $00,$00,$00,$00,$00,$00,$00,$00,$0F
-    dw enAI_5E0B
+    dw enAI_chuteLeech
 en65CF: ; Enemy 41h (autrack)
     db $00,$00,$00,$00,$08,$00,$00,$00,$0F
     dw enAI_6145

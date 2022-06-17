@@ -4357,32 +4357,32 @@ jr_002_5abc:
 ; Uses spritemaps 12h and 13h
 enAI_smallBug: ; 02:5ABF
     call enemy_flipSpriteId ; Animate
-    call .smallBug_act ; Act
+    call .act ; Act
 ret
 
-.smallBug_act:
+.act:
     ; Turn around when frame counter reaches $40
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $40 ; turnaround time
-    jr z, .smallBug_flip
+    jr z, .flip
 
     ; Move according to direction
     ld hl, hEnemyXPos
     ldh a, [$e5]
     bit 5, a
-    jr nz, .smallBug_moveRight
+    jr nz, .moveRight
     
     ; Move Left
     dec [hl]
 ret
 
-    .smallBug_moveRight:
+    .moveRight:
     inc [hl]
 ret
 
-    .smallBug_flip:
+    .flip:
     ld [hl], $00
     call enemy_flipHorizontal
 ret
@@ -4852,168 +4852,189 @@ ret
     ld [hl], $d8
 ret
 ; End of gullugg code
-
 ;------------------------------------------------------------------------------
-enAI_5E0B: ; enemy octroll
+; enemy octroll/chute leech
+enAI_chuteLeech: ; 02:5E0B
     ldh a, [$ea]
     dec a
-    jr z, jr_002_5e38
-
+        jr z, .case_ascend ; if state = 1
     dec a
-    jr z, jr_002_5e66
+        jr z, .case_descend ; if state = 2
 
+    ; Fall-through case
+    ; abs(samusX_screen - enemyX)
     ld a, [$d03c]
     ld b, a
     ld hl, hEnemyXPos
     ld a, [hl]
     sub b
-    jr nc, jr_002_5e20
+    jr nc, .endIf_A ; a = -a (two's compliment negation)
+        cpl
+        inc a
+    .endIf_A:
 
-    cpl
-    inc a
-
-jr_002_5e20:
+    ; Exit if not withing 5 blocks of distance
     cp $50
-    ret nc
+        ret nc
 
+    ; state = 1
     ld a, $01
     ldh [$ea], a
+    ; Clear flip flag
     xor a
     ldh [$e5], a
+    ; Animate ascent
     ld hl, $ffe3
     ld a, [hl]
-    cp $3e
-    jr nc, jr_002_5e35
+    cp $3e ; Check if an octroll
+    jr nc, .else_A
+        ld [hl], $1c ; Chute leech ascent pose
+        ret
+    .else_A:
+        ld [hl], $3e
+        ret
+; end proc
 
-    ld [hl], $1c
-    ret
-
-
-jr_002_5e35:
-    ld [hl], $3e
-    ret
-
-
-jr_002_5e38:
+.case_ascend:
+    ; Animate if an octroll
     ldh a, [$e3]
     cp $3e
-    call nc, Call_002_6b33
+        call nc, Call_002_6b33
+
+    ; Check if counter == $16
     ldh a, [$e9]
     cp $16
-    jr z, jr_002_5e51
-
+        jr z, .prepState2
+    ; Ascend
     ld hl, hEnemyYPos
     ld a, [hl]
     sub $04
     ld [hl], a
+    ; Increment counter
     ld hl, $ffe9
     inc [hl]
-    ret
+ret
 
-
-jr_002_5e51:
+.prepState2: ; Prep state 2
+    ; Clear counter
     xor a
     ldh [$e9], a
+    ; Go to state 2
     ld a, $02
     ldh [$ea], a
+    ; Animate
     ld hl, $ffe3
     ld a, [hl]
-    cp $3e
-    jr nc, jr_002_5e63
-
-    ld [hl], $1d
-    ret
-
-
-jr_002_5e63:
-    ld [hl], $40
-    ret
+    cp $3e ; Check if not an octroll
+    jr nc, .else_B
+        ld [hl], $1d ; chute leech descent pose
+        ret
+    .else_B:
+        ld [hl], $40
+        ret
+; end proc
 
 
-jr_002_5e66:
+.case_descend:
+    ; Load x speed from table using animation counter
     ld hl, $ffe9
     ld c, [hl]
     ld b, $00
-    ld hl, $5ec8
+    ld hl, .xSpeedTable
     add hl, bc
     ld a, [hl]
-    cp $80
-    jr nz, jr_002_5e84
+    cp $80 ; speed table is $80-terminated
+        jr nz, .descend
 
+    ; Restart AI
+    ; Reset counter
     xor a
     ldh [$e9], a
+    ; Reset state
     ldh [$ea], a
+    ; Animate
     ld hl, $ffe3
     ld a, [hl]
-    cp $3e
-    ret nc
-
+    cp $3e ; Check if not octroll
+        ret nc
     ld [hl], $1b
-    ret
+ret
 
 
-jr_002_5e84:
+.descend: ; Move down
+    ; Handle flipping animation
+    ; Check if flipped
     ldh a, [$e5]
     and a
-    jr nz, jr_002_5ea0
+    jr nz, .else_C
+        ; Check if not moving left
+        bit 7, [hl]
+            jr nz, .moveDown
+        ; Increment a secondary counter
+        ldh a, [$e7]
+        inc a
+        ldh [$e7], a
+        cp $04 ; Hang in place for 4 frames
+            ret nz
+        ; Clear the secondary counter
+        xor a
+        ldh [$e7], a
+        ; Flip the sprite horizontally
+        ldh a, [$e5]
+        xor $20
+        ldh [$e5], a
+            jr .moveDown
+    
+    .else_C:
+        ; Check if not moving right
+        bit 7, [hl]
+            jr z, .moveDown
+        ; Increment a secondary counter
+        ldh a, [$e7]
+        inc a
+        ldh [$e7], a
+        cp $04 ; Hang in place for 4 frames
+            ret nz
+        ; Clear the secondary counter
+        xor a
+        ldh [$e7], a
+        ; Flip the sprite horizontally
+        ldh a, [$e5]
+        xor $20
+        ldh [$e5], a
 
-    bit 7, [hl]
-    jr nz, jr_002_5eb5
-
-    ldh a, [$e7]
-    inc a
-    ldh [$e7], a
-    cp $04
-    ret nz
-
-    xor a
-    ldh [$e7], a
-    ldh a, [$e5]
-    xor $20
-    ldh [$e5], a
-    jr jr_002_5eb5
-
-jr_002_5ea0:
-    bit 7, [hl]
-    jr z, jr_002_5eb5
-
-    ldh a, [$e7]
-    inc a
-    ldh [$e7], a
-    cp $04
-    ret nz
-
-    xor a
-    ldh [$e7], a
-    ldh a, [$e5]
-    xor $20
-    ldh [$e5], a
-
-jr_002_5eb5:
+.moveDown:
+    ; Handle x position
     ldh a, [hEnemyXPos]
     add [hl]
     ldh [hEnemyXPos], a
-    ld hl, $5f18
+    ; Handle y position
+    ld hl, .ySpeedTable
     add hl, bc
     ldh a, [hEnemyYPos]
     add [hl]
     ldh [hEnemyYPos], a
+    ; Increment counter
     ld hl, $ffe9
     inc [hl]
-    ret
+ret
 
-
+.xSpeedTable:
     db $ff, $ff, $fe, $fe, $ff, $ff, $02, $02, $02, $02, $03, $03, $02, $04, $02, $02
     db $fe, $fe, $fe, $fe, $fe, $fd, $fd, $fd, $fd, $fd, $fd, $fc, $fd, $fd, $fe, $02
     db $03, $02, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $04, $03, $04
     db $03, $02, $fe, $fd, $fd, $fd, $fd, $fc, $fc, $fc, $fc, $fd, $fb, $fd, $fc, $fb
     db $fc, $fc, $fd, $fd, $03, $03, $03, $02, $04, $03, $03, $03, $04, $02, $02, $80
+.ySpeedTable:
     db $02, $02, $02, $01, $01, $00, $02, $01, $01, $01, $01, $01, $00, $01, $00, $00
     db $02, $02, $01, $02, $01, $02, $01, $01, $01, $01, $00, $01, $00, $01, $00, $02
     db $01, $02, $01, $01, $01, $01, $01, $01, $01, $01, $00, $01, $00, $01, $00, $01
     db $00, $00, $02, $03, $02, $02, $01, $02, $02, $01, $01, $02, $02, $01, $01, $00
     db $01, $01, $00, $00, $03, $02, $02, $01, $02, $02, $01, $01, $01, $01, $00
 
+; End of octroll/chute leech code
+;------------------------------------------------------------------------------
+; pipe bug spawner
 enAI_5F67:
     ldh a, [$ef]
     cp $03
@@ -8170,7 +8191,6 @@ enAI_6F60:
     ld a, [$c46d]
     cp $10
     ret nc
-
     ld a, $0f
     ld [$cec0], a
     ret
