@@ -206,7 +206,7 @@ jr_002_4125:
 ret
 
 
-Call_002_412f: ; Loads enemy save flags without saving them
+Call_002_412f: ; Loads enemy save flags from save buffer to WRAM without saving the previous set of flags to the save buffer
     ld d, $00
     ld a, [currentLevelBank]
     ld [previousLevelBank], a
@@ -1156,7 +1156,7 @@ jr_002_45f4:
     ret
 
 
-    ld hl, $ffe5
+    ld hl, hEnemyAttr
     ldh a, [$e8]
     and a
     jr z, jr_002_4605
@@ -2892,7 +2892,7 @@ jr_002_5256:
     ret
 
 arachnus_526E:
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     and a
     jr z, jr_002_528c
 
@@ -2932,7 +2932,7 @@ Call_002_529a:
     xor a
 
 jr_002_52a3:
-    ldh [$e5], a
+    ldh [hEnemyAttr], a
     ret
 
 
@@ -2943,7 +2943,7 @@ Call_002_52a6:
     ldh a, [hEnemyYPos]
     add $fd
     ld [hl+], a
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     ld b, $18
     and a
     jr nz, jr_002_52ba
@@ -2960,7 +2960,7 @@ jr_002_52ba:
     pop hl
     ld de, $0004
     add hl, de
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     ld [hl], a
     ld a, $03
     ldh [hEnemySpawnFlag], a
@@ -3201,7 +3201,7 @@ Call_002_54e4:
 jr_002_54f2:
     ld a, $2c
     ldh [$e3], a
-    ld hl, $ffe5
+    ld hl, hEnemyAttr
     ld a, [hl]
     xor $20
     ld [hl], a
@@ -3227,7 +3227,7 @@ jr_002_5508:
     ld a, [hl]
     xor $01
     ld [hl], a
-    ld hl, $ffe5
+    ld hl, hEnemyAttr
     ld a, [hl]
     xor $20
     ld [hl], a
@@ -4060,7 +4060,7 @@ jr_002_58f2:
     jr z, jr_002_58e6
 
     call Call_002_5895
-    ld hl, $ffe5
+    ld hl, hEnemyAttr
     set 6, [hl]
     ret
 
@@ -4072,7 +4072,7 @@ jr_002_5912:
     jr z, jr_002_58e6
 
     call Call_002_58a7
-    ld hl, $ffe5
+    ld hl, hEnemyAttr
     res 5, [hl]
     ret
 
@@ -4084,7 +4084,7 @@ Jump_002_5925:
     jr z, jr_002_58e6
 
     call Call_002_58b8
-    ld hl, $ffe5
+    ld hl, hEnemyAttr
     res 6, [hl]
     ret
 
@@ -4096,7 +4096,7 @@ Jump_002_5938:
     jr z, jr_002_58e6
 
     call Call_002_58cc
-    ld hl, $ffe5
+    ld hl, hEnemyAttr
     set 5, [hl]
     ret
 
@@ -4118,7 +4118,7 @@ jr_002_594b:
     jp nz, Jump_002_58e0
 
     call Call_002_58b8
-    ld hl, $ffe5
+    ld hl, hEnemyAttr
     res 6, [hl]
     ret
 
@@ -4130,7 +4130,7 @@ jr_002_596a:
     jp nz, Jump_002_58e0
 
     call Call_002_58cc
-    ld hl, $ffe5
+    ld hl, hEnemyAttr
     set 5, [hl]
     ret
 
@@ -4142,7 +4142,7 @@ jr_002_597e:
     jp nz, Jump_002_58e0
 
     call Call_002_5895
-    ld hl, $ffe5
+    ld hl, hEnemyAttr
     set 6, [hl]
     ret
 
@@ -4154,7 +4154,7 @@ jr_002_5992:
     jp nz, Jump_002_58e0
 
     call Call_002_58a7
-    ld hl, $ffe5
+    ld hl, hEnemyAttr
     res 5, [hl]
     ret
 
@@ -4166,7 +4166,7 @@ jr_002_59a6:
 
     ld hl, hEnemyXPos
     ld b, $02
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     bit 5, a
     jr nz, jr_002_59bb
 
@@ -4229,7 +4229,7 @@ jr_002_59f6:
     ret nc
 
     ld a, c
-    ldh [$e5], a
+    ldh [hEnemyAttr], a
     ld a, $01
     ldh [$e9], a
     ret
@@ -4297,7 +4297,7 @@ jr_002_5a40:
     ld [hl+], a
     ldh a, [hEnemyYPos]
     ld [hl+], a
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     ld b, a
     bit 5, a
     jr nz, jr_002_5a59
@@ -4376,7 +4376,7 @@ ret
 
     ; Move according to direction
     ld hl, hEnemyXPos
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     bit 5, a
     jr nz, .moveRight
     
@@ -4560,7 +4560,7 @@ jr_002_5bc8:
 jr_002_5be5:
     ld hl, hEnemyYPos
     inc [hl]
-    call Call_002_6a7b
+    call enemy_accelForwards
     call Call_002_49ba
     ld a, [en_bgCollisionResult]
     bit 1, a
@@ -4770,7 +4770,7 @@ Call_002_5cc7:
     cp $63
     jr nc, jr_002_5cdc
 
-    ld hl, $ffe5
+    ld hl, hEnemyAttr
     ld a, [hl]
     xor $20
     ld [hl], a
@@ -4888,7 +4888,7 @@ enAI_chuteLeech: ; 02:5E0B
     ldh [$ea], a
     ; Clear flip flag
     xor a
-    ldh [$e5], a
+    ldh [hEnemyAttr], a
     ; Animate ascent
     ld hl, $ffe3
     ld a, [hl]
@@ -4970,7 +4970,7 @@ ret
 .descend: ; Move down
     ; Handle flipping animation
     ; Check if flipped
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     and a
     jr nz, .else_C
         ; Check if not moving left
@@ -4986,9 +4986,9 @@ ret
         xor a
         ldh [$e7], a
         ; Flip the sprite horizontally
-        ldh a, [$e5]
+        ldh a, [hEnemyAttr]
         xor $20
-        ldh [$e5], a
+        ldh [hEnemyAttr], a
             jr .moveDown
     
     .else_C:
@@ -5005,9 +5005,9 @@ ret
         xor a
         ldh [$e7], a
         ; Flip the sprite horizontally
-        ldh a, [$e5]
+        ldh a, [hEnemyAttr]
         xor $20
-        ldh [$e5], a
+        ldh [hEnemyAttr], a
 
 .moveDown:
     ; Handle x position
@@ -5194,11 +5194,11 @@ jr_002_6017: ; state 0
     and a
     jr z, jr_002_6036
         xor a
-        ldh [$e5], a
+        ldh [hEnemyAttr], a
         jr jr_002_603a
     jr_002_6036:
         ld a, $20
-        ldh [$e5], a
+        ldh [hEnemyAttr], a
     jr_002_603a:
 
     ld a, $01
@@ -5230,17 +5230,18 @@ jr_002_605a:
     ld a, [hl]
     cp $a8
     jr nc, jr_002_6073
+        ; Check behavioral flip flag
         ldh a, [$e8]
         and a
         jr z, jr_002_606d
             dec [hl]
             dec [hl]
-            call Call_002_6aae
+            call enemy_accelBackwards
                 ret
         jr_002_606d:
             inc [hl]
             inc [hl]
-            call Call_002_6a7b
+            call enemy_accelForwards
                 ret
     jr_002_6073:
     
@@ -5307,7 +5308,7 @@ enAI_60AB:
 
     call Call_002_6b5b
     ld hl, hEnemyYPos
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     bit 6, a
     jr nz, jr_002_60cc
         dec [hl]
@@ -5340,7 +5341,7 @@ jr_002_60d9:
 
     call Call_002_6b5b
     ld hl, hEnemyYPos
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     bit 6, a
     jr nz, jr_002_60ed
 
@@ -5383,7 +5384,7 @@ enAI_60F8:
 
     call Call_002_6b6f
     ld hl, hEnemyXPos
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     bit 5, a
     jr z, jr_002_6119
 
@@ -5420,7 +5421,7 @@ jr_002_6126:
 
     call Call_002_6b6f
     ld hl, hEnemyXPos
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     bit 5, a
     jr z, jr_002_613a
 
@@ -5490,7 +5491,7 @@ jr_002_616c:
     ldh a, [hEnemyYPos]
     sub $14
     ld [hl+], a
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     ld b, a
     bit 5, a
     jr nz, jr_002_6188
@@ -5539,7 +5540,7 @@ jr_002_61a9:
 
 jr_002_61be:
     ld hl, hEnemyXPos
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     bit 5, a
     jr nz, jr_002_61cc
 
@@ -5598,7 +5599,7 @@ ret
     inc c ; BC now refers to the x position
     ld hl, hopper_jumpXSpeedTable
     add hl, de
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     and a
     jr z, .else_A
         ; move right
@@ -5688,7 +5689,7 @@ ret
     ld bc, hEnemyXPos
     ld hl, hopper_jumpXSpeedTable
     add hl, de
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     and a
     jr z, .else_B
         ;move right
@@ -5778,7 +5779,7 @@ jr_002_62e3:
     ldh a, [hEnemyYPos]
     sub $04
     ld [hl+], a
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     ld b, a
     bit 5, a
     jr nz, jr_002_6309
@@ -5831,7 +5832,7 @@ jr_002_633a:
 
     call Call_002_6b4e
     ld hl, hEnemyXPos
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     bit 5, a
     jr nz, jr_002_6365
 
@@ -6175,7 +6176,7 @@ Call_002_6538:
     ld [hl], $51
     ret
 
-enAI_6540:
+enAI_6540: ; Autom
     ldh a, [hEnemySpawnFlag]
     cp $03
     ret z
@@ -6427,7 +6428,7 @@ jr_002_6692:
     ld a, [hl]
     add $04
     ld [hl], a
-    call Call_002_6a7b
+    call enemy_accelForwards
     inc l
     ld b, $01
     ldh a, [$e8]
@@ -6467,7 +6468,7 @@ Call_002_66c0:
     and $03
     ret nz
 
-    ld hl, $ffe5
+    ld hl, hEnemyAttr
     ldh a, [$e8]
     and a
     jr nz, jr_002_66e5
@@ -6537,7 +6538,7 @@ jr_002_6709:
     bit 1, a
     ret nz
 
-    ld hl, $ffe5
+    ld hl, hEnemyAttr
     ld a, [hl]
     xor $20
     ld [hl], a
@@ -7240,155 +7241,146 @@ ret
 ; end of missile door code
 ;------------------------------------------------------------------------------
 
+; Called by multiple enemies
+; Used to move enemies "forwards" (right or down) in an accelerating fashion
+; Takes HL as an argument/return
+enemy_accelForwards: ; 02:6A7B
+    push bc
+    push de
+        push hl
+            ; Load value from [$E7], perform bounds check, and increment
+            ld bc, $ffe7
+            ld a, [bc]
+            cp $17
+            jr z, .endIf
+                inc a
+                ld [bc], a
+            .endIf:
+            ; Load value from table
+            ld e, a
+            ld d, $00
+            ld hl, .speedTable
+            add hl, de
+            ld a, [hl]
+        pop hl
+        ; Add value of table to [hl]
+        add [hl]
+        ld [hl], a
+    pop de
+    pop bc
+ret
+
+.speedTable: ; 02:6A96 - First entry is unused
+    db $00, $00, $01, $00, $01, $00, $01, $01, $02, $01, $02, $01, $02, $02, $03, $02
+    db $03, $03, $04, $03, $04, $04, $03, $04
 
 ; Called by multiple enemies
-Call_002_6a7b:
+; Used to move enemies "forwards" (right or down) in an accelerating fashion
+; Takes HL as an argument/return
+enemy_accelBackwards: ; 02:6AAE
     push bc
     push de
-    push hl
-    ld bc, $ffe7
-    ld a, [bc]
-    cp $17
-    jr z, jr_002_6a88
+        push hl
+            ; Load value from [$E7], perform bounds check, and increment
+            ld bc, $ffe7
+            ld a, [bc]
+            cp $17
+            jr z, .endIf
+                inc a
+                ld [bc], a
+            .endIf:
+            ; Load value from table
+            ld e, a
+            ld d, $00
+            ld hl, .speedTable
+            add hl, de
+            ld a, [hl]
+        pop hl
+        ; Add value of table to [hl]
+        add [hl]
+        ld [hl], a
+    pop de
+    pop bc
+ret
 
-    inc a
-    ld [bc], a
+.speedTable: ; 02:6AC9 First entry is unused
+    db $00, $00, $ff, $00, $ff, $00, $ff, $ff, $fe, $ff, $fe, $ff, $fe, $fe, $fd, $fe
+    db $fd, $fd, $fc, $fd, $fc, $fc, $fd, $fc
 
-jr_002_6a88:
-    ld e, a
-    ld d, $00
-    ld hl, $6a96
-    add hl, de
-    ld a, [hl]
-    pop hl
-    add [hl]
+; Unused (?) but similar to the above routines
+; Takes HL as an argument/return
+; Seems unnecessarily complex with the separate positive/negative cases
+unknownProc_6AE1: ; 02:6AE1
+    push bc
+    push de
+        push hl
+            ; Load value from [$E7], perform bounds check, and increment
+            ld bc, $ffe7
+            ld a, [bc]
+            cp $17
+            jr z, .endIf_A
+                inc a
+                ld [bc], a
+            .endIf_A:
+            ; Check if value in table is negative
+            ld e, a
+            ld d, $00
+            ld hl, .unknownTable
+            add hl, de
+            bit 7, [hl]
+            jr z, .else_B
+                ; If it was negative, take the two's compliment to make it positive
+                ld a, [hl]
+                cpl
+                inc a
+                ld b, a
+                
+                pop hl
+                ; And then subtract the value from the popped HL
+                ld a, [hl]
+                sub b
+                jr .endIf_B
+            .else_B:
+                ; If it was non-negative, then add the value from the table to the popped HL
+                ld a, [hl]
+                pop hl
+                add [hl]
+            .endIf_B:
+        ; HL has been popped by this point
     ld [hl], a
     pop de
     pop bc
-    ret
+ret
+
+.unknownTable: ; 02:6B09
+    db $00, $FE, $FE, $FE, $FF, $FE, $FE, $FF, $FF, $FE, $FF, $FF, $FF, $00, $FF, $FF
+    db $00, $FF, $00, $00, $FF, $00, $00, $00
 
 
-    nop
-
-    db $00, $01, $00, $01, $00, $01, $01, $02, $01, $02, $01, $02, $02, $03, $02, $03
-    db $03, $04, $03, $04, $04, $03, $04
-
-Call_002_6aae:
-    push bc
-    push de
-    push hl
-    ld bc, $ffe7
-    ld a, [bc]
-    cp $17
-    jr z, jr_002_6abb
-
-    inc a
-    ld [bc], a
-
-jr_002_6abb:
-    ld e, a
-    ld d, $00
-    ld hl, $6ac9
-    add hl, de
-    ld a, [hl]
-    pop hl
-    add [hl]
-    ld [hl], a
-    pop de
-    pop bc
-    ret
-
-
-    nop
-
-    db $00, $ff, $00, $ff, $00, $ff, $ff, $fe, $ff, $fe, $ff, $fe, $fe, $fd, $fe, $fd
-    db $fd, $fc, $fd, $fc, $fc, $fd, $fc
-
-    push bc
-    push de
-    push hl
-    ld bc, $ffe7
-    ld a, [bc]
-    cp $17
-    jr z, jr_002_6aee
-
-    inc a
-    ld [bc], a
-
-jr_002_6aee:
-    ld e, a
-    ld d, $00
-    ld hl, $6b09
-    add hl, de
-    bit 7, [hl]
-    jr z, jr_002_6b02
-
-    ld a, [hl]
-    cpl
-    inc a
-    ld b, a
-    pop hl
-    ld a, [hl]
-    sub b
-    jr jr_002_6b05
-
-jr_002_6b02:
-    ld a, [hl]
-    pop hl
-    add [hl]
-
-jr_002_6b05:
-    ld [hl], a
-    pop de
-    pop bc
-    ret
-
-
-    nop
-    cp $fe
-    cp $ff
-    cp $fe
-    rst $38
-    rst $38
-    cp $ff
-    rst $38
-    rst $38
-    nop
-    rst $38
-    rst $38
-    nop
-    rst $38
-    nop
-    nop
-    rst $38
-    nop
-    nop
-    nop
-
+; Something pointer related
 Call_002_6b21:
     ldh a, [$fd]
     cp $c6
-    jr nz, jr_002_6b2b
+    jr nz, .else
+        ldh a, [$fc]
+        jr .endIf
+    .else:
+        ldh a, [$fc]
+        add $10
+    .endIf:
 
-    ldh a, [$fc]
-    jr jr_002_6b2f
-
-jr_002_6b2b:
-    ldh a, [$fc]
-    add $10
-
-jr_002_6b2f:
     ld [$c477], a
-    ret
+ret
 
 
-Call_002_6b33:
+; Flip sprite ID (low bit)
+Call_002_6b33: ; 02:6B33
     ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
     jr enemy_flipSpriteId
 
-Call_002_6b3a:
+Call_002_6b3a: ; 02:6B3A
     ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
@@ -7396,69 +7388,73 @@ Call_002_6b3a:
 enemy_flipSpriteId: ; 02:6B3F
     ld hl, $ffe3
     ld a, [hl]
-    xor $01
+    xor %00000001 ;$01
     ld [hl], a
     ret
 
 
-Call_002_6b47:
+; Flip sprite ID (lowest two bits)
+Call_002_6b47: ; 02:6B47
     ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
     jr jr_002_6b53
 
-Call_002_6b4e:
+Call_002_6b4e: ; 02:6B47
     ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
-jr_002_6b53:
+jr_002_6b53: ; 02:6B53
     ld hl, $ffe3
     ld a, [hl]
-    xor $03
+    xor %00000011 ;$03
     ld [hl], a
     ret
 
-
-Call_002_6b5b:
+; Flip sprite horizontally
+Call_002_6b5b: ; 02:6B5B
     ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
     jr enemy_flipHorizontal
 
-Call_002_6b62:
+Call_002_6b62: ; 02:6B5B
     ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
-enemy_flipHorizontal:
-    ld hl, $ffe5
+enemy_flipHorizontal: ; 02:6B62
+    ld hl, hEnemyAttr
     ld a, [hl]
     xor $20
     ld [hl], a
     ret
 
-
-Call_002_6b6f:
+; Flip sprite vertically
+Call_002_6b6f: ; 02:6B6F
     ldh a, [hEnemy_frameCounter]
     and $01
     ret nz
 
     jr jr_002_6b7b
 
+; 02:6B76
     ldh a, [hEnemy_frameCounter]
     and $03
     ret nz
 
-jr_002_6b7b:
-    ld hl, $ffe5
+jr_002_6b7b: ; 02:6B7B
+    ld hl, hEnemyAttr
     ld a, [hl]
     xor $40
     ld [hl], a
     ret
+    
 
+;------------------------------------------------------------------------------
 enAI_6B83: ; Baby egg?
     ld hl, $ffe9
     inc [hl]
@@ -7686,12 +7682,12 @@ jr_002_6cb1:
     jr c, jr_002_6cce
 
     ld a, $20
-    ldh [$e5], a
+    ldh [hEnemyAttr], a
     jr jr_002_6cd1
 
 jr_002_6cce:
     xor a
-    ldh [$e5], a
+    ldh [hEnemyAttr], a
 
 jr_002_6cd1:
     ld hl, $ffe9
@@ -8546,12 +8542,12 @@ jr_002_715f:
     jr c, jr_002_717c
 
     ld a, $20
-    ldh [$e5], a
+    ldh [hEnemyAttr], a
     jr jr_002_717f
 
 jr_002_717c:
     xor a
-    ldh [$e5], a
+    ldh [hEnemyAttr], a
 
 jr_002_717f:
     ld hl, $ffe9
@@ -8577,7 +8573,7 @@ jr_002_7193:
     ldh a, [hEnemyYPos]
     add $0c
     ld [hl+], a
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     bit 5, a
     jr nz, jr_002_71ac
 
@@ -8595,7 +8591,7 @@ jr_002_71b0:
     ld [hl+], a
     ld a, $00
     ld [hl+], a
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     ld [hl+], a
     ld de, $71d0
     call Call_002_6b21
@@ -8622,13 +8618,13 @@ Call_002_71da:
     jr z, jr_002_7208
 
     dec [hl]
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     set 6, a
-    ldh [$e5], a
+    ldh [hEnemyAttr], a
     ldh a, [hEnemyYPos]
     sub $0d
     ldh [hEnemyYPos], a
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     bit 5, a
     jr nz, jr_002_7201
 
@@ -8646,7 +8642,7 @@ jr_002_7201:
 
 
 jr_002_7208:
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     bit 6, a
     jr nz, jr_002_7229
 
@@ -8654,7 +8650,7 @@ jr_002_7208:
     ldh a, [hEnemyYPos]
     sub $10
     ldh [hEnemyYPos], a
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     bit 5, a
     jr nz, jr_002_7222
 
@@ -8728,7 +8724,7 @@ Call_002_7235:
     inc [hl]
     inc l
     inc [hl]
-    ret
+ret
 
 
     ld h, $c6
@@ -8932,7 +8928,7 @@ jr_002_736f:
 
 jr_002_7391:
     ld a, $20
-    ldh [$e5], a
+    ldh [hEnemyAttr], a
     jr jr_002_73a3
 
 jr_002_7397:
@@ -8944,7 +8940,7 @@ jr_002_7397:
 
 jr_002_73a0:
     xor a
-    ldh [$e5], a
+    ldh [hEnemyAttr], a
 
 jr_002_73a3:
     ld hl, $c437
@@ -9160,7 +9156,7 @@ Jump_002_74b8:
     jr nc, jr_002_74d4
 
     ld [hl+], a
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     bit 5, a
     jr nz, jr_002_74d2
 
@@ -9182,12 +9178,12 @@ jr_002_74d4:
 
 jr_002_74dc:
     ld hl, hEnemyYPos
-    call Call_002_6aae
+    call enemy_accelBackwards
     ld a, [hl+]
     cp $30
     jr c, jr_002_74f1
 
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     bit 5, a
     jr nz, jr_002_74ef
 
@@ -9260,7 +9256,7 @@ jr_002_753e:
     ld a, $10
     ldh [$e6], a
     ld hl, hEnemyYPos
-    call Call_002_6a7b
+    call enemy_accelForwards
     ld a, [hl]
     cp $90
     ret c
@@ -9331,7 +9327,7 @@ Call_002_75ac:
     ldh a, [hEnemyYPos]
     add $04
     ld [hl+], a
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     ld b, a
     bit 5, a
     jr nz, jr_002_75c4
@@ -9511,7 +9507,7 @@ jr_002_768b:
     and $03
     jr z, jr_002_767c
 
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     bit 5, a
     jr nz, jr_002_76a0
 
@@ -9746,7 +9742,7 @@ jr_002_77d0:
     jr c, jr_002_77f2
 
     ld a, $20
-    ldh [$e5], a
+    ldh [hEnemyAttr], a
     jr jr_002_77f2
 
 jr_002_77eb:
@@ -9754,7 +9750,7 @@ jr_002_77eb:
     jr nc, jr_002_77f2
 
     xor a
-    ldh [$e5], a
+    ldh [hEnemyAttr], a
 
 jr_002_77f2:
     ret
@@ -9772,12 +9768,12 @@ jr_002_77f3:
 
 jr_002_7800:
     ld hl, hEnemyYPos
-    call Call_002_6aae
+    call enemy_accelBackwards
     ld a, [hl+]
     cp $34
     jr c, jr_002_7817
 
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     bit 5, a
     jr nz, jr_002_7814
 
@@ -9991,7 +9987,7 @@ Call_002_7922:
     ld [hl+], a
     ldh a, [hEnemyYPos]
     ld [hl+], a
-    ldh a, [$e5]
+    ldh a, [hEnemyAttr]
     ld b, a
     bit 5, a
     jr nz, jr_002_7938
@@ -10208,7 +10204,7 @@ jr_002_7a3e:
     ld a, $20
 
 jr_002_7a40:
-    ldh [$e5], a
+    ldh [hEnemyAttr], a
 
 Call_002_7a42:
     ldh a, [hEnemy_frameCounter]
@@ -10834,6 +10830,7 @@ Call_002_7da0:
     ld a, $ff
     ld [$c46d], a
     ld c, a
+    ; if($c467 != $FFFD) then exit
     ld hl, $c468
     ld de, $fffd
     ld a, [de]
@@ -10923,14 +10920,15 @@ jr_002_7df4:
 
 
 Call_002_7df8:
+    ; Exit if the frame is odd
     ldh a, [hEnemy_frameCounter]
     and $01
-    ret nz
-
+        ret nz
+    ; Toggle visibility
     ld hl, $ffe0
     ld a, [hl]
     xor $80
     ld [hl], a
     ret
 
-; Freespace 
+; 02:7E05 - Freespace 

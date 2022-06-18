@@ -140,10 +140,12 @@ hEnemyXPos: ds 1 ;    $FFE2: Enemy X position
 ;    }
 ;    $FFE3: Sprite ID
 ;    $FFE4: Set to 20h in $2:5895
-;    $FFE5: Enemy flip flags. Set to 0 if [$FFE8] != 0 else 20h by $2:45FA. XOR'd with 20 in $2:5513
+def hEnemyAttr = $FFE5 ; Enemy sprite attribute flags. Set to 0 if [$FFE8] != 0 else 20h by $2:45FA. XOR'd with 20 in $2:5513
 ;    {
+;        10h: Palette
 ;        20h: X flip
 ;        40h: Y flip
+;        80h: BG priority
 ;    }
 ;
 ;    $FFE7: Incremented in $2:514A and $2:55AC
