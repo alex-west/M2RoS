@@ -516,18 +516,17 @@ jr_003_4274:
     pop bc
     ret
 
-
-Call_003_42b4:
+; returns pointer to first unused enemy slot in HL
+Call_003_42b4: ; 03:42B4
     ld hl, $c600
     ld bc, $0020
 
-jr_003_42ba:
-    ld a, [hl]
-    cp $ff
-    ret z
-
-    add hl, bc
-    jr jr_003_42ba
+    .findLoop:
+        ld a, [hl]
+        cp $ff
+            ret z
+        add hl, bc
+    jr .findLoop
 
 ; Returns the base offset for a bank's enemy data pointer in HL
 getEnemyDataPointerForBank:
@@ -710,9 +709,9 @@ en667F: ; Enemy D3h (gravitt)
 en668A: ; Enemy D8h (gullugg)
     db $00,$00,$00,$00,$00,$00,$00,$00,$04
     dw enAI_gullugg
-en6695: ; Enemy F8h
+en6695: ; Enemy F8h (missile door)
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
-    dw enAI_6A14
+    dw enAI_missileDoor
 en66A0: ; Enemy A0h (metroid) ; First Alpha metroid
     db $00,$00,$00,$00,$FF,$00,$00,$00,$05
     dw enAI_6BB2
@@ -840,15 +839,15 @@ hitbox6ADF: db -24, 23, -24, 23
 hitbox6AE3: db   0, 55,   0, 47
 
 ; Enemy AI stuff
-
+; 03:6AE7
     ld hl, $ffe0
     ld c, [hl]
     ld a, $ff
     ld b, $0f
 
-jr_003_6aef:
-    ld [hl+], a
-    dec b
+    jr_003_6aef:
+        ld [hl+], a
+        dec b
     jr nz, jr_003_6aef
 
     ld a, [hl]
@@ -859,31 +858,26 @@ jr_003_6aef:
     ld h, $c6
     bit 4, a
     jr nz, jr_003_6b04
+        add $1c
+        ld l, a
+        jr jr_003_6b08
+    jr_003_6b04:
+        add $0c
+        ld l, a
+        inc h
+    jr_003_6b08:
 
-    add $1c
-    ld l, a
-    jr jr_003_6b08
-
-jr_003_6b04:
-    add $0c
-    ld l, a
-    inc h
-
-jr_003_6b08:
     ld a, [hl]
     cp $03
     jr z, jr_003_6b15
-
-    cp $05
-    jr nz, jr_003_6b1f
-
-    ld a, $04
-    jr jr_003_6b17
-
-jr_003_6b15:
-    ld a, $01
-
-jr_003_6b17:
+        cp $05
+            jr nz, jr_003_6b1f
+        ld a, $04
+        jr jr_003_6b17
+    jr_003_6b15:
+        ld a, $01
+    jr_003_6b17:
+    
     ld [hl+], a
     ld b, a
     ld a, [hl]
@@ -1001,7 +995,7 @@ jr_003_6b92:
     ld hl, $ffe2
     add [hl]
     ld [hl], a
-    ret
+ret
 
 
     db $fb
@@ -1014,6 +1008,7 @@ jr_003_6b92:
     dec b
 
     db $05
+
 
     ld hl, $c40c
     ld de, $c205

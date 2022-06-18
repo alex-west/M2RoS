@@ -447,7 +447,7 @@ jr_002_4276:
 jr_002_428b:
     call $3ca6
     ld a, $02
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     call Call_002_438f
     ld hl, $c466
     ld a, $ff
@@ -589,7 +589,7 @@ jr_002_434c:
     ld b, $10
 
 jr_002_434e:
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $06
     jr z, jr_002_436e
 
@@ -635,7 +635,7 @@ jr_002_437f:
 
     call $3ca6
     ld a, $ff
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     jr jr_002_437f
 
 Call_002_438f:
@@ -1054,7 +1054,7 @@ jr_002_456d:
 
     ld hl, $ffe0
     ld [hl], $01
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $02
     jr z, jr_002_459d
 
@@ -1068,7 +1068,7 @@ jr_002_456d:
     dec [hl]
     inc l
     inc [hl]
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $03
     jr z, jr_002_45c2
 
@@ -1085,7 +1085,7 @@ jr_002_456d:
 jr_002_459d:
     call $3ca6
     ld a, $02
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     pop af
     jp Jump_002_40d8
 
@@ -1093,14 +1093,14 @@ jr_002_459d:
 jr_002_45a8:
     call $3ca6
     ld a, $ff
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     pop af
     jp Jump_002_40d8
 
 
 jr_002_45b3:
     ld a, $04
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     xor a
     ld [$c41b], a
     ld [$c41c], a
@@ -1110,7 +1110,7 @@ jr_002_45b3:
 
 jr_002_45c2:
     ld a, $01
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     pop af
     jp Jump_002_40d8
 
@@ -2379,7 +2379,7 @@ jr_002_4e80:
 
     call $3ca6
     ld a, $02
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
 enAI_4EA1:
@@ -2631,6 +2631,7 @@ jr_002_4ff1:
 
     add b
 
+; Looks like some function pointers might be mixed in here
     db $9e, $00, $00, $00, $00, $00, $d7, $53, $00, $02, $02, $6f, $53, $9e, $00, $00
     db $00, $00, $00, $08, $54, $00, $02, $03, $6f, $53, $9e, $00, $00, $00, $00, $00
     db $37, $54, $00, $02, $04, $6f, $53, $9e, $00, $00, $00, $00, $00, $63, $54, $00
@@ -2854,7 +2855,7 @@ jr_002_521b:
 jr_002_5230:
     ld a, $7a
     ldh [$e3], a
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $01
     ret nz
 
@@ -2962,13 +2963,14 @@ jr_002_52ba:
     ldh a, [$e5]
     ld [hl], a
     ld a, $03
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
-; 02:52D2
-    db $7b, $00, $00, $00, $00, $00, $00, $00, $00, $02, $02, $df, $52
+; 02:52D2 - Enemy header (arachnus projectile?)
+    db $7b, $00, $00, $00, $00, $00, $00, $00, $00, $02, $02;, $df, $52
+    dw enAI_52DF
 
-; 02:52DF - Unreferenced code?
+enAI_52DF: ; 02:52DF
     ld hl, hEnemyXPos
     ldh a, [$e7]
     and a
@@ -2996,9 +2998,13 @@ jr_002_52eb:
     db $ff, $fe, $fe, $fe, $ff, $ff, $fe, $ff, $fe, $fe, $fe, $ff, $ff, $ff, $00, $00
     db $00, $00, $01, $00, $01, $01, $00, $01, $01, $01, $01, $01, $01, $01, $01, $01
     db $01, $02, $02, $02, $02, $02, $02, $02, $02, $03, $03, $03, $03, $03, $03, $03
-    db $00, $80, $fc, $fd, $fd, $fd, $fe, $fe, $fd, $fe, $fe, $fe, $fe, $ff, $fe, $ff
+    db $00, $80
+; 02:532E?
+    db $fc, $fd, $fd, $fd, $fe, $fe, $fd, $fe, $fe, $fe, $fe, $ff, $fe, $ff
     db $fe, $ff, $ff, $00, $00, $00, $00, $01, $01, $02, $01, $02, $01, $02, $02, $02
-    db $02, $03, $02, $02, $03, $03, $03, $04, $00, $80, $fd, $fe, $fe, $fe, $ff, $ff
+    db $02, $03, $02, $02, $03, $03, $03, $04, $00, $80
+; 02:5356?
+    db $fd, $fe, $fe, $fe, $ff, $ff
     db $00, $ff, $ff, $00, $ff, $00, $00, $01, $00, $01, $01, $00, $01, $01, $02, $02
     db $02, $03
     db $81 ;add c
@@ -3090,7 +3096,7 @@ jr_002_53be:
 jr_002_53cf:
     call $3ca6
     ld a, $ff
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
 ; 02:53D7
@@ -3543,7 +3549,7 @@ jr_002_5685:
     ld [$ced5], a
     call $3ca6
     ld a, $02
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
 
@@ -3582,7 +3588,7 @@ jr_002_56b3:
     ldh [$ed], a
     call $3ca6
     ld a, $02
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
 
@@ -3667,7 +3673,7 @@ jr_002_570f:
 jr_002_571f:
     call $3ca6
     ld a, $02
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
 
@@ -3682,7 +3688,7 @@ jr_002_5727:
 
 
 Jump_002_5732:
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $06
     jr z, jr_002_57ab
 
@@ -3734,7 +3740,7 @@ jr_002_575e:
     ld [hl], a
     call $3ca6
     ld a, $02
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     xor a
     ld [$c41c], a
     ld [$c463], a
@@ -3775,7 +3781,7 @@ jr_002_57a2:
 jr_002_57ab:
     call $3ca6
     ld a, $ff
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
 
@@ -4180,11 +4186,11 @@ jr_002_59bb:
 jr_002_59bf:
     call $3ca6
     ld a, $ff
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
 enAI_59C7:
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     and $0f
     jr z, jr_002_59a6
 
@@ -4230,7 +4236,7 @@ jr_002_59f6:
 
 
 jr_002_5a01:
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $03
     ret z
 
@@ -4316,7 +4322,7 @@ jr_002_5a5d:
     call Call_002_6b21
     call Call_002_7231
     ld a, $03
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ld a, $07
     ldh [$e3], a
     ld a, $12
@@ -4329,7 +4335,7 @@ jr_002_5a5d:
     db $00, $00, $00, $00, $10, $00, $00, $ff, $07, $c7, $59
 
 Call_002_5aa8:
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $03
     ret z
 
@@ -4493,7 +4499,7 @@ jr_002_5b48:
     call Call_002_6b21
     call Call_002_7235
     ld a, $03
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
 
@@ -4506,7 +4512,7 @@ jr_002_5b48:
     add b
 
 Call_002_5bb5:
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     ld hl, $ffe3
     cp $03
     jr z, jr_002_5bc7
@@ -4578,7 +4584,7 @@ jr_002_5bff:
     ret c
 
     ld h, $c6
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     bit 4, a
     jr nz, jr_002_5c16
 
@@ -4608,7 +4614,7 @@ jr_002_5c29:
     ld a, $03
     ld [$ced5], a
     ld a, $ff
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
 enAI_5C36:
@@ -5036,36 +5042,37 @@ ret
 ;------------------------------------------------------------------------------
 ; pipe bug spawner
 enAI_5F67:
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $03
-    ret z
+        ret z
 
     cp $01
-    jp nz, Jump_002_600a
+        jp nz, Jump_002_600a
 
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $18
-    ret c
+        ret c
 
     ld [hl], $00
     ld hl, $ffe7
     ld a, [hl]
     cp $0a
     jr c, jr_002_5f90
+        ; Delete self?
+        call $3ca6
+        ; Play sound
+        ld a, $14
+        ld [$cec0], a
+        ld a, $02
+        ldh [hEnemySpawnFlag], a
+            ret
+    jr_002_5f90:
 
-    call $3ca6
-    ld a, $14
-    ld [$cec0], a
-    ld a, $02
-    ldh [$ef], a
-    ret
-
-
-jr_002_5f90:
+    ; Load in new pipe bug
     inc [hl]
-    call $3df6
+    call $3df6 ; Get first unused slot
     xor a
     ld [hl+], a
     ldh a, [hEnemyYPos]
@@ -5075,32 +5082,30 @@ jr_002_5f90:
     ldh a, [$e3]
     cp $3c
     jr nc, jr_002_5fa6
+        ld a, $17
+        jr jr_002_5fa8
+    jr_002_5fa6:
+        ld a, $38
+    jr_002_5fa8:
 
-    ld a, $17
-    jr jr_002_5fa8
-
-jr_002_5fa6:
-    ld a, $38
-
-jr_002_5fa8:
     ld [hl+], a
-    ld de, $5fff
+    ld de, pipeBugHeader ;$5fff
     ld b, $09
 
-jr_002_5fae:
-    ld a, [de]
-    ld [hl+], a
-    inc de
-    dec b
+    jr_002_5fae:
+        ld a, [de]
+        ld [hl+], a
+        inc de
+        dec b
     jr nz, jr_002_5fae
 
     ld c, a
     xor a
     ld b, $04
 
-jr_002_5fb8:
-    ld [hl+], a
-    dec b
+    jr_002_5fb8:
+        ld [hl+], a
+        dec b
     jr nz, jr_002_5fb8
 
     ld [hl], c
@@ -5110,36 +5115,32 @@ jr_002_5fb8:
     ldh a, [$fd]
     cp $c6
     jr nz, jr_002_5fcb
+        ldh a, [$fc]
+        jr jr_002_5fcf
+    jr_002_5fcb:
+        ldh a, [$fc]
+        add $10
+    jr_002_5fcf:
 
-    ldh a, [$fc]
-    jr jr_002_5fcf
-
-jr_002_5fcb:
-    ldh a, [$fc]
-    add $10
-
-jr_002_5fcf:
     ld [hl+], a
     ld [$c477], a
     ldh a, [$e3]
     bit 0, a
     jr nz, jr_002_5fdc
+        xor a
+        jr jr_002_5fde
+    jr_002_5fdc:
+        ld a, $01
+    jr_002_5fde:
 
-    xor a
-    jr jr_002_5fde
-
-jr_002_5fdc:
-    ld a, $01
-
-jr_002_5fde:
     ld [hl+], a
     ld b, $02
 
-jr_002_5fe1:
-    ld a, [de]
-    ld [hl+], a
-    inc e
-    dec b
+    jr_002_5fe1:
+        ld a, [de]
+        ld [hl+], a
+        inc e
+        dec b
     jr nz, jr_002_5fe1
 
     dec l
@@ -5154,25 +5155,25 @@ jr_002_5fe1:
     inc [hl]
     inc l
     inc [hl]
-    ld hl, $ffef
+    ld hl, hEnemySpawnFlag
     ld [hl], $03
-    ret
+ret
 
-
+; Pipe bug enemy header
+pipeBugHeader: ; 02:5FFF
     db $80, $00, $00, $00, $00, $00, $00, $00, $01, $67, $5f
 
 Jump_002_600a:
     call Call_002_609b
     ldh a, [$ea]
     and a
-    jr z, jr_002_6017
-
+        jr z, jr_002_6017 ; state == 0
     dec a
-    jr z, jr_002_603e
+        jr z, jr_002_603e ; state == 1
+    ; last case
+        jr jr_002_605a
 
-    jr jr_002_605a
-
-jr_002_6017:
+jr_002_6017: ; state 0
     ld c, $02
     ld a, [$d03c]
     ld b, a
@@ -5180,29 +5181,26 @@ jr_002_6017:
     ld a, [hl]
     sub b
     jr nc, jr_002_6028
+        cpl
+        inc a
+        ld c, $00
+    jr_002_6028:
 
-    cpl
-    inc a
-    ld c, $00
-
-jr_002_6028:
     cp $50
-    ret nc
+        ret nc
 
     ld a, c
     ldh [$e8], a
     and a
     jr z, jr_002_6036
+        xor a
+        ldh [$e5], a
+        jr jr_002_603a
+    jr_002_6036:
+        ld a, $20
+        ldh [$e5], a
+    jr_002_603a:
 
-    xor a
-    ldh [$e5], a
-    jr jr_002_603a
-
-jr_002_6036:
-    ld a, $20
-    ldh [$e5], a
-
-jr_002_603a:
     ld a, $01
     ldh [$ea], a
 
@@ -5214,17 +5212,17 @@ jr_002_603e:
     ld a, [$d03b]
     add $05
     cp [hl]
-    ret c
+        ret c
 
     ld hl, $ffea
     inc [hl]
     ld hl, $ffe3
     ld a, [hl]
     cp $38
-    ret c
+        ret c
 
     ld [hl], $3a
-    ret
+ret
 
 
 jr_002_605a:
@@ -5232,56 +5230,48 @@ jr_002_605a:
     ld a, [hl]
     cp $a8
     jr nc, jr_002_6073
-
-    ldh a, [$e8]
-    and a
-    jr z, jr_002_606d
-
-    dec [hl]
-    dec [hl]
-    call Call_002_6aae
-    ret
-
-
-jr_002_606d:
-    inc [hl]
-    inc [hl]
-    call Call_002_6a7b
-    ret
-
-
-jr_002_6073:
+        ldh a, [$e8]
+        and a
+        jr z, jr_002_606d
+            dec [hl]
+            dec [hl]
+            call Call_002_6aae
+                ret
+        jr_002_606d:
+            inc [hl]
+            inc [hl]
+            call Call_002_6a7b
+                ret
+    jr_002_6073:
+    
     ld h, $c6
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     bit 4, a
     jr nz, jr_002_6080
+        add $1c
+        ld l, a
+        jr jr_002_6084
+    jr_002_6080:
+        add $0c
+        ld l, a
+        inc h
+    jr_002_6084:
 
-    add $1c
-    ld l, a
-    jr jr_002_6084
-
-jr_002_6080:
-    add $0c
-    ld l, a
-    inc h
-
-jr_002_6084:
     ld a, [hl]
     cp $03
     jr nz, jr_002_6093
+        ld a, $01
+        ld [hl+], a
+        ld a, [hl]
+        ld hl, enemySpawnFlags
+        ld l, a
+        ld [hl], $01
+    jr_002_6093:
 
-    ld a, $01
-    ld [hl+], a
-    ld a, [hl]
-    ld hl, enemySpawnFlags
-    ld l, a
-    ld [hl], $01
-
-jr_002_6093:
     call $3ca6
     ld a, $ff
-    ldh [$ef], a
-    ret
+    ldh [hEnemySpawnFlag], a
+ret
 
 
 Call_002_609b:
@@ -5289,63 +5279,57 @@ Call_002_609b:
     ld a, [hl]
     cp $38
     jr nc, jr_002_60a7
-
-    xor $0f
-    jr jr_002_60a9
-
-jr_002_60a7:
-    xor $01
-
-jr_002_60a9:
+        xor $0f
+        jr jr_002_60a9
+    jr_002_60a7:
+        xor $01
+    jr_002_60a9:
+    
     ld [hl], a
-    ret
+ret
+
+; end of pipe bug code?
 
 enAI_60AB:
     ld hl, $ffea
     ld a, [hl-]
     dec a
-    jr z, jr_002_60d2
-
+        jr z, jr_002_60d2
     dec a
-    jr z, jr_002_60d9
-
+        jr z, jr_002_60d9
     dec a
-    jr z, jr_002_60ef
+        jr z, jr_002_60ef
 
     inc [hl]
     ld a, [hl]
     cp $20
-    jr z, jr_002_60ce
+        jr z, jr_002_60ce
 
     call Call_002_6b5b
     ld hl, hEnemyYPos
     ldh a, [$e5]
     bit 6, a
     jr nz, jr_002_60cc
-
-    dec [hl]
-    ret
-
-
-jr_002_60cc:
-    inc [hl]
-    ret
-
+        dec [hl]
+        ret
+    jr_002_60cc:
+        inc [hl]
+        ret
+; end proc
 
 jr_002_60ce:
     xor a
     ld [hl+], a
     inc [hl]
-    ret
+ret
 
 
 jr_002_60d2:
     inc [hl]
     ld a, [hl]
     cp $08
-    jr z, jr_002_60ce
-
-    ret
+        jr z, jr_002_60ce
+ret
 
 
 jr_002_60d9:
@@ -5469,7 +5453,7 @@ enAI_6145:
     ld [hl], $41
 
 jr_002_614f:
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $06
     jr z, jr_002_61be
 
@@ -5754,7 +5738,7 @@ enAI_62B4:
 
 jr_002_62be:
     call Call_002_7da0
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $06
     jr z, jr_002_633a
 
@@ -5889,13 +5873,13 @@ jr_002_6374:
 jr_002_637a:
     call $3ca6
     ld a, $ff
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
     db $00, $00, $00, $00, $00, $00, $fe, $01, $b4, $62
 
 enAI_638C:
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $06
     jp z, Jump_002_64a7
 
@@ -6147,7 +6131,7 @@ jr_002_64db:
 jr_002_64e5:
     call $3ca6
     ld a, $ff
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
 
@@ -6192,7 +6176,7 @@ Call_002_6538:
     ret
 
 enAI_6540:
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $03
     ret z
 
@@ -6256,7 +6240,7 @@ jr_002_657a:
     ld hl, $ffe3
     ld [hl], $5d
     ld a, $03
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
 
@@ -6293,7 +6277,7 @@ jr_002_65b5:
 
     call $3ca6
     ld a, $ff
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
     db $5e, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $00, $40, $65
@@ -6474,7 +6458,7 @@ Jump_002_66ae:
 jr_002_66b8:
     call $3ca6
     ld a, $02
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
 
@@ -7163,79 +7147,101 @@ Call_002_6a04:
     ld [hl], $d4
     ret
 
-enAI_6A14:
+;------------------------------------------------------------------------------
+; Missile Door
+enAI_missileDoor: ; 02:6A14
+    ; Load results of collision tests with this object
     call Call_002_7da0
+    ; If not the door sprite, jump ahead
     ld hl, $ffe3
     ld a, [hl]
     cp $f8
-    jr nz, jr_002_6a61
+        jr nz, .exploding
 
+    ; Exit if not hit with a projectile
     ld a, [$c46d]
     cp $20
-    ret nc
+        ret nc
 
     ld b, a
+    ; Play sound (plink)
     ld a, $0f
     ld [$cec0], a
+    ; Exit if not hit by missile
     ld a, b
     cp $08
-    ret nz
+        ret nz
 
+    ; Clear plink sound
     ld a, $ff
     ld [$cec0], a
+    ; Play missile sound
     ld a, $08
     ld [$ced5], a
+    ; Change palette for a few frames
     ld a, $13
     ldh [$e6], a
+    ; Increment hit counter
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
+    ; Exit if not hit with 5 missiles
     cp $05
-    ret nz
+        ret nz
 
+    ; Clear hit counter and palette effect
     xor a
     ld [hl], a
     ldh [$e6], a
+    ; Change sprite ID to explosion
     ld a, $e2
     ldh [$e3], a
+    ; Play sound effect
     ld a, $10
     ld [$cec0], a
+    
+    ; Check which direction the door was hit from, to adjust the position of the explosion
     ld a, [$c46e]
     bit 1, a
-    jr nz, jr_002_6a6b
+        jr nz, .rightSide
 
+;.leftSide:
+    ; Adjust position so the explosion is on the left
     ld hl, hEnemyXPos
     ld a, [hl]
     sub $18
     ld [hl], a
-    ret
+ret
 
-
-jr_002_6a61:
+.exploding:
+    ; Animate the explosion (sprites $E2 thru $E7)
     ld hl, $ffe3
     ld a, [hl]
     cp $e7
-    jr z, jr_002_6a73
-
+        jr z, .deleteDoor
     inc [hl]
-    ret
+ret
 
-
-jr_002_6a6b:
+.rightSide:
+    ; Adjust position so the explosion is on the right
     ld hl, hEnemyXPos
     ld a, [hl]
     add $18
     ld [hl], a
-    ret
+ret
 
-
-jr_002_6a73:
-    call $3ca6
+.deleteDoor:
+    call $3ca6 ; Delete self?
+    ; Set enemy spawn flag to dead
     ld a, $02
-    ldh [$ef], a
-    ret
+    ldh [hEnemySpawnFlag], a
+ret
+
+; end of missile door code
+;------------------------------------------------------------------------------
 
 
+; Called by multiple enemies
 Call_002_6a7b:
     push bc
     push de
@@ -7479,7 +7485,7 @@ enAI_6B83: ; Baby egg?
 
     call $3ca6
     ld a, $02
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     xor a
     ld [$c463], a
     ret
@@ -7521,7 +7527,7 @@ jr_002_6bdc:
     jp z, Jump_002_6c7d
 
     ld b, a
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $04
     jr z, jr_002_6c4f
 
@@ -7595,7 +7601,7 @@ enAI_6C44: ; Alpha metroid ?
     ; Routine for before it attacks
 
     ld a, $04
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
 
 jr_002_6c4f:
     ld a, $a3
@@ -7812,7 +7818,7 @@ jr_002_6d61:
     ld [$cedc], a
     ld a, $02
     ld [$c465], a
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ld hl, $d089
     ld a, [hl]
     sub $01
@@ -7834,7 +7840,7 @@ jr_002_6d99:
     ld hl, $ffe3
     ld [hl], $a3
     ld a, $04
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     xor a
     ld [$c463], a
     ld a, $02
@@ -8199,7 +8205,7 @@ enAI_6F60:
 jr_002_6f7f:
     call $3ca6
     ld a, $ff
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
 
@@ -8214,7 +8220,7 @@ jr_002_6f8e:
     and a
     jp nz, Jump_002_7016
 
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $04
     jr z, jr_002_6fd8
 
@@ -8303,12 +8309,12 @@ Jump_002_7003:
     inc a
     ld [$c41c], a
     ld a, $04
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
 
 Jump_002_7016:
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $05
     ret z
 
@@ -8483,7 +8489,7 @@ Jump_002_7105:
     ld [$cedc], a
     ld a, $02
     ld [$c465], a
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ld hl, $d089
     ld a, [hl]
     sub $01
@@ -8595,7 +8601,7 @@ jr_002_71b0:
     call Call_002_6b21
     call Call_002_7231
     ld a, $05
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     xor a
     ldh [$e9], a
     ld a, $14
@@ -8668,7 +8674,7 @@ jr_002_7222:
 jr_002_7229:
     call $3ca6
     ld a, $ff
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
 
@@ -8726,7 +8732,7 @@ Call_002_7235:
 
 
     ld h, $c6
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     bit 4, a
     jr z, jr_002_7274
 
@@ -8739,7 +8745,7 @@ jr_002_7274:
 
 enAI_7276:
     call Call_002_7da0
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $06
     jp z, Jump_002_74b8
 
@@ -8781,7 +8787,7 @@ jr_002_72b1:
     jp nc, Jump_002_73cc
 
     ld b, a
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $04
     jr z, jr_002_7317
 
@@ -8957,7 +8963,7 @@ jr_002_73a3:
 
     call Call_002_75ac
     ld a, $05
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ld a, $04
     ld [$c41c], a
     xor a
@@ -9085,7 +9091,7 @@ jr_002_7452:
     ld [$cedc], a
     ld a, $02
     ld [$c465], a
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ld hl, $d089
     ld a, [hl]
     sub $01
@@ -9170,7 +9176,7 @@ jr_002_74d2:
 jr_002_74d4:
     call $3ca6
     ld a, $ff
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
 
@@ -9220,7 +9226,7 @@ jr_002_750b:
     ld a, $03
     ld [$c41c], a
     ld a, $04
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ld a, $b7
     ldh [$e3], a
     ret
@@ -9233,7 +9239,7 @@ Jump_002_751b:
     ldh [$e9], a
     ldh [$ea], a
     ld a, $04
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     xor a
     ld [$c463], a
     ld a, $03
@@ -9261,7 +9267,7 @@ jr_002_753e:
 
     call $3ca6
     ld a, $02
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ld a, $02
     ld [$c41c], a
     ret
@@ -9437,7 +9443,7 @@ jr_002_762f:
 
 enAI_7631:
     call Call_002_7da0
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $06
     jp z, Jump_002_7847
 
@@ -9581,7 +9587,7 @@ jr_002_76e1:
     ld [$cedc], a
     ld a, $02
     ld [$c465], a
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ld hl, $d089
     ld a, [hl]
     sub $01
@@ -9809,7 +9815,7 @@ Jump_002_7824:
     ld a, $02
     ld [$c41c], a
     ld a, $05
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ld a, $c1
     ldh [$e3], a
     ld a, $15
@@ -9918,7 +9924,7 @@ Jump_002_78c8:
 jr_002_78c8:
     call $3ca6
     ld a, $ff
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ld hl, $c41c
     ld a, [hl]
     cp $02
@@ -9930,7 +9936,7 @@ jr_002_78c8:
 
 
 Jump_002_78dc:
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $04
     jp z, Jump_002_7950
 
@@ -10062,7 +10068,7 @@ Jump_002_798b:
     inc a
     ld [$c41c], a
     ld a, $04
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ret
 
 
@@ -10360,7 +10366,7 @@ jr_002_7b14:
     ld [$c474], a
     ld [$c475], a
     ld a, $02
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ld a, $10
     ldh [$ee], a
     ld a, $0d
@@ -10544,7 +10550,7 @@ jr_002_7c04:
 
 
 jr_002_7c20:
-    ldh a, [$ef]
+    ldh a, [hEnemySpawnFlag]
     cp $04
     jr z, jr_002_7c6b
 
@@ -10591,7 +10597,7 @@ jr_002_7c40:
     ld hl, $c465
     inc [hl]
     ld a, $04
-    ldh [$ef], a
+    ldh [hEnemySpawnFlag], a
     ld a, $16
     ld [$ced5], a
     ret
@@ -10823,7 +10829,7 @@ Call_002_7d97:
     ld [$ced5], a
     ret
 
-
+; Theory: This copies collision test results for the working enemy from HRAM to WRAM
 Call_002_7da0:
     ld a, $ff
     ld [$c46d], a
@@ -10832,13 +10838,13 @@ Call_002_7da0:
     ld de, $fffd
     ld a, [de]
     cp [hl]
-    ret nz
+        ret nz
 
     dec e
     dec l
     ld a, [de]
     cp [hl]
-    ret nz
+        ret nz
 
     dec l
     ld c, [hl]
@@ -10852,7 +10858,7 @@ Call_002_7da0:
     ld [$c46d], a
     ld a, b
     ld [$c46e], a
-    ret
+ret
 
 
 Call_002_7dc6:

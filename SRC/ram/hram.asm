@@ -160,7 +160,7 @@ hEnemyXPos: ds 1 ;    $FFE2: Enemy X position
 ;        Otherwise: missile drop
 ;    }
 ;    $FFEE: Tested in $2:4239
-;    $FFEF: Compared with 3 in places in bank 2
+def hEnemySpawnFlag = $FFEF ; Enemy spawn flag
 ;
 def hEnemyAI_low  = $FFF1 ; Enemy AI pointer (low byte)
 def hEnemyAI_high = $FFF2 ; Enemy AI pointer (high byte)
