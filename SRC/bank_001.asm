@@ -312,14 +312,15 @@ ret
 ret
 
 ;------------------------------------------------------------------------------
-; 01:4AFC - Display a two-sprite number
+debug_drawNumber: ; 01:4AFC - Display a two-sprite number
+.twoDigit:
     ldh [$99], a
     swap a
     and $0f
     add $a0
     call Call_001_4b11
     ldh a, [$99]
-; 01:4B09 - Display a one-sprite number
+.oneDigit: ; 01:4B09 - Display a one-sprite number
     and $0f
     add $a0
     call Call_001_4b11
@@ -939,20 +940,20 @@ initialSaveFile:
 	db $00       ; In-game timer, hours
 	db $39       ; Number of Metroids remaining
 
-
+samusShoot: ; 01:4E8A
     ldh a, [hInputRisingEdge]
     bit PADB_B, a
-    jr nz, jr_001_4e9f
+        jr nz, jr_001_4e9f
 
     ldh a, [hInputPressed]
     bit PADB_B, a
-    ret z
+        ret z
 
     ld a, [$d00d]
     inc a
     ld [$d00d], a
     cp $10
-    ret c
+        ret c
 
 Jump_001_4e9f:
 jr_001_4e9f:
@@ -1031,11 +1032,12 @@ jr_001_4ed8:
     cp $04
     jp z, Jump_001_4f7e
 
-    call Call_001_4fee
+    call findProjectileSlot ; Projectile slot is returned in HL
+    ; Exit if projectile is 3
     ld a, l
     swap a
     cp $03
-    ret z
+        ret z
 
     ld a, [samusActiveWeapon]
     cp $08
@@ -1046,13 +1048,12 @@ jr_001_4ed8:
     ld a, [samusCurMissilesHigh]
     or b
     jr nz, jr_001_4f32
+        ; Play sound effect
+        ld a, $19
+        ld [$cec0], a
+            ret
+    jr_001_4f32:
 
-    ld a, $19
-    ld [$cec0], a
-    ret
-
-
-jr_001_4f32:
     ld a, [samusCurMissilesLow]
     sub $01
     daa
@@ -1103,7 +1104,7 @@ jr_001_4f6f:
 
 
 Jump_001_4f7e:
-    ld hl, $dd00
+    ld hl, projectileArray
     ld a, [hl]
     cp $ff
     ret nz
@@ -1183,31 +1184,31 @@ jr_001_4fad:
 
     db $08
 
-Call_001_4fee:
-    ld hl, $dd00
+
+findProjectileSlot: ; 01:4FEE
+    ld hl, projectileArray
     ld a, [samusActiveWeapon]
     cp $08
-    jr nz, jr_001_4ffd
+    jr nz, .endIf
+        ld a, $02
+        swap a
+        ld l, a
+    .endIf
 
-    ld a, $02
-    swap a
-    ld l, a
-
-jr_001_4ffd:
-    ld a, [hl]
-    cp $ff
-    ret z
-
-    ld de, $0010
-    add hl, de
-    ld a, l
-    swap a
-    cp $03
-    jr nz, jr_001_4ffd
-
-    ret
+    .loop:
+        ld a, [hl]
+        cp $ff
+            ret z
+        ld de, $0010
+        add hl, de
+        ld a, l
+        swap a
+        cp $03
+    jr nz, .loop
+ret
 
 
+handleProjectiles: ; 01:500D
     xor a
     ld [$d032], a
 
@@ -1443,7 +1444,7 @@ jr_001_513c:
     and $01
     jp z, Jump_001_52e0
 
-    call $2266
+    call beam_getTileIndex
     ld hl, beamSolidityIndex
     cp [hl]
     jp nc, Jump_001_52e0
@@ -1451,7 +1452,7 @@ jr_001_513c:
     cp $04
     jr nc, jr_001_5172
 
-    call Call_001_5671
+    call destroyRespawningBlock
     jp Jump_001_52f3
 
 
@@ -1639,28 +1640,26 @@ jr_001_5282:
     and $01
     jr z, jr_001_52e0
 
-    call $2266
+    call beam_getTileIndex
     ld hl, beamSolidityIndex
     cp [hl]
     jr nc, jr_001_52e0
 
     cp $04
     jr nc, jr_001_52b8
+        call c, destroyRespawningBlock
+            jr jr_001_52c6
+    jr_001_52b8:
 
-    call c, Call_001_5671
-    jr jr_001_52c6
-
-jr_001_52b8:
     ld h, $dc
     ld l, a
     ld a, [hl]
     bit 5, a
     jp z, Jump_001_52c6
+        ld a, $ff
+        call Call_001_56e9
+    Jump_001_52c6:
 
-    ld a, $ff
-    call Call_001_56e9
-
-Jump_001_52c6:
 jr_001_52c6:
     ldh a, [$b9]
     cp $07
@@ -1704,11 +1703,12 @@ jr_001_52f3:
     ret
 
 
+; draw projectiles ; 01:5300
     ld a, $00
     ld [$d032], a
 
 Jump_001_5305:
-    ld hl, $dd00
+    ld hl, projectileArray
     ld a, [$d032]
     swap a
     ld e, a
@@ -2117,32 +2117,30 @@ jr_001_5525:
     ld [$c203], a
     ld a, [$d04b]
     ld [$c204], a
-    call $2266
+    call beam_getTileIndex
     cp $04
     jr nc, jr_001_553f
+        call destroyRespawningBlock
+            jr jr_001_554d
+    jr_001_553f:
 
-    call Call_001_5671
-    jr jr_001_554d
-
-jr_001_553f:
     ld h, $dc
     ld l, a
     ld a, [hl]
     bit 6, a
     jp z, Jump_001_554d
+        ld a, $ff
+        call Call_001_56e9
+    Jump_001_554d:
 
-    ld a, $ff
-    call Call_001_56e9
-
-Jump_001_554d:
 jr_001_554d:
     ld a, [$d04a]
     ld [$c203], a
-    call $2266
+    call beam_getTileIndex
     cp $04
     jr nc, jr_001_555f
 
-    call Call_001_5671
+    call destroyRespawningBlock
     jr jr_001_556d
 
 jr_001_555f:
@@ -2160,14 +2158,13 @@ jr_001_556d:
     ld a, [$d04a]
     add $10
     ld [$c203], a
-    call $2266
+    call beam_getTileIndex
     cp $04
     jr nc, jr_001_5581
+        call destroyRespawningBlock
+            jr jr_001_558f
+    jr_001_5581:
 
-    call Call_001_5671
-    jr jr_001_558f
-
-jr_001_5581:
     ld h, $dc
     ld l, a
     ld a, [hl]
@@ -2184,14 +2181,13 @@ jr_001_558f:
     ld a, [$d04b]
     add $10
     ld [$c204], a
-    call $2266
+    call beam_getTileIndex
     cp $04
     jr nc, jr_001_55a9
+        call destroyRespawningBlock
+        jr jr_001_55b7
+    jr_001_55a9:
 
-    call Call_001_5671
-    jr jr_001_55b7
-
-jr_001_55a9:
     ld h, $dc
     ld l, a
     ld a, [hl]
@@ -2206,14 +2202,13 @@ jr_001_55b7:
     ld a, [$d04b]
     sub $10
     ld [$c204], a
-    call $2266
+    call beam_getTileIndex
     cp $04
     jr nc, jr_001_55cb
+        call destroyRespawningBlock
+        jr jr_001_55d9
+    jr_001_55cb:
 
-    call Call_001_5671
-    jr jr_001_55d9
-
-jr_001_55cb:
     ld h, $dc
     ld l, a
     ld a, [hl]
@@ -2380,100 +2375,95 @@ jr_001_55d9:
 
     add b
 
-Call_001_5671:
+destroyRespawningBlock: ; 01:5671
     ld hl, $d900
 
-jr_001_5674:
-    ld a, [hl]
-    and a
-    jr z, jr_001_5681
+    .findLoop:
+        ld a, [hl]
+        and a
+            jr z, .break    
+        ld a, l
+        add $10
+        ld l, a
+        cp $00
+            ret z
+    jr .findLoop
+    .break:
 
-    ld a, l
-    add $10
-    ld l, a
-    cp $00
-    ret z
-
-    jr jr_001_5674
-
-jr_001_5681:
     ld a, $01
     ld [hl+], a
     ld a, [$c203]
     ld [hl+], a
     ld a, [$c204]
     ld [hl+], a
+    ; Request sound effect
     ld a, $04
     ld [$ced5], a
-    ret
+ret
 
-
+handleRespawningBlocks: ; 01:5692
     ld hl, $d900
-
-jr_001_5695:
-    ld a, [hl]
-    and a
-    jr z, jr_001_56df
-
-    inc a
-    ld [hl+], a
-    ld a, [$c205]
-    ld b, a
-    ld a, [hl+]
-    ld [$c203], a
-    sub b
-    and $f0
-    cp $c0
-    jr z, jr_001_56d9
-
-    ld a, [$c206]
-    ld b, a
-    ld a, [hl]
-    ld [$c204], a
-    sub b
-    and $f0
-    cp $d0
-    jr z, jr_001_56d9
-
-    dec hl
-    dec hl
-    ld a, [hl]
-    cp $02
-    jp z, Jump_001_5742
-
-    cp $07
-    jp z, Jump_001_5769
-
-    cp $0d
-    jr z, jr_001_56e9
-
-    cp $f6
-    jp z, Jump_001_5769
-
-    cp $fa
-    jr z, jr_001_5742
-
-    cp $fe
-    jr z, jr_001_5712
-
-    jr jr_001_56df
-
-jr_001_56d9:
-    ld a, l
-    and $f0
-    ld l, a
-    xor a
-    ld [hl], a
-
-jr_001_56df:
-    ld a, l
-    and $f0
-    add $10
-    ld l, a
-    and a
-    jr nz, jr_001_5695
-
-    ret
+    .loop:
+        ; Skip block if timer is zero
+        ld a, [hl]
+        and a
+        jr z, .nextBlock
+            ; Increment frame counter
+            inc a
+            ld [hl+], a
+            ; Compare scroll y and tile y
+            ld a, [$c205]
+            ld b, a
+            ld a, [hl+]
+            ld [$c203], a
+            sub b
+            and $f0
+            cp $c0
+                jr z, .removeBlock
+        
+            ; Control scroll x and tile x
+            ld a, [$c206]
+            ld b, a
+            ld a, [hl]
+            ld [$c204], a
+            sub b
+            and $f0
+            cp $d0
+                jr z, .removeBlock
+        
+            dec hl
+            dec hl
+            ld a, [hl]
+            cp $02
+                jp z, Jump_001_5742
+            cp $07
+                jp z, Jump_001_5769
+            cp $0d
+                jr z, jr_001_56e9
+            cp $f6
+                jp z, Jump_001_5769
+            cp $fa
+                jr z, jr_001_5742
+            cp $fe
+                jr z, jr_001_5712
+        
+            jr .nextBlock
+        
+        .removeBlock: ; Clear the 
+            ld a, l
+            and $f0
+            ld l, a
+            xor a
+            ld [hl], a
+    
+    .nextBlock:
+        ld a, l
+        and $f0
+        add $10
+        ld l, a
+        and a
+    jr nz, .loop
+ret
 
 
 Call_001_56e9:
@@ -2486,14 +2476,14 @@ jr_001_56e9:
     ld h, a
     ld de, $001f
 
-jr_001_56f9:
-    ldh a, [rSTAT]
-    and $03
+    jr_001_56f9:
+        ldh a, [rSTAT]
+        and $03
     jr nz, jr_001_56f9
 
-jr_001_56ff:
-    ldh a, [rSTAT]
-    and $03
+    jr_001_56ff:
+        ldh a, [rSTAT]
+        and $03
     jr nz, jr_001_56ff
 
     ld a, $ff
@@ -2504,7 +2494,7 @@ jr_001_56ff:
     ld [hl], a
     ld a, $04
     ld [$ced5], a
-    ret
+ret
 
 
 jr_001_5712:
@@ -2539,7 +2529,7 @@ jr_001_572a:
     ld [hl], a
     ld a, [samusInvulnerableTimer]
     and a
-    ret nz
+        ret nz
 
     call Call_001_5790
     ret
@@ -2555,14 +2545,14 @@ jr_001_5742:
     ld h, a
     ld de, $001f
 
-jr_001_5752:
-    ldh a, [rSTAT]
-    and $03
+    jr_001_5752:
+        ldh a, [rSTAT]
+        and $03
     jr nz, jr_001_5752
 
-jr_001_5758:
-    ldh a, [rSTAT]
-    and $03
+    jr_001_5758:
+        ldh a, [rSTAT]
+        and $03
     jr nz, jr_001_5758
 
     ld a, $04
@@ -2586,14 +2576,14 @@ Jump_001_5769:
     ld h, a
     ld de, $001f
 
-jr_001_5779:
-    ldh a, [rSTAT]
-    and $03
+    jr_001_5779:
+        ldh a, [rSTAT]
+        and $03
     jr nz, jr_001_5779
 
-jr_001_577f:
-    ldh a, [rSTAT]
-    and $03
+    jr_001_577f:
+        ldh a, [rSTAT]
+        and $03
     jr nz, jr_001_577f
 
     ld a, $08
@@ -2609,11 +2599,13 @@ jr_001_577f:
 
 
 Call_001_5790:
-    ld hl, $57df
+    ; Index into table with Samus' pose
+    ld hl, table_57DF
     ld a, [samusPose]
     ld e, a
     ld d, $00
     add hl, de
+    
     ld a, [hl]
     ld b, a
     ld a, [$c203]
@@ -2625,7 +2617,7 @@ Call_001_5790:
     add $18
     sub c
     cp b
-    jr nc, jr_001_57de
+        jr nc, .exit
 
     ld a, [$c204]
     sub $08
@@ -2636,52 +2628,34 @@ Call_001_5790:
     add $0c
     sub b
     cp $18
-    jr nc, jr_001_57de
+        jr nc, .exit
 
     cp $0c
-    jr nc, jr_001_57cc
-
-    ld a, $ff
-    ld [$c423], a
-    jr jr_001_57d1
-
-jr_001_57cc:
-    ld a, $01
-    ld [$c423], a
-
-jr_001_57d1:
+    jr nc, .else
+        ld a, $ff
+        ld [$c423], a
+        jr .endIf
+    .else:
+        ld a, $01
+        ld [$c423], a
+    .endIf:
+    
     ld a, $01
     ld [$c422], a
     ld a, $02
     ld [$c424], a
-    call Call_001_5671
+    call destroyRespawningBlock
 
-jr_001_57de:
+.exit:
     ret
 
+; Pose related
+table_57DF: ; 01:57DF
+    db $20, $20, $20, $20, $20, $10, $10, $20, $10, $20, $20, $10, $10, $10, $10, $20
+    db $10, $20, $10
 
-    db $20, $20, $20, $20
-
-    db $20
-
-    db $10
-
-    db $10
-    db $20
-
-    db $10
-
-    jr nz, @+$22
-
-    db $10
-
-    db $10
-    db $10
-    db $10
-    jr nz, @+$12
-
-    jr nz, @+$12
-
+;------------------------------------------------------------------------------
+; 01:57F2
     ld a, [$d088]
 
 jr_001_57f5:
@@ -3247,7 +3221,7 @@ jr_001_71c3:
     ld l, a
     jp hl
 
-
+    ; This is a jump table
     db $fb, $71, $ff, $71, $03, $72
 
     rlca

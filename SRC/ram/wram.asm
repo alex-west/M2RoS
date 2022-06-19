@@ -932,7 +932,7 @@ collisionArray:: ds $100 ;$DC00..FF: Tile properties. Indexed by tilemap value. 
 ;    40h: Bomb block
 ;    80h: Save pillar
 ;}
-;$DD00..2F: Projectile data. 10h byte slots
+projectileArray:: ds $10 * 3 ;$DD00..2F: Projectile data. 10h byte slots
 ;{
 ;    $DD00..1F: Beam slots
 ;    $DD20: Missile or beam slot

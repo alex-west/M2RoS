@@ -3467,7 +3467,7 @@ ret
 Call_002_5630:
     ldh a, [$ed]
     and a
-    jr nz, jr_002_5692
+        jr nz, jr_002_5692
 
     ldh a, [$ee]
     and a
@@ -3475,11 +3475,11 @@ Call_002_5630:
 
     ldh a, [$eb]
     and a
-    jr nz, jr_002_5652
+        jr nz, jr_002_5652
 
     ld a, [$c41c]
     cp $80
-    jp z, Jump_002_5732
+        jp z, Jump_002_5732
 
 Jump_002_5648:
 jr_002_5648:

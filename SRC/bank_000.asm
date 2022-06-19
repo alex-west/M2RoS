@@ -692,8 +692,8 @@ jr_000_0522:
     call Call_000_2ee3 ; Damage Samus
     call Call_000_0d21 ; Samus pose handler
     call Call_000_32ab ; ? Samus/enemy collision logic
-    call Call_000_21fb ; Handle toggling cannon
-    call Call_000_3d8e ; Handle projectiles
+    call Call_000_21fb ; Handle shooting or toggling cannon
+    call handleProjectiles_longJump ; Handle projectiles
     call Call_000_3d99 ; Handle bombs
 
 jr_000_053e:
@@ -703,7 +703,7 @@ jr_000_053e:
     call handleItemPickup
     call Call_000_3e93 ; Draw Samus
     call Call_000_3da4 ; Draw projectiles
-    call Call_000_3d83 ; Handle respawning blocks
+    call handleRespawningBlocks_longJump ; Handle respawning blocks
     call adjustHudValues_longJump ; Handle missile/energy counters
     ld a, [$d049]
     and a
@@ -748,14 +748,14 @@ Jump_000_0578:
     call Call_000_0d21
     call Call_000_32ab
     call Call_000_21fb
-    call Call_000_3d8e
+    call handleProjectiles_longJump
     call Call_000_3d99
     call Call_000_0698
     call Call_000_08fe
     call Call_000_2366
     call Call_000_3e93
     call Call_000_3da4
-    call Call_000_3d83
+    call handleRespawningBlocks_longJump
     call adjustHudValues_longJump
     ld a, [$d049]
     and a
@@ -5206,15 +5206,13 @@ ret
 Call_000_21fb:
     ld a, [samusPose]
     cp $13
-    jp z, Jump_000_3daf
-
+        jp z, samusShoot_longJump
     ld a, [$d090]
     cp $22
-    jp z, Jump_000_3daf
-
+        jp z, samusShoot_longJump
     ldh a, [hInputRisingEdge]
     bit PADB_SELECT, a
-    jp z, Jump_000_3daf
+        jp z, samusShoot_longJump
 
 ; Switch between missiles and beams
 toggleMissiles: ; 00:2212
@@ -5253,8 +5251,7 @@ gfxInfo_cannonBeam: db BANK(gfx_cannonBeam)
     dw gfx_cannonBeam, vramDest_cannon, $0020
 
 ; Function returns the tile number for a particular x-y tile on the tilemap
-enemy_getTileIndex:
-func_2250: ; 00:2250 - Called by enemy routines
+enemy_getTileIndex: ; 00:2250 - Called by enemy routines
     ; Adjust enemy coordinates (in camera-space) to map-space coordinates
     ld a, [$c205]
     ld b, a
@@ -5267,7 +5264,7 @@ func_2250: ; 00:2250 - Called by enemy routines
     add b
     ld [$c204], a
     
-func_2266: ; 00:2266 - Called by beam routines
+beam_getTileIndex: ; 00:2266 - Entry point for beam routines
     call getTilemapAddress
     ld a, [$c219]
     and $08
@@ -7155,7 +7152,7 @@ debugPauseMenu:
     ld a, $50
     ldh [hSpriteXPixel], a
     ld a, [samusActiveWeapon]
-    call $4afc
+    call debug_drawNumber
     
     ldh a, [hOamBufferIndex]
     ld [maxOamPrevFrame], a
@@ -9525,18 +9522,18 @@ adjustHudValues_longJump: ; 00:3D78
     jp adjustHudValues
 
 
-Call_000_3d83: ; 00:3D83
-    ld a, $01
+handleRespawningBlocks_longJump: ; 00:3D83
+    ld a, BANK(handleRespawningBlocks)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    jp $5692
+    jp handleRespawningBlocks
 
 
-Call_000_3d8e: ; 00:3D8E
-    ld a, $01
+handleProjectiles_longJump: ; 00:3D8E
+    ld a, BANK(handleProjectiles)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    jp $500d
+    jp handleProjectiles
 
 
 Call_000_3d99: ; 00:3D99
@@ -9550,14 +9547,14 @@ Call_000_3da4: ; 00:3DA4
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    jp $5300
+    jp $5300 
 
 
-Jump_000_3daf: ; 00:3DAF
-    ld a, $01
+samusShoot_longJump: ; 00:3DAF
+    ld a, BANK(samusShoot)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    jp $4e8a
+    jp samusShoot
 
 ; 00:3DBA
     ld a, $03
@@ -9692,18 +9689,17 @@ drawHudMetroid_longJump: ; 00:3E9E
     jp drawHudMetroid
 
 
-; 00:3EA9
-    ld a, $01
+debug_drawOneDigitNumber_longJump: ; 00:3EA9 - Unused?
+    ld a, BANK(debug_drawNumber)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    jp $4b09
+    jp debug_drawNumber.oneDigit
 
-
-; 00:3EB4
-    ld a, $01
+debug_drawTwoDigitNumber_longJump: ; 00:3EB4 - Unused?
+    ld a, BANK(debug_drawNumber)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    jp $4afc
+    jp debug_drawNumber.twoDigit
 
 
 Call_000_3ebf: ; 00:3EBF
