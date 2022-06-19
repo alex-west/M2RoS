@@ -5443,7 +5443,7 @@ jr_002_613c:
 
 ;------------------------------------------------------------------------------
 ; Autrack AI (laser turret)
-enAI_autrack: ; 01:6145
+enAI_autrack: ; 02:6145
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $1e ; Check to change the flipped version to refer to the proper sprite
@@ -5733,16 +5733,15 @@ hopper_jumpXSpeedTable:
     db $00, $01, $01, $01, $01, $01, $02, $01, $01, $01, $01, $01, $01, $01, $01, $01
 
 ;------------------------------------------------------------------------------
-
-enAI_62B4:
+; Wallfire AI (bird mask on wall that shoots you)
+enAI_62B4: ; 02:62B4
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $1f
     jr nz, jr_002_62be
+        ld [hl], $4a
+    jr_002_62be:
 
-    ld [hl], $4a
-
-jr_002_62be:
     call Call_002_7da0
     ldh a, [hEnemySpawnFlag]
     cp $06
@@ -5882,9 +5881,12 @@ jr_002_637a:
     ldh [hEnemySpawnFlag], a
     ret
 
-    db $00, $00, $00, $00, $00, $00, $fe, $01, $b4, $62
+    db $00, $00, $00, $00, $00, $00, $fe, $01
+    dw enAI_62B4
 
-enAI_638C:
+;------------------------------------------------------------------------------
+; Gunzoo AI (floating robot with gun's)
+enAI_638C: ; 02:638C
     ldh a, [hEnemySpawnFlag]
     cp $06
     jp z, Jump_002_64a7
@@ -6168,10 +6170,10 @@ jr_002_650f:
     inc [hl]
     ret
 
-
-    db $57, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $01, $8c, $63, $57, $00, $00
-    db $00, $00, $00, $00, $00, $00, $fe, $02, $8c, $63, $54, $00, $00, $00, $00, $00
-    db $00, $00, $00, $fe, $03, $8c, $63
+; Enemy Headers
+    db $57, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $01, $8c, $63
+    db $57, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $02, $8c, $63
+    db $54, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $03, $8c, $63
 
 Call_002_6538:
     ldh a, [hEnemy_frameCounter]
@@ -6181,7 +6183,9 @@ Call_002_6538:
     ld [hl], $51
     ret
 
-enAI_6540: ; Autom
+;------------------------------------------------------------------------------
+; Autom AI (robot that spills oil or fire or something)
+enAI_6540: ; 02:6540
     ldh a, [hEnemySpawnFlag]
     cp $03
     ret z
@@ -6288,66 +6292,78 @@ jr_002_65b5:
 
     db $5e, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $00, $40, $65
 
+;------------------------------------------------------------------------------
+; Proboscum AI (nose on wall that is acts as a platform)
 enAI_65D5:
     ld hl, hEnemySpriteType
     ld a, [hl]
-    cp $6e
+    cp $6e ; Check to make sure the flipped version has the correct sprite
     jr nz, jr_002_65df
+        ld [hl], $72
+    jr_002_65df:
 
-    ld [hl], $72
-
-jr_002_65df:
     ldh a, [hEnemyState]
     dec a
-        jr z, jr_002_65fd
+        jr z, .case_1 ; State 1
     dec a
-        jr z, jr_002_65ea
+        jr z, .case_2 ; State 2
     dec a
-        jr z, jr_002_6610
+        jr z, .case_3 ; State 3
+    ; Fall-through state
 
-jr_002_65ea:
+.case_2:
+    ; Wait for 64 frames
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $40
-    ret nz
+        ret nz
 
+    ; Reset counter
     ld [hl], $00
+    ; Change sprite (half-extended)
     ld a, $73
     ldh [hEnemySpriteType], a
+    ; state becomes 1 or 3, depending on if we fell-through to here or not
     ld hl, hEnemyState
     inc [hl]
-    ret
+ret
 
-
-jr_002_65fd:
+.case_1:
+    ; Wait for two frames
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $02
-    ret nz
+        ret nz
 
+    ; Reset counter
     ld [hl], $00
+    ; Change sprite
     ld a, $74
     ldh [hEnemySpriteType], a
+    ; state = 2
     ld a, $02
     ldh [hEnemyState], a
-    ret
+ret
 
-
-jr_002_6610:
+.case_3:
+    ; Wait for two frames
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $02
-    ret nz
+        ret nz
 
+    ; Reset counter
     ld [hl], $00
+    ; Change sprite
     ld a, $72
     ldh [hEnemySpriteType], a
+    ; state = 0 (fall-through to 2)
     xor a
     ldh [hEnemyState], a
-    ret
+ret
 
 ;------------------------------------------------------------------------------
 ; Missile block AI

@@ -631,7 +631,7 @@ en6561: ; Enemy 1Bh (chute leech)
 en656C: ; Enemy 1Eh (autrack (flipped))
     db $00,$20,$00,$00,$08,$00,$00,$00,$0F
     dw enAI_autrack
-en6577: ; Enemy 1Fh
+en6577: ; Enemy 1Fh (wallfire (flipped))
     db $00,$20,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_62B4
 en6582: ; Enemy 28h (skorp)
@@ -688,7 +688,7 @@ en6632: ; Enemy 6Bh (ramulken)
 en663D: ; Enemy 6Dh
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_6B83
-en6648: ; Enemy 6Eh
+en6648: ; Enemy 6Eh (proboscum (flipped))
     db $00,$20,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_65D5
 en6653: ; Enemy 72h (proboscum)
