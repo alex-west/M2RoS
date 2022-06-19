@@ -418,7 +418,7 @@ Call_003_422f:
     push bc
     ld d, h
     ld e, l
-    call Call_003_42b4
+    call findFirstEmptyEnemySlot
     ld a, l
     ld [$c450], a
     ld a, h
@@ -517,7 +517,7 @@ jr_003_4274:
     ret
 
 ; returns pointer to first unused enemy slot in HL
-Call_003_42b4: ; 03:42B4
+findFirstEmptyEnemySlot: ; 03:42B4
     ld hl, $c600
     ld bc, $0020
 
@@ -628,9 +628,9 @@ en6556: ; Enemy 19h/1Ah/3Ch/3Dh (gawron/yumee spawner)
 en6561: ; Enemy 1Bh (chute leech)
     db $00,$00,$00,$00,$00,$00,$00,$00,$03
     dw enAI_chuteLeech
-en656C: ; Enemy 1Eh
+en656C: ; Enemy 1Eh (autrack (flipped))
     db $00,$20,$00,$00,$08,$00,$00,$00,$0F
-    dw enAI_6145
+    dw enAI_autrack
 en6577: ; Enemy 1Fh
     db $00,$20,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_62B4
@@ -657,7 +657,7 @@ en65C4: ; Enemy 40h (octroll)
     dw enAI_chuteLeech
 en65CF: ; Enemy 41h (autrack)
     db $00,$00,$00,$00,$08,$00,$00,$00,$0F
-    dw enAI_6145
+    dw enAI_autrack
 en65DA: ; Enemy 46h (autoad)
     db $00,$20,$00,$00,$00,$00,$02,$00,$0E
     dw enAI_hopper

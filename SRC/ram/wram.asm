@@ -532,7 +532,7 @@ saveBuf_enemySaveFlags = $C900 ;$C900..CABF: Copied to/from SRAM ($B000 + [save 
 ;$D00A: Metatile bottom-left
 ;$D00B: Metatile bottom-right
 ;$D00C: Samus' previous Y position. Used for scrolling, low byte only
-;$D00D: Auto-fire cooldown counter
+def samusBeamCooldown = $D00D ; Auto-fire cooldown counter
 def doorScrollDirection = $D00E ; Door transition direction
 ;{
 ;    1: Right

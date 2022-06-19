@@ -9586,11 +9586,11 @@ samusShoot_longJump: ; 00:3DAF
     ld [rMBC_BANK_REG], a
     ret
 
-; 00:3DF6
-    ld a, $03
+findFirstEmptyEnemySlot_longJump: ; 00:3DF6
+    ld a, BANK(findFirstEmptyEnemySlot)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    call $42b4
+    call findFirstEmptyEnemySlot
     ld a, $02
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a

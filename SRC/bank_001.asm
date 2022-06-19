@@ -949,9 +949,9 @@ samusShoot: ; 01:4E8A
     bit PADB_B, a
         ret z
 
-    ld a, [$d00d]
+    ld a, [samusBeamCooldown]
     inc a
-    ld [$d00d], a
+    ld [samusBeamCooldown], a
     cp $10
         ret c
 
@@ -975,7 +975,7 @@ jr_001_4e9f:
 
     ld b, a
     xor a
-    ld [$d00d], a
+    ld [samusBeamCooldown], a
     ldh a, [hInputPressed]
     swap a
     and b
@@ -1457,7 +1457,7 @@ jr_001_513c:
 
 
 jr_001_5172:
-    ld h, $dc
+    ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
     bit 5, a
@@ -1651,7 +1651,7 @@ jr_001_5282:
             jr jr_001_52c6
     jr_001_52b8:
 
-    ld h, $dc
+    ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
     bit 5, a
@@ -2124,7 +2124,7 @@ jr_001_5525:
             jr jr_001_554d
     jr_001_553f:
 
-    ld h, $dc
+    ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
     bit 6, a
@@ -2144,7 +2144,7 @@ jr_001_554d:
     jr jr_001_556d
 
 jr_001_555f:
-    ld h, $dc
+    ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
     bit 6, a
@@ -2165,7 +2165,7 @@ jr_001_556d:
             jr jr_001_558f
     jr_001_5581:
 
-    ld h, $dc
+    ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
     bit 6, a
@@ -2188,7 +2188,7 @@ jr_001_558f:
         jr jr_001_55b7
     jr_001_55a9:
 
-    ld h, $dc
+    ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
     bit 6, a
@@ -2209,7 +2209,7 @@ jr_001_55b7:
         jr jr_001_55d9
     jr_001_55cb:
 
-    ld h, $dc
+    ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
     bit 6, a
@@ -3208,7 +3208,7 @@ jr_001_71c3:
     ld [$c45c], a
     ret
 
-
+; 01:71CB
     ld hl, $71db
     ld a, [hEnemyState]
     add a
@@ -3230,6 +3230,7 @@ jr_001_71c3:
     db $0b, $72, $0f, $72, $13, $72, $17, $72, $1b, $72, $1f, $72, $23, $72, $27, $72
     db $2b, $72, $2f, $72, $33, $72, $37, $72
 
+    ; And these are the destinations to that jump table
     ld bc, $0003
     ret
 

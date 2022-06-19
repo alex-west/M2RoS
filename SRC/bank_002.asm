@@ -2528,7 +2528,7 @@ jr_002_4f93:
 
 
 Call_002_4f97:
-    call $3df6
+    call findFirstEmptyEnemySlot_longJump
     ld [hl], $00
     inc hl
     ldh a, [hEnemyYPos]
@@ -2935,7 +2935,7 @@ jr_002_52a3:
 
 
 Call_002_52a6:
-    call $3df6
+    call findFirstEmptyEnemySlot_longJump
     ld [hl], $00
     inc hl
     ldh a, [hEnemyYPos]
@@ -4288,7 +4288,7 @@ jr_002_5a28:
 jr_002_5a40:
     ld a, $02
     ldh [$e9], a
-    call $3df6
+    call findFirstEmptyEnemySlot_longJump
     xor a
     ld [hl+], a
     ldh a, [hEnemyYPos]
@@ -4483,7 +4483,7 @@ jr_002_5b48:
 
     ld hl, hEnemyState
     ld [hl], $00
-    call $3df6
+    call findFirstEmptyEnemySlot_longJump
     xor a
     ld [hl+], a
     ldh a, [hEnemyYPos]
@@ -5068,7 +5068,7 @@ enAI_5F67:
 
     ; Load in new pipe bug
     inc [hl]
-    call $3df6 ; Get first unused slot
+    call findFirstEmptyEnemySlot_longJump ; Get first unused slot
     xor a
     ld [hl+], a
     ldh a, [hEnemyYPos]
@@ -5441,119 +5441,128 @@ jr_002_613c:
     ld [hl], a
     ret
 
-enAI_6145:
+;------------------------------------------------------------------------------
+; Autrack AI (laser turret)
+enAI_autrack: ; 01:6145
     ld hl, hEnemySpriteType
     ld a, [hl]
-    cp $1e
-    jr nz, jr_002_614f
-
-    ld [hl], $41
-
-jr_002_614f:
+    cp $1e ; Check to change the flipped version to refer to the proper sprite
+    jr nz, .endIf_A
+        ld [hl], $41
+    .endIf_A:
+    
+    ; Check if this object is actually the laser
     ldh a, [hEnemySpawnFlag]
     cp $06
-    jr z, jr_002_61be
+        jr z, .laser ; Laser AI
 
     ld hl, hEnemySpriteType
     ldh a, [$e8]
     bit 1, a
-    jr nz, jr_002_6165
+    jr nz, .else_B
+        ld a, [hl]
+        cp $43
+            jr z, .fireLaser
+        inc [hl]
+        ret
+    .else_B:
+        ld a, [hl]
+        cp $41
+            jr z, .action
+        dec [hl]
+        ret
+; end proc
 
-    ld a, [hl]
-    cp $43
-    jr z, jr_002_616c
-
-    inc [hl]
-    ret
-
-
-jr_002_6165:
-    ld a, [hl]
-    cp $41
-    jr z, jr_002_61a9
-
-    dec [hl]
-    ret
-
-
-jr_002_616c:
+.fireLaser:
+    ; Only act every 16 frames
     ldh a, [hEnemy_frameCounter]
     and $0f
-    ret nz
+        ret nz
 
-    call $3df6
+    ; set HL to enemy's slot
+    call findFirstEmptyEnemySlot_longJump
+    ; Set enemy to active
     xor a
     ld [hl+], a
+    ; Set y position
     ldh a, [hEnemyYPos]
     sub $14
     ld [hl+], a
+    ; Adjust spawn location of laser depending on direction facing
     ldh a, [hEnemyAttr]
     ld b, a
     bit OAMB_XFLIP, a
-    jr nz, jr_002_6188
-
-    ldh a, [hEnemyXPos]
-    sub $08
-    jr jr_002_618c
-
-jr_002_6188:
-    ldh a, [hEnemyXPos]
-    add $08
-
-jr_002_618c:
+    jr nz, .else_C
+        ldh a, [hEnemyXPos]
+        sub $08
+        jr .endIf_C
+    .else_C:
+        ldh a, [hEnemyXPos]
+        add $08
+    .endIf_C:
     ld [hl+], a
+    ; Set sprite ID
     ld a, $45
     ld [hl+], a
+    
     ld a, $00
     ld [hl+], a
+    ; Set attributes
     ld a, b
     ld [hl+], a
-    ld de, $61d1
+    ; Load data from header
+    ld de, header_61D1
     ld a, $06
     ld [$c477], a
     call Call_002_7231
+    
+    ; Animate cannon
     ld a, $44
     ldh [hEnemySpriteType], a
+    ; Request sound effect
     ld a, $13
     ld [$ced5], a
 
-jr_002_61a9:
+.action:
+    ; Only act every 16 frames
     ldh a, [hEnemy_frameCounter]
     and $0f
-    ret nz
+        ret nz
 
+    ; Flip a flag
     ld hl, $ffe8
     ld a, [hl]
     xor $0a
     ld [hl], a
     cp $08
-    ret nz
+        ret nz
 
+    ; Request sound effect
     ld a, $18
     ld [$ced5], a
-    ret
+ret
 
-
-jr_002_61be:
+.laser: ; Laser AI
     ld hl, hEnemyXPos
     ldh a, [hEnemyAttr]
     bit OAMB_XFLIP, a
-    jr nz, jr_002_61cc
+    jr nz, .moveLeft
+    ; move left
+        ld a, [hl]
+        sub $05
+        ld [hl], a
+        ret
+    .moveLeft:
+        ld a, [hl]
+        add $05
+        ld [hl], a
+        ret
+; end proc
 
-    ld a, [hl]
-    sub $05
-    ld [hl], a
-    ret
-
-
-jr_002_61cc:
-    ld a, [hl]
-    add $05
-    ld [hl], a
-    ret
-
-
-    db $00, $00, $00, $00, $00, $00, $fe, $00, $45, $61
+; Enemy header for laser
+header_61D1:
+    db $00, $00, $00, $00, $00, $00, $fe, $00
+    dw enAI_autrack
 
 ; -----------------------------------------------------------------------------
 ; hornoad/autotoad/ramulken AI (enemy 14h)
@@ -5769,7 +5778,7 @@ jr_002_62e3:
     ret nz
 
     ld [hl], $00
-    call $3df6
+    call findFirstEmptyEnemySlot_longJump
     xor a
     ld [hl+], a
     ldh a, [hEnemyYPos]
@@ -5943,7 +5952,7 @@ jr_002_63d9:
 
 
 jr_002_63e1:
-    call $3df6
+    call findFirstEmptyEnemySlot_longJump
     xor a
     ld [hl+], a
     ldh a, [hEnemyYPos]
@@ -5970,7 +5979,7 @@ jr_002_6409:
     and $1f
     jr nz, jr_002_63b4
 
-    call $3df6
+    call findFirstEmptyEnemySlot_longJump
     xor a
     ld [hl+], a
     ldh a, [hEnemyYPos]
@@ -6061,7 +6070,7 @@ jr_002_647b:
 
 
 jr_002_6483:
-    call $3df6
+    call findFirstEmptyEnemySlot_longJump
     xor a
     ld [hl+], a
     ldh a, [hEnemyYPos]
@@ -6222,7 +6231,7 @@ jr_002_6572:
 
 
 jr_002_657a:
-    call $3df6
+    call findFirstEmptyEnemySlot_longJump
     xor a
     ld [hl+], a
     ldh a, [hEnemyYPos]
@@ -8568,7 +8577,7 @@ jr_002_7193:
     cp $14
     ret c
 
-    call $3df6
+    call findFirstEmptyEnemySlot_longJump
     xor a
     ld [hl+], a
     ldh a, [hEnemyYPos]
@@ -9274,7 +9283,7 @@ Jump_002_7559:
     xor a
     ld [hl], a
     ldh [$e6], a
-    call $3df6
+    call findFirstEmptyEnemySlot_longJump
     xor a
     ld [hl+], a
     ldh a, [hEnemyYPos]
@@ -9322,7 +9331,7 @@ Jump_002_757f:
     db $b2, $80, $00, $00, $00, $00, $00, $00, $00, $ff, $06, $76, $72
 
 Call_002_75ac:
-    call $3df6
+    call findFirstEmptyEnemySlot_longJump
     xor a
     ld [hl+], a
     ldh a, [hEnemyYPos]
@@ -9983,7 +9992,7 @@ jr_002_790c:
 
 
 Call_002_7922:
-    call $3df6
+    call findFirstEmptyEnemySlot_longJump
     xor a
     ld [hl+], a
     ldh a, [hEnemyYPos]
