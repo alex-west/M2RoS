@@ -2206,31 +2206,31 @@ jr_002_4dab:
 ; End of apparent enemy tilemap collision routines
 
 Call_002_4db1:
-    ld hl, $4ffe
-    ld de, $c300
+    ld hl, blobThrowerSprite ;$4ffe
+    ld de, spriteC300
     ld b, $3e
 
-jr_002_4db9:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    dec b
+    jr_002_4db9:
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        dec b
     jr nz, jr_002_4db9
 
-    ld hl, $503b
-    ld de, $c360
+    ld hl, blobThrowerHitbox
+    ld de, hitboxC360
     ld b, $04
 
-jr_002_4dc7:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    dec b
+    jr_002_4dc7:
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        dec b
     jr nz, jr_002_4dc7
 
     ld a, $00
     ld [$c380], a
-    ret
+ret
 
 ;------------------------------------------------------------------------------
 ; Item Orb and Item AI
@@ -2424,37 +2424,39 @@ jr_002_4ec6:
 jr_002_4ed1:
     ld a, [$c382]
     and a
-    jr z, jr_002_4ee2
-
+        jr z, jr_002_4ee2 ; case 0
     cp $01
-    jr z, jr_002_4f40
-
+        jr z, jr_002_4f40 ; case 1
     cp $02
-    jr z, jr_002_4f56
+        jr z, jr_002_4f56 ; case 2
 
     jp Jump_002_4fb9
 
 
 jr_002_4ee2:
     ld de, $c300
-    ld hl, $503f
+    ld hl, table_503F
     ld a, $04
     call Call_002_4fd4
-    ld hl, $503f
+    
+    ld hl, table_503F
     ld a, $01
     call Call_002_4fd4
-    ld hl, $5071
+    
+    ld hl, table_5071
     ld a, $01
     call Call_002_4fd4
-    ld hl, $50a3
+    
+    ld hl, table_50A3
     ld a, $01
     call Call_002_4fd4
-    ld hl, $503f
+    ld hl, table_503F
     ld a, [$c380]
     ld e, a
     ld d, $00
     add hl, de
-    ld de, $c360
+
+    ld de, hitboxC360
     ld a, [de]
     add [hl]
     ld [de], a
@@ -2462,7 +2464,7 @@ jr_002_4ee2:
     inc a
     ld [$c380], a
     cp $15
-    ret nz
+        ret nz
 
     ld hl, $c302
     ld de, $0004
@@ -2506,13 +2508,13 @@ jr_002_4f56:
     ld a, $03
     ld [$c382], a
     call Call_002_4f87
-    ld de, $50d5
+    ld de, header_50D5
     call Call_002_4f97
-    ld de, $50e2
+    ld de, header_50E2
     call Call_002_4f97
-    ld de, $50ef
+    ld de, header_50EF
     call Call_002_4f97
-    ld de, $50fc
+    ld de, header_50FC
     call Call_002_4f97
     ret
 
@@ -2524,34 +2526,37 @@ Call_002_4f87:
     cp b
     ld a, $00
     jr c, jr_002_4f93
+        inc a
+    jr_002_4f93:
 
-    inc a
-
-jr_002_4f93:
     ld [$c386], a
-    ret
+ret
 
 
 Call_002_4f97:
     call findFirstEmptyEnemySlot_longJump
     ld [hl], $00
     inc hl
+
     ldh a, [hEnemyYPos]
     sub $20
     ld [hl+], a
+
     ldh a, [hEnemyXPos]
     ld [hl+], a
+
     ld a, $06
     ld [$c477], a
     push hl
-    call Call_002_7235
+        call Call_002_7235
     pop hl
     ld de, $0004
     add hl, de
+
     ldh a, [hEnemyYPos]
     add $40
     ld [hl], a
-    ret
+ret
 
 
 Jump_002_4fb9:
@@ -2583,25 +2588,22 @@ jr_002_4fda:
     add hl, de
     ld a, [hl]
     cp $80
-    jr z, jr_002_4ff1
+        jr z, jr_002_4ff1
 
     pop bc
     pop bc
     pop de
-
-jr_002_4fe6:
-    ld a, [de]
-    add [hl]
-    ld [de], a
-    inc de
-    inc de
-    inc de
-    inc de
-    dec b
+    jr_002_4fe6:
+        ld a, [de]
+        add [hl]
+        ld [de], a
+        inc de
+        inc de
+        inc de
+        inc de
+        dec b
     jr nz, jr_002_4fe6
-
-    ret
-
+ret
 
 jr_002_4ff1:
     ld a, $30
@@ -2610,35 +2612,64 @@ jr_002_4ff1:
     ld [$c380], a
     pop hl
     push hl
-    jr jr_002_4fda
+jr jr_002_4fda
 
-; 02:4FFE
-    db $f8, $00, $dd, $20, $f8, $f8, $dd, $00, $00, $00, $de, $20, $00, $f8, $de, $00
-    db $08, $fc, $db, $00, $08, $fc, $db, $00, $08, $fc, $db, $00, $08, $f4, $d6, $00
-    db $08, $fc, $da, $00, $08, $04, $d8, $00, $10, $f4, $d3, $00, $10, $fc, $d9, $00
-    db $10, $04, $d5, $00, $ff, $f0, $e0, $00, $e8, $08, $e0, $20, $ff, $fc, $18, $f8
-    db $08, $00, $fe, $ff, $ff, $ff, $ff, $ff, $ff, $fe, $fe, $fe, $fe, $fe, $fe, $fd
-    db $ff, $00, $00, $00, $00, $00, $00, $02, $01, $00, $01, $01, $01, $01, $00, $01
-    db $00, $02, $01, $01, $01, $01, $02, $00, $00, $01, $01, $01, $02, $01, $00, $02
-    db $00, $00, $80, $00, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $fe, $ff, $ff, $ff
-    db $fe, $ff, $00, $00, $00, $00, $00, $00, $00, $01, $00, $01, $02, $00, $00, $00
-    db $00, $00, $00, $00, $00, $00, $01, $00, $01, $02, $00, $02, $00, $01, $01, $01
-    db $01, $01, $01, $00
+blobThrowerSprite: ; 02:4FFE
+    db $F8, $00, $DD, $20
+    db $F8, $F8, $DD, $00
+    db $00, $00, $DE, $20
+    db $00, $F8, $DE, $00
+    db $08, $FC, $DB, $00
+    db $08, $FC, $DB, $00
+    db $08, $FC, $DB, $00
+    db $08, $F4, $D6, $00
+    db $08, $FC, $DA, $00
+    db $08, $04, $D8, $00
+    db $10, $F4, $D3, $00
+    db $10, $FC, $D9, $00
+    db $10, $04, $D5, $00
+    db $FF, $F0, $E0, $00
+    db $E8, $08, $E0, $20
+    db $FF
+blobThrowerHitbox: ; 02:503B
+    db $FC, $18, $F8, $08
 
-    add b
-
-    db $00, $ff, $00, $ff, $00, $ff, $00, $00, $ff, $00, $ff, $00, $ff, $ff, $ff, $00
+table_503F: ; 02:503F
+    db $00, $FE, $FF, $FF, $FF, $FF, $FF, $FF, $FE, $FE, $FE, $FE, $FE, $FE, $FD, $FF
+    db $00, $00, $00, $00, $00, $00, $02, $01, $00, $01, $01, $01, $01, $00, $01, $00
+    db $02, $01, $01, $01, $01, $02, $00, $00, $01, $01, $01, $02, $01, $00, $02, $00
+    db $00, $80
+table_5071: ; 02:5071
+    db $00, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FE, $FF, $FF, $FF, $FE, $FF, $00
+    db $00, $00, $00, $00, $00, $00, $01, $00, $01, $02, $00, $00, $00, $00, $00, $00
+    db $00, $00, $00, $01, $00, $01, $02, $00, $02, $00, $01, $01, $01, $01, $01, $01
+    db $00, $80
+table_50A3: ; 02:50A3
+    db $00, $FF, $00, $FF, $00, $FF, $00, $00, $FF, $00, $FF, $00, $FF, $FF, $FF, $00
     db $00, $00, $00, $00, $00, $01, $00, $00, $01, $01, $00, $00, $00, $00, $00, $01
     db $00, $00, $00, $01, $00, $01, $00, $00, $00, $00, $01, $00, $00, $00, $01, $00
-    db $00
-
-    add b
-
-; Looks like some function pointers might be mixed in here
-    db $9e, $00, $00, $00, $00, $00, $d7, $53, $00, $02, $02, $6f, $53, $9e, $00, $00
-    db $00, $00, $00, $08, $54, $00, $02, $03, $6f, $53, $9e, $00, $00, $00, $00, $00
-    db $37, $54, $00, $02, $04, $6f, $53, $9e, $00, $00, $00, $00, $00, $63, $54, $00
-    db $02, $05, $6f, $53
+    db $00, $80
+; Enemy headers for projectiles
+header_50D5:
+    db $9E, $00, $00, $00, $00, $00,
+    dw table_53D7
+    db $00, $02, $02
+    dw enAI_536F
+header_50E2:
+    db $9E, $00, $00, $00, $00, $00
+    dw table_5408
+    db $00, $02, $03
+    dw enAI_536F
+header_50EF:
+    db $9E, $00, $00, $00, $00, $00
+    dw table_5437
+    db $00, $02, $04
+    dw enAI_536F
+header_50FC:
+    db $9E, $00, $00, $00, $00, $00
+    dw table_5463
+    db $00, $02, $05
+    dw enAI_536F
 
 ;------------------------------------------------------------------------------
 ; Arachnus / Arachnus Orb
@@ -2695,7 +2726,7 @@ Jump_002_514a:
 ret
 
 arachnus_5152:
-    ld hl, $52fc
+    ld hl, table_52FC
     call Call_002_516e
     jr nz, jr_002_513f
 
@@ -2772,7 +2803,7 @@ jr_002_51b6:
 ret
 
 arachnus_51B9:
-    ld hl, $5356
+    ld hl, table_5356
 
 Jump_002_51bc:
     call Call_002_516e
@@ -2913,7 +2944,7 @@ jr_002_5281:
     ldh [hEnemyXPos], a
 
 jr_002_5286:
-    ld hl, $532e
+    ld hl, table_532E
     jp Jump_002_51bc
 
 
@@ -2995,24 +3026,24 @@ jr_002_52eb:
     ldh [hEnemySpriteType], a
     ret
 
-    ret ; Unused?
+    ret ; 02:52FB - Unreferenced
 
-; 02:52FC
-    db $ff, $fe, $fe, $fe, $ff, $ff, $fe, $ff, $fe, $fe, $fe, $ff, $ff, $ff, $00, $00
+table_52FC: ; 02:52FC
+    db $FF, $FE, $FE, $FE, $FF, $FF, $FE, $FF, $FE, $FE, $FE, $FF, $FF, $FF, $00, $00
     db $00, $00, $01, $00, $01, $01, $00, $01, $01, $01, $01, $01, $01, $01, $01, $01
     db $01, $02, $02, $02, $02, $02, $02, $02, $02, $03, $03, $03, $03, $03, $03, $03
     db $00, $80
-; 02:532E?
-    db $fc, $fd, $fd, $fd, $fe, $fe, $fd, $fe, $fe, $fe, $fe, $ff, $fe, $ff
-    db $fe, $ff, $ff, $00, $00, $00, $00, $01, $01, $02, $01, $02, $01, $02, $02, $02
-    db $02, $03, $02, $02, $03, $03, $03, $04, $00, $80
-; 02:5356?
-    db $fd, $fe, $fe, $fe, $ff, $ff
-    db $00, $ff, $ff, $00, $ff, $00, $00, $01, $00, $01, $01, $00, $01, $01, $02, $02
-    db $02, $03
-    db $81 ;add c
+table_532E: ; 02:532E
+    db $FC, $FD, $FD, $FD, $FE, $FE, $FD, $FE, $FE, $FE, $FE, $FF, $FE, $FF, $FE, $FF
+    db $FF, $00, $00, $00, $00, $01, $01, $02, $01, $02, $01, $02, $02, $02, $02, $03
+    db $02, $02, $03, $03, $03, $04, $00, $80
+table_5356: ; 02:5356
+    db $FD, $FE, $FE, $FE, $FF, $FF, $00, $FF, $FF, $00, $FF, $00, $00, $01, $00, $01
+    db $01, $00, $01, $01, $02, $02, $02, $03, $81
 
-; 02:536F - Unreferenced code?
+;------------------------------------------------------------------------------
+; Blob thrower projectile
+enAI_536F: ; 02:536F
     ldh a, [hEnemy_frameCounter]
     ld b, a
     and $01
@@ -3102,36 +3133,29 @@ jr_002_53cf:
     ldh [hEnemySpawnFlag], a
     ret
 
-; 02:53D7
-    db $19, $1a, $1a, $29, $28, $31, $32, $32, $33, $34, $34, $25, $89, $9b, $9b, $a9
-    db $a8, $b1, $b2, $c2, $c3, $d4, $d4, $c5, $09, $1b, $1b, $29, $28, $31, $32, $42
-    db $43, $54, $54, $45, $89, $9b, $9b, $a9, $a8, $b1, $b2, $c2, $c3, $d4, $d4, $c5
-    db $80, $09, $1a, $1a, $2a, $3a, $3a, $4a, $49, $58, $51, $89, $9b, $9b, $a9, $a8
-    db $b1, $b2, $c2, $c3, $d4, $d4, $c5, $09, $1b, $1b, $29, $28, $31, $32, $42, $43
-    db $54, $54, $45, $89, $9b, $9b, $a9, $a8, $b1, $b2, $c2, $c3, $d4, $d4, $c5, $80
-    db $19, $1a, $2b, $4b, $4a, $5a, $59, $09, $1b, $1b, $29, $28, $31, $32, $42, $43
-    db $54, $54, $45, $89, $9b, $9b, $a9, $a8, $b1, $b2, $c2, $c3, $d4
-    ; Data
-    call nc, $09c5
-    dec de
-    dec de
-    add hl, hl
-    jr z, @+$33
+; Bitpacked speed pairs?
+table_53D7: ; 02:53D7
+    db $19, $1A, $1A, $29, $28, $31, $32, $32, $33, $34, $34, $25, $89, $9B, $9B, $A9
+    db $A8, $B1, $B2, $C2, $C3, $D4, $D4, $C5, $09, $1B, $1B, $29, $28, $31, $32, $42
+    db $43, $54, $54, $45, $89, $9B, $9B, $A9, $A8, $B1, $B2, $C2, $C3, $D4, $D4, $C5
+    db $80
+table_5408: ; 02:5408
+    db $09, $1A, $1A, $2A, $3A, $3A, $4A, $49, $58, $51, $89, $9B, $9B, $A9, $A8, $B1
+    db $B2, $C2, $C3, $D4, $D4, $C5, $09, $1B, $1B, $29, $28, $31, $32, $42, $43, $54
+    db $54, $45, $89, $9B, $9B, $A9, $A8, $B1, $B2, $C2, $C3, $D4, $D4, $C5, $80
+table_5437: ; 02:5437
+    db $19, $1A, $2B, $4B, $4A, $5A, $59, $09, $1B, $1B, $29, $28, $31, $32, $42, $43
+    db $54, $54, $45, $89, $9B, $9B, $A9, $A8, $B1, $B2, $C2, $C3, $D4, $D4, $C5, $09
+    db $1B, $1B, $29, $28, $31, $32, $42, $43, $54, $54, $45, $80
+table_5463: ; 02:5463
+    db $29, $39, $3A, $4A, $4B, $5B, $58, $6B, $09, $1B, $1B, $29, $28, $31, $32, $42
+    db $43, $54, $54, $45, $89, $9B, $9B, $A9, $A8, $B1, $B2, $C2, $C3, $D4, $D4, $C5
+    db $09, $1B, $1B, $29, $28, $31, $32, $42, $43, $54, $54, $45, $EB, $FA, $FA, $E9
+    db $E9, $D8, $D8, $C1, $C1, $B2, $B2, $A3, $A3, $94, $94, $85, $85, $80,
 
-    ld [hl-], a
-    ld b, d
-    ld b, e
-    ld d, h
-    ld d, h
-    ld b, l
-    add b
-
-    db $29, $39, $3a, $4a, $4b, $5b, $58, $6b, $09, $1b, $1b, $29, $28, $31, $32, $42
-    db $43, $54, $54, $45, $89, $9b, $9b, $a9, $a8, $b1, $b2, $c2, $c3, $d4, $d4, $c5
-    db $09, $1b, $1b, $29, $28, $31, $32, $42, $43, $54, $54, $45, $eb, $fa, $fa, $e9
-    db $e9, $d8, $d8, $c1, $c1, $b2, $b2, $a3, $a3, $94, $94, $85, $85, $80
-
-enAI_54A1:
+;------------------------------------------------------------------------------
+; Glow Fly AI (thing that goes back and forth between walls)
+enAI_54A1: ; 02:54A1
     ldh a, [hEnemyState]
     and a
     jr nz, jr_002_54c7
