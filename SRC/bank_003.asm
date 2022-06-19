@@ -960,21 +960,21 @@ jr_003_6b77:
 
     jr c, jr_003_6b8a
 
-    ldh a, [$ea]
+    ldh a, [hEnemyState]
     cp d
     jr z, jr_003_6b92
 
     add b
-    ldh [$ea], a
+    ldh [hEnemyState], a
     jr jr_003_6b92
 
 jr_003_6b8a:
-    ldh a, [$ea]
+    ldh a, [hEnemyState]
     cp e
     jr z, jr_003_6b92
 
     sub b
-    ldh [$ea], a
+    ldh [hEnemyState], a
 
 jr_003_6b92:
     ldh a, [$e9]
@@ -986,7 +986,7 @@ jr_003_6b92:
     ld hl, $ffe1
     add [hl]
     ld [hl], a
-    ldh a, [$ea]
+    ldh a, [hEnemyState]
     ld e, a
     ld d, $00
     ld hl, $6bb1

@@ -130,15 +130,15 @@ hCameraXScreen:: ds 1 ;$FFCB: Camera X position
 section "HRAM part enemy local", HRAM[$ffE0]
 ;{
     ds 1 ; FFE0 - ??
-hEnemyYPos: ds 1 ;    $FFE1: Enemy Y position. Incremented in $2:55AC
-hEnemyXPos: ds 1 ;    $FFE2: Enemy X position
+hEnemyYPos: ds 1 ; $FFE1: Enemy Y position. Incremented in $2:55AC
+hEnemyXPos: ds 1 ; $FFE2: Enemy X position
 ;    {
 ;        Sets $C40E = 0 if less than [Samus' X position on screen] else 2 by $2:45E4.
 ;        $C386 = [Samus' X position on screen] >= $FFE2.
 ;        If [$FFE8] = 0, 3 is added, else 3 is subtracted in $2:54D2.
 ;        Oscillated between 36h and 37h every other frame in $2:5612.
 ;    }
-;    $FFE3: Sprite ID
+hEnemySpriteType: ds 1 ; $FFE3: Sprite ID when first loaded, and sprite graphic
 ;    $FFE4: Set to 20h in $2:5895
 def hEnemyAttr = $FFE5 ; Enemy sprite attribute flags. Set to 0 if [$FFE8] != 0 else 20h by $2:45FA. XOR'd with 20 in $2:5513
 ;    {
@@ -152,6 +152,8 @@ def hEnemyAttr = $FFE5 ; Enemy sprite attribute flags. Set to 0 if [$FFE8] != 0 
 ;    $FFE8: Sets $FFE5 to 0 if non-zero else 20h by $2:45FA. Adds 3 to $FFE2 if 0 else subtracts 3 in $2:54D2. XOR'd with 1 in $2:5513
 ;
 ;   $FFE9: Enemy behavior counter (?)
+;
+def hEnemyState = $FFEA ; Usually enemy state
 ;
 ;    $FFEC: Enemy health
 ;    $FFED: Checked for 0/1/2 in $2:4239

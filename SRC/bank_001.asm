@@ -3117,7 +3117,7 @@ jr_001_712b:
     ld hl, $7158
     add hl, de
     ld a, [hl]
-    ld [$ffea], a
+    ld [hEnemyState], a
     ret
 
 
@@ -3236,7 +3236,7 @@ jr_001_71c3:
 
 
     ld hl, $71db
-    ld a, [$ffea]
+    ld a, [hEnemyState]
     add a
     ld e, a
     ld d, $00
@@ -3370,7 +3370,7 @@ jr_001_726f:
     ld hl, $729c
     add hl, de
     ld a, [hl]
-    ld [$ffea], a
+    ld [hEnemyState], a
     ret
 
 
@@ -3492,9 +3492,9 @@ jr_001_7311:
     ld [$c45c], a
     ret
 
-
+; 01:7319
     ld hl, $7329
-    ld a, [$ffea]
+    ld a, [hEnemyState]
     add a
     ld e, a
     ld d, $00
