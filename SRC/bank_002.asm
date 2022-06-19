@@ -2232,25 +2232,25 @@ jr_002_4dc7:
     ld [$c380], a
     ret
 
-; 02:4DD3 - Item Orb
-enAI_4DD3:
+;------------------------------------------------------------------------------
+; Item Orb and Item AI
+;  Note: Orbs have even enemy IDs, items have odd enemy IDs
+enAI_itemOrb: ; 02:4DD3
     ldh a, [hEnemySpriteType]
-    bit 0, a
-    jr z, jr_002_4de6
+    bit 0, a ; Jump ahead if orb, not item
+    jr z, .endIf_A
+        ld a, [frameCounter]
+        and $06
+        jr nz, .endIf_A
+            ldh a, [$e6]
+            xor $10
+            ldh [$e6], a
+    .endIf_A:
 
-    ld a, [frameCounter]
-    and $06
-    jr nz, jr_002_4de6
-
-    ldh a, [$e6]
-    xor $10
-    ldh [$e6], a
-
-jr_002_4de6:
-    call Call_002_7da0
+    call Call_002_7da0 ; Get sprite collision results
     ld a, [$c46d]
     cp $ff
-    ret z
+        ret z
 
     ld b, a
     ld [$d06f], a
@@ -2258,129 +2258,134 @@ jr_002_4de6:
     ld [$d070], a
     ldh a, [$fd]
     ld [$d071], a
+    ; Branch ahead if not orb
     ldh a, [hEnemySpriteType]
     ld c, a
     bit 0, a
-    jr nz, jr_002_4e1c
+        jr nz, .branchItem
 
+    ; Orb branch
+    ; Check if orb got hit
     ld a, b
     cp $09
-    ret z
-
+        ret z
     cp $10
-    ret z
-
+        ret z
     cp $20
-    ret z
-
+        ret z
+    ; Request sound effect
     xor a
     ld [$cec0], a
     ld a, $02
     ld [$ced5], a
+    ; Change orb into item
     ld a, c
     inc a
     ldh [hEnemySpriteType], a
-    ret
+ret
 
-
-jr_002_4e1c:
+.branchItem:
     ld a, b
     cp $20
-    jr z, jr_002_4e29
+    jr z, .endIf_B
+        cp $10
+            ret nz
+        ; Clear sound effect
+        ld a, $ff
+        ld [$cec0], a
+    .endIf_B:
 
-    cp $10
-    ret nz
-
-    ld a, $ff
-    ld [$cec0], a
-
-jr_002_4e29:
-    ld a, [$d06d]
+    ld a, [itemCollectionFlag]
     and a
-    jr nz, jr_002_4e80
+        jr nz, .checkIfDone
 
+; Energy refill branch
     ld a, c
-    cp $9b
-    jr nz, jr_002_4e46
-
+    cp $9b ; Jump ahead if not energy refill
+        jr nz, .branchMissileRefill
+    ; Return if at full health
     ld a, [samusCurHealthLow]
     cp $99
-    jr nz, jr_002_4e5d
-
+        jr nz, .getItemNum
     ld a, [samusEnergyTanks]
     ld b, a
     ld a, [samusCurHealthHigh]
     cp b
-    jr nz, jr_002_4e5d
+        jr nz, .getItemNum
+ret
 
-    ret
-
-
-jr_002_4e46:
-    cp $9d
-    jr nz, jr_002_4e5d
-
+.branchMissileRefill:
+    cp $9d ; Jump ahead if not missile refill
+        jr nz, .getItemNum
+    ; Return if at full missiles
     ld a, [samusCurMissilesLow]
     ld b, a
     ld a, [samusMaxMissilesLow]
     cp b
-    jr nz, jr_002_4e5d
-
+        jr nz, .getItemNum
     ld a, [samusCurMissilesHigh]
     ld b, a
     ld a, [samusMaxMissilesHigh]
     cp b
-    ret z
+        ret z
 
-jr_002_4e5d:
+.getItemNum:
+    ; Converts the sprite type into the item type
+    ; Formula is equivalent to (([enemy sprite ID] - 81h)/2) + 1
     ld a, c
-    ld [$c388], a
+    ld [temp_spriteType], a
     ld c, $01
 
-jr_002_4e63:
-    cp $81
-    jr z, jr_002_4e6c
+    .loop:
+        cp $81
+            jr z, .break
+        sub $02
+        inc c
+    jr .loop
+    .break:
 
-    sub $02
-    inc c
-    jr jr_002_4e63
-
-jr_002_4e6c:
+    ; Set item number being collected
     ld a, c
-    ld [$d06c], a
+    ld [itemCollected], a
+    
     ldh a, [hEnemyYPos]
     ld [$d094], a
     ldh a, [hEnemyXPos]
     ld [$d095], a
+    ; Let game know that an item is being collected now
     ld a, $ff
-    ld [$d06d], a
-    ret
+    ld [itemCollectionFlag], a
+ret
 
-
-jr_002_4e80:
+.checkIfDone:
     ld b, a
+    ; Clear item collected (so we don't collect it multiple times)
     xor a
-    ld [$d06c], a
+    ld [itemCollected], a
+    ; return until handleItemPickup sets the itemCollectionFlag to $03
     ld a, b
     cp $ff
-    ret z
+        ret z
 
+    ; Clear item variables
     xor a
-    ld [$d06c], a
-    ld [$d06d], a
-    ld a, [$c388]
-    cp $9b
-    ret z
-
-    cp $9d
-    ret z
-
-    call $3ca6
-    ld a, $02
+    ld [itemCollected], a
+    ld [itemCollectionFlag], a
+    ; Don't delete the refills
+    ld a, [temp_spriteType]
+    cp $9b ; Exit if energy refill
+        ret z
+    cp $9d ; Exit if missile refill
+        ret z
+    ; Delete the items
+    call $3ca6 ; Delete self
+    ld a, $02 ; Set collected flag
     ldh [hEnemySpawnFlag], a
-    ret
+ret
 
-enAI_4EA1:
+;------------------------------------------------------------------------------
+; Blob Thrower AI (plant that spits out spores)
+enAI_4EA1: ; 02:4EA1
     ld a, [frameCounter]
     and $0e
     jr nz, jr_002_4ec6

@@ -555,8 +555,8 @@ gameMode_LoadA:
     ld [deathFlag], a
     ld [$d047], a
     ld [$d06b], a
-    ld [$d06c], a
-    ld [$d06d], a
+    ld [itemCollected], a
+    ld [itemCollectionFlag], a
     ld [maxOamPrevFrame], a
 
     ld a, $01
@@ -8647,8 +8647,8 @@ jp bootRoutine
 
 ;------------------------------------------------------------------------------
 ; Handle item pick-up
-handleItemPickup:
-    ld a, [$d06c]
+handleItemPickup: ; 00:372F
+    ld a, [itemCollected]
     and a
         ret z
 
@@ -8657,7 +8657,7 @@ handleItemPickup:
     call waitOneFrame
     call waitOneFrame
 
-    ld a, [$d06c]
+    ld a, [itemCollected]
     ld [$d093], a
     ld b, a
     ; Unused SFX?
@@ -9048,7 +9048,7 @@ Jump_000_3a01:
     xor a
     ld [$d093], a
     ld a, $03
-    ld [$d06d], a
+    ld [itemCollectionFlag], a
     ld a, [$d06f]
     ld [$c466], a
     ld a, [$d070]
@@ -9067,7 +9067,7 @@ Jump_000_3a01:
         call handleAudio
         call clearUnusedOamSlots_longJump
         call waitForNextFrame
-        ld a, [$d06d]
+        ld a, [itemCollectionFlag]
         and a
     jr nz, jr_000_3a60
 ret

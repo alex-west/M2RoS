@@ -12,15 +12,13 @@ include "data/sprites_samus.asm"
 updateStatusBar:
     ld a, [$c3ca]
     and a
-    ret nz
-
-    ld a, [$d06c]
+        ret nz
+    ld a, [itemCollected]
     and a
-    ret nz
-
-    ld a, [$d06d]
+        ret nz
+    ld a, [itemCollectionFlag]
     and a
-    ret nz
+        ret nz
 
     ld hl, $ffb7
     ld a, $af

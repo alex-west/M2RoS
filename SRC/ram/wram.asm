@@ -57,6 +57,7 @@ def hitboxC360 = $C360 ;-$C363: Set to [$2:503B..3E] in $2:4DB1
 ;
 ;$C386: Set to Samus is right of enemy in $2:4F87
 ;
+def temp_spriteType = $C388 ; 02:4DD3 - Temp variable used to store the sprite type in the item AI (02:4DD3)
 ;$C390: Set to 0 in $2:5144
 ;$C391: Set to 20h in $2:5144
 ;$C392: Set to 5 in $2:513F
@@ -738,7 +739,7 @@ countdownTimerHigh = $D067; ;  various events
 enemySolidityIndex_canon = $D069 ; Canonicaly copy of the enemy solid block threshold (not used by enemy code, however)
 ;
 ;$D06B: Unused. Cleared by loading save
-;$D06C: Item pickup. Set to ([enemy sprite ID] - 81h) / 2 + 1 by $2:4DD3
+def itemCollected = $D06C ; Item pickup being collected at the moment. Set to ([enemy sprite ID] - 81h) / 2 + 1 by $2:4DD3
 ;{
 ;    1: Plasma
 ;    2: Ice
@@ -756,7 +757,13 @@ enemySolidityIndex_canon = $D069 ; Canonicaly copy of the enemy solid block thre
 ;    Eh: Energy refill
 ;    Fh: Missile refill
 ;}
-;$D06D: Cleared by loading save. Stop the status bar from updating
+def itemCollectionFlag = $D06D ; Item collection flag. Stops the status bar from updating. Three values:
+;{
+;    $00 = No item is being collected
+;    $FF = Set by Item AI to indicate an item is being collected
+;    $03 = Set by handleItemPickup (00:372F) to tell the item AI that it's time to delete the item
+;}
+
 def maxOamPrevFrame = $D06E ; OAM slots used in by the previous frame
 ;$D06F: Mirror of $C46D? $C466?
 ;$D070: Mirror of $FFFC? $C467?

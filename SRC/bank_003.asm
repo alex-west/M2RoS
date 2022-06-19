@@ -735,10 +735,10 @@ en66E2: ; Enemy A6h (baby metroid egg)
     dw enAI_7BE5
 en66ED: ; Enemy 80h..99h/9Bh/9Dh (item / item orb / enemy/missile refill)
     db $80,$00,$00,$00,$00,$00,$00,$00,$FF
-    dw enAI_4DD3
+    dw enAI_itemOrb
 en66F8: ; Unused
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
-    dw enAI_4DD3
+    dw enAI_itemOrb
 en6703: ; Enemy 9Ah (blob thrower?)
     db $00,$00,$00,$00,$70,$00,$00,$00,$15
     dw enAI_4EA1
