@@ -395,24 +395,23 @@ Call_002_4239:
 
     ldh a, [$ee]
     and a
-    jp nz, Jump_002_438f
-
-    ldh a, [$ed]
+        jp nz, Jump_002_438f
+    ldh a, [hEnemyDropType]
     and a
-    jr z, jr_002_42ce
+        jr z, jr_002_42ce
 
     dec hl
     dec hl
     ld a, [hl]
     cp $10
-    jp c, Jump_002_438f
+        jp c, Jump_002_438f
 
-    ldh a, [$ed]
+    ldh a, [hEnemyDropType]
     dec a
-    jr z, jr_002_426f
+        jr z, jr_002_426f
 
     dec a
-    jr z, jr_002_4266
+        jr z, jr_002_4266
 
     jr jr_002_42a2
 
@@ -512,20 +511,18 @@ jr_002_42d9:
     cp $01
     jr nz, jr_002_4314
 
-    ld hl, $ffec
+    ld hl, hEnemyHealth
     ld a, [hl]
     and a
-    jr z, jr_002_434c
-
+        jr z, jr_002_434c ; if health == $00
     inc a
-    jr z, jr_002_4345
-
+        jr z, jr_002_4345 ; if health == $FF
     inc a
-    jr z, jr_002_430d
+        jr z, jr_002_430d ; if health == $FE
 
     call Call_002_43a9
     dec [hl]
-    jr z, jr_002_42fb
+        jr z, jr_002_42fb
 
     dec [hl]
 
@@ -534,9 +531,9 @@ jr_002_42fb:
     ld [$ced5], a
 
 jr_002_4300:
-    ld hl, $ffe6
+    ld hl, hEnemyStunCounter
     ld [hl], $10
-    ld hl, $ffeb
+    ld hl, hEnemyIceCounter
     ld [hl], $01
     jp Jump_002_438f
 
@@ -552,7 +549,7 @@ jr_002_4314:
     ld hl, $43c8
     add hl, de
     call Call_002_43a9
-    ldh a, [$ec]
+    ldh a, [hEnemyHealth]
     cp $fe
     jr nc, jr_002_4345
 
@@ -561,18 +558,18 @@ jr_002_4314:
 
     jr c, jr_002_434c
 
-    ldh [$ec], a
+    ldh [hEnemyHealth], a
     ld a, $01
     ld [$ced5], a
     call Call_002_438f
     ld a, $11
-    ldh [$e6], a
+    ldh [hEnemyStunCounter], a
     pop af
     jp Jump_002_40d8
 
 
 jr_002_433b:
-    ldh a, [$ec]
+    ldh a, [hEnemyHealth]
     cp $ff
     jr z, jr_002_4345
 
@@ -586,35 +583,32 @@ jr_002_4345:
     jr jr_002_438f
 
 jr_002_434c:
+    ; Prep explosion flag and determine drop
     ld b, $10
 
 jr_002_434e:
     ldh a, [hEnemySpawnFlag]
     cp $06
-    jr z, jr_002_436e
+        jr z, jr_002_436e
 
     and $0f
-    jr z, jr_002_436e
+        jr z, jr_002_436e
 
     ldh a, [$f5]
     cp $fd
-    jr z, jr_002_4374
-
+        jr z, jr_002_4374
     cp $fe
-    jr z, jr_002_4374
-
+        jr z, jr_002_4374
     bit 0, a
-    jr z, jr_002_4372
-
+        jr z, jr_002_4372
     cp $0a
-    jr c, jr_002_436e
+        jr c, jr_002_436e
 
     set 1, b
-    jr jr_002_4374
-
+        jr jr_002_4374
 jr_002_436e:
     set 0, b
-    jr jr_002_4374
+        jr jr_002_4374
 
 jr_002_4372:
     set 2, b
@@ -622,6 +616,7 @@ jr_002_4372:
 jr_002_4374:
     ld a, b
     ldh [$ee], a
+    
     xor a
     ldh [$e9], a
     ld a, $02
@@ -704,41 +699,42 @@ Call_002_43d2:
     ld b, $0f
     ld de, $ffe0
 
-jr_002_43dd:
-    ld a, [hl+]
-    ld [de], a
-    inc e
-    dec b
+    jr_002_43dd:
+        ld a, [hl+]
+        ld [de], a
+        inc e
+        dec b
     jr nz, jr_002_43dd
 
-    ld a, [hl+]
+    ld a, [hl+] ; enemyOffset + $0F
     ldh [$f3], a
-    ld a, [hl+]
+    ld a, [hl+] ; enemyOffset + $10
     ldh [$f4], a
-    ld a, [hl]
+    ld a, [hl] ; enemyOffset + $11
     ldh [$f5], a
+    
+    ; Load spawn flag, spawn number, and AI pointer to $FFEF-$FFF2
     ldh a, [$fc]
     add $1c
     ld l, a
     ld b, $04
-
-jr_002_43f3:
-    ld a, [hl+]
-    ld [de], a
-    inc e
-    dec b
+    jr_002_43f3:
+        ld a, [hl+]
+        ld [de], a
+        inc e
+        dec b
     jr nz, jr_002_43f3
 
     ldh a, [hEnemyYPos]
     ld [$c41e], a
     ldh a, [hEnemyXPos]
     ld [$c41f], a
-    ldh a, [$e6]
+    ldh a, [hEnemyStunCounter]
     cp $11
-    ret c
+        ret c
 
     inc a
-    ldh [$e6], a
+    ldh [hEnemyStunCounter], a
     cp $14
     jr z, jr_002_4413
 
@@ -747,19 +743,16 @@ jr_002_43f3:
 
 
 jr_002_4413:
-    ldh a, [$eb]
+    ldh a, [hEnemyIceCounter]
     and a
     jr nz, jr_002_441c
-
-    xor a
-    ldh [$e6], a
-    ret
-
-
-jr_002_441c:
-    ld a, $10
-    ldh [$e6], a
-    ret
+        xor a
+        ldh [hEnemyStunCounter], a
+        ret
+    jr_002_441c:
+        ld a, $10
+        ldh [hEnemyStunCounter], a
+        ret
 
 
 Call_002_4421:
@@ -2205,6 +2198,7 @@ jr_002_4dab:
 
 ; End of apparent enemy tilemap collision routines
 
+; Loads the Blob Thrower sprite and hitbox into RAM
 Call_002_4db1:
     ld hl, blobThrowerSprite ;$4ffe
     ld de, spriteC300
@@ -2242,9 +2236,9 @@ enAI_itemOrb: ; 02:4DD3
         ld a, [frameCounter]
         and $06
         jr nz, .endIf_A
-            ldh a, [$e6]
+            ldh a, [hEnemyStunCounter]
             xor $10
-            ldh [$e6], a
+            ldh [hEnemyStunCounter], a
     .endIf_A:
 
     call Call_002_7da0 ; Get sprite collision results
@@ -2698,7 +2692,7 @@ jr_002_5122:
     ld a, $06
     ld [$c394], a
     ld a, $ff
-    ldh [$ec], a
+    ldh [hEnemyHealth], a
     call Call_002_7da0
     ld a, [$c46d]
     cp $ff
@@ -2865,7 +2859,7 @@ arachnus_51FB:
     ld a, $05
     ld [$ced5], a
     ld a, $11
-    ldh [$e6], a
+    ldh [hEnemyStunCounter], a
     ld a, [$c394]
     dec a
     ld [$c394], a
@@ -2914,7 +2908,7 @@ jr_002_5249:
 jr_002_5256:
     ld a, $0d
     ld [$ced5], a
-    ld hl, $ffec
+    ld hl, hEnemyHealth
     ld [hl], $ff
     ld a, $95
     ldh [hEnemySpriteType], a
@@ -3047,47 +3041,44 @@ enAI_536F: ; 02:536F
     ldh a, [hEnemy_frameCounter]
     ld b, a
     and $01
-    ret nz
+        ret nz
 
     ld a, b
     and $01
     jr nz, jr_002_5380
+        ldh a, [hEnemySpriteType]
+        xor $01
+        ldh [hEnemySpriteType], a
+    jr_002_5380:
 
-    ldh a, [hEnemySpriteType]
-    xor $01
-    ldh [hEnemySpriteType], a
-
-jr_002_5380:
     ld hl, $ffe9
     ld e, [hl]
     inc l
     ld d, [hl]
     ld a, [de]
     cp $80
-    jr z, jr_002_53be
+        jr z, jr_002_53be
 
     ld a, [de]
     and $f0
     swap a
     bit 3, a
     jr z, jr_002_5398
+        and $07
+        cpl
+        inc a
+    jr_002_5398:
 
-    and $07
-    cpl
-    inc a
-
-jr_002_5398:
     ld b, a
     ld a, [$c386]
     and a
     jr z, jr_002_53a3
+        ld a, b
+        cpl
+        inc a
+        ld b, a
+    jr_002_53a3:
 
-    ld a, b
-    cpl
-    inc a
-    ld b, a
-
-jr_002_53a3:
     ldh a, [hEnemyXPos]
     add b
     ldh [hEnemyXPos], a
@@ -3095,12 +3086,11 @@ jr_002_53a3:
     and $0f
     bit 3, a
     jr z, jr_002_53b3
+        and $07
+        cpl
+        inc a
+    jr_002_53b3:
 
-    and $07
-    cpl
-    inc a
-
-jr_002_53b3:
     ld b, a
     ldh a, [hEnemyYPos]
     add b
@@ -3109,7 +3099,7 @@ jr_002_53b3:
     ld [hl], d
     dec l
     ld [hl], e
-    ret
+ret
 
 
 jr_002_53be:
@@ -3119,19 +3109,18 @@ jr_002_53be:
     ld b, a
     ldh a, [hEnemyYPos]
     cp b
-    jr nc, jr_002_53cf
-
+        jr nc, jr_002_53cf
     inc a
     inc a
     ldh [hEnemyYPos], a
-    ret
+ret
 
 
 jr_002_53cf:
-    call $3ca6
+    call $3ca6 ; Delete self
     ld a, $ff
     ldh [hEnemySpawnFlag], a
-    ret
+ret
 
 ; Bitpacked speed pairs?
 table_53D7: ; 02:53D7
@@ -3151,7 +3140,7 @@ table_5463: ; 02:5463
     db $29, $39, $3A, $4A, $4B, $5B, $58, $6B, $09, $1B, $1B, $29, $28, $31, $32, $42
     db $43, $54, $54, $45, $89, $9B, $9B, $A9, $A8, $B1, $B2, $C2, $C3, $D4, $D4, $C5
     db $09, $1B, $1B, $29, $28, $31, $32, $42, $43, $54, $54, $45, $EB, $FA, $FA, $E9
-    db $E9, $D8, $D8, $C1, $C1, $B2, $B2, $A3, $A3, $94, $94, $85, $85, $80,
+    db $E9, $D8, $D8, $C1, $C1, $B2, $B2, $A3, $A3, $94, $94, $85, $85, $80
 
 ;------------------------------------------------------------------------------
 ; Glow Fly AI (thing that goes back and forth between walls)
@@ -3494,18 +3483,19 @@ ret
 ;------------------------------------------------------------------------------
 
 Call_002_5630:
-    ldh a, [$ed]
+    ; Check if a drop
+    ldh a, [hEnemyDropType]
     and a
         jr nz, jr_002_5692
-
+    ; Check if exploding/becoming a drop
     ldh a, [$ee]
     and a
-    jp nz, Jump_002_56bf
-
-    ldh a, [$eb]
+        jp nz, Jump_002_56bf
+    ; Check if frozen
+    ldh a, [hEnemyIceCounter]
     and a
         jr nz, jr_002_5652
-
+    ; Check if metroid has been killed?
     ld a, [$c41c]
     cp $80
         jp z, Jump_002_5732
@@ -3518,161 +3508,145 @@ jr_002_5648:
     dec c
     ld a, [bc]
     ld l, a
-    jp hl ; Jump to enemy AI!
+    jp hl ; Jump to enemy AI !!!
 
-
-enAI_NULL:
+; Default AI stub
+enAI_NULL: ; 02:5651
     ret
 
 
 jr_002_5652:
+    ; Check if sprite is a standard metroid
+    ; (the standard metroid will call this on its own terms)
     ldh a, [hEnemySpriteType]
     cp $a0
-    jr z, jr_002_5648
-
+        jr z, jr_002_5648
     sub $ce
-    jr z, jr_002_5648
-
+        jr z, jr_002_5648
     dec a
-    jr z, jr_002_5648
+        jr z, jr_002_5648
 
 Call_002_565f:
     ldh a, [hEnemy_frameCounter]
     and $01
-    ret nz
-
-    ld hl, $ffeb
+        ret nz
+    ld hl, hEnemyIceCounter
     ld a, [hl]
     cp $c4
     inc [hl]
     inc [hl]
-    ret c
-
+        ret c
     cp $d0
     jr nc, jr_002_5679
+        ld hl, $ffe0
+        ld a, [hl]
+        xor $80
+        ld [hl], a
+        ret
+    jr_002_5679:
+        xor a
+        ld [hl+], a
+        ld a, [hl]
+        and a
+        jr z, jr_002_5685
+            xor a
+            ldh [hEnemyStunCounter], a
+            ldh [$e0], a
+            ret
+        jr_002_5685:
+            ld a, $02
+            ld [$ced5], a
+            call $3ca6
+            ld a, $02
+            ldh [hEnemySpawnFlag], a
+            ret
 
-    ld hl, $ffe0
-    ld a, [hl]
-    xor $80
-    ld [hl], a
-    ret
-
-
-jr_002_5679:
-    xor a
-    ld [hl+], a
-    ld a, [hl]
-    and a
-    jr z, jr_002_5685
-
-    xor a
-    ldh [$e6], a
-    ldh [$e0], a
-    ret
-
-
-jr_002_5685:
-    ld a, $02
-    ld [$ced5], a
-    call $3ca6
-    ld a, $02
-    ldh [hEnemySpawnFlag], a
-    ret
-
-
+; Drop handler
 jr_002_5692:
     ld hl, $ffe9
     ld a, [hl]
     inc [hl]
     cp $b0
     jr z, jr_002_56b3
+        ; Have the drop pulsate more rapidly after $80 frames
+        cp $80
+        jr nc, jr_002_56a6
+            ldh a, [hEnemy_frameCounter]
+            and $03
+                ret nz
+            jr jr_002_56ab
+        jr_002_56a6:
+            ldh a, [hEnemy_frameCounter]
+            and $01
+                ret nz
+        jr_002_56ab:
+        ; Flip low bit of sprite type
+        ld hl, hEnemySpriteType
+        ld a, [hl]
+        xor $01
+        ld [hl], a
+            ret
+    jr_002_56b3:
+        xor a
+        ld [hl], a
+        ldh [hEnemyDropType], a
+        ; Die
+        call $3ca6
+        ld a, $02
+        ldh [hEnemySpawnFlag], a
+        ret
+; end proc
 
-    cp $80
-    jr nc, jr_002_56a6
-
-    ldh a, [hEnemy_frameCounter]
-    and $03
-    ret nz
-
-    jr jr_002_56ab
-
-jr_002_56a6:
-    ldh a, [hEnemy_frameCounter]
-    and $01
-    ret nz
-
-jr_002_56ab:
-    ld hl, hEnemySpriteType
-    ld a, [hl]
-    xor $01
-    ld [hl], a
-    ret
-
-
-jr_002_56b3:
-    xor a
-    ld [hl], a
-    ldh [$ed], a
-    call $3ca6
-    ld a, $02
-    ldh [hEnemySpawnFlag], a
-    ret
-
-
+; Explode
 Jump_002_56bf:
     bit 5, a
-    jr nz, jr_002_56cc
-
+        jr nz, jr_002_56cc
     ld b, $03
     cp $11
-    jr z, jr_002_56da
-
+        jr z, jr_002_56da
     inc b
-    jr jr_002_56da
+        jr jr_002_56da
 
 jr_002_56cc:
     ld hl, $ffe9
     ld a, [hl]
     inc [hl]
     cp $06
-    jr z, jr_002_56e7
-
-    add $e2
+        jr z, jr_002_56e7
+    add $e2 ; Explosion type A
     ldh [hEnemySpriteType], a
-    ret
-
+ret
 
 jr_002_56da:
     ld hl, $ffe9
     ld a, [hl]
     inc [hl]
     cp b
-    jr z, jr_002_56e7
-
-    add $e8
+        jr z, jr_002_56e7
+    add $e8 ; Explosion type b
     ldh [hEnemySpriteType], a
-    ret
+ret
 
 
 jr_002_56e7:
     ldh a, [$f5]
     cp $fd
-    jr z, jr_002_5727
+        jr z, jr_002_5727
 
+    ; 50% chance of dropping nothing
     ld a, [rDIV]
     and $01
-    jr nz, jr_002_571f
+        jr nz, jr_002_571f
 
     ldh a, [$ee]
     and $0f
-    jr z, jr_002_571f
-
+        jr z, jr_002_571f ; Case 0 - Nothing/default?
     dec a
-    jr z, jr_002_5705
-
+        jr z, jr_002_5705 ; Case 1 - Small Health
     dec a
-    jr z, jr_002_570a
+        jr z, jr_002_570a ; Case 2 - Large health
 
+; Missile drop
     ld bc, $04ee
     jr jr_002_570f
 
@@ -3686,55 +3660,53 @@ jr_002_570a:
 
 jr_002_570f:
     ld a, b
-    ldh [$ed], a
+    ldh [hEnemyDropType], a
     ld a, c
     ldh [hEnemySpriteType], a
     xor a
-    ldh [$e6], a
-    ldh [$eb], a
+    ldh [hEnemyStunCounter], a
+    ldh [hEnemyIceCounter], a
     ldh [$e9], a
     ldh [$ee], a
-    ret
+ret
 
-
-jr_002_571f:
+jr_002_571f: ; Delete self
     call $3ca6
     ld a, $02
     ldh [hEnemySpawnFlag], a
     ret
 
-
 jr_002_5727:
     xor a
-    ldh [$e6], a
-    ldh [$eb], a
+    ldh [hEnemyStunCounter], a
+    ldh [hEnemyIceCounter], a
     ldh [$ee], a
     inc a
     ldh [$e9], a
-    ret
+ret
 
 
+; Metroid death branch?
 Jump_002_5732:
     ldh a, [hEnemySpawnFlag]
     cp $06
-    jr z, jr_002_57ab
+        jr z, jr_002_57ab
 
+    ; Explosion related stuff
     ldh a, [hEnemySpriteType]
     cp $e2
-    jp c, Jump_002_5648
-
+        jp c, Jump_002_5648
     cp $e8
-    jp nc, Jump_002_5648
+        jp nc, Jump_002_5648
 
     ld hl, $c463
     ld a, [hl]
     and a
     jr nz, jr_002_5750
+        ld [hl], $01
+        call Call_002_57b3
+    jr_002_5750:
 
-    ld [hl], $01
-    call Call_002_57b3
-
-jr_002_5750:
     ld hl, $ffe9
     ld a, [hl]
     cp $06
@@ -3814,25 +3786,21 @@ Call_002_57b3:
     ld hl, hEnemyYPos
     ld a, [hl]
     cp $f0
-    jr nc, jr_002_57d7
-
+        jr nc, jr_002_57d7
     cp $a0
-    jr nc, jr_002_57d3
-
+        jr nc, jr_002_57d3
     cp $0a
-    jr c, jr_002_57d7
+        jr c, jr_002_57d7
 
 jr_002_57c3:
     inc l
     ld a, [hl]
     cp $f0
-    jr nc, jr_002_57d0
-
+        jr nc, jr_002_57d0
     cp $a0
-    jr nc, jr_002_57db
-
+        jr nc, jr_002_57db
     cp $0a
-    ret nc
+        ret nc
 
 jr_002_57d0:
     ld [hl], $18
@@ -3851,6 +3819,9 @@ jr_002_57db:
     ld [hl], $98
     ret
 
+;------------------------------------------------------------------------------
+; Tsumuri/Needler/Moheek AI (crawlers)
+; - Right facing variant
 enAI_57DE:
     jr jr_002_5838
 
@@ -3858,143 +3829,123 @@ Jump_002_57e0:
 jr_002_57e0:
     ld a, $ff
     ldh [$e9], a
-    jr jr_002_57f5
+        jr jr_002_57f5
 
 jr_002_57e6:
     call Call_002_587e
     ldh a, [hEnemy_frameCounter]
     and $01
-    ret nz
-
+        ret nz
     ld hl, hEnemySpriteType
     call enemy_flipSpriteId
-    ret
-
+ret
 
 jr_002_57f5:
     ldh a, [$e8]
     and a
-    jr z, jr_002_580e
+        jr z, jr_002_580e ; State 0 - right?
+    dec a                 
+        jr z, jr_002_581c ; State 1 - down?
+    dec a                 
+        jr z, jr_002_582a ; State 2 - left?
 
-    dec a
-    jr z, jr_002_581c
-
-    dec a
-    jr z, jr_002_582a
-
+; State 3 - up?
     call Call_002_4d51
     ld a, [en_bgCollisionResult]
     bit 3, a
-    jr z, jr_002_57e6
-
+        jr z, jr_002_57e6
     call Call_002_58b8
-    ret
-
+ret
 
 jr_002_580e:
     call Call_002_4783
     ld a, [en_bgCollisionResult]
     bit 0, a
-    jr z, jr_002_57e6
-
+        jr z, jr_002_57e6
     call Call_002_58cc
-    ret
-
+ret
 
 jr_002_581c:
     call Call_002_4b64
     ld a, [en_bgCollisionResult]
     bit 1, a
-    jr z, jr_002_57e6
-
+        jr z, jr_002_57e6
     call Call_002_5895
-    ret
-
+ret
 
 jr_002_582a:
     call Call_002_495c
     ld a, [en_bgCollisionResult]
     bit 2, a
-    jr z, jr_002_57e6
-
+        jr z, jr_002_57e6
     call Call_002_58a7
-    ret
+ret
 
 
 jr_002_5838:
     ldh a, [$e8]
     and a
-    jr z, jr_002_5851
-
+        jr z, jr_002_5851 ; State 0 - right?
     dec a
-    jr z, jr_002_5860
-
+        jr z, jr_002_5860 ; State 1 - down?
     dec a
-    jr z, jr_002_586f
+        jr z, jr_002_586f ; State 2 - left?
 
+; State 3 - up?
     call Call_002_4783
     ld a, [en_bgCollisionResult]
     bit 0, a
-    jr nz, jr_002_57e0
-
+        jr nz, jr_002_57e0
     call Call_002_5895
-    ret
-
+ret
 
 jr_002_5851:
     call Call_002_4b64
     ld a, [en_bgCollisionResult]
     bit 1, a
-    jp nz, Jump_002_57e0
-
+        jp nz, Jump_002_57e0
     call Call_002_58a7
-    ret
-
+ret
 
 jr_002_5860:
     call Call_002_495c
     ld a, [en_bgCollisionResult]
     bit 2, a
-    jp nz, Jump_002_57e0
-
+        jp nz, Jump_002_57e0
     call Call_002_58b8
-    ret
-
+ret
 
 jr_002_586f:
     call Call_002_4d51
     ld a, [en_bgCollisionResult]
     bit 3, a
-    jp nz, Jump_002_57e0
-
+        jp nz, Jump_002_57e0
     call Call_002_58cc
-    ret
+ret
 
-
+; Shared movement subroutine
 Call_002_587e:
     ld hl, hEnemyYPos
     ldh a, [$e8]
     and $0f
     cp $01
-    jr z, jr_002_5893
-
+        jr z, jr_002_5893 ; case 1 - go down
     cp $03
-    jr z, jr_002_5891
-
+        jr z, jr_002_5891 ; case 3 - go up
+    ; x movement cases
     inc l
     and a
-    jr z, jr_002_5893
-
+        jr z, jr_002_5893 ; case 0 - go right
+    ; case 2 - go left
 jr_002_5891:
     dec [hl]
     ret
-
 
 jr_002_5893:
     inc [hl]
     ret
 
-
+; Rotation (?) functions for the crawlers (shared)
 Call_002_5895:
     ldh a, [$e8]
     and $f0
@@ -4008,8 +3959,7 @@ jr_002_58a1:
     inc l
     ld a, $20
     ld [hl], a
-    ret
-
+ret
 
 Call_002_58a7:
     ldh a, [$e8]
@@ -4038,7 +3988,6 @@ jr_002_58c6:
     ld [hl], a
     ret
 
-
 Call_002_58cc:
     ldh a, [$e8]
     and $f0
@@ -4050,6 +3999,9 @@ Call_002_58cc:
     add $02
     jr jr_002_58c6
 
+;------------------------------------------------------------------------------
+; Tsumuri/Needler/Moheek AI (crawlers)
+; - Left facing variant
 enAI_58DE:
     jr jr_002_594b
 
@@ -4062,179 +4014,158 @@ jr_002_58e6:
     call Call_002_587e
     ldh a, [hEnemy_frameCounter]
     and $01
-    ret nz
-
+        ret nz
     call enemy_flipSpriteId
-    ret
+ret
 
 
 jr_002_58f2:
     ldh a, [$e8]
     and a
-    jr z, jr_002_5912
+        jr z, jr_002_5912   ; State 0 - right?
+    dec a                   
+        jp z, Jump_002_5925 ; State 1 - down?
+    dec a                   
+        jp z, Jump_002_5938 ; State 2 - left?
 
-    dec a
-    jp z, Jump_002_5925
-
-    dec a
-    jp z, Jump_002_5938
-
+; State 3 - up?
     call Call_002_4d7f
     ld a, [en_bgCollisionResult]
     bit 3, a
-    jr z, jr_002_58e6
-
+        jr z, jr_002_58e6
     call Call_002_5895
     ld hl, hEnemyAttr
     set OAMB_YFLIP, [hl]
-    ret
-
+ret
 
 jr_002_5912:
     call Call_002_47b4
     ld a, [en_bgCollisionResult]
     bit 0, a
-    jr z, jr_002_58e6
-
+        jr z, jr_002_58e6
     call Call_002_58a7
     ld hl, hEnemyAttr
     res OAMB_XFLIP, [hl]
-    ret
-
+ret
 
 Jump_002_5925:
     call Call_002_4b91
     ld a, [en_bgCollisionResult]
     bit 1, a
-    jr z, jr_002_58e6
-
+        jr z, jr_002_58e6
     call Call_002_58b8
     ld hl, hEnemyAttr
     res OAMB_YFLIP, [hl]
-    ret
-
+ret
 
 Jump_002_5938:
     call Call_002_498d
     ld a, [en_bgCollisionResult]
     bit 2, a
-    jr z, jr_002_58e6
-
+        jr z, jr_002_58e6
     call Call_002_58cc
     ld hl, hEnemyAttr
     set OAMB_XFLIP, [hl]
-    ret
-
+ret
 
 jr_002_594b:
     ldh a, [$e8]
     and a
-    jr z, jr_002_596a
+        jr z, jr_002_596a ; State 0 - right?
+    dec a                 
+        jr z, jr_002_597e ; State 1 - down?
+    dec a                 
+        jr z, jr_002_5992 ; State 2 - left?
 
-    dec a
-    jr z, jr_002_597e
-
-    dec a
-    jr z, jr_002_5992
-
+; State 3 - up?
     call Call_002_498d
     ld a, [en_bgCollisionResult]
     bit 2, a
-    jp nz, Jump_002_58e0
-
+        jp nz, Jump_002_58e0
     call Call_002_58b8
     ld hl, hEnemyAttr
     res OAMB_YFLIP, [hl]
-    ret
-
+ret
 
 jr_002_596a:
     call Call_002_4d7f
     ld a, [en_bgCollisionResult]
     bit 3, a
-    jp nz, Jump_002_58e0
-
+        jp nz, Jump_002_58e0
     call Call_002_58cc
     ld hl, hEnemyAttr
     set OAMB_XFLIP, [hl]
-    ret
-
+ret
 
 jr_002_597e:
     call Call_002_47b4
     ld a, [en_bgCollisionResult]
     bit 0, a
-    jp nz, Jump_002_58e0
-
+        jp nz, Jump_002_58e0
     call Call_002_5895
     ld hl, hEnemyAttr
     set OAMB_YFLIP, [hl]
-    ret
-
+ret
 
 jr_002_5992:
     call Call_002_4b91
     ld a, [en_bgCollisionResult]
     bit 1, a
-    jp nz, Jump_002_58e0
-
+        jp nz, Jump_002_58e0
     call Call_002_58a7
     ld hl, hEnemyAttr
     res OAMB_XFLIP, [hl]
-    ret
+ret
 
 
+;------------------------------------------------------------------------------
+; Skreek projectile code
 jr_002_59a6:
     ld hl, $ffe9
     dec [hl]
-    jr z, jr_002_59bf
-
+        jr z, jr_002_59bf
     ld hl, hEnemyXPos
     ld b, $02
     ldh a, [hEnemyAttr]
     bit OAMB_XFLIP, a
     jr nz, jr_002_59bb
-
-    ld a, [hl]
-    sub b
-    ld [hl], a
-    ret
-
-
-jr_002_59bb:
-    ld a, [hl]
-    add b
-    ld [hl], a
-    ret
-
+        ld a, [hl]
+        sub b
+        ld [hl], a
+        ret
+    jr_002_59bb:
+        ld a, [hl]
+        add b
+        ld [hl], a
+        ret
 
 jr_002_59bf:
     call $3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
-    ret
+ret
 
+;------------------------------------------------------------------------------
+; Skreek AI (bird faced things that jump out of lava and spit at samus)
 enAI_59C7:
     ldh a, [hEnemySpawnFlag]
     and $0f
-    jr z, jr_002_59a6
+        jr z, jr_002_59a6
 
     call Call_002_5aa8
     ldh a, [$e9]
     dec a
-    jr z, jr_002_5a28
-
+        jr z, jr_002_5a28
     dec a
-    jr z, jr_002_5a01
-
+        jr z, jr_002_5a01
     dec a
-    jr z, jr_002_5a0f
+        jr z, jr_002_5a0f
 
     ld hl, hEnemyState
     inc [hl]
     ld a, [hl]
     cp $10
-    ret nz
+        ret nz
 
     ld [hl], $00
     ld c, $00
@@ -4244,56 +4175,48 @@ enAI_59C7:
     ld a, [hl]
     sub b
     jr nc, jr_002_59f6
+        cpl
+        inc a
+        ld c, OAMF_XFLIP
+    jr_002_59f6:
 
-    cpl
-    inc a
-    ld c, OAMF_XFLIP
-
-jr_002_59f6:
     cp $30
-    ret nc
-
+        ret nc
     ld a, c
     ldh [hEnemyAttr], a
     ld a, $01
     ldh [$e9], a
-    ret
-
+ret
 
 jr_002_5a01:
     ldh a, [hEnemySpawnFlag]
     cp $03
-    ret z
-
+        ret z
     ld a, $04
     ldh [hEnemySpriteType], a
     ld a, $03
     ldh [$e9], a
-    ret
-
+ret
 
 jr_002_5a0f:
     ld hl, hEnemyState
     dec [hl]
     jr z, jr_002_5a24
-
-    ld e, [hl]
-    ld d, $00
-    ld hl, $5a7d
-    add hl, de
-    ld b, [hl]
-    ld hl, hEnemyYPos
-    ld a, [hl]
-    add b
-    ld [hl], a
-    ret
-
-
-jr_002_5a24:
-    xor a
-    ldh [$e9], a
-    ret
-
+        ld e, [hl]
+        ld d, $00
+        ld hl, $5a7d
+        add hl, de
+        ld b, [hl]
+        ld hl, hEnemyYPos
+        ld a, [hl]
+        add b
+        ld [hl], a
+        ret
+    jr_002_5a24:
+        xor a
+        ldh [$e9], a
+        ret
+; end proc
 
 jr_002_5a28:
     ld hl, hEnemyState
@@ -4354,10 +4277,12 @@ jr_002_5a5d:
     ld [$ced5], a
     ret
 
-
+; 02:5A7D
     db $00, $05, $05, $05, $04, $05, $03, $03, $02, $03, $03, $03, $02, $03, $03, $02
     db $02, $03, $02, $02, $00, $01, $01, $01, $00, $01, $01, $00, $00, $01, $00, $00
-    db $00, $00, $00, $00, $10, $00, $00, $ff, $07, $c7, $59
+    db $00
+; 02:5A9E
+    db $00, $00, $00, $10, $00, $00, $ff, $07, $c7, $59
 
 Call_002_5aa8:
     ldh a, [hEnemySpawnFlag]
@@ -7236,7 +7161,7 @@ enAI_missileDoor: ; 02:6A14
     ld [$ced5], a
     ; Change palette for a few frames
     ld a, $13
-    ldh [$e6], a
+    ldh [hEnemyStunCounter], a
     ; Increment hit counter
     ld hl, $ffe9
     inc [hl]
@@ -7248,7 +7173,7 @@ enAI_missileDoor: ; 02:6A14
     ; Clear hit counter and palette effect
     xor a
     ld [hl], a
-    ldh [$e6], a
+    ldh [hEnemyStunCounter], a
     ; Change sprite ID to explosion
     ld a, $e2
     ldh [hEnemySpriteType], a
@@ -7599,9 +7524,9 @@ jr_002_6bdc:
     and $03
     ret nz
 
-    ldh a, [$e6]
+    ldh a, [hEnemyStunCounter]
     xor $10
-    ldh [$e6], a
+    ldh [hEnemyStunCounter], a
     ld hl, hEnemyXPos
     ld a, [$d03c]
     sub [hl]
@@ -7639,9 +7564,9 @@ jr_002_6c2e:
     cp $08
     jp z, Jump_002_6dac
 
-    ldh a, [$e6]
+    ldh a, [hEnemyStunCounter]
     xor $10
-    ldh [$e6], a
+    ldh [hEnemyStunCounter], a
     ret
 
 ;------------------------------------------------------------------------------
@@ -7771,7 +7696,7 @@ jr_002_6ce9:
 
 
 jr_002_6cf2:
-    ld hl, $ffec
+    ld hl, hEnemyHealth
     dec [hl]
     ld a, [hl]
     and a
@@ -7902,7 +7827,7 @@ jr_002_6d99:
 Jump_002_6dac:
     xor a
     ld [hl], a
-    ldh [$e6], a
+    ldh [hEnemyStunCounter], a
     ld a, $a1
     ldh [hEnemySpriteType], a
     ret
@@ -8406,7 +8331,7 @@ jr_002_7044:
 
 
 jr_002_704d:
-    ld hl, $ffec
+    ld hl, hEnemyHealth
     dec [hl]
     ld a, [hl]
     and a
@@ -8862,9 +8787,9 @@ jr_002_72b1:
     and $03
     ret nz
 
-    ldh a, [$e6]
+    ldh a, [hEnemyStunCounter]
     xor $10
-    ldh [$e6], a
+    ldh [hEnemyStunCounter], a
     ld hl, hEnemyXPos
     ld a, [$d03c]
     sub [hl]
@@ -8898,9 +8823,9 @@ jr_002_7301:
     cp $08
     jp z, Jump_002_7559
 
-    ldh a, [$e6]
+    ldh a, [hEnemyStunCounter]
     xor $10
-    ldh [$e6], a
+    ldh [hEnemyStunCounter], a
     ret
 
 
@@ -9055,7 +8980,7 @@ jr_002_73eb:
     bit 2, b
     jr nz, jr_002_73dc
 
-    ld hl, $ffec
+    ld hl, hEnemyHealth
     dec [hl]
     ld a, [hl]
     and a
@@ -9309,7 +9234,7 @@ Jump_002_7534:
 
 jr_002_753e:
     ld a, $10
-    ldh [$e6], a
+    ldh [hEnemyStunCounter], a
     ld hl, hEnemyYPos
     call enemy_accelForwards
     ld a, [hl]
@@ -9327,7 +9252,7 @@ jr_002_753e:
 Jump_002_7559:
     xor a
     ld [hl], a
-    ldh [$e6], a
+    ldh [hEnemyStunCounter], a
     call findFirstEmptyEnemySlot_longJump
     xor a
     ld [hl+], a
@@ -9496,7 +9421,7 @@ enAI_7631:
     call Call_002_7da0
     ldh a, [hEnemySpawnFlag]
     cp $06
-    jp z, Jump_002_7847
+        jp z, Jump_002_7847
 
     ld a, [$c41c]
     and a
@@ -9534,13 +9459,11 @@ jr_002_7665:
 
     ld a, [$c46d]
     cp $20
-    jp nc, Jump_002_771f
-
+        jp nc, Jump_002_771f
     cp $10
-    jr z, jr_002_7682
-
+        jr z, jr_002_7682
     cp $08
-    jr z, jr_002_768b
+        jr z, jr_002_768b
 
 jr_002_767c:
     ld a, $0f
@@ -9576,7 +9499,8 @@ jr_002_76a0:
     jr z, jr_002_76b3
 
 jr_002_76a4:
-    ld hl, $ffec
+    ; Omega Metroid was hit in the back (do 3x damage)
+    ld hl, hEnemyHealth
     ld a, [hl]
     sub $03
     jr c, jr_002_76e1
@@ -9588,7 +9512,7 @@ jr_002_76a4:
     jr jr_002_76bb
 
 jr_002_76b3:
-    ld hl, $ffec
+    ld hl, hEnemyHealth
     dec [hl]
     jr z, jr_002_76e1
 
@@ -10360,12 +10284,12 @@ jr_002_7ac0:
     ldh [hEnemySpriteType], a
 
 jr_002_7acd:
-    ldh a, [$eb]
+    ldh a, [hEnemyIceCounter]
     and a
     jr z, jr_002_7b43
 
     call Call_002_565f
-    ldh a, [$eb]
+    ldh a, [hEnemyIceCounter]
     and a
     jr z, jr_002_7aee
 
@@ -10391,12 +10315,12 @@ jr_002_7aee:
     ld a, $ce
     ldh [hEnemySpriteType], a
     ld a, $05
-    ldh [$ec], a
+    ldh [hEnemyHealth], a
     ret
 
 
 jr_002_7afd:
-    ld hl, $ffec
+    ld hl, hEnemyHealth
     dec [hl]
     ld a, [hl]
     and a
@@ -10503,9 +10427,9 @@ jr_002_7b92:
     ld a, $1a
     ld [$cec0], a
     ld a, $10
-    ldh [$e6], a
+    ldh [hEnemyStunCounter], a
     ld a, $44
-    ldh [$eb], a
+    ldh [hEnemyIceCounter], a
     xor a
     ldh [$e0], a
     ret
@@ -10642,7 +10566,7 @@ jr_002_7c40:
     xor a
     ld [hl-], a
     ld [hl], a
-    ldh [$e6], a
+    ldh [hEnemyStunCounter], a
     ld a, $03
     ld [$c41c], a
     ld hl, $c465
@@ -10711,7 +10635,7 @@ Call_002_7caf:
     and $03
     ret nz
 
-    ld hl, $ffe6
+    ld hl, hEnemyStunCounter
     ld a, [hl]
     xor $10
     ld [hl], a

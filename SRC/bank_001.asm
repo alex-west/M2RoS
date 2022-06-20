@@ -2892,7 +2892,7 @@ jr_001_5a21:
 
     ret
 
-
+; Render enemy sprite
 Call_001_5a3f:
     call Call_001_5a9a
     ld a, [$c430]
@@ -2906,84 +2906,86 @@ Call_001_5a3f:
     ld e, a
     ld a, [hl]
     ld d, a
+
     ld h, $c0
     ldh a, [hOamBufferIndex]
     ld l, a
+
     ld a, [$c42e]
     ld b, a
     ld a, [$c42f]
     ld c, a
 
-jr_001_5a61:
-    ld a, [de]
-    cp $ff
-    jr z, jr_001_5a99
-
-    ld a, [$c431]
-    bit 6, a
-    jr z, jr_001_5a73
-
-    ld a, [de]
-    cpl
-    sub $07
-    jr jr_001_5a74
-
-jr_001_5a73:
-    ld a, [de]
-
-jr_001_5a74:
-    add b
-    ld [hl+], a
-    inc de
-    ld a, [$c431]
-    bit 5, a
-    jr z, jr_001_5a84
-
-    ld a, [de]
-    cpl
-    sub $07
-    jr jr_001_5a85
-
-jr_001_5a84:
-    ld a, [de]
-
-jr_001_5a85:
-    add c
-    ld [hl+], a
-    inc de
-    ld a, [de]
-    ld [hl+], a
-    inc de
-    push hl
-    ld hl, $c431
-    ld a, [de]
-    xor [hl]
-    pop hl
-    ld [hl+], a
-    ld a, l
-    ldh [hOamBufferIndex], a
-    inc de
+    jr_001_5a61:
+        ld a, [de]
+        cp $ff
+            jr z, jr_001_5a99
+    
+        ld a, [$c431]
+        bit 6, a
+        jr z, jr_001_5a73
+            ld a, [de]
+            cpl
+            sub $07
+            jr jr_001_5a74
+        jr_001_5a73:
+            ld a, [de]
+        jr_001_5a74:
+    
+        add b
+        ld [hl+], a
+        inc de
+        ld a, [$c431]
+        bit 5, a
+        jr z, jr_001_5a84
+            ld a, [de]
+            cpl
+            sub $07
+            jr jr_001_5a85
+        jr_001_5a84:
+            ld a, [de]
+        jr_001_5a85:
+    
+        add c
+        ld [hl+], a
+        inc de
+        ld a, [de]
+        ld [hl+], a
+        inc de
+        push hl
+        ld hl, $c431
+        ld a, [de]
+        xor [hl]
+        pop hl
+        ld [hl+], a
+        ld a, l
+        ldh [hOamBufferIndex], a
+        inc de
     jr jr_001_5a61
 
-jr_001_5a99:
-    ret
+jr_001_5a99: ; .break
+ret
 
-
+; Get base information for enemy sprite to render
 Call_001_5a9a:
     inc l
+    ; y pos
     ld a, [hl+]
     ld [$c42e], a
+    ; x pos
     ld a, [hl+]
     ld [$c42f], a
+    ; sprite type
     ld a, [hl+]
     ld [$c430], a
+    ; Attributes
     ld a, [hl+]
     xor [hl]
     inc l
     xor [hl]
     and $f0
     ld [$c431], a
-    ret
+ret
 
 ; 01:5AB1
 include "data/sprites_enemies.asm"

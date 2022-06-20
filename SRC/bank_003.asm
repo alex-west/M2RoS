@@ -587,15 +587,15 @@ enemyHeaderPointers:
     dw enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX
     dw enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   en6695, enXX,   enXX,   enXX,   enXX,   enXX,   enXX
 
-;        ______________________________
-;       |    ___________________________ Flip flags. 20h = X flip, 40h = Y flip
-;       |   |    ________________________
+;        ______________________________ Base sprite attributes - not modified during runtime (apparently)
+;       |    ___________________________ Sprite attributes (flipping, etc.) - modified during runtime
+;       |   |    ________________________ Stun counter? (dummy value in header)
 ;       |   |   |    _____________________
 ;       |   |   |   |    __________________
 ;       |   |   |   |   |    _______________
 ;       |   |   |   |   |   |    ____________
-;       |   |   |   |   |   |   |    _________
-;       |   |   |   |   |   |   |   |    ______ Health
+;       |   |   |   |   |   |   |    _________ 
+;       |   |   |   |   |   |   |   |    ______ Health (also determines drop type?)
 ;       |   |   |   |   |   |   |   |   |    ___ AI pointer (bank 2)
 ;       |   |   |   |   |   |   |   |   |   |
 enXX: ; Default - 03:64FE
@@ -622,7 +622,7 @@ en6540: ; Enemy 14h (hornoad)
 en654B: ; Enemy 16h (senjoo)
     db $00,$00,$00,$00,$00,$00,$00,$00,$06
     dw enAI_5C36
-en6556: ; Enemy 19h/1Ah/3Ch/3Dh (gawron/yumee spawner)
+en6556: ; Enemy 19h/1Ah/3Ch/3Dh (gawron/yumee spawner (pipe bugs))
     db $80,$00,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_5F67
 en6561: ; Enemy 1Bh (chute leech)

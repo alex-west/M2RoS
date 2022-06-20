@@ -139,35 +139,45 @@ hEnemyXPos: ds 1 ; $FFE2: Enemy X position
 ;        Oscillated between 36h and 37h every other frame in $2:5612.
 ;    }
 hEnemySpriteType: ds 1 ; $FFE3: Sprite ID when first loaded, and sprite graphic
-;    $FFE4: Set to 20h in $2:5895
-def hEnemyAttr = $FFE5 ; Enemy sprite attribute flags. Set to 0 if [$FFE8] != 0 else 20h by $2:45FA. XOR'd with 20 in $2:5513
+; The following three variables are XOR'd together to get the sprite attributes for display
+hEnemyBaseAttr: ds 1 ; $FFE4: Enemy base sprite attribute flags (first byte header). Never modified during runtime.
+hEnemyAttr:     ds 1 ; $FFE5: Enemy sprite attribute flags. Modified during runtime.
+     ; (Set to 0 if [$FFE8] != 0 else 20h by $2:45FA. XOR'd with 20 in $2:5513)
 ;    {
 ;        10h: Palette
 ;        20h: X flip
 ;        40h: Y flip
 ;        80h: BG priority
 ;    }
-;
+hEnemyStunCounter: ds 1 ; $FFE6: Stun counter
+; Values:
+;  $00: Nothing
+;  $10: Palette changed, but value does not increment (used for visual component of ice beam)
+;  $11-$13: Stunned (increments each frame until $13, then it stops)
+
+; General purpose enemy variables?
 ;    $FFE7: Incremented in $2:514A and $2:55AC
 ;    $FFE8: Sets $FFE5 to 0 if non-zero else 20h by $2:45FA. Adds 3 to $FFE2 if 0 else subtracts 3 in $2:54D2. XOR'd with 1 in $2:5513
-;
-;   $FFE9: Enemy behavior counter (?)
-;
+;    $FFE9: Enemy behavior counter (?)
 def hEnemyState = $FFEA ; Usually enemy state
-;
-;    $FFEC: Enemy health
-;    $FFED: Checked for 0/1/2 in $2:4239
+
+def hEnemyIceCounter = $FFEB ; Frozen enemy counter
+def hEnemyHealth = $FFEC ; Enemy health
+def hEnemyDropType = $FFED ; Drop type: Checked for 0/1/2 in $2:4239
 ;    {
-;        0: ?
+;        0: None
 ;        1: Small health
 ;        2: Large health
 ;        Otherwise: missile drop
 ;    }
 ;    $FFEE: Tested in $2:4239
 def hEnemySpawnFlag = $FFEF ; Enemy spawn flag
-;
+def hEnemySpawnNumber = $FFF0 ; The enemy's number on the map (for respawning)
 def hEnemyAI_low  = $FFF1 ; Enemy AI pointer (low byte)
 def hEnemyAI_high = $FFF2 ; Enemy AI pointer (high byte)
+; $FFF3
+; $FFF4
+; $FFF5 - Initial health? determines enemy drops somehow
 ;}
 ;
 ;$FFFC: Enemy address in $2:409E
