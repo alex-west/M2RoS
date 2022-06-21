@@ -647,23 +647,6 @@ def samusFacingDirection = $D02B ; Direction Samus is facing. Saved to SRAM, mir
 ;    2: Clockwise
 ;}
 def samusItems = $D045 ; Samus' equipment
-    def itemMask_bomb   = %00000001 ; 01: Bombs
-	def itemMask_hiJump = %00000010 ; 02: Hi-jump
-	def itemMask_screw  = %00000100 ; 04: Screw attack
-	def itemMask_space  = %00001000 ; 08: Space jump
-	def itemMask_spring = %00010000 ; 10: Spring ball
-	def itemMask_spider = %00100000 ; 20: Spider ball
-	def itemMask_varia  = %01000000 ; 40: Varia suit
-	def itemMask_UNUSED = %10000000 ; 80: Unused
-	; For BIT instructions
-	def itemBit_bomb   = 0
-	def itemBit_hiJump = 1
-	def itemBit_screw  = 2
-	def itemBit_space  = 3
-	def itemBit_spring = 4
-	def itemBit_spider = 5
-	def itemBit_varia  = 6
-	def itemBit_UNUSED = 7
 
 def debugItemIndex = $D046 ; Debug screen selector index
 ;$D047: VRAM tiles update flag (see $FFB1..B6, $2BA3, $27BA)
@@ -929,15 +912,15 @@ saveBuf_metroidCountDisplayed: ds 1 ; $D825: Number of Metroids remaining
 section "Tiletable Array", wramx[$da00]
 tiletableArray:: ds $200 ;$DA00..DBFF: Metatile definitions
 collisionArray:: ds $100 ;$DC00..FF: Tile properties. Indexed by tilemap value. Note that tilemap value < 4 is a respawning shot block
-;{
-;    1: Water (also causes morph ball sound effect glitch)
-;    2: Half-solid floor (can jump through)
-;    4: Half-solid ceiling (can fall through)
-;    8: Spike
-;    10h: Acid
-;    20h: Shot block
-;    40h: Bomb block
-;    80h: Save pillar
+;{  mask - bitnum
+;    01h : 0 Water (also causes morph ball sound effect glitch)
+;    02h : 1 Half-solid floor (can jump through)
+;    04h : 2 Half-solid ceiling (can fall through)
+;    08h : 3 Spike
+;    10h : 4 Acid
+;    20h : 5 Shot block
+;    40h : 6 Bomb block
+;    80h : 7 Save pillar
 ;}
 projectileArray:: ds $10 * 3 ;$DD00..2F: Projectile data. 10h byte slots
 ;{

@@ -1458,11 +1458,10 @@ jr_001_5172:
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
-    bit 5, a
+    bit blockType_shot, a
     jp z, Jump_001_52f3
-
-    ld a, $ff
-    call Call_001_56e9
+        ld a, $ff
+        call Call_001_56e9
     jp Jump_001_52f3
 
 
@@ -1652,7 +1651,7 @@ jr_001_5282:
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
-    bit 5, a
+    bit blockType_shot, a
     jp z, Jump_001_52c6
         ld a, $ff
         call Call_001_56e9
@@ -2125,7 +2124,7 @@ jr_001_5525:
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
-    bit 6, a
+    bit blockType_bomb, a
     jp z, Jump_001_554d
         ld a, $ff
         call Call_001_56e9
@@ -2145,13 +2144,12 @@ jr_001_555f:
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
-    bit 6, a
+    bit blockType_bomb, a
     jp z, Jump_001_556d
+        ld a, $ff
+        call Call_001_56e9
+    Jump_001_556d:
 
-    ld a, $ff
-    call Call_001_56e9
-
-Jump_001_556d:
 jr_001_556d:
     ld a, [$d04a]
     add $10
@@ -2166,13 +2164,12 @@ jr_001_556d:
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
-    bit 6, a
+    bit blockType_bomb, a
     jp z, Jump_001_558f
+        ld a, $ff
+        call Call_001_56e9
+    Jump_001_558f:
 
-    ld a, $ff
-    call Call_001_56e9
-
-Jump_001_558f:
 jr_001_558f:
     ld a, [$d04a]
     ld [$c203], a
@@ -2189,13 +2186,12 @@ jr_001_558f:
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
-    bit 6, a
+    bit blockType_bomb, a
     jp z, Jump_001_55b7
+        ld a, $ff
+        call Call_001_56e9
+    Jump_001_55b7:
 
-    ld a, $ff
-    call Call_001_56e9
-
-Jump_001_55b7:
 jr_001_55b7:
     ld a, [$d04b]
     sub $10
@@ -2210,13 +2206,12 @@ jr_001_55b7:
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
-    bit 6, a
+    bit blockType_bomb, a
     jp z, Jump_001_55d9
+        ld a, $ff
+        call Call_001_56e9
+    Jump_001_55d9:
 
-    ld a, $ff
-    call Call_001_56e9
-
-Jump_001_55d9:
 jr_001_55d9:
     pop hl
     pop de

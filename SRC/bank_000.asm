@@ -4179,7 +4179,7 @@ jr_000_1af2:
     ldh a, [hSamusXPixel]
     add $0f
     ld [$c204], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     jr nc, jr_000_1b13
@@ -4225,7 +4225,7 @@ Call_000_1b37:
     ldh a, [hSamusYPixel]
     add $10
     ld [$c203], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     ret c
@@ -4233,7 +4233,7 @@ Call_000_1b37:
     ldh a, [hSamusXPixel]
     add $14
     ld [$c204], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     ret c
@@ -4249,7 +4249,7 @@ jr_000_1b6b:
     ldh a, [hSamusYPixel]
     add $18
     ld [$c203], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1b9a
@@ -4257,7 +4257,7 @@ jr_000_1b6b:
     ldh a, [hSamusXPixel]
     add $14
     ld [$c204], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1b9a
@@ -4296,7 +4296,7 @@ Call_000_1bb3:
     ldh a, [hSamusXPixel]
     add $0b
     ld [$c204], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1c0c
@@ -4304,7 +4304,7 @@ Call_000_1bb3:
     ldh a, [hSamusXPixel]
     add $14
     ld [$c204], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1c0c
@@ -4315,7 +4315,7 @@ Call_000_1bb3:
     ldh a, [hSamusXPixel]
     add $0b
     ld [$c204], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1c0c
@@ -4323,7 +4323,7 @@ Call_000_1bb3:
     ldh a, [hSamusXPixel]
     add $14
     ld [$c204], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1c0c
@@ -4712,7 +4712,7 @@ jr_000_1dec:
     ldh a, [hSamusYPixel]
     add b
     ld [$c203], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1e84
@@ -4723,7 +4723,7 @@ jr_000_1e38:
     ldh a, [hSamusYPixel]
     add b
     ld [$c203], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1e84
@@ -4734,7 +4734,7 @@ jr_000_1e4b:
     ldh a, [hSamusYPixel]
     add b
     ld [$c203], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1e84
@@ -4745,7 +4745,7 @@ jr_000_1e5e:
     ldh a, [hSamusYPixel]
     add b
     ld [$c203], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1e84
@@ -4756,7 +4756,7 @@ jr_000_1e71:
     ldh a, [hSamusYPixel]
     add b
     ld [$c203], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1e84
@@ -4789,26 +4789,26 @@ Call_000_1e88:
     ldh a, [hSamusYPixel]
     add b
     ld [$c203], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
-    bit 0, a
+    bit blockType_water, a
     jr z, jr_000_1ebf
         ld a, $ff
         ld [$d048], a
         ld a, [hl]
     jr_000_1ebf:
 
-    bit 1, a
+    bit blockType_up, a
     jr z, jr_000_1ec4
         ccf
     jr_000_1ec4:
 
     ld a, [hl]
-    bit 4, a
+    bit blockType_acid, a
     jr z, jr_000_1ed6
         ld a, $40
         ld [acidContactFlag], a
@@ -4823,27 +4823,27 @@ Call_000_1e88:
     ldh a, [hSamusXPixel]
     add $14
     ld [$c204], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
-    bit 0, a
+    bit blockType_water, a
     jr z, jr_000_1ef4
         ld a, $ff
         ld [$d048], a
         ld a, [hl]
     jr_000_1ef4:
     
-    bit 1, a
+    bit blockType_up, a
     jr z, jr_000_1ef9
 
     ccf
 
 jr_000_1ef9:
     ld a, [hl]
-    bit 4, a
+    bit blockType_acid, a
     jr z, jr_000_1f0b
 
     ld a, $40
@@ -4886,92 +4886,86 @@ jr_000_1f2c:
     ldh a, [hSamusYPixel]
     add $2c
     ld [$c203], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
-    bit 0, a
+    bit blockType_water, a
     jr z, jr_000_1f4e
         ld a, $31
         ld [$d048], a
     jr_000_1f4e:
 
     ld a, [hl]
-    bit 7, a
+    bit blockType_save, a
     jr z, jr_000_1f58
+        ld a, $ff
+        ld [$d07d], a
+    jr_000_1f58:
 
-    ld a, $ff
-    ld [$d07d], a
-
-jr_000_1f58:
     ld a, [hl]
-    bit 2, a
+    bit blockType_down, a
     jr z, jr_000_1f62
+        ld a, [samusPose]
+        scf
+        ccf
+    jr_000_1f62:
 
-    ld a, [samusPose]
-    scf
-    ccf
-
-jr_000_1f62:
     ld a, [hl]
-    bit 4, a
+    bit blockType_acid, a
     jr z, jr_000_1f74
+        ld a, $40
+        ld [acidContactFlag], a
+        push af
+        ld a, [acidDamageValue]
+        call applyAcidDamage
+        pop af
+    jr_000_1f74:
 
-    ld a, $40
-    ld [acidContactFlag], a
-    push af
-    ld a, [acidDamageValue]
-    call applyAcidDamage
-    pop af
-
-jr_000_1f74:
     jr c, jr_000_1fbb
 
     ldh a, [hSamusXPixel]
     add $14
     ld [$c204], a
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
-    bit 0, a
+    bit blockType_water, a
     jr z, jr_000_1f91
         ld a, $ff
         ld [$d048], a
     jr_000_1f91:
 
     ld a, [hl]
-    bit 7, a
+    bit blockType_save, a
     jr z, jr_000_1f9b
+        ld a, $ff
+        ld [$d07d], a
+    jr_000_1f9b:
 
-    ld a, $ff
-    ld [$d07d], a
-
-jr_000_1f9b:
     ld a, [hl]
-    bit 2, a
+    bit blockType_down, a
     jr z, jr_000_1fa2
+        scf
+        ccf
+    jr_000_1fa2:
 
-    scf
-    ccf
-
-jr_000_1fa2:
     ld a, [hl]
-    bit 4, a
+    bit blockType_acid, a
     jr z, jr_000_1fb4
+        ld a, $40
+        ld [acidContactFlag], a
+        push af
+        ld a, [acidDamageValue]
+        call applyAcidDamage
+        pop af
+    jr_000_1fb4:
 
-    ld a, $40
-    ld [acidContactFlag], a
-    push af
-    ld a, [acidDamageValue]
-    call applyAcidDamage
-    pop af
-
-jr_000_1fb4:
     jr nc, jr_000_1fbb
 
     ld a, $00
@@ -4986,7 +4980,7 @@ jr_000_1fbb:
 
 
 Call_000_1fbf:
-    call Call_000_1ff5
+    call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
     jr nc, jr_000_1fe0
@@ -4994,15 +4988,14 @@ Call_000_1fbf:
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
-    bit 4, a
+    bit blockType_acid, a
     jr z, jr_000_1fdb
-
-    ld a, $40
-    ld [acidContactFlag], a
-    ld a, [acidDamageValue]
-    call applyAcidDamage
-
-jr_000_1fdb:
+        ld a, $40
+        ld [acidContactFlag], a
+        ld a, [acidDamageValue]
+        call applyAcidDamage
+    jr_000_1fdb:
+    
     scf
     ret
 
@@ -5017,7 +5010,7 @@ jr_000_1fe0:
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
-    bit 4, a
+    bit blockType_acid, a
     jr z, jr_000_1fdd
         ld a, $40
         ld [acidContactFlag], a
@@ -5026,7 +5019,7 @@ jr_000_1fe0:
     jr jr_000_1fdd
 
 
-Call_000_1ff5: ; Collision related
+samus_getTileIndex: ; 00:1FF5
     call getTilemapAddress
 
     ; Adjust base address for collision depending on the tilemap being used
@@ -5055,7 +5048,9 @@ Call_000_1ff5: ; Collision related
     ld a, [hl]
     and b
     ld b, a
-    
+
+    ; Check for spike collision
+    ;  I presume this is done here because spike collision pertains to every moment direction and every state (?)
     ld a, [samusInvulnerableTimer]
     and a
     jr nz, .endIf_B
@@ -5063,7 +5058,7 @@ Call_000_1ff5: ; Collision related
         ld a, b
         ld l, a
         ld a, [hl]
-        bit 3, a
+        bit blockType_spike, a
         jr z, .endIf_B
             ; Play sfx
             ld a, $04

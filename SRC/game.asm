@@ -5,7 +5,8 @@
 
 INCLUDE "hardware.inc"
 
-rMBC_BANK_REG = $2100 ; Dunno why it just doesn't use $2000
+INCLUDE "constants.asm"
+;INCLUDE "macros.asm" ; Maybe later
 
 ; RAM definitions
 INCLUDE "ram/vram.asm"
