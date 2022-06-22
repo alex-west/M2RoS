@@ -1795,7 +1795,7 @@ Call_000_0c37:
 jr_000_0c4e:
     xor a
     ld [$c422], a
-    ld [$d07d], a
+    ld [saveContactFlag], a
     ld a, $ff
     ld hl, $dd30
     ld [hl], a
@@ -4853,7 +4853,7 @@ Call_000_1f0f:
     bit blockType_save, a
     jr z, jr_000_1f58
         ld a, $ff
-        ld [$d07d], a
+        ld [saveContactFlag], a
     jr_000_1f58:
 
     ld a, [hl]
@@ -4896,7 +4896,7 @@ Call_000_1f0f:
     bit blockType_save, a
     jr z, jr_000_1f9b
         ld a, $ff
-        ld [$d07d], a
+        ld [saveContactFlag], a
     jr_000_1f9b:
 
     ld a, [hl]
@@ -5499,7 +5499,7 @@ executeDoorScript: ; 00:239C
     jr nz, .doorToken_copy
         xor a
         ld [$d088], a
-        ld [$d07d], a
+        ld [saveContactFlag], a
         ld a, $88
         ldh [rWY], a
         call door_loadGraphics
@@ -5510,7 +5510,7 @@ executeDoorScript: ; 00:239C
     jr nz, .doorToken_tiletable
         xor a
         ld [$d088], a
-        ld [$d07d], a
+        ld [saveContactFlag], a
         ld a, $88
         ldh [rWY], a
         call door_copyData
@@ -6748,15 +6748,13 @@ Call_000_2c79:
 
     ld a, [samusPose]
     cp $13
-    ret z
-
+        ret z
     ld a, [doorScrollDirection]
     and a
-    ret nz
-
-    ld a, [$d07d]
+        ret nz
+    ld a, [saveContactFlag]
     and a
-    ret nz
+        ret nz
 
     ld hl, $203b
     ld a, [metroidCountReal]

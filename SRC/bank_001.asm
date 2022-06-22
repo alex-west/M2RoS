@@ -353,7 +353,7 @@ drawHudMetroid::
     cp $11
     jr z, .endIf_A
         ; If standing on save point
-        ld a, [$d07d]
+        ld a, [saveContactFlag]
         and a
         jr nz, .endIf_B
             ; or if a major item is being collected
@@ -2650,16 +2650,12 @@ table_57DF: ; 01:57DF
 ;------------------------------------------------------------------------------
 ; 01:57F2
     ld a, [$d088]
-
-jr_001_57f5:
     and a
     jr z, jr_001_57fc
+        dec a
+        ld [$d088], a
+    jr_001_57fc:
 
-jr_001_57f8:
-    dec a
-    ld [$d088], a
-
-jr_001_57fc:
     ld a, [$d08b]
     cp $11
     jr z, jr_001_5873
@@ -2667,16 +2663,15 @@ jr_001_57fc:
     ldh a, [rLCDC]
     bit 5, a
     jr nz, jr_001_580d
+        set 5, a
+        ldh [rLCDC], a
+    jr_001_580d:
 
-    set 5, a
-    ldh [rLCDC], a
-
-jr_001_580d:
     ld a, $88
     ldh [rWY], a
-    ld a, [$d07d]
+    ld a, [saveContactFlag]
     and a
-    jr nz, jr_001_582a
+        jr nz, jr_001_582a
 
     ld a, [$d093]
     and a
@@ -2696,70 +2691,61 @@ jr_001_582a:
     ld a, [$d088]
     and a
     jr nz, jr_001_5843
+        ldh a, [hInputRisingEdge]
+        cp PADF_START
+        jr nz, jr_001_5843
+            ld a, $09
+            ldh [gameMode], a
+            ld a, $ff
+            ld [$d088], a
+    jr_001_5843:
 
-    ldh a, [hInputRisingEdge]
-    cp PADF_START
-    jr nz, jr_001_5843
-
-    ld a, $09
-    ldh [gameMode], a
-    ld a, $ff
-    ld [$d088], a
-
-jr_001_5843:
     ld a, [$d088]
     and a
     jr z, jr_001_585a
+        ld a, $98
+        ldh [hSpriteYPixel], a
+        ld a, $44
+        ldh [hSpriteXPixel], a
+        ld a, $43
+        ldh [hSpriteId], a
+        call Call_001_4b62
+        jr jr_001_5873
+    jr_001_585a:
+        xor a
+        ld [saveContactFlag], a
+        ldh a, [frameCounter]
+        bit 3, a
+        jr z, jr_001_5873
+            ld a, $98
+            ldh [hSpriteYPixel], a
+            ld a, $44
+            ldh [hSpriteXPixel], a
+            ld a, $42
+            ldh [hSpriteId], a
+            call Call_001_4b62
+    jr_001_5873:
 
-    ld a, $98
-    ldh [hSpriteYPixel], a
-    ld a, $44
-    ldh [hSpriteXPixel], a
-    ld a, $43
-    ldh [hSpriteId], a
-    call Call_001_4b62
-    jr jr_001_5873
-
-jr_001_585a:
-    xor a
-    ld [$d07d], a
-    ldh a, [frameCounter]
-    bit 3, a
-    jr z, jr_001_5873
-
-    ld a, $98
-    ldh [hSpriteYPixel], a
-    ld a, $44
-    ldh [hSpriteXPixel], a
-    ld a, $42
-    ldh [hSpriteId], a
-    call Call_001_4b62
-
-jr_001_5873:
     ldh a, [frameCounter]
     and a
     jr nz, jr_001_589a
+        ld a, [earthquakeTimer]
+        and a
+        jr z, jr_001_589a
+            dec a
+            ld [earthquakeTimer], a
+            jr nz, jr_001_589a
+                ld a, $ff
+                ld [$d083], a
+                ld a, $0e
+                ld [$cede], a
+                ld a, [metroidCountReal]
+                cp $01
+                jr nz, jr_001_589a
+                    ld a, $60
+                    ld [$d083], a
+    jr_001_589a:
 
-    ld a, [earthquakeTimer]
-    and a
-    jr z, jr_001_589a
-
-    dec a
-    ld [earthquakeTimer], a
-    jr nz, jr_001_589a
-
-    ld a, $ff
-    ld [$d083], a
-    ld a, $0e
-    ld [$cede], a
-    ld a, [metroidCountReal]
-    cp $01
-    jr nz, jr_001_589a
-
-    ld a, $60
-    ld [$d083], a
-
-jr_001_589a:
     ld a, [samusPose]
     cp $13
     jr nz, jr_001_58ab
@@ -2807,16 +2793,13 @@ jr_001_58d8:
     ld a, [$d0a6]
     and a
     jr z, jr_001_58f0
-
-    ldh a, [frameCounter]
-    and $7f
-    jr nz, jr_001_58f0
-
-    ld a, $17
-    ld [$ced5], a
-
-jr_001_58f0:
-    ret
+        ldh a, [frameCounter]
+        and $7f
+        jr nz, jr_001_58f0
+            ld a, $17
+            ld [$ced5], a
+    jr_001_58f0:
+ret
 
 ; Item message pointers and strings:
 ; 01:58F1
@@ -2868,21 +2851,21 @@ itemTextPointerTable:
     ld a, h
     ld [$c455], a
 
-jr_001_5a21:
-    ld a, [hl]
-    and a
-    call z, Call_001_5a3f
-    ld a, [$c454]
-    ld l, a
-    ld a, [$c455]
-    ld h, a
-    ld de, $0020
-    add hl, de
-    ld a, l
-    ld [$c454], a
-    ld a, h
-    ld [$c455], a
-    cp $c8
+    jr_001_5a21:
+        ld a, [hl]
+        and a
+        call z, Call_001_5a3f
+        ld a, [$c454]
+        ld l, a
+        ld a, [$c455]
+        ld h, a
+        ld de, $0020
+        add hl, de
+        ld a, l
+        ld [$c454], a
+        ld a, h
+        ld [$c455], a
+        cp $c8
     jr nz, jr_001_5a21
 
     ret

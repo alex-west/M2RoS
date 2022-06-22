@@ -765,7 +765,7 @@ def spikeDamageValue = $D078 ; Spike damage. Saved to SRAM
 ;}
 def titleStarY = $D07B ; Star Y position
 def titleStarX = $D07C ; Star X position
-;$D07D: On save pillar flag
+def saveContactFlag = $D07D ; On save pillar flag
 ;{
 ;    0: Not on save pillar
 ;    FFh: On save pillar
