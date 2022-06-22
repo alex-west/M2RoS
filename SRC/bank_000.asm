@@ -1911,7 +1911,7 @@ ret
 Call_000_0d21:
 Jump_000_0d21:
     xor a
-    ld [$d048], a
+    ld [waterContactFlag], a
     ld [acidContactFlag], a
     ld a, [$d072]
     inc a
@@ -2243,7 +2243,7 @@ poseFunc_0EF7: ; $0F - Knockback
     ld [$cec0], a
 
 jr_000_0f20:
-    ld a, [$d048]
+    ld a, [waterContactFlag]
     and a
     jr z, jr_000_0f2e
 
@@ -2335,16 +2335,13 @@ jr_000_0fac:
     ld a, [$d00f]
     cp $01
     jr nz, jr_000_0fb6
-
-    call Call_000_1cfa
-
-jr_000_0fb6:
-    ld a, [$d00f]
-    cp $ff
-    ret nz
-
-    call Call_000_1d26
-    ret
+        call samus_moveRightInAir.damageBoost
+    jr_000_0fb6:
+        ld a, [$d00f]
+        cp $ff
+            ret nz
+        call samus_moveLeftInAir.damageBoost
+        ret
 
 
 jr_000_0fc0:
@@ -2508,16 +2505,16 @@ jr_000_10c2:
     ld [$d043], a
     ld a, [$d042]
     bit 0, a
-    call nz, Call_000_1132
+        call nz, samus_spiderRight
     ld a, [$d042]
     bit 1, a
-    call nz, Call_000_113c
+        call nz, samus_spiderLeft
     ld a, [$d042]
     bit 2, a
-    call nz, Call_000_1146
+        call nz, samus_spiderUp
     ld a, [$d042]
     bit 3, a
-    call nz, Call_000_1152
+        call nz, samus_spiderDown
     ld a, [$d043]
     and a
     ret nz
@@ -2546,73 +2543,65 @@ jr_000_1108:
     ld [$d043], a
     ld a, [$d042]
     bit 0, a
-    call nz, Call_000_1132
+        call nz, samus_spiderRight
     ld a, [$d042]
     bit 1, a
-    call nz, Call_000_113c
+        call nz, samus_spiderLeft
     ld a, [$d042]
     bit 2, a
-    call nz, Call_000_1146
+        call nz, samus_spiderUp
     ld a, [$d042]
     bit 3, a
-    call nz, Call_000_1152
-    ret
+        call nz, samus_spiderDown
+ret
 
-
-Call_000_1132:
-    call Call_000_1c94
+samus_spiderRight: ; 00:1132
+    call samus_rollRight.spider
     ld a, [$d035]
     ld [$d043], a
-    ret
+ret
 
-
-Call_000_113c:
-    call Call_000_1cc5
+samus_spiderLeft: ; 00:113C
+    call samus_rollLeft.spider
     ld a, [$d036]
     ld [$d043], a
-    ret
+ret
 
-
-Call_000_1146:
+samus_spiderUp: ; 00:1146
     ld a, $01
     call Call_000_1d98
     ld a, [$d037]
     ld [$d043], a
-    ret
+ret
 
-
-Call_000_1152:
+samus_spiderDown: ; 00:1152
     ld a, $01
     call Call_000_1d4e
     ld a, [$d038]
     ld [$d043], a
-    ret nc
-
+        ret nc
     ld a, [$c43a]
     and a
-    ret nz
-
+        ret nz
     ldh a, [hSamusYPixel]
     and $f8
     or $04
     ldh [hSamusYPixel], a
     xor a
     ld [$d043], a
-    ret
+ret
 
 poseFunc_1170: ; $0D
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
     jr z, jr_000_1181
+        ld a, $06
+        ld [samusPose], a
+        ld a, $06
+        ld [$cec0], a
+        ret
+    jr_000_1181:
 
-    ld a, $06
-    ld [samusPose], a
-    ld a, $06
-    ld [$cec0], a
-    ret
-
-
-jr_000_1181:
     ld a, [$d026]
     cp $40
     jr nc, jr_000_1197
@@ -2653,22 +2642,16 @@ jr_000_11a5:
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
     jr z, jr_000_11c6
-
-    call Call_000_1132
-    ret
-
-
-jr_000_11c6:
-    ldh a, [hInputPressed]
-    bit PADB_LEFT, a
-    jr z, jr_000_11d0
-
-    call Call_000_1cc9
-    ret
-
-
-jr_000_11d0:
-    ret
+        call samus_spiderRight
+        ret
+    jr_000_11c6:
+        ldh a, [hInputPressed]
+        bit PADB_LEFT, a
+        jr z, jr_000_11d0
+            call samus_rollLeft.morph
+            ret
+        jr_000_11d0:
+        ret
 
 
 jr_000_11d1:
@@ -2698,18 +2681,15 @@ jr_000_11f5:
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
     jr z, jr_000_1200
+        call samus_spiderRight
+        jr jr_000_1209
+    jr_000_1200:
+        ldh a, [hInputPressed]
+        bit PADB_LEFT, a
+        jr z, jr_000_1209
+            call samus_spiderLeft
+    jr_000_1209:
 
-    call Call_000_1132
-    jr jr_000_1209
-
-jr_000_1200:
-    ldh a, [hInputPressed]
-    bit PADB_LEFT, a
-    jr z, jr_000_1209
-
-    call Call_000_113c
-
-jr_000_1209:
     ld hl, $1386
     ld a, [$d024]
     ld e, a
@@ -2807,7 +2787,7 @@ jr_000_1285:
     bit PADB_RIGHT, a
     jr z, jr_000_12aa
 
-    call Call_000_1cf5
+    call samus_moveRightInAir
     ld a, [samusItems]
     bit itemBit_spider, a
     jr z, jr_000_12aa
@@ -2820,7 +2800,7 @@ jr_000_12aa:
     bit PADB_LEFT, a
     jr z, jr_000_12bd
 
-    call Call_000_1d22
+    call samus_moveLeftInAir
     ld a, [samusItems]
     bit itemBit_spider, a
     jr z, jr_000_12bd
@@ -2912,7 +2892,7 @@ jr_000_1335:
     bit PADB_RIGHT, a
     jr z, jr_000_1340
 
-    call Call_000_1cf5
+    call samus_moveRightInAir
     jr jr_000_1349
 
 jr_000_1340:
@@ -2920,7 +2900,7 @@ jr_000_1340:
     bit PADB_LEFT, a
     jr z, jr_000_1349
 
-    call Call_000_1d22
+    call samus_moveLeftInAir
 
 jr_000_1349:
     ld hl, $1386
@@ -3029,7 +3009,7 @@ jr_000_13c7:
     ld [$cec0], a
 
 jr_000_13fe:
-    ld a, [$d048]
+    ld a, [waterContactFlag]
     and a
     jr z, jr_000_140c
 
@@ -3055,82 +3035,67 @@ jr_000_1421:
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
     jr z, jr_000_1452
+        ld a, [samusFacingDirection]
+        cp $01
+        jr z, jr_000_1443
+            ld a, $83
+            ld [samusPose], a
+            ld a, $01
+            ld [samusFacingDirection], a
+            ld a, $02
+            ld [$d02c], a
+            ld a, $04
+            ld [$cec0], a
+            ret
+        jr_000_1443:
+            call samus_walkRight
+                ret c
+            ld a, $01
+            ld [samusFacingDirection], a
+            ld a, $03
+            ld [samusPose], a
+            ret
+    jr_000_1452:
 
-    ld a, [samusFacingDirection]
-    cp $01
-    jr z, jr_000_1443
-
-    ld a, $83
-    ld [samusPose], a
-    ld a, $01
-    ld [samusFacingDirection], a
-    ld a, $02
-    ld [$d02c], a
-    ld a, $04
-    ld [$cec0], a
-    ret
-
-
-jr_000_1443:
-    call Call_000_1c0d
-    ret c
-
-    ld a, $01
-    ld [samusFacingDirection], a
-    ld a, $03
-    ld [samusPose], a
-    ret
-
-
-jr_000_1452:
     ldh a, [hInputPressed]
     bit PADB_LEFT, a
     jr z, jr_000_1483
+        ld a, [samusFacingDirection]
+        cp $00
+        jr z, jr_000_1474
+            ld a, $83
+            ld [samusPose], a
+            ld a, $00
+            ld [samusFacingDirection], a
+            ld a, $02
+            ld [$d02c], a
+            ld a, $04
+            ld [$cec0], a
+            ret
+        jr_000_1474:
+            call samus_walkLeft
+                ret c
+            ld a, $00
+            ld [samusFacingDirection], a
+            ld a, $03
+            ld [samusPose], a
+            ret
+    jr_000_1483:
 
-    ld a, [samusFacingDirection]
-    cp $00
-    jr z, jr_000_1474
-
-    ld a, $83
-    ld [samusPose], a
-    ld a, $00
-    ld [samusFacingDirection], a
-    ld a, $02
-    ld [$d02c], a
-    ld a, $04
-    ld [$cec0], a
-    ret
-
-
-jr_000_1474:
-    call Call_000_1c51
-    ret c
-
-    ld a, $00
-    ld [samusFacingDirection], a
-    ld a, $03
-    ld [samusPose], a
-    ret
-
-
-jr_000_1483:
     ldh a, [hInputRisingEdge]
     bit PADB_DOWN, a
     jr z, jr_000_1498
-
-    xor a
-    ld [$d022], a
-    ld a, $04
-    ld [samusPose], a
-    ld a, $05
-    ld [$cec0], a
-    ret
-
-
-jr_000_1498:
-    ldh a, [hInputRisingEdge]
-    bit PADB_A, a
-    jr z, jr_000_14d5
+        xor a
+        ld [$d022], a
+        ld a, $04
+        ld [samusPose], a
+        ld a, $05
+        ld [$cec0], a
+        ret
+    jr_000_1498:
+        ldh a, [hInputRisingEdge]
+        bit PADB_A, a
+        jr z, jr_000_14d5
 
 Jump_000_149e:
     call Call_000_1e88
@@ -3150,7 +3115,7 @@ Jump_000_149e:
     ld [$cec0], a
 
 jr_000_14bd:
-    ld a, [$d048]
+    ld a, [waterContactFlag]
     and a
     jr z, jr_000_14cb
 
@@ -3209,7 +3174,7 @@ poseFunc_14D6: ; $03
     ld [$d026], a
 
 jr_000_1518:
-    ld a, [$d048]
+    ld a, [waterContactFlag]
     and a
     jr z, jr_000_1526
 
@@ -3249,7 +3214,7 @@ jr_000_153b:
         ld [$cec0], a
         ret
     jr_000_155d:
-        call Call_000_1c0d
+        call samus_walkRight
             ret nc
         xor a
         ld [samusPose], a
@@ -3274,7 +3239,7 @@ jr_000_1566:
         ld [$cec0], a
         ret
     jr_000_1588:
-        call Call_000_1c51
+        call samus_walkLeft
             ret nc
         xor a
         ld [samusPose], a
@@ -3332,7 +3297,7 @@ jr_000_15cb:
     ld [$cec0], a
 
 jr_000_15e5:
-    ld a, [$d048]
+    ld a, [waterContactFlag]
     and a
     jr z, jr_000_15f3
 
@@ -3469,7 +3434,7 @@ jr_000_16a0:
     ld [$d026], a
 
 jr_000_16b1:
-    ld a, [$d048]
+    ld a, [waterContactFlag]
     and a
     jr z, jr_000_16bf
 
@@ -3591,14 +3556,14 @@ poseFunc_1701: ; $05 - Morph ball
         ldh a, [hInputPressed]
         bit PADB_RIGHT, a
         jr z, jr_000_1779
-            call Call_000_1c98
+            call samus_rollRight.morph
             ld a, [$d035]
             ret
         jr_000_1779:
             ldh a, [hInputPressed]
             bit PADB_LEFT, a
                 ret z
-            call Call_000_1cc9
+            call samus_rollLeft.morph
             ld a, [$d036]
             ret
 ; end proc
@@ -3704,14 +3669,14 @@ jr_000_17ff:
     bit PADB_RIGHT, a
     jr z, jr_000_1824
 
-    call Call_000_1cf5
+    call samus_moveRightInAir
 
 jr_000_1824:
     ldh a, [hInputPressed]
     bit PADB_LEFT, a
     jr z, jr_000_182d
 
-    call Call_000_1d22
+    call samus_moveLeftInAir
 
 jr_000_182d:
     ret
@@ -3942,19 +3907,14 @@ jr_000_19b1:
     ld a, [$d00f]
     cp $01
     jr nz, jr_000_19bc
-
-    call Call_000_1cfa
-    ret
-
-
-jr_000_19bc:
-    ld a, [$d00f]
-    cp $ff
-    ret nz
-
-    call Call_000_1d26
-    ret
-
+        call samus_moveRightInAir.damageBoost
+        ret
+    jr_000_19bc:
+        ld a, [$d00f]
+        cp $ff
+            ret nz
+        call samus_moveLeftInAir.damageBoost
+        ret
 
     ret
 
@@ -4003,7 +3963,7 @@ poseFunc_19E2: ; $09 and $0A
     bit PADB_RIGHT, a
     jr z, jr_000_1a10
 
-    call Call_000_1cf5
+    call samus_moveRightInAir
     ret
 
 
@@ -4012,7 +3972,7 @@ jr_000_1a10:
     bit PADB_LEFT, a
     jr z, jr_000_1a1a
 
-    call Call_000_1d22
+    call samus_moveLeftInAir
     ret
 
 
@@ -4254,7 +4214,7 @@ samus_unmorphInAir: ; 00:1BB3
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
-        jr c, jr_000_1c0c
+        jr c, .exit
 
     ldh a, [hSamusXPixel]
     add $14
@@ -4262,7 +4222,7 @@ samus_unmorphInAir: ; 00:1BB3
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
-        jr c, jr_000_1c0c
+        jr c, .exit
 
     ldh a, [hSamusYPixel]
     add $18
@@ -4273,7 +4233,7 @@ samus_unmorphInAir: ; 00:1BB3
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
-        jr c, jr_000_1c0c
+        jr c, .exit
 
     ldh a, [hSamusXPixel]
     add $14
@@ -4281,39 +4241,37 @@ samus_unmorphInAir: ; 00:1BB3
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
-        jr c, jr_000_1c0c
+        jr c, .exit
 
     ld a, $07
     ld [samusPose], a
     ld a, $04
     ld [$cec0], a
 ret
-    jr_000_1c0c:
+    .exit:
 ret
 
-
-Call_000_1c0d:
+; Movement functions
+; Move right (walking)
+samus_walkRight: ; 00:1C0D
     ld a, $01
     ld [samusFacingDirection], a
     ld b, $01
-    ld a, [$d048]
+    ld a, [waterContactFlag]
     and a
-    jr nz, jr_000_1c2c
+    jr nz, .endIf
+        ld a, [samusItems]
+        bit itemBit_varia, a
+        jr z, .else
+            ld b, $02
+            jr .endIf
+        .else:
+            ldh a, [frameCounter]
+            and $01
+            add $01
+            ld b, a
+    .endIf:
 
-    ld a, [samusItems]
-    bit itemBit_varia, a
-    jr z, jr_000_1c25
-
-    ld b, $02
-    jr jr_000_1c2c
-
-jr_000_1c25:
-    ldh a, [frameCounter]
-    and $01
-    add $01
-    ld b, a
-
-jr_000_1c2c:
     ldh a, [hSamusXPixel]
     add b
     ldh [hSamusXPixel], a
@@ -4323,43 +4281,37 @@ jr_000_1c2c:
     ldh [hSamusXScreen], a
     ld [$c204], a
     call Call_000_1de2
-    jr nc, jr_000_1c4c
+    jr nc, .keepResults
+        ld a, [$d027]
+        ldh [hSamusXPixel], a
+        ld a, [$d028]
+        ldh [hSamusXScreen], a
+        ret
+    .keepResults:
+        ld a, b
+        ld [$d035], a
+        ret
+; end proc
 
-    ld a, [$d027]
-    ldh [hSamusXPixel], a
-    ld a, [$d028]
-    ldh [hSamusXScreen], a
-    ret
-
-
-jr_000_1c4c:
-    ld a, b
-    ld [$d035], a
-    ret
-
-
-Call_000_1c51:
+samus_walkLeft: ; 00:1C51
     xor a
     ld [samusFacingDirection], a
     ld b, $01
-    ld a, [$d048]
+    ld a, [waterContactFlag]
     and a
-    jr nz, jr_000_1c6f
+    jr nz, .endIf
+        ld a, [samusItems]
+        bit itemBit_varia, a
+        jr z, .else
+            ld b, $02
+            jr .endIf
+        .else:
+            ldh a, [frameCounter]
+            and $01
+            add $01
+            ld b, a
+    .endIf:
 
-    ld a, [samusItems]
-    bit itemBit_varia, a
-    jr z, jr_000_1c68
-
-    ld b, $02
-    jr jr_000_1c6f
-
-jr_000_1c68:
-    ldh a, [frameCounter]
-    and $01
-    add $01
-    ld b, a
-
-jr_000_1c6f:
     ldh a, [hSamusXPixel]
     sub b
     ldh [hSamusXPixel], a
@@ -4369,29 +4321,25 @@ jr_000_1c6f:
     ldh [hSamusXScreen], a
     ld [$c204], a
     call Call_000_1dd6
-    jr nc, jr_000_1c8f
+    jr nc, .keepResults
+        ld a, [$d027]
+        ldh [hSamusXPixel], a
+        ld a, [$d028]
+        ldh [hSamusXScreen], a
+        ret
+    .keepResults:
+        ld a, b
+        ld [$d036], a
+        ret
+; end proc
 
-    ld a, [$d027]
-    ldh [hSamusXPixel], a
-    ld a, [$d028]
-    ldh [hSamusXScreen], a
-    ret
-
-
-jr_000_1c8f:
-    ld a, b
-    ld [$d036], a
-    ret
-
-
-Call_000_1c94: ; Move right one pixel
-    ld a, $01
-    jr jr_000_1c9a
-
-Call_000_1c98: ; Move right two pixels
-    ld a, $02
-
-jr_000_1c9a:
+samus_rollRight:
+    .spider: ; 00:1C94 - Entry point for spider
+        ld a, $01
+        jr .start
+    .morph: ; 00:1C98 - Entry point for morph
+        ld a, $02
+.start:
     ld b, a
     ld a, $01
     ld [samusFacingDirection], a
@@ -4404,61 +4352,57 @@ jr_000_1c9a:
     ldh [hSamusXScreen], a
     ld [$c204], a
     call Call_000_1de2
-    jr nc, jr_000_1cc0
-
-    ld a, [$d027]
-    ldh [hSamusXPixel], a
-    ld a, [$d028]
-    ldh [hSamusXScreen], a
-    ret
-
-
-jr_000_1cc0:
-    ld a, b
-    ld [$d035], a
-    ret
+    jr nc, .keepResults
+        ; Revert to previous position
+        ld a, [$d027]
+        ldh [hSamusXPixel], a
+        ld a, [$d028]
+        ldh [hSamusXScreen], a
+        ret
+    .keepResults:
+        ld a, b
+        ld [$d035], a
+        ret
 
 
-Call_000_1cc5: ; Move left one pixel
-    ld a, $01
-    jr jr_000_1ccb
-
-Call_000_1cc9: ; Move left two pixels
-    ld a, $02
-
-jr_000_1ccb:
+samus_rollLeft:
+    .spider: ; 00:1CC5 - Entry point for spider
+        ld a, $01
+        jr .start
+    .morph: ; 00:1CC9 - Entry point for morph
+        ld a, $02
+.start:
     ld b, a
     xor a
     ld [samusFacingDirection], a
+
     ldh a, [hSamusXPixel]
     sub b
     ldh [hSamusXPixel], a
+    
     ldh a, [hSamusXScreen]
     sbc $00
     and $0f
     ldh [hSamusXScreen], a
+    
     ld [$c204], a
     call Call_000_1dd6
     jr nc, jr_000_1cf0
-
-    ld a, [$d027]
-    ldh [hSamusXPixel], a
-    ld a, [$d028]
-    ldh [hSamusXScreen], a
-    ret
-
-
-jr_000_1cf0:
-    ld a, b
-    ld [$d036], a
-    ret
+        ld a, [$d027]
+        ldh [hSamusXPixel], a
+        ld a, [$d028]
+        ldh [hSamusXScreen], a
+        ret
+    jr_000_1cf0:
+        ld a, b
+        ld [$d036], a
+        ret
 
 
-Call_000_1cf5:
+samus_moveRightInAir: ; 00:1CF5
     ld a, $01
     ld [samusFacingDirection], a
-
-Call_000_1cfa:
+.damageBoost: ; 00:1CFA Alternate entry
     ld a, $01
     ld b, a
     ldh a, [hSamusXPixel]
@@ -4467,29 +4411,26 @@ Call_000_1cfa:
     ldh a, [hSamusXScreen]
     adc $00
     and $0f
-    ldh [hSamusXScreen], a
+    ldh [hSamusXScreen], a    
     ld [$c204], a
     call Call_000_1de2
-    jr nc, jr_000_1d1d
-
-    ld a, [$d027]
-    ldh [hSamusXPixel], a
-    ld a, [$d028]
-    ldh [hSamusXScreen], a
-    ret
-
-
-jr_000_1d1d:
-    ld a, b
-    ld [$d035], a
-    ret
+    jr nc, .keepResults
+        ; Revert to previous position
+        ld a, [$d027]
+        ldh [hSamusXPixel], a
+        ld a, [$d028]
+        ldh [hSamusXScreen], a
+        ret
+    .keepResults:
+        ld a, b
+        ld [$d035], a
+        ret
 
 
-Call_000_1d22:
+samus_moveLeftInAir: ; 00:1D22
     xor a
     ld [samusFacingDirection], a
-
-Call_000_1d26:
+.damageBoost: ; 00:1D26 - Alternate entry
     ld a, $01
     ld b, a
     ldh a, [hSamusXPixel]
@@ -4501,25 +4442,22 @@ Call_000_1d26:
     ldh [hSamusXScreen], a
     ld [$c204], a
     call Call_000_1dd6
-    jr nc, jr_000_1d49
-
-    ld a, [$d027]
-    ldh [hSamusXPixel], a
-    ld a, [$d028]
-    ldh [hSamusXScreen], a
-    ret
-
-
-jr_000_1d49:
-    ld a, b
-    ld [$d036], a
-    ret
+    jr nc, .keepResults
+        ; Revert to previous position
+        ld a, [$d027]
+        ldh [hSamusXPixel], a
+        ld a, [$d028]
+        ldh [hSamusXScreen], a
+        ret
+    .keepResults:
+        ld a, b
+        ld [$d036], a
+        ret
 
 
-Call_000_1d4e:
+Call_000_1d4e: ; move down
     bit 7, a
-    jr nz, jr_000_1d96
-
+        jr nz, jr_000_1d96 ; Move up if negative
     ld b, a
     ld a, b
     ld [$d034], a
@@ -4532,42 +4470,37 @@ Call_000_1d4e:
     ldh [hSamusYScreen], a
     ld a, b
     call Call_000_1f0f
-    jr nc, jr_000_1d76
-
-    ld a, [$d029]
-    ldh [hSamusYPixel], a
-    ld a, [$d02a]
-    ldh [hSamusYScreen], a
-    scf
-    ret
-
-
-jr_000_1d76:
-    ld a, [$d048]
-    and a
-    jr z, jr_000_1d8b
-
-    srl b
-    ld a, [$d029]
-    add b
-    ldh [hSamusYPixel], a
-    ld a, [$d02a]
-    adc $00
-    ldh [hSamusYScreen], a
-
-jr_000_1d8b:
-    ld a, b
-    ld [$d038], a
-    ld a, [$d034]
-    ld [$d033], a
-    ret
+    jr nc, .keepResults
+        ld a, [$d029]
+        ldh [hSamusYPixel], a
+        ld a, [$d02a]
+        ldh [hSamusYScreen], a
+        scf
+        ret
+    .keepResults:
+        ld a, [waterContactFlag]
+        and a
+        jr z, jr_000_1d8b
+            srl b
+            ld a, [$d029]
+            add b
+            ldh [hSamusYPixel], a
+            ld a, [$d02a]
+            adc $00
+            ldh [hSamusYScreen], a
+        jr_000_1d8b:
+        ld a, b
+        ld [$d038], a
+        ld a, [$d034]
+        ld [$d033], a
+        ret
 
 
 jr_000_1d96:
     cpl
     inc a
 
-Call_000_1d98:
+Call_000_1d98: ; move up
     ld b, a
     ldh a, [hSamusYPixel]
     sub b
@@ -4578,36 +4511,31 @@ Call_000_1d98:
     ldh [hSamusYScreen], a
     ld a, b
     call Call_000_1e88
-    jr nc, jr_000_1dbc
+    jr nc, .keepResults
+        ld a, $56
+        ld [$d026], a
+        ld a, [$d029]
+        ldh [hSamusYPixel], a
+        ld a, [$d02a]
+        ldh [hSamusYScreen], a
+        ret
+    .keepResults:
+        ld a, [waterContactFlag]
+        and a
+        jr z, jr_000_1dd1
+            srl b
+            ld a, [$d029]
+            sub b
+            ldh [hSamusYPixel], a
+            ld a, [$d02a]
+            sbc $00
+            ldh [hSamusYScreen], a
+        jr_000_1dd1:
+        ld a, b
+        ld [$d037], a
+        ret
 
-    ld a, $56
-    ld [$d026], a
-    ld a, [$d029]
-    ldh [hSamusYPixel], a
-    ld a, [$d02a]
-    ldh [hSamusYScreen], a
-    ret
-
-
-jr_000_1dbc:
-    ld a, [$d048]
-    and a
-    jr z, jr_000_1dd1
-
-    srl b
-    ld a, [$d029]
-    sub b
-    ldh [hSamusYPixel], a
-    ld a, [$d02a]
-    sbc $00
-    ldh [hSamusYScreen], a
-
-jr_000_1dd1:
-    ld a, b
-    ld [$d037], a
-    ret
-
-
+; BG collision functions
 Call_000_1dd6:
     push hl
     push de
@@ -4751,7 +4679,7 @@ Call_000_1e88:
     bit blockType_water, a
     jr z, jr_000_1ebf
         ld a, $ff
-        ld [$d048], a
+        ld [waterContactFlag], a
         ld a, [hl]
     jr_000_1ebf:
 
@@ -4785,7 +4713,7 @@ Call_000_1e88:
     bit blockType_water, a
     jr z, jr_000_1ef4
         ld a, $ff
-        ld [$d048], a
+        ld [waterContactFlag], a
         ld a, [hl]
     jr_000_1ef4:
     
@@ -4845,8 +4773,8 @@ Call_000_1f0f:
     ld a, [hl]
     bit blockType_water, a
     jr z, jr_000_1f4e
-        ld a, $31
-        ld [$d048], a
+        ld a, $31 ; Set to $FF in every other circumstance (why?)
+        ld [waterContactFlag], a
     jr_000_1f4e:
 
     ld a, [hl]
@@ -4889,7 +4817,7 @@ Call_000_1f0f:
     bit blockType_water, a
     jr z, jr_000_1f91
         ld a, $ff
-        ld [$d048], a
+        ld [waterContactFlag], a
     jr_000_1f91:
 
     ld a, [hl]
@@ -4969,6 +4897,7 @@ jr_000_1fe0:
         call applyAcidDamage
     jr jr_000_1fdd
 
+; end of BG collision functions?
 
 samus_getTileIndex: ; 00:1FF5
     call getTilemapAddress

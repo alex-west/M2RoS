@@ -650,7 +650,7 @@ def samusItems = $D045 ; Samus' equipment
 
 def debugItemIndex = $D046 ; Debug screen selector index
 ;$D047: VRAM tiles update flag (see $FFB1..B6, $2BA3, $27BA)
-;$D048: Cleared by $0D21
+def waterContactFlag = $D048 ; Flag to tell if Samus is touching water
 ;$D049: Timer for something
 ;
 ;$D04C: Cleared by handle loading blocks due to scrolling, set to FFh in a few places. Never read
