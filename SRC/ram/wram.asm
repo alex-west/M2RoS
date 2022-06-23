@@ -581,7 +581,7 @@ def samusPose = $D020 ; Samus' pose
 ;    1D: Escaped Metroid Queen
 ;}
 ;
-;$D022: += 3 in $08FE during door transition
+;$D022: += 3 while running and in the door transition code. Seems llke some sort of animation timer. Used to morph after kneeling and holding down for a few frames.
 ;$D023: Direction of screen movement
 ;{
 ;    10: Right

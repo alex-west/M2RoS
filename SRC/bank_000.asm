@@ -1954,11 +1954,12 @@ Jump_000_0d21:
         dw poseFunc_0F38 ; $10
         dw poseFunc_0F6C ; $11
         dw poseFunc_0ECB ; $12
-        dw poseFunc_0EA5 ; $13
-        dw poseFunc_0EA5 ; $14
-        dw poseFunc_0EA5 ; $15
-        dw poseFunc_0EA5 ; $16
-        dw poseFunc_0EA5 ; $17
+        dw poseFunc_faceScreen ; $13
+        dw poseFunc_faceScreen ; $14
+        dw poseFunc_faceScreen ; $15
+        dw poseFunc_faceScreen ; $16
+        dw poseFunc_faceScreen ; $17
+        ; Poses related to being eaten by the queen
         dw poseFunc_0E36 ; $18
         dw poseFunc_0DF0 ; $19
         dw poseFunc_0DBE ; $1A
@@ -2165,52 +2166,52 @@ jr_000_0e9b:
     ld [$d090], a
     ret
 
-poseFunc_0EA5: ; $13-$17
+poseFunc_faceScreen: ; 00:0EA5 - poses $13-$17
+    ; Wait until timer expires
     ld a, [countdownTimerLow]
     and a
         ret nz
     ld a, [countdownTimerHigh]
     and a
         ret nz
-
+    ; Request song change if the current song doesn't match what's playing
     ld a, [$cedd]
     ld b, a
     ld a, [currentRoomSong]
     cp b
-    jr z, jr_000_0ebc
+    jr z, .endIf_A
         ld [$cedc], a
-    jr_000_0ebc:
+    .endIf_A:
 
     ld a, [$d079]
     and a
-    jr nz, jr_000_0ec6
+    jr nz, .endIf_B
+        ; Exit if nothing is pressed
         ldh a, [hInputPressed]
         and a
         ret z
-    jr_000_0ec6:
+    .endIf_B:
     
     xor a
     ld [samusPose], a
-    ret
+ret
 
 poseFunc_0ECB: ; $12 and $1D
     ldh a, [hInputRisingEdge]
     bit PADB_DOWN, a
     jr z, jr_000_0ee7
+        ld a, [samusItems]
+        bit itemBit_spider, a
+        jr z, jr_000_0ee7
+            ld a, pose_spiderFall
+            ld [samusPose], a
+            xor a
+            ld [$d044], a
+            ld a, $0d
+            ld [$cec0], a
+            ret
+    jr_000_0ee7:
 
-    ld a, [samusItems]
-    bit itemBit_spider, a
-    jr z, jr_000_0ee7
-
-    ld a, $0c
-    ld [samusPose], a
-    xor a
-    ld [$d044], a
-    ld a, $0d
-    ld [$cec0], a
-    ret
-
-jr_000_0ee7:
     ldh a, [hInputRisingEdge]
     bit PADB_UP, a
     jr z, jr_000_0f6c
@@ -2252,7 +2253,7 @@ jr_000_0f20:
     ld [$d026], a
 
 jr_000_0f2e:
-    ld a, $09
+    ld a, pose_jumpStart
     ld [samusPose], a
     xor a
     ld [$d010], a
@@ -2279,7 +2280,7 @@ poseFunc_0F38: ; $10
     ld [samusInvulnerableTimer], a
     ld a, $2e
     ld [$d026], a
-    ld a, $06
+    ld a, pose_morphJump
     ld [samusPose], a
     xor a
     ld [$d010], a
@@ -2399,26 +2400,23 @@ poseFunc_1029: ; $0E
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
     jr z, jr_000_103a
+        ld a, pose_morph
+        ld [samusPose], a
+        ld a, $06
+        ld [$cec0], a
+            ret
+    jr_000_103a:
 
-    ld a, $05
-    ld [samusPose], a
-    ld a, $06
-    ld [$cec0], a
-    ret
-
-
-jr_000_103a:
     call Call_000_1a42
     ld a, [$d03d]
     and a
     jr nz, jr_000_104d
+        ld a, pose_spiderFall
+        ld [samusPose], a
+        ld a, $01
+        ld [$d024], a
+    jr_000_104d:
 
-    ld a, $0c
-    ld [samusPose], a
-    ld a, $01
-    ld [$d024], a
-
-jr_000_104d:
     ldh a, [hInputRisingEdge]
     and PADF_DOWN | PADF_UP | PADF_LEFT | PADF_RIGHT ;$f0
     ret z
@@ -2428,48 +2426,43 @@ jr_000_104d:
     and PADF_DOWN | PADF_UP | PADF_LEFT | PADF_RIGHT ;$f0
     swap a
     jr z, jr_000_107d
-
-    ld b, a
-    ld a, [$d03d]
-    swap a
-    add b
-    ld e, a
-    ld d, $00
-    ld a, $06
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    ld hl, spiderBallTable ; 06:7E03
-    add hl, de
-    ld a, [hl]
-    ld [$d044], a
-    ld a, $0b
-    ld [samusPose], a
-    ret
-
-
-jr_000_107d:
-    ld a, $0c
-    ld [samusPose], a
-    ret
+        ld b, a
+        ld a, [$d03d]
+        swap a
+        add b
+        ld e, a
+        ld d, $00
+        ld a, BANK(spiderBallTable)
+        ld [bankRegMirror], a
+        ld [rMBC_BANK_REG], a
+        ld hl, spiderBallTable ; 06:7E03
+        add hl, de
+        ld a, [hl]
+        ld [$d044], a
+        ld a, pose_spiderRoll
+        ld [samusPose], a
+        ret
+    jr_000_107d:
+        ld a, pose_spiderFall
+        ld [samusPose], a
+        ret
 
 poseFunc_1083: ; $0B
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
     jr z, jr_000_1094
+        ld a, pose_morph
+        ld [samusPose], a
+        ld a, $06
+        ld [$cec0], a
+        ret
+    jr_000_1094:
 
-    ld a, $05
-    ld [samusPose], a
-    ld a, $06
-    ld [$cec0], a
-    ret
-
-
-jr_000_1094:
     ldh a, [hInputPressed]
     and PADF_DOWN | PADF_UP | PADF_LEFT | PADF_RIGHT ;$f0
     jr nz, jr_000_10a4
 
-    ld a, $0e
+    ld a, pose_spider
     ld [samusPose], a
     xor a
     ld [$d044], a
@@ -2595,7 +2588,7 @@ poseFunc_1170: ; $0D
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
     jr z, jr_000_1181
-        ld a, $06
+        ld a, pose_morphJump
         ld [samusPose], a
         ld a, $06
         ld [$cec0], a
@@ -2605,19 +2598,17 @@ poseFunc_1170: ; $0D
     ld a, [$d026]
     cp $40
     jr nc, jr_000_1197
+        ldh a, [hInputPressed]
+        bit PADB_A, a
+        jr z, jr_000_1192
+            ld a, $fe
+                jr jr_000_11a5
+        jr_000_1192:
+        
+        ld a, $56
+        ld [$d026], a
+    jr_000_1197:
 
-    ldh a, [hInputPressed]
-    bit PADB_A, a
-    jr z, jr_000_1192
-
-    ld a, $fe
-    jr jr_000_11a5
-
-jr_000_1192:
-    ld a, $56
-    ld [$d026], a
-
-jr_000_1197:
     sub $40
     ld hl, $184a
     ld e, a
@@ -2659,7 +2650,7 @@ jr_000_11d1:
     ld [$184a], a
     ld a, $16
     ld [$d024], a
-    ld a, $0c
+    ld a, pose_spiderFall
     ld [samusPose], a
     xor a
     ld [$d044], a
@@ -2669,15 +2660,13 @@ poseFunc_11E4: ; $0C
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
     jr z, jr_000_11f5
+        ld a, pose_morphFall
+        ld [samusPose], a
+        ld a, $06
+        ld [$cec0], a
+        ret
+    jr_000_11f5:
 
-    ld a, $08
-    ld [samusPose], a
-    ld a, $06
-    ld [$cec0], a
-    ret
-
-
-jr_000_11f5:
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
     jr z, jr_000_1200
@@ -2730,7 +2719,7 @@ jr_000_1233:
 
 Jump_000_1241:
 jr_000_1241:
-    ld a, $0b
+    ld a, pose_spiderRoll
     ld [samusPose], a
     xor a
     ld [$d024], a
@@ -2745,7 +2734,7 @@ poseFunc_124B: ; $08
     bit itemBit_spider, a
     jr z, jr_000_1267
 
-    ld a, $0c
+    ld a, pose_spiderFall
     ld [samusPose], a
     xor a
     ld [$d044], a
@@ -2764,7 +2753,7 @@ jr_000_1267:
     jr z, jr_000_1285
 
     ld [$d026], a
-    ld a, $06
+    ld a, pose_morphJump
     ld [samusPose], a
     xor a
     ld [$d010], a
@@ -2831,7 +2820,7 @@ jr_000_12dd:
 
 
 jr_000_12de:
-    ld a, $05
+    ld a, pose_morph
     ld [samusPose], a
     xor a
     ld [$d024], a
@@ -2853,32 +2842,28 @@ poseFunc_12F5: ; $07
     ld a, [acidContactFlag]
     and a
     jr z, jr_000_1306
+        ld [$d026], a
+        jr jr_000_1311
+    jr_000_1306:
+        ld a, [$d049]
+        and a
+            jr z, jr_000_1335
+        ld a, $21
+        ld [$d026], a
+    jr_000_1311:
 
-    ld [$d026], a
-    jr jr_000_1311
-
-jr_000_1306:
-    ld a, [$d049]
-    and a
-    jr z, jr_000_1335
-
-    ld a, $21
-    ld [$d026], a
-
-jr_000_1311:
     ld a, $02
     ld [$cec0], a
     ld a, [samusItems]
     bit itemBit_hiJump, a
     jr nz, jr_000_1327
+        ld a, $31
+        ld [$d026], a
+        ld a, $01
+        ld [$cec0], a
+    jr_000_1327:
 
-    ld a, $31
-    ld [$d026], a
-    ld a, $01
-    ld [$cec0], a
-
-jr_000_1327:
-    ld a, $09
+    ld a, pose_jumpStart
     ld [samusPose], a
     xor a
     ld [$d010], a
@@ -2929,7 +2914,7 @@ jr_000_136a:
     call Call_000_1b37
     jr nc, jr_000_1374
 
-    ld a, $04
+    ld a, pose_crouch
     ld [samusPose], a
 
 jr_000_1374:
@@ -2970,7 +2955,7 @@ poseFunc_13B7: ; $00
     call Call_000_1f0f
     jr c, jr_000_13c7
 
-    ld a, $07
+    ld a, pose_fall
     ld [samusPose], a
     ld a, $01
     ld [$d024], a
@@ -3012,20 +2997,18 @@ jr_000_13fe:
     ld a, [waterContactFlag]
     and a
     jr z, jr_000_140c
+        ld a, [$d026]
+        add $10
+        ld [$d026], a
+    jr_000_140c:
 
-    ld a, [$d026]
-    add $10
-    ld [$d026], a
-
-jr_000_140c:
-    ld a, $0a
+    ld a, pose_spinStart
     ld [samusPose], a
     xor a
     ld [$d010], a
     ld a, [samusItems]
     bit itemBit_screw, a
-    ret z
-
+        ret z
     ld a, $03
     ld [$cec0], a
     ret
@@ -3038,7 +3021,7 @@ jr_000_1421:
         ld a, [samusFacingDirection]
         cp $01
         jr z, jr_000_1443
-            ld a, $83
+            ld a, $80 | pose_run
             ld [samusPose], a
             ld a, $01
             ld [samusFacingDirection], a
@@ -3052,7 +3035,7 @@ jr_000_1421:
                 ret c
             ld a, $01
             ld [samusFacingDirection], a
-            ld a, $03
+            ld a, pose_run
             ld [samusPose], a
             ret
     jr_000_1452:
@@ -3063,7 +3046,7 @@ jr_000_1421:
         ld a, [samusFacingDirection]
         cp $00
         jr z, jr_000_1474
-            ld a, $83
+            ld a, $80 | pose_run
             ld [samusPose], a
             ld a, $00
             ld [samusFacingDirection], a
@@ -3077,7 +3060,7 @@ jr_000_1421:
                 ret c
             ld a, $00
             ld [samusFacingDirection], a
-            ld a, $03
+            ld a, pose_run
             ld [samusPose], a
             ret
     jr_000_1483:
@@ -3087,7 +3070,7 @@ jr_000_1421:
     jr z, jr_000_1498
         xor a
         ld [$d022], a
-        ld a, $04
+        ld a, pose_crouch
         ld [samusPose], a
         ld a, $05
         ld [$cec0], a
@@ -3108,23 +3091,21 @@ Jump_000_149e:
     ld a, [samusItems]
     bit itemBit_hiJump, a
     jr nz, jr_000_14bd
+        ld a, $31
+        ld [$d026], a
+        ld a, $01
+        ld [$cec0], a
+    jr_000_14bd:
 
-    ld a, $31
-    ld [$d026], a
-    ld a, $01
-    ld [$cec0], a
-
-jr_000_14bd:
     ld a, [waterContactFlag]
     and a
     jr z, jr_000_14cb
+        ld a, [$d026]
+        add $10
+        ld [$d026], a
+    jr_000_14cb:
 
-    ld a, [$d026]
-    add $10
-    ld [$d026], a
-
-jr_000_14cb:
-    ld a, $09
+    ld a, pose_jumpStart
     ld [samusPose], a
     xor a
     ld [$d010], a
@@ -3137,7 +3118,7 @@ jr_000_14d5:
 poseFunc_14D6: ; $03
     call Call_000_1f0f
     jr c, jr_000_14e6
-        ld a, $07
+        ld a, pose_fall
         ld [samusPose], a
         ld a, $01
         ld [$d024], a
@@ -3177,13 +3158,12 @@ jr_000_1518:
     ld a, [waterContactFlag]
     and a
     jr z, jr_000_1526
+        ld a, [$d026]
+        add $10
+        ld [$d026], a
+    jr_000_1526:
 
-    ld a, [$d026]
-    add $10
-    ld [$d026], a
-
-jr_000_1526:
-    ld a, $0a
+    ld a, pose_spinStart
     ld [samusPose], a
     xor a
     ld [$d010], a
@@ -3204,7 +3184,7 @@ jr_000_153b:
     ld a, [samusFacingDirection]
     cp $01
     jr z, jr_000_155d
-        ld a, $83
+        ld a, $80 | pose_run
         ld [samusPose], a
         ld a, $01
         ld [samusFacingDirection], a
@@ -3229,7 +3209,7 @@ jr_000_1566:
     ld a, [samusFacingDirection]
     cp $00
     jr z, jr_000_1588
-        ld a, $83
+        ld a, $80 | pose_run
         ld [samusPose], a
         ld a, $00
         ld [samusFacingDirection], a
@@ -3252,14 +3232,13 @@ jr_000_1591:
     ldh a, [hInputRisingEdge]
     bit PADB_DOWN, a
     jr z, jr_000_15aa
-
-    xor a
-    ld [$d022], a
-    ld a, $04
-    ld [samusPose], a
-    ld a, $05
-    ld [$cec0], a
-    ret
+        xor a
+        ld [$d022], a
+        ld a, pose_crouch
+        ld [samusPose], a
+        ld a, $05
+        ld [$cec0], a
+        ret
 
 
 jr_000_15aa:
@@ -3278,12 +3257,11 @@ jr_000_15aa:
     ld a, [samusItems]
     bit itemBit_hiJump, a
     jr nz, jr_000_15cb
+        ld a, $31
+        ld [$d026], a
+    jr_000_15cb:
 
-    ld a, $31
-    ld [$d026], a
-
-jr_000_15cb:
-    ld a, $09
+    ld a, pose_jumpStart
     ld [samusPose], a
     xor a
     ld [$d010], a
@@ -3312,7 +3290,7 @@ poseFunc_15F4: ; $04
     call Call_000_1f0f
     jr c, jr_000_1604
 
-    ld a, $07
+    ld a, pose_fall
     ld [samusPose], a
     ld a, $01
     ld [$d024], a
@@ -3340,18 +3318,15 @@ jr_000_161b:
     ld a, [samusFacingDirection]
     cp $01
     jr nz, jr_000_1635
+        call Call_000_1b37
+            ret nc
+        ld a, pose_morph
+        ld [samusPose], a
+        ld a, $06
+        ld [$cec0], a
+        ret
+    jr_000_1635:
 
-    call Call_000_1b37
-    ret nc
-
-    ld a, $05
-    ld [samusPose], a
-    ld a, $06
-    ld [$cec0], a
-    ret
-
-
-jr_000_1635:
     ld a, $01
     ld [samusFacingDirection], a
     ret
@@ -3378,18 +3353,15 @@ jr_000_1652:
     ld a, [samusFacingDirection]
     and a
     jr nz, jr_000_166b
-
-    call Call_000_1b37
-    ret nc
-
-    ld a, $05
-    ld [samusPose], a
-    ld a, $06
-    ld [$cec0], a
-    ret
-
-
-jr_000_166b:
+        call Call_000_1b37
+            ret nc
+        ld a, pose_morph
+        ld [samusPose], a
+        ld a, $06
+        ld [$cec0], a
+        ret
+    jr_000_166b:
+    
     ld a, $00
     ld [samusFacingDirection], a
     ret
@@ -3408,41 +3380,36 @@ jr_000_1671:
     ldh a, [hInputPressed]
     and PADF_LEFT | PADF_RIGHT ;$30
     jr z, jr_000_169b
+        ld a, pose_spinJump
+        ld [samusPose], a
+        ld a, [samusItems]
+        bit itemBit_screw, a
+        jr z, jr_000_16a0
+            ld a, $03
+            ld [$cec0], a
+            jr jr_000_16a0
+    jr_000_169b:
+        ld a, pose_jump
+        ld [samusPose], a
+    jr_000_16a0:
 
-    ld a, $02
-    ld [samusPose], a
-    ld a, [samusItems]
-    bit itemBit_screw, a
-    jr z, jr_000_16a0
-
-    ld a, $03
-    ld [$cec0], a
-    jr jr_000_16a0
-
-jr_000_169b:
-    ld a, $01
-    ld [samusPose], a
-
-jr_000_16a0:
     ld a, $21
     ld [$d026], a
     ld a, [samusItems]
     bit itemBit_hiJump, a
     jr nz, jr_000_16b1
+        ld a, $31
+        ld [$d026], a
+    jr_000_16b1:
 
-    ld a, $31
-    ld [$d026], a
-
-jr_000_16b1:
     ld a, [waterContactFlag]
     and a
     jr z, jr_000_16bf
+        ld a, [$d026]
+        add $10
+        ld [$d026], a
+    jr_000_16bf:
 
-    ld a, [$d026]
-    add $10
-    ld [$d026], a
-
-jr_000_16bf:
     xor a
     ld [$d010], a
     ret
@@ -3453,7 +3420,7 @@ jr_000_16c4:
     bit PADB_DOWN, a
     jr z, jr_000_16ce
 
-    call Call_000_1ba4
+    call samus_morphOnGround
     ret
 
 
@@ -3461,15 +3428,13 @@ jr_000_16ce:
     ldh a, [hInputPressed]
     bit PADB_DOWN, a
     jr z, jr_000_16e2
-
-    ld a, [$d022]
-    inc a
-    ld [$d022], a
-    cp $10
-    ret c
-
-    call Call_000_1ba4
-    ret
+        ld a, [$d022]
+        inc a
+        ld [$d022], a
+        cp $10
+            ret c
+        call samus_morphOnGround
+        ret
 
 
 jr_000_16e2:
@@ -3496,7 +3461,7 @@ ret
 poseFunc_1701: ; $05 - Morph ball
     call Call_000_1f0f
     jr c, jr_000_1711
-        ld a, $08
+        ld a, pose_morphFall
         ld [samusPose], a
         ld a, $01
         ld [$d024], a
@@ -3522,7 +3487,7 @@ poseFunc_1701: ; $05 - Morph ball
         jr z, jr_000_1742
             ld a, $2e
             ld [$d026], a
-            ld a, $06
+            ld a, pose_morphJump
             ld [samusPose], a
             xor a
             ld [$d010], a
@@ -3536,9 +3501,8 @@ poseFunc_1701: ; $05 - Morph ball
     jr c, jr_000_1768
         ldh a, [hInputPressed]
         bit PADB_DOWN, a
-        jp nz, Jump_000_1785
-    
-        ld a, $06
+            jp nz, Jump_000_1785
+        ld a, pose_morphJump
         ld [samusPose], a
         ld a, $01
         ld [$cec0], a
@@ -3574,7 +3538,7 @@ jr_000_1785:
     ld a, [samusItems]
     bit itemBit_spider, a
         ret z
-    ld a, $0e
+    ld a, pose_spider
     ld [samusPose], a
     ld a, $01
     ld [$d024], a
@@ -3593,7 +3557,7 @@ poseFunc_179F: ; $06
     bit itemBit_spider, a
     jr z, jr_000_17bb
 
-    ld a, $0d
+    ld a, pose_spiderJump
     ld [samusPose], a
     xor a
     ld [$d044], a
@@ -3655,7 +3619,7 @@ jr_000_17ff:
     inc a
     ld [$d026], a
     ld a, [samusPose]
-    cp $06
+    cp pose_morphJump
     jr nz, jr_000_181b
         ldh a, [hInputRisingEdge]
         bit PADB_UP, a
@@ -3688,18 +3652,15 @@ jr_000_182e:
     ld a, $16
     ld [$d024], a
     ld a, [samusPose]
-    cp $06
+    cp pose_morphJump
     jr z, jr_000_1844
-
-    ld a, $07
-    ld [samusPose], a
-    ret
-
-
-jr_000_1844:
-    ld a, $08
-    ld [samusPose], a
-    ret
+        ld a, pose_fall
+        ld [samusPose], a
+        ret
+    jr_000_1844:
+        ld a, pose_morphFall
+        ld [samusPose], a
+        ret
 
 ; 00:184A
     db $fe, $fe, $fe, $fe, $ff, $fe, $ff, $fe, $ff, $ff, $ff, $ff, $ff, $ff, $00, $ff
@@ -3769,32 +3730,29 @@ poseFunc_18E8: ; $02
     ldh a, [hInputRisingEdge]
     bit PADB_B, a
     jr z, jr_000_18f3
+        ld a, pose_jump
+        ld [samusPose], a
+    jr_000_18f3:
 
-    ld a, $01
-    ld [samusPose], a
-
-jr_000_18f3:
     ld a, [$d026]
     cp $40
     jr nc, jr_000_1912
+        ldh a, [hInputPressed]
+        bit PADB_A, a
+        jr z, jr_000_190d
+            ld a, [samusItems]
+            and itemMask_hiJump
+            srl a
+            ld b, a
+            ld a, $fe
+            sub b
+                jr jr_000_197b
+        jr_000_190d:
+    
+        ld a, $56
+        ld [$d026], a
+    jr_000_1912:
 
-    ldh a, [hInputPressed]
-    bit PADB_A, a
-    jr z, jr_000_190d
-
-    ld a, [samusItems]
-    and itemMask_hiJump
-    srl a
-    ld b, a
-    ld a, $fe
-    sub b
-    jr jr_000_197b
-
-jr_000_190d:
-    ld a, $56
-    ld [$d026], a
-
-jr_000_1912:
     sub $40
     ld e, a
     ld d, $00
@@ -3932,7 +3890,7 @@ jr_000_19d3:
     ld [$184a], a
     ld a, $16
     ld [$d024], a
-    ld a, $07
+    ld a, pose_fall
     ld [samusPose], a
     ret
 
@@ -3982,15 +3940,13 @@ jr_000_1a1a:
 
 jr_000_1a1b:
     ld a, [samusPose]
-    cp $09
+    cp pose_jumpStart
     jr nz, jr_000_1a28
+        ld a, pose_jump
+        ld [samusPose], a
+        ret
+    jr_000_1a28:
 
-    ld a, $01
-    ld [samusPose], a
-    ret
-
-
-jr_000_1a28:
     ldh a, [hInputPressed]
     and PADF_LEFT | PADF_RIGHT
     swap a
@@ -4000,7 +3956,7 @@ jr_000_1a28:
     add hl, de
     ld a, [hl]
     ld [$d00f], a
-    ld a, $02
+    ld a, pose_spinJump
     ld [samusPose], a
     ret
 
@@ -4145,6 +4101,7 @@ Call_000_1b37: ; 00:1B37
     ld hl, samusSolidityIndex
     cp [hl]
         ret c
+
     ldh a, [hSamusXPixel]
     add $14
     ld [$c204], a
@@ -4152,7 +4109,7 @@ Call_000_1b37: ; 00:1B37
     ld hl, samusSolidityIndex
     cp [hl]
         ret c
-    ; Set pose to crouching
+    ; Set pose to standing
     xor a
     ld [samusPose], a
     ld a, $04
@@ -4168,41 +4125,37 @@ jr_000_1b6b:
     ld hl, samusSolidityIndex
     cp [hl]
     jr c, jr_000_1b9a
-
-    ldh a, [hSamusXPixel]
-    add $14
-    ld [$c204], a
-    call samus_getTileIndex
-    ld hl, samusSolidityIndex
-    cp [hl]
-    jr c, jr_000_1b9a
-
-    ld a, $04
-    ld [samusPose], a
-    xor a
-    ld [$d022], a
-    ld a, $05
-    ld [$cec0], a
-    ret
-
-
-jr_000_1b9a:
-    ld a, $05
+        ldh a, [hSamusXPixel]
+        add $14
+        ld [$c204], a
+        call samus_getTileIndex
+        ld hl, samusSolidityIndex
+        cp [hl]
+        jr c, jr_000_1b9a
+            ld a, pose_crouch
+            ld [samusPose], a
+            xor a
+            ld [$d022], a
+            ld a, $05
+            ld [$cec0], a
+                ret
+    jr_000_1b9a:
+    ld a, pose_morph
     ld [samusPose], a
     xor a
     ld [$d033], a
-    ret
+ret
 
 
-Call_000_1ba4:
-    ld a, $05
+samus_morphOnGround: ; 00:1BA4
+    ld a, pose_morph
     ld [samusPose], a
     xor a
     ld [$d033], a
+    ; Play morphing sound
     ld a, $06
     ld [$cec0], a
-    ret
-
+ret
 
 samus_unmorphInAir: ; 00:1BB3
     ldh a, [hSamusYPixel]
@@ -4243,7 +4196,7 @@ samus_unmorphInAir: ; 00:1BB3
     cp [hl]
         jr c, .exit
 
-    ld a, $07
+    ld a, pose_fall
     ld [samusPose], a
     ld a, $04
     ld [$cec0], a
@@ -5080,7 +5033,7 @@ ret
 
 Call_000_21fb:
     ld a, [samusPose]
-    cp $13
+    cp pose_faceScreen
         jp z, samusShoot_longJump
     ld a, [$d090]
     cp $22
@@ -6676,7 +6629,7 @@ Call_000_2c79:
     ret z
 
     ld a, [samusPose]
-    cp $13
+    cp pose_faceScreen
         ret z
     ld a, [doorScrollDirection]
     and a
@@ -7038,9 +6991,9 @@ debugPauseMenu:
     cp PADF_SELECT
         ret nz
     ld a, [samusPose]
-    and a
+    and a ; equivalent to "cp pose_standing"
         jr z, jr_000_2ede
-    cp $05
+    cp pose_morph
         ret nz
         
 jr_000_2ede:
@@ -7194,10 +7147,10 @@ killSamus: ; Kill Samus
     ldh [gameMode], a
 ret
 
-
+; 00:2FC8 - Unused
     ld a, $a0
     ld [$d02c], a
-    ld a, $80
+    ld a, $80 | pose_standing
     ld [samusPose], a
     ld a, $20
     ld [deathAnimTimer], a
@@ -7205,7 +7158,7 @@ ret
     ld [$d05a], a
     ld a, $80
     ld [$d05b], a
-    ret
+ret
 
 ; Vblank routine for death
 VBlank_deathSequence: ; 00:2FE1
@@ -7925,15 +7878,13 @@ jr_000_33a1:
 jr_000_33e1:
     ld a, [samusItems]
     bit itemBit_screw, a
-    jr z, jr_000_3421
-
+        jr z, jr_000_3421
     ld a, [samusPose]
-    cp $02
-    jr z, jr_000_33f6
-
+    cp pose_spinJump
+        jr z, jr_000_33f6
     ld a, [samusPose]
-    cp $0a
-    jr nz, jr_000_3421
+    cp pose_spinStart
+        jr nz, jr_000_3421
 
 jr_000_33f6:
     ldh a, [$be]
@@ -7978,24 +7929,21 @@ jr_000_3426:
     jr nz, jr_000_3446
 
     ld a, [samusPose]
-    cp $05
+    cp pose_morph
     jr z, jr_000_343c
+        cp pose_morphJump
+        jr z, jr_000_343c
+            cp pose_morphFall
+                jr nz, jr_000_3446
+        jr_000_343c:
+            ld a, $01
+            ld [$d090], a
+            ld a, $18
+            ld [samusPose], a
+    jr_000_3446:
 
-    cp $06
-    jr z, jr_000_343c
-
-    cp $08
-    jr nz, jr_000_3446
-
-jr_000_343c:
-    ld a, $01
-    ld [$d090], a
-    ld a, $18
-    ld [samusPose], a
-
-jr_000_3446:
     scf
-    ret
+ret
 
 
 jr_000_3448:
@@ -8298,11 +8246,11 @@ jr_000_35e9:
     jr z, jr_000_3629
 
     ld a, [samusPose]
-    cp $02
+    cp pose_spinJump
     jr z, jr_000_35fe
 
     ld a, [samusPose]
-    cp $0a
+    cp pose_spinStart
     jr nz, jr_000_3629
 
 jr_000_35fe:
@@ -8348,22 +8296,21 @@ jr_000_362e:
     jr nz, jr_000_364e
 
     ld a, [samusPose]
-    cp $05
+    cp pose_morph
         jr z, jr_000_3644
-    cp $06
-        jr z, jr_000_3644
-    cp $08
-        jr nz, jr_000_364e
-
-jr_000_3644:
-    ld a, $01
-    ld [$d090], a
-    ld a, $18
-    ld [samusPose], a
-
-jr_000_364e:
+        cp pose_morphJump
+            jr z, jr_000_3644
+            cp pose_morphFall
+                jr nz, jr_000_364e
+        jr_000_3644:
+            ld a, $01
+            ld [$d090], a
+            ld a, $18
+            ld [samusPose], a
+    jr_000_364e:
     scf
-    ret
+
+ret
 
 
 jr_000_3650:

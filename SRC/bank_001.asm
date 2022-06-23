@@ -2747,7 +2747,7 @@ jr_001_582a:
     jr_001_589a:
 
     ld a, [samusPose]
-    cp $13
+    cp pose_faceScreen
     jr nz, jr_001_58ab
 
     ld a, [countdownTimerLow]

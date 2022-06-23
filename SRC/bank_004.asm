@@ -3559,12 +3559,11 @@ Jump_004_55c8:
     ret z
 
     ld a, [samusPose]
-    cp $02
-    ret nz
-
+    cp pose_spinJump
+        ret nz
     ld a, [samusItems]
     bit itemBit_screw, a
-    ret z
+        ret z
 
     ld a, $03
     ld [$cec1], a

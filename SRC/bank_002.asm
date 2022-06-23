@@ -9705,7 +9705,7 @@ jr_002_77bc:
     jr z, jr_002_77d0
 
     ld a, [samusPose]
-    cp $04
+    cp pose_crouch
     jr z, jr_002_77f3
 
 jr_002_77d0:
