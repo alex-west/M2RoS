@@ -2308,12 +2308,12 @@ jr_000_0fac:
     ld a, [$d00f]
     cp $01
     jr nz, jr_000_0fb6
-        call samus_moveRightInAir.damageBoost
+        call samus_moveRightInAir.noTurn
     jr_000_0fb6:
         ld a, [$d00f]
         cp $ff
             ret nz
-        call samus_moveLeftInAir.damageBoost
+        call samus_moveLeftInAir.noTurn
         ret
 
 
@@ -2583,7 +2583,7 @@ poseFunc_1170: ; $0D
     jr_000_1197:
 
     sub $40
-    ld hl, table_184A
+    ld hl, jumpArcTable
     ld e, a
     ld d, $00
     add hl, de
@@ -2621,7 +2621,7 @@ jr_000_11a5:
 jr_000_11d1:
     ; What? Why is this writing to ROM?
     xor a
-    ld [table_184A], a
+    ld [jumpArcTable], a
     ld a, $16
     ld [$d024], a
     ld a, pose_spiderFall
@@ -2750,7 +2750,7 @@ jr_000_1285:
     bit PADB_RIGHT, a
     jr z, jr_000_12aa
 
-    call samus_moveRightInAir
+    call samus_moveRightInAir.turn
     ld a, [samusItems]
     bit itemBit_spider, a
     jr z, jr_000_12aa
@@ -2763,7 +2763,7 @@ jr_000_12aa:
     bit PADB_LEFT, a
     jr z, jr_000_12bd
 
-    call samus_moveLeftInAir
+    call samus_moveLeftInAir.turn
     ld a, [samusItems]
     bit itemBit_spider, a
     jr z, jr_000_12bd
@@ -2850,13 +2850,13 @@ jr_000_1335:
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
     jr z, jr_000_1340
-        call samus_moveRightInAir
+        call samus_moveRightInAir.turn
         jr jr_000_1349
     jr_000_1340:
         ldh a, [hInputPressed]
         bit PADB_LEFT, a
         jr z, jr_000_1349
-            call samus_moveLeftInAir
+            call samus_moveLeftInAir.turn
     jr_000_1349:
 
     ld hl, $1386
@@ -3516,10 +3516,10 @@ ret
 poseFunc_morphJump: ; 00:179F - Pose $06
     ldh a, [hInputRisingEdge]
     bit PADB_DOWN, a
-    jr z, poseFunc_jump
+    jr z, .jump
         ld a, [samusItems]
         bit itemBit_spider, a
-        jr z, poseFunc_jump
+        jr z, .jump
             ld a, pose_spiderJump
             ld [samusPose], a
             xor a
@@ -3527,108 +3527,122 @@ poseFunc_morphJump: ; 00:179F - Pose $06
             ld a, $0d
             ld [$cec0], a
             ret
+    .jump: ; Fall through to jump handler below
 ; end proc
 
 poseFunc_jump: ; 00:17BB - Pose $01
     ld a, [$d026]
     cp $40
-    jr nc, jr_000_17da
+    jr nc, .endIf_A
         ldh a, [hInputPressed]
         bit PADB_A, a
-        jr z, jr_000_17d5
+        jr z, .endIf_B
             ld a, [samusItems]
             and itemMask_hiJump
             srl a
             ld b, a
             ld a, $fe
             sub b
-                jr jr_000_17f3
-        jr_000_17d5:
+                jr .moveVertical
+        .endIf_B:
     
-        ld a, $56
+        ld a, $40 + $16 ;56
         ld [$d026], a
-    jr_000_17da:
+    .endIf_A:
 
     sub $40
-    ld hl, table_184A
+    ld hl, jumpArcTable
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
     cp $80
-        jr z, jr_000_182e
+        jr z, .startFalling
 
+    ; Skip ahead if moving upwards
     bit 7, a
-    jr nz, jr_000_17f3
+    jr nz, .endIf_C
+        ; If the acid contact flag is set, start falling
         ld a, [acidContactFlag]
         and a
-            jr nz, jr_000_182e
+            jr nz, .startFalling ; Note: acidContactFlag is never set at this point in the main loop, so this jump appears to be thankfully never taken.
         ld a, [hl]
-    ; end if 
+    .endIf_C
 
-jr_000_17f3:
+.moveVertical:
     call samus_moveVertical
-    jr nc, jr_000_17ff
+    ; Bonk head on ceiling
+    jr nc, .endIf_D
         ld a, [$d026]
-        cp $57
-            jr nc, jr_000_182e
-    jr_000_17ff:
+        cp $40 + $17 ; 57
+            jr nc, .startFalling
+    .endIf_D:
 
+    ; Increment jump counter
     ld a, [$d026]
     inc a
     ld [$d026], a
+    ; Unmorph (if morphed and up is pressed)
     ld a, [samusPose]
     cp pose_morphJump
-    jr nz, jr_000_181b
+    jr nz, .endIf_E
         ldh a, [hInputRisingEdge]
         bit PADB_UP, a
-        jr z, jr_000_181b
+        jr z, .endIf_E
             call samus_unmorphInAir
             ld a, $10
             ld [$d049], a
-    jr_000_181b:
+    .endIf_E:
 
+;moveHorizontal
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
-    jr z, jr_000_1824
-        call samus_moveRightInAir
-    jr_000_1824:
+    jr z, .endIf_F
+        call samus_moveRightInAir.turn
+    .endIf_F:
     
     ldh a, [hInputPressed]
     bit PADB_LEFT, a
-    jr z, jr_000_182d
-        call samus_moveLeftInAir
-    jr_000_182d:
+    jr z, .endIf_G
+        call samus_moveLeftInAir.turn
+    .endIf_G:
 ret
 
-
-jr_000_182e:
+.startFalling:
     ; Why write to ROM?
     xor a
-    ld [table_184A], a
+    ld [jumpArcTable], a
 
     ld a, $16
     ld [$d024], a
 
     ld a, [samusPose]
     cp pose_morphJump
-    jr z, jr_000_1844
+    jr z, .endIf_H
         ld a, pose_fall
         ld [samusPose], a
         ret
-    jr_000_1844:
+    .endIf_H:
         ld a, pose_morphFall
         ld [samusPose], a
         ret
+; end proc
 
-table_184A: ; 00:184A - Jump arc table
+; Jump arc table
+; - This starts being referenced when the jump counter is $40
+; - I have no idea why the game tries writing to this table
+jumpArcTable: ; 00:184A - Jump arc table
     db $fe, $fe, $fe, $fe, $ff, $fe, $ff, $fe, $ff, $ff, $ff, $ff, $ff, $ff, $00, $ff
     db $ff, $00, $ff, $00, $ff, $00, $00, $00, $00, $00, $00, $00, $00, $01, $00, $01
     db $00, $01, $01, $00, $01, $01, $01, $01, $01, $01, $02, $01, $02, $01, $02, $02
     db $02, $02, $03, $02, $02, $03, $02, $02, $03, $02, $03, $02, $03, $02, $03, $02
     db $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $80
 
-table_1899: ; 00:1899
+; Space Jump Table
+; - $00 means no space jumping on that frame
+; - Non-zero values mean that you can space jump on that frame
+;  - Different non-zero values appear to have no meaning in the code (uncertain)
+spaceJumpTable: ; 00:1899
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $02, $01, $02, $02
@@ -3680,7 +3694,7 @@ poseFunc_spinJump: ; 00:18E8 - $02: Spin jumping
     bit PADB_A, a
     jr z, .endIf_D
         ; Load value from table
-        ld hl, table_1899
+        ld hl, spaceJumpTable
         add hl, de
         ld a, [hl]
         ; Skip ahead if zero
@@ -3734,7 +3748,7 @@ poseFunc_spinJump: ; 00:18E8 - $02: Spin jumping
     .endIf_G:
 
     ; Check if we're at the end of the table
-    ld hl, table_184A
+    ld hl, jumpArcTable
     add hl, de
     ld a, [hl]
     cp $80
@@ -3765,7 +3779,8 @@ poseFunc_spinJump: ; 00:18E8 - $02: Spin jumping
     ld a, [$d026]
     inc a
     ld [$d026], a
-    
+
+;moveHorizontal
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
     jr z, .endIf_J
@@ -3783,13 +3798,13 @@ poseFunc_spinJump: ; 00:18E8 - $02: Spin jumping
     ld a, [$d00f]
     cp $01
     jr nz, .else
-        call samus_moveRightInAir.damageBoost ; Is this name correct?
+        call samus_moveRightInAir.noTurn ; Is this name correct?
         ret
     .else:
         ld a, [$d00f]
         cp $ff
             ret nz
-        call samus_moveLeftInAir.damageBoost
+        call samus_moveLeftInAir.noTurn
         ret
 
     ret ; Unreferenced return :(
@@ -3805,7 +3820,7 @@ poseFunc_spinJump: ; 00:18E8 - $02: Spin jumping
 .startFalling:
     ; Why write to rom?
     xor a
-    ld [table_184A], a
+    ld [jumpArcTable], a
     ld a, $16
     ld [$d024], a
     ld a, pose_fall
@@ -3836,14 +3851,14 @@ poseFunc_jumpStart: ; 00:19E2 - $09 and $0A - Starting to jump
             ldh a, [hInputPressed]
             bit PADB_RIGHT, a
             jr z, .endIf_C
-                call samus_moveRightInAir
+                call samus_moveRightInAir.turn
                 ret
             .endIf_C:
         
             ldh a, [hInputPressed]
             bit PADB_LEFT, a
             jr z, .endIf_D
-                call samus_moveLeftInAir
+                call samus_moveLeftInAir.turn
                 ret
             .endIf_D:
             ret
@@ -4261,9 +4276,10 @@ samus_rollLeft:
 
 
 samus_moveRightInAir: ; 00:1CF5
+.turn:
     ld a, $01
     ld [samusFacingDirection], a
-.damageBoost: ; 00:1CFA Alternate entry
+.noTurn: ; 00:1CFA Alternate entry
     ld a, $01
     ld b, a
     ldh a, [hSamusXPixel]
@@ -4289,9 +4305,10 @@ samus_moveRightInAir: ; 00:1CF5
 
 
 samus_moveLeftInAir: ; 00:1D22
+.turn:
     xor a
     ld [samusFacingDirection], a
-.damageBoost: ; 00:1D26 - Alternate entry
+.noTurn: ; 00:1D26 - Alternate entry
     ld a, $01
     ld b, a
     ldh a, [hSamusXPixel]
