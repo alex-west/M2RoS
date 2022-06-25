@@ -589,9 +589,9 @@ def samusPose = $D020 ; Samus' pose
 ;    40: Up
 ;    80: Down
 ;}
-;$D024: Weird air time variable, increments to 16h when falling
+def samus_fallArcCounter = $D024 ; Index into falling velocity arrays. Max value is $16
 ;
-;$D026: Weird air time variable, set to 40h by $2EE3, set to 50h when escaping Metroid Queen's mouth
+def samus_jumpArcCounter = $D026 ; Index into jump velocity arrays. Values below $40 use a linear velocity case instead. Subtract by $40 before indexing an array with this.
 ;$D027: Samus' previous X position
 ;$D029: Samus' previous Y position
 def samusFacingDirection = $D02B ; Direction Samus is facing. Saved to SRAM, mirror of $D81E?
@@ -651,7 +651,7 @@ def samusItems = $D045 ; Samus' equipment
 def debugItemIndex = $D046 ; Debug screen selector index
 ;$D047: VRAM tiles update flag (see $FFB1..B6, $2BA3, $27BA)
 def waterContactFlag = $D048 ; Flag to tell if Samus is touching water
-;$D049: Timer for something
+;$D049: Timer for something. Decremented every frame. Written to in several places, but only meaningfully read in the falling poseHandler
 ;
 ;$D04C: Cleared by handle loading blocks due to scrolling, set to FFh in a few places. Never read
 def samusActiveWeapon = $D04D ; Weapon equipped.  See also $D055

@@ -2099,7 +2099,7 @@ jr_001_550e:
     ld a, c
     ld [$d00f], a
     ld a, $40
-    ld [$d026], a
+    ld [samus_jumpArcCounter], a
     ld a, [samusPose]
     ld e, a
     ld d, $00
