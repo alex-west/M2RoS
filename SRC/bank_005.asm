@@ -176,7 +176,7 @@ loadTitleScreen: ; 05:408F
     ldh [rLCDC], a
     ; Play title music
     ld a, $11
-    ld [$cedc], a
+    ld [songRequest], a
     
     xor a
     ld [$d039], a
@@ -337,7 +337,7 @@ titleScreenRoutine: ; 05: 4118
     jr nz, jr_005_41e5
         ; Play sound effect
         ld a, $15
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
         ; Toggle flag
         ld a, [$d0a4]
         xor $ff
@@ -353,7 +353,7 @@ titleScreenRoutine: ; 05: 4118
         jr nz, .handleLeftInput
             ; Play sound effect
             ld a, $15
-            ld [$cec0], a
+            ld [sfxRequest_square1], a
             ; Increment slot number
             ld a, [activeSaveSlot]
             inc a
@@ -374,7 +374,7 @@ titleScreenRoutine: ; 05: 4118
         jr nz, jr_005_4226
             ; Play sound effect
             ld a, $15
-            ld [$cec0], a
+            ld [sfxRequest_square1], a
             ; Decrement slot number
             ld a, [activeSaveSlot]
             dec a
@@ -404,7 +404,7 @@ titleScreenRoutine: ; 05: 4118
             jr z, jr_005_4246
                 ; Play sound effect
                 ld a, $15
-                ld [$cec0], a
+                ld [sfxRequest_square1], a
     jr_005_4246:
 
     ; Exit title routine if start is not pressed
@@ -424,10 +424,10 @@ titleScreenRoutine: ; 05: 4118
     jr nz, jr_005_42a6
 
     ld a, $15
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ; Play Samus fanfare
     ld a, $12
-    ld [$cedc], a
+    ld [songRequest], a
     xor a
     ld [$d079], a
     ; Enable SRAM
@@ -478,7 +478,7 @@ ret
 jr_005_42a6:
     ; Play sound effect
     ld a, $0f
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ; de = $A000 + (activeSaveSlot * $40)
     ld a, [activeSaveSlot]
     sla a
@@ -1124,7 +1124,7 @@ jr_005_58ab:
     ldh [hSamusXPixel], a
     ; Play credits music
     ld a, $13
-    ld [$cedc], a
+    ld [songRequest], a
     ; Init animation state
     xor a
     ld [credits_samusAnimState], a

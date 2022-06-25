@@ -760,11 +760,10 @@ Jump_000_0578:
     ld a, [$d049]
     and a
     jr z, jr_000_05cc
+        dec a
+        ld [$d049], a
+    jr_000_05cc:
 
-    dec a
-    ld [$d049], a
-
-jr_000_05cc:
     call drawHudMetroid_longJump
     ldh a, [hOamBufferIndex]
     ld [$d064], a
@@ -1904,7 +1903,7 @@ loadGame_samusData:
     ld [countdownTimerHigh], a
     ; Play Samus' appearance fanfare
     ld a, $12
-    ld [$cedc], a
+    ld [songRequest], a
 ret
 
 
@@ -2151,12 +2150,12 @@ poseFunc_faceScreen: ; 00:0EA5 - poses $13-$17
     and a
         ret nz
     ; Request song change if the current song doesn't match what's playing
-    ld a, [$cedd]
+    ld a, [songPlaying]
     ld b, a
     ld a, [currentRoomSong]
     cp b
     jr z, .endIf_A
-        ld [$cedc], a
+        ld [songRequest], a
     .endIf_A:
 
     ld a, [$d079]
@@ -2184,7 +2183,7 @@ poseFunc_0ECB: ; $12 and $1D
             xor a
             ld [$d044], a
             ld a, $0d
-            ld [$cec0], a
+            ld [sfxRequest_square1], a
             ret
     jr_000_0ee7:
 
@@ -2213,7 +2212,7 @@ poseFunc_0EF7: ; $0F - Knockback
     ld a, $21
     ld [samus_jumpArcCounter], a
     ld a, $02
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ld a, [samusItems]
     bit itemBit_hiJump, a
     jr nz, .endIf_A
@@ -2221,7 +2220,7 @@ poseFunc_0EF7: ; $0F - Knockback
         ld a, $31
         ld [samus_jumpArcCounter], a
         ld a, $01
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
     .endIf_A:
 
     ; Reduce height of knockback if in water
@@ -2263,7 +2262,7 @@ poseFunc_0F38: ; $10
             xor a
             ld [$d010], a
             ld a, $01
-            ld [$cec0], a
+            ld [sfxRequest_square1], a
             ret
 
 poseFunc_0F6C: ; 00:0F6C - $11: Bombed (standing)
@@ -2378,7 +2377,7 @@ poseFunc_1029: ; $0E
         ld a, pose_morph
         ld [samusPose], a
         ld a, $06
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
             ret
     jr_000_103a:
 
@@ -2429,7 +2428,7 @@ poseFunc_1083: ; $0B
         ld a, pose_morph
         ld [samusPose], a
         ld a, $06
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
         ret
     jr_000_1094:
 
@@ -2566,7 +2565,7 @@ poseFunc_spiderJump: ; 00:1170 - $0D: Spider ball jumping
         ld a, pose_morphJump
         ld [samusPose], a
         ld a, $06
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
         ret
     .endIf_A:
 
@@ -2645,7 +2644,7 @@ poseFunc_11E4: ; $0C
         ld a, pose_morphFall
         ld [samusPose], a
         ld a, $06
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
         ret
     jr_000_11f5:
 
@@ -2720,7 +2719,7 @@ poseFunc_morphFall: ; 00:123B - $08: Morphball falling
             xor a
             ld [$d044], a
             ld a, $0d
-            ld [$cec0], a
+            ld [sfxRequest_square1], a
             ret
     .endIf_A:
 
@@ -2741,7 +2740,7 @@ poseFunc_morphFall: ; 00:123B - $08: Morphball falling
             xor a
             ld [$d010], a
             ld a, $01
-            ld [$cec0], a
+            ld [sfxRequest_square1], a
             ret
     .endIf_B:
 
@@ -2820,7 +2819,7 @@ poseFunc_morphFall: ; 00:123B - $08: Morphball falling
         ret
 ; end proc
 
-poseFunc_12F5: ; $07
+poseFunc_12F5: ; $07 - Falling
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
     jr z, jr_000_1335
@@ -2839,14 +2838,14 @@ poseFunc_12F5: ; $07
     jr_000_1311:
 
     ld a, $02
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ld a, [samusItems]
     bit itemBit_hiJump, a
     jr nz, jr_000_1327
         ld a, $31
         ld [samus_jumpArcCounter], a
         ld a, $01
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
     jr_000_1327:
 
     ld a, pose_jumpStart
@@ -2960,7 +2959,7 @@ jr_000_13c7:
     ld a, $21
     ld [samus_jumpArcCounter], a
     ld a, $02
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ld a, [samusItems]
     bit itemBit_hiJump, a
     jr nz, jr_000_13fe
@@ -2968,7 +2967,7 @@ jr_000_13c7:
     ld a, $31
     ld [samus_jumpArcCounter], a
     ld a, $01
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
 
 jr_000_13fe:
     ld a, [waterContactFlag]
@@ -2987,7 +2986,7 @@ jr_000_13fe:
     bit itemBit_screw, a
         ret z
     ld a, $03
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -3005,7 +3004,7 @@ jr_000_1421:
             ld a, $02
             ld [$d02c], a
             ld a, $04
-            ld [$cec0], a
+            ld [sfxRequest_square1], a
             ret
         jr_000_1443:
             call samus_walkRight
@@ -3030,7 +3029,7 @@ jr_000_1421:
             ld a, $02
             ld [$d02c], a
             ld a, $04
-            ld [$cec0], a
+            ld [sfxRequest_square1], a
             ret
         jr_000_1474:
             call samus_walkLeft
@@ -3050,7 +3049,7 @@ jr_000_1421:
         ld a, pose_crouch
         ld [samusPose], a
         ld a, $05
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
         ret
     jr_000_1498:
         ldh a, [hInputRisingEdge]
@@ -3064,14 +3063,14 @@ Jump_000_149e:
     ld a, $21
     ld [samus_jumpArcCounter], a
     ld a, $02
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ld a, [samusItems]
     bit itemBit_hiJump, a
     jr nz, jr_000_14bd
         ld a, $31
         ld [samus_jumpArcCounter], a
         ld a, $01
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
     jr_000_14bd:
 
     ld a, [waterContactFlag]
@@ -3123,7 +3122,7 @@ poseFunc_14D6: ; $03
     and itemMask_hiJump
     srl a
     inc a
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ld a, [samusItems]
     bit itemBit_hiJump, a
     jr nz, jr_000_1518
@@ -3149,7 +3148,7 @@ jr_000_1518:
     ret z
 
     ld a, $03
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -3168,7 +3167,7 @@ jr_000_153b:
         ld a, $02
         ld [$d02c], a
         ld a, $04
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
         ret
     jr_000_155d:
         call samus_walkRight
@@ -3193,7 +3192,7 @@ jr_000_1566:
         ld a, $02
         ld [$d02c], a
         ld a, $04
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
         ret
     jr_000_1588:
         call samus_walkLeft
@@ -3214,7 +3213,7 @@ jr_000_1591:
         ld a, pose_crouch
         ld [samusPose], a
         ld a, $05
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
         ret
 
 
@@ -3243,13 +3242,13 @@ jr_000_15aa:
     xor a
     ld [$d010], a
     ld a, $02
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ld a, [samusItems]
     bit itemBit_hiJump, a
     jr nz, jr_000_15e5
 
     ld a, $01
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
 
 jr_000_15e5:
     ld a, [waterContactFlag]
@@ -3300,7 +3299,7 @@ jr_000_161b:
         ld a, pose_morph
         ld [samusPose], a
         ld a, $06
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
         ret
     jr_000_1635:
 
@@ -3335,7 +3334,7 @@ jr_000_1652:
         ld a, pose_morph
         ld [samusPose], a
         ld a, $06
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
         ret
     jr_000_166b:
     
@@ -3353,7 +3352,7 @@ jr_000_1671:
     and itemMask_hiJump
     srl a
     inc a
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ldh a, [hInputPressed]
     and PADF_LEFT | PADF_RIGHT ;$30
     jr z, jr_000_169b
@@ -3363,7 +3362,7 @@ jr_000_1671:
         bit itemBit_screw, a
         jr z, jr_000_16a0
             ld a, $03
-            ld [$cec0], a
+            ld [sfxRequest_square1], a
             jr jr_000_16a0
     jr_000_169b:
         ld a, pose_jump
@@ -3474,7 +3473,7 @@ poseFunc_1701: ; 00:1701 $05 - Morph ball
             xor a
             ld [$d010], a
             ld a, $01
-            ld [$cec0], a
+            ld [sfxRequest_square1], a
             ret
     .endIf_C:
 
@@ -3489,7 +3488,7 @@ poseFunc_1701: ; 00:1701 $05 - Morph ball
         ld a, pose_morphJump
         ld [samusPose], a
         ld a, $01
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
         ; Set up initial jump arc table index for morph bounce
         jr nz, .else_B
             ; Unused
@@ -3532,7 +3531,7 @@ jr_000_1785:
     xor a
     ld [$d044], a
     ld a, $0d
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
 ret
 
 poseFunc_morphJump: ; 00:179F - Pose $06
@@ -3547,7 +3546,7 @@ poseFunc_morphJump: ; 00:179F - Pose $06
             xor a
             ld [$d044], a
             ld a, $0d
-            ld [$cec0], a
+            ld [sfxRequest_square1], a
             ret
     .jump: ; Fall through to jump handler below
 ; end proc
@@ -3730,7 +3729,7 @@ poseFunc_spinJump: ; 00:18E8 - $02: Spin jumping
                 ld a, $18
                 ld [samus_jumpArcCounter], a
                 ld a, $02
-                ld [$cec0], a
+                ld [sfxRequest_square1], a
                 
                 ld a, [samusItems]
                 bit itemBit_hiJump, a
@@ -3739,14 +3738,14 @@ poseFunc_spinJump: ; 00:18E8 - $02: Spin jumping
                     ld a, $28
                     ld [samus_jumpArcCounter], a
                     ld a, $01
-                    ld [$cec0], a
+                    ld [sfxRequest_square1], a
                 .endIf_E:
                 ; Screw sound effect
                 ld a, [samusItems]
                 bit itemBit_screw, a
                 jr z, .endIf_F
                     ld a, $03
-                    ld [$cec0], a
+                    ld [sfxRequest_square1], a
                 .endIf_F:
                 ; Something regarding damage boosting?
                 ld a, [$d00f]
@@ -3837,7 +3836,7 @@ poseFunc_spinJump: ; 00:18E8 - $02: Spin jumping
     and itemMask_space | itemMask_screw
     jr z, .endIf_L
         ld a, $04
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
     .endIf_L
 
 .startFalling:
@@ -4037,7 +4036,7 @@ Call_000_1b2e: ; Unmorph on ground
 ; Called when landing (unmorphed) and uncrouching
 Call_000_1b37: ; 00:1B37
     ld a, $04
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ldh a, [hSamusXPixel]
     add $0c
     ld [$c204], a
@@ -4060,7 +4059,7 @@ Call_000_1b37: ; 00:1B37
     xor a
     ld [samusPose], a
     ld a, $04
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
 ret
 
 
@@ -4084,7 +4083,7 @@ jr_000_1b6b:
             xor a
             ld [$d022], a
             ld a, $05
-            ld [$cec0], a
+            ld [sfxRequest_square1], a
                 ret
     jr_000_1b9a:
     ld a, pose_morph
@@ -4101,7 +4100,7 @@ samus_morphOnGround: ; 00:1BA4
     ld [$d033], a
     ; Play morphing sound
     ld a, $06
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
 ret
 
 samus_unmorphInAir: ; 00:1BB3
@@ -4146,7 +4145,7 @@ samus_unmorphInAir: ; 00:1BB3
     ld a, pose_fall
     ld [samusPose], a
     ld a, $04
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
 ret
     .exit:
 ret
@@ -4847,7 +4846,7 @@ samus_getTileIndex: ; 00:1FF5
         jr z, .endIf_B
             ; Play sfx
             ld a, $04
-            ld [$cec0], a
+            ld [sfxRequest_square1], a
             ; Samus damaged flag
             ld a, $01
             ld [$c422], a
@@ -5007,7 +5006,7 @@ toggleMissiles: ; 00:2212
         call Call_000_2753
         ; Play sound effect
         ld a, $15
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
             ret
     .endIf:
     ; Save current beam (unnecessary code?)
@@ -5020,7 +5019,7 @@ toggleMissiles: ; 00:2212
     call Call_000_2753
     ; Play sound effect
     ld a, $15
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
 ret
 
 ; 00:2242
@@ -5497,7 +5496,7 @@ executeDoorScript: ; 00:239C
         ldh [hOamBufferIndex], a
         ld [$d0a6], a
         ld a, $02
-        ld [$cedc], a
+        ld [songRequest], a
         push hl
         call clearAllOam_longJump
         pop hl
@@ -5581,7 +5580,7 @@ executeDoorScript: ; 00:239C
             and $0f
             cp $0a
             jr z, .song_branchB    
-                ld [$cedc], a
+                ld [songRequest], a
                 ld [currentRoomSong], a
                 cp $0b
                 jr nz, .song_branchA
@@ -5599,7 +5598,7 @@ executeDoorScript: ; 00:239C
         
             .song_branchB:
             ld a, $ff
-            ld [$cedc], a
+            ld [songRequest], a
             ld [currentRoomSong], a
             xor a
             ld [$d0a5], a
@@ -6999,7 +6998,7 @@ applyStomachDamage: ; 00:2F29
     ret nz
 
     ld a, $07
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ldh a, [frameCounter]
     and $0f
     ret nz
@@ -7014,7 +7013,7 @@ Call_000_2f3c: ; Apply damage for for enemies with a damage value of $FE?
     ret nz
 
     ld a, $07
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     jr jr_000_2f60
 
 applyAcidDamage: ; 00:2F4A
@@ -7024,7 +7023,7 @@ applyAcidDamage: ; 00:2F4A
     ret nz
 
     ld a, $07
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     jr jr_000_2f60
 
 Call_000_2f57: ; Apply enemy/spike damage?
@@ -7033,7 +7032,7 @@ Call_000_2f57: ; Apply enemy/spike damage?
         ret nc
     ; Play sound
     ld a, $06
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
 
 jr_000_2f60: ; Apply damage
     ld a, [samusItems]
@@ -7079,7 +7078,7 @@ killSamus: ; Kill Samus
     call Call_000_2390 ; Music related
 
     ld a, $0b
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     call waitOneFrame
     call Call_000_3ebf ; Draw Samus regardless of i-frames
 
@@ -8422,7 +8421,7 @@ handleItemPickup: ; 00:372F
     ld b, a
     ; Unused SFX?
     ld a, $12
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ; Play item get jingle
     ld a, $01
     ld [$cede], a
@@ -8454,11 +8453,11 @@ handleItemPickup: ; 00:372F
             ld [countdownTimerHigh], a
             ld [countdownTimerLow], a
             ld a, $0e
-            ld [$cec0], a
+            ld [sfxRequest_square1], a
             jr z, .endIf
                 ; Play sound effect
                 ld a, $0c
-                ld [$cec0], a
+                ld [sfxRequest_square1], a
     .endIf:
 
     ld a, [$cedf]
@@ -8635,7 +8634,7 @@ pickup_variaSuit:
     ld [$d02c], a
     call waitOneFrame
     ld a, $1d
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ld a, $ff
     ld [$d08c], a
     ld hl, gfxInfo_variaSuit

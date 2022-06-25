@@ -63,7 +63,7 @@ jr_002_404b:
         ; Resume music unless all metroids are dead
         ld a, [currentRoomSong]
         add $11
-        ld [$cedc], a
+        ld [songRequest], a
     jr_002_4059:
 
     xor a
@@ -418,13 +418,13 @@ Call_002_4239:
 jr_002_4266:
     ld b, $20
     ld a, $17
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     jr jr_002_4276
 
 jr_002_426f:
     ld b, $05
     ld a, $0e
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
 
 jr_002_4276:
     ld hl, samusCurHealthLow
@@ -460,7 +460,7 @@ jr_002_428b:
 
 jr_002_42a2:
     ld a, $0c
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ld hl, samusCurMissilesLow
     ld a, [hl]
     add $05
@@ -528,7 +528,7 @@ jr_002_42d9:
 
 jr_002_42fb:
     ld a, $01
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
 
 jr_002_4300:
     ld hl, hEnemyStunCounter
@@ -540,7 +540,7 @@ jr_002_4300:
 
 jr_002_430d:
     ld a, $0f
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     jr jr_002_4300
 
 jr_002_4314:
@@ -560,7 +560,7 @@ jr_002_4314:
 
     ldh [hEnemyHealth], a
     ld a, $01
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     call Call_002_438f
     ld a, $11
     ldh [hEnemyStunCounter], a
@@ -579,7 +579,7 @@ jr_002_433b:
 Jump_002_4345:
 jr_002_4345:
     ld a, $0f
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     jr jr_002_438f
 
 jr_002_434c:
@@ -620,7 +620,7 @@ jr_002_4374:
     xor a
     ldh [$e9], a
     ld a, $02
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
 
 jr_002_437f:
     call Call_002_438f
@@ -2269,9 +2269,9 @@ enAI_itemOrb: ; 02:4DD3
         ret z
     ; Request sound effect
     xor a
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ld a, $02
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ; Change orb into item
     ld a, c
     inc a
@@ -2286,7 +2286,7 @@ ret
             ret nz
         ; Clear sound effect
         ld a, $ff
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
     .endIf_B:
 
     ld a, [itemCollectionFlag]
@@ -2857,7 +2857,7 @@ arachnus_51FB:
     jr nz, jr_002_521b
 
     ld a, $05
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ld a, $11
     ldh [hEnemyStunCounter], a
     ld a, [$c394]
@@ -2907,7 +2907,7 @@ jr_002_5249:
 
 jr_002_5256:
     ld a, $0d
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ld hl, hEnemyHealth
     ld [hl], $ff
     ld a, $95
@@ -3437,7 +3437,7 @@ ret
     
     ; Play sound effect
     ld a, $11
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     
     ; Return to home y-position
     ; yPos = yPos - distance travelled
@@ -3555,7 +3555,7 @@ Call_002_565f:
             ret
         jr_002_5685:
             ld a, $02
-            ld [$ced5], a
+            ld [sfxRequest_noise], a
             call $3ca6
             ld a, $02
             ldh [hEnemySpawnFlag], a
@@ -4274,7 +4274,7 @@ jr_002_5a5d:
     ld a, $07
     ldh [hEnemySpriteType], a
     ld a, $12
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 ; 02:5A7D
@@ -4519,7 +4519,7 @@ jr_002_5be5:
     ld a, $0f
     ldh [hEnemySpriteType], a
     ld a, $11
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -4562,7 +4562,7 @@ jr_002_5c1a:
 jr_002_5c29:
     call $3ca6
     ld a, $03
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ld a, $ff
     ldh [hEnemySpawnFlag], a
     ret
@@ -5014,7 +5014,7 @@ enAI_5F67:
         call $3ca6
         ; Play sound
         ld a, $14
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
         ld a, $02
         ldh [hEnemySpawnFlag], a
             ret
@@ -5475,7 +5475,7 @@ enAI_autrack: ; 02:6145
     ldh [hEnemySpriteType], a
     ; Request sound effect
     ld a, $13
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
 
 .action:
     ; Only act every 16 frames
@@ -5493,7 +5493,7 @@ enAI_autrack: ; 02:6145
 
     ; Request sound effect
     ld a, $18
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
 ret
 
 .laser: ; Laser AI
@@ -5586,7 +5586,7 @@ ret
         ret nz
     ; Play jumping SFX if a certain enemy type
     ld a, $1a
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
 ret
 
 
@@ -5713,9 +5713,9 @@ enAI_62B4: ; 02:62B4
     ld a, $4c
     ld [hl], a
     ld a, $ff
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ld a, $02
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -5765,7 +5765,7 @@ jr_002_630d:
     ld a, $4b
     ldh [hEnemySpriteType], a
     ld a, $12
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -5806,7 +5806,7 @@ jr_002_635b:
     ld a, $4f
     ldh [hEnemySpriteType], a
     ld a, $03
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -5926,7 +5926,7 @@ jr_002_63e1:
     ld hl, hEnemyState
     inc [hl]
     ld a, $12
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -5952,7 +5952,7 @@ jr_002_6409:
     ld hl, hEnemyState
     inc [hl]
     ld a, $12
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -6042,7 +6042,7 @@ jr_002_6483:
     ld a, $01
     ldh [hEnemyState], a
     ld a, $12
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -6077,7 +6077,7 @@ Jump_002_64a7:
     sub $04
     ld [hl], a
     ld a, $03
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -6116,7 +6116,7 @@ jr_002_64ed:
     ld a, $59
     ldh [hEnemySpriteType], a
     ld a, $03
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -6210,7 +6210,7 @@ jr_002_657a:
 
 jr_002_659b:
     ld a, $07
-    ld [$cec7], a
+    ld [sfxRequest_square2], a
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $60
@@ -6342,7 +6342,7 @@ enAI_6622: ; 02:6622
     ld b, a
     ; Play plink sound
     ld a, $0f
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ; Exit if not hit by a missile
     ld a, b
     cp $08
@@ -6350,10 +6350,10 @@ enAI_6622: ; 02:6622
 
     ; Clear plink sound
     ld a, $ff
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ; Play missile hit sound
     ld a, $08
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ; Check direction block was hit from
     ld a, [$c46e]
     bit 0, a
@@ -7147,7 +7147,7 @@ enAI_missileDoor: ; 02:6A14
     ld b, a
     ; Play sound (plink)
     ld a, $0f
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ; Exit if not hit by missile
     ld a, b
     cp $08
@@ -7155,10 +7155,10 @@ enAI_missileDoor: ; 02:6A14
 
     ; Clear plink sound
     ld a, $ff
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ; Play missile sound
     ld a, $08
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ; Change palette for a few frames
     ld a, $13
     ldh [hEnemyStunCounter], a
@@ -7179,7 +7179,7 @@ enAI_missileDoor: ; 02:6A14
     ldh [hEnemySpriteType], a
     ; Play sound effect
     ld a, $10
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     
     ; Check which direction the door was hit from, to adjust the position of the explosion
     ld a, [$c46e]
@@ -7453,7 +7453,7 @@ enAI_6B83: ; Baby egg?
         ld [$d096], a
         ; Play metroid hive song with intro
         ld a, $1f
-        ld [$cedc], a
+        ld [songRequest], a
         ld a, $01
         ld [$c463], a
         ret
@@ -7485,7 +7485,7 @@ Jump_002_6bb2:
     ret nc
 
     ld a, $0f
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -7543,13 +7543,13 @@ jr_002_6c15:
     ld [$c463], a
     ld a, $01
     ld [$c465], a
-    ld a, [$cedd]
+    ld a, [songPlaying]
     cp $0c
     ret z
 
     ; Trigger Metroid fight music
     ld a, $0c
-    ld [$cedc], a
+    ld [songRequest], a
     ret
 
 
@@ -7599,12 +7599,12 @@ jr_002_6c4f:
     ld [$c465], a
     ld a, $02
     ld [$c41c], a
-    ld a, [$cedd]
+    ld a, [songPlaying]
     cp $0c
     jr z, jr_002_6c93
     ; Trigger Metroid fight music
     ld a, $0c
-    ld [$cedc], a
+    ld [songRequest], a
     jr jr_002_6c93
 
 Jump_002_6c7d:
@@ -7619,7 +7619,7 @@ Jump_002_6c7d:
     jr z, jr_002_6cf2
 
     ld a, $0f
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -7691,7 +7691,7 @@ jr_002_6cdf:
 jr_002_6ce9:
     call Call_002_6e41
     ld a, $1a
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -7705,7 +7705,7 @@ jr_002_6cf2:
     ld a, $08
     ld [$c464], a
     ld a, $05
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ld hl, $ffe8
     ld [hl], $00
     ld a, [$c46e]
@@ -7788,10 +7788,10 @@ jr_002_6d61:
     ld a, $e2
     ldh [hEnemySpriteType], a
     ld a, $0d
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ; Play metroid killed jingle
     ld a, $0f
-    ld [$cedc], a
+    ld [songRequest], a
     ld a, $02
     ld [$c465], a
     ldh [hEnemySpawnFlag], a
@@ -8174,7 +8174,7 @@ enAI_6F60:
     cp $10
     ret nc
     ld a, $0f
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -8223,7 +8223,7 @@ jr_002_6fb0:
     ld [$c463], a
     ; Trigger Metroid fight music
     ld a, $0c
-    ld [$cedc], a
+    ld [songRequest], a
     ld a, $01
     ld [$c465], a
 
@@ -8265,13 +8265,13 @@ jr_002_6fe7:
     ld [$c41c], a
     ld a, $01
     ld [$c465], a
-    ld a, [$cedd]
+    ld a, [songPlaying]
     cp $0c
     ret z
 
     ; Trigger Metroid fight music
     ld a, $0c
-    ld [$cedc], a
+    ld [songRequest], a
     ret
 
 
@@ -8303,7 +8303,7 @@ Jump_002_7016:
     ret nc
 
     ld a, $0f
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -8319,14 +8319,14 @@ jr_002_702e:
     jr z, jr_002_704d
 
     ld a, $0f
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
 jr_002_7044:
     call Call_002_6e41
     ld a, $1a
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -8340,7 +8340,7 @@ jr_002_704d:
     ld a, $08
     ld [$c46a], a
     ld a, $05
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ld hl, $ffe8
     ld [hl], $00
     ld a, [$c46e]
@@ -8459,10 +8459,10 @@ Jump_002_7105:
     ld a, $e2
     ldh [hEnemySpriteType], a
     ld a, $0d
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ; Play "killed metroid" jingle
     ld a, $0f
-    ld [$cedc], a
+    ld [songRequest], a
     ld a, $02
     ld [$c465], a
     ldh [hEnemySpawnFlag], a
@@ -8581,7 +8581,7 @@ jr_002_71b0:
     xor a
     ldh [$e9], a
     ld a, $14
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -8742,7 +8742,7 @@ enAI_7276:
     ret nc
 
     ld a, $0f
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -8806,7 +8806,7 @@ jr_002_72ee:
     ld [$c463], a
     ; Play Metroid fight song
     ld a, $0c
-    ld [$cedc], a
+    ld [songRequest], a
     ld a, $01
     ld [$c465], a
     ret
@@ -8853,13 +8853,13 @@ jr_002_7326:
     ld [$c465], a
     ld a, $03
     ld [$c41c], a
-    ld a, [$cedd]
+    ld a, [songPlaying]
     cp $0c
     jr z, jr_002_734b
 
     ; Play metroid fight song
     ld a, $0c
-    ld [$cedc], a
+    ld [songRequest], a
     jr jr_002_734b
 
 Jump_002_734b:
@@ -8963,14 +8963,14 @@ Jump_002_73cc:
 
 jr_002_73dc:
     ld a, $0f
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
 jr_002_73e2:
     call Call_002_6e41
     ld a, $1a
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -8991,7 +8991,7 @@ jr_002_73eb:
     ld a, $08
     ld [$c46c], a
     ld a, $05
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ld hl, $ffe8
     ld [hl], $00
     bit 0, b
@@ -9061,10 +9061,10 @@ jr_002_7452:
     ld a, $e2
     ldh [hEnemySpriteType], a
     ld a, $0d
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ; Play metroid killed jingle
     ld a, $0f
-    ld [$cedc], a
+    ld [songRequest], a
     ld a, $02
     ld [$c465], a
     ldh [hEnemySpawnFlag], a
@@ -9334,7 +9334,7 @@ jr_002_75c9:
     ld [$c477], a
     call Call_002_7231
     ld a, $15
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -9444,7 +9444,7 @@ enAI_7631:
     ret nc
 
     ld a, $0f
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -9467,14 +9467,14 @@ jr_002_7665:
 
 jr_002_767c:
     ld a, $0f
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
 jr_002_7682:
     call Call_002_6e41
     ld a, $1a
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -9525,7 +9525,7 @@ jr_002_76bb:
     ld [$c44f], a
     ld [hl], $c4
     ld a, $09
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     bit 0, b
     jr z, jr_002_76d7
 
@@ -9556,10 +9556,10 @@ jr_002_76e1:
     ld a, $e2
     ldh [hEnemySpriteType], a
     ld a, $0e
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ; Play metroid killed jingle
     ld a, $0f
-    ld [$cedc], a
+    ld [songRequest], a
     ld a, $02
     ld [$c465], a
     ldh [hEnemySpawnFlag], a
@@ -9794,7 +9794,7 @@ Jump_002_7824:
     ld a, $c1
     ldh [hEnemySpriteType], a
     ld a, $15
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -9939,7 +9939,7 @@ jr_002_78fa:
     ld [$c463], a
     ; Trigger Metroid fight music
     ld a, $0c
-    ld [$cedc], a
+    ld [songRequest], a
     ld a, $01
     ld [$c465], a
 
@@ -10023,13 +10023,13 @@ jr_002_795f:
     ld [$c465], a
     ld a, $ff
     ldh [$e8], a
-    ld a, [$cedd]
+    ld a, [songPlaying]
     cp $0c
     ret z
 
     ; Trigger Metroid fight music
     ld a, $0c
-    ld [$cedc], a
+    ld [songRequest], a
     ret
 
 
@@ -10114,7 +10114,7 @@ jr_002_79e6:
     ld a, $c3
     ldh [hEnemySpriteType], a
     ld a, $2d
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ld a, $05
     ld [$c41c], a
     pop af
@@ -10304,7 +10304,7 @@ jr_002_7acd:
     jp z, Jump_002_7b92
 
     ld a, $0f
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -10331,7 +10331,7 @@ jr_002_7afd:
     ld a, $cf
     ldh [hEnemySpriteType], a
     ld a, $05
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -10345,7 +10345,7 @@ jr_002_7b14:
     ld a, $10
     ldh [$ee], a
     ld a, $0d
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ld hl, $d089
     ld a, [hl]
     sub $01
@@ -10381,7 +10381,7 @@ jr_002_7b43:
     jr z, jr_002_7b92
 
     ld a, $0f
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -10418,14 +10418,14 @@ jr_002_7b86:
     ldh [$e9], a
     call Call_002_6e41
     ld a, $1a
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
 Jump_002_7b92:
 jr_002_7b92:
     ld a, $1a
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ld a, $10
     ldh [hEnemyStunCounter], a
     ld a, $44
@@ -10574,7 +10574,7 @@ jr_002_7c40:
     ld a, $04
     ldh [hEnemySpawnFlag], a
     ld a, $16
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -10598,7 +10598,7 @@ jr_002_7c7a:
     ld a, $02
     ld [$c41c], a
     ld a, $16
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -10801,7 +10801,7 @@ jr_002_7d86:
 Call_002_7d97:
     call $3cce
     ld a, $16
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 ; Theory: This copies collision test results for the working enemy from HRAM to WRAM

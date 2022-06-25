@@ -235,7 +235,7 @@ adjustHudValues:: ; 01:4A2B - Adjusts displayed health and missiles
         and $03
         jr nz, .checkMissileHighByte
             ld a, $18
-            ld [$cec0], a
+            ld [sfxRequest_square1], a
         jr .checkMissileHighByte
 
 .decrementDisplayedHealth: ; Decrement displayed health
@@ -257,7 +257,7 @@ adjustHudValues:: ; 01:4A2B - Adjusts displayed health and missiles
         and $03
         jr nz, .checkMissileHighByte
             ld a, $18
-            ld [$cec0], a
+            ld [sfxRequest_square1], a
 
 .checkMissileHighByte: ; Check missile high byte
     ld a, [samusCurMissilesHigh]
@@ -294,7 +294,7 @@ adjustHudValues:: ; 01:4A2B - Adjusts displayed health and missiles
     and $03
     ret nz
         ld a, $0c
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
 ret
 
 .decrementDisplayedMissiles: ; Decrement displayed missile count
@@ -744,12 +744,12 @@ jr_001_4d82:
     and $07
     jr nz, jr_001_4d94
 
-    ld a, [$ced5]
+    ld a, [sfxRequest_noise]
     and a
     jr nz, jr_001_4d94
 
     ld a, $10
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
 
 jr_001_4d94:
     ld a, [samusFacingDirection]
@@ -1048,7 +1048,7 @@ jr_001_4ed8:
     jr nz, jr_001_4f32
         ; Play sound effect
         ld a, $19
-        ld [$cec0], a
+        ld [sfxRequest_square1], a
             ret
     jr_001_4f32:
 
@@ -1097,7 +1097,7 @@ jr_001_4f6f:
     ld d, $00
     add hl, de
     ld a, [hl]
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -1170,7 +1170,7 @@ jr_001_4fad:
     ld d, $00
     add hl, de
     ld a, [hl]
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -1872,7 +1872,7 @@ jr_001_53c3:
     add $04
     ld [hl+], a
     ld a, $13
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -1914,7 +1914,7 @@ jr_001_53f8:
     add $10
     ld [hl+], a
     ld a, $13
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ret
 
 
@@ -1983,7 +1983,7 @@ jr_001_545d:
     call Call_001_4b62
     call $30bb
     ld a, $0c
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     jr jr_001_5490
 
 jr_001_547e:
@@ -2391,7 +2391,7 @@ destroyRespawningBlock: ; 01:5671
     ld [hl+], a
     ; Request sound effect
     ld a, $04
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
 ret
 
 handleRespawningBlocks: ; 01:5692
@@ -2486,7 +2486,7 @@ jr_001_56e9:
     ld [hl+], a
     ld [hl], a
     ld a, $04
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
 ret
 
 
@@ -2797,7 +2797,7 @@ jr_001_58d8:
         and $7f
         jr nz, jr_001_58f0
             ld a, $17
-            ld [$ced5], a
+            ld [sfxRequest_noise], a
     jr_001_58f0:
 ret
 
@@ -3727,7 +3727,7 @@ include "data/sprites_credits.asm" ; Also title
     and a
     jr z, jr_001_7a28
 
-    ld [$cedc], a
+    ld [songRequest], a
     ld [currentRoomSong], a
     xor a
     ld [$d0a5], a
@@ -3742,7 +3742,7 @@ jr_001_7a28:
 
 jr_001_7a2e:
     ld a, $01
-    ld [$cedc], a
+    ld [songRequest], a
     ret
 
 
@@ -3970,10 +3970,10 @@ saveFileToSRAM: ; 01:7ADF
     
     ; Play save sound effect
     ld a, $1c
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ; But why write to this twice?
     ld a, $1c
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ; Turn game mode back to main
     ld a, $04
     ldh [gameMode], a

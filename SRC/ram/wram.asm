@@ -228,7 +228,8 @@ def enemySaveFlags  = $C540 ;$C540..7F: Working copy of $C900 data for room bank
 ;}
 ;
 saveBuf_enemySaveFlags = $C900 ;$C900..CABF: Copied to/from SRAM ($B000 + [save slot] * 200h). 40h byte slots, one for each level data bank
-;
+
+
 ;$CEC0..CFFF: Audio data
 ;{
 ;    ; Song / sound effect is requested by writing directly to $CEDC/$CEC0/$CEC7/$CFE5/$CED5/$CEDE
@@ -237,7 +238,7 @@ saveBuf_enemySaveFlags = $C900 ;$C900..CABF: Copied to/from SRAM ($B000 + [save 
 ;    
 ;    $CEC0: Tone/sweep channel sound effect
 ;    {
-;        $CEC0: Tone/sweep channel sound effect to play (rename to request)
+def sfxRequest_square1 = $CEC0 ; Tone/sweep channel sound effect to play (rename to request)
 ;        {
 ;            0: Nothing
 ;            1: Jumping
@@ -280,7 +281,7 @@ saveBuf_enemySaveFlags = $C900 ;$C900..CABF: Copied to/from SRAM ($B000 + [save 
 ;
 ;    $CEC7: Tone channel sound effect
 ;    {
-;        $CEC7: Tone channel sound effect to play
+def sfxRequest_square2 = $CEC7 ; Tone channel sound effect to play
 ;        {
 ;            0: Nothing
 ;            1: Nothing
@@ -300,7 +301,7 @@ saveBuf_enemySaveFlags = $C900 ;$C900..CABF: Copied to/from SRAM ($B000 + [save 
 ;
 ;    $CED5: Noise channel sound effect
 ;    {
-;        $CED5: Noise channel sound effect to play
+def sfxRequest_noise = $CED5 ; Noise channel sound effect to play
 ;        {
 ;            FFh: Clear sound effect and disable noise channel
 ;            0: Nothing
@@ -336,7 +337,7 @@ saveBuf_enemySaveFlags = $C900 ;$C900..CABF: Copied to/from SRAM ($B000 + [save 
 ;        $CED8: Noise channel sound effect timer
 ;    }
 ;
-;    $CEDC: Song to play
+def songRequest = $CEDC ; Song to play
 ;    {
 ;        0: Nothing
 ;        1: Baby Metroid
@@ -372,7 +373,7 @@ saveBuf_enemySaveFlags = $C900 ;$C900..CABF: Copied to/from SRAM ($B000 + [save 
 ;        1Fh: Metroid hive with intro
 ;        20h: Missile pickup
 ;    }
-;    $CEDD: Song playing
+def songPlaying = $CEDD ; Song playing
 ;    $CEDE: Isolated sound effect to play
 ;    {
 ;        1: Play item-get music

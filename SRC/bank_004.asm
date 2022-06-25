@@ -314,10 +314,10 @@ jr_004_42fa:
     call Call_004_44a4
     call Call_004_4512
     xor a
-    ld [$cedc], a
-    ld [$ced5], a
-    ld [$cec0], a
-    ld [$cec7], a
+    ld [songRequest], a
+    ld [sfxRequest_noise], a
+    ld [sfxRequest_square1], a
+    ld [sfxRequest_square2], a
     ld [$cece], a
     ld [$cede], a
     ld [$cfe5], a
@@ -335,21 +335,21 @@ Call_004_4323:
 jr_004_432b:
     ld [$cedf], a
     ld a, $0a
-    ld [$cedc], a
+    ld [songRequest], a
     jr jr_004_4345
 
 jr_004_4335:
     ld [$cedf], a
     ld a, $20
-    ld [$cedc], a
+    ld [songRequest], a
     jr jr_004_4345
 
 jr_004_433f:
     ld [$cedf], a
-    ld [$cedc], a
+    ld [songRequest], a
 
 jr_004_4345:
-    ld a, [$cedd]
+    ld a, [songPlaying]
     ld [$cfc5], a
     ld a, [$cede]
     cp $0e
@@ -381,9 +381,9 @@ jr_004_4372:
 
     call Call_004_47b3
     ld [$cede], a
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ld [$cec1], a
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ld [$ced6], a
     ld [$cee7], a
     ret
@@ -420,9 +420,9 @@ jr_004_43ac:
     xor a
     ld [$cede], a
     ld a, $ff
-    ld [$cec0], a
-    ld [$cec7], a
-    ld [$ced5], a
+    ld [sfxRequest_square1], a
+    ld [sfxRequest_square2], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -434,7 +434,7 @@ Jump_004_43c4:
     xor a
     ldh [rNR30], a
     call Call_004_47c9
-    ld a, [$cedd]
+    ld a, [songPlaying]
     cp $0e
     jr z, jr_004_43df
 
@@ -451,7 +451,7 @@ jr_004_43df:
     ld [$cedf], a
     ld [$cfeb], a
     ld a, [$cfc5]
-    ld [$cedd], a
+    ld [songPlaying], a
     ret
 
 
@@ -521,13 +521,13 @@ jr_004_444f:
 
 jr_004_4461:
     xor a
-    ld [$cedd], a
+    ld [songPlaying], a
     ld [$cedf], a
     jp Jump_004_45b4
 
 
 Call_004_446b:
-    ld a, [$cec0]
+    ld a, [sfxRequest_square1]
     and a
     jr z, jr_004_448f
 
@@ -544,7 +544,7 @@ Call_004_446b:
     cp $18
     jr z, jr_004_448f
 
-    ld a, [$cec0]
+    ld a, [sfxRequest_square1]
     ld hl, $4ec4
     call Call_004_46de
     jp hl
@@ -571,7 +571,7 @@ jr_004_449f:
 
 
 Call_004_44a4:
-    ld a, [$cec7]
+    ld a, [sfxRequest_square2]
     and a
     jr z, jr_004_44ba
 
@@ -606,7 +606,7 @@ jr_004_44ca:
 
 
 Call_004_44cf:
-    ld a, [$ced5]
+    ld a, [sfxRequest_noise]
     and a
     jr z, jr_004_44fd
 
@@ -616,7 +616,7 @@ Call_004_44cf:
     cp $1b
     jr nc, jr_004_44fd
 
-    ld a, [$cedd]
+    ld a, [songPlaying]
     cp $0e
     ret z
 
@@ -630,7 +630,7 @@ Call_004_44cf:
     cp $0f
     jr z, jr_004_44fd
 
-    ld a, [$ced5]
+    ld a, [sfxRequest_noise]
     ld hl, $56cc
     call Call_004_46de
     jp hl
@@ -706,7 +706,7 @@ jr_004_4544:
     ld [$cee6], a
     ld [$cfe5], a
     ld [$cfe6], a
-    ld a, [$cedd]
+    ld a, [songPlaying]
     cp $0e
     ret z
 
@@ -724,7 +724,7 @@ jr_004_4544:
 
 
 Call_004_457c:
-    ld a, [$cedc]
+    ld a, [songRequest]
     and a
     jr z, jr_004_45d2
 
@@ -736,13 +736,13 @@ Call_004_457c:
 
     call Call_004_4716
     call Call_004_4741
-    ld a, [$cedc]
+    ld a, [songRequest]
 
 jr_004_4593:
     cp $21
     jr nc, jr_004_45d2
 
-    ld [$cedd], a
+    ld [songPlaying], a
     dec a
     ld e, a
     ld d, $00
@@ -751,7 +751,7 @@ jr_004_4593:
     ld a, [hl]
     ld [$cfec], a
     ldh [rNR51], a
-    ld a, [$cedc]
+    ld a, [songRequest]
     ld hl, $5f30
     call Call_004_46de
     jp Jump_004_48a0
@@ -772,12 +772,12 @@ jr_004_45b4:
 
 jr_004_45cd:
     xor a
-    ld [$cedd], a
+    ld [songPlaying], a
     ret
 
 
 jr_004_45d2:
-    ld a, [$cedd]
+    ld a, [songPlaying]
     and a
     ret z
 
@@ -929,7 +929,7 @@ jr_004_46c2:
     ret nz
 
     xor a
-    ld [$cedd], a
+    ld [songPlaying], a
     ld [$cedf], a
     ret
 
@@ -1058,7 +1058,7 @@ Jump_004_4752:
     ldh [rNR50], a
     ld a, $ff
     ldh [rNR51], a
-    ld hl, $cec0
+    ld hl, sfxRequest_square1
 
 jr_004_4761:
     ld [hl], $00
@@ -1072,10 +1072,10 @@ jr_004_4761:
 
 Jump_004_476a:
     xor a
-    ld [$cec0], a
-    ld [$cec7], a
+    ld [sfxRequest_square1], a
+    ld [sfxRequest_square2], a
     ld [$cece], a
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ld [$cfc7], a
     ret
 
@@ -1085,17 +1085,17 @@ jr_004_477b:
     ld a, $ff
     ldh [rNR51], a
     xor a
-    ld [$cec0], a
-    ld [$cec7], a
+    ld [sfxRequest_square1], a
+    ld [sfxRequest_square2], a
     ld [$cece], a
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ld [$cec1], a
     ld [$cec8], a
     ld [$cecf], a
     ld [$ced6], a
     ld a, $ff
-    ld [$cedc], a
-    ld [$cedd], a
+    ld [songRequest], a
+    ld [songPlaying], a
     xor a
     ld [$cede], a
     ld [$cedf], a
@@ -1227,7 +1227,7 @@ Jump_004_4846:
     xor a
     ld [$cfc8], a
     ld a, $1e
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     jp Jump_004_42c7
 
 
@@ -2316,7 +2316,7 @@ jr_004_4f44:
     jp c, Jump_004_448f
 
 jr_004_4f5d:
-    ld a, [$cedd]
+    ld a, [songPlaying]
     cp $03
     jr z, jr_004_4f3c
 
@@ -2325,7 +2325,7 @@ jr_004_4f5d:
     jp Jump_004_55e3
 
 
-    ld a, [$cedd]
+    ld a, [songPlaying]
     cp $03
     jr z, jr_004_4f44
 
@@ -2398,7 +2398,7 @@ jr_004_4fb1:
     jp c, Jump_004_448f
 
 jr_004_4fca:
-    ld a, [$cedd]
+    ld a, [songPlaying]
     cp $03
     jr z, jr_004_4fa9
 
@@ -2407,7 +2407,7 @@ jr_004_4fca:
     jp Jump_004_55e3
 
 
-    ld a, [$cedd]
+    ld a, [songPlaying]
     cp $03
     jr z, jr_004_4fb1
 
@@ -3574,7 +3574,7 @@ Jump_004_55c8:
 
 Jump_004_55e3:
     ld [$cec3], a
-    ld a, [$cec0]
+    ld a, [sfxRequest_square1]
     ld [$cec1], a
     ld [$cee4], a
     jp Jump_004_47d9
@@ -3704,7 +3704,7 @@ jr_004_5685:
 
 Jump_004_56bd:
     ld [$ceca], a
-    ld a, [$cec7]
+    ld a, [sfxRequest_square2]
     ld [$cec8], a
     ld [$cee5], a
     jp Jump_004_47e1
@@ -3760,7 +3760,7 @@ jr_004_574c:
 
 
     ld a, $1b
-    ld [$cec0], a
+    ld [sfxRequest_square1], a
     ld a, $40
     ld de, $5c8f
     call Call_004_5a19
@@ -3834,7 +3834,7 @@ jr_004_57c1:
 
 
     ld a, $03
-    ld [$cec7], a
+    ld [sfxRequest_square2], a
     ld a, $40
     ld de, $5cab
     jp Jump_004_5a19
@@ -3853,7 +3853,7 @@ jr_004_57dc:
 
 
     ld a, $06
-    ld [$cec7], a
+    ld [sfxRequest_square2], a
     ld a, $40
     ld de, $5cb3
     jp Jump_004_5a19
@@ -4248,14 +4248,14 @@ jr_004_59d3:
 
 
     ld a, $04
-    ld [$cec7], a
+    ld [sfxRequest_square2], a
     ld a, $08
     ld de, $5d0f
     jp Jump_004_5a19
 
 
     ld a, $05
-    ld [$cec7], a
+    ld [sfxRequest_square2], a
     ld a, $40
     ld de, $5d13
     jp Jump_004_5a19
@@ -4291,7 +4291,7 @@ jr_004_5a03:
 Call_004_5a19:
 Jump_004_5a19:
     ld [$ced8], a
-    ld a, [$ced5]
+    ld a, [sfxRequest_noise]
     ld [$ced6], a
     ld [$cee7], a
     jp Jump_004_47f1

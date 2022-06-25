@@ -1522,7 +1522,7 @@ jr_003_6ede:
     ld a, $0a
 
 jr_003_6efa:
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -2193,7 +2193,7 @@ jr_003_72ff:
     ld a, $93
     ld [$c3d2], a
     ld a, $0a
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ld hl, $c623
     ld [hl], $f7
     ret
@@ -2500,7 +2500,7 @@ jr_003_74cf:
     ld a, $0a
 
 jr_003_74e3:
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ld a, $32
     jr jr_003_74cb
 
@@ -3017,7 +3017,7 @@ jr_003_7750:
     ld a, $93
     ld [$c3d2], a
     ld a, $0a
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -3041,7 +3041,7 @@ jr_003_77c2:
     ld a, $93
     ld [$c3d2], a
     ld a, $0a
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
@@ -3465,7 +3465,7 @@ jr_003_7a4d:
     ld [hl], $80
     call Call_003_7aa8
     ld a, $0f
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ld a, $05
     ld [$c3cc], a
     call Call_003_746f
@@ -3525,8 +3525,9 @@ jr_003_7ab5:
     ld [hl], $77
     ld a, $d0
     ld [$d083], a
+    ; Play earthquake sound
     ld a, $0e
-    ld [$cedc], a
+    ld [songRequest], a
     ld a, $22
     ld [$d090], a
     ret
@@ -3691,7 +3692,7 @@ jr_003_7bce:
     ld a, $80
     ld [$d096], a
     ld a, $17
-    ld [$ced5], a
+    ld [sfxRequest_noise], a
     ret
 
 
