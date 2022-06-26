@@ -621,7 +621,7 @@ en6540: ; Enemy 14h (hornoad)
     dw enAI_hopper
 en654B: ; Enemy 16h (senjoo)
     db $00,$00,$00,$00,$00,$00,$00,$00,$06
-    dw enAI_5C36
+    dw enAI_senjooShirk
 en6556: ; Enemy 19h/1Ah/3Ch/3Dh (gawron/yumee spawner (pipe bugs))
     db $80,$00,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_5F67
@@ -672,7 +672,7 @@ en65FB: ; Enemy 5Ch (autom)
     dw enAI_6540
 en6606: ; Enemy 63h (shirk)
     db $00,$00,$00,$00,$00,$00,$00,$00,$0A
-    dw enAI_5C36
+    dw enAI_senjooShirk
 en6611: ; Enemy 65h (septogg)
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_6841

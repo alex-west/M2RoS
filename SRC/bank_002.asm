@@ -4567,170 +4567,178 @@ jr_002_5c29:
     ldh [hEnemySpawnFlag], a
     ret
 
-enAI_5C36:
-    call Call_002_5cc7
+;------------------------------------------------------------------------------
+; Senjoo/Shirk AI (things that move in a diamond shaped loop)
+enAI_senjooShirk: ; 02:5C36
+    call .animate ; animate
+    ; Get absolute value of distance between enemy and Samus
     ld a, [$d03c]
     ld b, a
     ld hl, hEnemyXPos
     ld a, [hl]
     sub b
-    jr nc, jr_002_5c46
-
-    cpl
-    inc a
-
-jr_002_5c46:
+    jr nc, .endIf_A
+        cpl
+        inc a
+    .endIf_A:
+    ; Prep HL for idle motion
     ld hl, $ffe7
+    ; Do active motion if within $50 pixels
     cp $50
-    jr c, jr_002_5c75
+        jr c, .activeMotion
+    ; else, do idle motion
 
+;idleMotion: ; bob up and down
+    ; Act every other frame
     ldh a, [hEnemy_frameCounter]
     and $01
-    ret nz
-
+        ret nz
+        
     ld a, [hl]
     cp $0c
-    jr z, jr_002_5c6d
+    jr z, .else_A
+        ; Move down 8 frames at 2 px/frame
+        ; Move up   4 frames at 4 px/frame
+        cp $08
+        jr nc, .else_B
+            inc [hl] ; $FFE7
+            ; Move down
+            ld hl, hEnemyYPos
+            ld a, [hl]
+            add $02
+            ld [hl], a
+            ret
+        .else_B:
+            inc [hl] ; $FFE7
+            ; Move up
+            ld hl, hEnemyYPos
+            ld a, [hl]
+            sub $04
+            ld [hl], a
+            ret
+    .else_A:
+        ; Reset idle motion
+        ldh a, [hEnemy_frameCounter]
+        and $03
+            ret nz
+        ; Reset $FFE7
+        ld [hl], $00
+        ret
 
-    cp $08
-    jr nc, jr_002_5c64
-
-    inc [hl]
-    ld hl, hEnemyYPos
-    ld a, [hl]
-    add $02
-    ld [hl], a
-    ret
-
-
-jr_002_5c64:
-    inc [hl]
-    ld hl, hEnemyYPos
-    ld a, [hl]
-    sub $04
-    ld [hl], a
-    ret
-
-
-jr_002_5c6d:
-    ldh a, [hEnemy_frameCounter]
-    and $03
-    ret nz
-
-    ld [hl], $00
-    ret
-
-
-jr_002_5c75:
+; go in a diamond pattern
+.activeMotion:
     ld b, $10
     ld hl, hEnemyState
     ld a, [hl-]
     and a
-    jr z, jr_002_5c97
-
+        jr z, .case_downLeft ; case 0
     dec a
-    jr z, jr_002_5cab
-
+        jr z, .case_downRight ; case 1
     dec a
-    jr z, jr_002_5cb9
+        jr z, .case_upRight ; case 2
+    ; case 3 (default case)
 
-    ld a, [hl]
+; case_upLeft
+    ; Check behavior counter
+    ld a, [hl] ; HL = $FFE9
     cp b
-    jr z, jr_002_5c92
-
+        jr z, .resetState
     inc [hl]
+    ; ypos - go up
     ld hl, hEnemyYPos
     dec [hl]
     dec [hl]
+    ; xpos - go left
     inc l
     dec [hl]
     dec [hl]
-    ret
+ret
 
-
-jr_002_5c92:
+.resetState:
     xor a
     ld [hl+], a
     xor a
     ld [hl], a
-    ret
+ret
 
-
-jr_002_5c97:
+.case_downLeft:
+    ; Check behavior counter
     ld a, [hl]
     cp b
-    jr z, jr_002_5ca5
-
+        jr z, .nextState
     inc [hl]
+    ; ypos - go down
     ld hl, hEnemyYPos
     inc [hl]
     inc [hl]
+    ; xpos - go left
     inc l
     dec [hl]
     dec [hl]
-    ret
+ret
 
-
-jr_002_5ca5:
+.nextState:
+    ; reset behavior counter
     xor a
     ld [hl+], a
+    ; inc hEnemyState
     ld a, [hl]
     inc a
     ld [hl], a
-    ret
+ret
 
-
-jr_002_5cab:
+.case_downRight:
+    ; Check behavior counter
     ld a, [hl]
     cp b
-    jr z, jr_002_5ca5
-
+        jr z, .nextState
     inc [hl]
+    ; ypos - go down
     ld hl, hEnemyYPos
     inc [hl]
     inc [hl]
+    ; xpox - go right
     inc l
     inc [hl]
     inc [hl]
-    ret
+ret
 
-
-jr_002_5cb9:
+.case_upRight:
+    ; Check behavior counter
     ld a, [hl]
     cp b
-    jr z, jr_002_5ca5
-
+        jr z, .nextState
     inc [hl]
+    ; ypos - go up
     ld hl, hEnemyYPos
     dec [hl]
     dec [hl]
+    ; xpos - go right
     inc l
     inc [hl]
     inc [hl]
-    ret
+ret
 
-
-Call_002_5cc7:
+.animate:
     ldh a, [hEnemy_frameCounter]
     and $01
-    ret nz
-
+        ret nz
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $63
-    jr nc, jr_002_5cdc
-
-    ld hl, hEnemyAttr
-    ld a, [hl]
-    xor OAMF_XFLIP
-    ld [hl], a
-    ret
-
-
-jr_002_5cdc:
-    xor $07
-    ld [hl], a
-    ret
+    jr nc, .endIf_B
+        ; Senjoo animation
+        ld hl, hEnemyAttr
+        ld a, [hl]
+        xor OAMF_XFLIP
+        ld [hl], a
+        ret
+    .endIf_B:
+        ; Shirk animation
+        xor $07
+        ld [hl], a
+        ret
+; end proc
 
 ;------------------------------------------------------------------------------
 ; gullugg AI - Thing that flies in a circle
