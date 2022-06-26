@@ -203,7 +203,7 @@ def enemySaveFlags  = $C540 ;$C540..7F: Working copy of $C900 data for room bank
 ;    Read at $3:4205 (metroid checking if it should spawn?)
 ;}
 ;
-;$C600..C7FF: Enemy data. 20h byte slots
+def enemyDataSlots = $C600;..C7FF ; Enemy data. 20h byte slots
 ;{
 ;    + 0: If bits 0..3 clear, collision with projectiles/bombs/Samus is enabled. If zero, sprite set is not drawn. If FFh, enemy is deleted
 ;    + 1: Y position. Relative to screen top boundary - 10h. Value for $FFB7 in $30EA

@@ -2684,9 +2684,9 @@ arachnus_511C:
     xor a
     ld b, $06
 
-jr_002_5122:
-    ld [hl+], a
-    dec b
+    jr_002_5122:
+        ld [hl+], a
+        dec b
     jr nz, jr_002_5122
 
     ld a, $06
@@ -2696,11 +2696,9 @@ jr_002_5122:
     call Call_002_7da0
     ld a, [$c46d]
     cp $ff
-    ret z
-
+        ret z
     cp $09
-    ret nc
-
+        ret nc
     ld a, $76
     ldh [hEnemySpriteType], a
 
@@ -2715,6 +2713,7 @@ Jump_002_5144:
 
 Jump_002_514a:
     ld [$c391], a
+    ; Next state
     ld hl, $ffe7
     inc [hl]
 ret
@@ -2722,8 +2721,7 @@ ret
 arachnus_5152:
     ld hl, table_52FC
     call Call_002_516e
-    jr nz, jr_002_513f
-
+        jr nz, jr_002_513f
     ld hl, hEnemyXPos
     ld a, [hl]
     add $01
@@ -2748,24 +2746,20 @@ Call_002_516e:
     ld b, a
     cp $80
     jr nz, jr_002_5180
+        ld bc, $0380
+        jr jr_002_5190
+    jr_002_5180:
+        cp $81
+        jr nz, jr_002_5189
+            ld bc, $0381
+            jr jr_002_5190
+        jr_002_5189:
+            inc e
+            ld a, e
+            ld [$c390], a
+            ld c, $00
+    jr_002_5190:
 
-    ld bc, $0380
-    jr jr_002_5190
-
-jr_002_5180:
-    cp $81
-    jr nz, jr_002_5189
-
-    ld bc, $0381
-    jr jr_002_5190
-
-jr_002_5189:
-    inc e
-    ld a, e
-    ld [$c390], a
-    ld c, $00
-
-jr_002_5190:
     ldh a, [hEnemyYPos]
     add b
     ldh [hEnemyYPos], a
@@ -2779,19 +2773,15 @@ jr_002_5190:
     ld a, [$c393]
     and a
     jr z, jr_002_51b6
-
-    cp $81
-    jr z, jr_002_51b6
-
-    ld a, [$c390]
-    inc a
-    ld [$c390], a
-    xor a
-    and a
-    ret
-
-
-jr_002_51b6:
+        cp $81
+        jr z, jr_002_51b6
+            ld a, [$c390]
+            inc a
+            ld [$c390], a
+            xor a
+            and a
+            ret
+    jr_002_51b6:
     inc a
     and a
 ret
@@ -2802,10 +2792,9 @@ arachnus_51B9:
 Jump_002_51bc:
     call Call_002_516e
     jr nz, jr_002_51c3
+        jr jr_002_5161
+    jr_002_51c3:
 
-    jr jr_002_5161
-
-jr_002_51c3:
     ld a, $04
     ld [$c391], a
     ld hl, $ffe7
@@ -2816,12 +2805,11 @@ arachnus_51CE:
     ld a, [$c391]
     and a
     jr z, jr_002_51da
+        dec a
+        ld [$c391], a
+        jr jr_002_5161
+    jr_002_51da:
 
-    dec a
-    ld [$c391], a
-    jr jr_002_5161
-
-jr_002_51da:
     call Call_002_529a
     ldh a, [hEnemyYPos]
     sub $08
@@ -2837,13 +2825,11 @@ arachnus_51EC:
     ld a, [$c391]
     and a
     jr z, jr_002_51f7
+        dec a
+        ld [$c391], a
+        ret
+    jr_002_51f7:
 
-    dec a
-    ld [$c391], a
-ret
-
-
-jr_002_51f7:
     ld a, $7a
     jr jr_002_51e5
 
@@ -2852,60 +2838,54 @@ arachnus_51FB:
     ld a, [$c46d]
     cp $ff
     jr z, jr_002_521b
+        cp $09
+        jr nz, jr_002_521b
+            ld a, $05
+            ld [sfxRequest_noise], a
+            ld a, $11
+            ldh [hEnemyStunCounter], a
+            ld a, [$c394]
+            dec a
+            ld [$c394], a
+                jr z, jr_002_5256 ; Die
+    jr_002_521b:
 
-    cp $09
-    jr nz, jr_002_521b
-
-    ld a, $05
-    ld [sfxRequest_noise], a
-    ld a, $11
-    ldh [hEnemyStunCounter], a
-    ld a, [$c394]
-    dec a
-    ld [$c394], a
-    jr z, jr_002_5256
-
-jr_002_521b:
     ld a, [hInputPressed]
     and PADF_B
     jr nz, jr_002_5249
-
-    call Call_002_529a
-    ld a, [$c391]
-    and a
-    jr z, jr_002_5230
-
-    dec a
-    ld [$c391], a
-    ret
-
-
-jr_002_5230:
-    ld a, $7a
-    ldh [hEnemySpriteType], a
-    ldh a, [hEnemySpawnFlag]
-    cp $01
-    ret nz
-
-    ld de, $52d2
-    call Call_002_52a6
-    ld a, $79
-    ldh [hEnemySpriteType], a
-    ld a, $10
-    ld [$c391], a
-    ret
-
-
-jr_002_5249:
-    ldh a, [hEnemyYPos]
-    add $08
-    ldh [hEnemyYPos], a
-    ld a, $76
-    ldh [hEnemySpriteType], a
-    jp Jump_002_5144
+        call Call_002_529a
+        ld a, [$c391]
+        and a
+        jr z, jr_002_5230
+            dec a
+            ld [$c391], a
+            ret
+        jr_002_5230:
+    
+        ; Spit fireball sprite
+        ld a, $7a
+        ldh [hEnemySpriteType], a
+        ldh a, [hEnemySpawnFlag]
+        cp $01
+            ret nz
+        ; Spawn projectile
+        ld de, header_52D2
+        call Call_002_52a6
+        ld a, $79
+        ldh [hEnemySpriteType], a
+        ld a, $10
+        ld [$c391], a
+        ret
+    jr_002_5249:
+        ldh a, [hEnemyYPos]
+        add $08
+        ldh [hEnemyYPos], a
+        ld a, $76
+        ldh [hEnemySpriteType], a
+        jp Jump_002_5144
 
 
-jr_002_5256:
+jr_002_5256: ; Become Spring ball
     ld a, $0d
     ld [sfxRequest_noise], a
     ld hl, hEnemyHealth
@@ -2913,55 +2893,49 @@ jr_002_5256:
     ld a, $95
     ldh [hEnemySpriteType], a
     ld hl, $fff1
-    ld de, $4dd3
+    ld de, enAI_itemOrb ;$4dd3
     ld [hl], e
     inc l
     ld [hl], d
-    ret
+ret
 
 arachnus_526E:
     ldh a, [hEnemyAttr]
     and a
     jr z, jr_002_528c
-
-    call Call_002_4662
-    ld b, $01
-    ld a, [en_bgCollisionResult]
-    and $01
-    jr z, jr_002_5281
-
-    jr jr_002_5286
-
-jr_002_5281:
-    ldh a, [hEnemyXPos]
-    add b
-    ldh [hEnemyXPos], a
-
-jr_002_5286:
-    ld hl, table_532E
-    jp Jump_002_51bc
-
-
-jr_002_528c:
+        call Call_002_4662
+        ld b, $01
+        ld a, [en_bgCollisionResult]
+        and $01
+        jr z, jr_002_5281
+            jr jr_002_5286
+        jr_002_5281:
+            ldh a, [hEnemyXPos]
+            add b
+            ldh [hEnemyXPos], a
+        jr_002_5286:
+            ld hl, table_532E
+            jp Jump_002_51bc
+    jr_002_528c:
+    
     call Call_002_483b
     ld b, $ff
     ld a, [en_bgCollisionResult]
     and $04
     jr z, jr_002_5281
+        jr jr_002_5286
 
-    jr jr_002_5286
 
 Call_002_529a:
     call Call_002_4f87
     and a
     ld a, $20
     jr z, jr_002_52a3
-
-    xor a
-
-jr_002_52a3:
+        xor a
+    jr_002_52a3:
+    
     ldh [hEnemyAttr], a
-    ret
+ret
 
 
 Call_002_52a6:
@@ -2975,10 +2949,9 @@ Call_002_52a6:
     ld b, $18
     and a
     jr nz, jr_002_52ba
-
-    ld b, $e8
-
-jr_002_52ba:
+        ld b, $e8
+    jr_002_52ba:
+    
     ldh a, [hEnemyXPos]
     add b
     ld [hl+], a
@@ -2992,33 +2965,31 @@ jr_002_52ba:
     ld [hl], a
     ld a, $03
     ldh [hEnemySpawnFlag], a
-    ret
+ret
 
-; 02:52D2 - Enemy header (arachnus projectile?)
-    db $7b, $00, $00, $00, $00, $00, $00, $00, $00, $02, $02;, $df, $52
-    dw enAI_52DF
+header_52D2: ; 02:52D2 - Enemy header (arachnus projectile?)
+    db $7b, $00, $00, $00, $00, $00, $00, $00, $00, $02, $02
+    dw enAI_arachnusFireball
 
-enAI_52DF: ; 02:52DF
+enAI_arachnusFireball: ; 02:52DF
     ld hl, hEnemyXPos
     ldh a, [$e7]
     and a
     ld b, $03
-    jr nz, jr_002_52eb
+    jr nz, .endIf
+        ld b, -3 ;$fd
+    .endIf:
 
-    ld b, $fd
-
-jr_002_52eb:
     ld a, [hl]
     add b
     ld [hl], a
     ld a, [frameCounter]
     and $06
-    ret nz
-
+        ret nz
     ldh a, [hEnemySpriteType]
     xor $07
     ldh [hEnemySpriteType], a
-    ret
+ret
 
     ret ; 02:52FB - Unreferenced
 
@@ -3045,56 +3016,72 @@ enAI_536F: ; 02:536F
 
     ld a, b
     and $01
-    jr nz, jr_002_5380
+    jr nz, .endIf_A
         ldh a, [hEnemySpriteType]
         xor $01
         ldh [hEnemySpriteType], a
-    jr_002_5380:
+    .endIf_A:
 
+    ; Load pointer to table
     ld hl, $ffe9
     ld e, [hl]
     inc l
     ld d, [hl]
+    
+    ; Check if at end of table
     ld a, [de]
     cp $80
-        jr z, jr_002_53be
+        jr z, .done
 
+;moveHorizontal
+    ; Extract upper nybble
     ld a, [de]
     and $f0
     swap a
+    ; Sign-extend if necessary (is the stored format sign-magnitude?)
     bit 3, a
-    jr z, jr_002_5398
+    jr z, .endIf_B
         and $07
         cpl
         inc a
-    jr_002_5398:
-
+    .endIf_B:
+    ; Save result
     ld b, a
+
+    ; Negate if Samus is to the right side of the parent blob thrower
     ld a, [$c386]
     and a
-    jr z, jr_002_53a3
+    jr z, .endIf_C
         ld a, b
         cpl
         inc a
         ld b, a
-    jr_002_53a3:
+    .endIf_C:
 
+    ; Apply velocity
     ldh a, [hEnemyXPos]
     add b
     ldh [hEnemyXPos], a
+
+;moveVertical    
+    ; Extract lower nybble
     ld a, [de]
     and $0f
+    ; Sign-extend if necessary
     bit 3, a
-    jr z, jr_002_53b3
+    jr z, .endIf_D
         and $07
         cpl
         inc a
-    jr_002_53b3:
-
+    .endIf_D:
+    ; Save result
     ld b, a
+    ; Apply velocity
     ldh a, [hEnemyYPos]
     add b
     ldh [hEnemyYPos], a
+
+    ; Increment and save movement table pointer
     inc de
     ld [hl], d
     dec l
@@ -3102,25 +3089,27 @@ enAI_536F: ; 02:536F
 ret
 
 
-jr_002_53be:
+.done:
+    ; Clear unused (?) variable
     xor a
     ld [$c387], a
+    ; Check if below threshold
     ldh a, [$e7]
     ld b, a
     ldh a, [hEnemyYPos]
     cp b
-        jr nc, jr_002_53cf
-    inc a
-    inc a
-    ldh [hEnemyYPos], a
-ret
-
-
-jr_002_53cf:
-    call $3ca6 ; Delete self
-    ld a, $ff
-    ldh [hEnemySpawnFlag], a
-ret
+    jr nc, .else
+        ; Move down
+        inc a
+        inc a
+        ldh [hEnemyYPos], a
+        ret
+    .else:
+        ; Delete self
+        call $3ca6
+        ld a, $ff
+        ldh [hEnemySpawnFlag], a
+        ret
 
 ; Bitpacked speed pairs?
 table_53D7: ; 02:53D7
@@ -7492,7 +7481,7 @@ enAI_6B83: ; Baby egg?
     ldh [hEnemySpawnFlag], a
     xor a
     ld [$c463], a
-    ret
+ret
 
 
 enAI_6BB2:
@@ -10512,27 +10501,26 @@ Call_002_7bd9:
     ld [hl], a
     ret
 
+;------------------------------------------------------------------------------
 enAI_7BE5: ; the baby?
     ld a, [$c41c]
     and a
-    jr z, jr_002_7c20
-
+        jr z, jr_002_7c20 ; case 0
     dec a
-    jr z, jr_002_7c04
-
+        jr z, jr_002_7c04 ; case 1
     dec a
-    jp nz, Jump_002_7c8d
-
+        jp nz, Jump_002_7c8d ; case 2
+    ; default case
     call Call_002_6b3a
     ld b, $02
     ld de, $2000
     call $3cba
     call Call_002_7d2a
     call Call_002_7ddc
-    ret
+ret
 
 
-jr_002_7c04:
+jr_002_7c04: ; case 1
     call Call_002_75ff
     ld hl, hEnemyYPos
     dec [hl]
@@ -10540,8 +10528,7 @@ jr_002_7c04:
     inc [hl]
     ld a, [hl]
     cp $0c
-    ret nz
-
+        ret nz
     ld a, $10
     ld [hl+], a
     ld [hl], a
@@ -10549,157 +10536,140 @@ jr_002_7c04:
     inc [hl]
     xor a
     ld [$c463], a
-    ret
+ret
 
 
-jr_002_7c20:
+jr_002_7c20: ; case 0
     ldh a, [hEnemySpawnFlag]
     cp $04
     jr z, jr_002_7c6b
+        call Call_002_7caf
+        ld hl, hEnemyXPos
+        ld a, [$d03c]
+        sub [hl]
+        jr nc, jr_002_7c34
+            cpl
+            inc a
+        jr_002_7c34:
+    
+        cp $18
+            ret nc
+        dec l
+        ld a, [$d03b]
+        sub [hl]
+        jr nc, jr_002_7c40
+            cpl
+            inc a
+        jr_002_7c40:
+    
+        cp $10
+            ret nc
+        ld a, $01
+        ld [$c463], a
+        call Call_002_7cbc
+        ld hl, hEnemyState
+        inc [hl]
+        ld a, [hl]
+        cp $30
+            ret nz
+        xor a
+        ld [hl-], a
+        ld [hl], a
+        ldh [hEnemyStunCounter], a
+        ld a, $03
+        ld [$c41c], a
+        ld hl, $c465
+        inc [hl]
+        ld a, $04
+        ldh [hEnemySpawnFlag], a
+        ld a, $16
+        ld [sfxRequest_noise], a
+        ret
+    jr_002_7c6b:
+        ld a, $a8
+        ldh [hEnemySpriteType], a
+        ld hl, hEnemyXPos
+        ld a, [$d03c]
+        sub [hl]
+        jr nc, jr_002_7c7a
+            cpl
+            inc a
+        jr_002_7c7a:
+        
+        cp $60
+            ret nc
+        ld a, $01
+        ld [$c465], a
+        ld a, $02
+        ld [$c41c], a
+        ld a, $16
+        ld [sfxRequest_noise], a
+        ret
+; end proc
 
-    call Call_002_7caf
-    ld hl, hEnemyXPos
-    ld a, [$d03c]
-    sub [hl]
-    jr nc, jr_002_7c34
-
-    cpl
-    inc a
-
-jr_002_7c34:
-    cp $18
-    ret nc
-
-    dec l
-    ld a, [$d03b]
-    sub [hl]
-    jr nc, jr_002_7c40
-
-    cpl
-    inc a
-
-jr_002_7c40:
-    cp $10
-    ret nc
-
-    ld a, $01
-    ld [$c463], a
-    call Call_002_7cbc
-    ld hl, hEnemyState
-    inc [hl]
-    ld a, [hl]
-    cp $30
-    ret nz
-
-    xor a
-    ld [hl-], a
-    ld [hl], a
-    ldh [hEnemyStunCounter], a
-    ld a, $03
-    ld [$c41c], a
-    ld hl, $c465
-    inc [hl]
-    ld a, $04
-    ldh [hEnemySpawnFlag], a
-    ld a, $16
-    ld [sfxRequest_noise], a
-    ret
-
-
-jr_002_7c6b:
-    ld a, $a8
-    ldh [hEnemySpriteType], a
-    ld hl, hEnemyXPos
-    ld a, [$d03c]
-    sub [hl]
-    jr nc, jr_002_7c7a
-
-    cpl
-    inc a
-
-jr_002_7c7a:
-    cp $60
-    ret nc
-
-    ld a, $01
-    ld [$c465], a
-    ld a, $02
-    ld [$c41c], a
-    ld a, $16
-    ld [sfxRequest_noise], a
-    ret
-
-
-Jump_002_7c8d:
+Jump_002_7c8d: ; Case 2
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     bit 0, a
     jr z, jr_002_7c9d
-
-    srl a
-    add $e2
-    ldh [hEnemySpriteType], a
-    ret
-
-
-jr_002_7c9d:
-    cp $0c
-    call z, Call_002_7ca7
-    ld a, $a8
-    ldh [hEnemySpriteType], a
-    ret
+        srl a
+        add $e2
+        ldh [hEnemySpriteType], a
+        ret
+    jr_002_7c9d:
+        cp $0c
+            call z, Call_002_7ca7
+        ld a, $a8
+        ldh [hEnemySpriteType], a
+        ret
 
 
 Call_002_7ca7:
     ld [hl], $00
     ld a, $01
     ld [$c41c], a
-    ret
+ret
 
 
 Call_002_7caf:
+    ; Flash every 4 frames
     ldh a, [hEnemy_frameCounter]
     and $03
-    ret nz
-
+        ret nz
     ld hl, hEnemyStunCounter
     ld a, [hl]
     xor $10
     ld [hl], a
-    ret
+ret
 
 
 Call_002_7cbc:
     ldh a, [hEnemy_frameCounter]
     and $01
-    ret nz
-
+        ret nz
     ld hl, hEnemySpriteType
     ldh a, [$e9]
     dec a
     jr z, jr_002_7cd6
+        inc [hl]
+        ld a, [hl]
+        cp $a7
+        ret nz
+    jr_002_7cce:
+        ld hl, $ffe9
+        ld a, [hl]
+        xor $01
+        ld [hl], a
+        ret
+    jr_002_7cd6:
 
-    inc [hl]
-    ld a, [hl]
-    cp $a7
-    ret nz
-
-jr_002_7cce:
-    ld hl, $ffe9
-    ld a, [hl]
-    xor $01
-    ld [hl], a
-    ret
-
-
-jr_002_7cd6:
     dec [hl]
     ld a, [hl]
     cp $a5
-    ret nz
-
+        ret nz
     jr jr_002_7cce
+
 
 Call_002_7cdd:
     ldh a, [$e9]

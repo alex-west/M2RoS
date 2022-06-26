@@ -685,7 +685,7 @@ en6627: ; Enemy 6Ah (halzyn)
 en6632: ; Enemy 6Bh (ramulken)
     db $00,$20,$00,$00,$B0,$00,$02,$00,$0C
     dw enAI_hopper
-en663D: ; Enemy 6Dh
+en663D: ; Enemy 6Dh - Metroid egg
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_6B83
 en6648: ; Enemy 6Eh (proboscum (flipped))
