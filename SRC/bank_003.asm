@@ -612,7 +612,7 @@ en651F: ; Enemy 4 (skreek)
     dw enAI_59C7
 en652A: ; Enemy 9 (drivel)
     db $00,$00,$00,$00,$00,$10,$00,$00,$0A
-    dw enAI_5AE2
+    dw enAI_drivel
 en6535: ; Enemy 12h (yumbo)
     db $00,$00,$00,$00,$00,$00,$00,$00,$01
     dw enAI_smallBug ; The things the flit back and forth

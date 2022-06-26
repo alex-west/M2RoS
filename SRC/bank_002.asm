@@ -4322,13 +4322,13 @@ ret
     inc [hl]
     ld a, [hl]
     cp $40 ; turnaround time
-    jr z, .flip
+        jr z, .flip
 
     ; Move according to direction
     ld hl, hEnemyXPos
     ldh a, [hEnemyAttr]
     bit OAMB_XFLIP, a
-    jr nz, .moveRight
+        jr nz, .moveRight
     
     ; Move Left
     dec [hl]
@@ -4343,100 +4343,107 @@ ret
     call enemy_flipHorizontal
 ret
 ;------------------------------------------------------------------------------
-
-enAI_5AE2:
-    call Call_002_5bb5
+; Drivel AI (acid-spitting bat)
+enAI_drivel: ; 02:5AE2
+    call .animate
     ldh a, [hEnemyState]
     and a
-    jr nz, jr_002_5b3b
-
+        jr nz, .tryShooting
+    ; Randomly enter try-shooting state
     ld a, [rDIV]
     and $0f
-    jr z, jr_002_5b37
+        jr z, .startTryShooting
+    ; Fallthrough to moving
 
-jr_002_5af1:
+.move:
     ld de, hEnemyYPos
-    ld hl, $5b79
+    ld hl, .ySpeedTable
     ldh a, [$e9]
     ld c, a
     ld b, $00
     add hl, bc
     ld a, [hl]
     cp $80
-    jr z, jr_002_5b25
+        jr z, .flipDirection
 
+    ; Check if negative
     bit 7, [hl]
-    jr nz, jr_002_5b0a
-
-    ld a, [de]
-    add [hl]
-    jr jr_002_5b12
-
-jr_002_5b0a:
-    ld a, [hl]
-    cpl
-    inc a
-    ld b, a
-    ld a, [de]
-    sub b
-    ld b, $00
-
-jr_002_5b12:
+    jr nz, .else_A
+        ; If not, then add
+        ld a, [de]
+        add [hl]
+        jr .endIf_A
+    .else_A:
+        ; else, negate and then subtract
+        ld a, [hl]
+        cpl
+        inc a
+        ld b, a
+        ld a, [de]
+        sub b
+        ld b, $00
+    .endIf_A:
+    ; Store the result
     ld [de], a
+    ; DE now points to xpos
     inc e
-    ld hl, $5b97
+    ld hl, .xSpeedTable
     add hl, bc
     ldh a, [$e8]
     and a
-    jr nz, jr_002_5b2f
-
+        jr nz, .moveLeft
+; move right
     ld a, [de]
     add [hl]
     ld [de], a
+    ; inc counter
     ld hl, $ffe9
     inc [hl]
-    ret
+ret
 
-
-jr_002_5b25:
+.flipDirection:
+    ; flip direction
     ldh a, [$e8]
     xor $02
     ldh [$e8], a
+    ; Reset counter
     xor a
     ldh [$e9], a
-    ret
+ret
 
-
-jr_002_5b2f:
+.moveLeft:
+    ; move left
     ld a, [de]
     sub [hl]
     ld [de], a
+    ; inc counter
     ld hl, $ffe9
     inc [hl]
-    ret
+ret
 
-
-jr_002_5b37:
+.startTryShooting:
+    ; Set try shooting state
     ld a, $01
     ldh [hEnemyState], a
-
-jr_002_5b3b:
+.tryShooting:
+    ; abs(samusX_screen - enemyX)
     ld a, [$d03c]
     ld b, a
     ld hl, hEnemyXPos
     ld a, [hl]
     sub b
-    jr nc, jr_002_5b48
-
-    cpl
-    inc a
-
-jr_002_5b48:
+    jr nc, .endIf_B
+        cpl
+        inc a
+    .endIf_B:
+    ; If not within range, just move
     cp $30
-    jr nc, jr_002_5af1
-
+        jr nc, .move
+    ; else, shoot projectile
+    ; Reset state
     ld hl, hEnemyState
     ld [hl], $00
+    ; Spawn projectile
     call findFirstEmptyEnemySlot_longJump
     xor a
     ld [hl+], a
@@ -4445,127 +4452,137 @@ jr_002_5b48:
     ld [hl+], a
     ldh a, [hEnemyXPos]
     ld [hl+], a
-    ld de, $5b6c
+    ld de, .header_5B6C
     call Call_002_6b21
     call Call_002_7235
+    ; Causes drivel to animate, but not act (see .animate function below)
     ld a, $03
     ldh [hEnemySpawnFlag], a
-    ret
+ret
 
+.header_5B6C: ; 02:5B6C
+    db $0C, $80, $00, $00, $00, $00, $00, $00, $00, $01, $00
+    dw enAI_drivelSpit
+.ySpeedTable: ; 02:5B79
+    db $01, $01, $01, $02, $03, $03, $03, $03, $03, $02, $02, $02, $02, $01, $01, $00
+    db $00, $FF, $FE, $FD, $FC, $FA, $FD, $FE, $FE, $FE, $FE, $FE, $FF, $80
+.xSpeedTable: ; 02:5B97
+    db $00, $01, $00, $01, $01, $02, $01, $02, $02, $03, $02, $03, $04, $03, $03, $02
+    db $04, $02, $05, $04, $05, $04, $01, $02, $01, $01, $00, $01, $00, $80
 
-    db $0c, $80, $00, $00, $00, $00, $00, $00, $00, $01, $00, $d4, $5b, $01, $01, $01
-    db $02, $03, $03, $03, $03, $03, $02, $02, $02, $02, $01, $01, $00, $00, $ff, $fe
-    db $fd, $fc, $fa, $fd, $fe, $fe, $fe, $fe, $fe, $ff, $80, $00, $01, $00, $01, $01
-    db $02, $01, $02, $02, $03, $02, $03, $04, $03, $03, $02, $04, $02, $05, $04, $05
-    db $04, $01, $02, $01, $01, $00, $01, $00
-
-    add b
-
-Call_002_5bb5:
+; Excellent spaghetti code
+.animate: ; 02:5BB5
     ldh a, [hEnemySpawnFlag]
     ld hl, hEnemySpriteType
+    ; Check if this enemy's projectile is onscreen
     cp $03
-    jr z, jr_002_5bc7
-
+        jr z, .forceInaction
+    ; Check timer so enemy does not animate for the first few frames of its swoop motion
     ldh a, [$e9]
     cp $0c
-    jr nc, jr_002_5bc8
-
-jr_002_5bc4:
+        jr nc, .nextFrame        
+.resetAnimation:
     ld [hl], $09
     ret
-
-
-jr_002_5bc7:
+    
+.forceInaction:
+    ; Pop the return address of the stack so the next ret instruction exits the enemy AI
+    ; so the enemy animates, but does no other action while its projectile is onscreen
     pop af
-
-jr_002_5bc8:
+.nextFrame:
+    ; Animate every other frame
     ldh a, [hEnemy_frameCounter]
     and $01
-    ret nz
-
+        ret nz
+    ; Loop back to start of animation if at the end
     ld a, [hl]
     cp $0b
-    jr z, jr_002_5bc4
-
+        jr z, .resetAnimation
+    ; Set next frame
     inc [hl]
-    ret
+ret
 
-
+;--------------------------------------
+; Drivel projectile code
+enAI_drivelSpit: ; 02:5BD4
+    ; Initial enemySpriteType is $0C
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $0e
-    jr z, jr_002_5be5
+        jr z, .fall  ; Jump if equal
+        jr nc, .explode ; Jump if greater
 
-    jr nc, jr_002_5bff
-
+; animate start
     ldh a, [hEnemy_frameCounter]
     and $03
-    ret nz
-
+        ret nz
     inc [hl]
-    ret
+ret
 
-
-jr_002_5be5:
+.fall: ; Fall
+    ; Move
     ld hl, hEnemyYPos
     inc [hl]
     call enemy_accelForwards
+    ; Check collision
     call Call_002_49ba
     ld a, [en_bgCollisionResult]
     bit 1, a
-    ret z
-
+        ret z
+    ; Ground has been hit, so move on to next state
     ld a, $0f
     ldh [hEnemySpriteType], a
     ld a, $11
     ld [sfxRequest_noise], a
-    ret
+ret
 
-
-jr_002_5bff:
+.explode:
+    ; Execute every 4th frame
     ldh a, [hEnemy_frameCounter]
     and $03
-    ret nz
-
+        ret nz
+    ; Animate explosion
+    ; inc enemySpriteType
     inc [hl]
     ld a, [hl]
     cp $12
-    ret c
-
+        ret c
+    
+    ; Get WRAM offset for parent creature
     ld h, $c6
     ldh a, [hEnemySpawnFlag]
     bit 4, a
-    jr nz, jr_002_5c16
+    jr nz, .else_A
+        add $1c
+        ld l, a
+        jr .endIf_A
+    .else_A:
+        add $0c
+        ld l, a
+        inc h
+    .endIf_A:
 
-    add $1c
-    ld l, a
-    jr jr_002_5c1a
-
-jr_002_5c16:
-    add $0c
-    ld l, a
-    inc h
-
-jr_002_5c1a:
+    ; Check if parent enemy still exists
     ld a, [hl]
     cp $03
-    jr nz, jr_002_5c29
+    jr nz, .endIf_B
+        ; Tell it that this projectile is done
+        ld a, $01
+        ld [hl+], a
+        ; Also update the spawn flag table accordingly
+        ld a, [hl]
+        ld hl, enemySpawnFlags
+        ld l, a
+        ld [hl], $01
+    .endIf_B:
 
-    ld a, $01
-    ld [hl+], a
-    ld a, [hl]
-    ld hl, enemySpawnFlags
-    ld l, a
-    ld [hl], $01
-
-jr_002_5c29:
+    ; Delete self
     call $3ca6
     ld a, $03
     ld [sfxRequest_noise], a
     ld a, $ff
     ldh [hEnemySpawnFlag], a
-    ret
+ret
 
 ;------------------------------------------------------------------------------
 ; Senjoo/Shirk AI (things that move in a diamond shaped loop)
