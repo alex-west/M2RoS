@@ -3144,140 +3144,143 @@ table_5463: ; 02:5463
 
 ;------------------------------------------------------------------------------
 ; Glow Fly AI (thing that goes back and forth between walls)
-enAI_54A1: ; 02:54A1
+enAI_glowFly: ; 02:54A1
+    ; Move if state is non-zero
     ldh a, [hEnemyState]
     and a
-    jr nz, jr_002_54c7
-
+        jr nz, .case_move
+    ; Increment wait timer
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $50
-    jr z, jr_002_54bc
-
+        jr z, .case_launch
     cp $45
-    jr z, jr_002_54b7
+        jr z, .case_windUpFrame
+    call .animateIdle
+ret
 
-    call Call_002_5524
-    ret
-
-
-jr_002_54b7:
+.case_windUpFrame:
+    ; Animate wind-up frame before movement
     ld a, $2e
     ldh [hEnemySpriteType], a
-    ret
+ret
 
-
-jr_002_54bc:
+.case_launch:
+    ; Start launching off the wall
+    ; Set sprite graphics
     ld a, $2e
     ldh [hEnemySpriteType], a
+    ; Reset wait timer
     ld [hl], $00
+    ; Set state to move
     ld a, $01
     ldh [hEnemyState], a
-    ret
+ret
 
-
-jr_002_54c7:
+.case_move:
+    ; Set sprite type
     ld a, $2f
     ldh [hEnemySpriteType], a
-    call Call_002_54d2
-    call Call_002_54e4
-    ret
+    call .move
+    call .tryFlip
+ret
 
-
-Call_002_54d2:
+.move:
     ld hl, hEnemyXPos
+    ; Check direction
     ldh a, [$e8]
     and a
-    jr nz, jr_002_54df
+    jr nz, .else_A
+        ; Move right
+        ld a, [hl]
+        add $03
+        ld [hl], a
+        ret
+    .else_A:
+        ; Move left
+        ld a, [hl]
+        sub $03
+        ld [hl], a
+        ret
+; end proc
 
-    ld a, [hl]
-    add $03
-    ld [hl], a
-    ret
-
-
-jr_002_54df:
-    ld a, [hl]
-    sub $03
-    ld [hl], a
-    ret
-
-
-Call_002_54e4:
+.tryFlip:
     ldh a, [$e8]
     and a
-    jr nz, jr_002_5508
+        jr nz, .goingLeft
 
+;goingRight
     call Call_002_4608
     ld a, [en_bgCollisionResult]
     bit 0, a
-    ret z
+        ret z
 
-jr_002_54f2:
+.flip:
+    ; Animate sprite
     ld a, $2c
     ldh [hEnemySpriteType], a
+    ; Flip sprite (graphics)
     ld hl, hEnemyAttr
     ld a, [hl]
     xor OAMF_XFLIP
     ld [hl], a
+    ; Flip sprite (logic)
     ld hl, $ffe8
     ld a, [hl]
     xor $01
     ld [hl], a
+    ; Reset state
     xor a
     ldh [hEnemyState], a
-    ret
+ret
 
-
-jr_002_5508:
+.goingLeft:
     call Call_002_47e1
     ld a, [en_bgCollisionResult]
     bit 2, a
-    ret z
+        ret z
+    jr .flip ; Unconditional jump (code below is orphaned)
 
-    jr jr_002_54f2
-
+; 02:5513 - Unreferenced/unused code?
+    ; Perhaps meant to reset state?
     ld [hl], $00
+    ; Flip sprite (logic)
     ld hl, $ffe8
     ld a, [hl]
     xor $01
     ld [hl], a
+    ; Flip sprite (graphics)
     ld hl, hEnemyAttr
     ld a, [hl]
     xor OAMF_XFLIP
     ld [hl], a
-    ret
+    ; This unused branch doesn't animate the sprite
+ret
 
-
-Call_002_5524:
+.animateIdle:
+    ; Execute every 8th frame
     ldh a, [hEnemy_frameCounter]
     and $07
-    ret nz
-
+        ret nz
+    ; Looks like a really convoluted way of oscillating between $2C and $2D
     ldh a, [hEnemySpriteType]
     cp $2c
-    jr nz, jr_002_5533
-
-    inc a
-    ldh [hEnemySpriteType], a
-    ret
-
-
-jr_002_5533:
-    ldh a, [hEnemySpriteType]
-    cp $2d
-    jr nz, jr_002_553d
-
-    dec a
-    ldh [hEnemySpriteType], a
-    ret
-
-
-jr_002_553d:
-    ld a, $2c
-    ldh [hEnemySpriteType], a
-    ret
+    jr nz, .else_B
+        inc a
+        ldh [hEnemySpriteType], a
+        ret
+    .else_B:
+        ldh a, [hEnemySpriteType]
+        cp $2d
+        jr nz, .else_C
+            dec a
+            ldh [hEnemySpriteType], a
+            ret
+        .else_C:
+            ld a, $2c
+            ldh [hEnemySpriteType], a
+            ret
 
 ;------------------------------------------------------------------------------
 ; Rock Icicle (discount skree)

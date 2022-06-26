@@ -744,7 +744,7 @@ en6703: ; Enemy 9Ah (blob thrower?)
     dw enAI_4EA1
 en670E: ; Enemy 2Ch (glow fly)
     db $00,$00,$00,$00,$00,$00,$00,$00,$03
-    dw enAI_54A1
+    dw enAI_glowFly
 en6719: ; Enemy 34h (rock icicle)
     db $00,$00,$00,$00,$00,$00,$00,$00,$01
     dw enAI_rockIcicle
