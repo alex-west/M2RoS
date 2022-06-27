@@ -1934,10 +1934,10 @@ samus_handlePose:
     ; Take the jump table
     ld a, [samusPose]
     rst $28
-        dw poseFunc_13B7       ; $00 Standing
+        dw poseFunc_standing   ; $00 Standing
         dw poseFunc_jump       ; $01 Jumping
         dw poseFunc_spinJump   ; $02 Spin-jumping
-        dw poseFunc_14D6       ; $03 Running (set to 83h when turning)
+        dw poseFunc_run        ; $03 Running (set to 83h when turning)
         dw poseFunc_crouch     ; $04 Crouching
         dw poseFunc_1701       ; $05 Morphball
         dw poseFunc_morphJump  ; $06 Morphball jumping
@@ -2926,76 +2926,81 @@ handleTurnaroundTimer: ; Called if MSB of Samus' pose is set
     jp samus_handlePose
 ; end proc
 
-poseFunc_13B7: ; $00
+poseFunc_standing: ; 00:13B7 - $00: Standing
+    ; Fall if ground is missing
     call Call_000_1f0f
-    jr c, jr_000_13c7
-
-    ld a, pose_fall
-    ld [samusPose], a
-    ld a, $01
-    ld [samus_fallArcCounter], a
-    ret
-
-
-jr_000_13c7:
+    jr c, .endIf_A
+        ld a, pose_fall
+        ld [samusPose], a
+        ld a, $01
+        ld [samus_fallArcCounter], a
+        ret
+    .endIf_A:
+    ; Clear timer
     xor a
     ld [$d022], a
+
+; Handle spin jump inputs
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
-    jr z, jr_000_1421
-
-    ldh a, [hInputPressed]
-    and PADF_LEFT | PADF_RIGHT ;$30
-    jr z, jr_000_1421
-
-    ld a, [samusItems]
-    bit itemBit_space, a
-    jp z, Jump_000_149e
-
-    call Call_000_1e88
-        ret c
-
-    ld a, $21
-    ld [samus_jumpArcCounter], a
-    ld a, $02
-    ld [sfxRequest_square1], a
-    ld a, [samusItems]
-    bit itemBit_hiJump, a
-    jr nz, jr_000_13fe
-
-    ld a, $31
-    ld [samus_jumpArcCounter], a
-    ld a, $01
-    ld [sfxRequest_square1], a
-
-jr_000_13fe:
-    ld a, [waterContactFlag]
-    and a
-    jr z, jr_000_140c
-        ld a, [samus_jumpArcCounter]
-        add $10
-        ld [samus_jumpArcCounter], a
-    jr_000_140c:
-
-    ld a, pose_spinStart
-    ld [samusPose], a
-    xor a
-    ld [samus_jumpStartCounter], a
-    ld a, [samusItems]
-    bit itemBit_screw, a
-        ret z
-    ld a, $03
-    ld [sfxRequest_square1], a
-    ret
-
-
-jr_000_1421:
+    jr z, .endIf_B
+        ldh a, [hInputPressed]
+        and PADF_LEFT | PADF_RIGHT ;$30
+        jr z, .endIf_B
+            ; This check makes it so you can't spin-jump from a standstill without Space Jump. Very strange.
+            ld a, [samusItems]
+            bit itemBit_space, a
+                jp z, .normalJump
+            ; Return if a ceiling is in the way
+            call Call_000_1e88
+                ret c
+            ; High jump parameters
+            ld a, $21
+            ld [samus_jumpArcCounter], a
+            ld a, $02
+            ld [sfxRequest_square1], a
+            ; Check for high jump
+            ld a, [samusItems]
+            bit itemBit_hiJump, a
+            jr nz, .endIf_C
+                ; Normal jump parameters
+                ld a, $31
+                ld [samus_jumpArcCounter], a
+                ld a, $01
+                ld [sfxRequest_square1], a
+            .endIf_C:
+            ; Decrease jump height in water
+            ld a, [waterContactFlag]
+            and a
+            jr z, .endIf_D
+                ld a, [samus_jumpArcCounter]
+                add $10
+                ld [samus_jumpArcCounter], a
+            .endIf_D:
+            ; Select pose
+            ld a, pose_spinStart
+            ld [samusPose], a
+            ; Clear jump start counter
+            xor a
+            ld [samus_jumpStartCounter], a
+            ; Set up Screw Attack sound if needed
+            ld a, [samusItems]
+            bit itemBit_screw, a
+                ret z
+            ld a, $03
+            ld [sfxRequest_square1], a
+            ret
+    .endIf_B:
+    
+; Handle right input
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
-    jr z, jr_000_1452
+    jr z, .endIf_E
+        ; Check facing direction
         ld a, [samusFacingDirection]
         cp $01
-        jr z, jr_000_1443
+        jr z, .else_F
+            ; Turning around
             ld a, $80 | pose_run
             ld [samusPose], a
             ld a, $01
@@ -3005,7 +3010,8 @@ jr_000_1421:
             ld a, $04
             ld [sfxRequest_square1], a
             ret
-        jr_000_1443:
+        .else_F:
+            ; Walking forward
             call samus_walkRight
                 ret c
             ld a, $01
@@ -3013,14 +3019,17 @@ jr_000_1421:
             ld a, pose_run
             ld [samusPose], a
             ret
-    jr_000_1452:
+    .endIf_E:
 
+; Handle left input
     ldh a, [hInputPressed]
     bit PADB_LEFT, a
-    jr z, jr_000_1483
+    jr z, .endIf_G
+        ; Check facing direction
         ld a, [samusFacingDirection]
         cp $00
-        jr z, jr_000_1474
+        jr z, .else_H
+            ; Turning around
             ld a, $80 | pose_run
             ld [samusPose], a
             ld a, $00
@@ -3030,7 +3039,8 @@ jr_000_1421:
             ld a, $04
             ld [sfxRequest_square1], a
             ret
-        jr_000_1474:
+        .else_H:
+            ; Walking forward
             call samus_walkLeft
                 ret c
             ld a, $00
@@ -3038,228 +3048,257 @@ jr_000_1421:
             ld a, pose_run
             ld [samusPose], a
             ret
-    jr_000_1483:
+    .endIf_G:
 
+; Handle morph input
     ldh a, [hInputRisingEdge]
     bit PADB_DOWN, a
-    jr z, jr_000_1498
+    jr z, .endIf_I
+        ; Clear cooldown timer (so we don't instantly morph)
         xor a
         ld [$d022], a
+        ; Set pose
         ld a, pose_crouch
         ld [samusPose], a
+        ; Play sound
         ld a, $05
         ld [sfxRequest_square1], a
         ret
-    jr_000_1498:
-        ldh a, [hInputRisingEdge]
-        bit PADB_A, a
-        jr z, jr_000_14d5
+    .endIf_I:
 
-Jump_000_149e:
-    call Call_000_1e88
-        ret c
-
-    ld a, $21
-    ld [samus_jumpArcCounter], a
-    ld a, $02
-    ld [sfxRequest_square1], a
-    ld a, [samusItems]
-    bit itemBit_hiJump, a
-    jr nz, jr_000_14bd
-        ld a, $31
+; Handle normal jump input
+    ldh a, [hInputRisingEdge]
+    bit PADB_A, a
+    jr z, .endIf_J
+        .normalJump: ; Entry point from a weird case above
+        call Call_000_1e88
+            ret c
+        ; High jump parameters
+        ld a, $21
         ld [samus_jumpArcCounter], a
-        ld a, $01
+        ld a, $02
         ld [sfxRequest_square1], a
-    jr_000_14bd:
+        ; Check for high jump
+        ld a, [samusItems]
+        bit itemBit_hiJump, a
+        jr nz, .endIf_K
+            ; Normal jump parameters
+            ld a, $31
+            ld [samus_jumpArcCounter], a
+            ld a, $01
+            ld [sfxRequest_square1], a
+        .endIf_K:
+        ; Decrease jump height in water
+        ld a, [waterContactFlag]
+        and a
+        jr z, .endIf_L
+            ld a, [samus_jumpArcCounter]
+            add $10
+            ld [samus_jumpArcCounter], a
+        .endIf_L:
+        ; Set pose
+        ld a, pose_jumpStart
+        ld [samusPose], a
+        ; Clear counter
+        xor a
+        ld [samus_jumpStartCounter], a
+        ret
+    .endIf_J:
+ret
 
-    ld a, [waterContactFlag]
-    and a
-    jr z, jr_000_14cb
-        ld a, [samus_jumpArcCounter]
-        add $10
-        ld [samus_jumpArcCounter], a
-    jr_000_14cb:
-
-    ld a, pose_jumpStart
-    ld [samusPose], a
-    xor a
-    ld [samus_jumpStartCounter], a
-    ret
-
-
-jr_000_14d5:
-    ret
-
-poseFunc_14D6: ; $03
+poseFunc_run: ; 00:14D6 - $03: Running
+    ; Fall if ground is missing
     call Call_000_1f0f
-    jr c, jr_000_14e6
+    jr c, .endIf_A
         ld a, pose_fall
         ld [samusPose], a
         ld a, $01
         ld [samus_fallArcCounter], a
         ret
-    jr_000_14e6:
+    .endIf_A:
 
+    ; Animation timer?
     ld hl, $d022
     inc [hl]
     inc [hl]
     inc [hl]
+
+; Handle spin jump inputs
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
-    jr z, jr_000_153b
+    jr z, .endIf_B
+        ldh a, [hInputPressed]
+        and PADF_LEFT | PADF_RIGHT ;$30
+        jr z, .endIf_B
+            ; Exit if a ceiling is in the way
+            call Call_000_1e88
+                ret c
+            ; High jump parameter
+            ld a, $21
+            ld [samus_jumpArcCounter], a
+            ; Request sound
+            ld a, [samusItems]
+            and itemMask_hiJump
+            srl a
+            inc a
+            ld [sfxRequest_square1], a
+            ; Check equipment
+            ld a, [samusItems]
+            bit itemBit_hiJump, a
+            jr nz, .endIf_C
+                ; Normal jump parameter
+                ld a, $31
+                ld [samus_jumpArcCounter], a
+            .endIf_C:
+            ; Decrease jump height in water
+            ld a, [waterContactFlag]
+            and a
+            jr z, .endIf_D
+                ld a, [samus_jumpArcCounter]
+                add $10
+                ld [samus_jumpArcCounter], a
+            .endIf_D:
+            ; Set pose
+            ld a, pose_spinStart
+            ld [samusPose], a
+            ; Clear counter
+            xor a
+            ld [samus_jumpStartCounter], a
+            ; Request Screw Attack sound if needed
+            ld a, [samusItems]
+            bit itemBit_screw, a
+                ret z
+            ld a, $03
+            ld [sfxRequest_square1], a
+            ret
+    .endIf_B:
 
-    ldh a, [hInputPressed]
-    and PADF_LEFT | PADF_RIGHT ;$30
-    jr z, jr_000_153b
-
-    call Call_000_1e88
-        ret c
-
-    ld a, $21
-    ld [samus_jumpArcCounter], a
-    ld a, [samusItems]
-    and itemMask_hiJump
-    srl a
-    inc a
-    ld [sfxRequest_square1], a
-    ld a, [samusItems]
-    bit itemBit_hiJump, a
-    jr nz, jr_000_1518
-
-    ld a, $31
-    ld [samus_jumpArcCounter], a
-
-jr_000_1518:
-    ld a, [waterContactFlag]
-    and a
-    jr z, jr_000_1526
-        ld a, [samus_jumpArcCounter]
-        add $10
-        ld [samus_jumpArcCounter], a
-    jr_000_1526:
-
-    ld a, pose_spinStart
-    ld [samusPose], a
-    xor a
-    ld [samus_jumpStartCounter], a
-    ld a, [samusItems]
-    bit itemBit_screw, a
-    ret z
-
-    ld a, $03
-    ld [sfxRequest_square1], a
-    ret
-
-
-jr_000_153b:
+; Handle right input
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
-    jr z, jr_000_1566
+    jr z, .endIf_E
+        ; Check facing direction
+        ld a, [samusFacingDirection]
+        cp $01
+        jr z, .else_F
+            ; Turn around
+            ld a, $80 | pose_run
+            ld [samusPose], a
+            ld a, $01
+            ld [samusFacingDirection], a
+            ld a, $02
+            ld [samus_turnAnimTimer], a
+            ld a, $04
+            ld [sfxRequest_square1], a
+            ret
+        .else_F:
+            ; Walk forwards
+            call samus_walkRight
+                ret nc
+            xor a
+            ld [samusPose], a
+            ret
+    .endIf_E:
 
-    ld a, [samusFacingDirection]
-    cp $01
-    jr z, jr_000_155d
-        ld a, $80 | pose_run
-        ld [samusPose], a
-        ld a, $01
-        ld [samusFacingDirection], a
-        ld a, $02
-        ld [samus_turnAnimTimer], a
-        ld a, $04
-        ld [sfxRequest_square1], a
-        ret
-    jr_000_155d:
-        call samus_walkRight
-            ret nc
-        xor a
-        ld [samusPose], a
-        ret
-
-
-jr_000_1566:
+; Handle left input
     ldh a, [hInputPressed]
     bit PADB_LEFT, a
-    jr z, jr_000_1591
+    jr z, .endIf_G
+        ; Check facing direction
+        ld a, [samusFacingDirection]
+        cp $00
+        jr z, .else_H
+            ; Turn around
+            ld a, $80 | pose_run
+            ld [samusPose], a
+            ld a, $00
+            ld [samusFacingDirection], a
+            ld a, $02
+            ld [samus_turnAnimTimer], a
+            ld a, $04
+            ld [sfxRequest_square1], a
+            ret
+        .else_H:
+            ; Walk forward
+            call samus_walkLeft
+                ret nc
+            xor a
+            ld [samusPose], a
+            ret
+    .endIf_G:
 
-    ld a, [samusFacingDirection]
-    cp $00
-    jr z, jr_000_1588
-        ld a, $80 | pose_run
-        ld [samusPose], a
-        ld a, $00
-        ld [samusFacingDirection], a
-        ld a, $02
-        ld [samus_turnAnimTimer], a
-        ld a, $04
-        ld [sfxRequest_square1], a
-        ret
-    jr_000_1588:
-        call samus_walkLeft
-            ret nc
-        xor a
-        ld [samusPose], a
-        ret
-
-
-jr_000_1591:
+    ; Set pose to standing (neither direction was pressed, so no longer walking)
     xor a
     ld [samusPose], a
+
+; Handle down input
     ldh a, [hInputRisingEdge]
     bit PADB_DOWN, a
-    jr z, jr_000_15aa
+    jr z, .endIf_I
+        ; Clear cooldown timer (so you don't instantly morph)
         xor a
         ld [$d022], a
+        ; Set pose
         ld a, pose_crouch
         ld [samusPose], a
+        ; Request sound
         ld a, $05
         ld [sfxRequest_square1], a
         ret
+    .endIf_I:
 
-
-jr_000_15aa:
+; Handle normal jump input
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
-    jr z, jr_000_15f3
-
-    ldh a, [hSamusYPixel]
-    sub $08
-    ldh [hSamusYPixel], a
-    call Call_000_1e88
-        ret c
-
-    ld a, $21
-    ld [samus_jumpArcCounter], a
-    ld a, [samusItems]
-    bit itemBit_hiJump, a
-    jr nz, jr_000_15cb
-        ld a, $31
+    jr z, .endIf_J
+        ; Exit if ceiling is in the way
+        ldh a, [hSamusYPixel]
+        sub $08
+        ldh [hSamusYPixel], a
+        call Call_000_1e88
+            ret c
+        
+        ; High jump parameter
+        ld a, $21
         ld [samus_jumpArcCounter], a
-    jr_000_15cb:
-
-    ld a, pose_jumpStart
-    ld [samusPose], a
-    xor a
-    ld [samus_jumpStartCounter], a
-    ld a, $02
-    ld [sfxRequest_square1], a
-    ld a, [samusItems]
-    bit itemBit_hiJump, a
-    jr nz, jr_000_15e5
-
-    ld a, $01
-    ld [sfxRequest_square1], a
-
-jr_000_15e5:
-    ld a, [waterContactFlag]
-    and a
-    jr z, jr_000_15f3
-
-    ld a, [samus_jumpArcCounter]
-    add $10
-    ld [samus_jumpArcCounter], a
-
-jr_000_15f3:
-    ret
+        ; Check equipment
+        ld a, [samusItems]
+        bit itemBit_hiJump, a
+        jr nz, .endIf_K
+            ; Normal jump parameter
+            ld a, $31
+            ld [samus_jumpArcCounter], a
+        .endIf_K:
+        
+        ; Set pose
+        ld a, pose_jumpStart
+        ld [samusPose], a
+        ; Clear counter
+        xor a
+        ld [samus_jumpStartCounter], a
+        
+        ; High jump sound
+        ld a, $02
+        ld [sfxRequest_square1], a
+        ; Check equipment
+        ld a, [samusItems]
+        bit itemBit_hiJump, a
+        jr nz, .endIf_L
+            ; Normal jump sound
+            ld a, $01
+            ld [sfxRequest_square1], a
+        .endIf_L:
+        
+        ; Decrease jump height in water
+        ld a, [waterContactFlag]
+        and a
+        jr z, .endIf_M
+            ld a, [samus_jumpArcCounter]
+            add $10
+            ld [samus_jumpArcCounter], a
+        .endIf_M:
+    .endIf_J:
+ret
 
 poseFunc_crouch: ; 00:15F4 - $04: Crouching
     ; Start falling if ground disappears
