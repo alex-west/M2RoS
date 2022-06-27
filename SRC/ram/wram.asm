@@ -548,7 +548,7 @@ def doorScrollDirection = $D00E ; Door transition direction
 ;    1: Up-right
 ;    FFh: Up-left
 ;}
-;$D010: Counter for spin-jumping
+def samus_jumpStartCounter = $D010 ; Counter for the beginning of Samus's jump state (used in the jumpStart pose)
 ;$D011: Nothing. Only cleared
 ;$D012: Value for $D060 in $31F1. Projectile direction in $1:500D
 ;
@@ -600,7 +600,7 @@ def samusFacingDirection = $D02B ; Direction Samus is facing. Saved to SRAM, mir
 ;    0: Left
 ;    1: Right
 ;}
-;$D02C: Samus animation counter
+def samus_turnAnimTimer = $D02C ; Timer for turnaround animation (facing the screen). Used and decremented when MSB of samusPose is set.
 ;
 ;$D032: Projectile index
 ;$D033: Cleared by morph

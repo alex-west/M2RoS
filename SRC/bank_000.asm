@@ -690,7 +690,7 @@ jr_000_0522:
     xor a
     ld [$d05c], a
     call Call_000_2ee3 ; Damage Samus
-    call Call_000_0d21 ; Samus pose handler
+    call samus_handlePose ; Samus pose handler
     call Call_000_32ab ; ? Samus/enemy collision logic
     call Call_000_21fb ; Handle shooting or toggling cannon
     call handleProjectiles_longJump ; Handle projectiles
@@ -745,7 +745,7 @@ Jump_000_0578:
     ld [$d028], a
     xor a
     ld [$d05c], a
-    call Call_000_0d21
+    call samus_handlePose
     call Call_000_32ab
     call Call_000_21fb
     call handleProjectiles_longJump
@@ -1906,39 +1906,39 @@ loadGame_samusData:
     ld [songRequest], a
 ret
 
-
-Call_000_0d21:
-Jump_000_0d21:
+samus_handlePose:
+    ; Clear collision flags
     xor a
     ld [waterContactFlag], a
     ld [acidContactFlag], a
+    ; Increment animation-related counter
     ld a, [$d072]
     inc a
     ld [$d072], a
-    
+    ; Erase inputs if dead
     ld a, [deathFlag]
     and a
-    jr z, jr_000_0d3a
+    jr z, .endIf
         xor a
         ldh [hInputRisingEdge], a
         ldh [hInputPressed], a
-    jr_000_0d3a:
-
+    .endIf:
+    ; Exit if door is scrolling
     ld a, [doorScrollDirection]
     and a
-    ret nz
-
+        ret nz
+    ; Turnaround animation logic
     ld a, [samusPose]
     bit 7, a
-    jp nz, Jump_000_139d
-
+        jp nz, handleTurnaroundTimer
+    ; Take the jump table
     ld a, [samusPose]
     rst $28
         dw poseFunc_13B7       ; $00 Standing
         dw poseFunc_jump       ; $01 Jumping
         dw poseFunc_spinJump   ; $02 Spin-jumping
         dw poseFunc_14D6       ; $03 Running (set to 83h when turning)
-        dw poseFunc_15F4       ; $04 Crouching
+        dw poseFunc_crouch     ; $04 Crouching
         dw poseFunc_1701       ; $05 Morphball
         dw poseFunc_morphJump  ; $06 Morphball jumping
         dw poseFunc_12F5       ; $07 Falling
@@ -2235,7 +2235,7 @@ poseFunc_0EF7: ; $0F - Knockback
     ld a, pose_jumpStart
     ld [samusPose], a
     xor a
-    ld [$d010], a
+    ld [samus_jumpStartCounter], a
 ret
 
 poseFunc_0F38: ; $10
@@ -2260,7 +2260,7 @@ poseFunc_0F38: ; $10
             ld a, pose_morphJump
             ld [samusPose], a
             xor a
-            ld [$d010], a
+            ld [samus_jumpStartCounter], a
             ld a, $01
             ld [sfxRequest_square1], a
             ret
@@ -2738,7 +2738,7 @@ poseFunc_morphFall: ; 00:123B - $08: Morphball falling
             ld a, pose_morphJump
             ld [samusPose], a
             xor a
-            ld [$d010], a
+            ld [samus_jumpStartCounter], a
             ld a, $01
             ld [sfxRequest_square1], a
             ret
@@ -2823,41 +2823,39 @@ poseFunc_12F5: ; $07 - Falling
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
     jr z, jr_000_1335
-
-    ld a, [acidContactFlag]
-    and a
-    jr z, jr_000_1306
-        ld [samus_jumpArcCounter], a
-        jr jr_000_1311
-    jr_000_1306:
-        ld a, [$d049]
+        ld a, [acidContactFlag]
         and a
-            jr z, jr_000_1335
-        ld a, $21
-        ld [samus_jumpArcCounter], a
-    jr_000_1311:
-
-    ld a, $02
-    ld [sfxRequest_square1], a
-    ld a, [samusItems]
-    bit itemBit_hiJump, a
-    jr nz, jr_000_1327
-        ld a, $31
-        ld [samus_jumpArcCounter], a
-        ld a, $01
+        jr z, jr_000_1306
+            ld [samus_jumpArcCounter], a
+            jr jr_000_1311
+        jr_000_1306:
+            ld a, [$d049]
+            and a
+                jr z, jr_000_1335
+            ld a, $21
+            ld [samus_jumpArcCounter], a
+        jr_000_1311:
+    
+        ld a, $02
         ld [sfxRequest_square1], a
-    jr_000_1327:
+        ld a, [samusItems]
+        bit itemBit_hiJump, a
+        jr nz, jr_000_1327
+            ld a, $31
+            ld [samus_jumpArcCounter], a
+            ld a, $01
+            ld [sfxRequest_square1], a
+        jr_000_1327:
+    
+        ld a, pose_jumpStart
+        ld [samusPose], a
+        xor a
+        ld [samus_jumpStartCounter], a
+        xor a
+        ld [$d049], a
+        ret    
+    jr_000_1335:
 
-    ld a, pose_jumpStart
-    ld [samusPose], a
-    xor a
-    ld [$d010], a
-    xor a
-    ld [$d049], a
-    ret
-
-
-jr_000_1335:
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
     jr z, jr_000_1340
@@ -2888,44 +2886,45 @@ jr_000_1335:
         jr_000_1369:
         ret
     jr_000_136a:
+        call samus_tryStanding
+        jr nc, jr_000_1374
+            ld a, pose_crouch
+            ld [samusPose], a
+        jr_000_1374:
     
-    call Call_000_1b37
-    jr nc, jr_000_1374
-        ld a, pose_crouch
-        ld [samusPose], a
-    jr_000_1374:
-
-    xor a
-    ld [samus_fallArcCounter], a
-    ld a, [$c43a]
-    and a
-        ret nz
-    ldh a, [hSamusYPixel]
-    and $f8
-    or $04
-    ldh [hSamusYPixel], a
-ret
+        xor a
+        ld [samus_fallArcCounter], a
+        ld a, [$c43a]
+        and a
+            ret nz
+        ldh a, [hSamusYPixel]
+        and $f8
+        or $04
+        ldh [hSamusYPixel], a
+        ret
 
 fallArcTable: ; 00:1386
     db $01, $01, $01, $01, $00, $01, $01, $00, $01, $01, $01, $01, $01, $01, $02, $01
     db $02, $02, $01, $02, $02, $02, $03
 
 
-Jump_000_139d:
-    call Call_000_1f0f
+handleTurnaroundTimer: ; Called if MSB of Samus' pose is set
+    call Call_000_1f0f ; Downwards BG collision
+    ; Exit this state if jump is pressed
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
-    jp nz, Jump_000_13ac
-
-    ld hl, $d02c
-    dec [hl]
-    ret nz
-
-Jump_000_13ac:
+    jp nz, .endIf
+        ; Decrement timer
+        ld hl, samus_turnAnimTimer
+        dec [hl]
+        ret nz
+    .endIf:
+    ; Clear MSB of pose
     ld a, [samusPose]
     res 7, a
     ld [samusPose], a
-    jp Jump_000_0d21
+    jp samus_handlePose
+; end proc
 
 poseFunc_13B7: ; $00
     call Call_000_1f0f
@@ -2954,7 +2953,7 @@ jr_000_13c7:
     jp z, Jump_000_149e
 
     call Call_000_1e88
-    ret c
+        ret c
 
     ld a, $21
     ld [samus_jumpArcCounter], a
@@ -2981,7 +2980,7 @@ jr_000_13fe:
     ld a, pose_spinStart
     ld [samusPose], a
     xor a
-    ld [$d010], a
+    ld [samus_jumpStartCounter], a
     ld a, [samusItems]
     bit itemBit_screw, a
         ret z
@@ -3002,7 +3001,7 @@ jr_000_1421:
             ld a, $01
             ld [samusFacingDirection], a
             ld a, $02
-            ld [$d02c], a
+            ld [samus_turnAnimTimer], a
             ld a, $04
             ld [sfxRequest_square1], a
             ret
@@ -3027,7 +3026,7 @@ jr_000_1421:
             ld a, $00
             ld [samusFacingDirection], a
             ld a, $02
-            ld [$d02c], a
+            ld [samus_turnAnimTimer], a
             ld a, $04
             ld [sfxRequest_square1], a
             ret
@@ -3058,7 +3057,7 @@ jr_000_1421:
 
 Jump_000_149e:
     call Call_000_1e88
-    ret c
+        ret c
 
     ld a, $21
     ld [samus_jumpArcCounter], a
@@ -3084,7 +3083,7 @@ Jump_000_149e:
     ld a, pose_jumpStart
     ld [samusPose], a
     xor a
-    ld [$d010], a
+    ld [samus_jumpStartCounter], a
     ret
 
 
@@ -3114,7 +3113,7 @@ poseFunc_14D6: ; $03
     jr z, jr_000_153b
 
     call Call_000_1e88
-    ret c
+        ret c
 
     ld a, $21
     ld [samus_jumpArcCounter], a
@@ -3142,7 +3141,7 @@ jr_000_1518:
     ld a, pose_spinStart
     ld [samusPose], a
     xor a
-    ld [$d010], a
+    ld [samus_jumpStartCounter], a
     ld a, [samusItems]
     bit itemBit_screw, a
     ret z
@@ -3165,7 +3164,7 @@ jr_000_153b:
         ld a, $01
         ld [samusFacingDirection], a
         ld a, $02
-        ld [$d02c], a
+        ld [samus_turnAnimTimer], a
         ld a, $04
         ld [sfxRequest_square1], a
         ret
@@ -3190,7 +3189,7 @@ jr_000_1566:
         ld a, $00
         ld [samusFacingDirection], a
         ld a, $02
-        ld [$d02c], a
+        ld [samus_turnAnimTimer], a
         ld a, $04
         ld [sfxRequest_square1], a
         ret
@@ -3226,7 +3225,7 @@ jr_000_15aa:
     sub $08
     ldh [hSamusYPixel], a
     call Call_000_1e88
-    ret c
+        ret c
 
     ld a, $21
     ld [samus_jumpArcCounter], a
@@ -3240,7 +3239,7 @@ jr_000_15aa:
     ld a, pose_jumpStart
     ld [samusPose], a
     xor a
-    ld [$d010], a
+    ld [samus_jumpStartCounter], a
     ld a, $02
     ld [sfxRequest_square1], a
     ld a, [samusItems]
@@ -3262,176 +3261,201 @@ jr_000_15e5:
 jr_000_15f3:
     ret
 
-poseFunc_15F4: ; $04
+poseFunc_crouch: ; 00:15F4 - $04: Crouching
+    ; Start falling if ground disappears
     call Call_000_1f0f
-    jr c, jr_000_1604
+    jr c, .endIf_A
+        ld a, pose_fall
+        ld [samusPose], a
+        ld a, $01
+        ld [samus_fallArcCounter], a
+        ret
+    .endIf_A:
 
-    ld a, pose_fall
-    ld [samusPose], a
-    ld a, $01
-    ld [samus_fallArcCounter], a
-    ret
-
-
-jr_000_1604:
+; Handle right input
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
-    jr z, jr_000_163b
-
-    ld a, [$d022]
-    inc a
-    ld [$d022], a
-    cp $08
-    jr nc, jr_000_161b
-
-    ldh a, [hInputRisingEdge]
-    bit PADB_RIGHT, a
-    jr z, jr_000_163b
-
-jr_000_161b:
-    xor a
-    ld [$d022], a
-    ld a, [samusFacingDirection]
-    cp $01
-    jr nz, jr_000_1635
-        call Call_000_1b37
-            ret nc
-        ld a, pose_morph
-        ld [samusPose], a
-        ld a, $06
-        ld [sfxRequest_square1], a
-        ret
-    jr_000_1635:
-
-    ld a, $01
-    ld [samusFacingDirection], a
-    ret
-
-
-jr_000_163b:
-    ldh a, [hInputPressed]
-    bit PADB_LEFT, a
-    jr z, jr_000_1671
-
-    ld a, [$d022]
-    inc a
-    ld [$d022], a
-    cp $08
-    jr nc, jr_000_1652
-
-    ldh a, [hInputRisingEdge]
-    bit PADB_LEFT, a
-    jr z, jr_000_1671
-
-jr_000_1652:
-    xor a
-    ld [$d022], a
-    ld a, [samusFacingDirection]
-    and a
-    jr nz, jr_000_166b
-        call Call_000_1b37
-            ret nc
-        ld a, pose_morph
-        ld [samusPose], a
-        ld a, $06
-        ld [sfxRequest_square1], a
-        ret
-    jr_000_166b:
-    
-    ld a, $00
-    ld [samusFacingDirection], a
-    ret
-
-
-jr_000_1671:
-    ldh a, [hInputRisingEdge]
-    bit PADB_A, a
-    jr z, jr_000_16c4
-
-    ld a, [samusItems]
-    and itemMask_hiJump
-    srl a
-    inc a
-    ld [sfxRequest_square1], a
-    ldh a, [hInputPressed]
-    and PADF_LEFT | PADF_RIGHT ;$30
-    jr z, jr_000_169b
-        ld a, pose_spinJump
-        ld [samusPose], a
-        ld a, [samusItems]
-        bit itemBit_screw, a
-        jr z, jr_000_16a0
-            ld a, $03
-            ld [sfxRequest_square1], a
-            jr jr_000_16a0
-    jr_000_169b:
-        ld a, pose_jump
-        ld [samusPose], a
-    jr_000_16a0:
-
-    ld a, $21
-    ld [samus_jumpArcCounter], a
-    ld a, [samusItems]
-    bit itemBit_hiJump, a
-    jr nz, jr_000_16b1
-        ld a, $31
-        ld [samus_jumpArcCounter], a
-    jr_000_16b1:
-
-    ld a, [waterContactFlag]
-    and a
-    jr z, jr_000_16bf
-        ld a, [samus_jumpArcCounter]
-        add $10
-        ld [samus_jumpArcCounter], a
-    jr_000_16bf:
-
-    xor a
-    ld [$d010], a
-    ret
-
-
-jr_000_16c4:
-    ldh a, [hInputRisingEdge]
-    bit PADB_DOWN, a
-    jr z, jr_000_16ce
-
-    call samus_morphOnGround
-    ret
-
-
-jr_000_16ce:
-    ldh a, [hInputPressed]
-    bit PADB_DOWN, a
-    jr z, jr_000_16e2
+    jr z, .endIf_B
+        ; inc input cooldown timer
         ld a, [$d022]
         inc a
         ld [$d022], a
+        ; Jump ahead if cooldown is met
+        cp $08
+        jr nc, .endIf_C
+            ; Exit if statement if not a rising edge
+            ldh a, [hInputRisingEdge]
+            bit PADB_RIGHT, a
+                jr z, .endIf_B
+        .endIf_C:
+        ; We've reached this point if the cooldown is done or if the input was a rising edge
+        ; Clear cooldown
+        xor a
+        ld [$d022], a
+        ; Check if facing direction matches input
+        ld a, [samusFacingDirection]
+        cp $01
+        jr nz, .else_D
+            ; It's a match. Now prep to move forward
+            call samus_tryStanding ; Stand
+                ret nc
+            ; Morph if can't stand
+            ld a, pose_morph
+            ld [samusPose], a
+            ld a, $06
+            ld [sfxRequest_square1], a
+            ret
+        .else_D:
+            ; Turn around
+            ld a, $01
+            ld [samusFacingDirection], a
+            ret
+    .endIf_B:
+
+; Handle left input
+    ldh a, [hInputPressed]
+    bit PADB_LEFT, a
+    jr z, .endIf_E
+        ; inc input cooldown timer
+        ld a, [$d022]
+        inc a
+        ld [$d022], a
+        ; Jump ahead if cooldown is met
+        cp $08
+        jr nc, .endIf_F
+            ; Exit if statement if not a rising edge
+            ldh a, [hInputRisingEdge]
+            bit PADB_LEFT, a
+                jr z, .endIf_E
+        .endIf_F:
+        ; We've reached this point if the cooldown is done or if the input was a rising edge
+        ; Clear cooldown
+        xor a
+        ld [$d022], a
+        ; Check if facing direction matches input
+        ld a, [samusFacingDirection]
+        and a
+        jr nz, .else_G
+            ; It's a match. Now prep to move forward
+            call samus_tryStanding ; Stand
+                ret nc
+            ; Morph if can't stand
+            ld a, pose_morph
+            ld [samusPose], a
+            ld a, $06
+            ld [sfxRequest_square1], a
+            ret
+        .else_G:
+            ; Turn around
+            ld a, $00
+            ld [samusFacingDirection], a
+            ret
+    .endIf_E:
+
+; Handle jump input
+    ldh a, [hInputRisingEdge]
+    bit PADB_A, a
+    jr z, .endIf_H
+        ; Request appropriate jump sound effect
+        ld a, [samusItems]
+        and itemMask_hiJump
+        srl a
+        inc a
+        ld [sfxRequest_square1], a
+        ; Check if we're making a normal jump or spin jump
+        ldh a, [hInputPressed]
+        and PADF_LEFT | PADF_RIGHT ;$30
+        jr z, .else_I
+            ; Spin jump
+            ld a, pose_spinJump
+            ld [samusPose], a
+            ; Request screw sound effect
+            ld a, [samusItems]
+            bit itemBit_screw, a
+            jr z, .endIf_I
+                ld a, $03
+                ld [sfxRequest_square1], a
+                jr .endIf_I
+        .else_I:
+            ; Normal jump
+            ld a, pose_jump
+            ld [samusPose], a
+        .endIf_I:
+
+        ; High jump counter value
+        ld a, $21
+        ld [samus_jumpArcCounter], a
+        ld a, [samusItems]
+        bit itemBit_hiJump, a
+        jr nz, .endIf_J
+            ; Normal jump counter value
+            ld a, $31
+            ld [samus_jumpArcCounter], a
+        .endIf_J:
+
+        ; Make jump lower if in water
+        ld a, [waterContactFlag]
+        and a
+        jr z, .endIf_K
+            ld a, [samus_jumpArcCounter]
+            add $10
+            ld [samus_jumpArcCounter], a
+        .endIf_K:
+    
+        ; Clear jump start counter
+        ; (Not sure if this is necessary since we're not entering the jumpStart pose)
+        xor a
+        ld [samus_jumpStartCounter], a
+        ret
+    .endIf_H:
+
+; Handle down input
+    ; Rising edge
+    ldh a, [hInputRisingEdge]
+    bit PADB_DOWN, a
+    jr z, .endIf_L
+        call samus_morphOnGround
+        ret
+    .endIf_L:
+
+    ; Already pressed
+    ldh a, [hInputPressed]
+    bit PADB_DOWN, a
+    jr z, .endIf_M
+        ; Increment cooldown
+        ld a, [$d022]
+        inc a
+        ld [$d022], a
+        ; Morph if cooldown is done
         cp $10
             ret c
         call samus_morphOnGround
         ret
+    .endIf_M:
 
-
-jr_000_16e2:
+; Handle up input
+    ; Rising edge
     ldh a, [hInputRisingEdge]
     bit PADB_UP, a
-    jr z, jr_000_16ec
-        call Call_000_1b37
+    jr z, .endIf_N
+        call samus_tryStanding
         ret
-    jr_000_16ec:
+    .endIf_N:
 
+    ; Already pressed
     ldh a, [hInputPressed]
     bit PADB_UP, a
-    jr z, jr_000_1700
+    jr z, .endIf_O
+        ; Increment cooldown
         ld a, [$d022]
         inc a
         ld [$d022], a
+        ; Stand if cooldown is done
         cp $10
             ret c
-        call Call_000_1b37
+        call samus_tryStanding
         ret
-    jr_000_1700:
+    .endIf_O:
 ret
 
 poseFunc_1701: ; 00:1701 $05 - Morph ball
@@ -3471,7 +3495,7 @@ poseFunc_1701: ; 00:1701 $05 - Morph ball
             ld a, pose_morphJump
             ld [samusPose], a
             xor a
-            ld [$d010], a
+            ld [samus_jumpStartCounter], a
             ld a, $01
             ld [sfxRequest_square1], a
             ret
@@ -3861,14 +3885,14 @@ poseFunc_jumpStart: ; 00:19E2 - $09 and $0A - Starting to jump
         sub b
         call samus_moveVertical
         jr nc, .endIf_B
-            call Call_000_1b37
+            call samus_tryStanding
             ret
         .endIf_B:
     
         ; Inc jump-start counter
-        ld a, [$d010]
+        ld a, [samus_jumpStartCounter]
         inc a
-        ld [$d010], a
+        ld [samus_jumpStartCounter], a
         cp $06
         jr nc, .endIf_A
             ldh a, [hInputPressed]
@@ -3958,12 +3982,11 @@ Call_000_1a42:
     ld [$c203], a
     call Call_000_1fbf
     jr nc, jr_000_1abc
+        ld a, [$d03d]
+        or $03
+        ld [$d03d], a
+    jr_000_1abc:
 
-    ld a, [$d03d]
-    or $03
-    ld [$d03d], a
-
-jr_000_1abc:
     ldh a, [hSamusXPixel]
     add $0a
     ld [$c204], a
@@ -3972,12 +3995,11 @@ jr_000_1abc:
     ld [$c203], a
     call Call_000_1fbf
     jr nc, jr_000_1ad7
+        ld a, [$d03d]
+        or $0c
+        ld [$d03d], a
+    jr_000_1ad7:
 
-    ld a, [$d03d]
-    or $0c
-    ld [$d03d], a
-
-jr_000_1ad7:
     ldh a, [hSamusXPixel]
     add $0f
     ld [$c204], a
@@ -3986,12 +4008,11 @@ jr_000_1ad7:
     ld [$c203], a
     call Call_000_1fbf
     jr nc, jr_000_1af2
+        ld a, [$d03d]
+        or $05
+        ld [$d03d], a
+    jr_000_1af2:
 
-    ld a, [$d03d]
-    or $05
-    ld [$d03d], a
-
-jr_000_1af2:
     ldh a, [hSamusYPixel]
     add $2c
     ld [$c203], a
@@ -4002,21 +4023,18 @@ jr_000_1af2:
     ld hl, samusSolidityIndex
     cp [hl]
     jr nc, jr_000_1b13
+        ld a, [$d03d]
+        or $0a
+        ld [$d03d], a
+        jr jr_000_1b20
+    jr_000_1b13:
+        call Call_000_348d
+        jr nc, jr_000_1b20
+            ld a, [$d03d]
+            or $0a
+            ld [$d03d], a
+    jr_000_1b20:
 
-    ld a, [$d03d]
-    or $0a
-    ld [$d03d], a
-    jr jr_000_1b20
-
-jr_000_1b13:
-    call Call_000_348d
-    jr nc, jr_000_1b20
-
-    ld a, [$d03d]
-    or $0a
-    ld [$d03d], a
-
-jr_000_1b20:
     ld a, [$d03d]
     and $05
     cp $05
@@ -4033,10 +4051,11 @@ Call_000_1b2e: ; Unmorph on ground
     ld [$c204], a
         jr jr_000_1b6b
 
-; Called when landing (unmorphed) and uncrouching
-Call_000_1b37: ; 00:1B37
+; Attempts to stand up. Returns carry if it fails.
+samus_tryStanding: ; 00:1B37
     ld a, $04
     ld [sfxRequest_square1], a
+    ; Check upper left pixel
     ldh a, [hSamusXPixel]
     add $0c
     ld [$c204], a
@@ -4047,7 +4066,7 @@ Call_000_1b37: ; 00:1B37
     ld hl, samusSolidityIndex
     cp [hl]
         ret c
-
+    ; Check upper right pixel
     ldh a, [hSamusXPixel]
     add $14
     ld [$c204], a
@@ -4439,7 +4458,7 @@ samus_moveUp: ; 00:1D98 - Move up (only directly called by spider ball)
         ret
 
 ; BG collision functions
-Call_000_1dd6:
+Call_000_1dd6: ; Left
     push hl
     push de
     push bc
@@ -4448,7 +4467,7 @@ Call_000_1dd6:
     ld [$c204], a
     jr jr_000_1dec
 
-Call_000_1de2:
+Call_000_1de2: ; Right
     push hl
     push de
     push bc
@@ -4456,9 +4475,9 @@ Call_000_1de2:
     add $14
     ld [$c204], a
 
-jr_000_1dec:
+jr_000_1dec: ; Start
     call Call_000_32cf
-    jp c, Jump_000_1e84
+        jp c, Jump_000_1e84
 
     ld hl, $20ff
     ld a, [samusPose]
@@ -4470,27 +4489,24 @@ jr_000_1dec:
     add hl, de
     ld a, [hl+]
     cp $80
-    jp z, Jump_000_1e84
+        jp z, Jump_000_1e84
 
     ld [$d02d], a
     ld a, [hl+]
     cp $80
-    jr z, jr_000_1e71
-
+        jr z, jr_000_1e71
     ld [$d02e], a
     ld a, [hl+]
     cp $80
-    jr z, jr_000_1e5e
-
+        jr z, jr_000_1e5e
     ld [$d02f], a
     ld a, [hl+]
     cp $80
-    jr z, jr_000_1e4b
-
+        jr z, jr_000_1e4b
     ld [$d030], a
     ld a, [hl]
     cp $80
-    jr z, jr_000_1e38
+        jr z, jr_000_1e38
 
     ld b, a
     ldh a, [hSamusYPixel]
@@ -4499,7 +4515,7 @@ jr_000_1dec:
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
-    jr c, jr_000_1e84
+        jr c, jr_000_1e84
 
 jr_000_1e38:
     ld a, [$d030]
@@ -4510,7 +4526,7 @@ jr_000_1e38:
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
-    jr c, jr_000_1e84
+        jr c, jr_000_1e84
 
 jr_000_1e4b:
     ld a, [$d02f]
@@ -4521,7 +4537,7 @@ jr_000_1e4b:
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
-    jr c, jr_000_1e84
+        jr c, jr_000_1e84
 
 jr_000_1e5e:
     ld a, [$d02e]
@@ -4532,7 +4548,7 @@ jr_000_1e5e:
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
-    jr c, jr_000_1e84
+        jr c, jr_000_1e84
 
 jr_000_1e71:
     ld a, [$d02d]
@@ -4543,22 +4559,22 @@ jr_000_1e71:
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
-    jr c, jr_000_1e84
+        jr c, jr_000_1e84
 
 Jump_000_1e84:
 jr_000_1e84:
     pop bc
     pop de
     pop hl
-    ret
+ret
 
 
-Call_000_1e88:
+Call_000_1e88: ; Samus upwards BG collision detection
     push hl
     push de
     push bc
     call Call_000_34ef
-    jp c, Jump_000_1f0b
+        jp c, Jump_000_1f0b
 
     ldh a, [hSamusXPixel]
     add $0c
@@ -4602,7 +4618,7 @@ Call_000_1e88:
         pop af
     jr_000_1ed6:
 
-    jr c, jr_000_1f0b
+    jr c, Jump_000_1f0b
 
     ldh a, [hSamusXPixel]
     add $14
@@ -4628,23 +4644,22 @@ Call_000_1e88:
     ld a, [hl]
     bit blockType_acid, a
     jr z, jr_000_1f0b
-
-    ld a, $40
-    ld [acidContactFlag], a
-    push af
-    ld a, [acidDamageValue]
-    call applyAcidDamage
-    pop af
+        ld a, $40
+        ld [acidContactFlag], a
+        push af
+        ld a, [acidDamageValue]
+        call applyAcidDamage
+        pop af
+    jr_000_1f0b:
 
 Jump_000_1f0b:
-jr_000_1f0b:
     pop bc
     pop de
     pop hl
-    ret
+ret
 
 
-Call_000_1f0f:
+Call_000_1f0f: ; Samus downwards BG collision detection
     push hl
     push de
     push bc
@@ -4762,7 +4777,7 @@ jr_000_1fbb:
 ret
 
 
-Call_000_1fbf:
+Call_000_1fbf: ; Check if touching acid
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
@@ -5245,7 +5260,7 @@ Call_000_2366:
     sub $50
     ld [$c206], a
     call Call_000_3ced
-    ret
+ret
 
 
 Call_000_2378:
@@ -5253,7 +5268,7 @@ Call_000_2378:
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     call $4006
-    ret
+ret
 
 
 handleAudio: ;00:2384
@@ -7098,7 +7113,7 @@ ret
 
 ; 00:2FC8 - Unused
     ld a, $a0
-    ld [$d02c], a
+    ld [samus_turnAnimTimer], a
     ld a, $80 | pose_standing
     ld [samusPose], a
     ld a, $20
@@ -7255,26 +7270,26 @@ reti
     ld [rMBC_BANK_REG], a
     ld hl, $c600
 
-jr_000_30ce:
-    ld a, [hl]
-    and $0f
-    jr nz, jr_000_30d8
-
-    call Call_000_30ea
-    jr c, jr_000_30e1
-
-jr_000_30d8:
-    ld de, $0020
-    add hl, de
-    ld a, h
-    cp $c8
+    jr_000_30ce:
+        ld a, [hl]
+        and $0f
+        jr nz, jr_000_30d8
+            call Call_000_30ea
+                jr c, jr_000_30e1
+        jr_000_30d8:
+    
+        ld de, $0020
+        add hl, de
+        ld a, h
+        cp $c8
     jr nz, jr_000_30ce
 
-jr_000_30e1:
+    jr_000_30e1:
+    
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    ret
+ret
 
 
 Call_000_30ea:
@@ -7282,12 +7297,11 @@ Call_000_30ea:
     inc hl
     ld a, [hl+]
     cp $e0
-    jp nc, Jump_000_31b2
-
+        jp nc, Jump_000_31b2
     ldh [$b7], a
     ld a, [hl+]
     cp $e0
-    jp nc, Jump_000_31b2
+        jp nc, Jump_000_31b2
 
     ldh [$b8], a
     ld a, [hl+]
@@ -7312,59 +7326,55 @@ Call_000_30ea:
     ldh a, [$bf]
     bit 6, a
     jr nz, jr_000_312c
+        ld a, [hl+]
+        add b
+        sub $10
+        ldh [$ba], a
+        ld a, [hl+]
+        add b
+        add $10
+        ldh [$bb], a
+        jr jr_000_313a
+    jr_000_312c:
+        ld a, [hl+]
+        sub b
+        cpl
+        add $10
+        ldh [$bb], a
+        ld a, [hl+]
+        sub b
+        cpl
+        sub $10
+        ldh [$ba], a
+    jr_000_313a:
 
-    ld a, [hl+]
-    add b
-    sub $10
-    ldh [$ba], a
-    ld a, [hl+]
-    add b
-    add $10
-    ldh [$bb], a
-    jr jr_000_313a
-
-jr_000_312c:
-    ld a, [hl+]
-    sub b
-    cpl
-    add $10
-    ldh [$bb], a
-    ld a, [hl+]
-    sub b
-    cpl
-    sub $10
-    ldh [$ba], a
-
-jr_000_313a:
     ldh a, [$b8]
     ld b, a
     ldh a, [$bf]
     bit 5, a
     jr nz, jr_000_3151
+        ld a, [hl+]
+        add b
+        sub $10
+        ldh [$bc], a
+        ld a, [hl+]
+        add b
+        add $10
+        ldh [$bd], a
+        jr jr_000_315f
+    jr_000_3151:
+        ld a, [hl+]
+        sub b
+        cpl
+        add $10
+        ldh [$bd], a
+        ld a, [hl+]
+        sub b
+        cpl
+        sub $10
+        ldh [$bc], a
+    jr_000_315f:
 
-    ld a, [hl+]
-    add b
-    sub $10
-    ldh [$bc], a
-    ld a, [hl+]
-    add b
-    add $10
-    ldh [$bd], a
-    jr jr_000_315f
-
-jr_000_3151:
-    ld a, [hl+]
-    sub b
-    cpl
-    add $10
-    ldh [$bd], a
-    ld a, [hl+]
-    sub b
-    cpl
-    sub $10
-    ldh [$bc], a
-
-jr_000_315f:
     ldh a, [$ba]
     ld b, a
     ldh a, [$bb]
@@ -7373,7 +7383,7 @@ jr_000_315f:
     ldh a, [$98]
     sub b
     cp c
-    jr nc, jr_000_31b2
+        jr nc, jr_000_31b2
 
     ldh a, [$bc]
     ld b, a
@@ -7383,7 +7393,7 @@ jr_000_315f:
     ldh a, [$99]
     sub b
     cp c
-    jr nc, jr_000_31b2
+        jr nc, jr_000_31b2
 
     ld a, $09
     ld [$d05d], a
@@ -7395,31 +7405,27 @@ jr_000_315f:
     ld a, [$d090]
     cp $03
     jr nz, jr_000_3199
+        ldh a, [$b9]
+        cp $f1
+        jr nz, jr_000_3199
+            ld a, $04
+            ld [$d090], a
+    jr_000_3199:
 
-    ldh a, [$b9]
-    cp $f1
-    jr nz, jr_000_3199
-
-    ld a, $04
-    ld [$d090], a
-
-jr_000_3199:
     ld a, [$d090]
     cp $06
     jr nz, jr_000_31b0
-
-    ldh a, [$b9]
-    cp $f3
-    jr nz, jr_000_31b0
-
-    ld a, $07
-    ld [$d090], a
-    ld a, $1c
-    ld [samusPose], a
-
-jr_000_31b0:
+        ldh a, [$b9]
+        cp $f3
+        jr nz, jr_000_31b0
+            ld a, $07
+            ld [$d090], a
+            ld a, $1c
+            ld [samusPose], a
+    jr_000_31b0:
+    ; A collision happened
     scf
-    ret
+ret
 
 
 Jump_000_31b2:
@@ -7427,9 +7433,9 @@ jr_000_31b2:
     pop hl
     scf
     ccf
-    ret
+ret
 
-
+; 00:31B6 - Projectile/enemy collision function
     ld a, [$c205]
     ld b, a
     ld a, [$c203]
@@ -7445,26 +7451,25 @@ jr_000_31b2:
     ld [rMBC_BANK_REG], a
     ld hl, $c600
 
-jr_000_31d5:
-    ld a, [hl]
-    and $0f
-    jr nz, jr_000_31df
-
-    call Call_000_31f1
-    jr c, jr_000_31e8
-
-jr_000_31df:
-    ld de, $0020
-    add hl, de
-    ld a, h
-    cp $c8
+    jr_000_31d5:
+        ld a, [hl]
+        and $0f
+        jr nz, jr_000_31df
+            call Call_000_31f1
+                jr c, jr_000_31e8
+        jr_000_31df:
+        ld de, $0020
+        add hl, de
+        ld a, h
+        cp $c8
     jr nz, jr_000_31d5
 
-jr_000_31e8:
+    jr_000_31e8:
+
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    ret
+ret
 
 
 Call_000_31f1:
@@ -7472,12 +7477,12 @@ Call_000_31f1:
     inc hl
     ld a, [hl+]
     cp $e0
-    jp nc, Jump_000_32a7
+        jp nc, Jump_000_32a7
 
     ldh [$b7], a
     ld a, [hl+]
     cp $e0
-    jp nc, Jump_000_32a7
+        jp nc, Jump_000_32a7
 
     ldh [$b8], a
     ld a, [hl+]
@@ -7492,7 +7497,7 @@ Call_000_31f1:
     add hl, de
     ld a, [hl]
     and a
-    jp z, Jump_000_32a7
+        jp z, Jump_000_32a7
 
     ldh a, [$b9]
     sla a
@@ -7511,51 +7516,47 @@ Call_000_31f1:
     ldh a, [$bf]
     bit 6, a
     jr nz, jr_000_323d
+        ld a, [hl+]
+        add b
+        ldh [$ba], a
+        ld a, [hl+]
+        add b
+        ldh [$bb], a
+        jr jr_000_3247
+    jr_000_323d:
+        ld a, [hl+]
+        sub b
+        cpl
+        ldh [$bb], a
+        ld a, [hl+]
+        sub b
+        cpl
+        ldh [$ba], a
+    jr_000_3247:
 
-    ld a, [hl+]
-    add b
-    ldh [$ba], a
-    ld a, [hl+]
-    add b
-    ldh [$bb], a
-    jr jr_000_3247
-
-jr_000_323d:
-    ld a, [hl+]
-    sub b
-    cpl
-    ldh [$bb], a
-    ld a, [hl+]
-    sub b
-    cpl
-    ldh [$ba], a
-
-jr_000_3247:
     ldh a, [$b8]
     ld b, a
     ldh a, [$bf]
     bit 5, a
     jr nz, jr_000_325a
+        ld a, [hl+]
+        add b
+        ldh [$bc], a
+        ld a, [hl+]
+        add b
+        ldh [$bd], a
+        jr jr_000_3264
+    jr_000_325a:
+        ld a, [hl+]
+        sub b
+        cpl
+        ldh [$bd], a
+        ld a, [hl+]
+        sub b
+        cpl
+        ldh [$bc], a
+    jr_000_3264:
 
-    ld a, [hl+]
-    add b
-    ldh [$bc], a
-    ld a, [hl+]
-    add b
-    ldh [$bd], a
-    jr jr_000_3264
-
-jr_000_325a:
-    ld a, [hl+]
-    sub b
-    cpl
-    ldh [$bd], a
-    ld a, [hl+]
-    sub b
-    cpl
-    ldh [$bc], a
-
-jr_000_3264:
     ldh a, [$ba]
     ld b, a
     ldh a, [$bb]
@@ -7564,8 +7565,7 @@ jr_000_3264:
     ldh a, [$98]
     sub b
     cp c
-    jr nc, jr_000_32a7
-
+        jr nc, jr_000_32a7
     ldh a, [$bc]
     ld b, a
     ldh a, [$bd]
@@ -7574,8 +7574,7 @@ jr_000_3264:
     ldh a, [$99]
     sub b
     cp c
-    jr nc, jr_000_32a7
-
+        jr nc, jr_000_32a7
     ld a, [$d08d]
     ld [$d05d], a
     pop hl
@@ -7588,17 +7587,15 @@ jr_000_3264:
     ld a, [$d08d]
     cp $08
     jr nz, jr_000_32a5
-
-    ldh a, [$b9]
-    cp $f6
-    jr nz, jr_000_32a5
-
-    ld a, $10
-    ld [$d090], a
-
-jr_000_32a5:
+        ldh a, [$b9]
+        cp $f6
+        jr nz, jr_000_32a5
+            ld a, $10
+            ld [$d090], a
+    jr_000_32a5:
+    ; A collision happened
     scf
-    ret
+ret
 
 
 Jump_000_32a7:
@@ -7606,26 +7603,23 @@ jr_000_32a7:
     pop hl
     scf
     ccf
-    ret
+ret
 
 
 Call_000_32ab: ; Samus enemy collision detection ?
     ; Conditions for exiting early early
     ld a, [samusPose]
     cp $18
-    jp nc, Jump_000_3698
-
+        jp nc, Jump_000_3698
     ld a, [deathFlag]
     and a
-    jp nz, Jump_000_3698
-
+        jp nz, Jump_000_3698
     ld a, [samusInvulnerableTimer]
     and a
-    jp nz, Jump_000_3698
-
+        jp nz, Jump_000_3698
     ld a, [$d05c]
     and a
-    jp nz, Jump_000_3698
+        jp nz, Jump_000_3698
 
     ld a, [$d03c]
     ldh [$99], a
@@ -7669,22 +7663,20 @@ jr_000_32f7:
     ld [$d05c], a
     ld hl, $c600
 
-jr_000_3311:
-    ld a, [hl]
-    and $0f
-    jr nz, jr_000_331a
-
-    call Call_000_3324
-    ret c
-
-jr_000_331a:
-    ld de, $0020
-    add hl, de
-    ld a, h
-    cp $c8
+    jr_000_3311:
+        ld a, [hl]
+        and $0f
+        jr nz, jr_000_331a
+            call Call_000_3324
+            ret c
+        jr_000_331a:
+    
+        ld de, $0020
+        add hl, de
+        ld a, h
+        cp $c8
     jr nz, jr_000_3311
-
-    ret
+ret
 
 
 Call_000_3324:
@@ -7692,12 +7684,11 @@ Call_000_3324:
     inc hl
     ld a, [hl+]
     cp $e0
-    jp nc, Jump_000_3489
-
+        jp nc, Jump_000_3489
     ldh [$b7], a
     ld a, [hl+]
     cp $e0
-    jp nc, Jump_000_3489
+        jp nc, Jump_000_3489
 
     ldh [$b8], a
     ld a, [hl+]
@@ -7729,59 +7720,55 @@ Call_000_3324:
     ldh a, [$bf]
     bit 6, a
     jr nz, jr_000_336e
+        ld a, [hl+]
+        add b
+        sub $11
+        ldh [$ba], a
+        ld a, [hl+]
+        add b
+        sub $04
+        ldh [$bb], a
+        jr jr_000_337c
+    jr_000_336e:
+        ld a, [hl+]
+        sub b
+        cpl
+        sub $04
+        ldh [$bb], a
+        ld a, [hl+]
+        sub b
+        cpl
+        sub $11
+        ldh [$ba], a
+    jr_000_337c:
 
-    ld a, [hl+]
-    add b
-    sub $11
-    ldh [$ba], a
-    ld a, [hl+]
-    add b
-    sub $04
-    ldh [$bb], a
-    jr jr_000_337c
-
-jr_000_336e:
-    ld a, [hl+]
-    sub b
-    cpl
-    sub $04
-    ldh [$bb], a
-    ld a, [hl+]
-    sub b
-    cpl
-    sub $11
-    ldh [$ba], a
-
-jr_000_337c:
     ldh a, [$b8]
     ld b, a
     ldh a, [$bf]
     bit 5, a
     jr nz, jr_000_3393
+        ld a, [hl+]
+        add b
+        sub $05
+        ldh [$bc], a
+        ld a, [hl+]
+        add b
+        add $05
+        ldh [$bd], a
+        jr jr_000_33a1
+    jr_000_3393:
+        ld a, [hl+]
+        sub b
+        cpl
+        add $05
+        ldh [$bd], a
+        ld a, [hl+]
+        sub b
+        cpl
+        sub $05
+        ldh [$bc], a
+    jr_000_33a1:
 
-    ld a, [hl+]
-    add b
-    sub $05
-    ldh [$bc], a
-    ld a, [hl+]
-    add b
-    add $05
-    ldh [$bd], a
-    jr jr_000_33a1
-
-jr_000_3393:
-    ld a, [hl+]
-    sub b
-    cpl
-    add $05
-    ldh [$bd], a
-    ld a, [hl+]
-    sub b
-    cpl
-    sub $05
-    ldh [$bc], a
-
-jr_000_33a1:
     ld a, [samusPose]
     and $7f
     ld e, a
@@ -7801,8 +7788,7 @@ jr_000_33a1:
     ldh a, [$98]
     sub b
     cp c
-    jp nc, Jump_000_3489
-
+        jp nc, Jump_000_3489
     ld a, $01
     ld [$c423], a
     ldh a, [$bc]
@@ -7815,16 +7801,15 @@ jr_000_33a1:
     ld d, a
     srl d
     sub c
-    jp c, Jump_000_3489
+        jp c, Jump_000_3489
 
     ld a, d
     cp c
     jr c, jr_000_33e1
+        ld a, $ff
+        ld [$c423], a
+    jr_000_33e1:
 
-    ld a, $ff
-    ld [$c423], a
-
-jr_000_33e1:
     ld a, [samusItems]
     bit itemBit_screw, a
         jr z, jr_000_3421
@@ -7876,21 +7861,20 @@ jr_000_3426:
     ldh a, [$b9]
     cp $f7
     jr nz, jr_000_3446
-
-    ld a, [samusPose]
-    cp pose_morph
-    jr z, jr_000_343c
-        cp pose_morphJump
+        ld a, [samusPose]
+        cp pose_morph
         jr z, jr_000_343c
-            cp pose_morphFall
-                jr nz, jr_000_3446
-        jr_000_343c:
-            ld a, $01
-            ld [$d090], a
-            ld a, $18
-            ld [samusPose], a
+            cp pose_morphJump
+            jr z, jr_000_343c
+                cp pose_morphFall
+                    jr nz, jr_000_3446
+            jr_000_343c:
+                ld a, $01
+                ld [$d090], a
+                ld a, $18
+                ld [samusPose], a
     jr_000_3446:
-
+    ; A collision happened
     scf
 ret
 
@@ -7919,7 +7903,7 @@ jr_000_3448:
     ld a, $20
     ld [$d05d], a
     scf
-    ret
+ret
 
 
 jr_000_3475:
@@ -7935,28 +7919,26 @@ jr_000_3478:
     ld [$d05d], a
     scf
     ccf
-    ret
+ret
 
-
+; Exit that clears the carry flag (indicates no collision happened)
 Jump_000_3489:
     pop hl
     scf
     ccf
-    ret
+ret
 
 
 Call_000_348d:
     ld a, [samusPose]
     cp $18
-    jp nc, Jump_000_3698
-
+        jp nc, Jump_000_3698
     ld a, [deathFlag]
     and a
-    jp nz, Jump_000_3698
-
+        jp nz, Jump_000_3698
     ld a, [samusInvulnerableTimer]
     and a
-    jp nz, Jump_000_3698
+        jp nz, Jump_000_3698
 
     ld a, [$d03b]
     add $12
@@ -7974,55 +7956,47 @@ Call_000_348d:
     ld [rMBC_BANK_REG], a
     ld hl, $c600
 
-jr_000_34c3:
-    ld a, [hl]
-    and $0f
-    jr nz, jr_000_34e5
-
-    call Call_000_3545
-    jr nc, jr_000_34e5
-
-    ld a, [$c424]
-    dec a
-    cp $fe
-    jr c, jr_000_34e3
-
-    ldh a, [$9a]
-    ld b, a
-    ldh a, [hSamusYPixel]
-    sub b
-    ldh [hSamusYPixel], a
-    ldh a, [hSamusYScreen]
-    sbc $00
-    ldh [hSamusYScreen], a
-
-jr_000_34e3:
-    scf
-    ret
-
-
-jr_000_34e5:
-    ld de, $0020
-    add hl, de
-    ld a, h
-    cp $c8
+    jr_000_34c3:
+        ld a, [hl]
+        and $0f
+            jr nz, jr_000_34e5
+        call Call_000_3545
+        jr nc, jr_000_34e5
+            ld a, [$c424]
+            dec a
+            cp $fe
+            jr c, jr_000_34e3
+                ldh a, [$9a]
+                ld b, a
+                ldh a, [hSamusYPixel]
+                sub b
+                ldh [hSamusYPixel], a
+                ldh a, [hSamusYScreen]
+                sbc $00
+                ldh [hSamusYScreen], a
+            jr_000_34e3:
+            scf
+            ret
+        jr_000_34e5:
+        
+        ld de, $0020
+        add hl, de
+        ld a, h
+        cp $c8
     jr nz, jr_000_34c3
-
-    ret
+ret
 
 
 Call_000_34ef:
     ld a, [samusPose]
     cp $18
-    jp nc, Jump_000_3698
-
+        jp nc, Jump_000_3698
     ld a, [deathFlag]
     and a
-    jp nz, Jump_000_3698
-
+        jp nz, Jump_000_3698
     ld a, [samusInvulnerableTimer]
     and a
-    jp nz, Jump_000_3698
+        jp nz, Jump_000_3698
 
     ld a, [samusPose]
     and $7f
@@ -8048,22 +8022,20 @@ Call_000_34ef:
     ld [rMBC_BANK_REG], a
     ld hl, $c600
 
-jr_000_3532:
-    ld a, [hl]
-    and $0f
-    jr nz, jr_000_353b
-
-    call Call_000_3545
-    ret c
-
-jr_000_353b:
-    ld de, $0020
-    add hl, de
-    ld a, h
-    cp $c8
+    jr_000_3532:
+        ld a, [hl]
+        and $0f
+        jr nz, jr_000_353b
+            call Call_000_3545
+            ret c
+        jr_000_353b:
+        
+        ld de, $0020
+        add hl, de
+        ld a, h
+        cp $c8
     jr nz, jr_000_3532
-
-    ret
+ret
 
 
 Call_000_3545:
@@ -8071,12 +8043,11 @@ Call_000_3545:
     inc hl
     ld a, [hl+]
     cp $e0
-    jp nc, Jump_000_3694
-
+        jp nc, Jump_000_3694
     ldh [$b7], a
     ld a, [hl+]
     cp $e0
-    jp nc, Jump_000_3694
+        jp nc, Jump_000_3694
 
     ldh [$b8], a
     ld a, [hl+]
@@ -8108,55 +8079,51 @@ Call_000_3545:
     ldh a, [$bf]
     bit 6, a
     jr nz, jr_000_358b
+        ld a, [hl+]
+        add b
+        ldh [$ba], a
+        ld a, [hl+]
+        add b
+        ldh [$bb], a
+        jr jr_000_3595
+    jr_000_358b:
+        ld a, [hl+]
+        sub b
+        cpl
+        ldh [$bb], a
+        ld a, [hl+]
+        sub b
+        cpl
+        ldh [$ba], a
+    jr_000_3595:
 
-    ld a, [hl+]
-    add b
-    ldh [$ba], a
-    ld a, [hl+]
-    add b
-    ldh [$bb], a
-    jr jr_000_3595
-
-jr_000_358b:
-    ld a, [hl+]
-    sub b
-    cpl
-    ldh [$bb], a
-    ld a, [hl+]
-    sub b
-    cpl
-    ldh [$ba], a
-
-jr_000_3595:
     ldh a, [$b8]
     ld b, a
     ldh a, [$bf]
     bit 5, a
     jr nz, jr_000_35ac
+        ld a, [hl+]
+        add b
+        sub $05
+        ldh [$bc], a
+        ld a, [hl+]
+        add b
+        add $05
+        ldh [$bd], a
+        jr jr_000_35ba
+    jr_000_35ac:
+        ld a, [hl+]
+        sub b
+        cpl
+        add $05
+        ldh [$bd], a
+        ld a, [hl+]
+        sub b
+        cpl
+        sub $05
+        ldh [$bc], a
+    jr_000_35ba:
 
-    ld a, [hl+]
-    add b
-    sub $05
-    ldh [$bc], a
-    ld a, [hl+]
-    add b
-    add $05
-    ldh [$bd], a
-    jr jr_000_35ba
-
-jr_000_35ac:
-    ld a, [hl+]
-    sub b
-    cpl
-    add $05
-    ldh [$bd], a
-    ld a, [hl+]
-    sub b
-    cpl
-    sub $05
-    ldh [$bc], a
-
-jr_000_35ba:
     ldh a, [$ba]
     ld b, a
     ldh a, [$bb]
@@ -8166,8 +8133,7 @@ jr_000_35ba:
     sub b
     ldh [$9a], a
     cp c
-    jp nc, Jump_000_3694
-
+        jp nc, Jump_000_3694
     ld a, $01
     ld [$c423], a
     ldh a, [$bc]
@@ -8180,37 +8146,32 @@ jr_000_35ba:
     ld d, a
     srl d
     sub c
-    jp c, Jump_000_3694
-
+        jp c, Jump_000_3694
     ld a, d
     cp c
     jr c, jr_000_35e9
+        ld a, $ff
+        ld [$c423], a
+    jr_000_35e9:
 
-    ld a, $ff
-    ld [$c423], a
-
-jr_000_35e9:
     ld a, [samusItems]
     bit itemBit_screw, a
-    jr z, jr_000_3629
-
+        jr z, jr_000_3629
     ld a, [samusPose]
     cp pose_spinJump
-    jr z, jr_000_35fe
-
+        jr z, jr_000_35fe
     ld a, [samusPose]
     cp pose_spinStart
-    jr nz, jr_000_3629
+        jr nz, jr_000_3629
 
 jr_000_35fe:
     ldh a, [$be]
     and a
     jr z, jr_000_3607
+        bit 0, a
+        jr z, jr_000_362e
+    jr_000_3607:
 
-    bit 0, a
-    jr z, jr_000_362e
-
-jr_000_3607:
     ldh a, [$b9]
     ld e, a
     ld d, $00
@@ -8218,8 +8179,7 @@ jr_000_3607:
     add hl, de
     ld a, [hl]
     cp $ff
-    jr z, jr_000_362e
-
+        jr z, jr_000_362e
     ld [$c424], a
     pop hl
     ld a, $10
@@ -8243,19 +8203,18 @@ jr_000_362e:
     ldh a, [$b9]
     cp $f7
     jr nz, jr_000_364e
-
-    ld a, [samusPose]
-    cp pose_morph
-        jr z, jr_000_3644
-        cp pose_morphJump
+        ld a, [samusPose]
+        cp pose_morph
             jr z, jr_000_3644
-            cp pose_morphFall
+            cp pose_morphJump
+                jr z, jr_000_3644
+                cp pose_morphFall
                 jr nz, jr_000_364e
-        jr_000_3644:
-            ld a, $01
-            ld [$d090], a
-            ld a, $18
-            ld [samusPose], a
+            jr_000_3644:
+                ld a, $01
+                ld [$d090], a
+                ld a, $18
+                ld [samusPose], a
     jr_000_364e:
     scf
 
@@ -8309,22 +8268,22 @@ jr_000_3683:
     ret
 
 
+; Common exits for collision routines that clear the carry flag (indicating no collision happened)
 Jump_000_3694:
     pop hl
     scf
     ccf
     ret
 
-
 Jump_000_3698:
     scf
     ccf
     ret
 
-
-; 00:369B
+; 00:369B - Collision/pose related table
     db $ec, $f4, $fc, $ec, $f6, $04, $04, $ec, $04, $ec, $ec, $04, $04, $04, $04, $ec
     db $04, $ec, $04, $ec, $04
+
 
 gameMode_dead: ; 00:36B0
     ; Wait until the death sound ends
@@ -8631,7 +8590,7 @@ pickup_variaSuit:
     ld [samusPose], a
     call Call_000_3e93
     ld a, $10
-    ld [$d02c], a
+    ld [samus_turnAnimTimer], a
     call waitOneFrame
     ld a, $1d
     ld [sfxRequest_square1], a
