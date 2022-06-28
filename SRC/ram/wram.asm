@@ -613,27 +613,40 @@ def samus_turnAnimTimer = $D02C ; Timer for turnaround animation (facing the scr
 ;
 ;$D03B: Samus' Y position on screen
 ;$D03C: Samus' X position on screen
-;$D03D: Spider ball orientation
+def spiderContactState = $D03D ; Spider ball orientation
 ;{
+; The game checks the following points on the spider ball
+; Point Bitmasks
+;   0    %0001
+;   1    %0010                    2 _6_ 0
+;   2    %0100                     /   \
+;   3    %1000                    5|   |4
+;   4    %0011                     \___/
+;   5    %1100                    3  7  1
+;   6    %0101
+;   7    %1010
+; Notice that the bitmasks for the sides are the OR'd sum of the bitmasks their
+;  adjacent corners.
+;
 ;    0: In air
-;    1: On bottom-left corner of ledge
-;    2: On top-left corner of ledge
-;    3: On left-facing wall
-;    4: On bottom-right corner of ledge
-;    5: On ceiling
-;    6: Unused
-;    7: On meet of left-facing wall and ceiling
-;    8: On top-right corner of ledge
-;    9: Unused
-;    Ah: On floor
-;    Bh: On meet of left-facing wall and floor
-;    Ch: On right-facing wall
-;    Dh: On meet of right-facing wall and ceiling
-;    Eh: On meet of right-facing wall and floor
-;    Fh: Unused
+;    1: Outside corner: Of left-facing wall and ceiling
+;    2: Outside corner: Of left-facing wall and floor
+;    3: Flat surface:   Left-facing wall
+;    4: Outside corner: Of right-facing wall and ceiling
+;    5: Flat surface:   Ceiling
+;    6: Unused:         Top-left and bottom-right corners of ball in contact
+;    7: Inside corner:  Of left-facing wall and ceiling
+;    8: Outside corner: Of right-facing wall and floor
+;    9: Unused:         Bottom-left and top-right corners of ball in contact
+;    A: Flat surface:   Floor
+;    B: Inside corner:  Of left-facing wall and floor
+;    C: Flat surface:   Right-facing wall
+;    D: Inside corner:  Of right-facing wall and ceiling
+;    E: Inside corner:  Of right-facing wall and floor
+;    F: Unused:         Embedded in solid
 ;}
 ;
-;$D042: Spider ball translational direction
+def spiderBallDirection = $D042 ; Spider ball translational direction
 ;{
 ;    1: Right
 ;    2: Left
@@ -641,7 +654,8 @@ def samus_turnAnimTimer = $D02C ; Timer for turnaround animation (facing the scr
 ;    8: Down
 ;}
 ;
-;$D044: Spider ball rotational direction
+def spiderDisplacement  = $D043 ; Distance moved by spider ball (non-directional)
+def spiderRotationState = $D044 ; Spider ball rotational direction
 ;{
 ;    0: Not moving
 ;    1: Anti-clockwise

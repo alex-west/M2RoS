@@ -2181,7 +2181,7 @@ poseFunc_0ECB: ; $12 and $1D
             ld a, pose_spiderFall
             ld [samusPose], a
             xor a
-            ld [$d044], a
+            ld [spiderRotationState], a
             ld a, $0d
             ld [sfxRequest_square1], a
             ret
@@ -2370,154 +2370,155 @@ table_0FF6: ; 00:0FF6
     db $01, $02, $02, $01, $02, $02, $02, $02, $02, $02, $03, $02, $03, $02, $03, $03
     db $03, $03, $80
 
-poseFunc_1029: ; $0E
+
+poseFunc_1029: ; 00:1029 - $0E: spider ball (not moving)
+    ; Un-spider if A is pressed
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
-    jr z, jr_000_103a
+    jr z, .endIf_A
         ld a, pose_morph
         ld [samusPose], a
         ld a, $06
         ld [sfxRequest_square1], a
             ret
-    jr_000_103a:
+    .endIf_A:
 
-    call Call_000_1a42
-    ld a, [$d03d]
+    ; Fall if not touching anything
+    call collision_checkSpiderSet
+    ld a, [spiderContactState]
     and a
-    jr nz, jr_000_104d
+    jr nz, .endIf_B
         ld a, pose_spiderFall
         ld [samusPose], a
         ld a, $01
         ld [samus_fallArcCounter], a
-    jr_000_104d:
+    .endIf_B:
 
+    ; Exit if not touching the d-pad
     ldh a, [hInputRisingEdge]
     and PADF_DOWN | PADF_UP | PADF_LEFT | PADF_RIGHT ;$f0
-    ret z
+        ret z
 
-    call Call_000_1a42
+    call collision_checkSpiderSet
     ldh a, [hInputRisingEdge]
     and PADF_DOWN | PADF_UP | PADF_LEFT | PADF_RIGHT ;$f0
     swap a
-    jr z, jr_000_107d
+    jr z, .fall
+        ; Create index into the 2D array spiderBallOrientationTable
+        ; - Upper nybble is spiderContactState
+        ; - Lower nybble is d-pad inputs
         ld b, a
-        ld a, [$d03d]
+        ld a, [spiderContactState]
         swap a
         add b
         ld e, a
         ld d, $00
-        ld a, BANK(spiderBallTable)
+        ; Load value from table
+        ld a, BANK(spiderBallOrientationTable)
         ld [bankRegMirror], a
         ld [rMBC_BANK_REG], a
-        ld hl, spiderBallTable ; 06:7E03
+        ld hl, spiderBallOrientationTable ; 06:7E03
         add hl, de
         ld a, [hl]
-        ld [$d044], a
+        ld [spiderRotationState], a
+        
         ld a, pose_spiderRoll
         ld [samusPose], a
         ret
-    jr_000_107d:
+    .fall:
         ld a, pose_spiderFall
         ld [samusPose], a
         ret
 
-poseFunc_1083: ; $0B
+poseFunc_1083: ; 00:1083 - $0B: Spider Ball (rolling)
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
-    jr z, jr_000_1094
+    jr z, .endIf_A
         ld a, pose_morph
         ld [samusPose], a
         ld a, $06
         ld [sfxRequest_square1], a
         ret
-    jr_000_1094:
+    .endIf_A:
 
     ldh a, [hInputPressed]
     and PADF_DOWN | PADF_UP | PADF_LEFT | PADF_RIGHT ;$f0
-    jr nz, jr_000_10a4
+    jr nz, .endIf_B
+        ld a, pose_spider
+        ld [samusPose], a
+        xor a
+        ld [spiderRotationState], a
+        ret
+    .endIf_B:
 
-    ld a, pose_spider
-    ld [samusPose], a
-    xor a
-    ld [$d044], a
-    ret
-
-
-jr_000_10a4:
-    call Call_000_1a42
-    ld a, [$d03d]
+    call collision_checkSpiderSet
+    ld a, [spiderContactState]
     and a
-    jr z, jr_000_107d
+        jr z, poseFunc_1029.fall
 
     ld e, a
     ld d, $00
-    ld a, [$d044]
+    ld a, [spiderRotationState]
     bit 0, a
-    jr z, jr_000_10bc
+    jr z, .else_C
+        ld hl, table_20A9
+        jr .endIf_C
+    .else_C:
+        bit 1, a
+            ret z
+        ld hl, table_20C9
+    .endIf_C:
 
-    ld hl, $20a9
-    jr jr_000_10c2
-
-jr_000_10bc:
-    bit 1, a
-    ret z
-
-    ld hl, $20c9
-
-jr_000_10c2:
     add hl, de
     ld a, [hl]
-    ld [$d042], a
+    ld [spiderBallDirection], a
     xor a
-    ld [$d043], a
-    ld a, [$d042]
+    ld [spiderDisplacement], a
+    ld a, [spiderBallDirection]
     bit 0, a
         call nz, samus_spiderRight
-    ld a, [$d042]
+    ld a, [spiderBallDirection]
     bit 1, a
         call nz, samus_spiderLeft
-    ld a, [$d042]
+    ld a, [spiderBallDirection]
     bit 2, a
         call nz, samus_spiderUp
-    ld a, [$d042]
+    ld a, [spiderBallDirection]
     bit 3, a
         call nz, samus_spiderDown
-    ld a, [$d043]
+    ld a, [spiderDisplacement]
     and a
-    ret nz
+        ret nz
 
-    ld a, [$d03d]
+    ld a, [spiderContactState]
     ld e, a
     ld d, $00
-    ld a, [$d044]
+    ld a, [spiderRotationState]
     bit 0, a
-    jr z, jr_000_1102
+    jr z, .else_D
+        ld hl, table_20B9
+        jr .endIf_D
+    .else_D:
+        bit 1, a
+            ret z
+        ld hl, table_20D9
+    .endIf_D:
 
-    ld hl, $20b9
-    jr jr_000_1108
-
-jr_000_1102:
-    bit 1, a
-    ret z
-
-    ld hl, $20d9
-
-jr_000_1108:
     add hl, de
     ld a, [hl]
-    ld [$d042], a
+    ld [spiderBallDirection], a
     xor a
-    ld [$d043], a
-    ld a, [$d042]
+    ld [spiderDisplacement], a
+    ld a, [spiderBallDirection]
     bit 0, a
         call nz, samus_spiderRight
-    ld a, [$d042]
+    ld a, [spiderBallDirection]
     bit 1, a
         call nz, samus_spiderLeft
-    ld a, [$d042]
+    ld a, [spiderBallDirection]
     bit 2, a
         call nz, samus_spiderUp
-    ld a, [$d042]
+    ld a, [spiderBallDirection]
     bit 3, a
         call nz, samus_spiderDown
 ret
@@ -2525,27 +2526,27 @@ ret
 samus_spiderRight: ; 00:1132
     call samus_rollRight.spider
     ld a, [$d035]
-    ld [$d043], a
+    ld [spiderDisplacement], a
 ret
 
 samus_spiderLeft: ; 00:113C
     call samus_rollLeft.spider
     ld a, [$d036]
-    ld [$d043], a
+    ld [spiderDisplacement], a
 ret
 
 samus_spiderUp: ; 00:1146
     ld a, $01
     call samus_moveUp
     ld a, [$d037]
-    ld [$d043], a
+    ld [spiderDisplacement], a
 ret
 
 samus_spiderDown: ; 00:1152
     ld a, $01
     call samus_moveVertical
     ld a, [$d038]
-    ld [$d043], a
+    ld [spiderDisplacement], a
         ret nc
     ld a, [$c43a]
     and a
@@ -2555,7 +2556,7 @@ samus_spiderDown: ; 00:1152
     or $04
     ldh [hSamusYPixel], a
     xor a
-    ld [$d043], a
+    ld [spiderDisplacement], a
 ret
 
 poseFunc_spiderJump: ; 00:1170 - $0D: Spider ball jumping
@@ -2599,8 +2600,8 @@ poseFunc_spiderJump: ; 00:1170 - $0D: Spider ball jumping
         jp c, Jump_000_1233
 
     ; Spider collision check
-    call Call_000_1a42
-    ld a, [$d03d]
+    call collision_checkSpiderSet
+    ld a, [spiderContactState]
     and a
         jp nz, Jump_000_1241
 
@@ -2633,7 +2634,7 @@ poseFunc_spiderJump: ; 00:1170 - $0D: Spider ball jumping
     ld a, pose_spiderFall
     ld [samusPose], a
     xor a
-    ld [$d044], a
+    ld [spiderRotationState], a
 ret
 
 
@@ -2669,8 +2670,8 @@ poseFunc_11E4: ; $0C
     call samus_moveVertical
     jr c, jr_000_1233
 
-    call Call_000_1a42
-    ld a, [$d03d]
+    call collision_checkSpiderSet
+    ld a, [spiderContactState]
     and a
     jr nz, jr_000_1241
 
@@ -2717,7 +2718,7 @@ poseFunc_morphFall: ; 00:123B - $08: Morphball falling
             ld a, pose_spiderFall
             ld [samusPose], a
             xor a
-            ld [$d044], a
+            ld [spiderRotationState], a
             ld a, $0d
             ld [sfxRequest_square1], a
             ret
@@ -3592,7 +3593,7 @@ jr_000_1785:
     ld a, $01
     ld [samus_fallArcCounter], a
     xor a
-    ld [$d044], a
+    ld [spiderRotationState], a
     ld a, $0d
     ld [sfxRequest_square1], a
 ret
@@ -3607,7 +3608,7 @@ poseFunc_morphJump: ; 00:179F - Pose $06
             ld a, pose_spiderJump
             ld [samusPose], a
             xor a
-            ld [$d044], a
+            ld [spiderRotationState], a
             ld a, $0d
             ld [sfxRequest_square1], a
             ret
@@ -3974,107 +3975,150 @@ poseFunc_jumpStart: ; 00:19E2 - $09 and $0A - Starting to jump
 .directionTable:
     db $00, $01, $ff
 
-Call_000_1a42:
+;------------------------------------------------------------------------------
+; Check all the collision points pertinent to the spider ball
+;
+; The following points are checked,
+;     x   y             arranged like so:
+; Corners    Bitmasks           |
+;  0 $15 $1E  %0001             |
+;  1 $15 $2C  %0010             v
+;  2 $0A $1E  %0100          2 _6_ 0
+;  3 $0A $2C  %1000           /   \
+; Sides                      5|   |4
+;  4 $15 $25  %0011           \___/
+;  5 $0A $25  %1100          3  7  1
+;  6 $0F $1E  %0101
+;  7 $0F $2C  %1010
+;
+; Notice that the bitmasks for the sides are the OR'd sum of the bitmasks their
+;  adjacent corners.
+;
+collision_checkSpiderSet: ; 00:1A42
+    ; Clear spider ball results flag
     xor a
-    ld [$d03d], a
+    ld [spiderContactState], a
+; Point 0 ($15, $1E)
     ldh a, [hSamusXPixel]
     add $15
     ld [$c204], a
     ldh a, [hSamusYPixel]
     add $1e
     ld [$c203], a
-    call Call_000_1fbf
-    ld a, [$d03d]
+    call collision_checkSpiderPoint
+    
+    ld a, [spiderContactState]
     rr a
-    ld [$d03d], a
+    ld [spiderContactState], a
+    
+; Point 1 ($15, $2C)
     ldh a, [hSamusYPixel]
     add $2c
     ld [$c203], a
-    call Call_000_1fbf
-    ld a, [$d03d]
+    call collision_checkSpiderPoint
+    
+    ld a, [spiderContactState]
     rr a
-    ld [$d03d], a
+    ld [spiderContactState], a
+    
+; Point 2 ($0A, $1E)
     ldh a, [hSamusXPixel]
     add $0a
     ld [$c204], a
     ldh a, [hSamusYPixel]
     add $1e
     ld [$c203], a
-    call Call_000_1fbf
-    ld a, [$d03d]
+    call collision_checkSpiderPoint
+    
+    ld a, [spiderContactState]
     rr a
-    ld [$d03d], a
+    ld [spiderContactState], a
+    
+; Point 3 ($0A, $2C)
     ldh a, [hSamusYPixel]
     add $2c
     ld [$c203], a
-    call Call_000_1fbf
-    ld a, [$d03d]
+    call collision_checkSpiderPoint
+    
+    ld a, [spiderContactState]
     rr a
-    ld [$d03d], a
+    ld [spiderContactState], a
+    ; All corner bits are in, now swap them into the lower nybble
     swap a
-    ld [$d03d], a
+    ld [spiderContactState], a
+    
+; Point 4 ($15, $25)
     ldh a, [hSamusXPixel]
     add $15
     ld [$c204], a
     ldh a, [hSamusYPixel]
     add $25
     ld [$c203], a
-    call Call_000_1fbf
-    jr nc, jr_000_1abc
-        ld a, [$d03d]
-        or $03
-        ld [$d03d], a
-    jr_000_1abc:
+    call collision_checkSpiderPoint
+    
+    jr nc, .endIf_A
+        ld a, [spiderContactState]
+        or %0011
+        ld [spiderContactState], a
+    .endIf_A:
 
+; Point 5 ($0A, $25)
     ldh a, [hSamusXPixel]
     add $0a
     ld [$c204], a
     ldh a, [hSamusYPixel]
     add $25
     ld [$c203], a
-    call Call_000_1fbf
-    jr nc, jr_000_1ad7
-        ld a, [$d03d]
-        or $0c
-        ld [$d03d], a
-    jr_000_1ad7:
+    call collision_checkSpiderPoint
+    
+    jr nc, .endIf_B
+        ld a, [spiderContactState]
+        or %1100
+        ld [spiderContactState], a
+    .endIf_B:
 
+; Point 6 ($0F, $1E)
     ldh a, [hSamusXPixel]
     add $0f
     ld [$c204], a
     ldh a, [hSamusYPixel]
     add $1e
     ld [$c203], a
-    call Call_000_1fbf
-    jr nc, jr_000_1af2
-        ld a, [$d03d]
-        or $05
-        ld [$d03d], a
-    jr_000_1af2:
+    call collision_checkSpiderPoint
+    
+    jr nc, .endIf_C
+        ld a, [spiderContactState]
+        or %0101
+        ld [spiderContactState], a
+    .endIf_C:
 
+; Point 7 ($0F, $2C)
     ldh a, [hSamusYPixel]
     add $2c
     ld [$c203], a
     ldh a, [hSamusXPixel]
     add $0f
     ld [$c204], a
+    ; I don't know why this doesn't just use collision_checkSpiderPoint,
+    ;  unless it's to minimize the damage from the acid
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
-    jr nc, jr_000_1b13
-        ld a, [$d03d]
-        or $0a
-        ld [$d03d], a
-        jr jr_000_1b20
-    jr_000_1b13:
+    jr nc, .else_D
+        ld a, [spiderContactState]
+        or %1010
+        ld [spiderContactState], a
+        jr .endIf_D
+    .else_D:
         call Call_000_348d
-        jr nc, jr_000_1b20
-            ld a, [$d03d]
-            or $0a
-            ld [$d03d], a
-    jr_000_1b20:
+        jr nc, .endIf_D
+            ld a, [spiderContactState]
+            or %1010
+            ld [spiderContactState], a
+    .endIf_D:
 
-    ld a, [$d03d]
+    ; Does this code do anything?
+    ld a, [spiderContactState]
     and $05
     cp $05
         ret z
@@ -4082,7 +4126,7 @@ Call_000_1a42:
     bit PADB_A, a
         ret z
     ret
-
+; end proc
 
 Call_000_1b2e: ; Unmorph on ground
     ldh a, [hSamusXPixel]
@@ -4618,7 +4662,7 @@ Call_000_1e88: ; Samus upwards BG collision detection
     ldh a, [hSamusXPixel]
     add $0c
     ld [$c204], a
-    ld hl, $20e9
+    ld hl, table_20E9
     ld a, [samusPose]
     ld e, a
     ld d, $00
@@ -4815,46 +4859,50 @@ jr_000_1fbb:
     pop hl
 ret
 
-
-Call_000_1fbf: ; Check if touching acid
+;------------------------------------------------------------------------------
+; Used by Spider Ball collision function
+collision_checkSpiderPoint: ; 00:1FBF
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
-    jr nc, jr_000_1fe0
+        jr nc, .noHit
 
+    ; Check if touching acid
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
     bit blockType_acid, a
-    jr z, jr_000_1fdb
+    jr z, .endIf
         ld a, $40
         ld [acidContactFlag], a
         ld a, [acidDamageValue]
         call applyAcidDamage
-    jr_000_1fdb:
-    
+    .endIf:
+;exitWithHit
+    ; Set carry
     scf
-    ret
+ret
 
-
-jr_000_1fdd:
+.exitNoHit:
+    ; Clear carry
     scf
     ccf
-    ret
+ret
 
-
-jr_000_1fe0:
+.noHit:
+    ; Check if touching acid
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
     bit blockType_acid, a
-    jr z, jr_000_1fdd
+    jr z, .exitNoHit
         ld a, $40
         ld [acidContactFlag], a
         ld a, [acidDamageValue]
         call applyAcidDamage
-    jr jr_000_1fdd
+    jr .exitNoHit
 
+;------------------------------------------------------------------------------
 ; end of BG collision functions?
 
 samus_getTileIndex: ; 00:1FF5
@@ -4958,15 +5006,38 @@ saveFile_magicNumber:
     db $1B
     db $1C
     db $1D
-    
-; Spider ball direction table
-; 00:20A9 - Spider Ball Direction Table
-    db $00, $04, $01, $04, $02, $02, $00, $02, $08, $00, $01, $04, $08, $08, $01, $00
-    db $00, $02, $04, $02, $08, $08, $00, $08, $01, $00, $04, $02, $01, $01, $04, $00
-    db $00, $01, $08, $08, $04, $01, $00, $08, $02, $00, $02, $02, $04, $01, $04, $00
-    db $00, $08, $02, $02, $01, $08, $00, $02, $04, $00, $04, $04, $01, $08, $01, $00
 
-; 00:20E9 - Samus pose related (y pixel offsets?)
+; 00:20A9 - Spider Ball Direction Tables
+; Values
+; - 0: Nothing
+; - 1: Move Right
+; - 2: Move Left
+; - 4: Move Up
+; - 8: Move Down
+;
+;               _____________________________________________________________ 0: In air
+;              |    _________________________________________________________ 1: Outside corner: Of left-facing wall and ceiling
+;              |   |    _____________________________________________________ 2: Outside corner: Of left-facing wall and floor
+;              |   |   |    _________________________________________________ 3: Flat surface:   Left-facing wall
+;              |   |   |   |    _____________________________________________ 4: Outside corner: Of right-facing wall and ceiling
+;              |   |   |   |   |    _________________________________________ 5: Flat surface:   Ceiling
+;              |   |   |   |   |   |    _____________________________________ 6: Unused:         Top-left and bottom-right corners of ball in contact
+;              |   |   |   |   |   |   |    _________________________________ 7: Inside corner:  Of left-facing wall and ceiling
+;              |   |   |   |   |   |   |   |    _____________________________ 8: Outside corner: Of right-facing wall and floor
+;              |   |   |   |   |   |   |   |   |    _________________________ 9: Unused:         Bottom-left and top-right corners of ball in contact
+;              |   |   |   |   |   |   |   |   |   |    _____________________ A: Flat surface:   Floor
+;              |   |   |   |   |   |   |   |   |   |   |    _________________ B: Inside corner:  Of left-facing wall and floor
+;              |   |   |   |   |   |   |   |   |   |   |   |    _____________ C: Flat surface:   Right-facing wall
+;              |   |   |   |   |   |   |   |   |   |   |   |   |    _________ D: Inside corner:  Of right-facing wall and ceiling
+;              |   |   |   |   |   |   |   |   |   |   |   |   |   |    _____ E: Inside corner:  Of right-facing wall and floor
+;              |   |   |   |   |   |   |   |   |   |   |   |   |   |   |    _ F: Unused:         Embedded in solid
+;              |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+table_20A9: db 0, $4, $1, $4, $2, $2,  0, $2, $8,  0, $1, $4, $8, $8, $1,  0
+table_20B9: db 0, $2, $4, $2, $8, $8,  0, $8, $1,  0, $4, $2, $1, $1, $4,  0
+table_20C9: db 0, $1, $8, $8, $4, $1,  0, $8, $2,  0, $2, $2, $4, $1, $4,  0
+table_20D9: db 0, $8, $2, $2, $1, $8,  0, $2, $4,  0, $4, $4, $1, $8, $1,  0
+
+table_20E9: ; 00:20E9 - Samus pose related (y pixel offsets?)
     db $08
     db $14
     db $1A
