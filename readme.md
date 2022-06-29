@@ -34,6 +34,7 @@ Subject to change.
 - `docs` - Assorted notes regarding the game's formats and structure
 - `out` - Output directory for the build process
 - `scripts` - Various scripts to extra data from the game
+- `patches` - Basic modifications to improve or change the game.
 - `SRC` - Top level source code
 - `SRC/data` - General data that hasn't been or can't be categorized elsewhere
 - `SRC/gfx` - Generic tile data
