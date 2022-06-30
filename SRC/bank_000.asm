@@ -3994,16 +3994,27 @@ poseFunc_jumpStart: ; 00:19E2 - $09 and $0A - Starting to jump
 ; Notice that the bitmasks for the sides are the OR'd sum of the bitmasks their
 ;  adjacent corners.
 ;
+
+; Pertinent constants (TODO: get these from every other Samus-related collision function too and put them in their own file)
+spiderXLeft  = $0A
+spiderXRight = $15
+spiderXMid   = (spiderXLeft + spiderXRight)/2 ; $0F
+
+spiderYTop    = $1E
+spiderYBottom = $2C
+spiderYMid    = (spiderYTop + spiderYBottom)/2 ; $25
+
 collision_checkSpiderSet: ; 00:1A42
     ; Clear spider ball results flag
     xor a
     ld [spiderContactState], a
 ; Point 0 ($15, $1E)
     ldh a, [hSamusXPixel]
-    add $15
+    add spiderXRight
     ld [$c204], a
+
     ldh a, [hSamusYPixel]
-    add $1e
+    add spiderYTop
     ld [$c203], a
     call collision_checkSpiderPoint
     
@@ -4013,7 +4024,7 @@ collision_checkSpiderSet: ; 00:1A42
     
 ; Point 1 ($15, $2C)
     ldh a, [hSamusYPixel]
-    add $2c
+    add spiderYBottom
     ld [$c203], a
     call collision_checkSpiderPoint
     
@@ -4023,10 +4034,11 @@ collision_checkSpiderSet: ; 00:1A42
     
 ; Point 2 ($0A, $1E)
     ldh a, [hSamusXPixel]
-    add $0a
+    add spiderXLeft
     ld [$c204], a
+
     ldh a, [hSamusYPixel]
-    add $1e
+    add spiderYTop
     ld [$c203], a
     call collision_checkSpiderPoint
     
@@ -4036,7 +4048,7 @@ collision_checkSpiderSet: ; 00:1A42
     
 ; Point 3 ($0A, $2C)
     ldh a, [hSamusYPixel]
-    add $2c
+    add spiderYBottom
     ld [$c203], a
     call collision_checkSpiderPoint
     
@@ -4049,10 +4061,11 @@ collision_checkSpiderSet: ; 00:1A42
     
 ; Point 4 ($15, $25)
     ldh a, [hSamusXPixel]
-    add $15
+    add spiderXRight
     ld [$c204], a
+
     ldh a, [hSamusYPixel]
-    add $25
+    add spiderYMid
     ld [$c203], a
     call collision_checkSpiderPoint
     
@@ -4064,10 +4077,11 @@ collision_checkSpiderSet: ; 00:1A42
 
 ; Point 5 ($0A, $25)
     ldh a, [hSamusXPixel]
-    add $0a
+    add spiderXLeft
     ld [$c204], a
+
     ldh a, [hSamusYPixel]
-    add $25
+    add spiderYMid
     ld [$c203], a
     call collision_checkSpiderPoint
     
@@ -4079,10 +4093,11 @@ collision_checkSpiderSet: ; 00:1A42
 
 ; Point 6 ($0F, $1E)
     ldh a, [hSamusXPixel]
-    add $0f
+    add spiderXMid
     ld [$c204], a
+
     ldh a, [hSamusYPixel]
-    add $1e
+    add spiderYTop
     ld [$c203], a
     call collision_checkSpiderPoint
     
@@ -4094,10 +4109,11 @@ collision_checkSpiderSet: ; 00:1A42
 
 ; Point 7 ($0F, $2C)
     ldh a, [hSamusYPixel]
-    add $2c
+    add spiderYBottom
     ld [$c203], a
+
     ldh a, [hSamusXPixel]
-    add $0f
+    add spiderXMid
     ld [$c204], a
     ; I don't know why this doesn't just use collision_checkSpiderPoint,
     ;  unless it's to minimize the damage from the acid
