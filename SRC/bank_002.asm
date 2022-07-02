@@ -7467,7 +7467,7 @@ enAI_6B83: ; Baby egg?
         daa
         ld [hl], a
         ld a, $ca
-        ld [$d096], a
+        ld [metroidCountShuffleTimer], a
         ; Play metroid hive song with intro
         ld a, $1f
         ld [songRequest], a
@@ -7823,7 +7823,7 @@ jr_002_6d61:
     daa
     ld [hl], a
     ld a, $c0
-    ld [$d096], a
+    ld [metroidCountShuffleTimer], a
     call $3c92
     ret
 
@@ -8494,7 +8494,7 @@ Jump_002_7105:
     daa
     ld [hl], a
     ld a, $c0
-    ld [$d096], a
+    ld [metroidCountShuffleTimer], a
     call $3c92
     ret
 
@@ -9096,7 +9096,7 @@ jr_002_7452:
     daa
     ld [hl], a
     ld a, $c0
-    ld [$d096], a
+    ld [metroidCountShuffleTimer], a
     call $3c92
     ret
 
@@ -9591,7 +9591,7 @@ jr_002_76e1:
     daa
     ld [hl], a
     ld a, $c0
-    ld [$d096], a
+    ld [metroidCountShuffleTimer], a
     call $3c92
     ret
 
@@ -10374,7 +10374,7 @@ jr_002_7b14:
     daa
     ld [hl], a
     ld a, $c0
-    ld [$d096], a
+    ld [metroidCountShuffleTimer], a
     call $3c92
     ret
 

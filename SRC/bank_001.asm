@@ -9,10 +9,12 @@ SECTION "ROM Bank $001", ROMX[$4000], BANK[$1]
 include "data/sprites_samus.asm"
 
 ; 01:493E: Update status bar
-updateStatusBar:
+VBlank_updateStatusBar:
+    ; Exit if the queen's head is being animated (vblank time optimization?)
     ld a, [$c3ca]
     and a
         ret nz
+    ; Don't update while an item is being collected
     ld a, [itemCollected]
     and a
         ret nz
@@ -20,56 +22,62 @@ updateStatusBar:
     and a
         ret nz
 
+    ; Prep energy tank graphics
     ld hl, $ffb7
-    ld a, $af
+    ; Fill buffer with blank spaces
+    ld a, $af ; Blank space
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
     ld [hl], a
+    
+    ; Check max energy
     ld a, [samusEnergyTanks]
     and a
-    jr z, jr_001_4979
+    jr z, .else_A
+        ; Pre-fill buffer with empty tanks
+        ld b, a
+        ld hl, $ffb7
+        ld a, $9c ; Empty tank
+    
+        .loop_A: ; Loop for max tanks
+            ld [hl+], a
+            dec b
+        jr nz, .loop_A
+    
+        ld a, [samusDispHealthHigh]
+        and a
+        jr z, .endIf_A
+            ; Fill buffer with full tanks
+            ld b, a
+            ld hl, $ffb7
+            ld a, $9d ; Filled tank
+        
+            .loop_B: ; Loop for full tanks
+                ld [hl+], a
+                dec b
+            jr nz, .loop_B
+    
+            jr .endIf_A
+    .else_A:
+        ; Draw E
+        ld a, $aa ; E
+        ldh [$b7], a
+    .endIf_A:
 
-    ld b, a
-    ld hl, $ffb7
-    ld a, $9c
-
-jr_001_4963:
-    ld [hl+], a
-    dec b
-    jr nz, jr_001_4963
-
-    ld a, [samusDispHealthHigh]
-    and a
-    jr z, jr_001_497d
-
-    ld b, a
-    ld hl, $ffb7
-    ld a, $9d
-
-jr_001_4973:
-    ld [hl+], a
-    dec b
-    jr nz, jr_001_4973
-
-    jr jr_001_497d
-
-jr_001_4979:
-    ld a, $aa
-    ldh [$b7], a
-
-jr_001_497d:
-    ld hl, $9be0
+    ; Adjust draw destination depending on if in the Queen fight or not
+    ; (the HUD in the Queen's room is on the normal BG layer, since her head uses the window layer)
+    ld hl, vramDest_queenStatusBar
     ld a, [$d08b]
     cp $11
-    jr z, jr_001_498e
+    jr z, .endIf_B
+        ld a, $07
+        ldh [rWX], a
+        ld hl, vramDest_statusBar
+    .endIf_B:
 
-    ld a, $07
-    ldh [rWX], a
-    ld hl, $9c00
-
-jr_001_498e:
+    ; Draw enery tanks
     ldh a, [$bb]
     ld [hl+], a
     ldh a, [$ba]
@@ -80,100 +88,112 @@ jr_001_498e:
     ld [hl+], a
     ldh a, [$b7]
     ld [hl+], a
-    ld a, $9e
+    ld a, $9e ; Dash
     ld [hl+], a
+    
+    ; Draw Samus' health (tens digit)
     ld a, [samusDispHealthLow]
     and $f0
     swap a
     add $a0
     ld [hl+], a
+    ; Ones digit
     ld a, [samusDispHealthLow]
     and $0f
     add $a0
     ld [hl+], a
+    
+    ; Skip over missile icon (drawn previously)
     inc hl
     inc hl
     inc hl
+    
+    ; Draw Samus' missiles (hundreds digit)
     ld a, [samusDispMissilesHigh]
     and $0f
     add $a0
     ld [hl+], a
+    ; Tens digit
     ld a, [samusDispMissilesLow]
     and $f0
     swap a
     add $a0
     ld [hl+], a
+    ; Ones digit
     ld a, [samusDispMissilesLow]
     and $0f
     add $a0
     ld [hl+], a
+    
+    ; Skip over metroid icon
     inc hl
     inc hl
     inc hl
     inc hl
+
+    ; Draw Metroid counter in corner
+    ; Check if paused
     ldh a, [gameMode]
     cp $08
-    jr z, jr_001_4a0f
-
-    ld a, [$d096]
-    and a
-    jr nz, jr_001_49f2
-
-    ld a, [metroidCountDisplayed]
-    and $f0
-    swap a
-    add $a0
-    ld [hl+], a
-    ld a, [metroidCountDisplayed]
-    and $0f
-    add $a0
-    ld [hl], a
-ret
-
-
-jr_001_49f2:
-    dec a
-    ld [$d096], a
-    cp $80
-    ret nc
-
-    ldh a, [rDIV]
-    add $10
-    daa
-    and $f0
-    swap a
-    add $a0
-    ld [hl+], a
-    ldh a, [rDIV]
-    inc a
-    daa
-    and $0f
-    add $a0
-    ld [hl], a
-    ret
-
-
-jr_001_4a0f:
-    ld a, [$d0a7]
-    cp $ff
-    jr z, jr_001_4a26
-
-    and $f0
-    swap a
-    add $a0
-    ld [hl+], a
-    ld a, [$d0a7]
-    and $0f
-    add $a0
-    ld [hl], a
-    ret
-
-
-jr_001_4a26:
-    ld a, $9e
-    ld [hl+], a
-    ld [hl], a
-    ret
+    jr z, .else_C
+        ld a, [metroidCountShuffleTimer]
+        and a
+        jr nz, .else_D
+            ; Draw normal metroid counter (tens digit)
+            ld a, [metroidCountDisplayed]
+            and $f0
+            swap a
+            add $a0
+            ld [hl+], a
+            ; Ones digit
+            ld a, [metroidCountDisplayed]
+            and $0f
+            add $a0
+            ld [hl], a
+            ret
+        .else_D:
+            ; Draw scrambled metroid counter
+            dec a
+            ld [metroidCountShuffleTimer], a
+            cp $80 ; Wait until counter is less than $80 before scrambling
+                ret nc
+            ; Tens digit
+            ldh a, [rDIV]
+            add $10
+            daa
+            and $f0
+            swap a
+            add $a0
+            ld [hl+], a
+            ; Ones digit
+            ldh a, [rDIV]
+            inc a
+            daa
+            and $0f
+            add $a0
+            ld [hl], a
+            ret
+    .else_C:
+        ld a, [metroidLCounterDisp]
+        cp $ff
+        jr z, .else_E
+            ; Draw normal L counter (tens digit)
+            and $f0
+            swap a
+            add $a0
+            ld [hl+], a
+            ; Ones digit
+            ld a, [metroidLCounterDisp]
+            and $0f
+            add $a0
+            ld [hl], a
+            ret
+        .else_E:
+            ; Draw blank L counter "--"
+            ld a, $9e ; Dash
+            ld [hl+], a
+            ld [hl], a
+            ret
 
 ;------------------------------------------------------------------------------
 adjustHudValues:: ; 01:4A2B - Adjusts displayed health and missiles
@@ -406,51 +426,47 @@ Call_001_4b62:
     ldh a, [hSpriteXPixel]
     ld c, a
 
-jr_001_4b86:
-    ld a, [de]
-    cp $ff
-    jr z, jr_001_4bb2
-
-    add b
-    ld [hl+], a
-    inc de
-    ld a, [de]
-    add c
-    ld [hl+], a
-    inc de
-    ld a, [de]
-    ld [hl+], a
-    inc de
-    ldh a, [hSpriteAttr]
-    and a
-    jr z, jr_001_4b9f
-
-    ld a, [de]
-    set 4, a
-    jr jr_001_4ba0
-
-jr_001_4b9f:
-    ld a, [de]
-
-jr_001_4ba0:
-    ld [hl], a
-    ld a, [$d057]
-    and a
-    jr nz, jr_001_4bab
-
-    ld a, [hl]
-    set 7, a
-    ld [hl], a
-
-jr_001_4bab:
-    inc hl
-    ld a, l
-    ldh [hOamBufferIndex], a
-    inc de
+    jr_001_4b86:
+        ld a, [de]
+        cp $ff
+            jr z, jr_001_4bb2
+        add b
+        ld [hl+], a
+        inc de
+        ld a, [de]
+        add c
+        ld [hl+], a
+        inc de
+        ld a, [de]
+        ld [hl+], a
+        inc de
+        ldh a, [hSpriteAttr]
+        and a
+        jr z, jr_001_4b9f
+            ld a, [de]
+            set 4, a
+            jr jr_001_4ba0
+        jr_001_4b9f:
+            ld a, [de]
+        jr_001_4ba0:
+    
+        ld [hl], a
+        ld a, [$d057]
+        and a
+        jr nz, jr_001_4bab
+            ld a, [hl]
+            set 7, a
+            ld [hl], a
+        jr_001_4bab:
+    
+        inc hl
+        ld a, l
+        ldh [hOamBufferIndex], a
+        inc de
     jr jr_001_4b86
 
-jr_001_4bb2:
-    ret
+    jr_001_4bb2:
+ret
 
 
 clearUnusedOamSlots: ; 01:4BB3

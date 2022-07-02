@@ -95,51 +95,49 @@ VBlankHandler: ; 00:0154
     ld a, [countdownTimerHigh]
     sbc $00
     ld [countdownTimerHigh], a
-    jr nc, jr_000_018b
+    jr nc, .endIf_A
         ; Minimum timer value is $0000
         xor a
         ld [countdownTimerLow], a
         ld [countdownTimerHigh], a
-    jr_000_018b:
+    .endIf_A:
 ; Various different update handlers
 ;  Looks like 
     ; Credits drawing routine
     ld a, [credits_nextLineReady]
     and a
-    jp nz, VBlank_drawCreditsLine_longJump
+        jp nz, VBlank_drawCreditsLine_longJump
     ; Death sequence drawing routine
     ld a, [deathAnimTimer]
     and a
-    jp nz, VBlank_deathSequence
+        jp nz, VBlank_deathSequence
     ; Some other VRAM 
     ld a, [$d047]
     and a
-    jp nz, Jump_000_2ba3
+        jp nz, Jump_000_2ba3
 
     ld a, [doorIndexLow]
     and a
-    jp nz, Jump_000_2b8f
+        jp nz, Jump_000_2b8f
 
     ; Branch for queen fight
     ld a, [$d08b]
     cp $11
-    jr z, jr_000_01d9
+        jr z, jr_000_01d9
 
     ld a, [$de01]
     and a
-    jr z, jr_000_01bf
+    jr z, .else_B
+        ld a, [currentLevelBank]
+        ld [rMBC_BANK_REG], a
+        call Call_000_08cf
+        jr .endIf_B
+    .else_B:
+        ld a, $01
+        ld [rMBC_BANK_REG], a
+        call $493e
+    .endIf_B:
 
-    ld a, [currentLevelBank]
-    ld [rMBC_BANK_REG], a
-    call Call_000_08cf
-    jr jr_000_01c7
-
-jr_000_01bf:
-    ld a, $01
-    ld [rMBC_BANK_REG], a
-    call $493e
-
-jr_000_01c7:
     call OAM_DMA ; Sprite DMA
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
@@ -153,9 +151,9 @@ reti
 
 
 jr_000_01d9:
-    ld a, BANK(updateStatusBar)
+    ld a, BANK(VBlank_updateStatusBar)
     ld [rMBC_BANK_REG], a
-    call updateStatusBar
+    call VBlank_updateStatusBar
     call OAM_DMA
     
     ld a, BANK(VBlank_drawQueen)
@@ -724,7 +722,7 @@ jr_000_053e:
 
 jr_000_0571:
     call clearUnusedOamSlots_longJump ; Clear unused OAM
-    call Call_000_2c79 ; Handle pausing ?
+    call tryPausing ; Handle pausing ?
     ret
 
 
@@ -769,7 +767,7 @@ Jump_000_0578:
     ld [$d064], a
     call Call_000_05de
     call clearUnusedOamSlots_longJump
-    call Call_000_2c79
+    call tryPausing
     ret
 
 
@@ -4979,7 +4977,7 @@ samus_getTileIndex: ; 00:1FF5
     ld a, b
 ret
 
-; 0:203B - Metroids remaining (L counter)
+metroidLCounterTabel: ; 0:203B - Metroids remaining (L counter)
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00, $00, $00, $00, $00, $00
     db $01, $02, $03, $01, $01, $01, $02, $03, $04, $05, $00, $00, $00, $00, $00, $00
     db $06, $07, $01, $02, $01, $01, $02, $03, $04, $05, $00, $00, $00, $00, $00, $00
@@ -5189,10 +5187,10 @@ beam_getTileIndex: ; 00:2266 - Entry point for beam routines
     ld a, [$c219]
     and $08
     jr z, .endIf
-    ld a, $04
-    add h
-    ld h, a
-    ld [$c216], a
+        ld a, $04
+        add h
+        ld h, a
+        ld [$c216], a
     .endIf
 
     .waitLoop_A:
@@ -6572,13 +6570,13 @@ Jump_000_2ba3:
     ldh a, [$b4]
     ld d, a
 
-jr_000_2bc2:
-    ld a, [hl+]
-    ld [de], a
-    inc de
-    dec bc
-    ld a, c
-    and $3f
+    jr_000_2bc2:
+        ld a, [hl+]
+        ld [de], a
+        inc de
+        dec bc
+        ld a, c
+        and $3f
     jr nz, jr_000_2bc2
 
     ld a, c
@@ -6596,11 +6594,10 @@ jr_000_2bc2:
     ld a, b
     or c
     jr nz, jr_000_2be5
+        xor a
+        ld [$d047], a
+    jr_000_2be5:
 
-    xor a
-    ld [$d047], a
-
-jr_000_2be5:
     ld a, $01
     ldh [hVBlankDoneFlag], a
     ld a, [bankRegMirror]
@@ -6625,23 +6622,23 @@ Jump_000_2bf4:
     ld h, a
     ld de, $0010
 
-jr_000_2c09:
-    push hl
-    ld de, $ce20
-    add hl, de
-    ld e, l
-    ld d, h
-    pop hl
-    ld a, [de]
-    ld [hl], a
-    ld a, l
-    add $10
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-    ld a, l
-    and $f0
+    jr_000_2c09:
+        push hl
+        ld de, $ce20
+        add hl, de
+        ld e, l
+        ld d, h
+        pop hl
+        ld a, [de]
+        ld [hl], a
+        ld a, l
+        add $10
+        ld l, a
+        ld a, h
+        adc $00
+        ld h, a
+        ld a, l
+        and $f0
     jr nz, jr_000_2c09
 
     ld a, l
@@ -6653,25 +6650,23 @@ jr_000_2c09:
     ld a, l
     cp $10
     jr nz, jr_000_2c34
+        add $f0
+        ld l, a
+        ld a, h
+        adc $00
+        ld h, a
+    jr_000_2c34:
 
-    add $f0
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-
-jr_000_2c34:
     ld a, l
     ldh [$b3], a
     ld a, h
     ldh [$b4], a
     cp $85
     jr nz, jr_000_2c42
-
-    xor a
-    ld [deathAnimTimer], a
-
-jr_000_2c42:
+        xor a
+        ld [deathAnimTimer], a
+    jr_000_2c42:
+    
     ld a, [$c205]
     ldh [rSCY], a
     ld a, [$c206]
@@ -6711,15 +6706,16 @@ waitOneFrame: ; 00:2C5E
 ret
 
 
-Call_000_2c79:
+tryPausing: ; 00:2C79
+    ; Don't try pausing unless start is pressed
     ldh a, [hInputRisingEdge]
     cp PADF_START
-    ret nz
-
+        ret nz
+    ; Exit if in Queen's room
     ld a, [$d08b]
     cp $11
-    ret z
-
+        ret z
+    ; No pausing if facing the screen
     ld a, [samusPose]
     cp pose_faceScreen
         ret z
@@ -6730,55 +6726,51 @@ Call_000_2c79:
     and a
         ret nz
 
-    ld hl, $203b
+    ld hl, metroidLCounterTabel
     ld a, [metroidCountReal]
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
-    ld [$d0a7], a
+    ld [metroidLCounterDisp], a
     ld a, [earthquakeTimer]
     and a
-    jr nz, jr_000_2cae
+    jr nz, .else_A
+        ld a, [$d083]
+        and a
+        jr z, .endIf_A
+    .else_A:
+        xor a
+        ld [metroidLCounterDisp], a
+    .endIf_A:
 
-    ld a, [$d083]
-    and a
-    jr z, jr_000_2cb2
-
-jr_000_2cae:
-    xor a
-    ld [$d0a7], a
-
-jr_000_2cb2:
     ld a, [debugFlag]
     and a
-    jr z, jr_000_2cbe
+    jr z, .endIf_B
+        xor a
+        ldh [hOamBufferIndex], a
+        call clearUnusedOamSlots_longJump
+    .endIf_B:
 
-    xor a
-    ldh [hOamBufferIndex], a
-    call clearUnusedOamSlots_longJump
-
-jr_000_2cbe:
     xor a
     ld [debugItemIndex], a
     ld [$d011], a
-    ld hl, $c002
+    ld hl, wram_oamBuffer + $2
 
-jr_000_2cc8:
-    ld a, [hl]
-    and $9a
-    cp $9a
-    jr z, jr_000_2cd9
+    .loop:
+        ld a, [hl]
+        and $9a
+        cp $9a
+            jr z, .break
+        ld a, l
+        add $04
+        ld l, a
+        cp $a0
+    jr c, .loop
 
-    ld a, l
-    add $04
-    ld l, a
-    cp $a0
-    jr c, jr_000_2cc8
+    jr .exit
 
-    jr jr_000_2ce3
-
-jr_000_2cd9:
+.break:
     ld de, $0004
     ld a, $36
     ld [hl], a
@@ -6786,7 +6778,7 @@ jr_000_2cd9:
     ld a, $0f
     ld [hl], a
 
-jr_000_2ce3:
+.exit:
     ld a, $01
     ld [$cfc7], a
     ld a, $08

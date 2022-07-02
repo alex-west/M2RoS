@@ -825,7 +825,7 @@ def currentRoomSong = $D092 ; Song for room. Used when restoring song when loadi
 ;$D093: Mirror of $D06C?
 ;$D094: Mirror of $FFE1?
 ;$D095
-;$D096: Metroids remaining shuffle timer
+def metroidCountShuffleTimer = $D096 ; Metroids remaining shuffle timer
 def credits_samusAnimState = $D097 ; Samus' animation state during the credits
 def gameTimeMinutes = $D098 ; In-game timer, minutes
 def gameTimeHours   = $D099 ; In-game timer, hours
@@ -842,7 +842,7 @@ def activeSaveSlot = $D0A3 ; Save slot
 ;$D0A4: Show clear save slot option flag
 ;$D0A5: Song to play after earthquake
 ;$D0A6: Enable Baby Metroid cry
-;$D0A7: Metroids remaining in area
+def metroidLCounterDisp = $D0A7 ; L Counter value to display (Metroids remaining in area)
 ;$D0A8: Set to 0 by $239C
 ;
 ;$D0F9: Used in title

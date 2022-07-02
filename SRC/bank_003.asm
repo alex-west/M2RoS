@@ -3690,7 +3690,7 @@ jr_003_7bce:
     ld a, $16
     ld [$c3c3], a
     ld a, $80
-    ld [$d096], a
+    ld [metroidCountShuffleTimer], a
     ld a, $17
     ld [sfxRequest_noise], a
     ret

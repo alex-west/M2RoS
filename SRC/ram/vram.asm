@@ -32,6 +32,7 @@ def vramDest_bgTiles = $9000 ; 128 tiles
 
 ; Background Tilemap - $9800-$9BFF - $20 bytes/row
 def vramDest_queenFeet = $9A00
+def vramDest_queenStatusBar = $9BE0
 
 ; Window Tilemap - $9C00-9FFF - $20 bytes/row
 def vramDest_statusBar = $9C00
