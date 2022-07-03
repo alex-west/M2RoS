@@ -5,13 +5,13 @@
 
 SECTION "ROM Bank $004", ROMX[$4000], BANK[$4]
 
-handleAudio_longJump:
+handleAudio:
     jp Jump_004_42b3
 
-
+silenceAudio:
     jp Jump_004_477b
 
-
+initializeAudio:
     jp Jump_004_4752
 
 
@@ -1060,14 +1060,13 @@ Jump_004_4752:
     ldh [rNR51], a
     ld hl, sfxRequest_square1
 
-jr_004_4761:
-    ld [hl], $00
-    inc hl
-    ld a, h
-    cp $d0
+    jr_004_4761:
+        ld [hl], $00
+        inc hl
+        ld a, h
+        cp $d0
     jr nz, jr_004_4761
-
-    ret
+ret
 
 
 Jump_004_476a:
@@ -1116,7 +1115,7 @@ Call_004_47b3:
     xor a
     ldh [rNR10], a
     ldh [rNR30], a
-    ret
+ret
 
 
 Call_004_47c9:

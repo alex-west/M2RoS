@@ -6,7 +6,7 @@
 INCLUDE "hardware.inc"
 
 INCLUDE "constants.asm"
-;INCLUDE "macros.asm" ; Maybe later
+INCLUDE "macros.asm"
 
 ; RAM definitions
 INCLUDE "ram/vram.asm"

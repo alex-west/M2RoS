@@ -212,7 +212,7 @@ bootRoutine: ; 00:01fB
     ld a, $43
     ld [ob_palette1], a
     ld sp, $dfff
-    call Call_000_2378
+    call initializeAudio_longJump
     ld a, $0a
     ld [$0000], a
     xor a
@@ -323,7 +323,7 @@ mainGameLoop: ; 00:02CD
     call z, main_readInput
     ; Do imporatant stuff
     call main_handleGameMode
-    call handleAudio
+    call handleAudio_longJump
     call executeDoorScript
     ldh a, [hInputPressed]
     ; Soft reset
@@ -2197,7 +2197,7 @@ poseFunc_0EF7: ; $0F - Knockback
         jr z, poseFunc_0F6C
 
     ; Return if colliding with something
-    call Call_000_1e88
+    call collision_samusTop
         ret c
 
     ; Clear i-frames
@@ -2948,7 +2948,7 @@ poseFunc_standing: ; 00:13B7 - $00: Standing
             bit itemBit_space, a
                 jp z, .normalJump
             ; Return if a ceiling is in the way
-            call Call_000_1e88
+            call collision_samusTop
                 ret c
             ; High jump parameters
             ld a, $21
@@ -3067,7 +3067,7 @@ poseFunc_standing: ; 00:13B7 - $00: Standing
     bit PADB_A, a
     jr z, .endIf_J
         .normalJump: ; Entry point from a weird case above
-        call Call_000_1e88
+        call collision_samusTop
             ret c
         ; High jump parameters
         ld a, $21
@@ -3127,7 +3127,7 @@ poseFunc_run: ; 00:14D6 - $03: Running
         and PADF_LEFT | PADF_RIGHT ;$30
         jr z, .endIf_B
             ; Exit if a ceiling is in the way
-            call Call_000_1e88
+            call collision_samusTop
                 ret c
             ; High jump parameter
             ld a, $21
@@ -3251,7 +3251,7 @@ poseFunc_run: ; 00:14D6 - $03: Running
         ldh a, [hSamusYPixel]
         sub $08
         ldh [hSamusYPixel], a
-        call Call_000_1e88
+        call collision_samusTop
             ret c
         
         ; High jump parameter
@@ -4121,7 +4121,7 @@ collision_checkSpiderSet: ; 00:1A42
         ld [spiderContactState], a
         jr .endIf_D
     .else_D:
-        call Call_000_348d
+        call Call_000_348d ; Sprite collision for bottom?
         jr nc, .endIf_D
             ld a, [spiderContactState]
             or %1010
@@ -4292,7 +4292,7 @@ samus_walkRight: ; 00:1C0D
     and $0f
     ldh [hSamusXScreen], a
     ld [$c204], a
-    call Call_000_1de2
+    call collision_samusHorizontal.right
     jr nc, .keepResults
         ld a, [$d027]
         ldh [hSamusXPixel], a
@@ -4332,7 +4332,7 @@ samus_walkLeft: ; 00:1C51
     and $0f
     ldh [hSamusXScreen], a
     ld [$c204], a
-    call Call_000_1dd6
+    call collision_samusHorizontal.left
     jr nc, .keepResults
         ld a, [$d027]
         ldh [hSamusXPixel], a
@@ -4363,7 +4363,7 @@ samus_rollRight:
     and $0f
     ldh [hSamusXScreen], a
     ld [$c204], a
-    call Call_000_1de2
+    call collision_samusHorizontal.right
     jr nc, .keepResults
         ; Revert to previous position
         ld a, [$d027]
@@ -4398,7 +4398,7 @@ samus_rollLeft:
     ldh [hSamusXScreen], a
     
     ld [$c204], a
-    call Call_000_1dd6
+    call collision_samusHorizontal.left
     jr nc, jr_000_1cf0
         ld a, [$d027]
         ldh [hSamusXPixel], a
@@ -4426,7 +4426,7 @@ samus_moveRightInAir: ; 00:1CF5
     and $0f
     ldh [hSamusXScreen], a    
     ld [$c204], a
-    call Call_000_1de2
+    call collision_samusHorizontal.right
     jr nc, .keepResults
         ; Revert to previous position
         ld a, [$d027]
@@ -4455,7 +4455,7 @@ samus_moveLeftInAir: ; 00:1D22
     and $0f
     ldh [hSamusXScreen], a
     ld [$c204], a
-    call Call_000_1dd6
+    call collision_samusHorizontal.left
     jr nc, .keepResults
         ; Revert to previous position
         ld a, [$d027]
@@ -4526,7 +4526,7 @@ samus_moveUp: ; 00:1D98 - Move up (only directly called by spider ball)
     and $0f
     ldh [hSamusYScreen], a
     ld a, b
-    call Call_000_1e88
+    call collision_samusTop
     jr nc, .keepResults
         ld a, $40 + $16 ;$56
         ld [samus_jumpArcCounter], a
@@ -4551,29 +4551,29 @@ samus_moveUp: ; 00:1D98 - Move up (only directly called by spider ball)
         ld [$d037], a
         ret
 
+;------------------------------------------------------------------------------
 ; BG collision functions
-Call_000_1dd6: ; Left
-    push hl
-    push de
-    push bc
-    ldh a, [hSamusXPixel]
-    add $0b
-    ld [$c204], a
-    jr jr_000_1dec
+collision_samusHorizontal: ; Has two entry points (left and right)
+    .left: ; 00:1DD6 - Entry point for left-side collision
+        push hl
+        push de
+        push bc
+        ldh a, [hSamusXPixel]
+        add $0b
+        ld [$c204], a
+        jr .start
+    .right: ; 00:1DE2 - Entry point for right-side collision
+        push hl
+        push de
+        push bc
+        ldh a, [hSamusXPixel]
+        add $14
+        ld [$c204], a
+.start: ; Start
+    call Call_000_32cf ; Sprite collision?
+        jp c, .exit
 
-Call_000_1de2: ; Right
-    push hl
-    push de
-    push bc
-    ldh a, [hSamusXPixel]
-    add $14
-    ld [$c204], a
-
-jr_000_1dec: ; Start
-    call Call_000_32cf
-        jp c, Jump_000_1e84
-
-    ld hl, $20ff
+    ld hl, table_20FF
     ld a, [samusPose]
     sla a
     sla a
@@ -4583,93 +4583,92 @@ jr_000_1dec: ; Start
     add hl, de
     ld a, [hl+]
     cp $80
-        jp z, Jump_000_1e84
+    jp z, .endIf_A
+        ld [$d02d], a
+        ld a, [hl+]
+        cp $80
+        jr z, .endIf_B
+            ld [$d02e], a
+            ld a, [hl+]
+            cp $80
+            jr z, .endIf_C
+                ld [$d02f], a
+                ld a, [hl+]
+                cp $80
+                jr z, .endIf_D
+                    ld [$d030], a
+                    ld a, [hl]
+                    cp $80
+                    jr z, .endIf_E
+                        ld b, a
+                        ldh a, [hSamusYPixel]
+                        add b
+                        ld [$c203], a
+                        call samus_getTileIndex
+                        ld hl, samusSolidityIndex
+                        cp [hl]
+                            jr c, .exit
+                    .endIf_E:
+                    ld a, [$d030]
+                    ld b, a
+                    ldh a, [hSamusYPixel]
+                    add b
+                    ld [$c203], a
+                    call samus_getTileIndex
+                    ld hl, samusSolidityIndex
+                    cp [hl]
+                        jr c, .exit
+                .endIf_D:
+                
+                ld a, [$d02f]
+                ld b, a
+                ldh a, [hSamusYPixel]
+                add b
+                ld [$c203], a
+                call samus_getTileIndex
+                ld hl, samusSolidityIndex
+                cp [hl]
+                    jr c, .exit
+            .endIf_C:
+            
+            ld a, [$d02e]
+            ld b, a
+            ldh a, [hSamusYPixel]
+            add b
+            ld [$c203], a
+            call samus_getTileIndex
+            ld hl, samusSolidityIndex
+            cp [hl]
+                jr c, .exit
+        .endIf_B:
+        
+        ld a, [$d02d]
+        ld b, a
+        ldh a, [hSamusYPixel]
+        add b
+        ld [$c203], a
+        call samus_getTileIndex
+        ld hl, samusSolidityIndex
+        cp [hl]
+            jr c, .exit
+    .endIf_A:
 
-    ld [$d02d], a
-    ld a, [hl+]
-    cp $80
-        jr z, jr_000_1e71
-    ld [$d02e], a
-    ld a, [hl+]
-    cp $80
-        jr z, jr_000_1e5e
-    ld [$d02f], a
-    ld a, [hl+]
-    cp $80
-        jr z, jr_000_1e4b
-    ld [$d030], a
-    ld a, [hl]
-    cp $80
-        jr z, jr_000_1e38
-
-    ld b, a
-    ldh a, [hSamusYPixel]
-    add b
-    ld [$c203], a
-    call samus_getTileIndex
-    ld hl, samusSolidityIndex
-    cp [hl]
-        jr c, jr_000_1e84
-
-jr_000_1e38:
-    ld a, [$d030]
-    ld b, a
-    ldh a, [hSamusYPixel]
-    add b
-    ld [$c203], a
-    call samus_getTileIndex
-    ld hl, samusSolidityIndex
-    cp [hl]
-        jr c, jr_000_1e84
-
-jr_000_1e4b:
-    ld a, [$d02f]
-    ld b, a
-    ldh a, [hSamusYPixel]
-    add b
-    ld [$c203], a
-    call samus_getTileIndex
-    ld hl, samusSolidityIndex
-    cp [hl]
-        jr c, jr_000_1e84
-
-jr_000_1e5e:
-    ld a, [$d02e]
-    ld b, a
-    ldh a, [hSamusYPixel]
-    add b
-    ld [$c203], a
-    call samus_getTileIndex
-    ld hl, samusSolidityIndex
-    cp [hl]
-        jr c, jr_000_1e84
-
-jr_000_1e71:
-    ld a, [$d02d]
-    ld b, a
-    ldh a, [hSamusYPixel]
-    add b
-    ld [$c203], a
-    call samus_getTileIndex
-    ld hl, samusSolidityIndex
-    cp [hl]
-        jr c, jr_000_1e84
-
-Jump_000_1e84:
-jr_000_1e84:
+.exit:
     pop bc
     pop de
     pop hl
 ret
 
 
-Call_000_1e88: ; Samus upwards BG collision detection
+; Samus upwards BG collision detection
+collision_samusTop: ; 00:1E88
     push hl
     push de
     push bc
-    call Call_000_34ef
-        jp c, Jump_000_1f0b
+    call Call_000_34ef ; Sprite collision?
+        jp c, .exit
 
+; Top left side
     ldh a, [hSamusXPixel]
     add $0c
     ld [$c204], a
@@ -4684,36 +4683,39 @@ Call_000_1e88: ; Samus upwards BG collision detection
     add b
     ld [$c203], a
     call samus_getTileIndex
+
     ld hl, samusSolidityIndex
     cp [hl]
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
     bit blockType_water, a
-    jr z, jr_000_1ebf
+    jr z, .endIf_A
         ld a, $ff
         ld [waterContactFlag], a
         ld a, [hl]
-    jr_000_1ebf:
+    .endIf_A:
 
     bit blockType_up, a
-    jr z, jr_000_1ec4
+    jr z, .endIf_B
+        ; Invert the solidity
         ccf
-    jr_000_1ec4:
+    .endIf_B:
 
     ld a, [hl]
     bit blockType_acid, a
-    jr z, jr_000_1ed6
+    jr z, .endIf_C
         ld a, $40
         ld [acidContactFlag], a
         push af
         ld a, [acidDamageValue]
         call applyAcidDamage
         pop af
-    jr_000_1ed6:
+    .endIf_C:
 
-    jr c, Jump_000_1f0b
+    jr c, .exit
 
+; Top right side
     ldh a, [hSamusXPixel]
     add $14
     ld [$c204], a
@@ -4724,41 +4726,42 @@ Call_000_1e88: ; Samus upwards BG collision detection
     ld l, a
     ld a, [hl]
     bit blockType_water, a
-    jr z, jr_000_1ef4
+    jr z, .endIf_D
         ld a, $ff
         ld [waterContactFlag], a
         ld a, [hl]
-    jr_000_1ef4:
+    .endIf_D:
     
     bit blockType_up, a
-    jr z, jr_000_1ef9
+    jr z, .endIf_E
+        ; Invert the solidity
         ccf
-    jr_000_1ef9:
+    .endIf_E:
 
     ld a, [hl]
     bit blockType_acid, a
-    jr z, jr_000_1f0b
+    jr z, .endIf_F
         ld a, $40
         ld [acidContactFlag], a
         push af
         ld a, [acidDamageValue]
         call applyAcidDamage
         pop af
-    jr_000_1f0b:
+    .endIf_F:
 
-Jump_000_1f0b:
+.exit:
     pop bc
     pop de
     pop hl
 ret
 
-
-Call_000_1f0f: ; Samus downwards BG collision detection
+; Samus downwards BG collision detection
+Call_000_1f0f: ; 00:1F0F
     push hl
     push de
     push bc
-    call Call_000_348d
-    jr nc, jr_000_1f2c
+    call Call_000_348d ; Sprite collision?
+    jr nc, .endIf_A
         ld a, $01
         ld [$c43a], a
         ld a, l
@@ -4767,9 +4770,10 @@ Call_000_1f0f: ; Samus downwards BG collision detection
         ld [$d05f], a
         ld a, $20
         ld [$d05d], a
-        jp Jump_000_1fbb
-    jr_000_1f2c:
+        jp .exit
+    .endIf_A:
 
+; Bottom left side
     ldh a, [hSamusXPixel]
     add $0c
     ld [$c204], a
@@ -4784,87 +4788,89 @@ Call_000_1f0f: ; Samus downwards BG collision detection
     ld l, a
     ld a, [hl]
     bit blockType_water, a
-    jr z, jr_000_1f4e
+    jr z, .endIf_B
         ld a, $31 ; Set to $FF in every other circumstance (why?)
         ld [waterContactFlag], a
-    jr_000_1f4e:
+    .endIf_B:
 
     ld a, [hl]
     bit blockType_save, a
-    jr z, jr_000_1f58
+    jr z, .endIf_C
         ld a, $ff
         ld [saveContactFlag], a
-    jr_000_1f58:
+    .endIf_C:
 
     ld a, [hl]
     bit blockType_down, a
-    jr z, jr_000_1f62
-        ld a, [samusPose]
+    jr z, .endIf_D
+        ld a, [samusPose] ; ?
         ; Clear carry flag
         scf
         ccf
-    jr_000_1f62:
+    .endIf_D:
 
     ld a, [hl]
     bit blockType_acid, a
-    jr z, jr_000_1f74
+    jr z, .endIf_E
         ld a, $40
         ld [acidContactFlag], a
         push af
         ld a, [acidDamageValue]
         call applyAcidDamage
         pop af
-    jr_000_1f74:
+    .endIf_E:
 
-    jr c, jr_000_1fbb
+    jr c, .exit
 
+; Bottom right side
     ldh a, [hSamusXPixel]
     add $14
     ld [$c204], a
     call samus_getTileIndex
+
     ld hl, samusSolidityIndex
     cp [hl]
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
     bit blockType_water, a
-    jr z, jr_000_1f91
+    jr z, .endIf_F
         ld a, $ff
         ld [waterContactFlag], a
-    jr_000_1f91:
+    .endIf_F:
 
     ld a, [hl]
     bit blockType_save, a
-    jr z, jr_000_1f9b
+    jr z, .endIf_G
         ld a, $ff
         ld [saveContactFlag], a
-    jr_000_1f9b:
+    .endIf_G:
 
     ld a, [hl]
     bit blockType_down, a
-    jr z, jr_000_1fa2
+    jr z, .endIf_H
+        ; Clear carry flag (ignore collision)
         scf
         ccf
-    jr_000_1fa2:
+    .endIf_H:
 
     ld a, [hl]
     bit blockType_acid, a
-    jr z, jr_000_1fb4
+    jr z, .endIf_I
         ld a, $40
         ld [acidContactFlag], a
         push af
         ld a, [acidDamageValue]
         call applyAcidDamage
         pop af
-    jr_000_1fb4:
+    .endIf_I:
 
-    jr nc, jr_000_1fbb
+    jr nc, .exit
 
     ld a, $00
     ld [$d049], a
 
-Jump_000_1fbb:
-jr_000_1fbb:
+.exit:
     pop bc
     pop de
     pop hl
@@ -5072,37 +5078,37 @@ table_20E9: ; 00:20E9 - Samus pose related (y pixel offsets?)
     db $20
     db $20
 
-; 00:20FF - Pose related table
-    db $10, $18, $20, $28, $2A, $80, $00, $00
-    db $14, $18, $20, $28, $2A, $80, $00, $00
-    db $1A, $20, $28, $2A, $80, $00, $00, $00
-    db $10, $18, $20, $28, $2A, $80, $00, $00
-    db $10, $18, $20, $28, $2A, $80, $00, $00
-    db $20, $25, $2A, $80, $00, $00, $00, $00
-    db $20, $25, $2A, $80, $00, $00, $00, $00
-    db $10, $18, $20, $28, $2A, $80, $00, $00
-    db $20, $25, $2A, $80, $00, $00, $00, $00
-    db $10, $18, $20, $28, $2A, $80, $00, $00
-    db $10, $18, $20, $28, $2A, $80, $00, $00
-    db $20, $25, $2B, $80, $00, $00, $00, $00
-    db $20, $25, $2B, $80, $00, $00, $00, $00
-    db $20, $25, $2B, $80, $00, $00, $00, $00
-    db $20, $25, $2B, $80, $00, $00, $00, $00
-    db $14, $18, $20, $28, $2A, $80, $00, $00
-    db $20, $25, $2A, $80, $00, $00, $00, $00
-    db $10, $18, $20, $28, $2A, $80, $00, $00
-    db $20, $25, $2A, $80, $00, $00, $00, $00
-    db $10, $18, $20, $28, $2A, $80, $00, $00
-    db $00, $00, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $00, $00, $00, $00, $00
-    db $20, $25, $2A, $80, $00, $00, $00, $00
-    db $20, $25, $2A, $80, $00, $00, $00, $00
-    db $20, $25, $2A, $80, $00, $00, $00, $00
-    db $20, $25, $2A, $80, $00, $00, $00, $00
-    db $20, $25, $2A, $80, $00, $00, $00, $00
-    db $20, $25, $2A, $80, $00, $00, $00, $00
+table_20FF: ; 00:20FF - Y-Offset collision lists per pose ($80 terminated)
+    db $10, $18, $20, $28, $2A, $80, 0, 0 ; $00 Standing
+    db $14, $18, $20, $28, $2A, $80, 0, 0 ; $01 Jumping
+    db $1A, $20, $28, $2A, $80, 0, 0, 0   ; $02 Spin-jumping
+    db $10, $18, $20, $28, $2A, $80, 0, 0 ; $03 Running (set to 83h when turning)
+    db $10, $18, $20, $28, $2A, $80, 0, 0 ; $04 Crouching
+    db $20, $25, $2A, $80, 0, 0, 0, 0     ; $05 Morphball
+    db $20, $25, $2A, $80, 0, 0, 0, 0     ; $06 Morphball jumping
+    db $10, $18, $20, $28, $2A, $80, 0, 0 ; $07 Falling
+    db $20, $25, $2A, $80, 0, 0, 0, 0     ; $08 Morphball falling
+    db $10, $18, $20, $28, $2A, $80, 0, 0 ; $09 Starting to jump
+    db $10, $18, $20, $28, $2A, $80, 0, 0 ; $0A Starting to spin-jump
+    db $20, $25, $2B, $80, 0, 0, 0, 0     ; $0B Spider ball rolling
+    db $20, $25, $2B, $80, 0, 0, 0, 0     ; $0C Spider ball falling
+    db $20, $25, $2B, $80, 0, 0, 0, 0     ; $0D Spider ball jumping
+    db $20, $25, $2B, $80, 0, 0, 0, 0     ; $0E Spider ball
+    db $14, $18, $20, $28, $2A, $80, 0, 0 ; $0F Knockback
+    db $20, $25, $2A, $80, 0, 0, 0, 0     ; $10 Morphball knockback
+    db $10, $18, $20, $28, $2A, $80, 0, 0 ; $11 Standing bombed
+    db $20, $25, $2A, $80, 0, 0, 0, 0     ; $12 Morphball bombed
+    db $10, $18, $20, $28, $2A, $80, 0, 0 ; $13 Facing screen
+    db 0, 0, 0, 0, 0, 0, 0, 0             ; $14
+    db 0, 0, 0, 0, 0, 0, 0, 0             ; $15
+    db 0, 0, 0, 0, 0, 0, 0, 0             ; $16
+    db 0, 0, 0, 0, 0, 0, 0, 0             ; $17
+    db $20, $25, $2A, $80, 0, 0, 0, 0     ; $18 Being eaten by Metroid Queen
+    db $20, $25, $2A, $80, 0, 0, 0, 0     ; $19 In Metroid Queen's mouth
+    db $20, $25, $2A, $80, 0, 0, 0, 0     ; $1A Being swallowed by Metroid Queen
+    db $20, $25, $2A, $80, 0, 0, 0, 0     ; $1B In Metroid Queen's stomach
+    db $20, $25, $2A, $80, 0, 0, 0, 0     ; $1C Escaping Metroid Queen
+    db $20, $25, $2A, $80, 0, 0, 0, 0     ; $1D Escaped Metroid Queen 
 
 
 ; Clear Projectile RAM
@@ -5267,17 +5273,17 @@ getTilemapAddress: ; 00:22BC
     ld [$c216], a
 ret
 
-
+; 00:22E1 - Unused ?
     ld a, [$c216]
     ld d, a
     ld a, [$c215]
     ld e, a
     ld b, $04
 
-jr_000_22eb:
-    rr d
-    rr e
-    dec b
+    jr_000_22eb:
+        rr d
+        rr e
+        dec b
     jr nz, jr_000_22eb
 
     ld a, e
@@ -5294,9 +5300,9 @@ jr_000_22eb:
     rla
     add $08
     ld [$c204], a
-    ret
+ret
 
-
+; 00:230C - Unused?
     ld a, [$c227]
     and a
     ret z
@@ -5305,48 +5311,44 @@ jr_000_22eb:
     xor a
     ld [$c227], a
 
-jr_000_2317:
-    ld a, [de]
-    ld b, a
-    swap a
-    and $0f
-    jr nz, jr_000_234a
+    jr_000_2317:
+        ld a, [de]
+        ld b, a
+        swap a
+        and $0f
+            jr nz, jr_000_234a
+    
+        ld a, [$c227]
+        and a
+        ld a, $00
+        jr nz, jr_000_2329
+            ld a, $ff
+        jr_000_2329:
 
-    ld a, [$c227]
-    and a
-    ld a, $00
-    jr nz, jr_000_2329
-
-    ld a, $ff
-
-jr_000_2329:
-    ld [hl+], a
-    ld a, b
-    and $0f
-    jr nz, jr_000_2353
-
-    ld a, [$c227]
-    and a
-    ld a, $00
-    jr nz, jr_000_2340
-
-    ld a, $01
-    cp c
-    ld a, $00
-    jr z, jr_000_2340
-
-    ld a, $ff
-
-jr_000_2340:
-    ld [hl+], a
-    dec e
-    dec c
+        ld [hl+], a
+        ld a, b
+        and $0f
+        jr nz, jr_000_2353
+    
+        ld a, [$c227]
+        and a
+        ld a, $00
+        jr nz, jr_000_2340
+            ld a, $01
+            cp c
+            ld a, $00
+            jr z, jr_000_2340
+                ld a, $ff
+    
+    jr_000_2340:
+        ld [hl+], a
+        dec e
+        dec c
     jr nz, jr_000_2317
 
     xor a
     ld [$c227], a
-    ret
-
+ret
 
 jr_000_234a:
     push af
@@ -5360,7 +5362,7 @@ jr_000_2353:
     ld a, $01
     ld [$c227], a
     pop af
-    jr jr_000_2340
+        jr jr_000_2340
 
 ;------------------------------------------------------------------------------
 oamDMA_routine: ; Copied to $FFA0 in HRAM
@@ -5383,28 +5385,18 @@ Call_000_2366:
     call Call_000_3ced
 ret
 
-
-Call_000_2378:
-    ld a, $04
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $4006
+;------------------------------------------------------------------------------
+; Audio calls
+initializeAudio_longJump: ; 00:2378
+    callFar initializeAudio
 ret
 
-
-handleAudio: ;00:2384
-    ld a, BANK(handleAudio_longJump)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call handleAudio_longJump
+handleAudio_longJump: ;00:2384
+    callFar handleAudio
 ret
 
-
-Call_000_2390:
-    ld a, $04
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $4003
+silenceAudio_longJump: ; 00:2390
+    callFar silenceAudio
 ret
 
 ;------------------------------------------------------------------------------
@@ -6682,7 +6674,7 @@ reti
 
 waitOneFrame: ; 00:2C5E
     push hl
-    call handleAudio
+    call handleAudio_longJump
     pop hl
     db $76 ; halt
 
@@ -7205,7 +7197,7 @@ ret
 
 
 killSamus: ; Kill Samus
-    call Call_000_2390 ; Music related
+    call silenceAudio_longJump ; Music related
 
     ld a, $0b
     ld [sfxRequest_noise], a
@@ -8403,7 +8395,7 @@ Jump_000_3698:
 gameMode_dead: ; 00:36B0
     ; Wait until the death sound ends
     .loopWaitSilence:
-        call handleAudio
+        call handleAudio_longJump
         call waitForNextFrame
         ld a, [$ced6]
         cp $0b
@@ -8467,7 +8459,7 @@ gameOverText: ; 00:3711 - "GAME OVER"
 
 ; Reboot game if a certain amount of time has elapsed, or if start is pressed
 gameMode_gameOver: ; 00:371B
-    call handleAudio
+    call handleAudio_longJump
     call waitForNextFrame
     ld a, [countdownTimerLow]
     and a
@@ -8851,7 +8843,7 @@ Jump_000_3a01:
             ld [bankRegMirror], a
             ld [rMBC_BANK_REG], a
             call $4000
-            call handleAudio
+            call handleAudio_longJump
             call clearUnusedOamSlots_longJump
             ld a, [$d093]
             cp $0b
@@ -8897,7 +8889,7 @@ Jump_000_3a01:
         ld [bankRegMirror], a
         ld [rMBC_BANK_REG], a
         call $4000
-        call handleAudio
+        call handleAudio_longJump
         call clearUnusedOamSlots_longJump
         call waitForNextFrame
         ld a, [itemCollectionFlag]
@@ -8946,7 +8938,7 @@ loadExtraSuitGraphics:
 ret
 
 gameMode_unusedA: ; 00:3ACE
-    call Call_000_2390
+    call silenceAudio_longJump
     ld a, $ff
     ld [$cfe5], a
     call disableLCD
@@ -9002,7 +8994,7 @@ gameSavedText: ; 00:3B24 - "GAME SAVED"
     db $56, $50, $5C, $54, $FF, $62, $50, $65, $54, $53, $80
 
 gameMode_unusedB: ; 00:3B2F
-    call handleAudio
+    call handleAudio_longJump
     call waitForNextFrame
     ld a, [countdownTimerLow]
     and a
@@ -9014,7 +9006,7 @@ gameMode_unusedB: ; 00:3B2F
 jp bootRoutine
 
 gameMode_unusedC: ; 00:3B43
-    call Call_000_2390
+    call silenceAudio_longJump
     ld a, $ff
     ld [$cfe5], a
     call disableLCD
@@ -9068,7 +9060,7 @@ gameClearedText: ; 00:3B94 - "GAME CLEARED"
     db $56, $50, $5C, $54, $FF, $52, $5B, $54, $50, $61, $54, $53, $80
 
 gameMode_unusedD: ; 00:3BA1
-    ; call handleAudio ; This ain't called here
+    ; call handleAudio_longJump ; This ain't called here
     call waitForNextFrame
     ld a, [countdownTimerLow]
     and a
@@ -9227,10 +9219,7 @@ ret
 ; External Calls
 
 ; 00:3C92
-    ld a, BANK(earthquakeCheck)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call earthquakeCheck
+    callFar earthquakeCheck
     ld a, $02
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9241,6 +9230,7 @@ ret
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     call $6ae7
+    ; Return to callee
     ld a, $02
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9267,11 +9257,7 @@ ret
     ret
 
 gameMode_saveGame: ; 00:3CE2
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp saveFileToSRAM
-
+    jpLong saveFileToSRAM
 
 Call_000_3ced: ; 00:3CED
     ld a, $01
@@ -9280,14 +9266,9 @@ Call_000_3ced: ; 00:3CED
     jp $79ef
 
 drawNonGameSprite_longCall: ; 00:3CF8
-    ld a, BANK(drawNonGameSprite)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call drawNonGameSprite
-    ld a, $05
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    ret
+    callFar drawNonGameSprite
+    switchBank titleCreditsBank
+ret
 
 ; 00:3D0C
     ld a, $01
@@ -9332,11 +9313,12 @@ drawNonGameSprite_longCall: ; 00:3CF8
 
 LCDCInterruptHandler: ; 00:3D5C
     push af
-    ld a, $03
-    ld [rMBC_BANK_REG], a
-    call $7c7f
-    ld a, [bankRegMirror]
-    ld [rMBC_BANK_REG], a
+        ; Presuming this non-standard convention is because this is an interrupt handler
+        ld a, $03
+        ld [rMBC_BANK_REG], a
+        call $7c7f
+        ld a, [bankRegMirror]
+        ld [rMBC_BANK_REG], a
     pop af
 reti
 
@@ -9347,27 +9329,14 @@ Call_000_3d6d: ; 00:3D6D
     ld [rMBC_BANK_REG], a
     jp $57f2
 
-
 adjustHudValues_longJump: ; 00:3D78
-    ld a, BANK(adjustHudValues)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp adjustHudValues
-
+    jpLong adjustHudValues
 
 handleRespawningBlocks_longJump: ; 00:3D83
-    ld a, BANK(handleRespawningBlocks)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp handleRespawningBlocks
-
+    jpLong handleRespawningBlocks
 
 handleProjectiles_longJump: ; 00:3D8E
-    ld a, BANK(handleProjectiles)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp handleProjectiles
-
+    jpLong handleProjectiles
 
 Call_000_3d99: ; 00:3D99
     ld a, $01
@@ -9384,10 +9353,7 @@ Call_000_3da4: ; 00:3DA4
 
 
 samusShoot_longJump: ; 00:3DAF
-    ld a, BANK(samusShoot)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp samusShoot
+    jpLong samusShoot
 
 ; 00:3DBA
     ld a, $03
@@ -9420,10 +9386,7 @@ samusShoot_longJump: ; 00:3DAF
     ret
 
 findFirstEmptyEnemySlot_longJump: ; 00:3DF6
-    ld a, BANK(findFirstEmptyEnemySlot)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call findFirstEmptyEnemySlot
+    callFar findFirstEmptyEnemySlot
     ld a, $02
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9431,34 +9394,19 @@ findFirstEmptyEnemySlot_longJump: ; 00:3DF6
 
 
 loadEnemySaveFlags_longJump: ; 00:3E0A
-    ld a, BANK(loadEnemySaveFlags)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call loadEnemySaveFlags
-    ; Return to our singular callee (same bank at the function we longjumped too)
-    ld a, BANK(loadSaveFile)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    ret
+    callFar loadEnemySaveFlags
+    switchBank loadSaveFile
+ret
 
 
 VBlank_drawCreditsLine_longJump: ; 00:3E1E
-    ld a, BANK(VBlank_drawCreditsLine)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp VBlank_drawCreditsLine
+    jpLong VBlank_drawCreditsLine
 
 gameMode_prepareCredits: ; 00:3E29
-    ld a, BANK(prepareCreditsRoutine)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp prepareCreditsRoutine
+    jpLong prepareCreditsRoutine
 
 gameMode_Credits: ; 00:3E34
-    ld a, BANK(creditsRoutine)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp creditsRoutine
+    jpLong creditsRoutine
 
 gameMode_Boot: ; 00:3E3F
     call disableLCD
@@ -9466,33 +9414,18 @@ gameMode_Boot: ; 00:3E3F
     xor a
     ldh [hOamBufferIndex], a
     call clearUnusedOamSlots_longJump
-    call Call_000_2390
-    ld a, BANK(loadTitleScreen)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp loadTitleScreen
+    call silenceAudio_longJump
+    jpLong loadTitleScreen
 
 gameMode_Title: ; 00:3E59
     call OAM_clearTable
-    ld a, BANK(titleScreenRoutine)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp titleScreenRoutine
-
+    jpLong titleScreenRoutine
 
 gameMode_newGame: ; 00:3E67 - New Game
-    ld a, BANK(createNewSave)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp createNewSave
-
+    jpLong createNewSave
 
 gameMode_loadSave: ; 00:3E72 - Load Save
-    ld a, BANK(loadSaveFile)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp loadSaveFile
-
+    jpLong loadSaveFile
 
 ; 00:3E7D
     ld a, $01
@@ -9500,13 +9433,8 @@ gameMode_loadSave: ; 00:3E72 - Load Save
     ld [rMBC_BANK_REG], a
     jp $4b62
 
-
 clearUnusedOamSlots_longJump: ; 00:3E88
-    ld a, BANK(clearUnusedOamSlots)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp clearUnusedOamSlots
-
+    jpLong clearUnusedOamSlots
 
 Call_000_3e93: ; 00:3E93
     ld a, $01
@@ -9514,26 +9442,14 @@ Call_000_3e93: ; 00:3E93
     ld [rMBC_BANK_REG], a
     jp $4bd9
 
-
 drawHudMetroid_longJump: ; 00:3E9E
-    ld a, BANK(drawHudMetroid)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp drawHudMetroid
-
+    jpLong drawHudMetroid
 
 debug_drawOneDigitNumber_longJump: ; 00:3EA9 - Unused?
-    ld a, BANK(debug_drawNumber)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp debug_drawNumber.oneDigit
+    jpLong debug_drawNumber.oneDigit
 
 debug_drawTwoDigitNumber_longJump: ; 00:3EB4 - Unused?
-    ld a, BANK(debug_drawNumber)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp debug_drawNumber.twoDigit
-
+    jpLong debug_drawNumber.twoDigit
 
 Call_000_3ebf: ; 00:3EBF
     ld a, $01
@@ -9541,13 +9457,10 @@ Call_000_3ebf: ; 00:3EBF
     ld [rMBC_BANK_REG], a
     jp $4bf3
 
-
 clearAllOam_longJump: ; 00:3ECA
-    ld a, BANK(clearAllOam)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp clearAllOam
+    jpLong clearAllOam
 
+; End of long calls
 
 ; Extracts the sprite priority bit that is bit-packed with the door transition index using the bitmask (0x0800)
 ; (I don't know why they didn't store these bits with the scroll bytes)

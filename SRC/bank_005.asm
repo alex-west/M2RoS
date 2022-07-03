@@ -5,6 +5,8 @@
 
 SECTION "ROM Bank $005", ROMX[$4000], BANK[$5]
 
+titleCreditsBank:
+
 ;------------------------------------------------------------------------------
 ; Draw two digits of ending timer
 credits_drawTimerDigits: ; 05:4000
