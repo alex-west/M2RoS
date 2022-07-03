@@ -1,74 +1,74 @@
 ; Sprite Pointers
 
-    dw sprite425F
-    dw sprite429C
-    dw sprite42FE
-    dw sprite4360
-    dw sprite4391
-    dw sprite43C6
-    dw sprite4476
-    dw sprite44AB
-    dw sprite44E8
-    dw sprite45AC
-    dw sprite4606
-    dw sprite4660
-    dw sprite46B2
-    dw sprite425F
-    dw sprite42CD
-    dw sprite432F
-    dw sprite43EB
-    dw sprite441C
-    dw sprite4451
-    dw sprite4511
-    dw sprite4546
-    dw sprite4583
-    dw sprite45D9
-    dw sprite4633
-    dw sprite4689
-    dw sprite46DB
-    dw sprite4197
-    dw sprite41B0
-    dw sprite41C9
-    dw sprite41E2
-    dw sprite410F
-    dw sprite4120
-    dw sprite4131
-    dw sprite4142
-    dw sprite41FB
-    dw sprite4214
-    dw sprite422D
-    dw sprite4246
-    dw sprite4153
-    dw sprite4164
-    dw sprite4175
-    dw sprite4186
-    dw sprite410A
-    dw sprite4704
-    dw sprite4735
-    dw sprite476E
-    dw sprite4793
-    dw sprite47C4
-    dw sprite47FD
-    dw sprite4859
-    dw sprite4848
-    dw sprite4827
-    dw sprite4822
-    dw sprite489A
-    dw sprite489F
-    dw sprite48A4
-    dw sprite48B5
-    dw sprite48C6
-    dw sprite48D7
-    dw sprite48E8
-    dw sprite48F9
-    dw sprite490A
-    dw sprite491B
-    dw sprite492C
-    dw sprite4935
-    dw sprite40E1
-    dw sprite40B8
-    dw sprite4093
-    dw sprite408A
+    dw sprite425F ; $00 - Facing screen
+    dw sprite429C ; $01 - Standing (right)
+    dw sprite42FE ; $02 - Standing (right, aiming up)
+    dw sprite4360 ; $03 - Running (right, frame 1), Jump-start (right)
+    dw sprite4391 ; $04 - Running (right, frame 2)
+    dw sprite43C6 ; $05 - Running (right, frame 3)
+    dw sprite4476 ; $06 - Running (right, firing forwards, frame 1)
+    dw sprite44AB ; $07 - Running (right, firing forwards, frame 2)
+    dw sprite44E8 ; $08 - Running (right, firing forwards, frame 3)
+    dw sprite45AC ; $09 - Jumping (facing right)
+    dw sprite4606 ; $0A - Jumping (facing right, aiming up)
+    dw sprite4660 ; $0B - Crouching (facing right)
+    dw sprite46B2 ; $0C - Jumping (facing right, aiming down)
+    dw sprite425F ; $0D - Facing screen (unused? duplicate)
+    dw sprite42CD ; $0E - Standing (left)
+    dw sprite432F ; $0F - Standing (left, aiming up)
+    dw sprite43EB ; $10 - Running (left, frame 1), Jump-start (left)
+    dw sprite441C ; $11 - Running (left, frame 2)
+    dw sprite4451 ; $12 - Running (left, frame 3)
+    dw sprite4511 ; $13 - Running (left, firing forwards, frame 1)
+    dw sprite4546 ; $14 - Running (left, firing forwards, frame 2)
+    dw sprite4583 ; $15 - Running (left, firing forwards, frame 3)
+    dw sprite45D9 ; $16 - Jumping (facing left)
+    dw sprite4633 ; $17 - Jumping (facing left, aiming up)
+    dw sprite4689 ; $18 - Crouching (facing left)
+    dw sprite46DB ; $19 - Jumping (facing left, aiming down)
+    dw sprite4197 ; $1A - Spin jump (right, frame 1)
+    dw sprite41B0 ; $1B - Spin jump (right, frame 2)
+    dw sprite41C9 ; $1C - Spin jump (right, frame 3)
+    dw sprite41E2 ; $1D - Spin jump (right, frame 4)
+    dw sprite410F ; $1E - Morph (left, frame 1)
+    dw sprite4120 ; $1F - Morph (left, frame 2)
+    dw sprite4131 ; $20 - Morph (left, frame 3)
+    dw sprite4142 ; $21 - Morph (left, frame 4)
+    dw sprite41FB ; $22 - Spin jump (left, frame 1)
+    dw sprite4214 ; $23 - Spin jump (left, frame 2)
+    dw sprite422D ; $24 - Spin jump (left, frame 3)
+    dw sprite4246 ; $25 - Spin jump (left, frame 4)
+    dw sprite4153 ; $26 - Morph (right, frame 1)
+    dw sprite4164 ; $27 - Morph (right, frame 2)
+    dw sprite4175 ; $28 - Morph (right, frame 3)
+    dw sprite4186 ; $29 - Morph (right, frame 4)
+    dw sprite410A ; $2A - Beam (horizontal)
+    dw sprite4704 ; $2B - Running (right, aiming up, frame 1)
+    dw sprite4735 ; $2C - Running (right, aiming up, frame 2)
+    dw sprite476E ; $2D - Running (right, aiming up, frame 3)
+    dw sprite4793 ; $2E - Running (left, aiming up, frame 1)
+    dw sprite47C4 ; $2F - Running (left, aiming up, frame 2)
+    dw sprite47FD ; $30 - Running (left, aiming up, frame 3)
+    dw sprite4859 ; $31 - Explosion (frame ?)
+    dw sprite4848 ; $32 - Explosion (frame ?)
+    dw sprite4827 ; $33 - Explosion (frame ?)
+    dw sprite4822 ; $34 - Bomb (frame ?)
+    dw sprite489A ; $35 - Bomb (frame ?)
+    dw sprite489F ; $36 - Bomb (frame ?)
+    dw sprite48A4 ; $37 - Spider (left, frame 1)
+    dw sprite48B5 ; $38 - Spider (left, frame 2)
+    dw sprite48C6 ; $39 - Spider (left, frame 3)
+    dw sprite48D7 ; $3A - Spider (left, frame 4)
+    dw sprite48E8 ; $3B - Spider (right, frame 1)
+    dw sprite48F9 ; $3C - Spider (right, frame 2)
+    dw sprite490A ; $3D - Spider (right, frame 3)
+    dw sprite491B ; $3E - Spider (right, frame 4)
+    dw sprite492C ; $3F - Metroid counter (frame 1)
+    dw sprite4935 ; $40 - Metroid counter (frame 2)
+    dw sprite40E1 ; $41 - Unknown sprite
+    dw sprite40B8 ; $42 - "PRESS START" (Save text)
+    dw sprite4093 ; $43 - "COMPLETED" (Save text)
+    dw sprite408A ; $44 - L Counter
 
 
 ; Metasprite Data:
@@ -99,7 +99,7 @@ sprite40B8: ; "PRESS START"
     db   0, 72, $D1, $00
     db   0, 80, $D3, $00
     db $FF
-sprite40E1: ; ???
+sprite40E1: ; Unknown. Possibly a message (like the two sprites above), but doesn't appear to match any obvious character mapping
     db   0,  0, $ED, $00
     db   0,  8, $EE, $00
     db   0, 16, $EF, $00

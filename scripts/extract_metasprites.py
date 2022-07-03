@@ -27,10 +27,12 @@ elif spriteSet == 3:
 rom.seek(spritePointersBegin)
 print("; Sprite Pointers\n")
 spritePointers = set([])
+i = 0
 while rom.tell() < spriteDataBegin:
     gbAddr = romRead(2)
     spritePointers.add(gbAddr)
-    print("    dw sprite{:04X}".format(gbAddr))
+    print("    dw sprite{:04X} ; ${:02X}".format(gbAddr, i))
+    i += 1
 
 # Read the sprite data
 print("\n\n; Metasprite Data:")

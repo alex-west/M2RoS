@@ -582,7 +582,11 @@ def samusPose = $D020 ; Samus' pose
 ;    1D: Escaped Metroid Queen
 ;}
 ;
-;$D022: += 3 while running and in the door transition code. Seems llke some sort of animation timer. Used to morph after kneeling and holding down for a few frames.
+def samus_animationTimer = $D022
+; Used by the running animation. 
+;  Bits 4 and 5 select the animation frame. Clamped to be below $30. Typically incremented by 3 when running.
+; Also used as a cooldown timer for certain actions (holding down to morph, up to stand, etc.)
+
 ;$D023: Direction of screen movement
 ;{
 ;    10: Right
@@ -765,7 +769,7 @@ def itemCollectionFlag = $D06D ; Item collection flag. Stops the status bar from
 def maxOamPrevFrame = $D06E ; OAM slots used in by the previous frame
 ;$D06F: Mirror of $C46D? $C466?
 ;$D070: Mirror of $FFFC? $C467?
-;$D072: Incremented by $0D21 and $08FE
+def samus_spinAnimationTimer = $D072 ; Animation timer for spinning. Incremented by general pose handler and door transitions.
 def credits_textPointerLow  = $D073 ; Pointer to the working copy of the credits in SRAM. Stops being incremented when it hits the byte $F0. Character data is subtracted by $21 to adjust to almost-ASCII
 def credits_textPointerHigh = $D074 ;
 def credits_nextLineReady = $D076 ; Flag to indicate that the next line of the credits is ready to be uploaded

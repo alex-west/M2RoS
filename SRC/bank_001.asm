@@ -345,7 +345,7 @@ debug_drawNumber: ; 01:4AFC - Display a two-sprite number
 ret
 
 
-Call_001_4b11:
+Call_001_4b11: ; 01:4B11
     ldh [$98], a
     ld h, $c0
     ldh a, [hOamBufferIndex]
@@ -503,53 +503,59 @@ clearAllOam: ; 00:4BCE
     jr c, .clearLoop
 ret
 
-; 01:4BD9: Draw Samus
+drawSamus: ; 01:4BD9: Draw Samus
+; Entry point 1
     ld a, [samusInvulnerableTimer]
     and a
-    jr z, jr_001_4be8
+    jr z, .endIf_A
         dec a
         ld [samusInvulnerableTimer], a
+        ; 4 frames on, 4 frames off
         ldh a, [frameCounter]
         bit 2, a
         ret z
-    jr_001_4be8:
+    .endIf_A:
     
     ld a, [acidContactFlag]
     and a
-    jr z, jr_001_4bf3
+    jr z, .endIf_B
+        ; 4 frames on, 4 frames off
         ldh a, [frameCounter]
         bit 2, a
         ret z
-    jr_001_4bf3:
+    .endIf_B:
 
+; 01:4BF3 - Entry point 2
     ld a, [samusPose]
     bit 7, a
-    jp nz, Jump_001_4d33
+        jp nz, drawSamus_faceScreen
 
+    ; Convert facing direction into a dummy input
     ld b, $01
     ld a, [samusFacingDirection]
     and a
-    jr nz, jr_001_4c05
+    jr nz, .endIf_C
+        ld b, $02
+    .endIf_C:
 
-    ld b, $02
-
-jr_001_4c05:
+    ; Check if cutsence is active (e.g. a metroid is transforming)
     ld a, [$c463]
     and a
-    jr z, jr_001_4c10
+    jr z, .else_D
+        ; Load dummy input to temp
+        ld a, b
+        ldh [$98], a
+        jr .endIf_D
+    .else_D:
+        ; Load input into temp variable
+        ldh a, [hInputPressed]
+        and PADF_DOWN | PADF_UP | PADF_LEFT | PADF_RIGHT ;$f0
+        swap a
+        ; OR the dummy input into the temp variable as well
+        or b
+        ldh [$98], a
+    .endIf_D:
 
-    ld a, b
-    ldh [$98], a
-    jr jr_001_4c19
-
-jr_001_4c10:
-    ldh a, [hInputPressed]
-    and PADF_DOWN | PADF_UP | PADF_LEFT | PADF_RIGHT ;$f0
-    swap a
-    or b
-    ldh [$98], a
-
-jr_001_4c19:
     ld a, [samusPose]
     rst $28
         dw drawSamus_4D45 ; $00
@@ -571,11 +577,11 @@ jr_001_4c19:
         dw drawSamus_4C94 ; $10
         dw drawSamus_4C59 ; $11
         dw drawSamus_4C94 ; $12
-        dw drawSamus_4D33 ; $13
-        dw drawSamus_4D33 ; $14
-        dw drawSamus_4D33 ; $15
-        dw drawSamus_4D33 ; $16
-        dw drawSamus_4D33 ; $17
+        dw drawSamus_faceScreen ; $13
+        dw drawSamus_faceScreen ; $14
+        dw drawSamus_faceScreen ; $15
+        dw drawSamus_faceScreen ; $16
+        dw drawSamus_faceScreen ; $17
         dw drawSamus_4C94 ; $18
         dw drawSamus_4C94 ; $19
         dw drawSamus_4C94 ; $1A
@@ -587,61 +593,71 @@ drawSamus_4C59: ; $0F, $11
     ld d, $00
     ld a, [samusFacingDirection]
     ld e, a
-    ld hl, $4c69
+    ld hl, table_4C69
     add hl, de
     ld a, [hl]
     ldh [hSpriteId], a
     jp Jump_001_4ddf
 
+table_4C69:
     db $16, $09
 
-drawSamus_4C6B: ; $0B-$0E
+drawSamus_4C6B: ; 01:4C6B - $0B-$0E: Spider Ball
     ld a, [samusFacingDirection]
     and $01
     sla a
     sla a
     ld b, a
-    ld a, [$d072]
+
+    ld a, [samus_spinAnimationTimer]
     and $0c
     srl a
     srl a
     add b
     ld e, a
     ld d, $00
-    ld hl, $4c8c
+
+    ld hl, table_4C8C
     add hl, de
     ld a, [hl]
     ldh [hSpriteId], a
     jp Jump_001_4ddf
 
-    db $37, $38, $39, $3a, $3b, $3c, $3d, $3e
+table_4C8C:
+    db $37, $38, $39, $3a ; Left
+    db $3b, $3c, $3d, $3e ; Right
 
 drawSamus_4C94: ; Morph poses
+    ; Get sub-table depending on facing direction
     ld a, [samusFacingDirection]
     and $01
     sla a
     sla a
     ld b, a
-    ld a, [$d072]
+    ; Get index into table
+    ld a, [samus_spinAnimationTimer]
     and $0c
     srl a
     srl a
     add b
     ld e, a
     ld d, $00
-    ld hl, $4cb5
+    ; Load sprite index from table
+    ld hl, table_4CB5
     add hl, de
     ld a, [hl]
     ldh [hSpriteId], a
     jp Jump_001_4ddf
 
-    db $1e, $1f, $20, $21, $26, $27, $28, $29
+table_4CB5: ; 01:4CB5
+    db $1e, $1f, $20, $21 ; Left
+    db $26, $27, $28, $29 ; Right
 
 drawSamus_4CBD: ; $01, $07
     ld d, $00
     ldh a, [$98]
     ld e, a
-    ld hl, $4cde
+    ld hl, table_4CDE
     add hl, de
     ld a, [hl]
     ldh [hSpriteId], a
@@ -653,76 +669,75 @@ drawSamus_4CCC: ; %09, $0A
     ldh [hSpriteId], a
     ld a, [samusFacingDirection]
     and a
-    jp nz, Jump_001_4ddf
-
+        jp nz, Jump_001_4ddf
     ld a, $10
     ldh [hSpriteId], a
-    jp Jump_001_4ddf
+        jp Jump_001_4ddf
+; end proc
 
+table_4CDE: ; 01:4CDE
+; Value read is based on input and facing direction
+;                                U    U              D    D
+;       x    R    L    x    U    R    L    x    D    R    L    x    x    x    x    x
+    db $00, $09, $16, $00, $00, $0a, $17, $00, $00, $0c, $19, $00, $00, $00, $00, $00
 
-    db $00, $09, $16, $00, $00, $0a, $17, $00
-    db $00, $0c, $19, $00, $00, $00, $00, $00
-
-drawSamus_4CEE: ; $02
+drawSamus_4CEE: ; 01:4CEE - $02: Spin jump
     ld a, [samusFacingDirection]
     and a
-    jp z, Jump_001_4cfb
+    jp z, .else
+        ld hl, table_4D2B
+        jp .endIf
+    .else:
+        ld hl, table_4D2F
+    .endIf:
 
-    ld hl, $4d2b
-    jp Jump_001_4cfe
-
-
-Jump_001_4cfb:
-    ld hl, $4d2f
-
-Jump_001_4cfe:
     ld a, [samusItems]
     and itemMask_space | itemMask_screw
-    jr nz, jr_001_4d1a
+    jr nz, .spinFast
+        ; Slow spin
+        ld a, [samus_spinAnimationTimer]
+        srl a
+        and $0c
+        srl a
+        srl a
+        ld e, a
+        ld d, $00
+        add hl, de
+        ld a, [hl]
+        ldh [hSpriteId], a
+        jp Jump_001_4ddf
+    .spinFast:
+        ld a, [samus_spinAnimationTimer]
+        srl a
+        and $03
+        ld e, a
+        ld d, $00
+        add hl, de
+        ld a, [hl]
+        ldh [hSpriteId], a
+        jp Jump_001_4ddf
 
-    ld a, [$d072]
-    srl a
-    and $0c
-    srl a
-    srl a
-    ld e, a
-    ld d, $00
-    add hl, de
-    ld a, [hl]
-    ldh [hSpriteId], a
-    jp Jump_001_4ddf
+; Spin tables
+table_4D2B: ; 01:4D2B
+    db $1A, $1B, $1C, $1D ; Right
+table_4D2F: ; 01:4D2F
+    db $22, $23, $24, $25 ; Left
 
-
-jr_001_4d1a:
-    ld a, [$d072]
-    srl a
-    and $03
-    ld e, a
-    ld d, $00
-    add hl, de
-    ld a, [hl]
-    ldh [hSpriteId], a
-    jp Jump_001_4ddf
-
-    db $1a, $1b, $1c, $1d, $22, $23, $24, $25
-
-drawSamus_4D33: ; $13-$17: Facing the screen
-Jump_001_4d33:
+drawSamus_faceScreen: ; 00:4D33 - $13-$17: Facing the screen
     ld a, [countdownTimerLow]
     and a
-    jr z, jr_001_4d3e
+    jr z, .endIf
+        ldh a, [frameCounter]
+        and $03
+        ret z
+    .endIf:
 
-    ldh a, [frameCounter]
-    and $03
-    ret z
-
-jr_001_4d3e:
     ld a, $00
     ldh [hSpriteId], a
     jp Jump_001_4ddf
 
 
-drawSamus_4D45: ; $00
+drawSamus_4D45: ; $00: Standing
     ld d, $00
     ldh a, [$98]
     ld e, a
@@ -732,98 +747,86 @@ drawSamus_4D45: ; $00
     ldh [hSpriteId], a
     jp Jump_001_4ddf
 
-    db $00, $01, $0e, $00, $00, $02, $0f, $00
-    db $00, $01, $0e, $00, $00, $00, $00, $00, $00
+; Value read is based on input and facing direction
+;                                U    U              D    D
+;       x    R    L    x    U    R    L    x    D    R    L    x    x    x    x    x
+    db $00, $01, $0e, $00, $00, $02, $0f, $00, $00, $01, $0e, $00, $00, $00, $00, $00, $00
 
-
-drawSamus_4D65: ; $04
+drawSamus_4D65: ; $04 - Crouching
     ld a, $0b
     ldh [hSpriteId], a
     ld a, [samusFacingDirection]
     and a
-    jp nz, Jump_001_4ddf
-
+        jp nz, Jump_001_4ddf
     ld a, $18
     ldh [hSpriteId], a
-    jp Jump_001_4ddf
+        jp Jump_001_4ddf
+; end proc
 
-drawSamus_4D77: ; $03
-    ld a, [$d022]
+drawSamus_4D77: ; 01:4D77 - $03: Running
+    ; Clamp run animation counter so it never equals or exceeds $30
+    ld a, [samus_animationTimer]
     cp $30
-    jr c, jr_001_4d82
-
-    xor a
-    ld [$d022], a
-
-jr_001_4d82:
-    ld a, [$d022]
+    jr c, .endIf_A
+        xor a
+        ld [samus_animationTimer], a
+    .endIf_A:
+    
+    ld a, [samus_animationTimer]
     and $07
     jr nz, jr_001_4d94
+        ld a, [sfxRequest_noise]
+        and a
+        jr nz, jr_001_4d94
+            ld a, $10
+            ld [sfxRequest_noise], a
+    jr_001_4d94:
 
-    ld a, [sfxRequest_noise]
-    and a
-    jr nz, jr_001_4d94
-
-    ld a, $10
-    ld [sfxRequest_noise], a
-
-jr_001_4d94:
+    ; Get index into table
+    ;  Multiply facing direction by 4 to get the pertinent sub-table
     ld a, [samusFacingDirection]
     and $01
     sla a
     sla a
     ld b, a
-    ld a, [$d022]
+    ; Convert run animation timer to table index
+    ld a, [samus_animationTimer]
     and $30
     swap a
     add b
     ld e, a
     ld d, $00
-    ld hl, $4dc7
+    ; Get base address of table
+    ld hl, table_4dc7
     ldh a, [hInputPressed]
     bit PADB_UP, a
     jr z, jr_001_4db7
+        ld hl, table_4dd7
+        jr jr_001_4dc0
+    jr_001_4db7:
+        ldh a, [hInputPressed]
+        bit PADB_B, a
+        jr z, jr_001_4dc0
+            ld hl, table_4dcf
+    jr_001_4dc0:
 
-    ld hl, $4dd7
-    jr jr_001_4dc0
-
-jr_001_4db7:
-    ldh a, [hInputPressed]
-    bit PADB_B, a
-    jr z, jr_001_4dc0
-
-    ld hl, $4dcf
-
-jr_001_4dc0:
     add hl, de
     ld a, [hl]
     ldh [hSpriteId], a
     jp Jump_001_4ddf
 
+; Normal, Firing, Up
 
-    db $10, $11, $12
+table_4dc7: ; 01:4DC7 - Normal
+    db $10, $11, $12, $00 ; Left
+    db $03, $04, $05, $00 ; Right
+table_4dcf: ; 01:4DCF - Firing forwards
+    db $13, $14, $15, $00 ; Left
+    db $06, $07, $08, $00 ; Right
+table_4dd7: ; 01:4DD7 - Aiming up
+    db $2e, $2f, $30, $00 ; Left
+    db $2b, $2c, $2d, $00 ; Right
 
-    nop
-
-    db $03, $04, $05
-
-    nop
-
-    db $13, $14, $15
-
-    nop
-
-    db $06, $07, $08
-
-    nop
-
-    db $2e, $2f, $30
-
-    nop
-
-    db $2b, $2c, $2d
-
-    nop
 
 Jump_001_4ddf:
     call loadScreenSpritePriorityBit
@@ -975,7 +978,7 @@ jr_001_4e9f:
     bit 7, a
     ret nz
 
-    ld hl, $5653
+    ld hl, table_5653
     ld a, [samusPose]
     ld e, a
     ld d, $00
@@ -990,38 +993,36 @@ jr_001_4e9f:
     ld b, a
     xor a
     ld [samusBeamCooldown], a
+    
     ldh a, [hInputPressed]
     swap a
     and b
     jr nz, jr_001_4ecf
+        ld c, $01
+        ld a, [samusFacingDirection]
+        and a
+        jr nz, jr_001_4ed8
+            ld c, $02
+            jr jr_001_4ed8
+    jr_001_4ecf:
+        ld hl, table_5643
+        ld e, a
+        ld d, $00
+        add hl, de
+        ld a, [hl]
+        ld c, a
+    jr_001_4ed8:
 
-    ld c, $01
-    ld a, [samusFacingDirection]
-    and a
-    jr nz, jr_001_4ed8
-
-    ld c, $02
-    jr jr_001_4ed8
-
-jr_001_4ecf:
-    ld hl, $5643
-    ld e, a
-    ld d, $00
-    add hl, de
-    ld a, [hl]
-    ld c, a
-
-jr_001_4ed8:
     ld a, c
     ldh [$99], a
-    ld hl, $561d
+    ld hl, table_561D
     ld a, [samusPose]
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
     ld b, a
-    ld hl, $5630
+    ld hl, table_5630
     ld a, c
     ld e, a
     ld d, $00
@@ -1031,7 +1032,7 @@ jr_001_4ed8:
     sub $04
     ld b, a
     ldh [$9a], a
-    ld hl, $55fb
+    ld hl, table_55FB
     sla c
     ld a, [samusFacingDirection]
     add c
@@ -1903,22 +1904,20 @@ Jump_001_53d9:
 
     ld hl, $dd30
 
-jr_001_53e7:
-    ld a, [hl]
-    cp $ff
-    jr z, jr_001_53f8
-
-    ld de, $0010
-    add hl, de
-    ld a, l
-    swap a
-    cp $06
+    jr_001_53e7:
+        ld a, [hl]
+        cp $ff
+            jr z, jr_001_53f8
+        ld de, $0010
+        add hl, de
+        ld a, l
+        swap a
+        cp $06
     jr nz, jr_001_53e7
-
     ret
+    
+    jr_001_53f8:
 
-
-jr_001_53f8:
     ld a, $01
     ld [hl+], a
     ld a, $60
@@ -1931,146 +1930,136 @@ jr_001_53f8:
     ld [hl+], a
     ld a, $13
     ld [sfxRequest_square1], a
-    ret
+ret
 
 
 Call_001_540e:
     xor a
     ld [$d032], a
 
-Jump_001_5412:
-    ld hl, $dd30
-    ld a, [$d032]
-    swap a
-    add l
-    ld l, a
-    ld a, [hl+]
-    ldh [$98], a
-    cp $ff
-    jr z, jr_001_5490
-
-    ld a, [hl+]
-    ld c, a
-    ld a, [$c205]
-    ld b, a
-    ld a, [hl+]
-    ld [$d04a], a
-    sub b
-    ldh [hSpriteYPixel], a
-    ld a, [$c206]
-    ld b, a
-    ld a, [hl]
-    ld [$d04b], a
-    sub b
-    ldh [hSpriteXPixel], a
-    ldh a, [hSpriteXPixel]
-    cp $b0
-    jr nc, jr_001_548a
-
-    ldh a, [hSpriteYPixel]
-    cp $b0
-    jr nc, jr_001_548a
-
-    ldh a, [$98]
-    cp $01
-    jr nz, jr_001_545d
-
-    ld a, c
-    and $08
-    sla a
-    swap a
-    add $35
-    ldh [hSpriteId], a
-    call Call_001_4b62
-    jr jr_001_5490
-
-jr_001_545d:
-    ld a, c
-    cp $08
-    jr nz, jr_001_547e
-
-    ld a, [samusPose]
-    cp $18
-    call c, Call_001_54d7
-    ld a, c
-    srl a
-    add $31
-    ldh [hSpriteId], a
-    call Call_001_4b62
-    call $30bb
-    ld a, $0c
-    ld [sfxRequest_noise], a
-    jr jr_001_5490
-
-jr_001_547e:
-    ld a, c
-    srl a
-    add $31
-    ldh [hSpriteId], a
-    call Call_001_4b62
-    jr jr_001_5490
-
-jr_001_548a:
-    dec hl
-    dec hl
-    dec hl
-    ld a, $ff
-    ld [hl], a
-
-jr_001_5490:
-    ld a, [$d032]
-    inc a
-    ld [$d032], a
-    cp $03
+    Jump_001_5412:
+        ld hl, $dd30
+        ld a, [$d032]
+        swap a
+        add l
+        ld l, a
+        ld a, [hl+]
+        ldh [$98], a
+        cp $ff
+        jr z, jr_001_5490
+            ld a, [hl+]
+            ld c, a
+            ld a, [$c205]
+            ld b, a
+            ld a, [hl+]
+            ld [$d04a], a
+            sub b
+            ldh [hSpriteYPixel], a
+            ld a, [$c206]
+            ld b, a
+            ld a, [hl]
+            ld [$d04b], a
+            sub b
+            ldh [hSpriteXPixel], a
+            ldh a, [hSpriteXPixel]
+            cp $b0
+            jr nc, jr_001_548a
+                ldh a, [hSpriteYPixel]
+                cp $b0
+                jr nc, jr_001_548a
+                    ldh a, [$98]
+                    cp $01
+                    jr nz, jr_001_545d
+                        ld a, c
+                        and $08
+                        sla a
+                        swap a
+                        add $35
+                        ldh [hSpriteId], a
+                        call Call_001_4b62
+                        jr jr_001_5490
+                    jr_001_545d:
+                    
+                    ld a, c
+                    cp $08
+                    jr nz, jr_001_547e
+                        ld a, [samusPose]
+                        cp $18
+                            call c, Call_001_54d7
+                        ld a, c
+                        srl a
+                        add $31
+                        ldh [hSpriteId], a
+                        call Call_001_4b62
+                        call $30bb
+                        ld a, $0c
+                        ld [sfxRequest_noise], a
+                        jr jr_001_5490
+                    jr_001_547e:
+                        ld a, c
+                        srl a
+                        add $31
+                        ldh [hSpriteId], a
+                        call Call_001_4b62
+                        jr jr_001_5490
+            
+            jr_001_548a:
+                dec hl
+                dec hl
+                dec hl
+                ld a, $ff
+                ld [hl], a
+        
+        jr_001_5490:
+        ld a, [$d032]
+        inc a
+        ld [$d032], a
+        cp $03
     jp nz, Jump_001_5412
-
-    ret
+ret
 
 
     xor a
     ld [$d032], a
 
-jr_001_54a1:
-    ld hl, $dd30
-    ld a, [$d032]
-    swap a
-    add l
-    ld l, a
-    ld a, [hl+]
-    ld b, a
-    cp $ff
-    jr z, jr_001_54c8
-
-    ld a, [hl]
-    dec a
-    ld [hl], a
-    jr nz, jr_001_54c8
-
-    ld a, b
-    cp $01
-    jr z, jr_001_54c1
-
-    dec hl
-    ld a, $ff
-    ld [hl], a
-    jr jr_001_54c8
-
-jr_001_54c1:
-    dec hl
-    ld a, $02
-    ld [hl+], a
-    ld a, $08
-    ld [hl], a
-
-jr_001_54c8:
-    ld a, [$d032]
-    inc a
-    ld [$d032], a
-    cp $03
+    jr_001_54a1:
+        ld hl, $dd30
+        ld a, [$d032]
+        swap a
+        add l
+        ld l, a
+        ld a, [hl+]
+        ld b, a
+        cp $ff
+        jr z, jr_001_54c8
+            ld a, [hl]
+            dec a
+            ld [hl], a
+            jr nz, jr_001_54c8
+                ld a, b
+                cp $01
+                jr z, jr_001_54c1
+                    dec hl
+                    ld a, $ff
+                    ld [hl], a
+                    jr jr_001_54c8
+                jr_001_54c1:
+        
+                dec hl
+                ld a, $02
+                ld [hl+], a
+                ld a, $08
+                ld [hl], a
+        jr_001_54c8:
+        
+        ld a, [$d032]
+        inc a
+        ld [$d032], a
+        cp $03
     jr nz, jr_001_54a1
 
     call Call_001_540e
-    ret
+ret
 
 
 Call_001_54d7:
@@ -2083,48 +2072,41 @@ Call_001_54d7:
     sub $20
     cp b
     jr nc, jr_001_5525
+        ld a, [$d03b]
+        add $20
+        cp b
+        jr c, jr_001_5525
+            ldh a, [hSpriteXPixel]
+            ld b, a
+            ld a, [$d03c]
+            sub $10
+            cp b
+            jr nc, jr_001_5525
+                ld a, [$d03c]
+                add $10
+                cp b
+                jr c, jr_001_5525
+                    ld c, $ff
+                    ld a, [$d03c]
+                    sub b
+                    jr c, jr_001_550e
+                        ld c, $00
+                        jr z, jr_001_550e
+                            ld c, $01
+                    jr_001_550e:
+                    ld a, c
+                    ld [$d00f], a
+                    ld a, $40
+                    ld [samus_jumpArcCounter], a
+                    ld a, [samusPose]
+                    ld e, a
+                    ld d, $00
+                    ld hl, table_55DD
+                    add hl, de
+                    ld a, [hl]
+                    ld [samusPose], a
+    jr_001_5525:
 
-    ld a, [$d03b]
-    add $20
-    cp b
-    jr c, jr_001_5525
-
-    ldh a, [hSpriteXPixel]
-    ld b, a
-    ld a, [$d03c]
-    sub $10
-    cp b
-    jr nc, jr_001_5525
-
-    ld a, [$d03c]
-    add $10
-    cp b
-    jr c, jr_001_5525
-
-    ld c, $ff
-    ld a, [$d03c]
-    sub b
-    jr c, jr_001_550e
-
-    ld c, $00
-    jr z, jr_001_550e
-
-    ld c, $01
-
-jr_001_550e:
-    ld a, c
-    ld [$d00f], a
-    ld a, $40
-    ld [samus_jumpArcCounter], a
-    ld a, [samusPose]
-    ld e, a
-    ld d, $00
-    ld hl, $55dd
-    add hl, de
-    ld a, [hl]
-    ld [samusPose], a
-
-jr_001_5525:
     ld a, [$d04a]
     sub $10
     ld [$c203], a
@@ -2134,39 +2116,36 @@ jr_001_5525:
     cp $04
     jr nc, jr_001_553f
         call destroyRespawningBlock
-            jr jr_001_554d
+        jr jr_001_554d
     jr_001_553f:
+        ld h, HIGH(collisionArray)
+        ld l, a
+        ld a, [hl]
+        bit blockType_bomb, a
+        jp z, Jump_001_554d
+            ld a, $ff
+            call Call_001_56e9
+        Jump_001_554d:
+    jr_001_554d:
 
-    ld h, HIGH(collisionArray)
-    ld l, a
-    ld a, [hl]
-    bit blockType_bomb, a
-    jp z, Jump_001_554d
-        ld a, $ff
-        call Call_001_56e9
-    Jump_001_554d:
-
-jr_001_554d:
     ld a, [$d04a]
     ld [$c203], a
     call beam_getTileIndex
     cp $04
     jr nc, jr_001_555f
+        call destroyRespawningBlock
+        jr jr_001_556d
+    jr_001_555f:
+        ld h, HIGH(collisionArray)
+        ld l, a
+        ld a, [hl]
+        bit blockType_bomb, a
+        jp z, Jump_001_556d
+            ld a, $ff
+            call Call_001_56e9
+        Jump_001_556d:
+    jr_001_556d:
 
-    call destroyRespawningBlock
-    jr jr_001_556d
-
-jr_001_555f:
-    ld h, HIGH(collisionArray)
-    ld l, a
-    ld a, [hl]
-    bit blockType_bomb, a
-    jp z, Jump_001_556d
-        ld a, $ff
-        call Call_001_56e9
-    Jump_001_556d:
-
-jr_001_556d:
     ld a, [$d04a]
     add $10
     ld [$c203], a
@@ -2174,19 +2153,18 @@ jr_001_556d:
     cp $04
     jr nc, jr_001_5581
         call destroyRespawningBlock
-            jr jr_001_558f
+        jr jr_001_558f
     jr_001_5581:
+        ld h, HIGH(collisionArray)
+        ld l, a
+        ld a, [hl]
+        bit blockType_bomb, a
+        jp z, Jump_001_558f
+            ld a, $ff
+            call Call_001_56e9
+        Jump_001_558f:
+    jr_001_558f:
 
-    ld h, HIGH(collisionArray)
-    ld l, a
-    ld a, [hl]
-    bit blockType_bomb, a
-    jp z, Jump_001_558f
-        ld a, $ff
-        call Call_001_56e9
-    Jump_001_558f:
-
-jr_001_558f:
     ld a, [$d04a]
     ld [$c203], a
     ld a, [$d04b]
@@ -2198,17 +2176,16 @@ jr_001_558f:
         call destroyRespawningBlock
         jr jr_001_55b7
     jr_001_55a9:
+        ld h, HIGH(collisionArray)
+        ld l, a
+        ld a, [hl]
+        bit blockType_bomb, a
+        jp z, Jump_001_55b7
+            ld a, $ff
+            call Call_001_56e9
+        Jump_001_55b7:
+    jr_001_55b7:
 
-    ld h, HIGH(collisionArray)
-    ld l, a
-    ld a, [hl]
-    bit blockType_bomb, a
-    jp z, Jump_001_55b7
-        ld a, $ff
-        call Call_001_56e9
-    Jump_001_55b7:
-
-jr_001_55b7:
     ld a, [$d04b]
     sub $10
     ld [$c204], a
@@ -2218,171 +2195,165 @@ jr_001_55b7:
         call destroyRespawningBlock
         jr jr_001_55d9
     jr_001_55cb:
+        ld h, HIGH(collisionArray)
+        ld l, a
+        ld a, [hl]
+        bit blockType_bomb, a
+        jp z, Jump_001_55d9
+            ld a, $ff
+            call Call_001_56e9
+        Jump_001_55d9:
+    jr_001_55d9:
 
-    ld h, HIGH(collisionArray)
-    ld l, a
-    ld a, [hl]
-    bit blockType_bomb, a
-    jp z, Jump_001_55d9
-        ld a, $ff
-        call Call_001_56e9
-    Jump_001_55d9:
-
-jr_001_55d9:
     pop hl
     pop de
     pop bc
-    ret
+ret
 
-
-    db $11, $11
-
+table_55DD: ; 01:55DD - Pose related
     db $11
-
-    db $11, $11, $12, $12
-
     db $11
-
-    db $12, $11
-
     db $11
-
+    db $11
+    db $11
     db $12
-
-    ld [de], a
-    ld [de], a
-
     db $12
-
     db $11
+    db $12
+    db $11
+    db $11
+    db $12
+    db $12
+    db $12
+    db $12
+    db $11
+    db $12
+    db $11
+    db $12
+    db $11
+    db $00
+    db $00
+    db $00
+    db $00
+    db $12
+    db $12
+    db $1A
+    db $1B
+    db $1C
+    db $1D
 
-    db $12, $11, $12
-
-    ld de, $0000
-    nop
-    nop
-    ld [de], a
-    ld [de], a
-    ld a, [de]
-    dec de
-    inc e
-    dec e
-    nop
-    nop
-
-    db $18, $1c, $04, $08
-
-    db $10
-    db $10
-
-    db $0e, $12
-
-    db $10
-    db $10
-    db $10
-    db $10
-    db $10
-    db $10
-
-    db $0d, $13
-
-    db $10
-    db $10
-    db $10
-    db $10
-    db $10
-    db $10
-    db $10
-    db $10
-    db $10
-    db $10
-    db $10
-    db $10
-    db $10
-    db $10
-    db $10
-    db $10
-
-    db $17, $1f
-
-    nop
-
-    db $14, $21
-
-    nop
-    nop
-
-    db $1d
-
-    nop
-
-    db $15, $15
-
-    nop
-    nop
-    nop
-    nop
-
-    db $1f
-
-    nop
-
-    db $1f
-
-    nop
-    nop
-
+table_55FB: ; 01:55FB - Projectile X offsets
+; Column index into table is based off of facing direction
+; Row index is based off of you facing direction of the table_5643
     db $00, $00
+    db $18, $1C ; Right
+    db $04, $08 ; Left
+    db $10, $10
+    db $0E, $12 ; Up
+    db $10, $10
+    db $10, $10
+    db $10, $10
+    db $0D, $13 ; Down
+    db $10, $10
+    db $10, $10
+    db $10, $10
+    db $10, $10
+    db $10, $10
+    db $10, $10
+    db $10, $10
+    db $10, $10
 
-    nop
-
-    db $f0
-
-    nop
-    nop
-    nop
-
+table_561D: ; 01:561D - Projectile y-offsets per pose
+    db $17
+    db $1F
+    db $00
+    db $14
+    db $21
+    db $00
+    db $00
+    db $1D
+    db $00
+    db $15
+    db $15
+    db $00
+    db $00
+    db $00
+    db $00
+    db $1F
+    db $00
+    db $1F
+    db $00
+    
+table_5630: ; 01:5630 - Projectile y offset due to firing direction
+    db $00
+    db $00
+    db $00
+    db $00
+    db $F0
+    db $00
+    db $00
+    db $00
     db $08
-
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    rra
-    nop
-    nop
-    nop
-
-    db $01, $02
-
+    db $00
+    db $00
+    db $00
+    db $00
+    db $00
+    db $00
+    db $00
+    db $1F
+    db $00
+    db $00
+    
+table_5643: ; 01:5643 - Shot direction based on directional input
+    db $00
     db $01
-
-    db $04, $04, $04
-
-    inc b
-
-    db $08, $08, $08
-
-    ld [$0808], sp
+    db $02
+    db $01
+    db $04
+    db $04
+    db $04
+    db $04
+    db $08
+    db $08
+    db $08
+    db $08
+    db $08
+    db $08
     db $08
     db $08
 
-    db $07, $0f, $00, $07, $03, $80, $80, $0f, $80, $0f, $0f, $80, $80, $80, $80, $0f
-    db $80, $0f, $80, $00
-
-    nop
-    nop
-    nop
-    nop
-    nop
-    add b
-
-    db $00, $80, $00
-
-    add b
+table_5653: ; 01:5653 - Possible shot directions
+    db $07
+    db $0F
+    db $00
+    db $07
+    db $03
+    db $80
+    db $80
+    db $0F
+    db $80
+    db $0F
+    db $0F
+    db $80
+    db $80
+    db $80
+    db $80
+    db $0F
+    db $80
+    db $0F
+    db $80
+    db $00
+    db $00
+    db $00
+    db $00
+    db $00
+    db $00
+    db $80
+    db $00
+    db $80
+    db $00
+    db $80
 
 destroyRespawningBlock: ; 01:5671
     ld hl, $d900
@@ -2476,7 +2447,7 @@ ret
 
 
 Call_001_56e9:
-jr_001_56e9:
+jr_001_56e9: ; Destroy block (frame 3)
     call getTilemapAddress
     ld a, [$c215]
     and $de
@@ -2495,18 +2466,20 @@ jr_001_56e9:
         and $03
     jr nz, jr_001_56ff
 
+    ; Destroy block (turn to blank)
     ld a, $ff
     ld [hl+], a
     ld [hl], a
     add hl, de
     ld [hl+], a
     ld [hl], a
+
     ld a, $04
     ld [sfxRequest_noise], a
 ret
 
 
-jr_001_5712:
+jr_001_5712: ; Restore block (frame 3)
     xor a
     ld [hl], a
     call getTilemapAddress
@@ -2517,14 +2490,14 @@ jr_001_5712:
     ld h, a
     ld de, $001f
 
-jr_001_5724:
-    ldh a, [rSTAT]
-    and $03
+    jr_001_5724:
+        ldh a, [rSTAT]
+        and $03
     jr nz, jr_001_5724
 
-jr_001_572a:
-    ldh a, [rSTAT]
-    and $03
+    jr_001_572a:
+        ldh a, [rSTAT]
+        and $03
     jr nz, jr_001_572a
 
     xor a
@@ -2541,10 +2514,10 @@ jr_001_572a:
         ret nz
 
     call Call_001_5790
-    ret
+ret
 
 
-Jump_001_5742:
+Jump_001_5742: ; Destroy block (frame 1), Restore block (frame 2)
 jr_001_5742:
     call getTilemapAddress
     ld a, [$c215]
@@ -2573,10 +2546,10 @@ jr_001_5742:
     ld [hl+], a
     inc a
     ld [hl], a
-    ret
+ret
 
 
-Jump_001_5769:
+Jump_001_5769: ; Destroy block (frame 2), Restore block (frame 1)
     call getTilemapAddress
     ld a, [$c215]
     and $de

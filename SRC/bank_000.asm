@@ -1620,19 +1620,14 @@ jr_000_0b2c:
     ld [$d00c], a
     ret
 
-
-    nop
-    ld bc, $0001
-    nop
-    nop
-    ld bc, $0202
-    db $01
-    db $01
+; 00:0B39 - Unreferenced data?
+    db $00, $01, $01, $00, $00, $00, $01, $02, $02, $01, $01
 
 Jump_000_0b44:
-    ld a, [$d072]
+    ld a, [samus_spinAnimationTimer]
     inc a
-    ld [$d072], a
+    ld [samus_spinAnimationTimer], a
+    
     ld a, [doorScrollDirection]
     bit 0, a
     jr z, jr_000_0b82
@@ -1644,11 +1639,13 @@ Jump_000_0b44:
     adc $00
     and $0f
     ldh [hCameraXScreen], a
-    ld a, [$d022]
+    ; Play running animation
+    ld a, [samus_animationTimer]
     inc a
     inc a
     inc a
-    ld [$d022], a
+    ld [samus_animationTimer], a
+
     ld a, $10
     ld [$d023], a
     ldh a, [hSamusXPixel]
@@ -1675,11 +1672,11 @@ jr_000_0b82:
     sbc $00
     and $0f
     ldh [hCameraXScreen], a
-    ld a, [$d022]
+    ld a, [samus_animationTimer]
     inc a
     inc a
     inc a
-    ld [$d022], a
+    ld [samus_animationTimer], a
     ld a, $20
     ld [$d023], a
     ldh a, [hSamusXPixel]
@@ -1705,11 +1702,11 @@ jr_000_0bb5:
     sbc $00
     and $0f
     ldh [hCameraYScreen], a
-    ld a, [$d022]
+    ld a, [samus_animationTimer]
     inc a
     inc a
     inc a
-    ld [$d022], a
+    ld [samus_animationTimer], a
     ld a, $40
     ld [$d023], a
     ldh a, [frameCounter]
@@ -1739,11 +1736,11 @@ jr_000_0bee:
     adc $00
     and $0f
     ldh [hCameraYScreen], a
-    ld a, [$d022]
+    ld a, [samus_animationTimer]
     inc a
     inc a
     inc a
-    ld [$d022], a
+    ld [samus_animationTimer], a
     ld a, $80
     ld [$d023], a
     ldh a, [frameCounter]
@@ -1910,9 +1907,9 @@ samus_handlePose:
     ld [waterContactFlag], a
     ld [acidContactFlag], a
     ; Increment animation-related counter
-    ld a, [$d072]
+    ld a, [samus_spinAnimationTimer]
     inc a
-    ld [$d072], a
+    ld [samus_spinAnimationTimer], a
     ; Erase inputs if dead
     ld a, [deathFlag]
     and a
@@ -2937,7 +2934,7 @@ poseFunc_standing: ; 00:13B7 - $00: Standing
     .endIf_A:
     ; Clear timer
     xor a
-    ld [$d022], a
+    ld [samus_animationTimer], a
 
 ; Handle spin jump inputs
     ldh a, [hInputRisingEdge]
@@ -3055,7 +3052,7 @@ poseFunc_standing: ; 00:13B7 - $00: Standing
     jr z, .endIf_I
         ; Clear cooldown timer (so we don't instantly morph)
         xor a
-        ld [$d022], a
+        ld [samus_animationTimer], a
         ; Set pose
         ld a, pose_crouch
         ld [samusPose], a
@@ -3117,7 +3114,7 @@ poseFunc_run: ; 00:14D6 - $03: Running
     .endIf_A:
 
     ; Animation timer?
-    ld hl, $d022
+    ld hl, samus_animationTimer
     inc [hl]
     inc [hl]
     inc [hl]
@@ -3236,7 +3233,7 @@ poseFunc_run: ; 00:14D6 - $03: Running
     jr z, .endIf_I
         ; Clear cooldown timer (so you don't instantly morph)
         xor a
-        ld [$d022], a
+        ld [samus_animationTimer], a
         ; Set pose
         ld a, pose_crouch
         ld [samusPose], a
@@ -3315,9 +3312,9 @@ poseFunc_crouch: ; 00:15F4 - $04: Crouching
     bit PADB_RIGHT, a
     jr z, .endIf_B
         ; inc input cooldown timer
-        ld a, [$d022]
+        ld a, [samus_animationTimer]
         inc a
-        ld [$d022], a
+        ld [samus_animationTimer], a
         ; Jump ahead if cooldown is met
         cp $08
         jr nc, .endIf_C
@@ -3329,7 +3326,7 @@ poseFunc_crouch: ; 00:15F4 - $04: Crouching
         ; We've reached this point if the cooldown is done or if the input was a rising edge
         ; Clear cooldown
         xor a
-        ld [$d022], a
+        ld [samus_animationTimer], a
         ; Check if facing direction matches input
         ld a, [samusFacingDirection]
         cp $01
@@ -3355,9 +3352,9 @@ poseFunc_crouch: ; 00:15F4 - $04: Crouching
     bit PADB_LEFT, a
     jr z, .endIf_E
         ; inc input cooldown timer
-        ld a, [$d022]
+        ld a, [samus_animationTimer]
         inc a
-        ld [$d022], a
+        ld [samus_animationTimer], a
         ; Jump ahead if cooldown is met
         cp $08
         jr nc, .endIf_F
@@ -3369,7 +3366,7 @@ poseFunc_crouch: ; 00:15F4 - $04: Crouching
         ; We've reached this point if the cooldown is done or if the input was a rising edge
         ; Clear cooldown
         xor a
-        ld [$d022], a
+        ld [samus_animationTimer], a
         ; Check if facing direction matches input
         ld a, [samusFacingDirection]
         and a
@@ -3461,9 +3458,9 @@ poseFunc_crouch: ; 00:15F4 - $04: Crouching
     bit PADB_DOWN, a
     jr z, .endIf_M
         ; Increment cooldown
-        ld a, [$d022]
+        ld a, [samus_animationTimer]
         inc a
-        ld [$d022], a
+        ld [samus_animationTimer], a
         ; Morph if cooldown is done
         cp $10
             ret c
@@ -3485,9 +3482,9 @@ poseFunc_crouch: ; 00:15F4 - $04: Crouching
     bit PADB_UP, a
     jr z, .endIf_O
         ; Increment cooldown
-        ld a, [$d022]
+        ld a, [samus_animationTimer]
         inc a
-        ld [$d022], a
+        ld [samus_animationTimer], a
         ; Stand if cooldown is done
         cp $10
             ret c
@@ -4197,7 +4194,7 @@ jr_000_1b6b:
             ld a, pose_crouch
             ld [samusPose], a
             xor a
-            ld [$d022], a
+            ld [samus_animationTimer], a
             ld a, $05
             ld [sfxRequest_square1], a
                 ret
