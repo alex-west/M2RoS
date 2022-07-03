@@ -16,9 +16,16 @@ jpLong: MACRO
     jp \1
 ENDM
 
-; Switch to another bank (i.e. referencing a table in it)
+; Switch active bank to another bank (based off of label)
 switchBank: MACRO
     ld a, BANK(\1)
+    ld [bankRegMirror], a
+    ld [rMBC_BANK_REG], a
+ENDM
+
+; Switch to another bank (based off some other expression)
+switchBankVar: MACRO
+    ld a, \1
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
 ENDM

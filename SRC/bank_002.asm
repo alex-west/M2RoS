@@ -5,7 +5,7 @@
 
 SECTION "ROM Bank $002", ROMX[$4000], BANK[$2]
 
-; 02:4000
+Call_002_4000: ; 02:4000
     ld e, $00
     ld a, [currentLevelBank]
     inc a

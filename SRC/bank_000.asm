@@ -488,9 +488,7 @@ ret
 
 gameMode_LoadA:
     call loadGame_samusData
-    ld a, $08
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBank metatilePointerTable
     ld a, [saveBuf_tiletableSrcLow]
     ld l, a
     ld a, [saveBuf_tiletableSrcHigh]
@@ -572,10 +570,7 @@ gameMode_LoadA:
         ld l, a
     jr nz, .clearLoop
 
-    ld a, $02
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $418c
+    callFar Call_002_418c
     ; Increment gameMode to gameMode_loadB
     ldh a, [gameMode]
     inc a
@@ -596,9 +591,7 @@ gameMode_LoadB:
     ld a, [saveBuf_cameraXScreen]
     ldh [hCameraXScreen], a
     
-    ld a, [currentLevelBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [currentLevelBank]
     ; Render map
     jr_000_048a:
         ld a, $00
@@ -699,7 +692,7 @@ jr_000_053e:
     call Call_000_08fe ; Handle scrolling/triggering door transitions
     call Call_000_2366 ; Calculate scroll offsets
     call handleItemPickup
-    call Call_000_3e93 ; Draw Samus
+    call drawSamus_longJump ; Draw Samus
     call Call_000_3da4 ; Draw projectiles
     call handleRespawningBlocks_longJump ; Handle respawning blocks
     call adjustHudValues_longJump ; Handle missile/energy counters
@@ -751,7 +744,7 @@ Jump_000_0578:
     call Call_000_0698
     call Call_000_08fe
     call Call_000_2366
-    call Call_000_3e93
+    call drawSamus_longJump
     call Call_000_3da4
     call handleRespawningBlocks_longJump
     call adjustHudValues_longJump
@@ -774,43 +767,27 @@ Jump_000_0578:
 Call_000_05de:
     ld a, [$d08b]
     cp $11
-    jr z, jr_000_05f1
-
-    ld a, $02
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $4000
-    ret
-
-
-jr_000_05f1:
-    ld a, BANK(queenHandler)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call queenHandler
-    ret
-
+    jr z, .else
+        callFar Call_002_4000 ; Handle enemies
+        ret
+    .else:
+        callFar queenHandler ; Handle Queen
+        ret
 
 loadGame_loadGraphics:
-    ld a, BANK(gfx_commonItems)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBank gfx_commonItems
     ld bc, $0100
     ld hl, gfx_commonItems
     ld de, vramDest_commonItems
     call copyToVram
     
-    ld a, BANK(gfx_samusPowerSuit)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBank gfx_samusPowerSuit
     ld bc, $0b00
     ld hl, gfx_samusPowerSuit
     ld de, vramDest_samus
     call copyToVram
 
-    ld a, BANK(gfx_enemiesA)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBank gfx_enemiesA ; Unforunately, save files don't save the bank they load enemy graphics from
     ld bc, $0400
     ld a, [saveBuf_enGfxSrcLow]
     ld l, a
@@ -822,18 +799,14 @@ loadGame_loadGraphics:
     ld a, [$d079]
     and a
     jr z, jr_000_0658
-        ld a, BANK(gfx_itemFont)
-        ld [bankRegMirror], a
-        ld [rMBC_BANK_REG], a
+        switchBank gfx_itemFont
         ld bc, $0200
         ld hl, gfx_itemFont
         ld de, vramDest_itemFont
         call copyToVram
     jr_000_0658:
 
-    ld a, [saveBuf_bgGfxSrcBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [saveBuf_bgGfxSrcBank]
     ld bc, $0800
     ld a, [saveBuf_bgGfxSrcLow]
     ld l, a
@@ -870,9 +843,7 @@ jr_000_0680:
 
 
 Call_000_0698:
-    ld a, [currentLevelBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [currentLevelBank]
     ld a, $00
     ldh [$af], a
     ld a, $de
@@ -2409,9 +2380,7 @@ poseFunc_1029: ; 00:1029 - $0E: spider ball (not moving)
         ld e, a
         ld d, $00
         ; Load value from table
-        ld a, BANK(spiderBallOrientationTable)
-        ld [bankRegMirror], a
-        ld [rMBC_BANK_REG], a
+        switchBank spiderBallOrientationTable
         ld hl, spiderBallOrientationTable ; 06:7E03
         add hl, de
         ld a, [hl]
@@ -5416,9 +5385,7 @@ executeDoorScript: ; 00:239C
     call OAM_DMA
 	
 	; From the door index, get the pointer and load the script
-    ld a, BANK(doorPointerTable)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBank doorPointerTable
     ; Get index to door script pointer
     ld a, [doorIndexLow]
     ld e, a
@@ -5500,9 +5467,7 @@ executeDoorScript: ; 00:239C
             ld d, $00
             sla e
             sla e
-            ld a, BANK(solidityIndexTable)
-            ld [bankRegMirror], a
-            ld [rMBC_BANK_REG], a
+            switchBank solidityIndexTable
             ld hl, solidityIndexTable
             add hl, de
             ; Update solidity indexes (working and save buffer copies)
@@ -6022,12 +5987,9 @@ jr_000_27bf:
     and a
     jr z, jr_000_27d9
 
-    call Call_000_3e93
+    call drawSamus_longJump
     call Call_000_05de
-    ld a, BANK(drawHudMetroid)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call drawHudMetroid
+    callFar drawHudMetroid
     call clearUnusedOamSlots_longJump
 
 jr_000_27d9:
@@ -6062,12 +6024,9 @@ Call_000_27e3:
 jr_000_2804:
     ld a, $80
     ldh [rWY], a
-    call Call_000_3e93
+    call drawSamus_longJump
     call Call_000_05de
-    ld a, BANK(drawHudMetroid)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call drawHudMetroid
+    callFar drawHudMetroid
     call clearUnusedOamSlots_longJump
     call waitOneFrame
     ldh a, [$b4]
@@ -6080,9 +6039,7 @@ jr_000_2804:
 
 
 door_loadTiletable:
-    ld a, BANK(metatilePointerTable)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBank metatilePointerTable
     ld a, [hl+]
     push hl
     and $0f
@@ -6113,9 +6070,7 @@ door_loadTiletable:
 
 
 door_loadCollision:
-    ld a, BANK(collisionPointerTable)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBank collisionPointerTable
     ld a, [hl+]
     push hl
         and $0f
@@ -6152,6 +6107,7 @@ Call_000_2887:
     ld [saveBuf_currentLevelBank], a
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
+    
     ld a, [hl+]
     ldh [hCameraYPixel], a
     sub $48
@@ -6175,10 +6131,8 @@ Call_000_2887:
     push hl
     call disableLCD
     call Call_000_0673
-    ld a, $03
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $6d4a
+    callFar Call_003_6d4a
+    
     ldh a, [hCameraXPixel]
     ld b, a
     ldh a, [hSamusXPixel]
@@ -6251,9 +6205,7 @@ Jump_000_2918: ; Rerender screen ahead of Samus
 
 
 jr_000_2939:
-    ld a, [currentLevelBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [currentLevelBank]
     ld a, $00
     ldh [$af], a
     ld a, $de
@@ -6276,9 +6228,7 @@ jr_000_2939:
     ldh [$cd], a
     call Call_000_07e4
     call waitOneFrame
-    ld a, [currentLevelBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [currentLevelBank]
     ld a, $00
     ldh [$af], a
     ld a, $de
@@ -6294,9 +6244,7 @@ jr_000_2939:
     ldh [$cf], a
     call Call_000_07e4
     call waitOneFrame
-    ld a, [currentLevelBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [currentLevelBank]
     ld a, $00
     ldh [$af], a
     ld a, $de
@@ -6316,9 +6264,7 @@ jr_000_2939:
 
 
 Jump_000_29c4:
-    ld a, [currentLevelBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [currentLevelBank]
     ld a, $00
     ldh [$af], a
     ld a, $de
@@ -6341,9 +6287,7 @@ Jump_000_29c4:
     ldh [$cd], a
     call Call_000_07e4
     call waitOneFrame
-    ld a, [currentLevelBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [currentLevelBank]
     ld a, $00
     ldh [$af], a
     ld a, $de
@@ -6359,9 +6303,7 @@ Jump_000_29c4:
     ldh [$cf], a
     call Call_000_07e4
     call waitOneFrame
-    ld a, [currentLevelBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [currentLevelBank]
     ld a, $00
     ldh [$af], a
     ld a, $de
@@ -6381,9 +6323,7 @@ Jump_000_29c4:
 
 
 Jump_000_2a4f:
-    ld a, [currentLevelBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [currentLevelBank]
     ld a, $00
     ldh [$af], a
     ld a, $de
@@ -6406,9 +6346,7 @@ Jump_000_2a4f:
     ldh [$cd], a
     call Call_000_0788
     call waitOneFrame
-    ld a, [currentLevelBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [currentLevelBank]
     ld a, $00
     ldh [$af], a
     ld a, $de
@@ -6424,9 +6362,7 @@ Jump_000_2a4f:
     ldh [$cd], a
     call Call_000_0788
     call waitOneFrame
-    ld a, [currentLevelBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [currentLevelBank]
     ld a, $00
     ldh [$af], a
     ld a, $de
@@ -6442,9 +6378,7 @@ Jump_000_2a4f:
     ldh [$cd], a
     call Call_000_0788
     call waitOneFrame
-    ld a, [currentLevelBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [currentLevelBank]
     ld a, $00
     ldh [$af], a
     ld a, $de
@@ -6464,9 +6398,7 @@ Jump_000_2a4f:
 
 
 Jump_000_2b04:
-    ld a, [currentLevelBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [currentLevelBank]
     ld a, $00
     ldh [$af], a
     ld a, $de
@@ -6489,9 +6421,7 @@ Jump_000_2b04:
     ldh [$cd], a
     call Call_000_0788
     call waitOneFrame
-    ld a, [currentLevelBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [currentLevelBank]
     ld a, $00
     ldh [$af], a
     ld a, $de
@@ -6507,9 +6437,7 @@ Jump_000_2b04:
     ldh [$cd], a
     call Call_000_0788
     call waitOneFrame
-    ld a, [currentLevelBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [currentLevelBank]
     ld a, $00
     ldh [$af], a
     ld a, $de
@@ -6533,9 +6461,7 @@ Jump_000_2b8f:
     and a
     jr z, jr_000_2be5
 
-    ld a, [currentLevelBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [currentLevelBank]
     call Call_000_08cf
     jr jr_000_2be5
 
@@ -6978,9 +6904,7 @@ debugPauseMenu:
     jr_000_2e31:
 
     ; Render logic
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBank debug_drawNumber ; For this, and other drawing functions
     ; Display debug cursor
     ld a, $58
     ldh [hSpriteYPixel], a
@@ -6991,7 +6915,7 @@ debugPauseMenu:
     add $69
     ldh [hSpriteXPixel], a
     ld a, [debugItemIndex]
-    call $4b09
+    call debug_drawNumber.oneDigit
     ; Display item toggle bits
     ld a, $54
     ldh [hSpriteYPixel], a
@@ -7002,56 +6926,56 @@ debugPauseMenu:
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_UNUSED, a
-    call nz, $4b62
+    call nz, Call_001_4b62
     
     ld a, $3c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_varia, a
-    call nz, $4b62
+    call nz, Call_001_4b62
 
     ld a, $44
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_spider, a
-    call nz, $4b62
+    call nz, Call_001_4b62
 
     ld a, $4c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_spring, a
-    call nz, $4b62
+    call nz, Call_001_4b62
 
     ld a, $54
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_space, a
-    call nz, $4b62
+    call nz, Call_001_4b62
 
     ld a, $5c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_screw, a
-    call nz, $4b62
+    call nz, Call_001_4b62
 
     ld a, $64
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_hiJump, a
-    call nz, $4b62
+    call nz, Call_001_4b62
 
     ld a, $6c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_bomb, a
-    call nz, $4b62
+    call nz, Call_001_4b62
     
     ld a, $68
     ldh [hSpriteYPixel], a
     ld a, $50
     ldh [hSpriteXPixel], a
     ld a, [samusActiveWeapon]
-    call debug_drawNumber
+    call debug_drawNumber.twoDigit
     
     ldh a, [hOamBufferIndex]
     ld [maxOamPrevFrame], a
@@ -7183,14 +7107,9 @@ gameMode_dying: ; 00:2F86
     ld a, [$d08b]
     cp $11
     jr nz, .endIf
-        call Call_000_3e93 ; Draw Samus
+        call drawSamus_longJump ; Draw Samus
         call drawHudMetroid_longJump
-        
-        ld a, BANK(queenHandler)
-        ld [bankRegMirror], a
-        ld [rMBC_BANK_REG], a
-        call queenHandler
-        
+        callFar queenHandler
         call clearUnusedOamSlots_longJump
     .endIf:
 ret
@@ -7202,7 +7121,7 @@ killSamus: ; Kill Samus
     ld a, $0b
     ld [sfxRequest_noise], a
     call waitOneFrame
-    call Call_000_3ebf ; Draw Samus regardless of i-frames
+    call drawSamus_ignoreDamageFrames_longJump ; Draw Samus regardless of i-frames
 
     ; Set timer
     ld a, $20
@@ -8410,9 +8329,7 @@ gameMode_dead: ; 00:36B0
     call clearAllOam_longJump
 
     ; Load graphics for Game Over screen
-    ld a, BANK(gfx_titleScreen)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBank gfx_titleScreen
     ld hl, gfx_titleScreen
     ld de, $8800
     ld bc, $1000
@@ -8673,12 +8590,9 @@ gfxInfo_springBallBottom: db BANK(gfx_springBallBottom)
 
 pickup_variaSuit:
     .loop:
-            call Call_000_3e93 ; Draw Samus
+            call drawSamus_longJump ; Draw Samus
             call Call_000_05de ; Handle enemies
-            ld a, BANK(drawHudMetroid)
-            ld [bankRegMirror], a
-            ld [rMBC_BANK_REG], a
-            call drawHudMetroid
+            callFar drawHudMetroid
             call clearUnusedOamSlots_longJump ; Clear unused OAM entries
             ld a, $80
             ldh [rWY], a
@@ -8695,7 +8609,7 @@ pickup_variaSuit:
     ld [samusItems], a
     ld a, $80
     ld [samusPose], a
-    call Call_000_3e93
+    call drawSamus_longJump
     ld a, $10
     ld [samus_turnAnimTimer], a
     call waitOneFrame
@@ -8837,12 +8751,9 @@ pickup_missileTank:
 ; Common routine for all pickups
 Jump_000_3a01:
     jr_000_3a01:
-            call Call_000_3e93
+            call drawSamus_longJump
             call drawHudMetroid_longJump
-            ld a, $02
-            ld [bankRegMirror], a
-            ld [rMBC_BANK_REG], a
-            call $4000
+            callFar Call_002_4000
             call handleAudio_longJump
             call clearUnusedOamSlots_longJump
             ld a, [$d093]
@@ -8882,13 +8793,10 @@ Jump_000_3a01:
     ld [$c468], a
 
     jr_000_3a60:
-        call Call_000_3e93
+        call drawSamus_longJump
         call drawHudMetroid_longJump
         call Call_000_32ab
-        ld a, $02
-        ld [bankRegMirror], a
-        ld [rMBC_BANK_REG], a
-        call $4000
+        callFar Call_002_4000
         call handleAudio_longJump
         call clearUnusedOamSlots_longJump
         call waitForNextFrame
@@ -8947,9 +8855,7 @@ gameMode_unusedA: ; 00:3ACE
     ldh [hOamBufferIndex], a
     call clearAllOam_longJump
     
-    ld a, BANK(gfx_titleScreen)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBank gfx_titleScreen
     ld hl, gfx_titleScreen
     ld de, $8000 ; Should be $8800
     ld bc, $1800 ; Should be $1000
@@ -9015,9 +8921,7 @@ gameMode_unusedC: ; 00:3B43
     ldh [hOamBufferIndex], a
     call clearAllOam_longJump
 
-    ld a, BANK(gfx_titleScreen)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBank gfx_titleScreen
     ld hl, gfx_titleScreen
     ld de, $8800
     ld bc, $1000
@@ -9191,9 +9095,7 @@ ret
 
 ; 00:3C6A - Load credits to SRAM
 loadCreditsText:
-    ld a, BANK(creditsText)
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBank creditsText
     ld hl, creditsText ;$7920
     ld de, creditsTextBuffer
     ; Enable SRAM
@@ -9226,31 +9128,22 @@ ret
 ret
 
 ; 00:3CA6
-    ld a, $03
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $6ae7
+    callFar Call_003_6ae7
     ; Return to callee
     ld a, $02
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    ret
+ret
 
 ; 00:3CBA
-    ld a, $03
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $6b44
+    callFar Call_003_6b44
     ld a, $02
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     ret
 
 ; 00:3CCE
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $56e9
+    callFar Call_001_56e9 ; $56e9
     ld a, $02
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9260,10 +9153,7 @@ gameMode_saveGame: ; 00:3CE2
     jpLong saveFileToSRAM
 
 Call_000_3ced: ; 00:3CED
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp $79ef
+    jpLong Call_001_79ef
 
 drawNonGameSprite_longCall: ; 00:3CF8
     callFar drawNonGameSprite
@@ -9271,40 +9161,28 @@ drawNonGameSprite_longCall: ; 00:3CF8
 ret
 
 ; 00:3D0C
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $70ba
+    callFar Call_001_70ba ; $70ba
     ld a, $02
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     ret
 
 ; 00:3D20
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $723b
+    callFar Call_001_723b
     ld a, $02
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     ret
 
 ; 00:3D34
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $71cb
+    callFar Call_001_71cb ; $71cb
     ld a, $02
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     ret
 
 ; 00:3D48
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $7319
+    callFar Call_001_7319 ; $7319
     ld a, $02
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9316,7 +9194,7 @@ LCDCInterruptHandler: ; 00:3D5C
         ; Presuming this non-standard convention is because this is an interrupt handler
         ld a, $03
         ld [rMBC_BANK_REG], a
-        call $7c7f
+        call Call_003_7c7f
         ld a, [bankRegMirror]
         ld [rMBC_BANK_REG], a
     pop af
@@ -9324,10 +9202,7 @@ reti
 
 
 Call_000_3d6d: ; 00:3D6D
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp $57f2
+    jpLong Call_001_57f2
 
 adjustHudValues_longJump: ; 00:3D78
     jpLong adjustHudValues
@@ -9339,47 +9214,30 @@ handleProjectiles_longJump: ; 00:3D8E
     jpLong handleProjectiles
 
 Call_000_3d99: ; 00:3D99
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp $549d
-
+    jpLong Call_001_549d ; $549d
 
 Call_000_3da4: ; 00:3DA4
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp $5300 
-
+    jpLong Call_001_5300
 
 samusShoot_longJump: ; 00:3DAF
     jpLong samusShoot
 
 ; 00:3DBA
-    ld a, $03
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $6bd2
+    callFar Call_003_6bd2
     ld a, $02
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     ret
 
 ; 00:3DCE
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $5a11
+    callFar Call_001_5a11
     ld a, $02
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
     ret
 
 ; 00:3DE2
-    ld a, $03
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    call $4000
+    callFar Call_003_4000 ;$4000
     ld a, $02
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9387,11 +9245,8 @@ samusShoot_longJump: ; 00:3DAF
 
 findFirstEmptyEnemySlot_longJump: ; 00:3DF6
     callFar findFirstEmptyEnemySlot
-    ld a, $02
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    ret
-
+    switchBankVar $02 ; Enemy AI bank
+ret
 
 loadEnemySaveFlags_longJump: ; 00:3E0A
     callFar loadEnemySaveFlags
@@ -9421,41 +9276,32 @@ gameMode_Title: ; 00:3E59
     call OAM_clearTable
     jpLong titleScreenRoutine
 
-gameMode_newGame: ; 00:3E67 - New Game
+gameMode_newGame: ; 00:3E67
     jpLong createNewSave
 
-gameMode_loadSave: ; 00:3E72 - Load Save
+gameMode_loadSave: ; 00:3E72
     jpLong loadSaveFile
 
-; 00:3E7D
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp $4b62
+; 00:3E7D - Unused long jump?
+    jpLong Call_001_4b62
 
 clearUnusedOamSlots_longJump: ; 00:3E88
     jpLong clearUnusedOamSlots
 
-Call_000_3e93: ; 00:3E93
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp $4bd9
+drawSamus_longJump: ; 00:3E93
+    jpLong drawSamus
 
 drawHudMetroid_longJump: ; 00:3E9E
     jpLong drawHudMetroid
 
-debug_drawOneDigitNumber_longJump: ; 00:3EA9 - Unused?
+debug_drawOneDigitNumber_longJump: ; 00:3EA9 - Unused long jump?
     jpLong debug_drawNumber.oneDigit
 
-debug_drawTwoDigitNumber_longJump: ; 00:3EB4 - Unused?
+debug_drawTwoDigitNumber_longJump: ; 00:3EB4 - Unused long jump?
     jpLong debug_drawNumber.twoDigit
 
-Call_000_3ebf: ; 00:3EBF
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    jp $4bf3
+drawSamus_ignoreDamageFrames_longJump: ; 00:3EBF
+    jpLong drawSamus.ignoreDamageFrames
 
 clearAllOam_longJump: ; 00:3ECA
     jpLong clearAllOam
@@ -9465,9 +9311,7 @@ clearAllOam_longJump: ; 00:3ECA
 ; Extracts the sprite priority bit that is bit-packed with the door transition index using the bitmask (0x0800)
 ; (I don't know why they didn't store these bits with the scroll bytes)
 loadScreenSpritePriorityBit: ; 00:3ED5
-    ld a, [currentLevelBank]
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBankVar [currentLevelBank]
     ; Get screen index from coordinates
     ldh a, [hSamusYScreen]
     swap a
@@ -9491,9 +9335,7 @@ loadScreenSpritePriorityBit: ; 00:3ED5
     xor $01
     ld [$d057], a
     ; Return to the callee
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    switchBank drawSamus
 ret
 
 ; 00:3F07

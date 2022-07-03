@@ -525,7 +525,7 @@ drawSamus: ; 01:4BD9: Draw Samus
         ret z
     .endIf_B:
 
-; 01:4BF3 - Entry point 2
+.ignoreDamageFrames ; 01:4BF3 - Entry point 2
     ld a, [samusPose]
     bit 7, a
         jp nz, drawSamus_faceScreen
@@ -1717,7 +1717,7 @@ jr_001_52f3:
     ret
 
 
-; draw projectiles ; 01:5300
+Call_001_5300: ; draw projectiles ; 01:5300
     ld a, $00
     ld [$d032], a
 
@@ -2018,7 +2018,7 @@ Call_001_540e:
     jp nz, Jump_001_5412
 ret
 
-
+Call_001_549d: ; 00:549D
     xor a
     ld [$d032], a
 
@@ -2637,7 +2637,7 @@ table_57DF: ; 01:57DF
     db $10, $20, $10
 
 ;------------------------------------------------------------------------------
-; 01:57F2
+Call_001_57f2: ; 01:57F2
     ld a, [$d088]
     and a
     jr z, jr_001_57fc
@@ -2794,7 +2794,7 @@ ret
 itemTextPointerTable: ; 01:58F1
     include "data/itemNames.asm"
 
-; Draw enemies - 01:5A11
+Call_001_5a11: ; Draw enemies - 01:5A11
     ld a, [$c426]
     and a
     ret z
@@ -2922,7 +2922,7 @@ ret
 ; 01:5AB1
 include "data/sprites_enemies.asm"
 
-; 01:70BA (called from bank 3?)
+Call_001_70ba: ; 01:70BA (called from bank 2?)
     call Call_001_70c1
     call Call_001_70fe
     ret
@@ -3140,7 +3140,7 @@ jr_001_71c3:
     ld [$c45c], a
     ret
 
-; 01:71CB
+Call_001_71cb: ; 01:71CB
     ld hl, $71db
     ld a, [hEnemyState]
     add a
@@ -3226,7 +3226,7 @@ jr_001_71c3:
     ld bc, $8381
     ret
 
-
+Call_001_723b: ; 01:723B
     call Call_001_70c1
     call Call_001_7242
     ret
@@ -3399,7 +3399,7 @@ jr_001_7311:
     ld [$c45c], a
     ret
 
-; 01:7319
+Call_001_7319: ; 01:7319
     ld hl, $7329
     ld a, [hEnemyState]
     add a
@@ -3651,7 +3651,7 @@ jr_001_7449:
 ; 01:744A
 include "data/sprites_credits.asm" ; Also title
 
-; 01:79EF: Handle earthquake (called from bank 0)
+Call_001_79ef: ; 01:79EF: Handle earthquake (called from bank 0)
     ld a, [$d083]
     and a
     ret z

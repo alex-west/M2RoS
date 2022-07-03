@@ -5,6 +5,7 @@
 
 SECTION "ROM Bank $003", ROMX[$4000], BANK[$3]
 
+Call_003_4000:
     call Call_003_4014
     ld hl, $c433
     ld a, [hl-]
@@ -839,7 +840,7 @@ hitbox6ADF: db -24, 23, -24, 23
 hitbox6AE3: db   0, 55,   0, 47
 
 ; Enemy AI stuff
-; 03:6AE7
+Call_003_6ae7: ; 03:6AE7
     ld hl, $ffe0
     ld c, [hl]
     ld a, $ff
@@ -916,7 +917,7 @@ jr_003_6b1f:
     ld [hl], a
     ret
 
-
+Call_003_6b44: ; 03:6B44
     ld hl, $c43f
     ld a, [$d03c]
     add $10
@@ -1009,7 +1010,7 @@ ret
 
     db $05
 
-
+Call_003_6bd2: ; 03:6BD2
     ld hl, $c40c
     ld de, $c205
     ld a, [de]
@@ -1254,6 +1255,7 @@ Call_003_6c74:
     db $20, $20, $20, $20, $20, $21, $21, $21, $20, $20, $20, $20, $20, $21, $21, $21
     db $00, $80
 
+Call_003_6d4a: ; 03:6D4A
     ld hl, $c300
     xor a
     ld b, a
@@ -3764,6 +3766,7 @@ jr_003_7c29:
     db $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02
     db $01, $01, $01, $01, $01, $82
 
+Call_003_7c7f: ; 03:7C7F - LCDCInterruptHandler
     push af
     push bc
     push de
