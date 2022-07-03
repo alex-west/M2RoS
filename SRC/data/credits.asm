@@ -1,4 +1,5 @@
-; Credits text
+; Credits text - 06:7920
+NEWCHARMAP creditsText
 CHARMAP "<END>", $F0
 CHARMAP "\n", $F1
 CHARMAP "-", $5E

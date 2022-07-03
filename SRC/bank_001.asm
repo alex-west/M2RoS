@@ -2791,43 +2791,8 @@ jr_001_58d8:
 ret
 
 ; Item message pointers and strings:
-; 01:58F1
-itemTextPointerTable:
-    dw $5911
-    dw $5921
-    dw $5931
-    dw $5941
-    dw $5951
-    dw $5961
-    dw $5971
-    dw $5981
-    dw $5991
-    dw $59A1
-    dw $59B1
-    dw $59C1
-    dw $59D1
-    dw $59E1
-    dw $59F1
-    dw $5A01
-
-; 01:5911 - Item names
-; TODO: Define a charmap for this
-    db $FF, $D2, $C0, $D5, $C4, $DE, $DF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-    db $FF, $FF, $FF, $FF, $FF, $CF, $CB, $C0, $D2, $CC, $C0, $FF, $C1, $C4, $C0, $CC
-    db $FF, $FF, $FF, $FF, $FF, $FF, $C8, $C2, $C4, $FF, $C1, $C4, $C0, $CC, $FF, $FF
-    db $FF, $FF, $FF, $FF, $FF, $D6, $C0, $D5, $C4, $FF, $C1, $C4, $C0, $CC, $FF, $FF
-    db $FF, $FF, $FF, $FF, $FF, $FF, $D2, $CF, $C0, $D9, $C4, $D1, $FF, $FF, $FF, $FF
-    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $C1, $CE, $CC, $C1, $FF, $FF, $FF, $FF
-    db $FF, $FF, $FF, $FF, $D2, $C2, $D1, $C4, $D6, $FF, $C0, $D3, $D3, $C0, $C2, $CA
-    db $FF, $FF, $FF, $FF, $FF, $FF, $D5, $C0, $D1, $C8, $C0, $FF, $FF, $FF, $FF, $FF
-    db $FF, $C7, $C8, $C6, $C7, $FF, $C9, $D4, $CC, $CF, $FF, $C1, $CE, $CE, $D3, $D2
-    db $FF, $FF, $FF, $FF, $FF, $D2, $CF, $C0, $C2, $C4, $FF, $C9, $D4, $CC, $CF, $FF
-    db $FF, $FF, $FF, $FF, $D2, $CF, $C8, $C3, $C4, $D1, $FF, $C1, $C0, $CB, $CB, $FF
-    db $FF, $FF, $FF, $D2, $CF, $D1, $C8, $CD, $C6, $FF, $C1, $C0, $CB, $CB, $FF, $FF
-    db $FF, $FF, $FF, $FF, $C4, $CD, $C4, $D1, $C6, $D8, $FF, $D3, $C0, $CD, $CA, $FF
-    db $FF, $FF, $FF, $FF, $CC, $C8, $D2, $D2, $C8, $CB, $C4, $FF, $D3, $C0, $CD, $CA
-    db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $C4, $CD, $C4, $D1, $C6, $D8, $FF, $FF, $FF
-    db $FF, $FF, $FF, $FF, $FF, $FF, $CC, $C8, $D2, $D2, $C8, $CB, $C4, $D2, $FF, $FF
+itemTextPointerTable: ; 01:58F1
+    include "data/itemNames.asm"
 
 ; Draw enemies - 01:5A11
     ld a, [$c426]
