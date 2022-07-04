@@ -127,8 +127,9 @@ hCameraXScreen:: ds 1 ;$FFCB: Camera X position
 ;$FFCF  (in screens)
 ;
 ;$FFE0..F5: Working enemy data (see $C600..C7FF)
-section "HRAM part enemy local", HRAM[$ffE0]
+section "HRAM part enemy local", HRAM[$FFE0]
 ;{
+hEnemyWorkingHram:
     ds 1 ; FFE0 - ??
 hEnemyYPos: ds 1 ; $FFE1: Enemy Y position. Incremented in $2:55AC
 hEnemyXPos: ds 1 ; $FFE2: Enemy X position
@@ -156,11 +157,10 @@ hEnemyStunCounter: ds 1 ; $FFE6: Stun counter
 ;  $11-$13: Stunned (increments each frame until $13, then it stops)
 
 ; General purpose enemy variables?
-;    $FFE7: Incremented in $2:514A and $2:55AC
-;    $FFE8: Sets $FFE5 to 0 if non-zero else 20h by $2:45FA. Adds 3 to $FFE2 if 0 else subtracts 3 in $2:54D2. XOR'd with 1 in $2:5513
-;    $FFE9: Enemy behavior counter (?)
-def hEnemyState = $FFEA ; Usually enemy state
-
+;    $FFE7: ; Usually a counter or a state ; Incremented in $2:514A and $2:55AC
+;    $FFE8: ; Logical sprite flip direction? Sets $FFE5 to 0 if non-zero else 20h by $2:45FA. Adds 3 to $FFE2 if 0 else subtracts 3 in $2:54D2. XOR'd with 1 in $2:5513
+;    $FFE9: ; Generally a behavior counter
+def hEnemyState = $FFEA ; Generally an enemy state
 def hEnemyIceCounter = $FFEB ; Frozen enemy counter
 def hEnemyHealth = $FFEC ; Enemy health
 def hEnemyDropType = $FFED ; Drop type: Checked for 0/1/2 in $2:4239
@@ -168,18 +168,35 @@ def hEnemyDropType = $FFED ; Drop type: Checked for 0/1/2 in $2:4239
 ;        0: None
 ;        1: Small health
 ;        2: Large health
-;        Otherwise: missile drop
+;        4 (or otherwise): missile drop
 ;    }
-;    $FFEE: Tested in $2:4239
+def hEnemyExplosionFlag = $FFEE ; Enemy explosion and future-drop status
+; Values
+; - Non-zero - Explosion happening
+; - $1x - Explosion type A
+; - $2x - Explosion type B
+; - $x0 - No drop
+; - $x1 - Small health
+; - $x2 - Large health
+; - $x4 - Missile drop
+; $FFE9 is used as an explosion timer when exploding.
 def hEnemySpawnFlag = $FFEF ; Enemy spawn flag
 def hEnemySpawnNumber = $FFF0 ; The enemy's number on the map (for respawning)
 def hEnemyAI_low  = $FFF1 ; Enemy AI pointer (low byte)
 def hEnemyAI_high = $FFF2 ; Enemy AI pointer (high byte)
-; $FFF3
-; $FFF4
-; $FFF5 - Initial health? determines enemy drops somehow
+; $FFF3 - ?
+; $FFF4 - ?
+def hEnemyMaxHealth = $FFF5 ; Initial health value
+; Determines enemy drops (used when setting the explosion flag):
+; - If $FD or $FE - No drops
+; - If value is even, drop missile
+; - If value is >$0A, drop large health
+; - Else, drop small health
+; - Note: Drops have a 50% chance of happening or being nothing
+
 ;}
 ;
 ;$FFFC: Enemy address in $2:409E
-def hEnemy_frameCounter = $FFFE ; Frame counter, used by enemies
+
+def hEnemy_frameCounter = $FFFE ; Generic frame counter used by enemies
 ;}

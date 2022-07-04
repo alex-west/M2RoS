@@ -70,58 +70,50 @@ Call_003_4014:
     ld b, a
     and $0f
     jr nz, jr_003_408a
+        ld a, [$c411]
+        ld c, a
+        and $0f
+        cp $0f
+        jr nz, jr_003_408a
+            ld a, [hCameraYScreen]
+            cp b
+            jr z, jr_003_4082
+                ld a, c
+                ld [$c40f], a
+                ld a, d
+                ld [$c410], a
+                jr jr_003_408a
+            jr_003_4082:
+                ld a, b
+                ld [$c411], a
+                xor a
+                ld [$c412], a
+    jr_003_408a:
 
-    ld a, [$c411]
-    ld c, a
-    and $0f
-    cp $0f
-    jr nz, jr_003_408a
-
-    ld a, [hCameraYScreen]
-    cp b
-    jr z, jr_003_4082
-
-    ld a, c
-    ld [$c40f], a
-    ld a, d
-    ld [$c410], a
-    jr jr_003_408a
-
-jr_003_4082:
-    ld a, b
-    ld [$c411], a
-    xor a
-    ld [$c412], a
-
-jr_003_408a:
     ld a, [$c413]
     ld b, a
     and $0f
     jr nz, jr_003_40b4
+        ld a, [$c415]
+        ld c, a
+        and $0f
+        cp $0f
+        jr nz, jr_003_40b4
+            ld a, [hCameraXScreen]
+            cp b
+            jr z, jr_003_40ac
+                ld a, c
+                ld [$c413], a
+                ld a, d
+                ld [$c414], a
+                jr jr_003_40b4
+            jr_003_40ac:
+                ld a, b
+                ld [$c415], a
+                xor a
+                ld [$c416], a
+    jr_003_40b4:
 
-    ld a, [$c415]
-    ld c, a
-    and $0f
-    cp $0f
-    jr nz, jr_003_40b4
-
-    ld a, [hCameraXScreen]
-    cp b
-    jr z, jr_003_40ac
-
-    ld a, c
-    ld [$c413], a
-    ld a, d
-    ld [$c414], a
-    jr jr_003_40b4
-
-jr_003_40ac:
-    ld a, b
-    ld [$c415], a
-    xor a
-    ld [$c416], a
-
-jr_003_40b4:
     ld hl, $c401
     ld a, [hl]
     xor $01
@@ -134,32 +126,30 @@ jr_003_40b4:
     ret z
 
     jr c, jr_003_40e3
+        ld a, $01
+        ld [$c400], a
+        ld a, [$c40f]
+        ld b, a
+        ld a, [$c415]
+        ld c, a
+        ld a, [$c410]
+        ld [$ff98], a
+        call getEnemyDataPointerForBank
+        call getEnemyDataPointerForScreen
+        jr jr_003_40fc
+    jr_003_40e3:
+        ld a, $03
+        ld [$c400], a
+        ld a, [$c411]
+        ld b, a
+        ld a, [$c415]
+        ld c, a
+        ld a, [$c412]
+        ld [$ff98], a
+        call getEnemyDataPointerForBank
+        call getEnemyDataPointerForScreen
+    jr_003_40fc:
 
-    ld a, $01
-    ld [$c400], a
-    ld a, [$c40f]
-    ld b, a
-    ld a, [$c415]
-    ld c, a
-    ld a, [$c410]
-    ld [$ff98], a
-    call getEnemyDataPointerForBank
-    call getEnemyDataPointerForScreen
-    jr jr_003_40fc
-
-jr_003_40e3:
-    ld a, $03
-    ld [$c400], a
-    ld a, [$c411]
-    ld b, a
-    ld a, [$c415]
-    ld c, a
-    ld a, [$c412]
-    ld [$ff98], a
-    call getEnemyDataPointerForBank
-    call getEnemyDataPointerForScreen
-
-jr_003_40fc:
     ld a, [hl]
     cp $ff
     jr z, jr_003_4135
@@ -269,31 +259,29 @@ Jump_003_416a:
     ret z
 
     jr c, jr_003_4192
-
-    ld a, $00
-    ld [$c400], a
-    ld a, [$c411]
-    ld b, a
-    ld a, [$c413]
-    ld c, a
-    ld [$c457], a
-    ld a, [$c414]
-    ld [$ff98], a
-    call getEnemyDataPointerForBank
-    call getEnemyDataPointerForScreen
-    jr jr_003_41ab
-
-jr_003_4192:
-    ld a, $01
-    ld [$c400], a
-    ld a, [$c411]
-    ld b, a
-    ld a, [$c415]
-    ld c, a
-    ld a, [$c416]
-    ld [$ff98], a
-    call getEnemyDataPointerForBank
-    call getEnemyDataPointerForScreen
+        ld a, $00
+        ld [$c400], a
+        ld a, [$c411]
+        ld b, a
+        ld a, [$c413]
+        ld c, a
+        ld [$c457], a
+        ld a, [$c414]
+        ld [$ff98], a
+        call getEnemyDataPointerForBank
+        call getEnemyDataPointerForScreen
+        jr jr_003_41ab
+    jr_003_4192:
+        ld a, $01
+        ld [$c400], a
+        ld a, [$c411]
+        ld b, a
+        ld a, [$c415]
+        ld c, a
+        ld a, [$c416]
+        ld [$ff98], a
+        call getEnemyDataPointerForBank
+        call getEnemyDataPointerForScreen
 
 jr_003_41ab:
     ld a, [hl]
@@ -454,18 +442,16 @@ Call_003_422f:
     ld a, [hl]
     cp $ff
     jr z, jr_003_426e
+        ld a, $04
+        ld [hl], a
+        ld [$c461], a
+        jr jr_003_4274
+    jr_003_426e:
+        ld a, $01
+        ld [hl], a
+        ld [$c461], a
+    jr_003_4274:
 
-    ld a, $04
-    ld [hl], a
-    ld [$c461], a
-    jr jr_003_4274
-
-jr_003_426e:
-    ld a, $01
-    ld [hl], a
-    ld [$c461], a
-
-jr_003_4274:
     ld a, [$c450]
     add $03
     ld l, a
@@ -478,7 +464,7 @@ jr_003_4274:
     pop hl
     ld b, $09
 
-    jr_003_4289:
+    jr_003_4289: ; Read enemy header
         ld a, [de]
         ld [hl+], a
         inc de
@@ -489,7 +475,7 @@ jr_003_4274:
     xor a
     ld b, $04
 
-    jr_003_4293:
+    jr_003_4293: ; Clear next few bytes
         ld [hl+], a
         dec b
     jr nz, jr_003_4293
@@ -515,7 +501,7 @@ jr_003_4274:
     ld l, e
     ld h, d
     pop bc
-    ret
+ret
 
 ; returns pointer to first unused enemy slot in HL
 findFirstEmptyEnemySlot: ; 03:42B4

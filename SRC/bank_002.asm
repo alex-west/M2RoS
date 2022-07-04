@@ -127,44 +127,46 @@ Call_002_409e:
     jp z, Jump_002_4110
 
 jr_002_40c1:
+    ; Check if enemy if active
     ld a, [hl]
     and $0f
-    jr z, jr_002_40cc
+        jr z, jr_002_40cc
 
     dec a
     jr z, jr_002_40f6
-
-jr_002_40c9:
-    add hl, de
-    jr jr_002_40c1
-
-jr_002_40cc:
-    call Call_002_43d2
-    call Call_002_4239
-    call Call_002_452e
-    call Call_002_5630
-
-Jump_002_40d8:
-jr_002_40d8:
-    call Call_002_4421
-    ld a, [$c439]
-    dec a
-    ld [$c439], a
-    jr z, jr_002_4110
-
-    ld de, $0020
-    ldh a, [$fc]
-    ld l, a
-    ldh a, [$fd]
-    ld h, a
-    ld a, [rLY]
-    cp $58
-    jr nc, jr_002_4101
-
-    jr jr_002_40c9
-
-jr_002_40f6:
-    call Call_002_43d2
+        jr_002_40c9:
+            add hl, de
+            jr jr_002_40c1
+        
+        jr_002_40cc:
+            call enemy_moveFromWramToHram
+            call Call_002_4239
+            call Call_002_452e
+            call Call_002_5630 ; Enemy AI and related stuffs
+        
+        Jump_002_40d8:
+        jr_002_40d8:
+            call enemy_moveFromHramToWram
+            ld a, [$c439]
+            dec a
+            ld [$c439], a
+                jr z, jr_002_4110
+        
+            ld de, $0020
+            ; Reload enemy base address
+            ldh a, [$fc]
+            ld l, a
+            ldh a, [$fd]
+            ld h, a
+            ; Stop processing enemies (to avoid lag)
+            ld a, [rLY]
+            cp $58
+                jr nc, jr_002_4101
+    
+        jr jr_002_40c9
+    jr_002_40f6:
+    
+    call enemy_moveFromWramToHram
     call Call_002_4464
     call Call_002_44c0
     jr jr_002_40d8
@@ -189,18 +191,16 @@ jr_002_4110:
     ld a, [hl]
     and a
     jr z, jr_002_4124
+        xor a
+        ld [hl], a
+        jr jr_002_4125
+    jr_002_4124:
+        inc [hl]
+    jr_002_4125:
 
-    xor a
-    ld [hl], a
-    jr jr_002_4125
-
-jr_002_4124:
-    inc [hl]
-
-jr_002_4125:
     ld a, [rLY]
     cp $6c
-    ret nc
+        ret nc
 
     call Call_000_3de2
 ret
@@ -377,7 +377,8 @@ Call_002_4217:
     jr nz, jr_002_4234
 ret
 
-
+;------------------------------------------------------------------------------
+; Important per-enemy routine
 Call_002_4239:
     ld hl, $d05d
     ld a, [hl+]
@@ -393,7 +394,7 @@ Call_002_4239:
     cp [hl]
     ret nz
 
-    ldh a, [$ee]
+    ldh a, [hEnemyExplosionFlag]
     and a
         jp nz, Jump_002_438f
     ldh a, [hEnemyDropType]
@@ -546,7 +547,7 @@ jr_002_430d:
 jr_002_4314:
     ld e, a
     ld d, $00
-    ld hl, $43c8
+    ld hl, table_43C8
     add hl, de
     call Call_002_43a9
     ldh a, [hEnemyHealth]
@@ -580,43 +581,41 @@ Jump_002_4345:
 jr_002_4345:
     ld a, $0f
     ld [sfxRequest_square1], a
-    jr jr_002_438f
+    jr jr_002_438f ; Exit
 
-jr_002_434c:
+jr_002_434c: ; if enemy health == 0 (it dead)
     ; Prep explosion flag and determine drop
     ld b, $10
 
 jr_002_434e:
     ldh a, [hEnemySpawnFlag]
     cp $06
-        jr z, jr_002_436e
+        jr z, .smallHealth
 
     and $0f
-        jr z, jr_002_436e
+        jr z, .smallHealth
 
-    ldh a, [$f5]
+    ldh a, [hEnemyMaxHealth]
     cp $fd
-        jr z, jr_002_4374
+        jr z, .setExplosion ; If max health == $FD (only arachnus?)
     cp $fe
-        jr z, jr_002_4374
+        jr z, .setExplosion ; If max health == $FE (no enemies??)
     bit 0, a
-        jr z, jr_002_4372
+        jr z, .missileDrop ; If max health is even
     cp $0a
-        jr c, jr_002_436e
+        jr c, .smallHealth ; If max health is less than 10
 
-    set 1, b
-        jr jr_002_4374
-jr_002_436e:
-    set 0, b
-        jr jr_002_4374
-
-jr_002_4372:
-    set 2, b
-
-jr_002_4374:
+    set 1, b ; Large health
+        jr .setExplosion
+.smallHealth:
+    set 0, b ; Small health
+        jr .setExplosion
+.missileDrop:
+    set 2, b ; Missile drop
+.setExplosion:
     ld a, b
-    ldh [$ee], a
-    
+    ldh [hEnemyExplosionFlag], a
+    ; Clear timer
     xor a
     ldh [$e9], a
     ld a, $02
@@ -625,9 +624,9 @@ jr_002_4374:
 jr_002_437f:
     call Call_002_438f
     pop af
-    jp Jump_002_40d8
+    jp Jump_002_40d8 ; Skip to next enemy
 
-
+; 02:4386 - Unused branch
     call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
@@ -656,48 +655,35 @@ jr_002_438f:
 Call_002_43a9:
     ld a, [$d05d]
     cp $02
-    ret z
-
+        ret z
     ld c, a
     ldh a, [$e8]
     and $f0
-    ret z
-
+        ret z
     swap a
     ld b, a
     ld a, [$d060]
 
-jr_002_43bb:
-    rrc b
-    srl a
+    jr_002_43bb:
+        rrc b
+        srl a
     jr nc, jr_002_43bb
 
     bit 7, b
-    ret z
-
+        ret z
     pop af
     jp Jump_002_4345
 
+table_43C8: ; 02:43C8
+    db $01, $02, $04, $08, $1E, $00, $00, $02, $14, $0A
 
-    db $01
-
-    ld [bc], a
-
-    db $04, $08, $1e
-
-    nop
-    nop
-    ld [bc], a
-    inc d
-    ld a, [bc]
-
-Call_002_43d2:
+enemy_moveFromWramToHram: ; 02:43D2
     ld a, l
     ldh [$fc], a
     ld a, h
     ldh [$fd], a
     ld b, $0f
-    ld de, $ffe0
+    ld de, hEnemyWorkingHram ; $FFE0
 
     jr_002_43dd:
         ld a, [hl+]
@@ -711,7 +697,7 @@ Call_002_43d2:
     ld a, [hl+] ; enemyOffset + $10
     ldh [$f4], a
     ld a, [hl] ; enemyOffset + $11
-    ldh [$f5], a
+    ldh [hEnemyMaxHealth], a
     
     ; Load spawn flag, spawn number, and AI pointer to $FFEF-$FFF2
     ldh a, [$fc]
@@ -729,6 +715,7 @@ Call_002_43d2:
     ld [$c41e], a
     ldh a, [hEnemyXPos]
     ld [$c41f], a
+    ; Return if stun counter is less than $11
     ldh a, [hEnemyStunCounter]
     cp $11
         ret c
@@ -737,27 +724,24 @@ Call_002_43d2:
     ldh [hEnemyStunCounter], a
     cp $14
     jr z, jr_002_4413
+        pop af
+        jp Jump_002_40d8
+    jr_002_4413:
+        ldh a, [hEnemyIceCounter]
+        and a
+        jr nz, jr_002_441c
+            xor a
+            ldh [hEnemyStunCounter], a
+            ret
+        jr_002_441c:
+            ld a, $10
+            ldh [hEnemyStunCounter], a
+            ret
+; end proc
 
-    pop af
-    jp Jump_002_40d8
-
-
-jr_002_4413:
-    ldh a, [hEnemyIceCounter]
-    and a
-    jr nz, jr_002_441c
-        xor a
-        ldh [hEnemyStunCounter], a
-        ret
-    jr_002_441c:
-        ld a, $10
-        ldh [hEnemyStunCounter], a
-        ret
-
-
-Call_002_4421:
+enemy_moveFromHramToWram: ; 02:4421
     ld b, $0f
-    ld de, $ffe0
+    ld de, hEnemyWorkingHram ; $FFE0
     ldh a, [$fc]
     ld l, a
     ldh a, [$fd]
@@ -800,15 +784,14 @@ Call_002_4421:
     ld h, a
     ld a, [hl]
     cp $ff
-    ret nz
-
+        ret nz
     ld a, l
     add $1c
     ld l, a
     ld [hl], $ff
     inc l
     ld [hl], $ff
-    ret
+ret
 
 
 Call_002_4464:
@@ -3480,7 +3463,7 @@ Call_002_5630:
     and a
         jr nz, jr_002_5692
     ; Check if exploding/becoming a drop
-    ldh a, [$ee]
+    ldh a, [hEnemyExplosionFlag]
     and a
         jp nz, Jump_002_56bf
     ; Check if frozen
@@ -3621,36 +3604,34 @@ ret
 
 
 jr_002_56e7:
-    ldh a, [$f5]
+    ldh a, [hEnemyMaxHealth]
     cp $fd
         jr z, jr_002_5727
 
     ; 50% chance of dropping nothing
     ld a, [rDIV]
     and $01
-        jr nz, jr_002_571f
+        jr nz, .dropNothing
 
-    ldh a, [$ee]
+    ldh a, [hEnemyExplosionFlag]
     and $0f
-        jr z, jr_002_571f ; Case 0 - Nothing/default?
+        jr z, .dropNothing ; Case 0 - Nothing/default?
     dec a
-        jr z, jr_002_5705 ; Case 1 - Small Health
+        jr z, .dropSmallHealth ; Case 1 - Small Health
     dec a
-        jr z, jr_002_570a ; Case 2 - Large health
+        jr z, .dropLargeHealth ; Case 2 - Large health
 
 ; Missile drop
-    ld bc, $04ee
-    jr jr_002_570f
+    ld bc, $04ee ; drop type, sprite ID
+        jr .setDrop
+.dropSmallHealth:
+    ld bc, $01e0 ; drop type, sprite ID
+        jr .setDrop
+.dropLargeHealth:
+    ld bc, $02ec ; drop type, sprite ID
+        jr .setDrop
 
-jr_002_5705:
-    ld bc, $01e0
-    jr jr_002_570f
-
-jr_002_570a:
-    ld bc, $02ec
-    jr jr_002_570f
-
-jr_002_570f:
+.setDrop:
     ld a, b
     ldh [hEnemyDropType], a
     ld a, c
@@ -3659,10 +3640,10 @@ jr_002_570f:
     ldh [hEnemyStunCounter], a
     ldh [hEnemyIceCounter], a
     ldh [$e9], a
-    ldh [$ee], a
+    ldh [hEnemyExplosionFlag], a
 ret
 
-jr_002_571f: ; Delete self
+.dropNothing: ; Delete self
     call Call_000_3ca6
     ld a, $02
     ldh [hEnemySpawnFlag], a
@@ -3672,7 +3653,7 @@ jr_002_5727:
     xor a
     ldh [hEnemyStunCounter], a
     ldh [hEnemyIceCounter], a
-    ldh [$ee], a
+    ldh [hEnemyExplosionFlag], a
     inc a
     ldh [$e9], a
 ret
@@ -3703,14 +3684,12 @@ Jump_002_5732:
     ld a, [hl]
     cp $06
     jr z, jr_002_575e
+        add $e2
+        ldh [hEnemySpriteType], a
+        inc [hl]
+        ret
+    jr_002_575e:
 
-    add $e2
-    ldh [hEnemySpriteType], a
-    inc [hl]
-    ret
-
-
-jr_002_575e:
     ld [hl], $00
     ld hl, hEnemyState
     inc [hl]
@@ -3759,13 +3738,13 @@ jr_002_5797:
     call Call_002_57b3
     ret
 
-
 jr_002_57a2:
     ld hl, hEnemyYPos
     ld a, [hl]
     add $10
     ld [hl], a
     jr jr_002_5797
+
 
 jr_002_57ab:
     call Call_000_3ca6
@@ -4196,7 +4175,7 @@ jr_002_5a0f:
     jr z, jr_002_5a24
         ld e, [hl]
         ld d, $00
-        ld hl, $5a7d
+        ld hl, table_5A7D
         add hl, de
         ld b, [hl]
         ld hl, hEnemyYPos
@@ -4215,88 +4194,80 @@ jr_002_5a28:
     ld a, [hl]
     cp $21
     jr z, jr_002_5a40
+        ld e, a
+        ld d, $00
+        inc [hl]
+        ld hl, table_5A7D
+        add hl, de
+        ld b, [hl]
+        ld hl, hEnemyYPos
+        ld a, [hl]
+        sub b
+        ld [hl], a
+        ret
+    jr_002_5a40:
+        ld a, $02
+        ldh [$e9], a
+        call findFirstEmptyEnemySlot_longJump
+        xor a
+        ld [hl+], a
+        ldh a, [hEnemyYPos]
+        ld [hl+], a
+        ldh a, [hEnemyAttr]
+        ld b, a
+        bit OAMB_XFLIP, a
+        jr nz, jr_002_5a59
+            ldh a, [hEnemyXPos]
+            sub $04
+            jr jr_002_5a5d
+        jr_002_5a59:
+            ldh a, [hEnemyXPos]
+            add $04
+        jr_002_5a5d:
+        
+        ld [hl+], a
+        ld a, $08
+        ld [hl+], a
+        ld a, $80
+        ld [hl+], a
+        ld a, b
+        ld [hl+], a
+        ld de, header_5A9E
+        call Call_002_6b21
+        call Call_002_7231
+        ld a, $03
+        ldh [hEnemySpawnFlag], a
+        ld a, $07
+        ldh [hEnemySpriteType], a
+        ld a, $12
+        ld [sfxRequest_noise], a
+        ret
+; end proc
 
-    ld e, a
-    ld d, $00
-    inc [hl]
-    ld hl, $5a7d
-    add hl, de
-    ld b, [hl]
-    ld hl, hEnemyYPos
-    ld a, [hl]
-    sub b
-    ld [hl], a
-    ret
-
-
-jr_002_5a40:
-    ld a, $02
-    ldh [$e9], a
-    call findFirstEmptyEnemySlot_longJump
-    xor a
-    ld [hl+], a
-    ldh a, [hEnemyYPos]
-    ld [hl+], a
-    ldh a, [hEnemyAttr]
-    ld b, a
-    bit OAMB_XFLIP, a
-    jr nz, jr_002_5a59
-
-    ldh a, [hEnemyXPos]
-    sub $04
-    jr jr_002_5a5d
-
-jr_002_5a59:
-    ldh a, [hEnemyXPos]
-    add $04
-
-jr_002_5a5d:
-    ld [hl+], a
-    ld a, $08
-    ld [hl+], a
-    ld a, $80
-    ld [hl+], a
-    ld a, b
-    ld [hl+], a
-    ld de, $5a9e
-    call Call_002_6b21
-    call Call_002_7231
-    ld a, $03
-    ldh [hEnemySpawnFlag], a
-    ld a, $07
-    ldh [hEnemySpriteType], a
-    ld a, $12
-    ld [sfxRequest_noise], a
-    ret
-
-; 02:5A7D
+table_5A7D: ; 02:5A7D
     db $00, $05, $05, $05, $04, $05, $03, $03, $02, $03, $03, $03, $02, $03, $03, $02
     db $02, $03, $02, $02, $00, $01, $01, $01, $00, $01, $01, $00, $00, $01, $00, $00
     db $00
-; 02:5A9E
-    db $00, $00, $00, $10, $00, $00, $ff, $07, $c7, $59
+header_5A9E: ; 02:5A9E
+    db $00, $00, $00, $10, $00, $00, $ff, $07
+    dw enAI_59C7
 
 Call_002_5aa8:
     ldh a, [hEnemySpawnFlag]
     cp $03
-    ret z
-
+        ret z
     ldh a, [hEnemy_frameCounter]
     and $03
-    ret nz
-
+        ret nz
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $06
     jr z, jr_002_5abc
-
-    inc [hl]
-    ret
-
-
-jr_002_5abc:
-    ld [hl], $04
-    ret
+        inc [hl]
+        ret
+    jr_002_5abc:
+        ld [hl], $04
+        ret
 
 ;------------------------------------------------------------------------------
 ; 02:5ABF - small bug AI (enemy 12h)
@@ -10362,7 +10333,7 @@ jr_002_7b14:
     ld a, $02
     ldh [hEnemySpawnFlag], a
     ld a, $10
-    ldh [$ee], a
+    ldh [hEnemyExplosionFlag], a
     ld a, $0d
     ld [sfxRequest_noise], a
     ld hl, $d089
