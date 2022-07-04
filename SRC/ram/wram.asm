@@ -117,14 +117,14 @@ enemySolidityIndex = $C407 ; Copy of enemySolidityIndex_canon (actually used by 
 ;$C41E: Mirror of enemy Y position
 ;$C41F: Mirror of enemy X position
 ;
-;$C422: Samus damage flag
+def samus_hurtFlag = $C422 ; Samus damage flag
 ;$C423: Damage boost direction
 ;{
 ;    0: Up
 ;    1: Up-right
 ;    FFh: Up-left
 ;}
-;$C424: Samus damage
+def samus_damageValue = $C424 ; Health to take from Samus
 ;$C425: Number of enemies
 ;$C426: Cleared in $2:412F/$2:4217. Incremented when number of enemies is incremented in enemy loading
 ;$C427: Cleared in $2:4217
@@ -606,6 +606,7 @@ def samusFacingDirection = $D02B ; Direction Samus is facing. Saved to SRAM, mir
 ;}
 def samus_turnAnimTimer = $D02C ; Timer for turnaround animation (facing the screen). Used and decremented when MSB of samusPose is set.
 ;
+;$D031: Unused?
 ;$D032: Projectile index
 ;$D033: Cleared by morph
 ;

@@ -1759,7 +1759,7 @@ Call_000_0c37:
 
 jr_000_0c4e:
     xor a
-    ld [$c422], a
+    ld [samus_hurtFlag], a
     ld [saveContactFlag], a
     ld a, $ff
     ld hl, $dd30
@@ -1933,11 +1933,11 @@ samus_handlePose:
         dw poseFunc_0ECB       ; $1D Escaped Metroid Queen
 
 poseFunc_0D87: ; $1B - In Queen's stomach
-    call applyStomachDamage
+    call applyDamage.queenStomach
 ret
 
 poseFunc_0D8B: ; $1C - Escaping Queen's mouth
-    call applyStomachDamage
+    call applyDamage.queenStomach
     ldh a, [hSamusXPixel]
     cp $b0
     jr z, jr_000_0dae
@@ -1968,7 +1968,7 @@ poseFunc_0D8B: ; $1C - Escaping Queen's mouth
 ret
 
 poseFunc_0DBE: ; $1A
-    call applyStomachDamage
+    call applyDamage.queenStomach
     ldh a, [hSamusXPixel]
     cp $68
     jr z, jr_000_0dea
@@ -2006,7 +2006,7 @@ poseFunc_0DF0: ; $19
     ldh [hSamusYPixel], a
     ld a, $a6
     ldh [hSamusXPixel], a
-    call applyStomachDamage
+    call applyDamage.queenStomach
     ld a, [$d090]
     cp $05
     jr nz, jr_000_0e12
@@ -2038,7 +2038,7 @@ poseFunc_0DF0: ; $19
             ret
 
 poseFunc_0E36: ; $18
-    call applyStomachDamage
+    call applyDamage.queenStomach
     ld a, [$d090]
     cp $03
     jr nz, jr_000_0e46
@@ -4678,7 +4678,7 @@ collision_samusTop: ; 00:1E88
         ld [acidContactFlag], a
         push af
         ld a, [acidDamageValue]
-        call applyAcidDamage
+        call applyDamage.acid
         pop af
     .endIf_C:
 
@@ -4714,7 +4714,7 @@ collision_samusTop: ; 00:1E88
         ld [acidContactFlag], a
         push af
         ld a, [acidDamageValue]
-        call applyAcidDamage
+        call applyDamage.acid
         pop af
     .endIf_F:
 
@@ -4785,7 +4785,7 @@ Call_000_1f0f: ; 00:1F0F
         ld [acidContactFlag], a
         push af
         ld a, [acidDamageValue]
-        call applyAcidDamage
+        call applyDamage.acid
         pop af
     .endIf_E:
 
@@ -4830,7 +4830,7 @@ Call_000_1f0f: ; 00:1F0F
         ld [acidContactFlag], a
         push af
         ld a, [acidDamageValue]
-        call applyAcidDamage
+        call applyDamage.acid
         pop af
     .endIf_I:
 
@@ -4862,7 +4862,7 @@ collision_checkSpiderPoint: ; 00:1FBF
         ld a, $40
         ld [acidContactFlag], a
         ld a, [acidDamageValue]
-        call applyAcidDamage
+        call applyDamage.acid
     .endIf:
 ;exitWithHit
     ; Set carry
@@ -4885,7 +4885,7 @@ ret
         ld a, $40
         ld [acidContactFlag], a
         ld a, [acidDamageValue]
-        call applyAcidDamage
+        call applyDamage.acid
     jr .exitNoHit
 
 ;------------------------------------------------------------------------------
@@ -4937,13 +4937,13 @@ samus_getTileIndex: ; 00:1FF5
             ld [sfxRequest_square1], a
             ; Samus damaged flag
             ld a, $01
-            ld [$c422], a
+            ld [samus_hurtFlag], a
             ; Damage boost up
             xor a
             ld [$c423], a
             ; Samus damage
             ld a, [spikeDamageValue]
-            ld [$c424], a
+            ld [samus_damageValue], a
     .endIf_B:
 
     ld a, b
@@ -4961,7 +4961,7 @@ saveFile_magicNumber:
     db $01, $23, $45, $67, $89, $ab, $cd, $ef
 
 ; Damage pose transition table 
-; 00:208B
+table_208B: ; 00:208B
     db $0F
     db $0F
     db $0F
@@ -7000,16 +7000,16 @@ ret
 
 
 Call_000_2ee3:
-    ld a, [$c422]
+    ld a, [samus_hurtFlag]
     cp $01
         ret nz
     xor a
-    ld [$c422], a
+    ld [samus_hurtFlag], a
     ld a, [samusInvulnerableTimer]
     and a
         ret nz
-    ld a, [$c424]
-    call Call_000_2f57
+    ld a, [samus_damageValue]
+    call applyDamage.enemySpike
     ; Give Samus i-frames
     ld a, $33
     ld [samusInvulnerableTimer], a
@@ -7017,7 +7017,7 @@ Call_000_2ee3:
     res 7, a
     ld e, a
     ld d, $00
-    ld hl, $208b
+    ld hl, table_208B
     add hl, de
     ld a, [hl]
     ld [samusPose], a
@@ -7036,71 +7036,68 @@ Call_000_2ee3:
     ld [$d049], a
 ret
 
-
-; Apply queen stomach damage
-applyStomachDamage: ; 00:2F29
-    ldh a, [frameCounter]
-    and $07
-    ret nz
-
-    ld a, $07
-    ld [sfxRequest_noise], a
-    ldh a, [frameCounter]
-    and $0f
-    ret nz
-
-    ld b, $02
-    jr jr_000_2f60
-
-Call_000_2f3c: ; Apply damage for for enemies with a damage value of $FE?
-    ld b, $03
-    ldh a, [frameCounter]
-    and $07
-    ret nz
-
-    ld a, $07
-    ld [sfxRequest_noise], a
-    jr jr_000_2f60
-
-applyAcidDamage: ; 00:2F4A
-    ld b, a
-    ldh a, [frameCounter]
-    and $0f
-    ret nz
-
-    ld a, $07
-    ld [sfxRequest_noise], a
-    jr jr_000_2f60
-
-Call_000_2f57: ; Apply enemy/spike damage?
-    ld b, a
-    cp $60
-        ret nc
-    ; Play sound
-    ld a, $06
-    ld [sfxRequest_noise], a
-
-jr_000_2f60: ; Apply damage
+applyDamage: ; This procedure has multiple entry points
+    .queenStomach: ; 00:2F29
+        ; Apply queen stomach damage
+        ldh a, [frameCounter]
+        and $07
+            ret nz
+        ld a, $07
+        ld [sfxRequest_noise], a
+        ldh a, [frameCounter]
+        and $0f
+            ret nz
+        ld b, $02
+        jr .apply
+    .larvaMetroid: ; 00:2F3C
+        ; Any enemies with a damage value of $FE inflicts continuous contact damage.
+        ; In the game, this only applies to the larva metroids.
+        ld b, $03
+        ldh a, [frameCounter]
+        and $07
+            ret nz
+        ld a, $07
+        ld [sfxRequest_noise], a
+        jr .apply
+    .acid: ; 00:2F4A
+        ld b, a
+        ldh a, [frameCounter]
+        and $0f
+            ret nz
+        ld a, $07
+        ld [sfxRequest_noise], a
+        jr .apply
+    .enemySpike: ; 00:2F57
+        ; Apply damage from enemies, spikes, and respawning blocks
+        ld b, a
+        ; Arbitrarily limit damage to 96 units
+        cp $60
+            ret nc
+        ; Play sound
+        ld a, $06
+        ld [sfxRequest_noise], a
+.apply: ; Apply damage
+    ; Half damage with varia
     ld a, [samusItems]
     bit itemBit_varia, a
-    jr z, jr_000_2f69
+    jr z, .endIf_A
         srl b
-    jr_000_2f69:
+    .endIf_A:
 
     ld a, [samusCurHealthLow]
     sub b
     daa
-    ld [samusCurHealthLow], a
+    ld [samusCurHealthLow], a    
     ld a, [samusCurHealthHigh]
     sbc $00
     daa
     ld [samusCurHealthHigh], a
     cp $99
-    jr nz, jr_000_2f85
+    jr nz, .endIf_B
         xor a
         ld [samusCurHealthLow], a
         ld [samusCurHealthHigh], a
-    jr_000_2f85:
+    .endIf_B:
 ret
 
 gameMode_dying: ; 00:2F86
@@ -7864,7 +7861,7 @@ jr_000_33ff:
     cp $ff
     jr z, jr_000_3426
 
-    ld [$c424], a
+    ld [samus_damageValue], a
     pop hl
     ld a, $10
     ld [$d05d], a
@@ -7918,9 +7915,9 @@ jr_000_3448:
         jr z, jr_000_3475
     and a
         jr z, jr_000_3478
-    ld [$c424], a
+    ld [samus_damageValue], a
     ld a, $01
-    ld [$c422], a
+    ld [samus_hurtFlag], a
     pop hl
     ld a, l
     ld [$d05e], a
@@ -7933,7 +7930,7 @@ ret
 
 
 jr_000_3475:
-    call Call_000_2f3c
+    call applyDamage.larvaMetroid
 
 jr_000_3478:
     pop hl
@@ -7988,7 +7985,7 @@ Call_000_348d:
             jr nz, jr_000_34e5
         call Call_000_3545
         jr nc, jr_000_34e5
-            ld a, [$c424]
+            ld a, [samus_damageValue]
             dec a
             cp $fe
             jr c, jr_000_34e3
@@ -8206,7 +8203,7 @@ jr_000_35fe:
     ld a, [hl]
     cp $ff
         jr z, jr_000_362e
-    ld [$c424], a
+    ld [samus_damageValue], a
     pop hl
     ld a, $10
     ld [$d05d], a
@@ -8264,9 +8261,9 @@ jr_000_3650:
     and a
         jr z, jr_000_3683
 
-    ld [$c424], a
+    ld [samus_damageValue], a
     ld a, $01
-    ld [$c422], a
+    ld [samus_hurtFlag], a
     pop hl
     ld a, l
     ld [$d05e], a
@@ -8279,7 +8276,7 @@ jr_000_3650:
 
 
 jr_000_3680:
-    call Call_000_2f3c
+    call applyDamage.larvaMetroid
 
 jr_000_3683:
     pop hl
@@ -9238,7 +9235,6 @@ loadEnemySaveFlags_longJump: ; 00:3E0A
     callFar loadEnemySaveFlags
     switchBank loadSaveFile
 ret
-
 
 VBlank_drawCreditsLine_longJump: ; 00:3E1E
     jpLong VBlank_drawCreditsLine

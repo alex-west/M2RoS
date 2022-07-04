@@ -2623,9 +2623,9 @@ Call_001_5790:
     .endIf:
     
     ld a, $01
-    ld [$c422], a
+    ld [samus_hurtFlag], a
     ld a, $02
-    ld [$c424], a
+    ld [samus_damageValue], a
     call destroyRespawningBlock
 
 .exit:

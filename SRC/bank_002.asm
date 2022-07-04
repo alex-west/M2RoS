@@ -3829,7 +3829,7 @@ jr_002_57e6:
     and $01
         ret nz
     ld hl, hEnemySpriteType
-    call enemy_flipSpriteId
+    call enemy_flipSpriteId.now
 ret
 
 jr_002_57f5:
@@ -4007,7 +4007,7 @@ jr_002_58e6:
     ldh a, [hEnemy_frameCounter]
     and $01
         ret nz
-    call enemy_flipSpriteId
+    call enemy_flipSpriteId.now
 ret
 
 
@@ -4304,7 +4304,7 @@ jr_002_5abc:
 ; (TODO: verify they all actually use this)
 ; Uses spritemaps 12h and 13h
 enAI_smallBug: ; 02:5ABF
-    call enemy_flipSpriteId ; Animate
+    call enemy_flipSpriteId.now ; Animate
     call .act ; Act
 ret
 
@@ -4332,7 +4332,7 @@ ret
 
     .flip:
     ld [hl], $00
-    call enemy_flipHorizontal
+    call enemy_flipHorizontal.now
 ret
 ;------------------------------------------------------------------------------
 ; Drivel AI (acid-spitting bat)
@@ -4872,7 +4872,7 @@ enAI_chuteLeech: ; 02:5E0B
     ; Animate if an octroll
     ldh a, [hEnemySpriteType]
     cp $3e
-        call nc, Call_002_6b33
+        call nc, enemy_flipSpriteId.twoFrame
 
     ; Check if counter == $16
     ldh a, [$e9]
@@ -5258,7 +5258,9 @@ ret
 
 ; end of pipe bug code?
 
-enAI_60AB:
+;------------------------------------------------------------------------------
+; Skorp AI - Things with circular saws that poke out of walls (which type?)
+enAI_60AB: ; 02:60AB
     ld hl, hEnemyState
     ld a, [hl-]
     dec a
@@ -5273,7 +5275,7 @@ enAI_60AB:
     cp $20
         jr z, jr_002_60ce
 
-    call Call_002_6b5b
+    call enemy_flipHorizontal.twoFrame
     ld hl, hEnemyYPos
     ldh a, [hEnemyAttr]
     bit OAMB_YFLIP, a
@@ -5306,7 +5308,7 @@ jr_002_60d9:
     cp $20
     jr z, jr_002_60ce
 
-    call Call_002_6b5b
+    call enemy_flipHorizontal.twoFrame
     ld hl, hEnemyYPos
     ldh a, [hEnemyAttr]
     bit OAMB_YFLIP, a
@@ -5332,24 +5334,24 @@ jr_002_60ef:
     ld [hl], a
     ret
 
-enAI_60F8:
+;------------------------------------------------------------------------------
+; Skorp AI - Things with circular saws that poke out of walls (which type?)
+enAI_60F8: ; 02:60F8
     ld hl, hEnemyState
     ld a, [hl-]
     dec a
-    jr z, jr_002_611f
-
+        jr z, jr_002_611f
     dec a
-    jr z, jr_002_6126
-
+        jr z, jr_002_6126
     dec a
-    jr z, jr_002_613c
+        jr z, jr_002_613c
 
     inc [hl]
     ld a, [hl]
     cp $20
     jr z, jr_002_611b
 
-    call Call_002_6b6f
+    call enemy_flipVertical.twoFrame
     ld hl, hEnemyXPos
     ldh a, [hEnemyAttr]
     bit OAMB_XFLIP, a
@@ -5386,7 +5388,7 @@ jr_002_6126:
     cp $20
     jr z, jr_002_611b
 
-    call Call_002_6b6f
+    call enemy_flipVertical.twoFrame
     ld hl, hEnemyXPos
     ldh a, [hEnemyAttr]
     bit OAMB_XFLIP, a
@@ -5636,7 +5638,7 @@ jr .moveDown
         ret nz
     ; Every 4 jumps, reset jump counter and flip around
     ld [hl], $00
-    call enemy_flipHorizontal
+    call enemy_flipHorizontal.now
 ret
 
 
@@ -5689,7 +5691,7 @@ ret
     ldh a, [hEnemyXPos]
     cp $c8
     jr nc, .endIf_C
-        call enemy_flipHorizontal
+        call enemy_flipHorizontal.now
     .endIf_C:
     ; Clear state
     xor a
@@ -5805,7 +5807,7 @@ jr_002_633a:
     cp $4f
     jr nc, jr_002_6374
 
-    call Call_002_6b4e
+    call enemy_flipSpriteId_2Bits.twoFrame
     ld hl, hEnemyXPos
     ldh a, [hEnemyAttr]
     bit OAMB_XFLIP, a
@@ -6249,7 +6251,7 @@ jr_002_65b3:
 
 
 jr_002_65b5:
-    call Call_002_6b47
+    call enemy_flipSpriteId_2Bits.fourFrame
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
@@ -6265,7 +6267,7 @@ jr_002_65b5:
 
 ;------------------------------------------------------------------------------
 ; Proboscum AI (nose on wall that is acts as a platform)
-enAI_65D5:
+enAI_65D5: ; 02:65D5
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $6e ; Check to make sure the flipped version has the correct sprite
@@ -6521,7 +6523,7 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Moto enemy AI (the animal with a face-plate)
-enAI_66F3: ; 00:66F3
+enAI_66F3: ; 02:66F3
     call Call_002_6726
     ldh a, [hEnemy_frameCounter]
     and $01
@@ -6592,7 +6594,7 @@ ret
 ;------------------------------------------------------------------------------
 ; Halzyn (flying enemy with sheilds on the sides)
 enAI_6746: ; 02:6746
-    call Call_002_6b62 ; Animate
+    call enemy_flipHorizontal.fourFrame ; Animate
     call Call_002_677c ; Y Movment
     ; Check direction of movement
     ldh a, [$e8]
@@ -6769,7 +6771,7 @@ table_6837: ; 02:6837
 ;------------------------------------------------------------------------------
 ; Septogg AI (floating platforms)
 enAI_6841: ; 02:6841
-    call Call_002_6b4e
+    call enemy_flipSpriteId_2Bits.twoFrame
     call Call_002_7da0
     ld a, [$c46d]
     cp $20
@@ -6841,18 +6843,18 @@ jr_002_6892:
     dec [hl]
     ret
 
-enAI_68A0:
+;------------------------------------------------------------------------------
+; Flitt AI (weird platforms) (which type?)
+enAI_68A0: ; 02:68A0
     ld de, hEnemySpriteType
     ld hl, hEnemyState
     ld a, [hl]
     dec a
-    jr z, jr_002_68c3
-
+        jr z, jr_002_68c3
     dec a
-    jr z, jr_002_68d6
-
+        jr z, jr_002_68d6
     dec a
-    jr z, jr_002_68e9
+        jr z, jr_002_68e9
 
     ld hl, $ffe9
     inc [hl]
@@ -6912,8 +6914,10 @@ jr_002_68e9:
     ldh [hEnemySpriteType], a
     ret
 
-enAI_68FC: ; Flitts 
-    call Call_002_6b3a
+;------------------------------------------------------------------------------
+; Flitt AI (weird platforms) (which type?)
+enAI_68FC: ; 02:68FC
+    call enemy_flipSpriteId.fourFrame
     call Call_002_7da0
     ldh a, [$e8]
     and a
@@ -6987,8 +6991,9 @@ jr_002_695b:
     ldh [$e8], a
     ret
 
+;------------------------------------------------------------------------------
 ; Gravitt AI (crawler with a hat that pops out of the ground)
-enAI_659F:
+enAI_659F: ; 02:659F
     ld hl, hEnemyState
     ld a, [hl]
     dec a
@@ -7369,90 +7374,85 @@ Call_002_6b21:
     ld [$c477], a
 ret
 
-
+;------------------------------------------------------------------------------
 ; Flip sprite ID (low bit)
-Call_002_6b33: ; 02:6B33
-    ldh a, [hEnemy_frameCounter]
-    and $01
-    ret nz
-    jr enemy_flipSpriteId
-
-Call_002_6b3a: ; 02:6B3A
-    ldh a, [hEnemy_frameCounter]
-    and $03
-    ret nz
-
-enemy_flipSpriteId: ; 02:6B3F
+enemy_flipSpriteId: ; Procedure has 3 entry points
+    .twoFrame: ; 02:6B33 - Once every 2 frames
+        ldh a, [hEnemy_frameCounter]
+        and $01
+            ret nz
+        jr .now
+    .fourFrame: ; 02:6B3A - Once every 4 frames
+        ldh a, [hEnemy_frameCounter]
+        and $03
+            ret nz
+.now: ; 02:6B3F - Immediately
     ld hl, hEnemySpriteType
     ld a, [hl]
     xor %00000001 ;$01
     ld [hl], a
-    ret
+ret
 
-
+;------------------------------------------------------------------------------
 ; Flip sprite ID (lowest two bits)
-Call_002_6b47: ; 02:6B47
-    ldh a, [hEnemy_frameCounter]
-    and $03
-    ret nz
-
-    jr jr_002_6b53
-
-Call_002_6b4e: ; 02:6B47
-    ldh a, [hEnemy_frameCounter]
-    and $01
-    ret nz
-
-jr_002_6b53: ; 02:6B53
+enemy_flipSpriteId_2Bits: ; Procedure has 3 entry points
+    .fourFrame: ; 02:6B47
+        ldh a, [hEnemy_frameCounter]
+        and $03
+            ret nz
+        jr .now
+    .twoFrame: ; 02:6B47
+        ldh a, [hEnemy_frameCounter]
+        and $01
+            ret nz
+.now: ; 02:6B53 - Never called directly
     ld hl, hEnemySpriteType
     ld a, [hl]
     xor %00000011 ;$03
     ld [hl], a
-    ret
+ret
 
+;------------------------------------------------------------------------------
 ; Flip sprite horizontally
-Call_002_6b5b: ; 02:6B5B
-    ldh a, [hEnemy_frameCounter]
-    and $01
-    ret nz
-
-    jr enemy_flipHorizontal
-
-Call_002_6b62: ; 02:6B5B
-    ldh a, [hEnemy_frameCounter]
-    and $03
-    ret nz
-
-enemy_flipHorizontal: ; 02:6B62
+enemy_flipHorizontal: ; Procedure has 3 entry points
+    .twoFrame: ; 02:6B5B
+        ldh a, [hEnemy_frameCounter]
+        and $01
+            ret nz
+        jr enemy_flipHorizontal.now
+    .fourFrame: ; 02:6B5B
+        ldh a, [hEnemy_frameCounter]
+        and $03
+            ret nz
+.now: ; 02:6B62
     ld hl, hEnemyAttr
     ld a, [hl]
     xor OAMF_XFLIP
     ld [hl], a
-    ret
+ret
 
+;------------------------------------------------------------------------------
 ; Flip sprite vertically
-Call_002_6b6f: ; 02:6B6F
-    ldh a, [hEnemy_frameCounter]
-    and $01
-    ret nz
-
-    jr jr_002_6b7b
-
-; 02:6B76
-    ldh a, [hEnemy_frameCounter]
-    and $03
-    ret nz
-
-jr_002_6b7b: ; 02:6B7B
+enemy_flipVertical: ; Procedure has 3 entry points
+    .twoFrame: ; 02:6B6F
+        ldh a, [hEnemy_frameCounter]
+        and $01
+            ret nz
+        jr .now
+    .fourFrame: ; 02:6B76 - Never called
+        ldh a, [hEnemy_frameCounter]
+        and $03
+            ret nz
+.now: ; 02:6B7B - Never called directly
     ld hl, hEnemyAttr
     ld a, [hl]
     xor OAMF_YFLIP
     ld [hl], a
-    ret
-    
+ret    
 
 ;------------------------------------------------------------------------------
-enAI_6B83: ; Baby egg?
+; Baby egg ? (with musical stinger moment)
+enAI_6B83: ; 02:6B83
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
@@ -7484,7 +7484,8 @@ enAI_6B83: ; Baby egg?
 ret
 
 ;------------------------------------------------------------------------------
-enAI_6BB2: ; First alpha metroid?
+; First alpha metroid ? (with appearance cutscene)
+enAI_6BB2: ; 02:6BB2
 Jump_002_6bb2:
     call Call_002_7da0
     ld hl, $c464
@@ -7587,7 +7588,8 @@ jr_002_6c2e:
     ret
 
 ;------------------------------------------------------------------------------
-enAI_6C44: ; Alpha metroid ?
+; Alpha Metroid ?
+enAI_6C44: ; 02:6C44
     ld a, [$c465]
     and a
     jp nz, Jump_002_6bb2 ; Jump to actual AI?
@@ -8168,7 +8170,8 @@ Call_002_6f5b:
     ret
 
 ;------------------------------------------------------------------------------
-enAI_6F60: ; Gamma Metroid ?
+; Gamma Metroid ?
+enAI_6F60: ; 02:6F60
     call Call_002_7da0
     ld hl, $c46a
     ld a, [hl]
@@ -8729,7 +8732,9 @@ jr_002_7274:
     ld l, a
     ret
 
-enAI_7276: ; Zeta Metroid ?
+;------------------------------------------------------------------------------
+; Zeta Metroid ?
+enAI_7276: ; 02:7276
     call Call_002_7da0
     ldh a, [hEnemySpawnFlag]
     cp $06
@@ -9427,7 +9432,9 @@ jr_002_762f:
     inc [hl]
     ret
 
-enAI_7631: ; Omega Metroid ?
+;------------------------------------------------------------------------------
+; Omega Metroid ?
+enAI_7631: ; 02:7631
     call Call_002_7da0
     ldh a, [hEnemySpawnFlag]
     cp $06
@@ -9448,7 +9455,7 @@ enAI_7631: ; Omega Metroid ?
     and $01
     ret nz
 
-    call enemy_flipSpriteId
+    call enemy_flipSpriteId.now
     ld a, [$c46d]
     cp $10
     ret nc
@@ -9701,7 +9708,7 @@ jr_002_7787:
     cp b
     jr z, jr_002_7771
 
-    call Call_002_6b4e
+    call enemy_flipSpriteId_2Bits.twoFrame
     ret
 
 
@@ -9876,7 +9883,7 @@ jr_002_789f:
     and $03
     ret nz
 
-    call enemy_flipSpriteId
+    call enemy_flipSpriteId.now
     ret
 
 
@@ -10206,7 +10213,9 @@ Call_002_7a42:
     ld [hl], a
     ret
 
-enAI_7A4F:
+;------------------------------------------------------------------------------
+; Larval Metroid?
+enAI_7A4F: ; 02:7A4F
     call Call_002_7da0
     ldh a, [$e7]
     and a
@@ -10504,7 +10513,7 @@ enAI_7BE5: ; the baby?
     dec a
         jp nz, Jump_002_7c8d ; case 2
     ; default case
-    call Call_002_6b3a
+    call enemy_flipSpriteId.fourFrame
     ld b, $02
     ld de, $2000
     call Call_000_3cba
