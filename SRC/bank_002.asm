@@ -85,7 +85,7 @@ jr_002_4063:
 
     ld a, [rLY]
     cp $70
-    ret nc
+        ret nc
 
     ld a, [$c436]
     and a

@@ -7458,7 +7458,7 @@ jr_000_31b2:
     ccf
 ret
 
-; 00:31B6 - Projectile/enemy collision function
+Call_000_31b6: ; 00:31B6 - Projectile/enemy collision function
     ld a, [$c205]
     ld b, a
     ld a, [$c203]
@@ -7498,10 +7498,10 @@ ret
 Call_000_31f1:
     push hl
     inc hl
+    ; Ignore collision if X or Y position is too high?
     ld a, [hl+]
     cp $e0
         jp nc, Jump_000_32a7
-
     ldh [$b7], a
     ld a, [hl+]
     cp $e0

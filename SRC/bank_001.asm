@@ -1694,7 +1694,7 @@ jr_001_52c6:
 
 Jump_001_52e0:
 jr_001_52e0:
-    call $31b6
+    call Call_000_31b6
     jr nc, jr_001_52f3
 
     ld a, $dd
@@ -3362,7 +3362,7 @@ jr_001_7311:
     ret
 
 Call_001_7319: ; 01:7319
-    ld hl, $7329
+    ld hl, table_7329
     ld a, [hEnemyState]
     add a
     ld e, a
@@ -3374,107 +3374,103 @@ Call_001_7319: ; 01:7319
     ld l, a
     jp hl
 
+table_7329: ; 01:7329
+    dw func_7359
+    dw func_735D
+    dw func_7361
+    dw func_7365
+    dw func_7369
+    dw func_736D
+    dw func_7371
+    dw func_7375
+    dw func_7379
+    dw func_737D
+    dw func_7381
+    dw func_7385
+    dw func_7389
+    dw func_738D
+    dw func_7391
+    dw func_7395
+    dw func_7399
+    dw func_739D
+    dw func_73A1
+    dw func_73A5
+    dw func_73A9
+    dw func_73AD
+    dw func_73B1
+    dw func_73B5 ; Possibly unused?
 
-    db $59, $73, $5d, $73, $61, $73, $65, $73, $69, $73, $6d, $73, $71, $73, $75, $73
-    db $79, $73, $7d, $73, $81, $73, $85, $73, $89, $73, $8d, $73, $91, $73, $95, $73
-    db $99, $73, $9d, $73, $a1, $73, $a5, $73, $a9, $73, $ad, $73, $b1, $73
-
-    or l
-    ld [hl], e
-
-    ld bc, $0004
+func_7359: ld bc, $0004
     ret
 
-
-    ld bc, $0084
+func_735D: ld bc, $0084
     ret
 
-
-    ld bc, $0400
+func_7361: ld bc, $0400
     ret
 
-
-    ld bc, $8400
+func_7365: ld bc, $8400
     ret
 
-
-    ld bc, HeaderLogo
+func_7369: ld bc, HeaderLogo
     ret
 
-
-    ld bc, $0204
+func_736D: ld bc, $0204
     ret
 
-
-    ld bc, $0303
+func_7371: ld bc, $0303
     ret
 
-
-    ld bc, $0402
+func_7375: ld bc, $0402
     ret
 
-
-    ld bc, $0401
+func_7379: ld bc, $0401
     ret
 
-
-    ld bc, $0184
+func_737D: ld bc, $0184
     ret
 
-
-    ld bc, $0284
+func_7381: ld bc, $0284
     ret
 
-
-    ld bc, $0383
+func_7385: ld bc, $0383
     ret
 
-
+func_7389:
     ld bc, $0482
     ret
 
-
-    ld bc, $0481
+func_738D: ld bc, $0481
     ret
 
-
-    ld bc, $8104
+func_7391: ld bc, $8104
     ret
 
-
-    ld bc, $8204
+func_7395: ld bc, $8204
     ret
 
-
-    ld bc, $8303
+func_7399: ld bc, $8303
     ret
 
-
-    ld bc, $8402
+func_739D: ld bc, $8402
     ret
 
-
-    ld bc, $8401
+func_73A1: ld bc, $8401
     ret
 
-
-    ld bc, $8184
+func_73A5: ld bc, $8184
     ret
 
-
-    ld bc, $8284
+func_73A9: ld bc, $8284
     ret
 
-
-    ld bc, $8383
+func_73AD: ld bc, $8383
     ret
 
-
-    ld bc, $8482
+func_73B1: ld bc, $8482
     ret
 
-
-    ld bc, $8481
+func_73B5: ld bc, $8481
     ret
 
 

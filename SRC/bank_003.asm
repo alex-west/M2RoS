@@ -1017,10 +1017,10 @@ Call_003_6bd2: ; 03:6BD2
     ld hl, $c5e0
     ld de, $0020
 
-jr_003_6bf0:
-    add hl, de
-    ld a, [hl]
-    inc a
+    jr_003_6bf0:
+        add hl, de
+        ld a, [hl]
+        inc a
     jr z, jr_003_6bf0
 
     push hl
@@ -1028,70 +1028,58 @@ jr_003_6bf0:
     ld hl, $ffe1
     bit 7, b
     jr z, jr_003_6c14
+        ld a, b
+        cpl
+        inc a
+        add [hl]
+        ld [hl+], a
+        jr nc, jr_003_6c24
+            ldh a, [$e0]
+            cp $01
+            jr nz, jr_003_6c24
+                ldh a, [$f3]
+                inc a
+                ldh [$f3], a
+                jr jr_003_6c24
+    jr_003_6c14:
+        ld a, [hl]
+        sub b
+        ld [hl+], a
+        jr nc, jr_003_6c24
+            ldh a, [$e0]
+            cp $01
+            jr nz, jr_003_6c24
+                ldh a, [$f3]
+                dec a
+                ldh [$f3], a
+    jr_003_6c24:
 
-    ld a, b
-    cpl
-    inc a
-    add [hl]
-    ld [hl+], a
-    jr nc, jr_003_6c24
-
-    ldh a, [$e0]
-    cp $01
-    jr nz, jr_003_6c24
-
-    ldh a, [$f3]
-    inc a
-    ldh [$f3], a
-    jr jr_003_6c24
-
-jr_003_6c14:
-    ld a, [hl]
-    sub b
-    ld [hl+], a
-    jr nc, jr_003_6c24
-
-    ldh a, [$e0]
-    cp $01
-    jr nz, jr_003_6c24
-
-    ldh a, [$f3]
-    dec a
-    ldh [$f3], a
-
-jr_003_6c24:
     bit 7, c
     jr z, jr_003_6c3b
+        ld a, c
+        cpl
+        inc a
+        add [hl]
+        ld [hl], a
+        jr nc, jr_003_6c4a
+            ldh a, [$e0]
+            cp $01
+            jr nz, jr_003_6c4a
+                ld hl, $fff4
+                inc [hl]
+                jr jr_003_6c4a
+    jr_003_6c3b:
+        ld a, [hl]
+        sub c
+        ld [hl], a
+        jr nc, jr_003_6c4a
+            ldh a, [$e0]
+            cp $01
+            jr nz, jr_003_6c4a
+                ld hl, $fff4
+                dec [hl]
+    jr_003_6c4a:
 
-    ld a, c
-    cpl
-    inc a
-    add [hl]
-    ld [hl], a
-    jr nc, jr_003_6c4a
-
-    ldh a, [$e0]
-    cp $01
-    jr nz, jr_003_6c4a
-
-    ld hl, $fff4
-    inc [hl]
-    jr jr_003_6c4a
-
-jr_003_6c3b:
-    ld a, [hl]
-    sub c
-    ld [hl], a
-    jr nc, jr_003_6c4a
-
-    ldh a, [$e0]
-    cp $01
-    jr nz, jr_003_6c4a
-
-    ld hl, $fff4
-    dec [hl]
-
-jr_003_6c4a:
     call Call_003_6c74
     pop hl
     ld a, [$c44c]
@@ -1119,7 +1107,7 @@ Call_003_6c58:
     ldh [$f3], a
     ld a, [hl]
     ldh [$f4], a
-    ret
+ret
 
 
 Call_003_6c74:
@@ -1139,7 +1127,7 @@ Call_003_6c74:
     ld [hl+], a
     ldh a, [$f4]
     ld [hl], a
-    ret
+ret
 
 ; Uncertain data
     db $9c, $6c
