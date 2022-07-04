@@ -9120,34 +9120,32 @@ ret
 
 ; External Calls
 
-; 00:3C92
+earthquakeCheck_farCall: ; 00:3C92
     callFar earthquakeCheck
-    ld a, $02
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-ret
-
-; 00:3CA6
-    callFar Call_003_6ae7
     ; Return to callee
-    ld a, $02
+    ld a, $02 ; All callees are Metroid AI routines
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
 ret
 
-; 00:3CBA
-    callFar Call_003_6b44
-    ld a, $02
+Call_000_3ca6: ; 00:3CA6 - enemy routine: Delete self?
+    callFar Call_003_6ae7
+    ld a, $02 ; Enemy AI bank
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    ret
+ret
 
-; 00:3CCE
-    callFar Call_001_56e9 ; $56e9
-    ld a, $02
+Call_000_3cba: ; 00:3CBA
+    callFar Call_003_6b44
+    ld a, $02 ; Callees are metroids
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    ret
+ret
+
+Call_000_3cce: ; 00:3CCE
+    callFar Call_001_56e9 ; $56e9
+    switchBank enAI_7BE5 ; The Baby
+ret
 
 gameMode_saveGame: ; 00:3CE2
     jpLong saveFileToSRAM
@@ -9160,33 +9158,27 @@ drawNonGameSprite_longCall: ; 00:3CF8
     switchBank titleCreditsBank
 ret
 
-; 00:3D0C
+Call_000_3d0c: ; 00:3D0C
     callFar Call_001_70ba ; $70ba
-    ld a, $02
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    ret
+    switchBank enAI_6C44 ; Alpha Metroid AI?
+ret
 
-; 00:3D20
+Call_000_3d20: ; 00:3D20
     callFar Call_001_723b
-    ld a, $02
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    ret
+    switchBank enAI_6F60 ; Gamma Metroid AI?
+ret
 
-; 00:3D34
+Call_000_3d34: ; 00:3D34
     callFar Call_001_71cb ; $71cb
-    ld a, $02
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    ret
+    switchBank enAI_6C44 ; Also Alpha Metroid AI?
+ret
 
-; 00:3D48
+Call_000_3d48: ; 00:3D48
     callFar Call_001_7319 ; $7319
-    ld a, $02
+    ld a, $02 ; Callees are Metroids
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    ret
+ret
 
 
 LCDCInterruptHandler: ; 00:3D5C
@@ -9222,26 +9214,20 @@ Call_000_3da4: ; 00:3DA4
 samusShoot_longJump: ; 00:3DAF
     jpLong samusShoot
 
-; 00:3DBA
+Call_000_3dba: ; 00:3DBA
     callFar Call_003_6bd2
-    ld a, $02
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    ret
+    switchBank Call_002_4000
+ret
 
-; 00:3DCE
+Call_000_3dce: ; 00:3DCE
     callFar Call_001_5a11
-    ld a, $02
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    ret
+    switchBank Call_002_4000
+ret
 
-; 00:3DE2
+Call_000_3de2: ; 00:3DE2
     callFar Call_003_4000 ;$4000
-    ld a, $02
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    ret
+    switchBank Call_002_409e
+ret
 
 findFirstEmptyEnemySlot_longJump: ; 00:3DF6
     callFar findFirstEmptyEnemySlot

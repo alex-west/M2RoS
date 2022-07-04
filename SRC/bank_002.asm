@@ -95,14 +95,14 @@ jr_002_4063:
         ld [$c436], a
     jr_002_408b:
 
-    call $3dba
+    call Call_000_3dba
     call Call_002_409e
     call Call_002_45ca
     ld a, [rLY]
     cp $70
         ret nc
 
-    call $3dce
+    call Call_000_3dce
 ret
 
 
@@ -202,7 +202,7 @@ jr_002_4125:
     cp $6c
     ret nc
 
-    call $3de2
+    call Call_000_3de2
 ret
 
 
@@ -444,7 +444,7 @@ jr_002_4276:
     ld [hl], $99
 
 jr_002_428b:
-    call $3ca6
+    call Call_000_3ca6
     ld a, $02
     ldh [hEnemySpawnFlag], a
     call Call_002_438f
@@ -628,7 +628,7 @@ jr_002_437f:
     jp Jump_002_40d8
 
 
-    call $3ca6
+    call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
     jr jr_002_437f
@@ -1076,7 +1076,7 @@ jr_002_456d:
 
 
 jr_002_459d:
-    call $3ca6
+    call Call_000_3ca6
     ld a, $02
     ldh [hEnemySpawnFlag], a
     pop af
@@ -1084,7 +1084,7 @@ jr_002_459d:
 
 
 jr_002_45a8:
-    call $3ca6
+    call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
     pop af
@@ -2372,7 +2372,7 @@ ret
     cp $9d ; Exit if missile refill
         ret z
     ; Delete the items
-    call $3ca6 ; Delete self
+    call Call_000_3ca6 ; Delete self
     ld a, $02 ; Set collected flag
     ldh [hEnemySpawnFlag], a
 ret
@@ -3106,7 +3106,7 @@ ret
         ret
     .else:
         ; Delete self
-        call $3ca6
+        call Call_000_3ca6
         ld a, $ff
         ldh [hEnemySpawnFlag], a
         ret
@@ -3548,7 +3548,7 @@ Call_002_565f:
         jr_002_5685:
             ld a, $02
             ld [sfxRequest_noise], a
-            call $3ca6
+            call Call_000_3ca6
             ld a, $02
             ldh [hEnemySpawnFlag], a
             ret
@@ -3583,7 +3583,7 @@ jr_002_5692:
         ld [hl], a
         ldh [hEnemyDropType], a
         ; Die
-        call $3ca6
+        call Call_000_3ca6
         ld a, $02
         ldh [hEnemySpawnFlag], a
         ret
@@ -3663,7 +3663,7 @@ jr_002_570f:
 ret
 
 jr_002_571f: ; Delete self
-    call $3ca6
+    call Call_000_3ca6
     ld a, $02
     ldh [hEnemySpawnFlag], a
     ret
@@ -3727,7 +3727,7 @@ jr_002_575e:
     ld [hl+], a
     ld [hl+], a
     ld [hl], a
-    call $3ca6
+    call Call_000_3ca6
     ld a, $02
     ldh [hEnemySpawnFlag], a
     xor a
@@ -3768,7 +3768,7 @@ jr_002_57a2:
     jr jr_002_5797
 
 jr_002_57ab:
-    call $3ca6
+    call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
     ret
@@ -4132,7 +4132,7 @@ jr_002_59a6:
         ret
 
 jr_002_59bf:
-    call $3ca6
+    call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
 ret
@@ -4569,7 +4569,7 @@ ret
     .endIf_B:
 
     ; Delete self
-    call $3ca6
+    call Call_000_3ca6
     ld a, $03
     ld [sfxRequest_noise], a
     ld a, $ff
@@ -5028,7 +5028,7 @@ enAI_5F67:
     cp $0a
     jr c, jr_002_5f90
         ; Delete self?
-        call $3ca6
+        call Call_000_3ca6
         ; Play sound
         ld a, $14
         ld [sfxRequest_square1], a
@@ -5236,7 +5236,7 @@ jr_002_605a:
         ld [hl], $01
     jr_002_6093:
 
-    call $3ca6
+    call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
 ret
@@ -5847,7 +5847,7 @@ jr_002_6374:
 
 
 jr_002_637a:
-    call $3ca6
+    call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
     ret
@@ -6108,7 +6108,7 @@ jr_002_64db:
 
 
 jr_002_64e5:
-    call $3ca6
+    call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
     ret
@@ -6256,7 +6256,7 @@ jr_002_65b5:
     cp $20
     ret nz
 
-    call $3ca6
+    call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
     ret
@@ -6464,7 +6464,7 @@ ret
 ret
 
 .deleteSelf:
-    call $3ca6 ; Delete self
+    call Call_000_3ca6 ; Delete self
     ; Delete self for good
     ld a, $02
     ldh [hEnemySpawnFlag], a
@@ -7229,7 +7229,7 @@ ret
 ret
 
 .deleteDoor:
-    call $3ca6 ; Delete self?
+    call Call_000_3ca6 ; Delete self?
     ; Set enemy spawn flag to dead
     ld a, $02
     ldh [hEnemySpawnFlag], a
@@ -7476,15 +7476,15 @@ enAI_6B83: ; Baby egg?
         ret
     jr_002_6ba6:
 
-    call $3ca6
+    call Call_000_3ca6
     ld a, $02
     ldh [hEnemySpawnFlag], a
     xor a
     ld [$c463], a
 ret
 
-
-enAI_6BB2:
+;------------------------------------------------------------------------------
+enAI_6BB2: ; First alpha metroid?
 Jump_002_6bb2:
     call Call_002_7da0
     ld hl, $c464
@@ -7645,61 +7645,53 @@ jr_002_6c93:
     ldh a, [$e8]
     inc a
     jr z, jr_002_6cb1
+        call Call_002_6e7f
+        ld hl, $c471
+        ld a, [hl]
+        and a
+            ret z
+        ld [hl], $00
+        ld a, $ff
+        ldh [$e8], a
+        ld a, $a3
+        ldh [hEnemySpriteType], a
+        xor a
+        ldh [$e9], a
+        ldh [hEnemyState], a
+        ret
+    jr_002_6cb1:
 
-    call Call_002_6e7f
-    ld hl, $c471
-    ld a, [hl]
-    and a
-    ret z
-
-    ld [hl], $00
-    ld a, $ff
-    ldh [$e8], a
-    ld a, $a3
-    ldh [hEnemySpriteType], a
-    xor a
-    ldh [$e9], a
-    ldh [hEnemyState], a
-    ret
-
-
-jr_002_6cb1:
     ld hl, $ffe9
     ld a, [hl]
     and a
     jr nz, jr_002_6cd1
+        call Call_000_3d0c
+        ld hl, hEnemyXPos
+        ld a, [hl]
+        add $10
+        ld b, a
+        ld a, [$d03c]
+        sub b
+        jr c, jr_002_6cce
+            ld a, OAMF_XFLIP
+            ldh [hEnemyAttr], a
+            jr jr_002_6cd1
+        jr_002_6cce:
+            xor a
+            ldh [hEnemyAttr], a
+    jr_002_6cd1:
 
-    call $3d0c
-    ld hl, hEnemyXPos
-    ld a, [hl]
-    add $10
-    ld b, a
-    ld a, [$d03c]
-    sub b
-    jr c, jr_002_6cce
-
-    ld a, OAMF_XFLIP
-    ldh [hEnemyAttr], a
-    jr jr_002_6cd1
-
-jr_002_6cce:
-    xor a
-    ldh [hEnemyAttr], a
-
-jr_002_6cd1:
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $0e
     jr c, jr_002_6cdf
+        cp $14
+            ret nz
+        ld [hl], $00
+    jr_002_6cdf:
 
-    cp $14
-    ret nz
-
-    ld [hl], $00
-
-jr_002_6cdf:
-    call $3d34
+    call Call_000_3d34
     call Call_002_6dd4
     call Call_002_6e39
     ret
@@ -7824,7 +7816,7 @@ jr_002_6d61:
     ld [hl], a
     ld a, $c0
     ld [metroidCountShuffleTimer], a
-    call $3c92
+    call earthquakeCheck_farCall
     ret
 
 
@@ -8175,7 +8167,8 @@ Call_002_6f5b:
     ld [hl], a
     ret
 
-enAI_6F60:
+;------------------------------------------------------------------------------
+enAI_6F60: ; Gamma Metroid ?
     call Call_002_7da0
     ld hl, $c46a
     ld a, [hl]
@@ -8196,7 +8189,7 @@ enAI_6F60:
 
 
 jr_002_6f7f:
-    call $3ca6
+    call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
     ret
@@ -8495,7 +8488,7 @@ Jump_002_7105:
     ld [hl], a
     ld a, $c0
     ld [metroidCountShuffleTimer], a
-    call $3c92
+    call earthquakeCheck_farCall
     ret
 
 
@@ -8529,7 +8522,7 @@ jr_002_715f:
     and a
     jr nz, jr_002_717f
 
-    call $3d20
+    call Call_000_3d20
     ld hl, hEnemyXPos
     ld a, [hl]
     add $10
@@ -8553,7 +8546,7 @@ jr_002_717f:
     cp $0f
     jr nc, jr_002_7193
 
-    call $3d48
+    call Call_000_3d48
     call Call_002_6dd4
     ld a, $b0
     ldh [hEnemySpriteType], a
@@ -8665,7 +8658,7 @@ jr_002_7222:
 
 
 jr_002_7229:
-    call $3ca6
+    call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
     ret
@@ -8736,7 +8729,7 @@ jr_002_7274:
     ld l, a
     ret
 
-enAI_7276:
+enAI_7276: ; Zeta Metroid ?
     call Call_002_7da0
     ldh a, [hEnemySpawnFlag]
     cp $06
@@ -8911,7 +8904,7 @@ jr_002_736f:
 
     ld b, $02
     ld de, $2000
-    call $3cba
+    call Call_000_3cba
     ld hl, hEnemyXPos
     ld a, [$d03c]
     sub [hl]
@@ -9097,7 +9090,7 @@ jr_002_7452:
     ld [hl], a
     ld a, $c0
     ld [metroidCountShuffleTimer], a
-    call $3c92
+    call earthquakeCheck_farCall
     ret
 
 
@@ -9167,7 +9160,7 @@ jr_002_74d2:
 
 
 jr_002_74d4:
-    call $3ca6
+    call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
     ret
@@ -9258,7 +9251,7 @@ jr_002_753e:
     cp $90
     ret c
 
-    call $3ca6
+    call Call_000_3ca6
     ld a, $02
     ldh [hEnemySpawnFlag], a
     ld a, $02
@@ -9434,7 +9427,7 @@ jr_002_762f:
     inc [hl]
     ret
 
-enAI_7631:
+enAI_7631: ; Omega Metroid ?
     call Call_002_7da0
     ldh a, [hEnemySpawnFlag]
     cp $06
@@ -9592,7 +9585,7 @@ jr_002_76e1:
     ld [hl], a
     ld a, $c0
     ld [metroidCountShuffleTimer], a
-    call $3c92
+    call earthquakeCheck_farCall
     ret
 
 
@@ -9728,7 +9721,7 @@ jr_002_77bc:
 jr_002_77d0:
     ld b, $02
     ld de, $2000
-    call $3cba
+    call Call_000_3cba
     ld hl, hEnemyXPos
     ld a, [$d03c]
     sub [hl]
@@ -9830,10 +9823,10 @@ Jump_002_7847:
     jr nz, jr_002_7861
 
     ld [hl], $01
-    call $3d20
+    call Call_000_3d20
 
 jr_002_7861:
-    call $3d48
+    call Call_000_3d48
     ld a, b
     and a
     jr z, jr_002_7890
@@ -9914,7 +9907,7 @@ jr_002_78b9:
 
 Jump_002_78c8:
 jr_002_78c8:
-    call $3ca6
+    call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
     ld hl, $c41c
@@ -10375,7 +10368,7 @@ jr_002_7b14:
     ld [hl], a
     ld a, $c0
     ld [metroidCountShuffleTimer], a
-    call $3c92
+    call earthquakeCheck_farCall
     ret
 
 
@@ -10476,7 +10469,7 @@ Jump_002_7ba3:
 jr_002_7bc0:
     ld b, $01
     ld de, $1e02
-    call $3cba
+    call Call_000_3cba
     call Call_002_7cdd
     ret
 
@@ -10514,7 +10507,7 @@ enAI_7BE5: ; the baby?
     call Call_002_6b3a
     ld b, $02
     ld de, $2000
-    call $3cba
+    call Call_000_3cba
     call Call_002_7d2a
     call Call_002_7ddc
 ret
@@ -10742,7 +10735,7 @@ Call_002_7d2a:
 
 jr_002_7d45:
     ld a, [$c417]
-    cp $64
+    cp $64 ; Tile ID of the block the baby can clear
     call z, Call_002_7d97
 
 jr_002_7d4d:
@@ -10774,7 +10767,7 @@ jr_002_7d64:
 
 jr_002_7d78:
     ld a, [$c417]
-    cp $64
+    cp $64 ; Tile ID of the block the baby can clear
     call z, Call_002_7d97
 
 jr_002_7d80:
@@ -10797,7 +10790,7 @@ jr_002_7d86:
 
 
 Call_002_7d97:
-    call $3cce
+    call Call_000_3cce
     ld a, $16
     ld [sfxRequest_noise], a
     ret

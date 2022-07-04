@@ -934,54 +934,46 @@ Call_003_6b44: ; 03:6B44
     ld a, [$c43e]
     sub [hl]
     jr z, jr_003_6b77
+        jr c, jr_003_6b6f
+            ldh a, [$e9]
+            cp d
+            jr z, jr_003_6b77
+                add b
+                ldh [$e9], a
+                jr jr_003_6b77
+        jr_003_6b6f:
+        
+        ldh a, [$e9]
+        cp e
+        jr z, jr_003_6b77
+            sub b
+            ldh [$e9], a
+    jr_003_6b77:
 
-    jr c, jr_003_6b6f
-
-    ldh a, [$e9]
-    cp d
-    jr z, jr_003_6b77
-
-    add b
-    ldh [$e9], a
-    jr jr_003_6b77
-
-jr_003_6b6f:
-    ldh a, [$e9]
-    cp e
-    jr z, jr_003_6b77
-
-    sub b
-    ldh [$e9], a
-
-jr_003_6b77:
     inc l
     ld a, [$c43f]
     sub [hl]
     jr z, jr_003_6b92
+        jr c, jr_003_6b8a
+            ldh a, [hEnemyState]
+            cp d
+            jr z, jr_003_6b92
+                add b
+                ldh [hEnemyState], a
+                jr jr_003_6b92
+        jr_003_6b8a:
+        
+        ldh a, [hEnemyState]
+        cp e
+        jr z, jr_003_6b92
+            sub b
+            ldh [hEnemyState], a
+    jr_003_6b92:
 
-    jr c, jr_003_6b8a
-
-    ldh a, [hEnemyState]
-    cp d
-    jr z, jr_003_6b92
-
-    add b
-    ldh [hEnemyState], a
-    jr jr_003_6b92
-
-jr_003_6b8a:
-    ldh a, [hEnemyState]
-    cp e
-    jr z, jr_003_6b92
-
-    sub b
-    ldh [hEnemyState], a
-
-jr_003_6b92:
     ldh a, [$e9]
     ld e, a
     ld d, $00
-    ld hl, $6bb1
+    ld hl, table_6BB1
     add hl, de
     ld a, [hl]
     ld hl, $ffe1
@@ -990,7 +982,7 @@ jr_003_6b92:
     ldh a, [hEnemyState]
     ld e, a
     ld d, $00
-    ld hl, $6bb1
+    ld hl, table_6BB1
     add hl, de
     ld a, [hl]
     ld hl, $ffe2
@@ -998,16 +990,9 @@ jr_003_6b92:
     ld [hl], a
 ret
 
-
-    db $fb
-
-    ei
-
-    db $fc, $fc, $fd, $fe, $fd, $fd, $fd, $ff, $fe, $fe, $fe, $ff, $ff, $00, $00, $00
-    db $01, $01, $02, $02, $02, $01, $03, $03, $03, $02, $03, $04, $04
-
-    dec b
-
+table_6BB1: ; 03:6BB1
+    db $FB, $FB, $FC, $FC, $FD, $FE, $FD, $FD, $FD, $FF, $FE, $FE, $FE, $FF, $FF, $00
+    db $00, $00, $01, $01, $02, $02, $02, $01, $03, $03, $03, $02, $03, $04, $04, $05
     db $05
 
 Call_003_6bd2: ; 03:6BD2
@@ -1386,16 +1371,15 @@ Call_003_6e22:
     ld a, [$c3a9]
     add $10
 
-jr_003_6e2c:
-    ld [hl+], a
-    inc l
-    inc l
-    inc l
-    add $08
-    dec b
-    jr nz, jr_003_6e2c
-
-    ret
+    .loop:
+        ld [hl+], a
+        inc l
+        inc l
+        inc l
+        add $08
+        dec b
+    jr nz, .loop
+ret
 
 queenHandler: ; 03:6E36
     ld a, [deathFlag]
@@ -1645,15 +1629,28 @@ jr_003_6f8d:
     ld [hl], $82
     ret
 
-; 3:6FA2
 ; Queen head tilemaps
-    db $bb, $b1, $b2, $b3, $b4, $ff, $c0, $c1, $c2, $c3, $c4, $ff, $d0, $d1, $d2, $d3
-    db $d4, $d5, $ff, $ff, $e2, $e3, $e4, $e5, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
-    db $ff, $ff, $ff, $ff, $bb, $b1, $f5, $b8, $b9, $ba, $c0, $c1, $c7, $c8, $c9, $ca
-    db $d0, $e6, $d7, $d8, $ff, $ff, $ff, $f6, $e7, $e8, $ff, $ff, $ff, $ff, $f7, $f8
-    db $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $bc, $bd, $be, $ff, $ff, $ff, $cb
-    db $cc, $cd, $ff, $ff, $da, $db, $dc, $dd, $ff, $ff, $ea, $eb, $ec, $ed, $de, $ff
-    db $fa, $fb, $fc, $fd, $ee, $d9, $ff, $ff, $ff, $ff, $ff, $ff
+table_6FA2: ; 03:6FA2
+    db $BB, $B1, $B2, $B3, $B4, $FF
+    db $C0, $C1, $C2, $C3, $C4, $FF
+    db $D0, $D1, $D2, $D3, $D4, $D5
+    db $FF, $FF, $E2, $E3, $E4, $E5
+    db $FF, $FF, $FF, $FF, $FF, $FF
+    db $FF, $FF, $FF, $FF, $FF, $FF
+table_6FC6: ; 03:6FC6
+    db $BB, $B1, $F5, $B8, $B9, $BA
+    db $C0, $C1, $C7, $C8, $C9, $CA
+    db $D0, $E6, $D7, $D8, $FF, $FF
+    db $FF, $F6, $E7, $E8, $FF, $FF
+    db $FF, $FF, $F7, $F8, $FF, $FF
+    db $FF, $FF, $FF, $FF, $FF, $FF
+table_6FEA: ; 03:6FEA
+    db $FF, $BC, $BD, $BE, $FF, $FF
+    db $FF, $CB, $CC, $CD, $FF, $FF
+    db $DA, $DB, $DC, $DD, $FF, $FF
+    db $EA, $EB, $EC, $ED, $DE, $FF
+    db $FA, $FB, $FC, $FD, $EE, $D9
+    db $FF, $FF, $FF, $FF, $FF, $FF
 
 jr_003_700e:
     ld a, [$c3f2]
@@ -1673,15 +1670,15 @@ jr_003_701e:
     cp $ff
     jr z, jr_003_700e
 
-    ld de, $6fa2
+    ld de, table_6FA2
     cp $01
     jr z, jr_003_7038
 
-    ld de, $6fc6
+    ld de, table_6FC6
     cp $02
     jr z, jr_003_7038
 
-    ld de, $6fea
+    ld de, table_6FEA
 
 jr_003_7038:
     ld hl, $9c00

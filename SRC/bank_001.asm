@@ -2922,11 +2922,10 @@ ret
 ; 01:5AB1
 include "data/sprites_enemies.asm"
 
-Call_001_70ba: ; 01:70BA (called from bank 2?)
+Call_001_70ba: ; 01:70BA - called from bank 2 (Alpha Metroid related?)
     call Call_001_70c1
     call Call_001_70fe
     ret
-
 
 Call_001_70c1:
     ld hl, $ffe1
@@ -2936,19 +2935,16 @@ Call_001_70c1:
     ld a, [$d03b]
     sub b
     jr c, jr_001_70d5
+        ld b, $00
+        jr z, jr_001_70d9
+            inc b
+            jr jr_001_70d9
+    jr_001_70d5:
+        cpl
+        inc a
+        ld b, $ff
+    jr_001_70d9:
 
-    ld b, $00
-    jr z, jr_001_70d9
-
-    inc b
-    jr jr_001_70d9
-
-jr_001_70d5:
-    cpl
-    inc a
-    ld b, $ff
-
-jr_001_70d9:
     ld [$c45d], a
     ld a, b
     ld [$c45b], a
@@ -2959,23 +2955,20 @@ jr_001_70d9:
     ld a, [$d03c]
     sub b
     jr c, jr_001_70f2
+        ld b, $00
+        jr z, jr_001_70f6
+            inc b
+            jr jr_001_70f6
+    jr_001_70f2:
+        cpl
+        inc a
+        ld b, $ff
+    jr_001_70f6:
 
-    ld b, $00
-    jr z, jr_001_70f6
-
-    inc b
-    jr jr_001_70f6
-
-jr_001_70f2:
-    cpl
-    inc a
-    ld b, $ff
-
-jr_001_70f6:
     ld [$c45e], a
     ld a, b
     ld [$c45a], a
-    ret
+ret
 
 
 Call_001_70fe:
@@ -2993,23 +2986,19 @@ Call_001_70fe:
 
     inc c
     jr z, jr_001_7115
-
-    ld a, $04
-    jr jr_001_7122
-
-jr_001_7115:
-    ld a, $09
-    jr jr_001_7122
+        ld a, $04
+        jr jr_001_7122
+    jr_001_7115:
+        ld a, $09
+        jr jr_001_7122
 
 jr_001_7119:
     inc c
     jr z, jr_001_7120
-
-    ld a, $0e
-    jr jr_001_7122
-
-jr_001_7120:
-    ld a, $13
+        ld a, $0e
+        jr jr_001_7122
+    jr_001_7120:
+        ld a, $13
 
 jr_001_7122:
     ld [$c45c], a
@@ -3020,7 +3009,7 @@ jr_001_712b:
     ld a, [$c45c]
     ld e, a
     ld d, $00
-    ld hl, $7158
+    ld hl, table_7158
     add hl, de
     ld a, [hl]
     ld [hEnemyState], a
@@ -3031,42 +3020,28 @@ jr_001_713a:
     ld a, [$c45a]
     dec a
     jr z, jr_001_7144
-
-    ld a, $01
-    jr jr_001_7153
-
-jr_001_7144:
-    xor a
-    jr jr_001_7153
+        ld a, $01
+        jr jr_001_7153
+    jr_001_7144:
+        xor a
+        jr jr_001_7153
 
 jr_001_7147:
     ld a, [$c45b]
     dec a
     jr z, jr_001_7151
-
-    ld a, $03
-    jr jr_001_7153
-
-jr_001_7151:
-    ld a, $02
+        ld a, $03
+        jr jr_001_7153
+    jr_001_7151:
+        ld a, $02
 
 jr_001_7153:
     ld [$c45c], a
     jr jr_001_712b
 
-    db $00, $01
-
-    ld [bc], a
-    inc bc
-    nop
-
-    db $04, $05, $06, $02, $01, $07, $08, $09, $02, $00, $0a, $0b, $0c
-
-    inc bc
-
-    db $01, $0d, $0e, $0f
-
-    inc bc
+table_7158: ; 01:7158 - Enemy state transition table?
+    db $00, $01, $02, $03, $00, $04, $05, $06, $02, $01, $07, $08, $09, $02, $00, $0A
+    db $0B, $0C, $03, $01, $0D, $0E, $0F, $03
 
 Call_001_7170:
     ld b, $64
@@ -3080,7 +3055,7 @@ Call_001_7170:
     ld [$c45f], a
     ld a, h
     ld [$c460], a
-    ret
+ret
 
 
 Call_001_7189:
@@ -3138,10 +3113,10 @@ jr_001_71c3:
     ld a, [$c45c]
     add b
     ld [$c45c], a
-    ret
+ret
 
 Call_001_71cb: ; 01:71CB
-    ld hl, $71db
+    ld hl, table_71DB
     ld a, [hEnemyState]
     add a
     ld e, a
@@ -3152,78 +3127,71 @@ Call_001_71cb: ; 01:71CB
     ld h, d
     ld l, a
     jp hl
+    
+    table_71DB: ; 01:71DB
+        dw func_71FB
+        dw func_71FF
+        dw func_7203
+        dw func_7207 ; Possibly unused?
+        dw func_720B
+        dw func_720F
+        dw func_7213
+        dw func_7217
+        dw func_721B
+        dw func_721F
+        dw func_7223
+        dw func_7227
+        dw func_722B
+        dw func_722F
+        dw func_7233
+        dw func_7237
 
-    ; This is a jump table
-    db $fb, $71, $ff, $71, $03, $72
-
-    rlca
-    ld [hl], d
-
-    db $0b, $72, $0f, $72, $13, $72, $17, $72, $1b, $72, $1f, $72, $23, $72, $27, $72
-    db $2b, $72, $2f, $72, $33, $72, $37, $72
-
-    ; And these are the destinations to that jump table
-    ld bc, $0003
+func_71FB: ld bc, $0003
     ret
 
-
-    ld bc, $0083
+func_71FF: ld bc, $0083
     ret
 
-
-    ld bc, $0300
+func_7203: ld bc, $0300
     ret
 
-
-    ld bc, $8300
+func_7207: ld bc, $8300
     ret
 
-
-    ld bc, $0103
+func_720B: ld bc, $0103
     ret
 
-
-    ld bc, $0202
+func_720F: ld bc, $0202
     ret
 
-
-    ld bc, $0301
+func_7213: ld bc, $0301
     ret
 
-
-    ld bc, $0183
+func_7217: ld bc, $0183
     ret
 
-
-    ld bc, $0282
+func_721B: ld bc, $0282
     ret
 
-
-    ld bc, $0381
+func_721F: ld bc, $0381
     ret
 
-
-    ld bc, $8103
+func_7223: ld bc, $8103
     ret
 
-
-    ld bc, $8202
+func_7227: ld bc, $8202
     ret
 
-
-    ld bc, $8301
+func_722B: ld bc, $8301
     ret
 
-
-    ld bc, $8183
+func_722F: ld bc, $8183
     ret
 
-
-    ld bc, $8282
+func_7233: ld bc, $8282
     ret
 
-
-    ld bc, $8381
+func_7237: ld bc, $8381
     ret
 
 Call_001_723b: ; 01:723B
@@ -3274,7 +3242,7 @@ jr_001_726f:
     ld a, [$c45c]
     ld e, a
     ld d, $00
-    ld hl, $729c
+    ld hl, table_729C
     add hl, de
     ld a, [hl]
     ld [hEnemyState], a
@@ -3308,16 +3276,10 @@ jr_001_7297:
     ld [$c45c], a
     jr jr_001_726f
 
-    nop
-    db $01
-    ld [bc], a
+table_729C: ; 01:729C - State transition table?
+    db $00, $01, $02, $03, $00, $04, $05, $06, $07, $08, $02, $01, $09, $0A, $0B, $0C
+    db $0D, $02, $00, $0E, $0F, $10, $11, $12, $03, $01, $13, $14, $15, $16, $17, $03
 
-    db $03, $00, $04, $05, $06, $07, $08, $02, $01, $09, $0a, $0b, $0c, $0d, $02, $00
-    db $0e, $0f, $10, $11, $12, $03, $01, $13, $14, $15, $16
-
-    rla
-
-    db $03
 
 Call_001_72bc:
     ld a, [$c460]
