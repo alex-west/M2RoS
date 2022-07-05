@@ -6648,10 +6648,11 @@ tryPausing: ; 00:2C79
     add hl, de
     ld a, [hl]
     ld [metroidLCounterDisp], a
-    ld a, [earthquakeTimer]
+    ; Clear L counter value if an earthquake is either queued up or happening
+    ld a, [nextEarthquakeTimer]
     and a
     jr nz, .else_A
-        ld a, [$d083]
+        ld a, [earthquakeTimer]
         and a
         jr z, .endIf_A
     .else_A:
@@ -6926,49 +6927,49 @@ debugPauseMenu:
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_UNUSED, a
-    call nz, Call_001_4b62
+    call nz, drawSamusSprite
     
     ld a, $3c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_varia, a
-    call nz, Call_001_4b62
+    call nz, drawSamusSprite
 
     ld a, $44
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_spider, a
-    call nz, Call_001_4b62
+    call nz, drawSamusSprite
 
     ld a, $4c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_spring, a
-    call nz, Call_001_4b62
+    call nz, drawSamusSprite
 
     ld a, $54
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_space, a
-    call nz, Call_001_4b62
+    call nz, drawSamusSprite
 
     ld a, $5c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_screw, a
-    call nz, Call_001_4b62
+    call nz, drawSamusSprite
 
     ld a, $64
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_hiJump, a
-    call nz, Call_001_4b62
+    call nz, drawSamusSprite
 
     ld a, $6c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_bomb, a
-    call nz, Call_001_4b62
+    call nz, drawSamusSprite
     
     ld a, $68
     ldh [hSpriteYPixel], a
@@ -9264,8 +9265,8 @@ gameMode_newGame: ; 00:3E67
 gameMode_loadSave: ; 00:3E72
     jpLong loadSaveFile
 
-; 00:3E7D - Unused long jump?
-    jpLong Call_001_4b62
+drawSamusSprite_longJump: ; 00:3E7D - Unused long jump?
+    jpLong drawSamusSprite
 
 clearUnusedOamSlots_longJump: ; 00:3E88
     jpLong clearUnusedOamSlots
@@ -9315,7 +9316,7 @@ loadScreenSpritePriorityBit: ; 00:3ED5
     rlc a
     and $01
     xor $01
-    ld [$d057], a
+    ld [samus_screenSpritePriority], a
     ; Return to the callee
     switchBank drawSamus
 ret

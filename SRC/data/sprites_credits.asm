@@ -1,4 +1,5 @@
 ; Sprite Pointers
+creditsSpritePointerTable:
 
     dw sprite_titleStart ; 00
     dw sprite_titleClear ; 01

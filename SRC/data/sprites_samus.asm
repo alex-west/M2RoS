@@ -1,4 +1,5 @@
 ; Sprite Pointers
+samusSpritePointerTable:
 
     dw sprite425F ; $00 - Facing screen
     dw sprite429C ; $01 - Standing (right)
@@ -52,9 +53,9 @@
     dw sprite4859 ; $31 - Explosion (frame ?)
     dw sprite4848 ; $32 - Explosion (frame ?)
     dw sprite4827 ; $33 - Explosion (frame ?)
-    dw sprite4822 ; $34 - Bomb (frame ?)
-    dw sprite489A ; $35 - Bomb (frame ?)
-    dw sprite489F ; $36 - Bomb (frame ?)
+    dw sprite4822 ; $34 - Explosion (frame ?)
+    dw sprite489A ; $35 - Bomb (frame 1)
+    dw sprite489F ; $36 - Bomb (frame 2)
     dw sprite48A4 ; $37 - Spider (left, frame 1)
     dw sprite48B5 ; $38 - Spider (left, frame 2)
     dw sprite48C6 ; $39 - Spider (left, frame 3)

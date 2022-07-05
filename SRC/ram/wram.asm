@@ -702,7 +702,7 @@ def samusBeam = $D055 ; Current beam that Samus owns. See also $D04D/$D816
 ;    4: Plasma
 ;}
 samusSolidityIndex = $D056 ; Samus solid block threshold
-;$D057: Room sprite priority
+samus_screenSpritePriority = $D057 ; Room sprite priority
 ;{
 ;    0: Sprites over BG
 ;    1: BG over sprites
@@ -796,7 +796,7 @@ def ob_palette1 = $D080 ; Object 1 palette
 
 def samusMaxMissilesLow  = $D081 ; Samus' max missiles, see also $D81A
 def samusMaxMissilesHigh = $D082 ; Samus' max missiles (high byte)
-;$D083: Earthquake timer (how long the earthquake itself lasts)
+def earthquakeTimer = $D083 ; Earthquake timer (how long the earthquake itself lasts)
 def samusDispHealthLow  = $D084 ; Samus' health for display,   see also $D051/$D818
 def samusDispHealthHigh = $D085 ; Samus' energy tanks for display, see also $D052/$D819
 def samusDispMissilesLow  = $D086 ; Samus' missiles for display, see also $D053/$D81C
@@ -825,7 +825,7 @@ def doorIndexHigh = $D08F
 ;    20h:
 ;    22h: Dying
 ;}
-def earthquakeTimer = $D091 ; Time until next Metroid earthquake. Counts down in $100h frame intervals after killing a metroid.
+def nextEarthquakeTimer = $D091 ; Time until next Metroid earthquake. Counts down in $100h frame intervals after killing a metroid.
 def currentRoomSong = $D092 ; Song for room. Used when restoring song when loading a save and after some other events
 ;$D093: Mirror of $D06C?
 ;$D094: Mirror of $FFE1?

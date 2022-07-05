@@ -66,14 +66,14 @@ earthquakeCheck::
 .setTimer:
 ; If more than 1 Metroid is left, set timer to 3 and exit
     ld a, $03
-    ld [earthquakeTimer], a
+    ld [nextEarthquakeTimer], a
     ld a, [metroidCountReal]
     cp $01
     ret nz
 
 ; If only 1 metroid (the queen) is left, set timer to 1
     ld a, $01
-    ld [earthquakeTimer], a
+    ld [nextEarthquakeTimer], a
 .return:
     ret
 

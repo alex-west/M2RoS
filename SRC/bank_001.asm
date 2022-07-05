@@ -391,7 +391,7 @@ drawHudMetroid::
     ld a, $80
     ldh [hSpriteXPixel], a
     ld a, $01
-    ld [$d057], a
+    ld [samus_screenSpritePriority], a
     ; Animate the counter
     ldh a, [frameCounter]
     and $10
@@ -399,73 +399,83 @@ drawHudMetroid::
     add $3f
     ldh [hSpriteId], a
     ; Draw the sprite
-    call Call_001_4b62
+    call drawSamusSprite
 ret
 
-
-Call_001_4b62:
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+; Draws a sprite from Samus's sprite bank
+drawSamusSprite: ; 01:4B62
+    ; This routine was originally in bank 0
+    switchBank samusSpritePointerTable
+    ; Index into sprite pointer table
     ldh a, [hSpriteId]
     ld d, $00
     ld e, a
     sla e
     rl d
-    ld hl, $4000
+    ld hl, samusSpritePointerTable
     add hl, de
+    ; Load pointer from table
     ld a, [hl+]
     ld e, a
     ld a, [hl]
     ld d, a
+    ; Prep HL
     ld h, $c0
     ldh a, [hOamBufferIndex]
+    ; Store x and y offsets of sprite in B and C
     ld l, a
     ldh a, [hSpriteYPixel]
     ld b, a
     ldh a, [hSpriteXPixel]
     ld c, a
 
-    jr_001_4b86:
+    .spriteLoop:
+        ; No sprite flipping logic here
+        ; Load y coordinate
         ld a, [de]
         cp $ff
-            jr z, jr_001_4bb2
+            jr z, .exit
+        
         add b
         ld [hl+], a
-        inc de
+        ; Load x coordinate
+        inc de        
         ld a, [de]
         add c
         ld [hl+], a
+        ; Load tile number
         inc de
         ld a, [de]
         ld [hl+], a
+        ; Load sprite attribute byte
         inc de
+        ; Set PAL1 bit or leave it alone
         ldh a, [hSpriteAttr]
         and a
-        jr z, jr_001_4b9f
+        jr z, .else_A
             ld a, [de]
-            set 4, a
-            jr jr_001_4ba0
-        jr_001_4b9f:
+            set OAMB_PAL1, a
+            jr .endIf_A
+        .else_A:
             ld a, [de]
-        jr_001_4ba0:
-    
+        .endIf_A:
+        ; Adjust priority depending on screen
         ld [hl], a
-        ld a, [$d057]
+        ld a, [samus_screenSpritePriority]
         and a
-        jr nz, jr_001_4bab
+        jr nz, .endIf_B
             ld a, [hl]
-            set 7, a
+            set OAMB_PRI, a
             ld [hl], a
-        jr_001_4bab:
-    
+        .endIf_B:
+        ; Adjust indeces for next loop iteration
         inc hl
         ld a, l
         ldh [hOamBufferIndex], a
         inc de
-    jr jr_001_4b86
+    jr .spriteLoop
 
-    jr_001_4bb2:
+    .exit:
 ret
 
 
@@ -503,6 +513,7 @@ clearAllOam: ; 00:4BCE
     jr c, .clearLoop
 ret
 
+;------------------------------------------------------------------------------
 drawSamus: ; 01:4BD9: Draw Samus
 ; Entry point 1
     ld a, [samusInvulnerableTimer]
@@ -558,76 +569,80 @@ drawSamus: ; 01:4BD9: Draw Samus
 
     ld a, [samusPose]
     rst $28
-        dw drawSamus_4D45 ; $00
-        dw drawSamus_4CBD ; $01
-        dw drawSamus_4CEE ; $02
-        dw drawSamus_4D77 ; $03
-        dw drawSamus_4D65 ; $04
-        dw drawSamus_4C94 ; $05
-        dw drawSamus_4C94 ; $06
-        dw drawSamus_4CBD ; $07
-        dw drawSamus_4C94 ; $08
-        dw drawSamus_4CCC ; $09
-        dw drawSamus_4CCC ; $0A
-        dw drawSamus_4C6B ; $0B
-        dw drawSamus_4C6B ; $0C
-        dw drawSamus_4C6B ; $0D
-        dw drawSamus_4C6B ; $0E
-        dw drawSamus_4C59 ; $0F
-        dw drawSamus_4C94 ; $10
-        dw drawSamus_4C59 ; $11
-        dw drawSamus_4C94 ; $12
-        dw drawSamus_faceScreen ; $13
-        dw drawSamus_faceScreen ; $14
-        dw drawSamus_faceScreen ; $15
-        dw drawSamus_faceScreen ; $16
-        dw drawSamus_faceScreen ; $17
-        dw drawSamus_4C94 ; $18
-        dw drawSamus_4C94 ; $19
-        dw drawSamus_4C94 ; $1A
-        dw drawSamus_4C94 ; $1B
-        dw drawSamus_4C94 ; $1C
-        dw drawSamus_4C94 ; $1D
+        dw drawSamus_standing   ; $00 - Standing
+        dw drawSamus_jump       ; $01 - Jumping
+        dw drawSamus_spinJump   ; $02 - Spin-jumping
+        dw drawSamus_run        ; $03 - Running (set to 83h when turning)
+        dw drawSamus_crouch     ; $04 - Crouching
+        dw drawSamus_morph      ; $05 - Morphball
+        dw drawSamus_morph      ; $06 - Morphball jumping
+        dw drawSamus_jump       ; $07 - Falling
+        dw drawSamus_morph      ; $08 - Morphball falling
+        dw drawSamus_jumpStart  ; $09 - Starting to jump
+        dw drawSamus_jumpStart  ; $0A - Starting to spin-jump
+        dw drawSamus_spider     ; $0B - Spider ball rolling
+        dw drawSamus_spider     ; $0C - Spider ball falling
+        dw drawSamus_spider     ; $0D - Spider ball jumping
+        dw drawSamus_spider     ; $0E - Spider ball
+        dw drawSamus_knockback  ; $0F - Knockback
+        dw drawSamus_morph      ; $10 - Morphball knockback
+        dw drawSamus_knockback  ; $11 - Standing bombed
+        dw drawSamus_morph      ; $12 - Morphball bombed
+        dw drawSamus_faceScreen ; $13 - Facing screen
+        dw drawSamus_faceScreen ; $14   
+        dw drawSamus_faceScreen ; $15   
+        dw drawSamus_faceScreen ; $16   
+        dw drawSamus_faceScreen ; $17   
+        dw drawSamus_morph      ; $18 - Being eaten by Metroid Queen
+        dw drawSamus_morph      ; $19 - In Metroid Queen's mouth
+        dw drawSamus_morph      ; $1A - Being swallowed by Metroid Queen
+        dw drawSamus_morph      ; $1B - In Metroid Queen's stomach
+        dw drawSamus_morph      ; $1C - Escaping Metroid Queen
+        dw drawSamus_morph      ; $1D - Escaped Metroid Queen
 
-drawSamus_4C59: ; $0F, $11
+drawSamus_knockback: ; 01:4C59 - $0F, $11: Knockback
+    ; Index = facing direction
     ld d, $00
     ld a, [samusFacingDirection]
     ld e, a
-    ld hl, table_4C69
+    ld hl, .knockbackTable
     add hl, de
+    ; Load sprite
     ld a, [hl]
     ldh [hSpriteId], a
-    jp Jump_001_4ddf
+jp drawSamus_common
 
-table_4C69:
+.knockbackTable: ; 02:4C69
     db $16, $09
 
-drawSamus_4C6B: ; 01:4C6B - $0B-$0E: Spider Ball
+drawSamus_spider: ; 01:4C6B - $0B-$0E: Spider Ball
+    ; Multiply facing direction by 4
     ld a, [samusFacingDirection]
     and $01
     sla a
     sla a
     ld b, a
-
+    ; Get animation frame
     ld a, [samus_spinAnimationTimer]
-    and $0c
+    and %00001100 ; $0C
     srl a
     srl a
+    ; Index into table
     add b
     ld e, a
     ld d, $00
-
-    ld hl, table_4C8C
+    ; Load sprite ID
+    ld hl, .spiderTable
     add hl, de
     ld a, [hl]
     ldh [hSpriteId], a
-    jp Jump_001_4ddf
+jp drawSamus_common
 
-table_4C8C:
+.spiderTable: ; 02:4C8C
     db $37, $38, $39, $3a ; Left
     db $3b, $3c, $3d, $3e ; Right
 
-drawSamus_4C94: ; Morph poses
+drawSamus_morph: ; 01:4C94 - Morph poses
     ; Get sub-table depending on facing direction
     ld a, [samusFacingDirection]
     and $01
@@ -636,94 +651,101 @@ drawSamus_4C94: ; Morph poses
     ld b, a
     ; Get index into table
     ld a, [samus_spinAnimationTimer]
-    and $0c
+    and %00001100 ; $0C
     srl a
     srl a
     add b
     ld e, a
     ld d, $00
     ; Load sprite index from table
-    ld hl, table_4CB5
+    ld hl, .morphTable
     add hl, de
     ld a, [hl]
     ldh [hSpriteId], a
-    jp Jump_001_4ddf
+jp drawSamus_common
 
-table_4CB5: ; 01:4CB5
+.morphTable: ; 01:4CB5
     db $1e, $1f, $20, $21 ; Left
     db $26, $27, $28, $29 ; Right
 
-drawSamus_4CBD: ; $01, $07
+drawSamus_jump: ; 01:4CBD - $01, $07: Jumping and falling
+    ; Index into table using input + facing direction
     ld d, $00
     ldh a, [$98]
     ld e, a
-    ld hl, table_4CDE
+    ld hl, jumpSpriteTable
     add hl, de
+    ; Get sprite ID
     ld a, [hl]
     ldh [hSpriteId], a
-    jp Jump_001_4ddf
+jp drawSamus_common
 
-
-drawSamus_4CCC: ; %09, $0A
-    ld a, $03
+drawSamus_jumpStart: ; 01:4CCC - $09, $0A: Jump Start
+    ld a, $03 ; Right
     ldh [hSpriteId], a
     ld a, [samusFacingDirection]
     and a
-        jp nz, Jump_001_4ddf
-    ld a, $10
+        jp nz, drawSamus_common
+    ld a, $10 ; Left
     ldh [hSpriteId], a
-        jp Jump_001_4ddf
+        jp drawSamus_common
 ; end proc
 
-table_4CDE: ; 01:4CDE
+jumpSpriteTable: ; 01:4CDE
 ; Value read is based on input and facing direction
 ;                                U    U              D    D
 ;       x    R    L    x    U    R    L    x    D    R    L    x    x    x    x    x
     db $00, $09, $16, $00, $00, $0a, $17, $00, $00, $0c, $19, $00, $00, $00, $00, $00
 
-drawSamus_4CEE: ; 01:4CEE - $02: Spin jump
+drawSamus_spinJump: ; 01:4CEE - $02: Spin jump
     ld a, [samusFacingDirection]
     and a
     jp z, .else
-        ld hl, table_4D2B
+        ld hl, .spinRightTable
         jp .endIf
     .else:
-        ld hl, table_4D2F
+        ld hl, .spinLeftTable
     .endIf:
 
     ld a, [samusItems]
     and itemMask_space | itemMask_screw
     jr nz, .spinFast
         ; Slow spin
+        ; Get index into table
         ld a, [samus_spinAnimationTimer]
         srl a
-        and $0c
+        and %00001100
         srl a
         srl a
         ld e, a
         ld d, $00
         add hl, de
+        ; Load sprite ID
         ld a, [hl]
         ldh [hSpriteId], a
-        jp Jump_001_4ddf
+        jp drawSamus_common
     .spinFast:
+        ; Get index into table
         ld a, [samus_spinAnimationTimer]
         srl a
-        and $03
+        and %00000011
         ld e, a
         ld d, $00
         add hl, de
+        ; Load sprite ID
         ld a, [hl]
         ldh [hSpriteId], a
-        jp Jump_001_4ddf
+        jp drawSamus_common
+; end proc
 
 ; Spin tables
-table_4D2B: ; 01:4D2B
+.spinRightTable: ; 01:4D2B
     db $1A, $1B, $1C, $1D ; Right
-table_4D2F: ; 01:4D2F
+.spinLeftTable: ; 01:4D2F
     db $22, $23, $24, $25 ; Left
 
 drawSamus_faceScreen: ; 00:4D33 - $13-$17: Facing the screen
+    ; Fade-in logic
     ld a, [countdownTimerLow]
     and a
     jr z, .endIf
@@ -731,39 +753,41 @@ drawSamus_faceScreen: ; 00:4D33 - $13-$17: Facing the screen
         and $03
         ret z
     .endIf:
-
+    ; Load sprite ID
     ld a, $00
     ldh [hSpriteId], a
-    jp Jump_001_4ddf
+jp drawSamus_common
 
-
-drawSamus_4D45: ; $00: Standing
+drawSamus_standing: ; $00: Standing
+    ; Index into table using input + facing direction
     ld d, $00
     ldh a, [$98]
     ld e, a
-    ld hl, $4d54
+    ld hl, .standingTable
     add hl, de
+    ; Load sprite ID
     ld a, [hl]
     ldh [hSpriteId], a
-    jp Jump_001_4ddf
+jp drawSamus_common
 
+.standingTable: ; 01:4D54
 ; Value read is based on input and facing direction
 ;                                U    U              D    D
 ;       x    R    L    x    U    R    L    x    D    R    L    x    x    x    x    x
     db $00, $01, $0e, $00, $00, $02, $0f, $00, $00, $01, $0e, $00, $00, $00, $00, $00, $00
 
-drawSamus_4D65: ; $04 - Crouching
-    ld a, $0b
+drawSamus_crouch: ; $04 - Crouching
+    ld a, $0b ; Right
     ldh [hSpriteId], a
     ld a, [samusFacingDirection]
     and a
-        jp nz, Jump_001_4ddf
-    ld a, $18
+        jp nz, drawSamus_common
+    ld a, $18 ; Left
     ldh [hSpriteId], a
-        jp Jump_001_4ddf
+        jp drawSamus_common
 ; end proc
 
-drawSamus_4D77: ; 01:4D77 - $03: Running
+drawSamus_run: ; 01:4D77 - $03: Running
     ; Clamp run animation counter so it never equals or exceeds $30
     ld a, [samus_animationTimer]
     cp $30
@@ -771,16 +795,18 @@ drawSamus_4D77: ; 01:4D77 - $03: Running
         xor a
         ld [samus_animationTimer], a
     .endIf_A:
-    
+
+    ; Play stepping sound
     ld a, [samus_animationTimer]
     and $07
-    jr nz, jr_001_4d94
+    jr nz, .endIf_B
+        ; Don't interrupt currently playing sounds
         ld a, [sfxRequest_noise]
         and a
-        jr nz, jr_001_4d94
+        jr nz, .endIf_B
             ld a, $10
             ld [sfxRequest_noise], a
-    jr_001_4d94:
+    .endIf_B:
 
     ; Get index into table
     ;  Multiply facing direction by 4 to get the pertinent sub-table
@@ -796,39 +822,40 @@ drawSamus_4D77: ; 01:4D77 - $03: Running
     add b
     ld e, a
     ld d, $00
+
     ; Get base address of table
-    ld hl, table_4dc7
+    ld hl, .runningTableNormal
     ldh a, [hInputPressed]
     bit PADB_UP, a
-    jr z, jr_001_4db7
-        ld hl, table_4dd7
-        jr jr_001_4dc0
-    jr_001_4db7:
+    jr z, .else_C
+        ld hl, .runningTableAimingUp
+        jr .endIf_C
+    .else_C:
         ldh a, [hInputPressed]
         bit PADB_B, a
-        jr z, jr_001_4dc0
-            ld hl, table_4dcf
-    jr_001_4dc0:
-
+        jr z, .endIf_C
+            ld hl, .runningTableShooting
+    .endIf_C:
     add hl, de
+
+    ; Load sprite ID
     ld a, [hl]
     ldh [hSpriteId], a
-    jp Jump_001_4ddf
+jp drawSamus_common
 
-; Normal, Firing, Up
-
-table_4dc7: ; 01:4DC7 - Normal
+; The fourth frame in these tables is just padding
+.runningTableNormal: ; 01:4DC7 - Normal
     db $10, $11, $12, $00 ; Left
     db $03, $04, $05, $00 ; Right
-table_4dcf: ; 01:4DCF - Firing forwards
+.runningTableShooting: ; 01:4DCF - Firing forwards
     db $13, $14, $15, $00 ; Left
     db $06, $07, $08, $00 ; Right
-table_4dd7: ; 01:4DD7 - Aiming up
+.runningTableAimingUp: ; 01:4DD7 - Aiming up
     db $2e, $2f, $30, $00 ; Left
     db $2b, $2c, $2d, $00 ; Right
 
-
-Jump_001_4ddf:
+; All the above drawSamus procedures jump here
+drawSamus_common: ; 01:4DDF
     call loadScreenSpritePriorityBit
     ; Set x pos
     ldh a, [hCameraXPixel]
@@ -846,26 +873,26 @@ Jump_001_4ddf:
     add $62
     ldh [hSpriteYPixel], a
     ld [$d03b], a
-    
+    ; Set the sprite attribute
     xor a
     ldh [hSpriteAttr], a
+    ; If in contact with acid or being hurt, set attribute byte to non-zero
     ld a, [acidContactFlag]
     and a
-    jr nz, jr_001_4e0b
+    jr nz, .then
         ld a, [samusInvulnerableTimer]
         and a
-        jr z, jr_001_4e0f
+        jr z, .endIf
+    .then: ; I'd use else here, but these branches aren't mutually exclusive
+        ld a, $01
+        ldh [hSpriteAttr], a
+    .endIf:
 
-        jr_001_4e0b:
-            ld a, $01
-            ldh [hSpriteAttr], a
-    jr_001_4e0f:
-
-    call Call_001_7a34
-    call Call_001_4b62
+    call drawSamus_earthquakeAdjustment ; Adjust y position
+    call drawSamusSprite
     xor a
     ldh [hSpriteAttr], a
-    ld [$d057], a
+    ld [samus_screenSpritePriority], a
 ret
 
 ; New game
@@ -1976,7 +2003,7 @@ Call_001_540e:
                         swap a
                         add $35
                         ldh [hSpriteId], a
-                        call Call_001_4b62
+                        call drawSamusSprite
                         jr jr_001_5490
                     jr_001_545d:
                     
@@ -1990,7 +2017,7 @@ Call_001_540e:
                         srl a
                         add $31
                         ldh [hSpriteId], a
-                        call Call_001_4b62
+                        call drawSamusSprite
                         call $30bb
                         ld a, $0c
                         ld [sfxRequest_noise], a
@@ -2000,7 +2027,7 @@ Call_001_540e:
                         srl a
                         add $31
                         ldh [hSpriteId], a
-                        call Call_001_4b62
+                        call drawSamusSprite
                         jr jr_001_5490
             
             jr_001_548a:
@@ -2692,15 +2719,17 @@ jr_001_582a:
     ld a, [$d088]
     and a
     jr z, jr_001_585a
+        ; Draw save "Completed" sprite
         ld a, $98
         ldh [hSpriteYPixel], a
         ld a, $44
         ldh [hSpriteXPixel], a
         ld a, $43
         ldh [hSpriteId], a
-        call Call_001_4b62
+        call drawSamusSprite
         jr jr_001_5873
     jr_001_585a:
+        ; Draw blinking "Press Start" sprite
         xor a
         ld [saveContactFlag], a
         ldh a, [frameCounter]
@@ -2712,27 +2741,27 @@ jr_001_582a:
             ldh [hSpriteXPixel], a
             ld a, $42
             ldh [hSpriteId], a
-            call Call_001_4b62
+            call drawSamusSprite
     jr_001_5873:
 
     ldh a, [frameCounter]
     and a
     jr nz, jr_001_589a
-        ld a, [earthquakeTimer]
+        ld a, [nextEarthquakeTimer]
         and a
         jr z, jr_001_589a
             dec a
-            ld [earthquakeTimer], a
+            ld [nextEarthquakeTimer], a
             jr nz, jr_001_589a
                 ld a, $ff
-                ld [$d083], a
+                ld [earthquakeTimer], a
                 ld a, $0e
                 ld [$cede], a
                 ld a, [metroidCountReal]
                 cp $01
                 jr nz, jr_001_589a
                     ld a, $60
-                    ld [$d083], a
+                    ld [earthquakeTimer], a
     jr_001_589a:
 
     ld a, [samusPose]
@@ -3533,144 +3562,148 @@ jr_001_73ea:
 
 ; Draws sprites for title and credits
 drawNonGameSprite: ; 01:73F7
+    ; Index into sprite pointer table
     ldh a, [hSpriteId]
     ld d, $00
     ld e, a
     sla e
     rl d
-    ld hl, $744a
+    ld hl, creditsSpritePointerTable
     add hl, de
+    ; Load pointer from table
     ld a, [hl+]
     ld e, a
     ld a, [hl]
     ld d, a
+    ; Prep HL
     ld h, $c0
     ldh a, [hOamBufferIndex]
     ld l, a
+    ; Store x and y offsets of sprite in B and C
     ldh a, [hSpriteYPixel]
     ld b, a
     ldh a, [hSpriteXPixel]
     ld c, a
 
-jr_001_7413:
-    ld a, [de]
-    cp $ff
-    jr z, jr_001_7449
+    .spriteLoop:
+        ; Load y coordinate
+        ld a, [de]
+        cp $ff
+            jr z, .exit
+        ; Handle y flipping
+        ldh a, [hSpriteAttr]
+        bit OAMB_YFLIP, a
+        jr z, .else_A
+            ld a, [de]
+            cpl
+            sub $07
+            jr .endIf_A
+        .else_A:
+            ld a, [de]
+        .endIf_A:
+        ; Add y offset and store
+        add b
+        ld [hl+], a
 
-    ldh a, [hSpriteAttr]
-    bit 6, a
-    jr z, jr_001_7424
+        ; Load x coordinate
+        inc de
+        ldh a, [hSpriteAttr]
+        bit OAMB_XFLIP, a
+        jr z, .else_B
+            ld a, [de]
+            cpl
+            sub $07
+            jr .endIf_B
+        .else_B:
+            ld a, [de]
+        .endIf_B:
+    
+        add c
+        ld [hl+], a
+        ; Load tile number
+        inc de
+        ld a, [de]
+        ld [hl+], a
+        ; Load sprite attribute byte
+        inc de
+        push hl
+            ld hl, hSpriteAttr
+            ld a, [de]
+            xor [hl]
+        pop hl
+        ld [hl+], a
+        ; Adjust indeces for next loop iteration
+        ld a, l ; Assumes OAM buffer address is $00 aligned?
+        ldh [hOamBufferIndex], a
+        inc de
+    jr .spriteLoop
 
-    ld a, [de]
-    cpl
-    sub $07
-    jr jr_001_7425
-
-jr_001_7424:
-    ld a, [de]
-
-jr_001_7425:
-    add b
-    ld [hl+], a
-    inc de
-    ldh a, [hSpriteAttr]
-    bit 5, a
-    jr z, jr_001_7434
-
-    ld a, [de]
-    cpl
-    sub $07
-    jr jr_001_7435
-
-jr_001_7434:
-    ld a, [de]
-
-jr_001_7435:
-    add c
-    ld [hl+], a
-    inc de
-    ld a, [de]
-    ld [hl+], a
-    inc de
-    push hl
-    ld hl, $ffc7
-    ld a, [de]
-    xor [hl]
-    pop hl
-    ld [hl+], a
-    ld a, l
-    ldh [hOamBufferIndex], a
-    inc de
-    jr jr_001_7413
-
-jr_001_7449:
-    ret
+    .exit:
+ret
 
 ; 01:744A
 include "data/sprites_credits.asm" ; Also title
 
 Call_001_79ef: ; 01:79EF: Handle earthquake (called from bank 0)
-    ld a, [$d083]
+    ld a, [earthquakeTimer]
     and a
-    ret z
+        ret z
 
+    ; Value of A oscillates between 1 and -1 every two frames
     and $02
     dec a
     ld b, a
+    ; Adjust scroll
     ld a, [$c205]
     add b
     ld [$c205], a
+
     ldh a, [frameCounter]
     and $01
-    ret nz
+        ret nz
 
-    ld a, [$d083]
+    ld a, [earthquakeTimer]
     dec a
-    ld [$d083], a
-    ret nz
+    ld [earthquakeTimer], a
+        ret nz
 
     xor a
     ld [$cedf], a
     ld a, [$d08b]
     cp $10
     jr nc, jr_001_7a2e
+        ld a, [$d0a5]
+        and a
+        jr z, jr_001_7a28
+            ld [songRequest], a
+            ld [currentRoomSong], a
+            xor a
+            ld [$d0a5], a
+            ret
+        jr_001_7a28:
+            ld a, $03
+            ld [$cede], a
+            ret
+    jr_001_7a2e:
+        ld a, $01
+        ld [songRequest], a
+        ret
 
-    ld a, [$d0a5]
+
+drawSamus_earthquakeAdjustment: ; 01:7A34
+    ld a, [earthquakeTimer]
     and a
-    jr z, jr_001_7a28
-
-    ld [songRequest], a
-    ld [currentRoomSong], a
-    xor a
-    ld [$d0a5], a
-    ret
-
-
-jr_001_7a28:
-    ld a, $03
-    ld [$cede], a
-    ret
-
-
-jr_001_7a2e:
-    ld a, $01
-    ld [songRequest], a
-    ret
-
-
-Call_001_7a34:
-    ld a, [$d083]
-    and a
-    ret z
-
-    and $04
+        ret z
+    ; Alternate between +1 and -1 pixel based on timer (every 4 frames)
+    and %00000100 ; $04
     srl a
     dec a
     ld b, a
+    ; Add adjustment
     ldh a, [hSpriteYPixel]
     add b
     ldh [hSpriteYPixel], a
-    ret
+ret
 
 
 Call_001_7a45:

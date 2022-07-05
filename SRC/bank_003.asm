@@ -3497,7 +3497,7 @@ jr_003_7ab5:
     inc hl
     ld [hl], $77
     ld a, $d0
-    ld [$d083], a
+    ld [earthquakeTimer], a
     ; Play earthquake sound
     ld a, $0e
     ld [songRequest], a
