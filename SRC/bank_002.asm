@@ -712,9 +712,9 @@ enemy_moveFromWramToHram: ; 02:43D2
     jr nz, jr_002_43f3
 
     ldh a, [hEnemyYPos]
-    ld [$c41e], a
+    ld [enemy_yPosMirror], a
     ldh a, [hEnemyXPos]
-    ld [$c41f], a
+    ld [enemy_xPosMirror], a
     ; Return if stun counter is less than $11
     ldh a, [hEnemyStunCounter]
     cp $11
@@ -1114,7 +1114,7 @@ Call_002_45ca:
     ret
 
 
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     ld b, a
     ld hl, hEnemyXPos
     ld a, [hl]
@@ -2134,7 +2134,7 @@ Call_002_4d51:
     ldh a, [hEnemyYPos]
     sub $08
     ld [$c44d], a
-    ld a, [$c41f]
+    ld a, [enemy_xPosMirror]
     sub $09
     ld [$c44e], a
     call enemy_getTileIndex
@@ -2158,7 +2158,7 @@ Call_002_4d7f:
     ldh a, [hEnemyYPos]
     sub $08
     ld [$c44d], a
-    ld a, [$c41f]
+    ld a, [enemy_xPosMirror]
     sub $08
     ld [$c44e], a
     call enemy_getTileIndex
@@ -2497,7 +2497,7 @@ jr_002_4f56:
 
 
 Call_002_4f87:
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     ld b, a
     ldh a, [hEnemyXPos]
     cp b
@@ -4140,7 +4140,7 @@ enAI_59C7:
 
     ld [hl], $00
     ld c, $00
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     ld b, a
     ld hl, hEnemyXPos
     ld a, [hl]
@@ -4390,7 +4390,7 @@ ret
     ldh [hEnemyState], a
 .tryShooting:
     ; abs(samusX_screen - enemyX)
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     ld b, a
     ld hl, hEnemyXPos
     ld a, [hl]
@@ -4552,7 +4552,7 @@ ret
 enAI_senjooShirk: ; 02:5C36
     call .animate ; animate
     ; Get absolute value of distance between enemy and Samus
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     ld b, a
     ld hl, hEnemyXPos
     ld a, [hl]
@@ -4807,7 +4807,7 @@ enAI_chuteLeech: ; 02:5E0B
 
     ; Fall-through case
     ; abs(samusX_screen - enemyX)
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     ld b, a
     ld hl, hEnemyXPos
     ld a, [hl]
@@ -4979,7 +4979,7 @@ ret
 ; End of octroll/chute leech code
 ;------------------------------------------------------------------------------
 ; pipe bug spawner
-enAI_5F67:
+enAI_5F67: ; 02:5F67
     ldh a, [hEnemySpawnFlag]
     cp $03
         ret z
@@ -5113,7 +5113,7 @@ Jump_002_600a:
 
 jr_002_6017: ; state 0
     ld c, $02
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     ld b, a
     ld hl, hEnemyXPos
     ld a, [hl]
@@ -5147,7 +5147,7 @@ jr_002_603e:
     ld a, [hl]
     sub $04
     ld [hl], a
-    ld a, [$d03b]
+    ld a, [samus_onscreenYPos]
     add $05
     cp [hl]
         ret c
@@ -6741,17 +6741,19 @@ table_6837: ; 02:6837
 
 ;------------------------------------------------------------------------------
 ; Septogg AI (floating platforms)
-enAI_6841: ; 02:6841
+;  Uses $E9 and $EA as a 16-bit distance-travelled counter
+enAI_septogg: ; 02:6841
     call enemy_flipSpriteId_2Bits.twoFrame
-    call Call_002_7da0
+    call Call_002_7da0 ; Get sprite collision results
+    ; Check if being stood on?
     ld a, [$c46d]
     cp $20
-    jr nz, jr_002_6887
-
+        jr nz, .goBackUp
     ld a, [$c43a]
     and a
-    jr z, jr_002_6887
+        jr z, .goBackUp
 
+    ; Test if going down is okay
     ld b, $03
     ld hl, hEnemyYPos
     ld a, [hl]
@@ -6760,59 +6762,65 @@ enAI_6841: ; 02:6841
     call Call_002_4ad6
     ld a, [en_bgCollisionResult]
     bit 1, a
-    jr z, jr_002_686c
+    jr z, .else
+        ; Hit floor. Stay in place
+        ld a, [enemy_yPosMirror]
+        ldh [hEnemyYPos], a
+        ret
+    .else:
+        ; Go down
+        ld b, $03 ; Speed
+        ; Add distance travelled to counter
+        ld hl, $ffe9
+        ld a, [hl]
+        add b
+        ld [hl+], a
+        ld a, [hl]
+        adc $00
+        ld [hl], a
+        ; Move Samus down (on-screen y-pos)
+        ld hl, samus_onscreenYPos
+        ld a, [hl]
+        add b
+        ld [hl], a
+        ; Move Samus down (real position)
+        ld hl, hSamusYPixel
+        ld a, [hl]
+        add b
+        ld [hl+], a
+            ret nc
+        ; Don't forget about the y screen coordinate
+        inc [hl]
+        ret
+; end proc
 
-    ld a, [$c41e]
-    ldh [hEnemyYPos], a
-    ret
-
-
-jr_002_686c:
-    ld b, $03
-    ld hl, $ffe9
-    ld a, [hl]
-    add b
-    ld [hl+], a
-    ld a, [hl]
-    adc $00
-    ld [hl], a
-    ld hl, $d03b
-    ld a, [hl]
-    add b
-    ld [hl], a
-    ld hl, hSamusYPixel
-    ld a, [hl]
-    add b
-    ld [hl+], a
-    ret nc
-
-    inc [hl]
-    ret
-
-
-jr_002_6887:
+.goBackUp: ; Move back up if distance counter is non-zero
+    ; Check low byte of counter
     ld hl, $ffe9
     ld a, [hl]
     and a
-    jr nz, jr_002_6892
-
-    inc l
-    ld a, [hl]
-    and a
-    ret z
-
-jr_002_6892:
-    ld hl, hEnemyYPos
-    dec [hl]
-    ld hl, $ffe9
-    dec [hl]
-    ld a, [hl]
-    inc a
-    ret nz
-
-    inc l
-    dec [hl]
-    ret
+    jr nz, .then
+        ; Check high byte of counter
+        inc l
+        ld a, [hl]
+        and a
+            ret z
+    .then:
+        ; Move back up
+        ld hl, hEnemyYPos
+        dec [hl]
+        ; Move back up
+        ; Adjust low byte
+        ld hl, $ffe9
+        dec [hl]
+        ld a, [hl]
+        inc a
+            ret nz
+        ; Adjust high byte
+        inc l
+        dec [hl]
+        ret
+; end proc
 
 ;------------------------------------------------------------------------------
 ; Flitt AI (weird platforms) (vanishing type)
@@ -6914,7 +6922,7 @@ enAI_flittMoving: ; 02:68FC
             and a
                 ret z
             ; Move camera and such right
-            ld hl, $d03c
+            ld hl, samus_onscreenXPos
             inc [hl]
             ld hl, $d035
             inc [hl]
@@ -6946,7 +6954,7 @@ enAI_flittMoving: ; 02:68FC
             and a
                 ret z
             ; Move camera left
-            ld hl, $d03c
+            ld hl, samus_onscreenXPos
             dec [hl]
             ld hl, $d036
             inc [hl]
@@ -6985,7 +6993,7 @@ enAI_659F: ; 02:659F
     ; Default state
     ld hl, hEnemyXPos
     ld b, $00
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     sub [hl]
     jr nc, jr_002_6981
 
@@ -7521,7 +7529,7 @@ jr_002_6bdc:
     xor $10
     ldh [hEnemyStunCounter], a
     ld hl, hEnemyXPos
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     sub [hl]
     jr nc, jr_002_6c15
 
@@ -7577,7 +7585,7 @@ jr_002_6c4f:
     ld a, $a3
     ldh [hEnemySpriteType], a
     ld hl, hEnemyXPos
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     sub [hl]
     jr nc, jr_002_6c5e
         cpl
@@ -7647,7 +7655,7 @@ jr_002_6c93:
         ld a, [hl]
         add $10
         ld b, a
-        ld a, [$d03c]
+        ld a, [samus_onscreenXPos]
         sub b
         jr c, jr_002_6cce
             ld a, OAMF_XFLIP
@@ -7860,7 +7868,7 @@ Call_002_6dd4:
     bit 3, a
     jr z, jr_002_6e08
 
-    ld a, [$c41e]
+    ld a, [enemy_yPosMirror]
     ldh [hEnemyYPos], a
     jr jr_002_6e08
 
@@ -7873,7 +7881,7 @@ jr_002_6df6:
     bit 1, a
     jr z, jr_002_6e08
 
-    ld a, [$c41e]
+    ld a, [enemy_yPosMirror]
     ldh [hEnemyYPos], a
 
 jr_002_6e08:
@@ -7895,7 +7903,7 @@ jr_002_6e08:
     bit 2, a
     ret z
 
-    ld a, [$c41f]
+    ld a, [enemy_xPosMirror]
     ldh [hEnemyXPos], a
     ret
 
@@ -7909,7 +7917,7 @@ jr_002_6e27:
     bit 0, a
     ret z
 
-    ld a, [$c41f]
+    ld a, [enemy_xPosMirror]
     ldh [hEnemyXPos], a
     ret
 
@@ -7926,7 +7934,7 @@ Call_002_6e41:
     ld d, $00
     ld e, d
     ld hl, hEnemyYPos
-    ld a, [$d03b]
+    ld a, [samus_onscreenYPos]
     sub [hl]
     jr nc, jr_002_6e50
 
@@ -7937,7 +7945,7 @@ Call_002_6e41:
 jr_002_6e50:
     ld b, a
     inc l
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     sub [hl]
     jr nc, jr_002_6e5b
 
@@ -8017,7 +8025,7 @@ jr_002_6e8e:
     bit 3, a
     ret z
 
-    ld a, [$c41e]
+    ld a, [enemy_yPosMirror]
     ldh [hEnemyYPos], a
     ret
 
@@ -8034,7 +8042,7 @@ jr_002_6eb4:
     bit 2, a
     ret z
 
-    ld a, [$c41f]
+    ld a, [enemy_xPosMirror]
     ldh [hEnemyXPos], a
     ret
 
@@ -8048,7 +8056,7 @@ jr_002_6eca:
     bit 0, a
     ret z
 
-    ld a, [$c41f]
+    ld a, [enemy_xPosMirror]
     ldh [hEnemyXPos], a
     ret
 
@@ -8062,7 +8070,7 @@ jr_002_6edd:
     bit 1, a
     ret z
 
-    ld a, [$c41e]
+    ld a, [enemy_yPosMirror]
     ldh [hEnemyYPos], a
     ret
 
@@ -8082,7 +8090,7 @@ Call_002_6ef0:
     bit 3, a
     jr z, jr_002_6f23
 
-    ld a, [$c41e]
+    ld a, [enemy_yPosMirror]
     ldh [hEnemyYPos], a
     jr jr_002_6f23
 
@@ -8093,7 +8101,7 @@ jr_002_6f11:
     bit 1, a
     jr z, jr_002_6f23
 
-    ld a, [$c41e]
+    ld a, [enemy_yPosMirror]
     ldh [hEnemyYPos], a
 
 jr_002_6f23:
@@ -8111,7 +8119,7 @@ jr_002_6f23:
     bit 2, a
     ret z
 
-    ld a, [$c41f]
+    ld a, [enemy_xPosMirror]
     ldh [hEnemyXPos], a
     ret
 
@@ -8123,7 +8131,7 @@ jr_002_6f41:
     bit 0, a
     ret z
 
-    ld a, [$c41f]
+    ld a, [enemy_xPosMirror]
     ldh [hEnemyXPos], a
     ret
 
@@ -8196,7 +8204,7 @@ jr_002_6f8e:
     jr nz, jr_002_6fc2
 
     ld hl, hEnemyXPos
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     sub [hl]
     jr nc, jr_002_6fb0
 
@@ -8236,7 +8244,7 @@ jr_002_6fd8:
     ld a, $ad
     ldh [hEnemySpriteType], a
     ld hl, hEnemyXPos
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     sub [hl]
     jr nc, jr_002_6fe7
 
@@ -8358,7 +8366,7 @@ jr_002_704d:
     jr jr_002_70af
 
 jr_002_7090:
-    ld a, [$c41e]
+    ld a, [enemy_yPosMirror]
     ldh [hEnemyYPos], a
     ld hl, $ffe8
     jr jr_002_70af
@@ -8403,7 +8411,7 @@ jr_002_70bc:
     jr jr_002_70f8
 
 jr_002_70d3:
-    ld a, [$c41f]
+    ld a, [enemy_xPosMirror]
     ldh [hEnemyXPos], a
     ld hl, $ffe8
     jr jr_002_70f8
@@ -8505,7 +8513,7 @@ jr_002_715f:
     ld a, [hl]
     add $10
     ld b, a
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     sub b
     jr c, jr_002_717c
 
@@ -8781,7 +8789,7 @@ jr_002_72b1:
     xor $10
     ldh [hEnemyStunCounter], a
     ld hl, hEnemyXPos
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     sub [hl]
     jr nc, jr_002_72ee
 
@@ -8823,7 +8831,7 @@ jr_002_7317:
     ld a, $b7
     ldh [hEnemySpriteType], a
     ld hl, hEnemyXPos
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     sub [hl]
     jr nc, jr_002_7326
 
@@ -8886,7 +8894,7 @@ jr_002_736f:
     ld de, $2000
     call Call_000_3cba
     ld hl, hEnemyXPos
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     sub [hl]
     jr c, jr_002_7397
 
@@ -8920,7 +8928,7 @@ jr_002_73a3:
 
     ld [hl], $00
     ld hl, hEnemyYPos
-    ld a, [$d03b]
+    ld a, [samus_onscreenYPos]
     sub [hl]
     ret c
 
@@ -9705,7 +9713,7 @@ jr_002_77d0:
     ld de, $2000
     call Call_000_3cba
     ld hl, hEnemyXPos
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     sub [hl]
     jr c, jr_002_77eb
 
@@ -9915,7 +9923,7 @@ Jump_002_78dc:
     ld a, [hl]
     add $10
     ld b, a
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     add $10
     sub b
     jr nc, jr_002_78fa
@@ -9991,7 +9999,7 @@ Jump_002_7950:
     ld a, $bf
     ldh [hEnemySpriteType], a
     ld hl, hEnemyXPos
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     sub [hl]
     jr nc, jr_002_795f
 
@@ -10164,7 +10172,7 @@ jr_002_7a2d:
 
 Call_002_7a32:
     ld hl, hEnemyXPos
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     sub [hl]
     jr nc, jr_002_7a3e
 
@@ -10234,7 +10242,7 @@ jr_002_7a71:
     bit 3, a
     jr z, jr_002_7a98
 
-    ld a, [$c41e]
+    ld a, [enemy_yPosMirror]
     ldh [hEnemyYPos], a
 
 jr_002_7a98:
@@ -10249,7 +10257,7 @@ jr_002_7a98:
     bit 2, a
     ret z
 
-    ld a, [$c41f]
+    ld a, [enemy_xPosMirror]
     ldh [hEnemyXPos], a
     ret
 
@@ -10470,11 +10478,11 @@ Call_002_7bcc:
     ret
 
 
-Call_002_7bd9:
+Call_002_7bd9: ; Stay attached to Samus
     ld hl, hEnemyYPos
-    ld a, [$d03b]
+    ld a, [samus_onscreenYPos]
     ld [hl+], a
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     ld [hl], a
     ret
 
@@ -10522,7 +10530,7 @@ jr_002_7c20: ; case 0
     jr z, jr_002_7c6b
         call Call_002_7caf
         ld hl, hEnemyXPos
-        ld a, [$d03c]
+        ld a, [samus_onscreenXPos]
         sub [hl]
         jr nc, jr_002_7c34
             cpl
@@ -10532,7 +10540,7 @@ jr_002_7c20: ; case 0
         cp $18
             ret nc
         dec l
-        ld a, [$d03b]
+        ld a, [samus_onscreenYPos]
         sub [hl]
         jr nc, jr_002_7c40
             cpl
@@ -10566,7 +10574,7 @@ jr_002_7c20: ; case 0
         ld a, $a8
         ldh [hEnemySpriteType], a
         ld hl, hEnemyXPos
-        ld a, [$d03c]
+        ld a, [samus_onscreenXPos]
         sub [hl]
         jr nc, jr_002_7c7a
             cpl
@@ -10659,7 +10667,7 @@ Call_002_7cdd:
     jr z, jr_002_7d04
 
 jr_002_7ced:
-    ld a, [$c41e]
+    ld a, [enemy_yPosMirror]
     ldh [hEnemyYPos], a
     jr jr_002_7d04
 
@@ -10684,7 +10692,7 @@ jr_002_7d04:
     ret z
 
 jr_002_7d13:
-    ld a, [$c41f]
+    ld a, [enemy_xPosMirror]
     ldh [hEnemyXPos], a
     ret
 
@@ -10706,7 +10714,7 @@ Call_002_7d2a:
     ld hl, hEnemyXPos
     ld a, [hl]
     ld [$c43b], a
-    ld a, [$c41f]
+    ld a, [enemy_xPosMirror]
     ld [hl], a
     ldh a, [$e9]
     cp $10
@@ -10723,7 +10731,7 @@ jr_002_7d45:
     call z, Call_002_7d97
 
 jr_002_7d4d:
-    ld a, [$c41e]
+    ld a, [enemy_yPosMirror]
     ldh [hEnemyYPos], a
     jr jr_002_7d64
 
@@ -10755,7 +10763,7 @@ jr_002_7d78:
     call z, Call_002_7d97
 
 jr_002_7d80:
-    ld a, [$c41f]
+    ld a, [enemy_xPosMirror]
     ldh [hEnemyXPos], a
     ret
 

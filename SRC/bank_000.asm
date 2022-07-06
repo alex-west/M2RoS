@@ -1261,7 +1261,7 @@ Call_000_08fe:
     cp $b0
     jp nz, Jump_000_0936
 
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     cp $a1
     jr c, jr_000_0991
 
@@ -1338,7 +1338,7 @@ jr_000_0991:
     cp $50
     jr nz, jr_000_09bb
 
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     cp $0f
     jp nc, Jump_000_0a18
 
@@ -1455,7 +1455,7 @@ jr_000_0a58:
     jr nz, jr_000_0a71
 
 jr_000_0a5e:
-    ld a, [$d03b]
+    ld a, [samus_onscreenYPos]
     cp $78
     jp c, Jump_000_0b2c
 
@@ -1525,7 +1525,7 @@ Jump_000_0ab6:
     cp $48
     jr nz, jr_000_0aee
 
-    ld a, [$d03b]
+    ld a, [samus_onscreenYPos]
     cp $1b
     jr nc, jr_000_0b2c
 
@@ -2051,7 +2051,7 @@ poseFunc_0E36: ; $18
     ld a, [$c3a9]
     add $13
     ld b, a
-    ld a, [$d03b]
+    ld a, [samus_onscreenYPos]
     cp b
     jr nz, jr_000_0e58
         ld c, $01
@@ -2077,7 +2077,7 @@ jr_000_0e72:
     ld a, [$c3a8]
     add $1a
     ld b, a
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     cp b
     jr nz, jr_000_0e81
         inc c
@@ -5584,8 +5584,8 @@ executeDoorScript: ; 00:239C
     cp $80 ; ENTER_QUEEN
     jr nz, .doorToken_compare
         xor a
-        ld [$d03b], a
-        ld [$d03c], a
+        ld [samus_onscreenYPos], a
+        ld [samus_onscreenXPos], a
         ldh [hOamBufferIndex], a
         ld [$d0a6], a
         ld a, $02
@@ -6138,13 +6138,13 @@ Call_000_2887:
     ldh a, [hSamusXPixel]
     sub b
     add $60
-    ld [$d03c], a
+    ld [samus_onscreenXPos], a
     ldh a, [hCameraYPixel]
     ld b, a
     ldh a, [hSamusYPixel]
     sub b
     add $62
-    ld [$d03b], a
+    ld [samus_onscreenYPos], a
     ld a, $e3
     ldh [rLCDC], a
     xor a
@@ -7645,7 +7645,7 @@ Call_000_32ab: ; Samus enemy collision detection ?
     and a
         jp nz, Jump_000_3698
 
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     ldh [$99], a
     jr jr_000_32f7
 
@@ -7964,7 +7964,7 @@ Call_000_348d:
     and a
         jp nz, Jump_000_3698
 
-    ld a, [$d03b]
+    ld a, [samus_onscreenYPos]
     add $12
     ldh [$98], a
     xor a
@@ -8030,7 +8030,7 @@ Call_000_34ef:
     add hl, de
     ld a, [hl+]
     ld b, a
-    ld a, [$d03b]
+    ld a, [samus_onscreenYPos]
     add b
     ldh [$98], a
     xor a

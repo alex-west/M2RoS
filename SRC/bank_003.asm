@@ -662,7 +662,7 @@ en6606: ; Enemy 63h (shirk)
     dw enAI_senjooShirk
 en6611: ; Enemy 65h (septogg)
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
-    dw enAI_6841
+    dw enAI_septogg
 en661C: ; Enemy 68h (noto)
     db $00,$20,$00,$00,$20,$00,$00,$00,$11
     dw enAI_66F3
@@ -905,10 +905,10 @@ jr_003_6b1f:
 
 Call_003_6b44: ; 03:6B44
     ld hl, $c43f
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     add $10
     ld [hl-], a
-    ld a, [$d03b]
+    ld a, [samus_onscreenYPos]
     add $10
     ld [hl-], a
     ldh a, [$e2]
@@ -2489,7 +2489,7 @@ jr_003_74e3:
 
 
 Call_003_74fb:
-    ld de, $d03b
+    ld de, samus_onscreenYPos
     ld hl, $c3e6
     ld a, [de]
     ld b, a

@@ -114,8 +114,8 @@ enemySolidityIndex = $C407 ; Copy of enemySolidityIndex_canon (actually used by 
 ;$C41B: Checked and cleared in $2:4000, 90h frame timer?
 ;$C41C: Cleared in $2:4000/$2:412F
 ;
-;$C41E: Mirror of enemy Y position
-;$C41F: Mirror of enemy X position
+def enemy_yPosMirror = $C41E ; Initial y position for the current working enemy for the current frame
+def enemy_xPosMirror = $C41F ; Initial x position for the current working enemy for the current frame
 ;
 def samus_hurtFlag = $C422 ; Samus damage flag
 ;$C423: Damage boost direction
@@ -616,8 +616,8 @@ def samus_turnAnimTimer = $D02C ; Timer for turnaround animation (facing the scr
 ;$D038: Screen down velocity
 ;$D039: Set to 0 by load title screen, otherwise unused
 ;
-;$D03B: Samus' Y position on screen
-;$D03C: Samus' X position on screen
+def samus_onscreenYPos = $D03B ; Samus' Y position on screen
+def samus_onscreenXPos = $D03C ; Samus' X position on screen
 def spiderContactState = $D03D ; Spider ball orientation
 ;{
 ; The game checks the following points on the spider ball

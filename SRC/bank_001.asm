@@ -864,7 +864,7 @@ drawSamus_common: ; 01:4DDF
     sub b
     add $60
     ldh [hSpriteXPixel], a
-    ld [$d03c], a
+    ld [samus_onscreenXPos], a
     ; Set y pos
     ldh a, [hCameraYPixel]
     ld b, a
@@ -872,7 +872,7 @@ drawSamus_common: ; 01:4DDF
     sub b
     add $62
     ldh [hSpriteYPixel], a
-    ld [$d03b], a
+    ld [samus_onscreenYPos], a
     ; Set the sprite attribute
     xor a
     ldh [hSpriteAttr], a
@@ -2095,26 +2095,26 @@ Call_001_54d7:
     push hl
     ldh a, [hSpriteYPixel]
     ld b, a
-    ld a, [$d03b]
+    ld a, [samus_onscreenYPos]
     sub $20
     cp b
     jr nc, jr_001_5525
-        ld a, [$d03b]
+        ld a, [samus_onscreenYPos]
         add $20
         cp b
         jr c, jr_001_5525
             ldh a, [hSpriteXPixel]
             ld b, a
-            ld a, [$d03c]
+            ld a, [samus_onscreenXPos]
             sub $10
             cp b
             jr nc, jr_001_5525
-                ld a, [$d03c]
+                ld a, [samus_onscreenXPos]
                 add $10
                 cp b
                 jr c, jr_001_5525
                     ld c, $ff
-                    ld a, [$d03c]
+                    ld a, [samus_onscreenXPos]
                     sub b
                     jr c, jr_001_550e
                         ld c, $00
@@ -2961,7 +2961,7 @@ Call_001_70c1:
     ld a, [hl]
     add $10
     ld b, a
-    ld a, [$d03b]
+    ld a, [samus_onscreenYPos]
     sub b
     jr c, jr_001_70d5
         ld b, $00
@@ -2981,7 +2981,7 @@ Call_001_70c1:
     ld a, [hl]
     add $10
     ld b, a
-    ld a, [$d03c]
+    ld a, [samus_onscreenXPos]
     sub b
     jr c, jr_001_70f2
         ld b, $00
