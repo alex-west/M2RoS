@@ -6780,7 +6780,7 @@ jr_002_686c:
     ld a, [hl]
     add b
     ld [hl], a
-    ld hl, $ffc0
+    ld hl, hSamusYPixel
     ld a, [hl]
     add b
     ld [hl+], a
@@ -6815,152 +6815,156 @@ jr_002_6892:
     ret
 
 ;------------------------------------------------------------------------------
-; Flitt AI (weird platforms) (which type?)
-enAI_68A0: ; 02:68A0
-    ld de, hEnemySpriteType
+; Flitt AI (weird platforms) (vanishing type)
+enAI_flittVanishing: ; 02:68A0
+    ld de, hEnemySpriteType ; This line doesn't appear to get used
+    ; State graph is a simple loop of 0 -> 1 -> 2 -> 3 -> 0...
     ld hl, hEnemyState
     ld a, [hl]
     dec a
-        jr z, jr_002_68c3
+        jr z, .case_1 ; case 1
     dec a
-        jr z, jr_002_68d6
+        jr z, .case_2 ; case 2
     dec a
-        jr z, jr_002_68e9
+        jr z, .case_3 ; case 3
 
+; default case (case 0)
+    ; Check timer
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
-    cp $38
-    ret nz
-
-    ld [hl], $00
+    cp $38 ; Long wait
+        ret nz
+    ld [hl], $00 ; Reset timer
+    ; Animate
     ld a, $01
     ldh [hEnemyState], a
     ld a, $d1
     ldh [hEnemySpriteType], a
-    ret
+ret
 
-
-jr_002_68c3:
+.case_1:
+    ; Check timer
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $0e
-    ret nz
-
-    ld [hl], $00
+        ret nz
+    ld [hl], $00 ; Reset timer
+    ; Disappear
     ld a, $02
     ldh [hEnemyState], a
-    ld a, $fd
+    ld a, $fd ; No graphics
     ldh [hEnemySpriteType], a
-    ret
+ret
 
-
-jr_002_68d6:
+.case_2:
+    ; Check timer
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $0c
-    ret nz
-
-    ld [hl], $00
+        ret nz
+    ld [hl], $00 ; Reset timer
+    ; Reappear
     ld a, $03
     ldh [hEnemyState], a
     ld a, $d1
     ldh [hEnemySpriteType], a
-    ret
+ret
 
-
-jr_002_68e9:
+.case_3:
+    ; Check timer
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $0d
-    ret nz
-
-    ld [hl], $00
+        ret nz
+    ld [hl], $00 ; Reset timer
+    ; Animate
     ld a, $00
     ldh [hEnemyState], a
     ld a, $d0
     ldh [hEnemySpriteType], a
-    ret
+ret
 
 ;------------------------------------------------------------------------------
-; Flitt AI (weird platforms) (which type?)
-enAI_68FC: ; 02:68FC
+; Flitt AI (weird platforms) (moving type)
+enAI_flittMoving: ; 02:68FC
     call enemy_flipSpriteId.fourFrame
-    call Call_002_7da0
+    call Call_002_7da0 ; Get collision results
+    ; Check logical direction
     ldh a, [$e8]
     and a
-    jr nz, jr_002_6933
-
-    ld hl, $ffe9
-    inc [hl]
-    ld a, [hl]
-    cp $60
-    jr z, jr_002_692f
-
-    ld hl, hEnemyXPos
-    inc [hl]
-    ld a, [$c46d]
-    cp $20
-    ret nz
-
-    ld a, [$c43a]
-    and a
-    ret z
-
-    ld hl, $d03c
-    inc [hl]
-    ld hl, $d035
-    inc [hl]
-    ld hl, $ffc2
-    inc [hl]
-    ret nz
-
-    inc l
-    inc [hl]
-    ret
-
-
-jr_002_692f:
-    ld a, $02
-    ldh [$e8], a
-
-jr_002_6933:
-    ld hl, $ffe9
-    dec [hl]
-    jr z, jr_002_695b
-
-    ld hl, hEnemyXPos
-    dec [hl]
-    ld a, [$c46d]
-    cp $20
-    ret nz
-
-    ld a, [$c43a]
-    and a
-    ret z
-
-    ld hl, $d03c
-    dec [hl]
-    ld hl, $d036
-    inc [hl]
-    ld hl, $ffc2
-    dec [hl]
-    ld a, [hl]
-    cp $ff
-    ret nz
-
-    inc l
-    dec [hl]
-    ret
-
-
-jr_002_695b:
-    xor a
-    ldh [$e8], a
-    ret
+    jr nz, .else_A
+        ; Moving right
+        ld hl, $ffe9
+        inc [hl]
+        ld a, [hl]
+        cp $60
+        jr z, .else_B
+            ; Move right
+            ld hl, hEnemyXPos
+            inc [hl]
+            ; Check collision results
+            ld a, [$c46d]
+            cp $20
+                ret nz
+            ld a, [$c43a]
+            and a
+                ret z
+            ; Move camera and such right
+            ld hl, $d03c
+            inc [hl]
+            ld hl, $d035
+            inc [hl]
+            ; Move Samus right
+            ld hl, hSamusXPixel
+            inc [hl]
+                ret nz
+            inc l
+            inc [hl]
+            ret
+        .else_B:
+            ; Flip direction
+            ld a, $02
+            ldh [$e8], a
+            
+    .else_A:
+        ; Moving left
+        ld hl, $ffe9
+        dec [hl]
+        jr z, .else_C
+            ; Move left
+            ld hl, hEnemyXPos
+            dec [hl]
+            ; Check collision results
+            ld a, [$c46d]
+            cp $20
+                ret nz
+            ld a, [$c43a]
+            and a
+                ret z
+            ; Move camera left
+            ld hl, $d03c
+            dec [hl]
+            ld hl, $d036
+            inc [hl]
+            ; Move Samus left
+            ld hl, hSamusXPixel
+            dec [hl]
+            ld a, [hl]
+            cp $ff
+                ret nz
+            inc l
+            dec [hl]
+            ret
+        .else_C:
+            ; Flip direction
+            xor a
+            ldh [$e8], a
+            ret
+; end proc
 
 ;------------------------------------------------------------------------------
 ; Gravitt AI (crawler with a hat that pops out of the ground)
@@ -10808,66 +10812,54 @@ Call_002_7da0:
 ret
 
 
-Call_002_7dc6:
-    ld bc, $1890
+Call_002_7dc6: ; Used to keep zeta and omegas onscreen?
+    ld bc, $1890 ; Not a pointer. This is just loading two different values into B and C.
     ld hl, hEnemyYPos
     ld a, [hl]
     cp b
     jr nc, jr_002_7dd1
-
-    ld [hl], b
-
-jr_002_7dd1:
+        ld [hl], b
+    jr_002_7dd1:
+    
     inc l
     ld a, [hl]
     cp b
     jr nc, jr_002_7dd8
+        ld [hl], b
+        ret
+    jr_002_7dd8:
+        cp c
+            ret c
+        ld [hl], c
+        ret
+; end proc
 
-    ld [hl], b
-    ret
-
-
-jr_002_7dd8:
-    cp c
-    ret c
-
-    ld [hl], c
-    ret
-
-
-Call_002_7ddc:
-    ld bc, $1890
+Call_002_7ddc: ; Used to keep the baby metroid onscreen?
+    ld bc, $1890 ; Not a pointer. This is just loading two different values into B and C.
     ld hl, hEnemyYPos
     ld a, [hl]
     cp b
     jr nc, jr_002_7de9
+        ld [hl], b
+        jr jr_002_7ded
+    jr_002_7de9:
+        cp c
+        jr c, jr_002_7ded
+            ld [hl], c
+    jr_002_7ded:
 
-    ld [hl], b
-    jr jr_002_7ded
-
-jr_002_7de9:
-    cp c
-    jr c, jr_002_7ded
-
-    ld [hl], c
-
-jr_002_7ded:
     inc l
     ld a, [hl]
     cp b
     jr nc, jr_002_7df4
-
-    ld [hl], b
-    ret
-
-
-jr_002_7df4:
-    cp c
-    ret c
-
-    ld [hl], c
-    ret
-
+        ld [hl], b
+        ret
+    jr_002_7df4:
+        cp c
+            ret c
+        ld [hl], c
+        ret
+; end proc
 
 Call_002_7df8:
     ; Exit if the frame is odd
@@ -10879,6 +10871,6 @@ Call_002_7df8:
     ld a, [hl]
     xor $80
     ld [hl], a
-    ret
+ret
 
 ; 02:7E05 - Freespace 

@@ -684,12 +684,12 @@ en6653: ; Enemy 72h (proboscum)
 en665E: ; Enemy 75h (missile block)
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_6622
-en6669: ; Enemy D0h (flitt) (moving or disappearing??)
+en6669: ; Enemy D0h (flitt) (vanishing type)
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
-    dw enAI_68A0
-en6674: ; Enemy D1h (flitt) (moving or disappearing??)
+    dw enAI_flittVanishing
+en6674: ; Enemy D1h (flitt) (moving type)
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
-    dw enAI_68FC
+    dw enAI_flittMoving
 en667F: ; Enemy D3h (gravitt)
     db $80,$00,$00,$00,$80,$00,$00,$00,$05
     dw enAI_659F
