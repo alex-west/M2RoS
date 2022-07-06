@@ -578,7 +578,7 @@ enemyHeaderPointers:
 ;       |    ___________________________ Sprite attributes (flipping, etc.) - modified during runtime
 ;       |   |    ________________________ Stun counter? (dummy value in header)
 ;       |   |   |    _____________________
-;       |   |   |   |    __________________
+;       |   |   |   |    __________________ Upper nybble - directional invulnerability flags, lower nybble - flip related?
 ;       |   |   |   |   |    _______________
 ;       |   |   |   |   |   |    ____________
 ;       |   |   |   |   |   |   |    _________ 
@@ -663,9 +663,9 @@ en6606: ; Enemy 63h (shirk)
 en6611: ; Enemy 65h (septogg)
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_septogg
-en661C: ; Enemy 68h (noto)
+en661C: ; Enemy 68h (moto)
     db $00,$20,$00,$00,$20,$00,$00,$00,$11
-    dw enAI_66F3
+    dw enAI_moto
 en6627: ; Enemy 6Ah (halzyn)
     db $00,$00,$00,$00,$30,$00,$00,$00,$03
     dw enAI_6746

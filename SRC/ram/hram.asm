@@ -159,6 +159,11 @@ hEnemyStunCounter: ds 1 ; $FFE6: Stun counter
 ; General purpose enemy variables?
 ;    $FFE7: ; Usually a counter or a state ; Incremented in $2:514A and $2:55AC
 ;    $FFE8: ; Logical sprite flip direction? Sets $FFE5 to 0 if non-zero else 20h by $2:45FA. Adds 3 to $FFE2 if 0 else subtracts 3 in $2:54D2. XOR'd with 1 in $2:5513
+;     - Upper nybble encodes directional vulnerability flags
+;         %0001xxxx - resist rightward shots
+;         %0010xxxx - left
+;         %0100xxxx - up
+;         %1000xxxx - down
 ;    $FFE9: ; Generally a behavior counter
 def hEnemyState = $FFEA ; Generally an enemy state
 def hEnemyIceCounter = $FFEB ; Frozen enemy counter

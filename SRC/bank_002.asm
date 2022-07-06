@@ -6493,69 +6493,75 @@ ret
 ; end proc
 
 ;------------------------------------------------------------------------------
-; Moto enemy AI (the animal with a face-plate)
-enAI_66F3: ; 02:66F3
-    call Call_002_6726
+; Moto AI (the animal with a face-plate)
+enAI_moto: ; 02:66F3
+    call .animate
+    ; Act every other frame
     ldh a, [hEnemy_frameCounter]
     and $01
         ret nz
-
+    ; Handle movement
     ld hl, hEnemyXPos
-    ld b, $02
+    ld b, $02 ; Speed
+    ; Check direction
     ldh a, [$e8]
     and $0f
-    jr z, jr_002_6721
+    jr z, .moveRight
 
 ; Move left
     ld a, [hl]
     sub b
     ld [hl], a
 
-jr_002_6709:
+.checkFront:
+    ; Check forwards collision
     call Call_002_4abb
     ld a, [en_bgCollisionResult]
     bit 1, a
         ret nz
-
-    ; Flip enemy
+    ; Flip enemy (visually)
     ld hl, hEnemyAttr
     ld a, [hl]
     xor OAMF_XFLIP
     ld [hl], a
-    
+    ; Flip enemy (logically)
     ld hl, $ffe8
     ld a, [hl]
-    xor $32
+    xor %00110010 ; Upper nybble flips directional shield, lower nybble flips logical direction
     ld [hl], a
 ret
 
-
-jr_002_6721:
+.moveRight:
     ld a, [hl]
     add b
     ld [hl], a
-    jr jr_002_6709
+    jr .checkFront
+; end proc
 
-Call_002_6726:
+.animate:
+    ; Animate every other frame
     ldh a, [hEnemy_frameCounter]
     and $01
         ret nz
-
+    ; Skip ahead if not sprite $68
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $68
-    jr nz, jr_002_673c
+    jr nz, .endIf
+        ; Inc/Dec depending on this flag
         ldh a, [$e9]
         and a
-        jr z, jr_002_673a
+        jr z, .else
             inc [hl]
             ret
-        jr_002_673a:
+        .else:
             dec [hl]
             ret
-    jr_002_673c:
+    .endIf:
 
+    ; Reset sprite type
     ld [hl], $68
+    ; Switch between incrementing/decrementing the sprite type
     ld hl, $ffe9
     ld a, [hl]
     xor $01
