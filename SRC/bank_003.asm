@@ -574,15 +574,16 @@ enemyHeaderPointers:
     dw enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX
     dw enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   en6695, enXX,   enXX,   enXX,   enXX,   enXX,   enXX
 
-;        ______________________________ Base sprite attributes - not modified during runtime (apparently)
-;       |    ___________________________ Sprite attributes (flipping, etc.) - modified during runtime
-;       |   |    ________________________ Stun counter? (dummy value in header)
-;       |   |   |    _____________________
-;       |   |   |   |    __________________ Upper nybble - directional invulnerability flags, lower nybble - flip related?
-;       |   |   |   |   |    _______________
-;       |   |   |   |   |   |    ____________
-;       |   |   |   |   |   |   |    _________ 
-;       |   |   |   |   |   |   |   |    ______ Health (also determines drop type?)
+;                                         v--- Working address in HRAM 
+;        ______________________________ $FFE3 - Base sprite attributes - not modified during runtime (apparently)
+;       |    ___________________________ $FFE4 - Sprite attributes (flipping, etc.) - modified during runtime
+;       |   |    ________________________ $FFE6 - Stun counter? (dummy value in header)
+;       |   |   |    _____________________ $FFE7 - General variable (dummy value in header)
+;       |   |   |   |    __________________ $FFE8 - Upper nybble - directional invulnerability flags, lower nybble - flip related?
+;       |   |   |   |   |    _______________ $FFE9 - Not a dummy value?
+;       |   |   |   |   |   |    ____________ $FFEA - Not a dummy value?
+;       |   |   |   |   |   |   |    _________ $FFEB - Ice counter (dummy value in header)
+;       |   |   |   |   |   |   |   |    ______ $FFEC - Health (also determines drop type?)
 ;       |   |   |   |   |   |   |   |   |    ___ AI pointer (bank 2)
 ;       |   |   |   |   |   |   |   |   |   |
 enXX: ; Default - 03:64FE
@@ -692,7 +693,7 @@ en6674: ; Enemy D1h (flitt) (moving type)
     dw enAI_flittMoving
 en667F: ; Enemy D3h (gravitt)
     db $80,$00,$00,$00,$80,$00,$00,$00,$05
-    dw enAI_659F
+    dw enAI_gravitt
 en668A: ; Enemy D8h (gullugg)
     db $00,$00,$00,$00,$00,$00,$00,$00,$04
     dw enAI_gullugg
@@ -723,7 +724,7 @@ en66E2: ; Enemy A6h (baby metroid egg)
 en66ED: ; Enemy 80h..99h/9Bh/9Dh (item / item orb / enemy/missile refill)
     db $80,$00,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_itemOrb
-en66F8: ; Unused
+en66F8: ; Unused (item, but horizontally flipped)
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_itemOrb
 en6703: ; Enemy 9Ah (blob thrower?)

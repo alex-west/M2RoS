@@ -6982,162 +6982,168 @@ enAI_flittMoving: ; 02:68FC
 
 ;------------------------------------------------------------------------------
 ; Gravitt AI (crawler with a hat that pops out of the ground)
-enAI_659F: ; 02:659F
+enAI_gravitt: ; 02:659F
     ld hl, hEnemyState
     ld a, [hl]
     dec a
-        jr z, jr_002_699f ; State 1
+        jr z, .unburrow ; State 1
     dec a
-        jr z, jr_002_69b5 ; State 2
+        jr z, .crawl ; State 2 - Crawl in one direction
     dec a
-        jr z, jr_002_69b5 ; State 3
+        jr z, .crawl ; State 3 - And then crawl in the opposite
     dec a
-        jr z, jr_002_69de ; State 4
+        jr z, .burrow ; State 4
     dec a
-        jp z, Jump_002_69f8 ; State 5
+        jp z, .wait ; State 5
 
-    ; Default state
+; Default state
+    ; Don't act if Samus isn't within range
+    ; abs(samus_xpos - enemy_xpos) < $38
+    ; Uses B to mark which direction Samus approaches from
     ld hl, hEnemyXPos
-    ld b, $00
+    ld b, $00 ; Samus is to the left
     ld a, [samus_onscreenXPos]
     sub [hl]
-    jr nc, jr_002_6981
-
-    cpl
-    inc a
-    inc b
-
-jr_002_6981:
+    jr nc, .endIf_A
+        cpl
+        inc a
+        inc b ; Samus is to the right
+    .endIf_A:
     cp $38
-    ret nc
-
+        ret nc
+    ; Animate
     ld hl, hEnemySpriteType
     inc [hl]
+    ; Peek up a bit
     ld hl, hEnemyYPos
     dec [hl]
     dec [hl]
+    ; Next state
     ld a, $01
     ldh [hEnemyState], a
+    ; Set 
     ld a, b
     and a
-    jr nz, jr_002_699a
+    jr nz, .else_B
+        ld a, %10000000 ;$80
+        ldh [$e8], a
+        ret
+    .else_B:
+        ld a, %10000010 ;$82
+        ldh [$e8], a
+        ret
+; end state
 
-    ld a, $80
-    ldh [$e8], a
-    ret
-
-
-jr_002_699a:
-    ld a, $82
-    ldh [$e8], a
-    ret
-
-
-jr_002_699f:
+.unburrow: ; State 1
+    ; Increment timer
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $06
-    jr z, jr_002_69ae
+    jr z, .else_C
+        ; Peek up
+        ld hl, hEnemyYPos
+        dec [hl]
+        dec [hl]
+        ret
+    .else_C:
+        ; Clear timer
+        xor a
+        ld [hl+], a
+        ; Next state
+        ld a, $02
+        ldh [hEnemyState], a
+        ret
+; end state
 
-    ld hl, hEnemyYPos
-    dec [hl]
-    dec [hl]
-    ret
-
-
-jr_002_69ae:
-    xor a
-    ld [hl+], a
-    ld a, $02
-    ldh [hEnemyState], a
-    ret
-
-
-jr_002_69b5:
-    call Call_002_6a04
+.crawl: ; States 2 and 3
+    call .animate
+    ; Check and increment timer
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $18
-    jr z, jr_002_69d0
+    jr z, .else_D
+        ; Move
+        ld hl, hEnemyXPos
+        ldh a, [$e8]
+        bit 1, a ; Check direction
+        jr z, .else_E
+            ; Move left
+            dec [hl]
+            dec [hl]
+            ret
+        .else_E:
+            ; Move right
+            inc [hl]
+            inc [hl]
+            ret
+    .else_D:
+        ;  Clear timer
+        ld [hl], $00
+        ; Reverse heading
+        ld hl, $ffe8
+        ld a, [hl]
+        xor $02
+        ld [hl], a
+        ; Increment state
+        ld hl, hEnemyState
+        inc [hl]
+        ret
+; end state
 
-    ld hl, hEnemyXPos
-    ldh a, [$e8]
-    bit 1, a
-    jr z, jr_002_69cd
-
-    dec [hl]
-    dec [hl]
-    ret
-
-
-jr_002_69cd:
-    inc [hl]
-    inc [hl]
-    ret
-
-
-jr_002_69d0:
-    ld [hl], $00
-    ld hl, $ffe8
-    ld a, [hl]
-    xor $02
-    ld [hl], a
-    ld hl, hEnemyState
-    inc [hl]
-    ret
-
-
-jr_002_69de:
+.burrow: ; State 4
+    ; Check and increment timer
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $07
-    jr z, jr_002_69ed
+    jr z, .else_F
+        ; Move down
+        ld hl, hEnemyYPos
+        inc [hl]
+        inc [hl]
+        ret
+    .else_F:
+        ; Clear timer
+        xor a
+        ld [hl+], a
+        ; Next state
+        ld a, $05
+        ldh [hEnemyState], a
+        ; Animate
+        ld a, $d3
+        ldh [hEnemySpriteType], a
+        ret
+; end state
 
-    ld hl, hEnemyYPos
-    inc [hl]
-    inc [hl]
-    ret
-
-
-jr_002_69ed:
-    xor a
-    ld [hl+], a
-    ld a, $05
-    ldh [hEnemyState], a
-    ld a, $d3
-    ldh [hEnemySpriteType], a
-    ret
-
-
-Jump_002_69f8:
+.wait: ; State 5
+    ; Increment and check timer
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $30
-    ret nz
-
+        ret nz
+    ; Clear timer
     xor a
     ld [hl+], a
+    ; Clear state
     ld [hl], a
-    ret
+ret
 
-
-Call_002_6a04:
+.animate:
+    ; Animate every other frame
     ldh a, [hEnemy_frameCounter]
     and $01
-    ret nz
-
+        ret nz
+    ; $D4 -> $D5 -> $D6 -> $D7 animation loop
     ld hl, hEnemySpriteType
     inc [hl]
     ld a, [hl]
     cp $d8
-    ret nz
-
+        ret nz
     ld [hl], $d4
-    ret
+ret
 
 ;------------------------------------------------------------------------------
 ; Missile Door
