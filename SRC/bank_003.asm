@@ -657,7 +657,7 @@ en65F0: ; Enemy 51h (gunzoo)
     dw enAI_638C
 en65FB: ; Enemy 5Ch (autom)
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
-    dw enAI_6540
+    dw enAI_autom
 en6606: ; Enemy 63h (shirk)
     db $00,$00,$00,$00,$00,$00,$00,$00,$0A
     dw enAI_senjooShirk

@@ -6128,113 +6128,125 @@ Call_002_6538:
     ret
 
 ;------------------------------------------------------------------------------
-; Autom AI (robot that spills oil or fire or something)
-enAI_6540: ; 02:6540
+; Autom AI (robot that shoots a flamethrower downwards)
+enAI_autom: ; 02:6540
+    ; Don't do anything while shooting stuff
     ldh a, [hEnemySpawnFlag]
     cp $03
-    ret z
-
+        ret z
     and $0f
-    jr z, jr_002_659b
-
+        jr z, .projectileCode
+    ; Randomly shoot
     ld a, [rDIV]
     and $1f
-    jr z, jr_002_657a
+        jr z, .useFlamethrower
 
-    ld a, $5c
+    ; Animate
+    ld a, $5c ; Sprite with light off
     ldh [hEnemySpriteType], a
+    ; Prep variables
     ld de, hEnemyXPos
     ld hl, $ffe9
+    ; Check direction
     ldh a, [hEnemyState]
     and a
-        jr nz, jr_002_6572
+    jr nz, .else_A
+        ; Increment timer
+        inc [hl]
+        ld a, [hl]
+        cp $20
+            jr z, .flipDirection
+        ; Move right
+        ld a, [de]
+        add $03
+        ld [de], a
+        ret
+        
+.flipDirection:
+        ld hl, hEnemyState
+        ld a, [hl]
+        xor $01
+        ld [hl], a
+        ret
+    
+    .else_A:
+        ; Decrement timer
+        dec [hl]
+            jr z, .flipDirection
+        ; Move left
+        ld a, [de]
+        sub $03
+        ld [de], a
+        ret
+; end state
 
-    inc [hl]
-    ld a, [hl]
-    cp $20
-    jr z, jr_002_656a
-
-    ld a, [de]
-    add $03
-    ld [de], a
-    ret
-
-
-jr_002_656a:
-    ld hl, hEnemyState
-    ld a, [hl]
-    xor $01
-    ld [hl], a
-    ret
-
-
-jr_002_6572:
-    dec [hl]
-    jr z, jr_002_656a
-
-    ld a, [de]
-    sub $03
-    ld [de], a
-    ret
-
-
-jr_002_657a:
+.useFlamethrower: ; A fan wiki says its a flamethrower
     call findFirstEmptyEnemySlot_longJump
+    ; Set enemy slot to active
     xor a
     ld [hl+], a
+    ; Set position
     ldh a, [hEnemyYPos]
     add $10
     ld [hl+], a
     ldh a, [hEnemyXPos]
     inc a
     ld [hl+], a
+    ; Load header
     call Call_002_6b21
-    ld de, $65c8
+    ld de, .header_65C8
     call Call_002_7235
+    ; Animate
     ld hl, hEnemySpriteType
-    ld [hl], $5d
+    ld [hl], $5d ; Sprite with light on
+    ; Stay inactive while projectile is onscreen
     ld a, $03
     ldh [hEnemySpawnFlag], a
-    ret
+ret
 
 
-jr_002_659b:
+.projectileCode:
     ld a, $07
     ld [sfxRequest_square2], a
+    ; Check sprite type
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $60
-    jr z, jr_002_65b3
+    jr z, .else_B
+    jr nc, .else_C
+        ; Increment sprite type
+        inc [hl]
+        ; Move down
+        ld hl, hEnemyYPos
+        ld a, [hl]
+        add $08
+        ld [hl], a
+        ret
 
-    jr nc, jr_002_65b5
+    .else_B:
+        ; Increment sprite type
+        inc [hl]
+        ret
+        
+    .else_C:
+        ; Animate
+        call enemy_flipSpriteId_2Bits.fourFrame
+        ; Increment and check timer
+        ld hl, $ffe9
+        inc [hl]
+        ld a, [hl]
+        cp $20
+            ret nz
+        ; Delete self
+        call Call_000_3ca6
+        ld a, $ff
+        ldh [hEnemySpawnFlag], a
+        ret
+; end proc
 
-    inc [hl]
-    ld hl, hEnemyYPos
-    ld a, [hl]
-    add $08
-    ld [hl], a
-    ret
-
-
-jr_002_65b3:
-    inc [hl]
-    ret
-
-
-jr_002_65b5:
-    call enemy_flipSpriteId_2Bits.fourFrame
-    ld hl, $ffe9
-    inc [hl]
-    ld a, [hl]
-    cp $20
-    ret nz
-
-    call Call_000_3ca6
-    ld a, $ff
-    ldh [hEnemySpawnFlag], a
-    ret
-
-    db $5e, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $00, $40, $65
+.header_65C8:
+    db $5e, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $00
+    dw enAI_autom
 
 ;------------------------------------------------------------------------------
 ; Proboscum AI (nose on wall that is acts as a platform)
