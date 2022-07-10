@@ -2224,7 +2224,7 @@ enAI_itemOrb: ; 02:4DD3
             ldh [hEnemyStunCounter], a
     .endIf_A:
 
-    call Call_002_7da0 ; Get sprite collision results
+    call enemy_getSamusCollisionResults ; Get sprite collision results
     ld a, [$c46d]
     cp $ff
         ret z
@@ -2496,7 +2496,7 @@ jr_002_4f56:
     ret
 
 
-Call_002_4f87:
+Call_002_4f87: ; 02:4F87 - Shared with Arachnus
     ld a, [samus_onscreenXPos]
     ld b, a
     ldh a, [hEnemyXPos]
@@ -2523,9 +2523,9 @@ Call_002_4f97:
     ld [hl+], a
 
     ld a, $06
-    ld [$c477], a
+    ld [enemy_tempSpawnFlag], a
     push hl
-        call Call_002_7235
+        call enemy_spawnObject.longHeader
     pop hl
     ld de, $0004
     add hl, de
@@ -2653,30 +2653,31 @@ header_50FC:
 enAI_arachnus: ; 02:5109
     ldh a, [$e7]
     rst $28
-        dw arachnus_511C
-        dw arachnus_5152
-        dw arachnus_51B9
-        dw arachnus_51CE
-        dw arachnus_51EC
-        dw arachnus_51FB
-        dw arachnus_526E
+        dw arachnus_511C ; State - 0
+        dw arachnus_5152 ; State - 1
+        dw arachnus_51B9 ; State - 2
+        dw arachnus_51CE ; State - 3
+        dw arachnus_51EC ; State - 4
+        dw arachnus_51FB ; State - 5
+        dw arachnus_526E ; State - 6
         dw enAI_NULL ;arachnus_5651
 
-arachnus_511C:
-    ld hl, $c390
+arachnus_511C: ; 02:511C - State 0
+    ; Clear arachnus scratchpad
+    ld hl, arachnus_jumpCounter
     xor a
     ld b, $06
-
-    jr_002_5122:
+    .initLoop:
         ld [hl+], a
         dec b
-    jr nz, jr_002_5122
+    jr nz, .initLoop
 
     ld a, $06
-    ld [$c394], a
+    ld [arachnus_health], a
     ld a, $ff
     ldh [hEnemyHealth], a
-    call Call_002_7da0
+    
+    call enemy_getSamusCollisionResults
     ld a, [$c46d]
     cp $ff
         ret z
@@ -2691,7 +2692,7 @@ jr_002_513f:
 
 Jump_002_5144:
     xor a
-    ld [$c390], a
+    ld [arachnus_jumpCounter], a
     ld a, $20
 
 Jump_002_514a:
@@ -2701,9 +2702,9 @@ Jump_002_514a:
     inc [hl]
 ret
 
-arachnus_5152:
-    ld hl, table_52FC
-    call Call_002_516e
+arachnus_5152: ; 02:5152 - State 1
+    ld hl, arachnus_highJumpTable
+    call arachnus_jump
         jr nz, jr_002_513f
     ld hl, hEnemyXPos
     ld a, [hl]
@@ -2720,63 +2721,65 @@ jr_002_5161:
 ret
 
 
-Call_002_516e:
-    ld a, [$c390]
+arachnus_jump: ; 02:516E
+    ld a, [arachnus_jumpCounter]
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
     ld b, a
     cp $80
-    jr nz, jr_002_5180
+    jr nz, .else_A
         ld bc, $0380
-        jr jr_002_5190
-    jr_002_5180:
+        jr .endIf_A
+    .else_A:
         cp $81
-        jr nz, jr_002_5189
+        jr nz, .else_B
             ld bc, $0381
-            jr jr_002_5190
-        jr_002_5189:
+            jr .endIf_A
+        .else_B:
+            ; Increment jump counter
             inc e
             ld a, e
-            ld [$c390], a
+            ld [arachnus_jumpCounter], a
             ld c, $00
-    jr_002_5190:
-
+    .endIf_A:
+    ; Move vertically
     ldh a, [hEnemyYPos]
     add b
     ldh [hEnemyYPos], a
+    ; Save value of c
     ld a, c
     ld [$c393], a
+    
     call Call_002_4a28
     ld a, [en_bgCollisionResult]
     and $02
-    ret z
-
+        ret z
     ld a, [$c393]
     and a
-    jr z, jr_002_51b6
+    jr z, .endIf_C
         cp $81
-        jr z, jr_002_51b6
-            ld a, [$c390]
+        jr z, .endIf_C
+            ld a, [arachnus_jumpCounter]
             inc a
-            ld [$c390], a
+            ld [arachnus_jumpCounter], a
             xor a
             and a
             ret
-    jr_002_51b6:
+    .endIf_C:
     inc a
     and a
 ret
 
-arachnus_51B9:
-    ld hl, table_5356
+arachnus_51B9: ; 02:51B9 - State 2
+    ld hl, arachnus_lowJumpTable
 
 Jump_002_51bc:
-    call Call_002_516e
-    jr nz, jr_002_51c3
+    call arachnus_jump
+    jr nz, .endIf_D
         jr jr_002_5161
-    jr_002_51c3:
+    .endIf_D:
 
     ld a, $04
     ld [$c391], a
@@ -2784,7 +2787,7 @@ Jump_002_51bc:
     ld [hl], $03
 ret
 
-arachnus_51CE:
+arachnus_51CE: ; 02:51CE - State 3
     ld a, [$c391]
     and a
     jr z, jr_002_51da
@@ -2793,7 +2796,7 @@ arachnus_51CE:
         jr jr_002_5161
     jr_002_51da:
 
-    call Call_002_529a
+    call arachnus_faceSamus
     ldh a, [hEnemyYPos]
     sub $08
     ldh [hEnemyYPos], a
@@ -2803,8 +2806,9 @@ jr_002_51e5:
     ldh [hEnemySpriteType], a
     ld a, $04
     jp Jump_002_514a
+; end state
 
-arachnus_51EC:
+arachnus_51EC: ; 02:51EC - State 4
     ld a, [$c391]
     and a
     jr z, jr_002_51f7
@@ -2812,12 +2816,12 @@ arachnus_51EC:
         ld [$c391], a
         ret
     jr_002_51f7:
+        ld a, $7a
+        jr jr_002_51e5
+; end state
 
-    ld a, $7a
-    jr jr_002_51e5
-
-arachnus_51FB:
-    call Call_002_7da0
+arachnus_51FB: ; 02:51FB - State 5
+    call enemy_getSamusCollisionResults
     ld a, [$c46d]
     cp $ff
     jr z, jr_002_521b
@@ -2827,16 +2831,16 @@ arachnus_51FB:
             ld [sfxRequest_noise], a
             ld a, $11
             ldh [hEnemyStunCounter], a
-            ld a, [$c394]
+            ld a, [arachnus_health]
             dec a
-            ld [$c394], a
-                jr z, jr_002_5256 ; Die
+            ld [arachnus_health], a
+                jr z, arachnus_die ; Die
     jr_002_521b:
 
     ld a, [hInputPressed]
     and PADF_B
     jr nz, jr_002_5249
-        call Call_002_529a
+        call arachnus_faceSamus
         ld a, [$c391]
         and a
         jr z, jr_002_5230
@@ -2853,7 +2857,7 @@ arachnus_51FB:
             ret nz
         ; Spawn projectile
         ld de, header_52D2
-        call Call_002_52a6
+        call arachnus_shootFireball
         ld a, $79
         ldh [hEnemySpriteType], a
         ld a, $10
@@ -2866,23 +2870,24 @@ arachnus_51FB:
         ld a, $76
         ldh [hEnemySpriteType], a
         jp Jump_002_5144
+; end state
 
-
-jr_002_5256: ; Become Spring ball
+arachnus_die: ; Become Spring ball
     ld a, $0d
     ld [sfxRequest_noise], a
+    ; Transform into spring ball
     ld hl, hEnemyHealth
     ld [hl], $ff
-    ld a, $95
+    ld a, $95 ; Spring Ball
     ldh [hEnemySpriteType], a
-    ld hl, $fff1
+    ld hl, hEnemyAI_low ;$fff1
     ld de, enAI_itemOrb ;$4dd3
     ld [hl], e
     inc l
     ld [hl], d
 ret
 
-arachnus_526E:
+arachnus_526E: ; 02:526E - State 6
     ldh a, [hEnemyAttr]
     and a
     jr z, jr_002_528c
@@ -2892,55 +2897,55 @@ arachnus_526E:
         and $01
         jr z, jr_002_5281
             jr jr_002_5286
+            
         jr_002_5281:
             ldh a, [hEnemyXPos]
             add b
             ldh [hEnemyXPos], a
         jr_002_5286:
-            ld hl, table_532E
+            ld hl, arachnus_midJumpTable
             jp Jump_002_51bc
     jr_002_528c:
-    
-    call Call_002_483b
-    ld b, $ff
-    ld a, [en_bgCollisionResult]
-    and $04
-    jr z, jr_002_5281
-        jr jr_002_5286
+        call Call_002_483b
+        ld b, $ff
+        ld a, [en_bgCollisionResult]
+        and $04
+        jr z, jr_002_5281
+            jr jr_002_5286
+; end state
 
-
-Call_002_529a:
+arachnus_faceSamus: ; 02:529A
     call Call_002_4f87
     and a
-    ld a, $20
+    ld a, OAMF_XFLIP ;$20
     jr z, jr_002_52a3
         xor a
     jr_002_52a3:
-    
     ldh [hEnemyAttr], a
 ret
 
 
-Call_002_52a6:
+arachnus_shootFireball: ; 02:52A6
     call findFirstEmptyEnemySlot_longJump
     ld [hl], $00
     inc hl
     ldh a, [hEnemyYPos]
     add $fd
     ld [hl+], a
+    ; Adjust x-position based on facing
     ldh a, [hEnemyAttr]
     ld b, $18
     and a
-    jr nz, jr_002_52ba
-        ld b, $e8
-    jr_002_52ba:
-    
+    jr nz, .endIf
+        ld b, -$18 ; $E8
+    .endIf:
     ldh a, [hEnemyXPos]
     add b
     ld [hl+], a
+    
     push hl
-    call Call_002_6b21
-    call Call_002_7235
+        call enemy_createLinkForChildObject ; Fireball doesn't use this
+        call enemy_spawnObject.longHeader
     pop hl
     ld de, $0004
     add hl, de
@@ -2958,14 +2963,16 @@ enAI_arachnusFireball: ; 02:52DF
     ld hl, hEnemyXPos
     ldh a, [$e7]
     and a
-    ld b, $03
+    ; Set speed
+    ld b, 3
     jr nz, .endIf
         ld b, -3 ;$fd
     .endIf:
-
+    ; Move
     ld a, [hl]
     add b
     ld [hl], a
+    ; Animate
     ld a, [frameCounter]
     and $06
         ret nz
@@ -2976,16 +2983,16 @@ ret
 
     ret ; 02:52FB - Unreferenced
 
-table_52FC: ; 02:52FC
+arachnus_highJumpTable: ; 02:52FC - State 1
     db $FF, $FE, $FE, $FE, $FF, $FF, $FE, $FF, $FE, $FE, $FE, $FF, $FF, $FF, $00, $00
     db $00, $00, $01, $00, $01, $01, $00, $01, $01, $01, $01, $01, $01, $01, $01, $01
     db $01, $02, $02, $02, $02, $02, $02, $02, $02, $03, $03, $03, $03, $03, $03, $03
     db $00, $80
-table_532E: ; 02:532E
+arachnus_midJumpTable: ; 02:532E - State 6
     db $FC, $FD, $FD, $FD, $FE, $FE, $FD, $FE, $FE, $FE, $FE, $FF, $FE, $FF, $FE, $FF
     db $FF, $00, $00, $00, $00, $01, $01, $02, $01, $02, $01, $02, $02, $02, $02, $03
     db $02, $02, $03, $03, $03, $04, $00, $80
-table_5356: ; 02:5356
+arachnus_lowJumpTable: ; 02:5356 - State 2
     db $FD, $FE, $FE, $FE, $FF, $FF, $00, $FF, $FF, $00, $FF, $00, $00, $01, $00, $01
     db $01, $00, $01, $01, $02, $02, $02, $03, $81
 
@@ -4240,8 +4247,8 @@ jr_002_5a28:
         ld a, b
         ld [hl+], a
         ld de, header_5A9E
-        call Call_002_6b21
-        call Call_002_7231
+        call enemy_createLinkForChildObject
+        call enemy_spawnObject.shortHeader
         ld a, $03
         ldh [hEnemySpawnFlag], a
         ld a, $07
@@ -4423,8 +4430,8 @@ ret
     ldh a, [hEnemyXPos]
     ld [hl+], a
     ld de, .header_5B6C
-    call Call_002_6b21
-    call Call_002_7235
+    call enemy_createLinkForChildObject
+    call enemy_spawnObject.longHeader
     ; Causes drivel to animate, but not act (see .animate function below)
     ld a, $03
     ldh [hEnemySpawnFlag], a
@@ -5068,7 +5075,7 @@ enAI_5F67: ; 02:5F67
     jr_002_5fcf:
 
     ld [hl+], a
-    ld [$c477], a
+    ld [enemy_tempSpawnFlag], a
     ldh a, [hEnemySpriteType]
     bit 0, a
     jr nz, jr_002_5fdc
@@ -5094,7 +5101,7 @@ enAI_5F67: ; 02:5F67
     ld a, [hl]
     ld hl, enemySpawnFlags
     ld l, a
-    ld a, [$c477]
+    ld a, [enemy_tempSpawnFlag]
     ld [hl], a
     ld hl, $c425
     inc [hl]
@@ -5464,8 +5471,8 @@ enAI_autrack: ; 02:6145
     ; Load data from header
     ld de, header_61D1
     ld a, $06
-    ld [$c477], a
-    call Call_002_7231
+    ld [enemy_tempSpawnFlag], a
+    call enemy_spawnObject.shortHeader
     
     ; Animate cannon
     ld a, $44
@@ -5693,19 +5700,19 @@ enAI_62B4: ; 02:62B4
         ld [hl], $4a
     jr_002_62be:
 
-    call Call_002_7da0
+    call enemy_getSamusCollisionResults
     ldh a, [hEnemySpawnFlag]
     cp $06
-    jr z, jr_002_633a
+        jr z, jr_002_633a
 
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $4c
-    ret z
+        ret z
 
     ld a, [$c46d]
-    cp $20
-    jr nc, jr_002_62e3
+    cp $20 ; Touch
+        jr nc, jr_002_62e3
 
     ld a, $4c
     ld [hl], a
@@ -5713,7 +5720,7 @@ enAI_62B4: ; 02:62B4
     ld [sfxRequest_square1], a
     ld a, $02
     ld [sfxRequest_noise], a
-    ret
+ret
 
 
 jr_002_62e3:
@@ -5757,8 +5764,8 @@ jr_002_630d:
     ld [hl+], a
     ld de, $6382
     ld a, $06
-    ld [$c477], a
-    call Call_002_7231
+    ld [enemy_tempSpawnFlag], a
+    call enemy_spawnObject.shortHeader
     ld a, $4b
     ldh [hEnemySpriteType], a
     ld a, $12
@@ -5840,7 +5847,7 @@ jr_002_637a:
 enAI_638C: ; 02:638C
     ldh a, [hEnemySpawnFlag]
     cp $06
-    jp z, Jump_002_64a7
+        jp z, Jump_002_64a7
 
     ldh a, [$e8]
     bit 0, a
@@ -5915,9 +5922,9 @@ jr_002_63e1:
     sub $10
     ld [hl+], a
     ld a, $06
-    ld [$c477], a
-    ld de, $6511
-    call Call_002_7235
+    ld [enemy_tempSpawnFlag], a
+    ld de, header_6511
+    call enemy_spawnObject.longHeader
     ld hl, hEnemySpriteType
     inc [hl]
     ld hl, hEnemyState
@@ -5941,9 +5948,9 @@ jr_002_6409:
     sub $10
     ld [hl+], a
     ld a, $06
-    ld [$c477], a
-    ld de, $651e
-    call Call_002_7235
+    ld [enemy_tempSpawnFlag], a
+    ld de, header_651E
+    call enemy_spawnObject.longHeader
     ld a, $53
     ldh [hEnemySpriteType], a
     ld hl, hEnemyState
@@ -6033,9 +6040,9 @@ jr_002_6483:
     sub $08
     ld [hl+], a
     ld a, $06
-    ld [$c477], a
-    ld de, $652b
-    call Call_002_7235
+    ld [enemy_tempSpawnFlag], a
+    ld de, header_652B
+    call enemy_spawnObject.longHeader
     ld a, $01
     ldh [hEnemyState], a
     ld a, $12
@@ -6043,17 +6050,15 @@ jr_002_6483:
     ret
 
 
-Jump_002_64a7:
+Jump_002_64a7: ; Gunzoo projectile
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $57
-    jr nc, jr_002_64ed
-
+        jr nc, jr_002_64ed
     sub $55
-    jr z, jr_002_64db
-
+        jr z, jr_002_64db
     dec a
-    jr z, jr_002_64e5
+        jr z, jr_002_64e5
 
     ld hl, hEnemyYPos
     ld a, [hl]
@@ -6122,17 +6127,22 @@ jr_002_650f:
     ret
 
 ; Enemy Headers
-    db $57, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $01, $8c, $63
-    db $57, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $02, $8c, $63
-    db $54, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $03, $8c, $63
+header_6511: ; 02:6511
+    db $57, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $01
+    dw enAI_638C
+header_651E: ; 02:651E
+    db $57, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $02
+    dw enAI_638C
+header_652B: ; 92:651E
+    db $54, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $03
+    dw enAI_638C
 
 Call_002_6538:
     ldh a, [hEnemy_frameCounter]
     and $07
-    ret nz
-
+        ret nz
     ld [hl], $51
-    ret
+ret
 
 ;------------------------------------------------------------------------------
 ; Autom AI (robot that shoots a flamethrower downwards)
@@ -6200,9 +6210,9 @@ enAI_autom: ; 02:6540
     inc a
     ld [hl+], a
     ; Load header
-    call Call_002_6b21
+    call enemy_createLinkForChildObject
     ld de, .header_65C8
-    call Call_002_7235
+    call enemy_spawnObject.longHeader
     ; Animate
     ld hl, hEnemySpriteType
     ld [hl], $5d ; Sprite with light on
@@ -6331,7 +6341,7 @@ ret
 ;------------------------------------------------------------------------------
 ; Missile block AI
 enAI_6622: ; 02:6622
-    call Call_002_7da0
+    call enemy_getSamusCollisionResults
     ; Check state
     ld hl, hEnemyState
     ld a, [hl]
@@ -6769,7 +6779,7 @@ table_6837: ; 02:6837
 ;  Uses $E9 and $EA as a 16-bit distance-travelled counter
 enAI_septogg: ; 02:6841
     call enemy_flipSpriteId_2Bits.twoFrame
-    call Call_002_7da0 ; Get sprite collision results
+    call enemy_getSamusCollisionResults ; Get sprite collision results
     ; Check if shot
     ld a, [$c46d]
     cp $20
@@ -6926,7 +6936,7 @@ ret
 ; Flitt AI (weird platforms) (moving type)
 enAI_flittMoving: ; 02:68FC
     call enemy_flipSpriteId.fourFrame
-    call Call_002_7da0 ; Get collision results
+    call enemy_getSamusCollisionResults ; Get collision results
     ; Check logical direction
     ldh a, [$e8]
     and a
@@ -7169,7 +7179,7 @@ ret
 ; Missile Door
 enAI_missileDoor: ; 02:6A14
     ; Load results of collision tests with this object
-    call Call_002_7da0
+    call enemy_getSamusCollisionResults
     ; If not the door sprite, jump ahead
     ld hl, hEnemySpriteType
     ld a, [hl]
@@ -7374,8 +7384,9 @@ ret
     db $00, $FF, $00, $00, $FF, $00, $00, $00
 
 
-; Something pointer related
-Call_002_6b21:
+; When used in conjunction with a child-object spawner routine,
+;  this makes a child object point to its parent
+enemy_createLinkForChildObject: ; 02:6B21
     ldh a, [$fd]
     cp $c6
     jr nz, .else
@@ -7386,7 +7397,7 @@ Call_002_6b21:
         add $10
     .endIf:
 
-    ld [$c477], a
+    ld [enemy_tempSpawnFlag], a
 ret
 
 ;------------------------------------------------------------------------------
@@ -7506,7 +7517,7 @@ ret
 ; First alpha metroid ? (with appearance cutscene)
 enAI_6BB2: ; 02:6BB2
 Jump_002_6bb2:
-    call Call_002_7da0
+    call enemy_getSamusCollisionResults
     ; Check if stunned
     ld hl, alpha_stunCounter
     ld a, [hl]
@@ -8150,7 +8161,7 @@ ret
 ;------------------------------------------------------------------------------
 ; Gamma Metroid ?
 enAI_6F60: ; 02:6F60
-    call Call_002_7da0
+    call enemy_getSamusCollisionResults
     ld hl, gamma_stunCounter
     ld a, [hl]
     and a
@@ -8543,8 +8554,8 @@ jr_002_7193:
     ldh a, [hEnemyAttr]
     ld [hl+], a
     ld de, header_71D0
-    call Call_002_6b21
-    call Call_002_7231
+    call enemy_createLinkForChildObject
+    call enemy_spawnObject.shortHeader
     ld a, $05
     ldh [hEnemySpawnFlag], a
     xor a
@@ -8614,43 +8625,45 @@ Call_002_71da:
 ret
 
 
-Call_002_7231:
-    ld b, $07
-    jr jr_002_7237
+enemy_spawnObject:
+    .shortHeader: ; 02:7231
+        ld b, $07
+        jr .start
+    .longHeader: ;02:7235
+        ld b, $0a
+.start:
 
-Call_002_7235:
-    ld b, $0a
-
-    jr_002_7237:
+    .loadLoop_A:
         ld a, [de]
         ld [hl+], a
         inc de
         dec b
-    jr nz, jr_002_7237
-
+    jr nz, .loadLoop_A
+    ; Save max health to C
     ld c, a
     xor a
     ld b, $04
 
-    jr_002_7241:
+    .clearLoop:
         ld [hl+], a
         dec b
-    jr nz, jr_002_7241
-
+    jr nz, .clearLoop
+    ; Save max health properly
     ld [hl], c
+    
     ld a, l
     add $0b
     ld l, a
-    ld a, [$c477]
+    ld a, [enemy_tempSpawnFlag]
     ld [hl+], a
     ld b, $03
 
-    jr_002_7250:
+    .loadLoop_B:
         ld a, [de]
         ld [hl+], a
         inc de
         dec b
-    jr nz, jr_002_7250
+    jr nz, .loadLoop_B
 
     dec l
     dec l
@@ -8658,7 +8671,7 @@ Call_002_7235:
     ld a, [hl]
     ld hl, enemySpawnFlags
     ld l, a
-    ld a, [$c477]
+    ld a, [enemy_tempSpawnFlag]
     ld [hl], a
     ld hl, $c425
     inc [hl]
@@ -8680,7 +8693,7 @@ ret
 ;------------------------------------------------------------------------------
 ; Zeta Metroid ?
 enAI_7276: ; 02:7276
-    call Call_002_7da0
+    call enemy_getSamusCollisionResults
     ldh a, [hEnemySpawnFlag]
     cp $06
         jp z, zeta_fireball
@@ -9182,8 +9195,8 @@ Jump_002_7559:
     ld [hl+], a
     ld de, header_759F
     ld a, $03
-    ld [$c477], a
-    call Call_002_7235
+    ld [enemy_tempSpawnFlag], a
+    call enemy_spawnObject.longHeader
     ld hl, hEnemyYPos
     ld a, [hl]
     sub $08
@@ -9250,8 +9263,8 @@ jr_002_75c9:
     ld [hl+], a
     ld de, $75e2
     ld a, $06
-    ld [$c477], a
-    call Call_002_7231
+    ld [enemy_tempSpawnFlag], a
+    call enemy_spawnObject.shortHeader
     ld a, $15
     ld [sfxRequest_noise], a
     ret
@@ -9325,7 +9338,7 @@ ret
 ;------------------------------------------------------------------------------
 ; Omega Metroid ?
 enAI_7631: ; 02:7631
-    call Call_002_7da0
+    call enemy_getSamusCollisionResults
     ldh a, [hEnemySpawnFlag]
     cp $06
         jp z, omega_fireball
@@ -9854,8 +9867,8 @@ Call_002_7922:
     ld [hl+], a
     ld de, header_799E
     ld a, $06
-    ld [$c477], a
-    call Call_002_7231
+    ld [enemy_tempSpawnFlag], a
+    call enemy_spawnObject.shortHeader
     ret
 
 
@@ -10044,7 +10057,7 @@ ret
 ;------------------------------------------------------------------------------
 ; Larval Metroid?
 enAI_7A4F: ; 02:7A4F
-    call Call_002_7da0
+    call enemy_getSamusCollisionResults
     ; Check if latched?
     ldh a, [$e7]
     and a
@@ -10610,8 +10623,17 @@ ret
 ; end baby specific code
 
 ; Verify that enemy was hit by Samus, and copy the results to a working variable
-; Apparently beams or Samus herself count here ?
-Call_002_7da0:
+;  Return values ($C46D)
+; $00 - Power beam
+; $01 - Ice
+; $02 - Wave
+; $03 - Spazer
+; $04 - Plasma
+; $09 - Bombs
+; $10 - Screw
+; $20 - Touch
+; $FF - Nothing
+enemy_getSamusCollisionResults: ; 02:7DA0
     ; Save null result first
     ld a, $ff
     ld [$c46d], a
