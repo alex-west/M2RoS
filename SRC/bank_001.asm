@@ -2957,7 +2957,7 @@ Call_001_70ba: ; 01:70BA - called from bank 2 (Alpha Metroid related?)
     ret
 
 Call_001_70c1:
-    ld hl, $ffe1
+    ld hl, hEnemyYPos
     ld a, [hl]
     add $10
     ld b, a

@@ -705,7 +705,7 @@ en66A0: ; Enemy A0h (metroid) ; First Alpha metroid
     dw enAI_6BB2
 en66AB: ; Enemy A4h (alpha metroid)
     db $00,$00,$00,$00,$FF,$00,$00,$00,$05
-    dw enAI_6C44
+    dw enAI_alphaMetroid
 en66B6: ; Enemy A3h (alpha metroid) ; gamma?
     db $00,$00,$00,$00,$FF,$00,$00,$00,$0A
     dw enAI_6F60
@@ -904,6 +904,9 @@ jr_003_6b1f:
     ld [hl], a
     ret
 
+; Used for seeking towards Samus
+; takes B, D, and E as arguements
+; $E9 and $EA appear to be some sort of directional vector
 Call_003_6b44: ; 03:6B44
     ld hl, $c43f
     ld a, [samus_onscreenXPos]
@@ -912,12 +915,14 @@ Call_003_6b44: ; 03:6B44
     ld a, [samus_onscreenYPos]
     add $10
     ld [hl-], a
-    ldh a, [$e2]
+    ldh a, [hEnemyXPos]
     add $10
     ld [hl-], a
-    ldh a, [$e1]
+    ldh a, [hEnemyYPos]
     add $10
     ld [hl], a
+    
+    ; Compare y positions
     ld a, [$c43e]
     sub [hl]
     jr z, jr_003_6b77
@@ -929,14 +934,14 @@ Call_003_6b44: ; 03:6B44
                 ldh [$e9], a
                 jr jr_003_6b77
         jr_003_6b6f:
-        
-        ldh a, [$e9]
-        cp e
-        jr z, jr_003_6b77
-            sub b
-            ldh [$e9], a
+            ldh a, [$e9]
+            cp e
+            jr z, jr_003_6b77
+                sub b
+                ldh [$e9], a
     jr_003_6b77:
 
+    ; Compare x positions
     inc l
     ld a, [$c43f]
     sub [hl]
@@ -949,30 +954,31 @@ Call_003_6b44: ; 03:6B44
                 ldh [hEnemyState], a
                 jr jr_003_6b92
         jr_003_6b8a:
-        
-        ldh a, [hEnemyState]
-        cp e
-        jr z, jr_003_6b92
-            sub b
-            ldh [hEnemyState], a
+            ldh a, [hEnemyState]
+            cp e
+            jr z, jr_003_6b92
+                sub b
+                ldh [hEnemyState], a
     jr_003_6b92:
 
+    ; Adjust y position
     ldh a, [$e9]
     ld e, a
     ld d, $00
     ld hl, table_6BB1
     add hl, de
     ld a, [hl]
-    ld hl, $ffe1
+    ld hl, hEnemyYPos
     add [hl]
     ld [hl], a
+    ; Adjust x position
     ldh a, [hEnemyState]
     ld e, a
     ld d, $00
     ld hl, table_6BB1
     add hl, de
     ld a, [hl]
-    ld hl, $ffe2
+    ld hl, hEnemyXPos
     add [hl]
     ld [hl], a
 ret
@@ -1012,7 +1018,7 @@ Call_003_6bd2: ; 03:6BD2
 
     push hl
     call Call_003_6c58
-    ld hl, $ffe1
+    ld hl, hEnemyYPos
     bit 7, b
     jr z, jr_003_6c14
         ld a, b

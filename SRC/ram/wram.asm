@@ -141,11 +141,12 @@ def samus_damageValue = $C424 ; Health to take from Samus
 ;
 ;$C438: Enemy handling incomplete flag. In $2:409E, if 0: sets $C439 = [number of enemies]
 ;$C439: Current enemy index
-;
+def samus_onSolidSprite = $C43A ; Is Samus atop a solid sprite
 ;$C44B: Request to execute $2:418C (save/load spawn/save flags). Set by doorExitStatus in the door script function
 ;
 ;$C44D: Tile Y relative to scroll Y (see $2250)
 ;$C44E: Tile X relative to scroll X (see $2250)
+def omega_tempSpriteType = $C44F ; Used to preserve sprite type when stunned
 ;$C450: Enemy data address in $3:422F
 ;$C452: Enemy data address in $2:409E
 ;$C454: Enemy data address in $1:5A11
@@ -154,13 +155,18 @@ def samus_damageValue = $C424 ; Health to take from Samus
 def previousLevelBank = $C459 ; Previous level bank --- used during door transitions to make sure that the enemySaveFlags are saved to the correct location
 ;
 ;$C45C: Used as index for table at $1:729C, value for $FFEA
-;
+def omega_stunCounter = $C462 ; Omega Metroid stun counter
 ;$C463: Metroid is hatching flag (freeze time)
-;$C464: Metroid invincibility timer
+def alpha_stunCounter = $C464 ; Alpha Metroid stun counter
 ;$C465: Checked and cleared in $2:4000, cleared in $2:412F
+;  Possibly a flag for being in a metroid fight
 ;$C466..69: Set to [$D05D..60] in $2:438F
-;
+;$C468 is a pointer compared against in $2:7DA0
+def gamma_stunCounter = $C46A ; Gamma Metroid stun counter
+
+def zeta_stunCounter = $C46C ; Zeta Metroid stun counter
 ;$C46D: Set to FFh in $2:412F. Value for $D06F in $2:4DD3
+;  Enemy collision results?
 ;
 ;$C474: Cleared in $2:4000
 ;$C475: Cleared in $2:4000
@@ -266,7 +272,7 @@ def sfxRequest_square1 = $CEC0 ; Tone/sweep channel sound effect to play (rename
 ;            17h: Picked up large energy drop
 ;            18h: Samus' health changed
 ;            19h: No missile dud shot
-;            1Ah: (set in $2:6BB2 and other places in bank 2)
+;            1Ah: Metroids blocking Screw Attack
 ;            1Bh: Metroid cry
 ;            1Ch: Saved
 ;            1Dh: Varia suit transformation

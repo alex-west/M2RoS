@@ -2512,7 +2512,7 @@ samus_spiderDown: ; 00:1152
     ld a, [$d038]
     ld [spiderDisplacement], a
         ret nc
-    ld a, [$c43a]
+    ld a, [samus_onSolidSprite]
     and a
         ret nz
     ldh a, [hSamusYPixel]
@@ -2655,7 +2655,7 @@ jr_000_1232:
 
 Jump_000_1233:
 jr_000_1233:
-    ld a, [$c43a]
+    ld a, [samus_onSolidSprite]
     and a
     jr nz, jr_000_1241
 
@@ -2774,7 +2774,7 @@ poseFunc_morphFall: ; 00:123B - $08: Morphball falling
         xor a
         ld [samus_fallArcCounter], a
         ; Clamp y pixel to 8x8 tile boundary if this condition is met
-        ld a, [$c43a]
+        ld a, [samus_onSolidSprite]
         and a
             ret nz
         ldh a, [hSamusYPixel]
@@ -2859,7 +2859,7 @@ poseFunc_12F5: ; $07 - Falling
     
         xor a
         ld [samus_fallArcCounter], a
-        ld a, [$c43a]
+        ld a, [samus_onSolidSprite]
         and a
             ret nz
         ldh a, [hSamusYPixel]
@@ -4732,7 +4732,7 @@ Call_000_1f0f: ; 00:1F0F
     call Call_000_348d ; Sprite collision?
     jr nc, .endIf_A
         ld a, $01
-        ld [$c43a], a
+        ld [samus_onSolidSprite], a
         ld a, l
         ld [$d05e], a
         ld a, h
@@ -7968,7 +7968,7 @@ Call_000_348d:
     add $12
     ldh [$98], a
     xor a
-    ld [$c43a], a
+    ld [samus_onSolidSprite], a
     ldh a, [hCameraXPixel]
     ld b, a
     ldh a, [hSamusXPixel]
@@ -8034,7 +8034,7 @@ Call_000_34ef:
     add b
     ldh [$98], a
     xor a
-    ld [$c43a], a
+    ld [samus_onSolidSprite], a
     ldh a, [hCameraXPixel]
     ld b, a
     ldh a, [hSamusXPixel]
@@ -9158,7 +9158,7 @@ ret
 
 Call_000_3d0c: ; 00:3D0C
     callFar Call_001_70ba ; $70ba
-    switchBank enAI_6C44 ; Alpha Metroid AI?
+    switchBank enAI_alphaMetroid ; Bank 2 - Alpha Metroid AI?
 ret
 
 Call_000_3d20: ; 00:3D20
@@ -9168,7 +9168,7 @@ ret
 
 Call_000_3d34: ; 00:3D34
     callFar Call_001_71cb ; $71cb
-    switchBank enAI_6C44 ; Also Alpha Metroid AI?
+    switchBank enAI_alphaMetroid ; Also Alpha Metroid AI?
 ret
 
 Call_000_3d48: ; 00:3D48
