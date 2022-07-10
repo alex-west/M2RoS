@@ -7559,7 +7559,7 @@ Jump_002_6bb2:
         ldh a, [hEnemyStunCounter]
         xor $10
         ldh [hEnemyStunCounter], a
-
+        ; Check if Samus is in range
         ld hl, hEnemyXPos
         ld a, [samus_onscreenXPos]
         sub [hl]
@@ -7639,7 +7639,7 @@ jr jr_002_6c93
 
 Jump_002_6c7d: ; Shot reactions?
     ld a, [$c46d]
-    cp $20
+    cp $20 ; Touch
         jp nc, Jump_002_6c93
     cp $10
         jr z, alpha_screw
@@ -8185,12 +8185,11 @@ jr_002_6f87:
 jr_002_6f8e:
     ld a, [$c41c]
     and a
-    jp nz, Jump_002_7016
+        jp nz, Jump_002_7016
 
     ldh a, [hEnemySpawnFlag]
     cp $04
-    jr z, jr_002_6fd8
-
+        jr z, jr_002_6fd8
     and $0f
         jr z, jr_002_6f7f
 
@@ -9329,7 +9328,7 @@ enAI_7631: ; 02:7631
     call Call_002_7da0
     ldh a, [hEnemySpawnFlag]
     cp $06
-        jp z, Jump_002_7847
+        jp z, omega_fireball
 
     ld a, [$c41c]
     and a
@@ -9366,17 +9365,16 @@ jr_002_7665:
     jp z, Jump_002_78dc
 
     ld a, [$c46d]
-    cp $20
-        jp nc, Jump_002_771f
-    cp $10
+    cp $20 ; Touch
+        jp nc, omega_touch
+    cp $10 ; Screw
         jr z, omega_screw
-    cp $08
-        jr z, jr_002_768b
-jr_002_767c:
+    cp $08 ; Missiles
+        jr z, omega_hurt
+omega_plink:
     ld a, $0f
     ld [sfxRequest_square1], a
 ret
-
 
 omega_screw:
     call metroid_screwReaction
@@ -9384,68 +9382,66 @@ omega_screw:
     ld [sfxRequest_square1], a
 ret
 
-
-jr_002_768b:
+omega_hurt:
+    ; Ignore vertical shots
     ld a, [$c46e]
     ld b, a
     ld a, b
     and $03
-    jr z, jr_002_767c
-
+        jr z, omega_plink
+    ; Check if hit from front or behind
     ldh a, [hEnemyAttr]
     bit OAMB_XFLIP, a
-    jr nz, jr_002_76a0
+    jr nz, .else_A
+        bit 1, b
+            jr z, omega_oneDamage
+        jr omega_weakPoint
+    .else_A:
+        bit 0, b
+            jr z, omega_oneDamage
 
-    bit 1, b
-    jr z, jr_002_76b3
+    omega_weakPoint:
+        ; Omega Metroid was hit in the back (do 3x damage)
+        ld hl, hEnemyHealth
+        ld a, [hl]
+        sub $03
+            jr c, jr_002_76e1
+            jr z, jr_002_76e1
+        ld [hl], a
+        ld a, $10
+        jr omega_endBranch
+    omega_oneDamage:
+        ld hl, hEnemyHealth
+        dec [hl]
+            jr z, jr_002_76e1
+        ld a, $03
+    omega_endBranch:
 
-    jr jr_002_76a4
-
-jr_002_76a0:
-    bit 0, b
-    jr z, jr_002_76b3
-
-jr_002_76a4:
-    ; Omega Metroid was hit in the back (do 3x damage)
-    ld hl, hEnemyHealth
-    ld a, [hl]
-    sub $03
-        jr c, jr_002_76e1
-        jr z, jr_002_76e1
-    ld [hl], a
-    ld a, $10
-    jr jr_002_76bb
-
-jr_002_76b3:
-    ld hl, hEnemyHealth
-    dec [hl]
-        jr z, jr_002_76e1
-    ld a, $03
-
-jr_002_76bb:
     ld [omega_stunCounter], a
-    
+    ; Save sprite type to temp
     ld hl, hEnemySpriteType
     ld a, [hl]
     ld [omega_tempSpriteType], a
-    
+    ; Animate
     ld [hl], $c4
+    ; Noise
     ld a, $09
     ld [sfxRequest_noise], a
+    ; omega knockback
     bit 0, b
-    jr z, jr_002_76d7
+    jr z, .else_B
         ldh a, [hEnemyXPos]
         add $05
         ldh [hEnemyXPos], a
         ret
-    jr_002_76d7:
+    .else_B:
         ldh a, [hEnemyXPos]
         sub $05
         cp $10
             ret c
         ldh [hEnemyXPos], a
         ret
-
+; end branch
 
 jr_002_76e1:
     xor a
@@ -9481,17 +9477,15 @@ jr_002_76e1:
     ret
 
 
-Jump_002_771f:
+omega_touch:
     ldh a, [$e8]
     inc a
-    jr z, jr_002_7787
-
+        jr z, jr_002_7787
     call Call_002_6e7f
     ld hl, $c471
     ld a, [hl]
     and a
-    ret z
-
+        ret z
     ld [hl], $00
     ld a, $ff
     ldh [$e8], a
@@ -9509,7 +9503,7 @@ Jump_002_771f:
     ldh [hEnemySpriteType], a
     ld a, $05
     ld [$c41c], a
-    ret
+ret
 
 
 jr_002_7752:
@@ -9518,16 +9512,13 @@ jr_002_7752:
     ld a, [hl]
     cp $38
     jr z, jr_002_775f
-
-    call Call_002_7a42
-    ret
-
-
-jr_002_775f:
-    ld [hl], $00
-    ld a, $01
-    ld [$c41c], a
-    ret
+        call Call_002_7a42
+        ret
+    jr_002_775f:
+        ld [hl], $00
+        ld a, $01
+        ld [$c41c], a
+        ret
 
 
 jr_002_7767:
@@ -9548,69 +9539,64 @@ jr_002_7776:
     ld a, [hl]
     cp $24
     jr z, jr_002_7783
-
-    inc [hl]
-    call Call_002_7a42
-    ret
-
-
-jr_002_7783:
-    call Call_002_7a32
-    ret
+        inc [hl]
+        call Call_002_7a42
+        ret
+    jr_002_7783:
+        call omega_faceSamus
+        ret
 
 
 jr_002_7787:
     ld a, [$c41c]
     cp $05
-    jr z, jr_002_77bc
-
+        jr z, jr_002_77bc
     cp $06
-    jr z, jr_002_7800
-
+        jr z, jr_002_7800
     cp $07
-    jr z, jr_002_7752
+        jr z, jr_002_7752
 
     call Call_002_79a8
     ld a, [$c41c]
     cp $04
-    jr z, jr_002_7767
-
+        jr z, jr_002_7767
     dec a
-    jp z, Jump_002_7824
+        jp z, Jump_002_7824
 
     ld a, [$c425]
     dec a
-    jr z, jr_002_7767
+        jr z, jr_002_7767
 
     ld b, $18
     ld hl, $ffe9
     ld a, [hl]
     cp b
-    jr z, jr_002_7776
+        jr z, jr_002_7776
 
     inc [hl]
     ld a, [hl]
     cp b
-    jr z, jr_002_7771
+        jr z, jr_002_7771
 
     call enemy_flipSpriteId_2Bits.twoFrame
-    ret
+ret
 
 
 jr_002_77bc:
     ld hl, $ffe7
     dec [hl]
-    jr z, jr_002_77f3
+        jr z, jr_002_77f3
 
     ld a, [$c478]
     cp $04
-    jr z, jr_002_77d0
+        jr z, jr_002_77d0
 
     ld a, [samusPose]
     cp pose_crouch
-    jr z, jr_002_77f3
+        jr z, jr_002_77f3
 
 jr_002_77d0:
+    ; Chase Samus
     ld b, $02
     ld de, $2000
     call Call_000_3cba
@@ -9618,23 +9604,18 @@ jr_002_77d0:
     ld a, [samus_onscreenXPos]
     sub [hl]
     jr c, jr_002_77eb
-
-    cp $10
-    jr c, jr_002_77f2
-
-    ld a, OAMF_XFLIP
-    ldh [hEnemyAttr], a
-    jr jr_002_77f2
-
-jr_002_77eb:
-    cp $f0
-    jr nc, jr_002_77f2
-
-    xor a
-    ldh [hEnemyAttr], a
-
-jr_002_77f2:
-    ret
+        cp $10
+        jr c, jr_002_77f2
+            ld a, OAMF_XFLIP
+            ldh [hEnemyAttr], a
+            jr jr_002_77f2
+    jr_002_77eb:
+        cp $f0
+        jr nc, jr_002_77f2
+            xor a
+            ldh [hEnemyAttr], a
+    jr_002_77f2:
+ret
 
 
 jr_002_77f3:
@@ -9644,7 +9625,7 @@ jr_002_77f3:
     ldh [$e7], a
     ldh [$e9], a
     ldh [hEnemyState], a
-    ret
+ret
 
 
 jr_002_7800:
@@ -9653,34 +9634,28 @@ jr_002_7800:
     ld a, [hl+]
     cp $34
     jr c, jr_002_7817
-
-    ldh a, [hEnemyAttr]
-    bit OAMB_XFLIP, a
-    jr nz, jr_002_7814
-
-    dec [hl]
-    dec [hl]
-    ret
-
-
-jr_002_7814:
-    inc [hl]
-    inc [hl]
-    ret
-
-
-jr_002_7817:
-    ld a, $07
-    ld [$c41c], a
-    xor a
-    ldh [$e7], a
-    ld a, $bf
-    ldh [hEnemySpriteType], a
-    ret
+        ldh a, [hEnemyAttr]
+        bit OAMB_XFLIP, a
+        jr nz, jr_002_7814
+            dec [hl]
+            dec [hl]
+            ret
+        jr_002_7814:
+            inc [hl]
+            inc [hl]
+            ret
+    jr_002_7817:
+        ld a, $07
+        ld [$c41c], a
+        xor a
+        ldh [$e7], a
+        ld a, $bf
+        ldh [hEnemySpriteType], a
+        ret
 
 
 Jump_002_7824:
-    call Call_002_7a32
+    call omega_faceSamus
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
@@ -9700,77 +9675,69 @@ Jump_002_7824:
     ret
 
 
-Jump_002_7847: ; Omega fireball?
+omega_fireball: ; Omega fireball?
     ld a, [$c465]
     cp $02
-    jp z, Jump_002_78c8
+        jp z, Jump_002_78c8
 
     ldh a, [hEnemySpriteType]
     cp $c8
-    jr nc, jr_002_78b9
+        jr nc, jr_002_78b9
 
     ld hl, $ffe9
     ld a, [hl]
     and a
     jr nz, jr_002_7861
+        ld [hl], $01
+        call Call_000_3d20
+    jr_002_7861:
 
-    ld [hl], $01
-    call Call_000_3d20
-
-jr_002_7861:
     call Call_000_3d48
     ld a, b
     and a
     jr z, jr_002_7890
+        bit 7, b
+        jr z, jr_002_7880
+            res 7, b
+            ld hl, hEnemyYPos
+            ld a, [hl]
+            sub b
+            ld [hl], a
+            call Call_002_4bc2
+            ld a, [en_bgCollisionResult]
+            bit 3, a
+                jr nz, jr_002_78a9
+            jr jr_002_7890
+        jr_002_7880:
+    
+        ld hl, hEnemyYPos
+        ld a, [hl]
+        add b
+        ld [hl], a
+        call Call_002_49ba
+        ld a, [en_bgCollisionResult]
+        bit 1, a
+            jr nz, jr_002_78a9
+    jr_002_7890:
 
-    bit 7, b
-    jr z, jr_002_7880
-
-    res 7, b
-    ld hl, hEnemyYPos
-    ld a, [hl]
-    sub b
-    ld [hl], a
-    call Call_002_4bc2
-    ld a, [en_bgCollisionResult]
-    bit 3, a
-    jr nz, jr_002_78a9
-
-    jr jr_002_7890
-
-jr_002_7880:
-    ld hl, hEnemyYPos
-    ld a, [hl]
-    add b
-    ld [hl], a
-    call Call_002_49ba
-    ld a, [en_bgCollisionResult]
-    bit 1, a
-    jr nz, jr_002_78a9
-
-jr_002_7890:
     ld hl, hEnemyXPos
     bit 7, c
     jr z, jr_002_789d
+        res 7, c
+        ld a, [hl]
+        sub c
+        jr jr_002_789f
+    jr_002_789d:
+        ld a, [hl]
+        add c
+    jr_002_789f:
 
-    res 7, c
-    ld a, [hl]
-    sub c
-    jr jr_002_789f
-
-jr_002_789d:
-    ld a, [hl]
-    add c
-
-jr_002_789f:
     ld [hl], a
     ldh a, [hEnemy_frameCounter]
     and $03
-    ret nz
-
+        ret nz
     call enemy_flipSpriteId.now
     ret
-
 
 jr_002_78a9:
     ld a, [en_bgCollisionResult]
@@ -9783,18 +9750,16 @@ jr_002_78a9:
     ret
 
 
-jr_002_78b9:
+jr_002_78b9: ; Animate fireball explosion
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $cc
-    jr z, jr_002_78c8
-
+        jr z, jr_002_78c8
     ldh a, [hEnemy_frameCounter]
     and $01
-    ret nz
-
+        ret nz
     inc [hl]
-    ret
+ret
 
 
 Jump_002_78c8:
@@ -9821,6 +9786,7 @@ Jump_002_78dc:
     and a
     jr nz, jr_002_790c
 
+    ; Check if Samus is in range
     ld hl, hEnemyXPos
     ld a, [hl]
     add $10
@@ -9829,13 +9795,11 @@ Jump_002_78dc:
     add $10
     sub b
     jr nc, jr_002_78fa
-
-    cpl
-    inc a
-
-jr_002_78fa:
+        cpl
+        inc a
+    jr_002_78fa:
     cp $50
-    ret nc
+        ret nc
 
     ld a, $01
     ld [$c463], a
@@ -9872,18 +9836,16 @@ Call_002_7922:
     ld b, a
     bit OAMB_XFLIP, a
     jr nz, jr_002_7938
+        ldh a, [hEnemyXPos]
+        sub $10
+        ld [hl+], a
+        jr jr_002_793d
+    jr_002_7938:
+        ldh a, [hEnemyXPos]
+        add $10
+        ld [hl+], a
+    jr_002_793d:
 
-    ldh a, [hEnemyXPos]
-    sub $10
-    ld [hl+], a
-    jr jr_002_793d
-
-jr_002_7938:
-    ldh a, [hEnemyXPos]
-    add $10
-    ld [hl+], a
-
-jr_002_793d:
     ld a, $c6
     ld [hl+], a
     xor a
@@ -9900,15 +9862,14 @@ jr_002_793d:
 Jump_002_7950:
     ld a, $bf
     ldh [hEnemySpriteType], a
+    ; Check if Samus is in range
     ld hl, hEnemyXPos
     ld a, [samus_onscreenXPos]
     sub [hl]
     jr nc, jr_002_795f
-
-    cpl
-    inc a
-
-jr_002_795f:
+        cpl
+        inc a
+    jr_002_795f:
     cp $50
         ret nc
 
@@ -9931,7 +9892,7 @@ jr_002_795f:
         ret z
     ld a, $0c
     ld [songRequest], a
-    ret
+ret
 
 
 Jump_002_798b:
@@ -9956,53 +9917,47 @@ Call_002_79a8:
     ld a, [hl]
     cp $40
     jr z, jr_002_79b2
-
-    inc [hl]
-    ret
-
-
-jr_002_79b2:
-    ld [hl], $00
+        inc [hl]
+        ret
+    jr_002_79b2:
+    ld [hl], $00 ; Loop back to zero
+    
+    ; If Samus has lost enough health since last time this was called, do something?
     ld hl, samusCurHealthLow
     ld a, [$c470]
     sub [hl]
     cp $30
-    jr nc, jr_002_79d0
+        jr nc, .case_default
 
     ld hl, $c478
     inc [hl]
     ld a, [hl]
     dec a
-        jr z, jr_002_79d8
+        jr z, .case_1
     dec a
-        jr z, jr_002_79dc
+        jr z, .case_2
     dec a
-        jr z, jr_002_79e0
+        jr z, .case_3
     dec a
-        jr z, jr_002_79e4
+        jr z, .case_4
 
-jr_002_79d0:
+.case_default:
     xor a
     ld [$c478], a
     ld a, $0c
-        jr jr_002_79e6
-
-jr_002_79d8:
+        jr .exit
+.case_1:
     ld a, $14
-        jr jr_002_79e6
-
-jr_002_79dc:
+        jr .exit
+.case_2:
     ld a, $28
-        jr jr_002_79e6
-
-jr_002_79e0:
+        jr .exit
+.case_3:
     ld a, $40
-        jr jr_002_79e6
-
-jr_002_79e4:
+        jr .exit
+.case_4:
     ld a, $60
-
-jr_002_79e6:
+.exit:
     ldh [$e7], a
     ld a, [samusCurHealthLow]
     ld [$c470], a
@@ -10061,9 +10016,9 @@ jr_002_7a2d:
     add b
     ld [de], a
     jr jr_002_7a28
+; end unused?
 
-
-Call_002_7a32:
+omega_faceSamus: ; 02:7A32
     ld hl, hEnemyXPos
     ld a, [samus_onscreenXPos]
     sub [hl]
@@ -10082,7 +10037,7 @@ Call_002_7a42:
         ret nz
     ld hl, hEnemySpriteType
     ld a, [hl]
-    xor $7f
+    xor $7f ; Osciallate between $BF and $C0
     ld [hl], a
 ret
 
@@ -10090,6 +10045,7 @@ ret
 ; Larval Metroid?
 enAI_7A4F: ; 02:7A4F
     call Call_002_7da0
+    ; Check if latched?
     ldh a, [$e7]
     and a
         jr z, jr_002_7ac0
@@ -10101,7 +10057,7 @@ enAI_7A4F: ; 02:7A4F
     dec a
         jr z, jr_002_7a71
 
-    call Call_002_7bd9
+    call larva_stayAttached
     ; Unlatch if bombed
     ld a, [$c46d]
     cp $09
@@ -10180,11 +10136,11 @@ jr_002_7ac0:
 
     ; Frozen shot reactions
     ld a, [$c46d]
-    cp $20
+    cp $20 ; Touch
         ret nc
-    cp $08
+    cp $08 ; Missiles
         jr z, larva_hurt
-    dec a
+    dec a ; $01 - Ice (refreeze)
         jp z, larva_freeze
     ; Plink
     ld a, $0f
@@ -10252,22 +10208,21 @@ ret
 jr_002_7b43: ; Normal shot reactions
     call Call_002_7bcc
     ld a, [$c46d]
-    cp $ff
-        jp z, Jump_002_7ba3
-    cp $20
-        jp z, Jump_002_7b64
-    cp $10
-        jr z, jr_002_7b86
-    cp $09
-        jr z, jr_002_7b86
-    dec a ; $01
+    cp $ff ; Nothing
+        jp z, larva_notHit
+    cp $20 ; Touch
+        jp z, larva_touch
+    cp $10 ; Screw
+        jr z, larva_screwBomb
+    cp $09 ; Bomb
+        jr z, larva_screwBomb
+    dec a ; $01 - Ice
         jr z, larva_freeze
     ld a, $0f
     ld [sfxRequest_square1], a
 ret
 
-
-Jump_002_7b64:
+larva_touch:
     ld hl, $c474
     ld a, [hl]
     cp $02
@@ -10291,7 +10246,7 @@ Jump_002_7b64:
 ret
 
 
-jr_002_7b86:
+larva_screwBomb:
     xor a
     ldh [$e9], a
     call metroid_screwReaction
@@ -10312,7 +10267,7 @@ larva_freeze:
 ret
 
 
-Jump_002_7ba3:
+larva_notHit:
     ldh a, [$e8]
     inc a
     jr z, jr_002_7bc0
@@ -10344,12 +10299,12 @@ Call_002_7bcc:
         ret nz
     ld hl, hEnemySpriteType
     ld a, [hl]
-    xor $6e
+    xor $6e ; Osciallate between $A0 and $CE
     ld [hl], a
 ret
 
 
-Call_002_7bd9: ; Stay attached to Samus
+larva_stayAttached: ; Stay attached to Samus
     ld hl, hEnemyYPos
     ld a, [samus_onscreenYPos]
     ld [hl+], a

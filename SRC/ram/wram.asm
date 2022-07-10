@@ -166,10 +166,21 @@ def gamma_stunCounter = $C46A ; Gamma Metroid stun counter
 
 def zeta_stunCounter = $C46C ; Zeta Metroid stun counter
 ;$C46D: Set to FFh in $2:412F. Value for $D06F in $2:4DD3
-;  Enemy collision results?
-;
+;  Enemy-Samus/Beam collision results
+; $00 - Power beam
+; $01 - Ice
+; $02 - Wave
+; $03 - Spazer
+; $04 - Plasma
+; $09 - Bombs
+; $10 - Screw
+; $20 - Touch
+; $FF - Nothing
+;$C46E: Enemy-Beam collision direction results
+
+;$C46F: Omega Metroid waiting counter of some sort
 ;$C474: Cleared in $2:4000
-;$C475: Cleared in $2:4000
+;$C475: Cleared in $2:4000 - Larva metroid related
 ;
 ;$C477: Set to 6 in $2:4F97
 ;
