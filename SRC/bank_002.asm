@@ -1145,6 +1145,8 @@ jr_002_45f4:
 
 
 ; Beginning of apparent enemy tilemap collision routines
+
+; "$11 routines" = check right side of object?
 Call_002_4608:
     ld a, $11
     ld [en_bgCollisionResult], a
@@ -1169,6 +1171,7 @@ Call_002_4608:
 
     jr jr_002_46a6
 
+; Unused?
     ld a, $11
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
@@ -1263,6 +1266,7 @@ Call_002_46ac:
 
     jr jr_002_46a6
 
+; Unused?
     ld a, $11
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
@@ -1394,6 +1398,8 @@ Call_002_47b4:
 
     jr jr_002_47ae
 
+; "$44 functions"
+;  Check left edge?
 Call_002_47e1:
     ld a, $44
     ld [en_bgCollisionResult], a
@@ -1418,6 +1424,7 @@ Call_002_47e1:
 
     jr jr_002_487f
 
+; Unused?
     ld a, $44
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
@@ -1512,6 +1519,7 @@ Call_002_4885:
 
     jr jr_002_487f
 
+; Unused?
     ld a, $44
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
@@ -1643,6 +1651,8 @@ Call_002_498d:
 
     jr jr_002_4987
 
+; "$22 functions"
+;  Check bottom edge?
 Call_002_49ba:
     ld a, $22
     ld [en_bgCollisionResult], a
@@ -1738,6 +1748,7 @@ Call_002_4a28:
 
     jr jr_002_4a22
 
+; Unused?
     ld a, $22
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
@@ -1919,7 +1930,8 @@ jr_002_4bbc:
     res 1, [hl]
     ret
 
-
+; "$88 functions"
+; Check top edge?
 Call_002_4bc2:
     ld a, $88
     ld [en_bgCollisionResult], a
@@ -1944,6 +1956,7 @@ Call_002_4bc2:
 
     jr jr_002_4c2a
 
+; Unused?
     ld a, $88
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
@@ -2014,6 +2027,7 @@ Call_002_4c30:
 
     jr jr_002_4c2a
 
+; Unused?
     ld a, $88
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
@@ -2053,6 +2067,7 @@ Call_002_4c30:
 
     jr jr_002_4cfe
 
+; Unused?
     ld a, $88
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
@@ -2484,7 +2499,7 @@ jr_002_4f56:
     ld [$c381], a
     ld a, $03
     ld [$c382], a
-    call Call_002_4f87
+    call blobThrower_getFacingDirection
     ld de, header_50D5
     call Call_002_4f97
     ld de, header_50E2
@@ -2496,7 +2511,7 @@ jr_002_4f56:
     ret
 
 
-Call_002_4f87: ; 02:4F87 - Shared with Arachnus
+blobThrower_getFacingDirection: ; 02:4F87 - Shared with Arachnus
     ld a, [samus_onscreenXPos]
     ld b, a
     ldh a, [hEnemyXPos]
@@ -2651,18 +2666,19 @@ header_50FC:
 ;------------------------------------------------------------------------------
 ; Arachnus / Arachnus Orb
 enAI_arachnus: ; 02:5109
+arachnus:
     ldh a, [$e7]
     rst $28
-        dw arachnus_511C ; State - 0
-        dw arachnus_5152 ; State - 1
-        dw arachnus_51B9 ; State - 2
-        dw arachnus_51CE ; State - 3
-        dw arachnus_51EC ; State - 4
-        dw arachnus_51FB ; State - 5
-        dw arachnus_526E ; State - 6
+        dw .state_0 ; Init and start fight
+        dw .state_1 ; Initial bouncing for the intro
+        dw .state_2 ; An additional small bounce for the intro
+        dw .state_3 ; Standing up (part 1)
+        dw .state_4 ; Standing up (part 2)
+        dw .state_5 ; Attacking/Vulnerable
+        dw .state_6 ; Bouncing again (loops back to state 3)
         dw enAI_NULL ;arachnus_5651
 
-arachnus_511C: ; 02:511C - State 0
+.state_0: ; 02:511C - State 0 - Init and start fight
     ; Clear arachnus scratchpad
     ld hl, arachnus_jumpCounter
     xor a
@@ -2671,47 +2687,47 @@ arachnus_511C: ; 02:511C - State 0
         ld [hl+], a
         dec b
     jr nz, .initLoop
-
+    ; Set actual health and fake health
     ld a, $06
     ld [arachnus_health], a
     ld a, $ff
     ldh [hEnemyHealth], a
-    
+    ; Check if hit
     call enemy_getSamusCollisionResults
     ld a, [$c46d]
-    cp $ff
+    cp $ff ; Exit if touching
         ret z
-    cp $09
+    cp $09 ; Exit if not hit with bombs or a beam
         ret nc
+; Actually start the fight
+    ; Set sprite to arachnus
     ld a, $76
     ldh [hEnemySpriteType], a
-
-jr_002_513f:
+  .nextStateAndResetJumpCounterAndUnknownVar:
     ld a, $05
-    ld [$c392], a
-
-Jump_002_5144:
+    ld [arachnus_unknownVar], a
+  .nextStateAndResetJumpCounter:
     xor a
     ld [arachnus_jumpCounter], a
     ld a, $20
-
-Jump_002_514a:
-    ld [$c391], a
+  .nextState:
+    ld [arachnus_actionTimer], a
     ; Next state
     ld hl, $ffe7
     inc [hl]
 ret
 
-arachnus_5152: ; 02:5152 - State 1
-    ld hl, arachnus_highJumpTable
-    call arachnus_jump
-        jr nz, jr_002_513f
+.state_1: ; 02:5152 - State 1 - Initial Bouncing
+    ld hl, .jumpSpeedTable_high
+    call .jump
+        jr nz, .nextStateAndResetJumpCounterAndUnknownVar
+    ; Move right
     ld hl, hEnemyXPos
     ld a, [hl]
     add $01
     ld [hl], a
-
-jr_002_5161:
+    ; Animate
+  .flipSpriteId: ; 02:5161
     ld a, [frameCounter]
     and $06
         ret nz
@@ -2720,22 +2736,25 @@ jr_002_5161:
     ldh [hEnemySpriteType], a
 ret
 
-
-arachnus_jump: ; 02:516E
+; Subroutine, not a state
+.jump: ; 02:516E
+    ; Read value from jump table
     ld a, [arachnus_jumpCounter]
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
+    ; Store distance in B
     ld b, a
+    ; Check if it's a special token ($80 or $81) or not
     cp $80
     jr nz, .else_A
-        ld bc, $0380
+        ld bc, $0380 ; B = speed, C = status
         jr .endIf_A
     .else_A:
         cp $81
         jr nz, .else_B
-            ld bc, $0381
+            ld bc, $0381 ; B = speed, C = status
             jr .endIf_A
         .else_B:
             ; Increment jump counter
@@ -2750,83 +2769,88 @@ arachnus_jump: ; 02:516E
     ldh [hEnemyYPos], a
     ; Save value of c
     ld a, c
-    ld [$c393], a
-    
+    ld [arachnus_jumpStatus], a
+    ; Exit if no collision happened
     call Call_002_4a28
     ld a, [en_bgCollisionResult]
     and $02
         ret z
-    ld a, [$c393]
-    and a
-    jr z, .endIf_C
-        cp $81
-        jr z, .endIf_C
+    
+    ld a, [arachnus_jumpStatus]
+    and a ; Return nz if we somehow landed early
+    jr z, .else_C
+        cp $81 ; Return nz if we're at the end of the last bounce
+        jr z, .else_C
+            ; If arachnus_jumpStatus was $80, move on to the next jump speed table (so it bounces)
+            ; (note that the jump speed tables are right next to each other, and only the last one ends in $81)
             ld a, [arachnus_jumpCounter]
             inc a
             ld [arachnus_jumpCounter], a
+            ; Return zero
             xor a
             and a
             ret
-    .endIf_C:
-    inc a
-    and a
-ret
-
-arachnus_51B9: ; 02:51B9 - State 2
-    ld hl, arachnus_lowJumpTable
-
-Jump_002_51bc:
-    call arachnus_jump
-    jr nz, .endIf_D
-        jr jr_002_5161
-    .endIf_D:
-
-    ld a, $04
-    ld [$c391], a
-    ld hl, $ffe7
-    ld [hl], $03
-ret
-
-arachnus_51CE: ; 02:51CE - State 3
-    ld a, [$c391]
-    and a
-    jr z, jr_002_51da
-        dec a
-        ld [$c391], a
-        jr jr_002_5161
-    jr_002_51da:
-
-    call arachnus_faceSamus
-    ldh a, [hEnemyYPos]
-    sub $08
-    ldh [hEnemyYPos], a
-    ld a, $78
-
-jr_002_51e5:
-    ldh [hEnemySpriteType], a
-    ld a, $04
-    jp Jump_002_514a
-; end state
-
-arachnus_51EC: ; 02:51EC - State 4
-    ld a, [$c391]
-    and a
-    jr z, jr_002_51f7
-        dec a
-        ld [$c391], a
+    .else_C:
+        ; Return non-zero
+        inc a
+        and a
         ret
-    jr_002_51f7:
-        ld a, $7a
-        jr jr_002_51e5
 ; end state
 
-arachnus_51FB: ; 02:51FB - State 5
+.state_2: ; 02:51B9 - State 2 - An additional small bounce
+    ld hl, .jumpSpeedTable_low
+  .jumpAndAnimate:
+    call arachnus.jump
+    jr nz, .else_D ; Animate spin
+        jr arachnus.flipSpriteId
+    .else_D: ; Done bouncing
+        ; Set timer
+        ld a, $04
+        ld [arachnus_actionTimer], a
+        ; Move to state 3
+        ld hl, $ffe7
+        ld [hl], $03
+        ret
+
+.state_3: ; 02:51CE - State 3 - Standing up (part 1)
+    ld a, [arachnus_actionTimer]
+    and a
+    jr z, .else_E
+        dec a
+        ld [arachnus_actionTimer], a
+        jr arachnus.flipSpriteId
+    .else_E:
+        call .faceSamus
+        ; Stand up
+        ldh a, [hEnemyYPos]
+        sub $08
+        ldh [hEnemyYPos], a
+        ld a, $78
+      .nextStateAndSetSprite:
+        ldh [hEnemySpriteType], a
+        ld a, $04 ; value for animation timer
+        jp arachnus.nextState
+; end state
+
+.state_4: ; 02:51EC - State 4 - Standing up (part 2)
+    ld a, [arachnus_actionTimer]
+    and a
+    jr z, .else_F
+        dec a
+        ld [arachnus_actionTimer], a
+        ret
+    .else_F:
+        ld a, $7a ; Set sprite type
+        jr .nextStateAndSetSprite
+; end state
+
+.state_5: ; 02:51FB - State 5 - Attacking/Vulnerable
     call enemy_getSamusCollisionResults
     ld a, [$c46d]
-    cp $ff
-    jr z, jr_002_521b
-        cp $09
-        jr nz, jr_002_521b
+    cp $ff ; Skip ahead if nothing
+    jr z, .endIf_G
+        cp $09 ; Check if bomb
+        jr nz, .endIf_G
             ld a, $05
             ld [sfxRequest_noise], a
             ld a, $11
@@ -2834,45 +2858,45 @@ arachnus_51FB: ; 02:51FB - State 5
             ld a, [arachnus_health]
             dec a
             ld [arachnus_health], a
-                jr z, arachnus_die ; Die
-    jr_002_521b:
+                jr z, .die
+    .endIf_G:
 
     ld a, [hInputPressed]
     and PADF_B
-    jr nz, jr_002_5249
-        call arachnus_faceSamus
-        ld a, [$c391]
+    jr nz, .else_H
+        call .faceSamus
+        ld a, [arachnus_actionTimer]
         and a
-        jr z, jr_002_5230
+        jr z, .else_I
             dec a
-            ld [$c391], a
+            ld [arachnus_actionTimer], a
             ret
-        jr_002_5230:
-    
-        ; Spit fireball sprite
-        ld a, $7a
-        ldh [hEnemySpriteType], a
-        ldh a, [hEnemySpawnFlag]
-        cp $01
-            ret nz
-        ; Spawn projectile
-        ld de, header_52D2
-        call arachnus_shootFireball
-        ld a, $79
-        ldh [hEnemySpriteType], a
-        ld a, $10
-        ld [$c391], a
-        ret
-    jr_002_5249:
+        .else_I:
+            ; Spit fireball sprite
+            ld a, $7a
+            ldh [hEnemySpriteType], a
+            ldh a, [hEnemySpawnFlag]
+            cp $01
+                ret nz
+            ; Spawn projectile
+            ld de, .fireballHeader
+            call .shootFireball
+            ld a, $79
+            ldh [hEnemySpriteType], a
+            ; Reset action timer
+            ld a, $10
+            ld [arachnus_actionTimer], a
+            ret
+    .else_H:
         ldh a, [hEnemyYPos]
         add $08
         ldh [hEnemyYPos], a
         ld a, $76
         ldh [hEnemySpriteType], a
-        jp Jump_002_5144
+        jp .nextStateAndResetJumpCounter
 ; end state
 
-arachnus_die: ; Become Spring ball
+.die: ; Become Spring ball
     ld a, $0d
     ld [sfxRequest_noise], a
     ; Transform into spring ball
@@ -2887,45 +2911,46 @@ arachnus_die: ; Become Spring ball
     ld [hl], d
 ret
 
-arachnus_526E: ; 02:526E - State 6
+.state_6: ; 02:526E - State 6 - Bouncing again (loops back to state 3)
     ldh a, [hEnemyAttr]
     and a
-    jr z, jr_002_528c
+    jr z, .else_J
+        ; Try right
         call Call_002_4662
-        ld b, $01
+        ld b, 1 ; Speed
         ld a, [en_bgCollisionResult]
         and $01
-        jr z, jr_002_5281
-            jr jr_002_5286
+        jr z, .moveHorizontal
+            jr .moveVertical
             
-        jr_002_5281:
+          .moveHorizontal:
             ldh a, [hEnemyXPos]
             add b
             ldh [hEnemyXPos], a
-        jr_002_5286:
-            ld hl, arachnus_midJumpTable
-            jp Jump_002_51bc
-    jr_002_528c:
+          .moveVertical:
+            ld hl, .jumpSpeedTable_mid
+            jp .jumpAndAnimate
+    .else_J:
+        ; Try left
         call Call_002_483b
-        ld b, $ff
+        ld b, -1 ; Speed
         ld a, [en_bgCollisionResult]
         and $04
-        jr z, jr_002_5281
-            jr jr_002_5286
+        jr z, .moveHorizontal
+            jr .moveVertical
 ; end state
 
-arachnus_faceSamus: ; 02:529A
-    call Call_002_4f87
+.faceSamus: ; 02:529A
+    call blobThrower_getFacingDirection
     and a
     ld a, OAMF_XFLIP ;$20
-    jr z, jr_002_52a3
+    jr z, .endIf_K
         xor a
-    jr_002_52a3:
+    .endIf_K:
     ldh [hEnemyAttr], a
 ret
 
-
-arachnus_shootFireball: ; 02:52A6
+.shootFireball: ; 02:52A6
     call findFirstEmptyEnemySlot_longJump
     ld [hl], $00
     inc hl
@@ -2936,15 +2961,15 @@ arachnus_shootFireball: ; 02:52A6
     ldh a, [hEnemyAttr]
     ld b, $18
     and a
-    jr nz, .endIf
+    jr nz, .endIf_L
         ld b, -$18 ; $E8
-    .endIf:
+    .endIf_L:
     ldh a, [hEnemyXPos]
     add b
     ld [hl+], a
     
     push hl
-        call enemy_createLinkForChildObject ; Fireball doesn't use this
+        call enemy_createLinkForChildObject ; Fireball doesn't bother with this link
         call enemy_spawnObject.longHeader
     pop hl
     ld de, $0004
@@ -2955,19 +2980,19 @@ arachnus_shootFireball: ; 02:52A6
     ldh [hEnemySpawnFlag], a
 ret
 
-header_52D2: ; 02:52D2 - Enemy header (arachnus projectile?)
+.fireballHeader: ; 02:52D2 - Enemy header
     db $7b, $00, $00, $00, $00, $00, $00, $00, $00, $02, $02
-    dw enAI_arachnusFireball
+    dw .fireballAI
 
-enAI_arachnusFireball: ; 02:52DF
+.fireballAI: ; 02:52DF
     ld hl, hEnemyXPos
     ldh a, [$e7]
     and a
     ; Set speed
     ld b, 3
-    jr nz, .endIf
+    jr nz, .endIf_M
         ld b, -3 ;$fd
-    .endIf:
+    .endIf_M:
     ; Move
     ld a, [hl]
     add b
@@ -2983,16 +3008,21 @@ ret
 
     ret ; 02:52FB - Unreferenced
 
-arachnus_highJumpTable: ; 02:52FC - State 1
+; Notes: These tables need to be contiguous, and the code that accesses them only supports
+;  them having a combined length of 256 (easy enough to fix though).
+; The $80 at the end of each table should coincide with the moment that Arachnus lands on the ground,
+;  assuming you want it to continue on to the next bounce.
+; The last table should end with $81 so the game doesn't read junk data as velocities
+.jumpSpeedTable_high: ; 02:52FC - State 1 (jump off the pedestal)
     db $FF, $FE, $FE, $FE, $FF, $FF, $FE, $FF, $FE, $FE, $FE, $FF, $FF, $FF, $00, $00
     db $00, $00, $01, $00, $01, $01, $00, $01, $01, $01, $01, $01, $01, $01, $01, $01
     db $01, $02, $02, $02, $02, $02, $02, $02, $02, $03, $03, $03, $03, $03, $03, $03
     db $00, $80
-arachnus_midJumpTable: ; 02:532E - State 6
+.jumpSpeedTable_mid: ; 02:532E - State 6
     db $FC, $FD, $FD, $FD, $FE, $FE, $FD, $FE, $FE, $FE, $FE, $FF, $FE, $FF, $FE, $FF
     db $FF, $00, $00, $00, $00, $01, $01, $02, $01, $02, $01, $02, $02, $02, $02, $03
     db $02, $02, $03, $03, $03, $04, $00, $80
-arachnus_lowJumpTable: ; 02:5356 - State 2
+.jumpSpeedTable_low: ; 02:5356 - State 2
     db $FD, $FE, $FE, $FE, $FF, $FF, $00, $FF, $FF, $00, $FF, $00, $00, $01, $00, $01
     db $01, $00, $01, $01, $02, $02, $02, $03, $81
 

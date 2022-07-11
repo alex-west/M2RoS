@@ -59,13 +59,15 @@ def hitboxC360 = $C360 ;-$C363: Set to [$2:503B..3E] in $2:4DB1
 ;
 def temp_spriteType = $C388 ; 02:4DD3 - Temp variable used to store the sprite type in the item AI (02:4DD3)
 
+; Arachnus variables
 def arachnus_jumpCounter = $C390
-;$C391: Set to 20h in $2:5144 - Some sort of timer
-;$C392: Set to 5 in $2:513F (unwritten but never read?)
-;$C393: some status regarding Arachnus' jump
+def arachnus_actionTimer = $C391 ; Set to 20h, 10h, and 04h
+def arachnus_unknownVar  = $C392 ; Set to 5 in $2:513F (unwritten but never read?)
+def arachnus_jumpStatus  = $C393 ; $00 - in jump arc, $80 - At the end of an arc, $81 - At the end of the last arc
 def arachnus_health = $C394 ; Set in procedure at 02:511C
 ;$C395: unused
 ;$C396: Flag indicating whether Samus is to the left or right
+
 
 ;$C3A1: LCD interrupt handler scroll X
 ;
