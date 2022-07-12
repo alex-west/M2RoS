@@ -151,8 +151,9 @@ def samus_damageValue = $C424 ; Health to take from Samus
 def samus_onSolidSprite = $C43A ; Is Samus atop a solid sprite
 ;$C44B: Request to execute $2:418C (save/load spawn/save flags). Set by doorExitStatus in the door script function
 ;
-;$C44D: Tile Y relative to scroll Y (see $2250)
-;$C44E: Tile X relative to scroll X (see $2250)
+def enemy_testPointYPos = $C44D ; Test point for enemy collision (in camera-space)
+def enemy_testPointXPos = $C44E ; Test point for enemy collision (in camera-space)
+;;$C44E: Tile X relative to scroll X (see $2250)
 def omega_tempSpriteType = $C44F ; Used to preserve sprite type when stunned
 ;$C450: Enemy data address in $3:422F
 ;$C452: Enemy data address in $2:409E

@@ -5145,12 +5145,12 @@ enemy_getTileIndex: ; 00:2250 - Called by enemy routines
     ; Adjust enemy coordinates (in camera-space) to map-space coordinates
     ld a, [$c205]
     ld b, a
-    ld a, [$c44d]
+    ld a, [enemy_testPointYPos]
     add b
     ld [$c203], a
     ld a, [$c206]
     ld b, a
-    ld a, [$c44e]
+    ld a, [enemy_testPointXPos]
     add b
     ld [$c204], a
     

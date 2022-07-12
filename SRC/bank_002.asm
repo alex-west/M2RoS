@@ -1113,32 +1113,30 @@ Call_002_45ca:
     ld [hl], a
     ret
 
-
+unknown_002_45E4: ; 02:45E4 - Unreferenced
     ld a, [samus_onscreenXPos]
     ld b, a
     ld hl, hEnemyXPos
     ld a, [hl]
     cp b
-    jr nc, jr_002_45f4
+    jr nc, .else
+        xor a
+        ld [$c40e], a ; Variable appears to be unused
+        ret
+    .else:
+        ld a, $02
+        ld [$c40e], a
+        ret
+; end proc
 
-    xor a
-    ld [$c40e], a
-    ret
-
-
-jr_002_45f4:
-    ld a, $02
-    ld [$c40e], a
-    ret
-
-
+unknown_002_45FA: ; 02:45FA - Unreferenced
     ld hl, hEnemyAttr
     ldh a, [$e8]
     and a
-    jr z, jr_002_4605
+    jr z, .else
         ld [hl], $00
         ret
-    jr_002_4605:
+    .else:
         ld [hl], OAMF_XFLIP
         ret
 ; end proc
@@ -1147,565 +1145,567 @@ jr_002_45f4:
 ; Beginning of apparent enemy tilemap collision routines
 
 ; "$11 routines" = check right side of object?
-Call_002_4608:
+; 8 routines (2 unused)
+Call_002_4608: ; 02:4608
+;(3,-3)
+;(3, 3)
     ld a, $11
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $03
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     add $03
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $06
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_46a6
 
-; Unused?
+; 02:4635 - Unused
+;(7,-3)
+;(7, 3)
     ld a, $11
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $03
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     add $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $06
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_46a6
 
-Call_002_4662:
+Call_002_4662: ; 02:4662
+;(7,-6)
+;(7, 0)
+;(7, 6)
     ld a, $11
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $06
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     add $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $06
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $06
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
+        ret c
 
 jr_002_46a6:
     ld hl, en_bgCollisionResult
     res 0, [hl]
     ret
 
-
-Call_002_46ac:
+Call_002_46ac: ; 02:46AC
+;(11,-7)
+;(11, 0)
+;(11, 7)
     ld a, $11
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $07
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     add $0b
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $07
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $07
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_46a6
 
-; Unused?
+; 02:46E9 - Unused
+;(7,-11)
+;(7, -3)
+;(7,  3)
+;(7, 11)
     ld a, $11
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $0b
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     add $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $08
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $06
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $08
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_47ae
 
-Call_002_4736:
+Call_002_4736: ; 02:4736
+;(11,-11)
+;(11. -3)
+;(11,  3)
+;(11, 11)
     ld a, $11
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $0b
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     add $0b
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $08
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $06
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $08
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_47ae
 
-Call_002_4783:
+Call_002_4783: ; 02:4783
+;(7,-8)
+;(7, 7)
     ld a, $11
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $08
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     add $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $0f
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
+        ret c
 
 jr_002_47ae:
     ld hl, en_bgCollisionResult
     res 0, [hl]
     ret
 
-
-Call_002_47b4:
+Call_002_47b4: ; 02:47B4
+;(7,-7)
+;(7, 8)
     ld a, $11
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $07
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     add $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $0f
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_47ae
 
-; "$44 functions"
-;  Check left edge?
-Call_002_47e1:
+; "$44 functions" = Check left edge of object
+; 8 functions (2 unused)
+Call_002_47e1: ; 02:47E1
+;(-3,-3)
+;(-3, 3)
     ld a, $44
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $03
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $03
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $06
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_487f
 
-; Unused?
+; 02:480E - Unused
+;(-7,-3)
+;(-7, 3)
     ld a, $44
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $03
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $06
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_487f
 
-Call_002_483b:
+Call_002_483b: ; 02:483B
+;(-7,-6)
+;(-7, 0)
+;(-7, 6)
     ld a, $44
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $06
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $06
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $06
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
+        ret c
 
 jr_002_487f:
     ld hl, en_bgCollisionResult
     res 2, [hl]
     ret
 
-
-Call_002_4885:
+Call_002_4885: ; 02:4885
+;(-11,-7)
+;(-11, 0)
+;(-11, 7)
     ld a, $44
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $07
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $0b
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $07
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $07
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_487f
 
-; Unused?
+; 02:48C2 - Unused
+;(-7,-11)
+;(-7, -3)
+;(-7,  3)
+;(-7, 11)
     ld a, $44
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $0b
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $08
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $06
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $08
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_4987
 
-Call_002_490f:
+Call_002_490f: ; 02:490F
+;(-11,-11)
+;(-11, -3)
+;(-11,  3)
+;(-11, 11)
     ld a, $44
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $0b
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $0b
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $08
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $06
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $08
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_4987
 
-Call_002_495c:
+Call_002_495c: ; 02:495C
+;(-9,-7)
+;(-9, 8)
     ld a, $44
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $07
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $09
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $0f
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
+        ret c
 
 jr_002_4987:
     ld hl, en_bgCollisionResult
     res 2, [hl]
     ret
 
-
-Call_002_498d:
+Call_002_498d: ; 02:498D
+;(-9,-8)
+;(-9, 7)
     ld a, $44
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $08
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $09
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44d]
+        ret c
+    ld a, [enemy_testPointYPos]
     add $0f
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_4987
 
-; "$22 functions"
-;  Check bottom edge?
-Call_002_49ba:
+; "$22 functions" - Check bottom edge of object
+; 9 functions (2 unused)
+Call_002_49ba: ; 02:49BA
+;(-3,3)
+;( 3,3)
     ld a, $22
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $03
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $03
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $06
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_4a22
 
-; 02:49E7 - Unused?
+; 02:49E7 - Unused
+;(-7,3)
+;( 0,3)
+;( 7,3)
     ld a, $22
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $03
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
+        ret c
 
 jr_002_4a22:
     ld hl, en_bgCollisionResult
@@ -1713,481 +1713,484 @@ jr_002_4a22:
 ret
 
 
-Call_002_4a28:
+Call_002_4a28: ; 02:4A28
+;(-6,7)
+;( 0,7)
+;( 6,7)
     ld a, $22
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $07
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $06
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $06
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $06
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_4a22
 
-; Unused?
+; 02:4A6E - Unused
+;(-11,7)
+;( -3,7)
+;(  3,7)
+;( 11,7)
     ld a, $22
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $07
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $0b
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $08
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $06
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $08
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_4b11
 
-Call_002_4abb:
+Call_002_4abb: ; 02:4ABB
+;(0,11)
     ld a, $22
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $0b
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_4b11
 
-Call_002_4ad6:
+Call_002_4ad6: ; 02:4AD6
+;(-7,11)
+;( 0,11)
+;( 7,11)
     ld a, $22
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $0b
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
+        ret c
 
 jr_002_4b11:
     ld hl, en_bgCollisionResult
     res 1, [hl]
     ret
 
-
-Call_002_4b17:
+Call_002_4b17: ; 02:4B17
+;(-11,11)
+;( -3,11)
+;(  3,11)
+;( 11,11)
     ld a, $22
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $0b
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $0b
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $08
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $06
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $08
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_4b11
 
-Call_002_4b64:
+Call_002_4b64: ; 02:4B64
+;(-8,8)
+;( 7,8)
     ld a, $22
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $08
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $08
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $0f
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
+        ret c
 
     jr jr_002_4bbc
 
-Call_002_4b91:
+Call_002_4b91: ; 02:4B19
+;(-9,8)
+;( 6,8)
     ld a, $22
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     add $08
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $09
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $0f
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
+        ret c
 
 jr_002_4bbc:
     ld hl, en_bgCollisionResult
     res 1, [hl]
     ret
 
-; "$88 functions"
-; Check top edge?
-Call_002_4bc2:
+; "$88 functions" - Check top edge of object
+; 8 functions (3 unused)
+Call_002_4bc2: ; 02:4BC2
+;(-3,-3)
+;( 3,-3)
     ld a, $88
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $03
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $03
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $06
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_4c2a
 
-; Unused?
+; 02:4BEF - Unused
+;(-7,-3)
+;( 0,-3)
+;( 7,-3)
     ld a, $88
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $03
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
+        ret c
 
 jr_002_4c2a:
     ld hl, en_bgCollisionResult
     res 3, [hl]
     ret
 
-
-Call_002_4c30:
+Call_002_4c30: ; 02:4C30
+;(-6,-7)
+;( 0,-7)
+;( 6,-7)
     ld a, $88
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $07
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $06
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $06
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $06
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_4c2a
 
-; Unused?
+; 02:4C76 - Unused
+;(-11,-7)
+;( -3,-7)
+;(  3,-7)
+;( 11,-7)
     ld a, $88
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $07
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $0b
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $08
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $06
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $08
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_4cfe
 
-; Unused?
+; 02:4CC3 - Unused
+;(-7,-11)
+;( 0,-11)
+;( 7,-11)
     ld a, $88
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $0b
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $07
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
+        ret c
 
 jr_002_4cfe:
     ld hl, en_bgCollisionResult
     res 3, [hl]
     ret
 
-
-Call_002_4d04:
+Call_002_4d04: ; 02:4D04
+;(-11,-11)
+;( -3,-11)
+;(  3,-11)
+;( 11,-11)
     ld a, $88
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $0b
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ldh a, [hEnemyXPos]
     sub $0b
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $08
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $06
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $08
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_4cfe
 
-Call_002_4d51:
+Call_002_4d51: ; 02:4D51
+;(-9,-8)
+;( 6,-8)
     ld a, $88
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $08
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ld a, [enemy_xPosMirror]
     sub $09
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $0f
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
+        ret c
     jr jr_002_4dab
 
-Call_002_4d7f:
+Call_002_4d7f: ; 02:4D7F
+;(-8,-8)
+;( 7,-8)
     ld a, $88
     ld [en_bgCollisionResult], a
     ldh a, [hEnemyYPos]
     sub $08
-    ld [$c44d], a
+    ld [enemy_testPointYPos], a
     ld a, [enemy_xPosMirror]
     sub $08
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
-
-    ld a, [$c44e]
+        ret c
+    ld a, [enemy_testPointXPos]
     add $0f
-    ld [$c44e], a
+    ld [enemy_testPointXPos], a
     call enemy_getTileIndex
     ld hl, enemySolidityIndex
     cp [hl]
-    ret c
+        ret c
 
 jr_002_4dab:
     ld hl, en_bgCollisionResult
@@ -6573,7 +6576,7 @@ enAI_moto: ; 02:66F3
     ld [hl], a
 
 .checkFront:
-    ; Check forwards collision
+    ; Check floor below (don't run off a cliff)
     call Call_002_4abb
     ld a, [en_bgCollisionResult]
     bit 1, a
