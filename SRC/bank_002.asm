@@ -1141,12 +1141,14 @@ unknown_002_45FA: ; 02:45FA - Unreferenced
         ret
 ; end proc
 
-
-; Beginning of apparent enemy tilemap collision routines
-
-; "$11 routines" = check right side of object?
+;------------------------------------------------------------------------------
+; Beginning of enemy tilemap collision routines
+;
+; "$11 routines" = Check right side of object
 ; 8 routines (2 unused)
-Call_002_4608: ; 02:4608
+enCollision_right:
+
+.nearSmall: ; 02:4608
 ;(3,-3)
 ;(3, 3)
     ld a, $11
@@ -1168,9 +1170,9 @@ Call_002_4608: ; 02:4608
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_46a6
+    jr .exitA
 
-; 02:4635 - Unused
+.midSmall: ; 02:4635 - Unused
 ;(7,-3)
 ;(7, 3)
     ld a, $11
@@ -1192,9 +1194,9 @@ Call_002_4608: ; 02:4608
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_46a6
+    jr .exitA
 
-Call_002_4662: ; 02:4662
+.midMedium: ; 02:4662 - Note: saves tile number to $C417
 ;(7,-6)
 ;(7, 0)
 ;(7, 6)
@@ -1228,12 +1230,12 @@ Call_002_4662: ; 02:4662
     cp [hl]
         ret c
 
-jr_002_46a6:
+.exitA:
     ld hl, en_bgCollisionResult
     res 0, [hl]
     ret
 
-Call_002_46ac: ; 02:46AC
+.farMedium: ; 02:46AC
 ;(11,-7)
 ;(11, 0)
 ;(11, 7)
@@ -1263,9 +1265,9 @@ Call_002_46ac: ; 02:46AC
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_46a6
+    jr .exitA
 
-; 02:46E9 - Unused
+.midWide: ; 02:46E9 - Unused
 ;(7,-11)
 ;(7, -3)
 ;(7,  3)
@@ -1303,9 +1305,9 @@ Call_002_46ac: ; 02:46AC
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_47ae
+    jr .exitB
 
-Call_002_4736: ; 02:4736
+.farWide: ; 02:4736
 ;(11,-11)
 ;(11. -3)
 ;(11,  3)
@@ -1343,9 +1345,9 @@ Call_002_4736: ; 02:4736
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_47ae
+    jr .exitB
 
-Call_002_4783: ; 02:4783
+.crawlA: ; 02:4783
 ;(7,-8)
 ;(7, 7)
     ld a, $11
@@ -1368,12 +1370,12 @@ Call_002_4783: ; 02:4783
     cp [hl]
         ret c
 
-jr_002_47ae:
+.exitB:
     ld hl, en_bgCollisionResult
     res 0, [hl]
     ret
 
-Call_002_47b4: ; 02:47B4
+.crawlB: ; 02:47B4
 ;(7,-7)
 ;(7, 8)
     ld a, $11
@@ -1395,11 +1397,14 @@ Call_002_47b4: ; 02:47B4
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_47ae
+    jr .exitB
 
+;------------------------------------------------------------------------------
 ; "$44 functions" = Check left edge of object
 ; 8 functions (2 unused)
-Call_002_47e1: ; 02:47E1
+enCollision_left:
+
+.nearSmall: ; 02:47E1
 ;(-3,-3)
 ;(-3, 3)
     ld a, $44
@@ -1421,9 +1426,9 @@ Call_002_47e1: ; 02:47E1
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_487f
+    jr .exitA
 
-; 02:480E - Unused
+.midSmall: ; 02:480E - Unused
 ;(-7,-3)
 ;(-7, 3)
     ld a, $44
@@ -1445,9 +1450,9 @@ Call_002_47e1: ; 02:47E1
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_487f
+    jr .exitA
 
-Call_002_483b: ; 02:483B
+.midMedium: ; 02:483B - Note: saves tile number to $C417
 ;(-7,-6)
 ;(-7, 0)
 ;(-7, 6)
@@ -1481,12 +1486,12 @@ Call_002_483b: ; 02:483B
     cp [hl]
         ret c
 
-jr_002_487f:
+.exitA:
     ld hl, en_bgCollisionResult
     res 2, [hl]
     ret
 
-Call_002_4885: ; 02:4885
+.farMedium: ; 02:4885
 ;(-11,-7)
 ;(-11, 0)
 ;(-11, 7)
@@ -1516,9 +1521,9 @@ Call_002_4885: ; 02:4885
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_487f
+    jr .exitA
 
-; 02:48C2 - Unused
+.midWide: ; 02:48C2 - Unused
 ;(-7,-11)
 ;(-7, -3)
 ;(-7,  3)
@@ -1556,9 +1561,9 @@ Call_002_4885: ; 02:4885
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_4987
+    jr .exitB
 
-Call_002_490f: ; 02:490F
+.farWide: ; 02:490F
 ;(-11,-11)
 ;(-11, -3)
 ;(-11,  3)
@@ -1596,9 +1601,9 @@ Call_002_490f: ; 02:490F
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_4987
+    jr .exitB
 
-Call_002_495c: ; 02:495C
+.crawlA: ; 02:495C
 ;(-9,-7)
 ;(-9, 8)
     ld a, $44
@@ -1621,12 +1626,12 @@ Call_002_495c: ; 02:495C
     cp [hl]
         ret c
 
-jr_002_4987:
+.exitB:
     ld hl, en_bgCollisionResult
     res 2, [hl]
     ret
 
-Call_002_498d: ; 02:498D
+.crawlB: ; 02:498D
 ;(-9,-8)
 ;(-9, 7)
     ld a, $44
@@ -1648,11 +1653,14 @@ Call_002_498d: ; 02:498D
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_4987
+    jr .exitB
 
+;------------------------------------------------------------------------------
 ; "$22 functions" - Check bottom edge of object
 ; 9 functions (2 unused)
-Call_002_49ba: ; 02:49BA
+enCollision_down:
+
+.nearSmall: ; 02:49BA
 ;(-3,3)
 ;( 3,3)
     ld a, $22
@@ -1674,9 +1682,9 @@ Call_002_49ba: ; 02:49BA
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_4a22
+    jr .exitA
 
-; 02:49E7 - Unused
+.nearMedium: ; 02:49E7 - Unused
 ;(-7,3)
 ;( 0,3)
 ;( 7,3)
@@ -1707,13 +1715,12 @@ Call_002_49ba: ; 02:49BA
     cp [hl]
         ret c
 
-jr_002_4a22:
+.exitA:
     ld hl, en_bgCollisionResult
     res 1, [hl]
 ret
 
-
-Call_002_4a28: ; 02:4A28
+.midMedium: ; 02:4A28 - Note: saves tile number to $C417
 ;(-6,7)
 ;( 0,7)
 ;( 6,7)
@@ -1746,9 +1753,9 @@ Call_002_4a28: ; 02:4A28
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_4a22
+    jr .exitA
 
-; 02:4A6E - Unused
+.midWide: ; 02:4A6E - Unused
 ;(-11,7)
 ;( -3,7)
 ;(  3,7)
@@ -1786,9 +1793,9 @@ Call_002_4a28: ; 02:4A28
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_4b11
+    jr .exitB
 
-Call_002_4abb: ; 02:4ABB
+.onePoint: ; 02:4ABB
 ;(0,11)
     ld a, $22
     ld [en_bgCollisionResult], a
@@ -1801,9 +1808,9 @@ Call_002_4abb: ; 02:4ABB
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_4b11
+    jr .exitB
 
-Call_002_4ad6: ; 02:4AD6
+.farMedium: ; 02:4AD6
 ;(-7,11)
 ;( 0,11)
 ;( 7,11)
@@ -1834,12 +1841,12 @@ Call_002_4ad6: ; 02:4AD6
     cp [hl]
         ret c
 
-jr_002_4b11:
+.exitB:
     ld hl, en_bgCollisionResult
     res 1, [hl]
     ret
 
-Call_002_4b17: ; 02:4B17
+.farWide: ; 02:4B17
 ;(-11,11)
 ;( -3,11)
 ;(  3,11)
@@ -1877,9 +1884,9 @@ Call_002_4b17: ; 02:4B17
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_4b11
+    jr .exitB
 
-Call_002_4b64: ; 02:4B64
+.crawlA: ; 02:4B64
 ;(-8,8)
 ;( 7,8)
     ld a, $22
@@ -1901,10 +1908,9 @@ Call_002_4b64: ; 02:4B64
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
+    jr .exitC
 
-    jr jr_002_4bbc
-
-Call_002_4b91: ; 02:4B19
+.crawlB: ; 02:4B19
 ;(-9,8)
 ;( 6,8)
     ld a, $22
@@ -1927,14 +1933,17 @@ Call_002_4b91: ; 02:4B19
     cp [hl]
         ret c
 
-jr_002_4bbc:
+.exitC:
     ld hl, en_bgCollisionResult
     res 1, [hl]
     ret
 
+;------------------------------------------------------------------------------
 ; "$88 functions" - Check top edge of object
 ; 8 functions (3 unused)
-Call_002_4bc2: ; 02:4BC2
+enCollision_up:
+
+.nearSmall: ; 02:4BC2
 ;(-3,-3)
 ;( 3,-3)
     ld a, $88
@@ -1956,9 +1965,9 @@ Call_002_4bc2: ; 02:4BC2
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_4c2a
+    jr .exitA
 
-; 02:4BEF - Unused
+.nearMedium: ; 02:4BEF - Unused
 ;(-7,-3)
 ;( 0,-3)
 ;( 7,-3)
@@ -1989,12 +1998,12 @@ Call_002_4bc2: ; 02:4BC2
     cp [hl]
         ret c
 
-jr_002_4c2a:
+.exitA:
     ld hl, en_bgCollisionResult
     res 3, [hl]
     ret
 
-Call_002_4c30: ; 02:4C30
+.midMedium: ; 02:4C30
 ;(-6,-7)
 ;( 0,-7)
 ;( 6,-7)
@@ -2027,9 +2036,9 @@ Call_002_4c30: ; 02:4C30
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_4c2a
+    jr .exitA
 
-; 02:4C76 - Unused
+.midWide: ; 02:4C76 - Unused
 ;(-11,-7)
 ;( -3,-7)
 ;(  3,-7)
@@ -2067,9 +2076,9 @@ Call_002_4c30: ; 02:4C30
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_4cfe
+    jr .exitB
 
-; 02:4CC3 - Unused
+.farMedium: ; 02:4CC3 - Unused
 ;(-7,-11)
 ;( 0,-11)
 ;( 7,-11)
@@ -2100,12 +2109,12 @@ Call_002_4c30: ; 02:4C30
     cp [hl]
         ret c
 
-jr_002_4cfe:
+.exitB:
     ld hl, en_bgCollisionResult
     res 3, [hl]
     ret
 
-Call_002_4d04: ; 02:4D04
+.farWide: ; 02:4D04
 ;(-11,-11)
 ;( -3,-11)
 ;(  3,-11)
@@ -2143,9 +2152,9 @@ Call_002_4d04: ; 02:4D04
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_4cfe
+    jr .exitB
 
-Call_002_4d51: ; 02:4D51
+.crawlA: ; 02:4D51
 ;(-9,-8)
 ;( 6,-8)
     ld a, $88
@@ -2167,9 +2176,9 @@ Call_002_4d51: ; 02:4D51
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
-    jr jr_002_4dab
+    jr .exitC
 
-Call_002_4d7f: ; 02:4D7F
+.crawlB: ; 02:4D7F
 ;(-8,-8)
 ;( 7,-8)
     ld a, $88
@@ -2192,12 +2201,13 @@ Call_002_4d7f: ; 02:4D7F
     cp [hl]
         ret c
 
-jr_002_4dab:
+.exitC:
     ld hl, en_bgCollisionResult
     res 3, [hl]
     ret
 
-; End of apparent enemy tilemap collision routines
+; End of enemy tilemap collision routines
+;------------------------------------------------------------------------------
 
 ; Loads the Blob Thrower sprite and hitbox into RAM
 Call_002_4db1:
@@ -2774,7 +2784,7 @@ ret
     ld a, c
     ld [arachnus_jumpStatus], a
     ; Exit if no collision happened
-    call Call_002_4a28
+    call enCollision_down.midMedium
     ld a, [en_bgCollisionResult]
     and $02
         ret z
@@ -2919,7 +2929,7 @@ ret
     and a
     jr z, .else_J
         ; Try right
-        call Call_002_4662
+        call enCollision_right.midMedium
         ld b, 1 ; Speed
         ld a, [en_bgCollisionResult]
         and $01
@@ -2935,7 +2945,7 @@ ret
             jp .jumpAndAnimate
     .else_J:
         ; Try left
-        call Call_002_483b
+        call enCollision_left.midMedium
         ld b, -1 ; Speed
         ld a, [en_bgCollisionResult]
         and $04
@@ -3223,7 +3233,7 @@ ret
         jr nz, .goingLeft
 
 ;goingRight
-    call Call_002_4608
+    call enCollision_right.nearSmall
     ld a, [en_bgCollisionResult]
     bit 0, a
         ret z
@@ -3248,7 +3258,7 @@ ret
 ret
 
 .goingLeft:
-    call Call_002_47e1
+    call enCollision_left.nearSmall
     ld a, [en_bgCollisionResult]
     bit 2, a
         ret z
@@ -3440,7 +3450,7 @@ ret
     add $04
     ldh [$e7], a
 
-    call Call_002_49ba ; Tilemap collision routine
+    call enCollision_down.nearSmall ; Tilemap collision routine
     ld a, [en_bgCollisionResult]
     bit 1, a ; Bit 1 being set indicates a collision
     jr nz, .endIf_A
@@ -3868,7 +3878,7 @@ jr_002_57f5:
         jr z, jr_002_582a ; State 2 - left?
 
 ; State 3 - up?
-    call Call_002_4d51
+    call enCollision_up.crawlA
     ld a, [en_bgCollisionResult]
     bit 3, a
         jr z, jr_002_57e6
@@ -3876,7 +3886,7 @@ jr_002_57f5:
 ret
 
 jr_002_580e:
-    call Call_002_4783
+    call enCollision_right.crawlA
     ld a, [en_bgCollisionResult]
     bit 0, a
         jr z, jr_002_57e6
@@ -3884,7 +3894,7 @@ jr_002_580e:
 ret
 
 jr_002_581c:
-    call Call_002_4b64
+    call enCollision_down.crawlA
     ld a, [en_bgCollisionResult]
     bit 1, a
         jr z, jr_002_57e6
@@ -3892,7 +3902,7 @@ jr_002_581c:
 ret
 
 jr_002_582a:
-    call Call_002_495c
+    call enCollision_left.crawlA
     ld a, [en_bgCollisionResult]
     bit 2, a
         jr z, jr_002_57e6
@@ -3910,7 +3920,7 @@ jr_002_5838:
         jr z, jr_002_586f ; State 2 - left?
 
 ; State 3 - up?
-    call Call_002_4783
+    call enCollision_right.crawlA
     ld a, [en_bgCollisionResult]
     bit 0, a
         jr nz, jr_002_57e0
@@ -3918,7 +3928,7 @@ jr_002_5838:
 ret
 
 jr_002_5851:
-    call Call_002_4b64
+    call enCollision_down.crawlA
     ld a, [en_bgCollisionResult]
     bit 1, a
         jp nz, Jump_002_57e0
@@ -3926,7 +3936,7 @@ jr_002_5851:
 ret
 
 jr_002_5860:
-    call Call_002_495c
+    call enCollision_left.crawlA
     ld a, [en_bgCollisionResult]
     bit 2, a
         jp nz, Jump_002_57e0
@@ -3934,7 +3944,7 @@ jr_002_5860:
 ret
 
 jr_002_586f:
-    call Call_002_4d51
+    call enCollision_up.crawlA
     ld a, [en_bgCollisionResult]
     bit 3, a
         jp nz, Jump_002_57e0
@@ -4047,7 +4057,7 @@ jr_002_58f2:
         jp z, Jump_002_5938 ; State 2 - left?
 
 ; State 3 - up?
-    call Call_002_4d7f
+    call enCollision_up.crawlB
     ld a, [en_bgCollisionResult]
     bit 3, a
         jr z, jr_002_58e6
@@ -4057,7 +4067,7 @@ jr_002_58f2:
 ret
 
 jr_002_5912:
-    call Call_002_47b4
+    call enCollision_right.crawlB
     ld a, [en_bgCollisionResult]
     bit 0, a
         jr z, jr_002_58e6
@@ -4067,7 +4077,7 @@ jr_002_5912:
 ret
 
 Jump_002_5925:
-    call Call_002_4b91
+    call enCollision_down.crawlB
     ld a, [en_bgCollisionResult]
     bit 1, a
         jr z, jr_002_58e6
@@ -4077,7 +4087,7 @@ Jump_002_5925:
 ret
 
 Jump_002_5938:
-    call Call_002_498d
+    call enCollision_left.crawlB
     ld a, [en_bgCollisionResult]
     bit 2, a
         jr z, jr_002_58e6
@@ -4096,7 +4106,7 @@ jr_002_594b:
         jr z, jr_002_5992 ; State 2 - left?
 
 ; State 3 - up?
-    call Call_002_498d
+    call enCollision_left.crawlB
     ld a, [en_bgCollisionResult]
     bit 2, a
         jp nz, Jump_002_58e0
@@ -4106,7 +4116,7 @@ jr_002_594b:
 ret
 
 jr_002_596a:
-    call Call_002_4d7f
+    call enCollision_up.crawlB
     ld a, [en_bgCollisionResult]
     bit 3, a
         jp nz, Jump_002_58e0
@@ -4116,7 +4126,7 @@ jr_002_596a:
 ret
 
 jr_002_597e:
-    call Call_002_47b4
+    call enCollision_right.crawlB
     ld a, [en_bgCollisionResult]
     bit 0, a
         jp nz, Jump_002_58e0
@@ -4126,7 +4136,7 @@ jr_002_597e:
 ret
 
 jr_002_5992:
-    call Call_002_4b91
+    call enCollision_down.crawlB
     ld a, [en_bgCollisionResult]
     bit 1, a
         jp nz, Jump_002_58e0
@@ -4535,7 +4545,7 @@ ret
     inc [hl]
     call enemy_accelForwards
     ; Check collision
-    call Call_002_49ba
+    call enCollision_down.nearSmall
     ld a, [en_bgCollisionResult]
     bit 1, a
         ret z
@@ -5632,7 +5642,7 @@ ret
     cp $10
     jr nz, .moveDown
 
-    call Call_002_4a28
+    call enCollision_down.midMedium
     ld a, [en_bgCollisionResult]
     bit 1, a
     jr nz, .prepNextJump
@@ -5675,7 +5685,7 @@ ret
     ld [bc], a
 
     push de
-    call Call_002_4a28 ; BG collision function
+    call enCollision_down.midMedium ; BG collision function
     pop de
     ld a, [en_bgCollisionResult]
     bit 1, a ; Exit if we've hit ground (don't move forward)
@@ -5834,7 +5844,7 @@ jr_002_633a:
     ld a, [hl]
     add $04
     ld [hl], a
-    call Call_002_4608
+    call enCollision_right.nearSmall
     ld a, [en_bgCollisionResult]
     bit 0, a
     ret z
@@ -5851,7 +5861,7 @@ jr_002_6365:
     ld a, [hl]
     sub $04
     ld [hl], a
-    call Call_002_47e1
+    call enCollision_left.nearSmall
     ld a, [en_bgCollisionResult]
     bit 2, a
     ret z
@@ -6100,7 +6110,7 @@ Jump_002_64a7: ; Gunzoo projectile
     ld a, [hl]
     sub $02
     ld [hl], a
-    call Call_002_49ba
+    call enCollision_down.nearSmall
     ld a, [en_bgCollisionResult]
     bit 1, a
     ret z
@@ -6143,7 +6153,7 @@ jr_002_64ed:
     ld a, [hl]
     sub $03
     ld [hl], a
-    call Call_002_47e1
+    call enCollision_left.nearSmall
     ld a, [en_bgCollisionResult]
     bit 2, a
     ret z
@@ -6442,7 +6452,7 @@ enAI_6622: ; 02:6622
 
 .common_exit:
     call .animate
-    call Call_002_4a28 ; Check bg collision
+    call enCollision_down.midMedium ; Check bg collision
     ld a, [en_bgCollisionResult]
     bit 1, a
         ret z
@@ -6577,7 +6587,7 @@ enAI_moto: ; 02:66F3
 
 .checkFront:
     ; Check floor below (don't run off a cliff)
-    call Call_002_4abb
+    call enCollision_down.onePoint
     ld a, [en_bgCollisionResult]
     bit 1, a
         ret nz
@@ -6641,7 +6651,7 @@ enAI_6746: ; 02:6746
     jr z, .else
         call Call_002_67d9 ; X Movement
         ; Check collision
-        call Call_002_4885
+        call enCollision_left.farMedium
         ld a, [en_bgCollisionResult]
         bit 2, a
             ret z
@@ -6654,7 +6664,7 @@ enAI_6746: ; 02:6746
     .else:
         call Call_002_6803 ; X Movement
         ; Check collision
-        call Call_002_46ac
+        call enCollision_right.farMedium
         ld a, [en_bgCollisionResult]
         bit 0, a
             ret z
@@ -6828,7 +6838,7 @@ enAI_septogg: ; 02:6841
     ld a, [hl]
     add b
     ld [hl], a
-    call Call_002_4ad6
+    call enCollision_down.farMedium
     ld a, [en_bgCollisionResult]
     bit 1, a
     jr z, .else
@@ -7929,7 +7939,7 @@ Call_002_6dd4: ; Shared with gammas?
                 ld a, [hl]
                 sub b
                 ld [hl], a
-                call Call_002_4d04
+                call enCollision_up.farWide
                 ld a, [en_bgCollisionResult]
                 bit 3, a
                 jr z, jr_002_6e08
@@ -7940,7 +7950,7 @@ Call_002_6dd4: ; Shared with gammas?
                 ld a, [hl]
                 add b
                 ld [hl], a
-                call Call_002_4b17
+                call enCollision_down.farWide
                 ld a, [en_bgCollisionResult]
                 bit 1, a
                 jr z, jr_002_6e08
@@ -7959,7 +7969,7 @@ Call_002_6dd4: ; Shared with gammas?
         ld a, [hl]
         sub c
         ld [hl], a
-        call Call_002_490f
+        call enCollision_left.farWide
         ld a, [en_bgCollisionResult]
         bit 2, a
             ret z
@@ -7970,7 +7980,7 @@ Call_002_6dd4: ; Shared with gammas?
         ld a, [hl]
         add c
         ld [hl], a
-        call Call_002_4736
+        call enCollision_right.farWide
         ld a, [en_bgCollisionResult]
         bit 0, a
             ret z
@@ -8076,7 +8086,7 @@ Call_002_6e7f: ; Screw attack knockback ?
     cp $10
         ret c
     ld [hl], a
-    call Call_002_4d04
+    call enCollision_up.farWide
     ld a, [en_bgCollisionResult]
     bit 3, a
         ret z
@@ -8091,7 +8101,7 @@ jr_002_6eb4:
     cp $10
         ret c
     ld [hl], a
-    call Call_002_490f
+    call enCollision_left.farWide
     ld a, [en_bgCollisionResult]
     bit 2, a
         ret z
@@ -8104,7 +8114,7 @@ jr_002_6eca:
     ld a, [hl]
     add $05
     ld [hl], a
-    call Call_002_4736
+    call enCollision_right.farWide
     ld a, [en_bgCollisionResult]
     bit 0, a
         ret z
@@ -8116,7 +8126,7 @@ jr_002_6edd:
     ld a, [hl]
     add $05
     ld [hl], a
-    call Call_002_4b17
+    call enCollision_down.farWide
     ld a, [en_bgCollisionResult]
     bit 1, a
         ret z
@@ -8134,7 +8144,7 @@ Call_002_6ef0: ; Alpha/Gamma missile knockback
         bit 3, a
         jr z, jr_002_6f23
             call Call_002_6f53
-            call Call_002_4d04
+            call enCollision_up.farWide
             ld a, [en_bgCollisionResult]
             bit 3, a
             jr z, jr_002_6f23
@@ -8143,7 +8153,7 @@ Call_002_6ef0: ; Alpha/Gamma missile knockback
                 jr jr_002_6f23
     jr_002_6f11:
         call Call_002_6f5b
-        call Call_002_4b17
+        call enCollision_down.farWide
         ld a, [en_bgCollisionResult]
         bit 1, a
         jr z, jr_002_6f23
@@ -8158,7 +8168,7 @@ Call_002_6ef0: ; Alpha/Gamma missile knockback
         bit 2, a
             ret z
         call Call_002_6f53
-        call Call_002_490f
+        call enCollision_left.farWide
         ld a, [en_bgCollisionResult]
         bit 2, a
             ret z
@@ -8167,7 +8177,7 @@ Call_002_6ef0: ; Alpha/Gamma missile knockback
         ret
     jr_002_6f41:
         call Call_002_6f5b
-        call Call_002_4736
+        call enCollision_right.farWide
         ld a, [en_bgCollisionResult]
         bit 0, a
             ret z
@@ -8385,7 +8395,7 @@ gamma_hurt:
     jr c, jr_002_70af
 
     ldh [hEnemyYPos], a
-    call Call_002_4d04
+    call enCollision_up.farWide
     ld a, [en_bgCollisionResult]
     bit 3, a
     jr nz, jr_002_7090
@@ -8404,7 +8414,7 @@ jr_002_709a:
     ldh a, [hEnemyYPos]
     add $05
     ldh [hEnemyYPos], a
-    call Call_002_4b17
+    call enCollision_down.farWide
     ld a, [en_bgCollisionResult]
     bit 1, a
     jr nz, jr_002_7090
@@ -8427,7 +8437,7 @@ jr_002_70bc:
     ldh a, [hEnemyXPos]
     add $05
     ldh [hEnemyXPos], a
-    call Call_002_4736
+    call enCollision_right.farWide
     ld a, [en_bgCollisionResult]
     bit 0, a
     jr nz, jr_002_70d3
@@ -8449,7 +8459,7 @@ jr_002_70dd:
 
     sub $05
     ldh [hEnemyXPos], a
-    call Call_002_490f
+    call enCollision_left.farWide
     ld a, [en_bgCollisionResult]
     bit 2, a
     jr nz, jr_002_70d3
@@ -9749,7 +9759,7 @@ omega_fireball: ; Omega fireball?
             ld a, [hl]
             sub b
             ld [hl], a
-            call Call_002_4bc2
+            call enCollision_up.nearSmall
             ld a, [en_bgCollisionResult]
             bit 3, a
                 jr nz, jr_002_78a9
@@ -9760,7 +9770,7 @@ omega_fireball: ; Omega fireball?
         ld a, [hl]
         add b
         ld [hl], a
-        call Call_002_49ba
+        call enCollision_down.nearSmall
         ld a, [en_bgCollisionResult]
         bit 1, a
             jr nz, jr_002_78a9
@@ -10127,7 +10137,7 @@ jr_002_7a71:
     cp $10
     jr c, jr_002_7a98
         ldh [hEnemyYPos], a
-        call Call_002_4d04
+        call enCollision_up.farWide
         ld a, [en_bgCollisionResult]
         bit 3, a
         jr z, jr_002_7a98
@@ -10140,7 +10150,7 @@ jr_002_7a71:
     cp $10
         ret c
     ldh [hEnemyXPos], a
-    call Call_002_490f
+    call enCollision_left.farWide
     ld a, [en_bgCollisionResult]
     bit 2, a
         ret z
@@ -10540,7 +10550,7 @@ Call_002_7cdd: ; 02:7CDD
     ldh a, [$e9]
     cp $10
     jr c, jr_002_7cf4
-        call Call_002_4b17
+        call enCollision_down.farWide
         ld a, [en_bgCollisionResult]
         bit 1, a
             jr z, jr_002_7d04
@@ -10553,7 +10563,7 @@ Call_002_7cdd: ; 02:7CDD
         ldh a, [hEnemyYPos]
         cp $10
             jr c, jr_002_7ced
-        call Call_002_4d04
+        call enCollision_up.farWide
         ld a, [en_bgCollisionResult]
         bit 3, a
             jr nz, jr_002_7ced
@@ -10563,7 +10573,7 @@ Call_002_7cdd: ; 02:7CDD
     cp $10
     jr c, jr_002_7d19
 
-        call Call_002_4736
+        call enCollision_right.farWide
         ld a, [en_bgCollisionResult]
         bit 0, a
             ret z
@@ -10575,7 +10585,7 @@ Call_002_7cdd: ; 02:7CDD
         ldh a, [hEnemyXPos]
         cp $10
             jr c, jr_002_7d13
-        call Call_002_490f
+        call enCollision_left.farWide
         ld a, [en_bgCollisionResult]
         bit 2, a
             jr nz, jr_002_7d13
@@ -10592,7 +10602,7 @@ baby_checkBlocks: ; 02:7D2A - Check if blocks need to be cleared
     ldh a, [$e9]
     cp $10
     jr c, jr_002_7d54
-        call Call_002_4a28
+        call enCollision_down.midMedium
         ld a, [en_bgCollisionResult]
         bit 1, a
             jr z, jr_002_7d64
@@ -10610,7 +10620,7 @@ baby_checkBlocks: ; 02:7D2A - Check if blocks need to be cleared
         ldh a, [hEnemyYPos]
         cp $10
             jr c, jr_002_7d4d
-        call Call_002_4c30
+        call enCollision_up.midMedium
         ld a, [en_bgCollisionResult]
         bit 3, a
             jr nz, jr_002_7d45
@@ -10621,7 +10631,7 @@ baby_checkBlocks: ; 02:7D2A - Check if blocks need to be cleared
     ldh a, [hEnemyState]
     cp $10
     jr c, jr_002_7d86
-        call Call_002_4662
+        call enCollision_right.midMedium
         ld a, [en_bgCollisionResult]
         bit 0, a
             ret z
@@ -10640,7 +10650,7 @@ baby_checkBlocks: ; 02:7D2A - Check if blocks need to be cleared
         cp $10
             jr c, jr_002_7d80
     
-        call Call_002_483b
+        call enCollision_left.midMedium
         ld a, [en_bgCollisionResult]
         bit 2, a
             jr nz, jr_002_7d78
