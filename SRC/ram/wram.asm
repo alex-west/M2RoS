@@ -51,11 +51,13 @@ def spriteC300 = $C300 ;$C300..3D: Set to [$2:4FFE..503A] in $2:4DB1
 ;
 def hitboxC360 = $C360 ;-$C363: Set to [$2:503B..3E] in $2:4DB1
 ;
-;$C380: Cleared in $2:4DB1. Used as index in $2:4FD4
-;$C381: Timer for $2:4EA1
-;$C382: Set to 0 in $2:4FB9, set to 1/2/3 in $2:4EA1, stage index for $2:4EA1
-;
-;$C386: Set to Samus is right of enemy in $2:4F87
+def blobThrower_actionTimer = $C380 ; Cleared in $2:4DB1. Used as index in $2:4FD4
+def blobThrower_waitTimer = $C381 ; Timer for $2:4EA1
+def blobThrower_state = $C382 ; Valid values are 0, 1, 2, 3
+; $C383 - unused?
+; $C384 - unused?
+; $C385 - unused?
+def blobThrower_facingDirection = $C386 ; Set to Samus is right of enemy in $2:4F87
 ;
 def temp_spriteType = $C388 ; 02:4DD3 - Temp variable used to store the sprite type in the item AI (02:4DD3)
 
@@ -66,7 +68,7 @@ def arachnus_unknownVar  = $C392 ; Set to 5 in $2:513F (unwritten but never read
 def arachnus_jumpStatus  = $C393 ; $00 - in jump arc, $80 - At the end of an arc, $81 - At the end of the last arc
 def arachnus_health = $C394 ; Set in procedure at 02:511C
 ;$C395: unused
-;$C396: Flag indicating whether Samus is to the left or right
+;$C396: unused
 
 
 ;$C3A1: LCD interrupt handler scroll X

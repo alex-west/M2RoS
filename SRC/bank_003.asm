@@ -729,7 +729,7 @@ en66F8: ; Unused (item, but horizontally flipped)
     dw enAI_itemOrb
 en6703: ; Enemy 9Ah (blob thrower?)
     db $00,$00,$00,$00,$70,$00,$00,$00,$15
-    dw enAI_4EA1
+    dw enAI_blobThrower
 en670E: ; Enemy 2Ch (glow fly)
     db $00,$00,$00,$00,$00,$00,$00,$00,$03
     dw enAI_glowFly

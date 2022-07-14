@@ -251,7 +251,7 @@ Call_002_412f: ; Loads enemy save flags from save buffer to WRAM without saving 
     ld a, [$c206]
     ld [hl+], a
     ld [hl], a
-    call Call_002_4db1
+    call blobThrower_loadSprite
 ret
 
 
@@ -2003,7 +2003,7 @@ enCollision_up:
     res 3, [hl]
     ret
 
-.midMedium: ; 02:4C30
+.midMedium: ; 02:4C30 - Note: saves tile number to $C417
 ;(-6,-7)
 ;( 0,-7)
 ;( 6,-7)
@@ -2210,8 +2210,8 @@ enCollision_up:
 ;------------------------------------------------------------------------------
 
 ; Loads the Blob Thrower sprite and hitbox into RAM
-Call_002_4db1:
-    ld hl, blobThrowerSprite ;$4ffe
+blobThrower_loadSprite: ; 02:4DB1
+    ld hl, blobThrower.sprite ;$4ffe
     ld de, spriteC300
     ld b, $3e
 
@@ -2222,7 +2222,7 @@ Call_002_4db1:
         dec b
     jr nz, jr_002_4db9
 
-    ld hl, blobThrowerHitbox
+    ld hl, blobThrower.hitbox
     ld de, hitboxC360
     ld b, $04
 
@@ -2234,7 +2234,7 @@ Call_002_4db1:
     jr nz, jr_002_4dc7
 
     ld a, $00
-    ld [$c380], a
+    ld [blobThrower_actionTimer], a
 ret
 
 ;------------------------------------------------------------------------------
@@ -2390,88 +2390,91 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Blob Thrower AI (plant that spits out spores)
-enAI_4EA1: ; 02:4EA1
+enAI_blobThrower: ; 02:4EA1
+blobThrower:
+    ; Make stem blink periodically by changing tile numbers
     ld a, [frameCounter]
     and $0e
-    jr nz, jr_002_4ec6
+    jr nz, .endIf_A
+        ; Blink the first three tiles
+        ld de, $0004
+        ld b, $03
+        ld hl, spriteC300 + 4*4 + 2 ;$C312
+        .blinkLoop:
+            ld a, [hl]
+            xor $07
+            ld [hl], a
+            add hl, de
+            dec b
+        jr nz, .blinkLoop
+        ; Blink two other tiles (8 and 11)
+        ld hl, spriteC300 + 8*4 + 2 ; $C322
+        ld a, [hl]
+        xor $0d
+        ld [hl], a
+        ld hl, spriteC300 + 11*4 + 2 ; $C32E
+        ld a, [hl]
+        xor $0d
+        ld [hl], a
+    .endIf_A:
 
-    ld de, $0004
-    ld b, $03
-    ld hl, $c312
-
-jr_002_4eb0:
-    ld a, [hl]
-    xor $07
-    ld [hl], a
-    add hl, de
-    dec b
-    jr nz, jr_002_4eb0
-
-    ld hl, $c322
-    ld a, [hl]
-    xor $0d
-    ld [hl], a
-    ld hl, $c32e
-    ld a, [hl]
-    xor $0d
-    ld [hl], a
-
-jr_002_4ec6:
-    ld a, [$c381]
+    ; Wait on the wait timer
+    ld a, [blobThrower_waitTimer]
     and a
-    jr z, jr_002_4ed1
+    jr z, .else_B
+        ; Decrement timer
+        dec a
+        ld [blobThrower_waitTimer], a
+        ret
+    .else_B:
+        ; Go to current state
+        ld a, [blobThrower_state]
+        and a
+            jr z, .state_0 ; case 0
+        cp $01
+            jr z, .state_1 ; case 1
+        cp $02
+            jr z, .state_2 ; case 2
+        jp .state_3 ; case 3
 
-    dec a
-    ld [$c381], a
-    ret
-
-
-jr_002_4ed1:
-    ld a, [$c382]
-    and a
-        jr z, jr_002_4ee2 ; case 0
-    cp $01
-        jr z, jr_002_4f40 ; case 1
-    cp $02
-        jr z, jr_002_4f56 ; case 2
-
-    jp Jump_002_4fb9
-
-
-jr_002_4ee2:
-    ld de, $c300
-    ld hl, table_503F
+.state_0: ; Main action
+    ; Adjust sprites
+    ld de, spriteC300
+    ld hl, .speedTable_top
     ld a, $04
-    call Call_002_4fd4
+    call .moveSprites
     
-    ld hl, table_503F
+    ld hl, .speedTable_top
     ld a, $01
-    call Call_002_4fd4
+    call .moveSprites
     
-    ld hl, table_5071
+    ld hl, .speedTable_middle
     ld a, $01
-    call Call_002_4fd4
+    call .moveSprites
     
-    ld hl, table_50A3
+    ld hl, .speedTable_bottom
     ld a, $01
-    call Call_002_4fd4
-    ld hl, table_503F
-    ld a, [$c380]
+    call .moveSprites
+    ; Adjust hitbox
+    ld hl, .speedTable_top
+    ld a, [blobThrower_actionTimer]
     ld e, a
     ld d, $00
     add hl, de
-
     ld de, hitboxC360
     ld a, [de]
     add [hl]
     ld [de], a
-    ld a, [$c380]
+    ; Increment timer
+    ld a, [blobThrower_actionTimer]
     inc a
-    ld [$c380], a
+    ld [blobThrower_actionTimer], a
+    ; Check if at peak height
     cp $15
         ret nz
 
-    ld hl, $c302
+    ; Open up mouth by modifying first four tile numbers
+    ld hl, spriteC300 + 2 ;$c302
     ld de, $0004
     ld [hl], $df
     add hl, de
@@ -2480,65 +2483,63 @@ jr_002_4ee2:
     ld [hl], $e1
     add hl, de
     ld [hl], $e1
-    ld hl, $c334
+    ; Set y-pos for the 13th sprite so it and the next one get rendered
+    ld hl, spriteC300 + 13*4; $C334
     ld [hl], $e8
+    ; Prep next state
     ld a, $04
-    ld [$c381], a
+    ld [blobThrower_waitTimer], a
     ld a, $01
-    ld [$c382], a
-    ret
+    ld [blobThrower_state], a
+ret
 
-
-jr_002_4f40:
-    ld hl, $c302
+.state_1: ; Open mouth
+    ld hl, spriteC300 + 2 ;$c302
     ld de, $0004
     ld [hl], $e2
     add hl, de
     ld [hl], $e2
     ld a, $04
-    ld [$c381], a
+    ld [blobThrower_waitTimer], a
     ld a, $02
-    ld [$c382], a
-    ret
+    ld [blobThrower_state], a
+ret
 
-
-jr_002_4f56:
-    ld hl, $c302
+.state_2: ; Spew blobs
+    ld hl, spriteC300 + 2 ;$c302
     ld de, $0004
     ld [hl], $e3
     add hl, de
     ld [hl], $e3
     ld a, $40
-    ld [$c381], a
+    ld [blobThrower_waitTimer], a
     ld a, $03
-    ld [$c382], a
-    call blobThrower_getFacingDirection
-    ld de, header_50D5
-    call Call_002_4f97
-    ld de, header_50E2
-    call Call_002_4f97
-    ld de, header_50EF
-    call Call_002_4f97
-    ld de, header_50FC
-    call Call_002_4f97
-    ret
+    ld [blobThrower_state], a
+    call .getFacingDirection
+    ld de, .blobHeader_A
+    call .spewBlob
+    ld de, .blobHeader_B
+    call .spewBlob
+    ld de, .blobHeader_C
+    call .spewBlob
+    ld de, .blobHeader_D
+    call .spewBlob
+ret
 
-
-blobThrower_getFacingDirection: ; 02:4F87 - Shared with Arachnus
+.getFacingDirection: ; 02:4F87 - Shared with Arachnus
     ld a, [samus_onscreenXPos]
     ld b, a
     ldh a, [hEnemyXPos]
     cp b
     ld a, $00
-    jr c, jr_002_4f93
+    jr c, .endIf_C
         inc a
-    jr_002_4f93:
+    .endIf_C:
 
-    ld [$c386], a
+    ld [blobThrower_facingDirection], a
 ret
 
-
-Call_002_4f97:
+.spewBlob:
     call findFirstEmptyEnemySlot_longJump
     ld [hl], $00
     inc hl
@@ -2564,8 +2565,8 @@ Call_002_4f97:
 ret
 
 
-Jump_002_4fb9:
-    ld hl, $c302
+.state_3: ; State 3 - Close mouth
+    ld hl, spriteC300 + 2 ; $c302
     ld de, $0004
     ld [hl], $dd
     add hl, de
@@ -2574,52 +2575,57 @@ Jump_002_4fb9:
     ld [hl], $de
     add hl, de
     ld [hl], $de
-    ld hl, $c334
+    ; Set this y coordinate to $FF so this sprite and the one after it don't get rendered
+    ld hl, spriteC300 + 13*4; $C334
     ld [hl], $ff
     xor a
-    ld [$c382], a
-    ret
+    ld [blobThrower_state], a
+ret
 
-
-Call_002_4fd4:
+; A = number of sprites to move
+.moveSprites:
     push de
     push af
     push hl
-    ld a, [$c380]
+    ld a, [blobThrower_actionTimer]
 
-jr_002_4fda:
-    ld e, a
-    ld d, $00
-    add hl, de
-    ld a, [hl]
-    cp $80
-        jr z, jr_002_4ff1
+    .readLoop:
+        ; Check that we're not at the end of the list
+        ld e, a
+        ld d, $00
+        add hl, de
+        ld a, [hl]
+        cp $80
+        jr z, .endIf_D
+            pop bc
+            pop bc ; This is where B gets assigned the argument from A
+            pop de
+            ; Move the sprites, then exit
+            .moveLoop:
+                ld a, [de]
+                add [hl]
+                ld [de], a
+                inc de
+                inc de
+                inc de
+                inc de
+                dec b
+            jr nz, .moveLoop
+            ret
+        .endIf_D:
+        ; Delay when at bottom
+        ld a, $30
+        ld [blobThrower_waitTimer], a
+        ; Reset index
+        xor a
+        ld [blobThrower_actionTimer], a
+        pop hl
+        push hl
+    jr .readLoop
+; end proc
 
-    pop bc
-    pop bc
-    pop de
-    jr_002_4fe6:
-        ld a, [de]
-        add [hl]
-        ld [de], a
-        inc de
-        inc de
-        inc de
-        inc de
-        dec b
-    jr nz, jr_002_4fe6
-ret
-
-jr_002_4ff1:
-    ld a, $30
-    ld [$c381], a
-    xor a
-    ld [$c380], a
-    pop hl
-    push hl
-jr jr_002_4fda
-
-blobThrowerSprite: ; 02:4FFE
+; Main blob thrower sprite
+.sprite: ; 02:4FFE
     db $F8, $00, $DD, $20
     db $F8, $F8, $DD, $00
     db $00, $00, $DE, $20
@@ -2633,44 +2639,45 @@ blobThrowerSprite: ; 02:4FFE
     db $10, $F4, $D3, $00
     db $10, $FC, $D9, $00
     db $10, $04, $D5, $00
-    db $FF, $F0, $E0, $00
+    db $FF, $F0, $E0, $00 ; Note the $FF. It's dynamically changed to a valid value so this sprite and the next appear conditionally.
     db $E8, $08, $E0, $20
     db $FF
-blobThrowerHitbox: ; 02:503B
+.hitbox: ; 02:503B
     db $FC, $18, $F8, $08
 
-table_503F: ; 02:503F
+; Speed tables for moving the top, middile, and bottom parts of the blob thrower sprite
+.speedTable_top: ; 02:503F
     db $00, $FE, $FF, $FF, $FF, $FF, $FF, $FF, $FE, $FE, $FE, $FE, $FE, $FE, $FD, $FF
     db $00, $00, $00, $00, $00, $00, $02, $01, $00, $01, $01, $01, $01, $00, $01, $00
     db $02, $01, $01, $01, $01, $02, $00, $00, $01, $01, $01, $02, $01, $00, $02, $00
     db $00, $80
-table_5071: ; 02:5071
+.speedTable_middle: ; 02:5071
     db $00, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FE, $FF, $FF, $FF, $FE, $FF, $00
     db $00, $00, $00, $00, $00, $00, $01, $00, $01, $02, $00, $00, $00, $00, $00, $00
     db $00, $00, $00, $01, $00, $01, $02, $00, $02, $00, $01, $01, $01, $01, $01, $01
     db $00, $80
-table_50A3: ; 02:50A3
+.speedTable_bottom: ; 02:50A3
     db $00, $FF, $00, $FF, $00, $FF, $00, $00, $FF, $00, $FF, $00, $FF, $FF, $FF, $00
     db $00, $00, $00, $00, $00, $01, $00, $00, $01, $01, $00, $00, $00, $00, $00, $01
     db $00, $00, $00, $01, $00, $01, $00, $00, $00, $00, $01, $00, $00, $00, $01, $00
     db $00, $80
 ; Enemy headers for projectiles
-header_50D5:
+.blobHeader_A: ; 02:50D5
     db $9E, $00, $00, $00, $00, $00,
     dw table_53D7
     db $00, $02, $02
     dw enAI_536F
-header_50E2:
+.blobHeader_B: ; 02:50E2
     db $9E, $00, $00, $00, $00, $00
     dw table_5408
     db $00, $02, $03
     dw enAI_536F
-header_50EF:
+.blobHeader_C: ; 02:50EF
     db $9E, $00, $00, $00, $00, $00
     dw table_5437
     db $00, $02, $04
     dw enAI_536F
-header_50FC:
+.blobHeader_D: ; 02:50FC
     db $9E, $00, $00, $00, $00, $00
     dw table_5463
     db $00, $02, $05
@@ -2954,7 +2961,7 @@ ret
 ; end state
 
 .faceSamus: ; 02:529A
-    call blobThrower_getFacingDirection
+    call blobThrower.getFacingDirection
     and a
     ld a, OAMF_XFLIP ;$20
     jr z, .endIf_K
@@ -3082,7 +3089,7 @@ enAI_536F: ; 02:536F
     ld b, a
 
     ; Negate if Samus is to the right side of the parent blob thrower
-    ld a, [$c386]
+    ld a, [blobThrower_facingDirection]
     and a
     jr z, .endIf_C
         ld a, b
