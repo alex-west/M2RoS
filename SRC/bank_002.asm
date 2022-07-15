@@ -2541,29 +2541,28 @@ ret
 
 .spewBlob:
     call findFirstEmptyEnemySlot_longJump
+    ; Activate enemy
     ld [hl], $00
     inc hl
-
+    ; Set position of enemy
     ldh a, [hEnemyYPos]
     sub $20
     ld [hl+], a
-
     ldh a, [hEnemyXPos]
     ld [hl+], a
-
+    ; Load header
     ld a, $06
     ld [enemy_tempSpawnFlag], a
     push hl
         call enemy_spawnObject.longHeader
     pop hl
+    ; Dynamically set [$E7] for the blobs (their lower bound) depending on the y position of the thrower.
     ld de, $0004
     add hl, de
-
     ldh a, [hEnemyYPos]
     add $40
     ld [hl], a
 ret
-
 
 .state_3: ; State 3 - Close mouth
     ld hl, spriteC300 + 2 ; $c302
@@ -2664,24 +2663,24 @@ ret
 ; Enemy headers for projectiles
 .blobHeader_A: ; 02:50D5
     db $9E, $00, $00, $00, $00, $00,
-    dw table_53D7
+    dw blobMovementTable_A
     db $00, $02, $02
-    dw enAI_536F
+    dw enAI_blobProjectile
 .blobHeader_B: ; 02:50E2
     db $9E, $00, $00, $00, $00, $00
-    dw table_5408
+    dw blobMovementTable_B
     db $00, $02, $03
-    dw enAI_536F
+    dw enAI_blobProjectile
 .blobHeader_C: ; 02:50EF
     db $9E, $00, $00, $00, $00, $00
-    dw table_5437
+    dw blobMovementTable_C
     db $00, $02, $04
-    dw enAI_536F
+    dw enAI_blobProjectile
 .blobHeader_D: ; 02:50FC
     db $9E, $00, $00, $00, $00, $00
-    dw table_5463
+    dw blobMovementTable_D
     db $00, $02, $05
-    dw enAI_536F
+    dw enAI_blobProjectile
 
 ;------------------------------------------------------------------------------
 ; Arachnus / Arachnus Orb
@@ -3048,21 +3047,21 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Blob thrower projectile
-enAI_536F: ; 02:536F
+enAI_blobProjectile: ; 02:536F
     ldh a, [hEnemy_frameCounter]
     ld b, a
     and $01
         ret nz
-
+    ; Animate
     ld a, b
     and $01
-    jr nz, .endIf_A
+    jr nz, .endIf_A ; This conditional seems superfluous given the conditional return above
         ldh a, [hEnemySpriteType]
         xor $01
         ldh [hEnemySpriteType], a
     .endIf_A:
 
-    ; Load pointer to table
+    ; Load pointer to movement table (two bytes)
     ld hl, $ffe9
     ld e, [hl]
     inc l
@@ -3078,7 +3077,7 @@ enAI_536F: ; 02:536F
     ld a, [de]
     and $f0
     swap a
-    ; Sign-extend if necessary (is the stored format sign-magnitude?)
+    ; Apply the sign-bit if necessary (uses sign-magnitude format)
     bit 3, a
     jr z, .endIf_B
         and $07
@@ -3107,14 +3106,14 @@ enAI_536F: ; 02:536F
     ; Extract lower nybble
     ld a, [de]
     and $0f
-    ; Sign-extend if necessary
+    ; Apply the sign-bit if necessary (uses sign-magnitude format)
     bit 3, a
     jr z, .endIf_D
         and $07
         cpl
         inc a
     .endIf_D:
-    ; Save result
+    ; Save result to B (unnecessary)
     ld b, a
     ; Apply velocity
     ldh a, [hEnemyYPos]
@@ -3128,11 +3127,10 @@ enAI_536F: ; 02:536F
     ld [hl], e
 ret
 
-
 .done:
-    ; Clear unused (?) variable
+    ; Clear unused variable
     xor a
-    ld [$c387], a
+    ld [blobThrowerBlob_unknownVar], a
     ; Check if below threshold
     ldh a, [$e7]
     ld b, a
@@ -3150,22 +3148,24 @@ ret
         ld a, $ff
         ldh [hEnemySpawnFlag], a
         ret
+; end 
 
-; Bitpacked speed pairs?
-table_53D7: ; 02:53D7
+; Bitpacked speed pairs
+; - Signed-magnitude format (Signs: $X---Y---, Magnitudes: $-xxx-yyy)
+blobMovementTable_A: ; 02:53D7
     db $19, $1A, $1A, $29, $28, $31, $32, $32, $33, $34, $34, $25, $89, $9B, $9B, $A9
     db $A8, $B1, $B2, $C2, $C3, $D4, $D4, $C5, $09, $1B, $1B, $29, $28, $31, $32, $42
     db $43, $54, $54, $45, $89, $9B, $9B, $A9, $A8, $B1, $B2, $C2, $C3, $D4, $D4, $C5
     db $80
-table_5408: ; 02:5408
+blobMovementTable_B: ; 02:5408
     db $09, $1A, $1A, $2A, $3A, $3A, $4A, $49, $58, $51, $89, $9B, $9B, $A9, $A8, $B1
     db $B2, $C2, $C3, $D4, $D4, $C5, $09, $1B, $1B, $29, $28, $31, $32, $42, $43, $54
     db $54, $45, $89, $9B, $9B, $A9, $A8, $B1, $B2, $C2, $C3, $D4, $D4, $C5, $80
-table_5437: ; 02:5437
+blobMovementTable_C: ; 02:5437
     db $19, $1A, $2B, $4B, $4A, $5A, $59, $09, $1B, $1B, $29, $28, $31, $32, $42, $43
     db $54, $54, $45, $89, $9B, $9B, $A9, $A8, $B1, $B2, $C2, $C3, $D4, $D4, $C5, $09
     db $1B, $1B, $29, $28, $31, $32, $42, $43, $54, $54, $45, $80
-table_5463: ; 02:5463
+blobMovementTable_D: ; 02:5463
     db $29, $39, $3A, $4A, $4B, $5B, $58, $6B, $09, $1B, $1B, $29, $28, $31, $32, $42
     db $43, $54, $54, $45, $89, $9B, $9B, $A9, $A8, $B1, $B2, $C2, $C3, $D4, $D4, $C5
     db $09, $1B, $1B, $29, $28, $31, $32, $42, $43, $54, $54, $45, $EB, $FA, $FA, $E9
@@ -3514,6 +3514,7 @@ ret
 ; End of the rock icicle's code
 ;------------------------------------------------------------------------------
 
+; Common enemy handler
 Call_002_5630:
     ; Check if a drop
     ldh a, [hEnemyDropType]

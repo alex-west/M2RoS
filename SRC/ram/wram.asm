@@ -58,7 +58,7 @@ def blobThrower_state = $C382 ; Valid values are 0, 1, 2, 3
 ; $C384 - unused?
 ; $C385 - unused?
 def blobThrower_facingDirection = $C386 ; Set to Samus is right of enemy in $2:4F87
-;
+def blobThrowerBlob_unknownVar = $C387 ; Written to, but never read
 def temp_spriteType = $C388 ; 02:4DD3 - Temp variable used to store the sprite type in the item AI (02:4DD3)
 
 ; Arachnus variables
