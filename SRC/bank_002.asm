@@ -3858,7 +3858,7 @@ jr_002_57db:
 ;------------------------------------------------------------------------------
 ; Tsumuri/Needler/Moheek AI (crawlers)
 ; - Right facing variant
-enAI_57DE:
+enAI_57DE: ; 02:57DE
     jr jr_002_5838
 
 Jump_002_57e0:
@@ -4156,7 +4156,7 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Skreek projectile code
-jr_002_59a6:
+jr_002_59a6: ; 02:59A6
     ld hl, $ffe9
     dec [hl]
         jr z, jr_002_59bf
@@ -4183,7 +4183,7 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Skreek AI (bird faced things that jump out of lava and spit at samus)
-enAI_59C7:
+enAI_59C7: ; 02:59C7
     ldh a, [hEnemySpawnFlag]
     and $0f
         jr z, jr_002_59a6
@@ -5813,7 +5813,7 @@ jr_002_630d:
     ld [hl+], a
     ld a, b
     ld [hl+], a
-    ld de, $6382
+    ld de, header_6382
     ld a, $06
     ld [enemy_tempSpawnFlag], a
     call enemy_spawnObject.shortHeader
@@ -5890,6 +5890,7 @@ jr_002_637a:
     ldh [hEnemySpawnFlag], a
     ret
 
+header_6382:
     db $00, $00, $00, $00, $00, $00, $fe, $01
     dw enAI_62B4
 
@@ -7063,7 +7064,7 @@ enAI_flittMoving: ; 02:68FC
 
 ;------------------------------------------------------------------------------
 ; Gravitt AI (crawler with a hat that pops out of the ground)
-enAI_gravitt: ; 02:659F
+enAI_gravitt: ; 02:695F
     ld hl, hEnemyState
     ld a, [hl]
     dec a
@@ -9312,7 +9313,7 @@ jr_002_75c9:
     ld [hl+], a
     ld a, b
     ld [hl+], a
-    ld de, $75e2
+    ld de, header_75E2
     ld a, $06
     ld [enemy_tempSpawnFlag], a
     call enemy_spawnObject.shortHeader
@@ -9320,7 +9321,7 @@ jr_002_75c9:
     ld [sfxRequest_noise], a
     ret
 
-
+header_75E2:
     db $00, $00, $ff, $00, $00, $00, $ff, $08
     dw enAI_7276
 
