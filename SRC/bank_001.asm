@@ -330,40 +330,47 @@ ret
 ret
 
 ;------------------------------------------------------------------------------
+; Debug Menu drawing routines
 debug_drawNumber: ; 01:4AFC - Display a two-sprite number
 .twoDigit:
     ldh [$99], a
     swap a
     and $0f
-    add $a0
-    call Call_001_4b11
+    add $a0 ; Adjust value for display
+    call .drawSprite
     ldh a, [$99]
 .oneDigit: ; 01:4B09 - Display a one-sprite number
     and $0f
-    add $a0
-    call Call_001_4b11
+    add $a0 ; Adjust value for display
+    call .drawSprite
 ret
 
-
-Call_001_4b11: ; 01:4B11
+.drawSprite: ; 01:4B11
+    ; Save sprite tile to temp
     ldh [$98], a
+    ; Load WRAM address to HL
     ld h, $c0
     ldh a, [hOamBufferIndex]
     ld l, a
+    ; Write Y and X positions
     ldh a, [hSpriteYPixel]
     ld [hl+], a
     ldh a, [hSpriteXPixel]
     ld [hl+], a
+    ; Update x position for next sprite
     add $08
     ldh [hSpriteXPixel], a
+    ; Write tile number and sprite attributes
     ldh a, [$98]
     ld [hl+], a
     ldh a, [hSpriteAttr]
     ld [hl+], a
+    ; Save OAM buffer value
     ld a, l
     ldh [hOamBufferIndex], a
-    ret
+ret
 
+;------------------------------------------------------------------------------
 ; 01:4B2C - Render Metroid sprite on the HUD
 drawHudMetroid::
     ld a, $98
@@ -895,6 +902,7 @@ drawSamus_common: ; 01:4DDF
     ld [samus_screenSpritePriority], a
 ret
 
+;------------------------------------------------------------------------------
 ; New game
 ; - Transfers initial savegame from ROM to save buffer in WRAM
 createNewSave: ; 01:4E1C
@@ -984,27 +992,26 @@ initialSaveFile:
 	db $00       ; In-game timer, hours
 	db $39       ; Number of Metroids remaining
 
+;------------------------------------------------------------------------------
+
 samusShoot: ; 01:4E8A
     ldh a, [hInputRisingEdge]
     bit PADB_B, a
-        jr nz, jr_001_4e9f
-
-    ldh a, [hInputPressed]
-    bit PADB_B, a
-        ret z
-
-    ld a, [samusBeamCooldown]
-    inc a
-    ld [samusBeamCooldown], a
-    cp $10
-        ret c
+    jr nz, jr_001_4e9f
+        ldh a, [hInputPressed]
+        bit PADB_B, a
+            ret z
+        ld a, [samusBeamCooldown]
+        inc a
+        ld [samusBeamCooldown], a
+        cp $10
+            ret c
+    jr_001_4e9f:
 
 Jump_001_4e9f:
-jr_001_4e9f:
     ld a, [samusPose]
     bit 7, a
-    ret nz
-
+        ret nz
     ld hl, table_5653
     ld a, [samusPose]
     ld e, a
@@ -1012,10 +1019,9 @@ jr_001_4e9f:
     add hl, de
     ld a, [hl]
     and a
-    ret z
-
-    cp $80
-    jp z, Jump_001_53d9
+        ret z
+    cp $80 ; Check if it's a bomb-laying pose
+        jp z, Jump_001_53d9
 
     ld b, a
     xor a
@@ -1071,8 +1077,8 @@ jr_001_4e9f:
     sub $04
     ldh [$98], a
     ld a, [samusActiveWeapon]
-    cp $04
-    jp z, Jump_001_4f7e
+    cp $04 ; Plasma
+        jp z, Jump_001_4f7e
 
     call findProjectileSlot ; Projectile slot is returned in HL
     ; Exit if projectile is 3
@@ -1082,149 +1088,153 @@ jr_001_4e9f:
         ret z
 
     ld a, [samusActiveWeapon]
-    cp $08
+    cp $08 ; Missiles
     jr nz, jr_001_4f44
-
-    ld a, [samusCurMissilesLow]
-    ld b, a
-    ld a, [samusCurMissilesHigh]
-    or b
-    jr nz, jr_001_4f32
-        ; Play sound effect
-        ld a, $19
-        ld [sfxRequest_square1], a
+        ; Decrement missiles if possible
+        ld a, [samusCurMissilesLow]
+        ld b, a
+        ld a, [samusCurMissilesHigh]
+        or b
+        jr nz, jr_001_4f32
+            ; Play sound effect and exit
+            ld a, $19
+            ld [sfxRequest_square1], a
             ret
-    jr_001_4f32:
+        jr_001_4f32:
+    
+        ld a, [samusCurMissilesLow]
+        sub $01
+        daa
+        ld [samusCurMissilesLow], a
+        ld a, [samusCurMissilesHigh]
+        sbc $00
+        daa
+        ld [samusCurMissilesHigh], a
+    jr_001_4f44:
 
-    ld a, [samusCurMissilesLow]
-    sub $01
-    daa
-    ld [samusCurMissilesLow], a
-    ld a, [samusCurMissilesHigh]
-    sbc $00
-    daa
-    ld [samusCurMissilesHigh], a
-
-jr_001_4f44:
     ld a, [samusActiveWeapon]
     ld [hl+], a
+    ; Write direction
     ldh a, [$99]
     ld [hl+], a
+    ; Write y position
     ldh a, [$9a]
     ld b, a
     ldh a, [hSamusYPixel]
     add b
     ld [hl+], a
+    ; Write x position
     ldh a, [$98]
     ld b, a
     ldh a, [hSamusXPixel]
     add b
     ld [hl+], a
+    ; Write wave index
     ldh a, [frameCounter]
     and $10
     srl a
     ld [hl+], a
+    ; Write frame counter
     xor a
     ld [hl], a
+
     ld a, [samusActiveWeapon]
-    cp $03
+    cp $03 ; Spazer
     jr nz, jr_001_4f6f
+        ld a, l
+        cp $20
+        jp c, Jump_001_4e9f
+    jr_001_4f6f:
 
-    ld a, l
-    cp $20
-    jp c, Jump_001_4e9f
-
-jr_001_4f6f:
-    ld hl, $4fe5
+    ld hl, table_4FE5
     ld a, [samusActiveWeapon]
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
     ld [sfxRequest_square1], a
-    ret
+ret
 
 
-Jump_001_4f7e:
+Jump_001_4f7e: ; Plasma case
     ld hl, projectileArray
     ld a, [hl]
     cp $ff
     ret nz
 
-Jump_001_4f85:
-    ldh a, [$99]
-    cp $04
-    jr nc, jr_001_4f9d
-
-    ldh a, [$98]
-    sub $08
-    ldh [$98], a
-    ld a, l
-    and a
-    jr z, jr_001_4fad
-
-    ldh a, [$98]
-    add $10
-    ldh [$98], a
-    jr jr_001_4fad
-
-jr_001_4f9d:
-    ldh a, [$9a]
-    sub $08
-    ldh [$9a], a
-    ld a, l
-    and a
-    jr z, jr_001_4fad
-
-    ldh a, [$9a]
-    add $10
-    ldh [$9a], a
-
-jr_001_4fad:
-    ld a, [samusActiveWeapon]
-    ld [hl+], a
-    ldh a, [$99]
-    ld [hl+], a
-    ldh a, [$9a]
-    ld b, a
-    ldh a, [hSamusYPixel]
-    add b
-    ld [hl+], a
-    ldh a, [$98]
-    ld b, a
-    ldh a, [hSamusXPixel]
-    add b
-    ld [hl+], a
-    ldh a, [frameCounter]
-    and $10
-    srl a
-    ld [hl+], a
-    xor a
-    ld [hl], a
-    ld a, l
-    and $f0
-    add $10
-    ld l, a
-    cp $30
+    Jump_001_4f85:
+        ldh a, [$99]
+        cp $04
+        jr nc, jr_001_4f9d
+            ldh a, [$98]
+            sub $08
+            ldh [$98], a
+            ld a, l
+            and a
+            jr z, jr_001_4fad
+                ldh a, [$98]
+                add $10
+                ldh [$98], a
+                jr jr_001_4fad
+        jr_001_4f9d:
+            ldh a, [$9a]
+            sub $08
+            ldh [$9a], a
+            ld a, l
+            and a
+            jr z, jr_001_4fad
+                ldh a, [$9a]
+                add $10
+                ldh [$9a], a
+        jr_001_4fad:
+    
+        ld a, [samusActiveWeapon]
+        ld [hl+], a
+        ldh a, [$99]
+        ld [hl+], a
+        ldh a, [$9a]
+        ld b, a
+        ldh a, [hSamusYPixel]
+        add b
+        ld [hl+], a
+        ldh a, [$98]
+        ld b, a
+        ldh a, [hSamusXPixel]
+        add b
+        ld [hl+], a
+        ldh a, [frameCounter]
+        and $10
+        srl a
+        ld [hl+], a
+        xor a
+        ld [hl], a
+        ld a, l
+        and $f0
+        add $10
+        ld l, a
+        cp $30
     jp c, Jump_001_4f85
 
-    ld hl, $4fe5
+    ld hl, table_4FE5 ;$4fe5
     ld a, [samusActiveWeapon]
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
     ld [sfxRequest_square1], a
-    ret
+ret
+; end of samusShoot
 
-
-    db $07, $09, $16, $0b, $0a
-
-    rlca
-    rlca
-    rlca
-
-    db $08
+table_4FE5: ; 01:4FE5 - Sound effect table
+    db $07 ; 0: Normal
+    db $09 ; 1: Ice
+    db $16 ; 2: Wave
+    db $0B ; 3: Spazer
+    db $0A ; 4: Plasma
+    db $07 ; 5: x
+    db $07 ; 6: x
+    db $07 ; 7: x
+    db $08 ; 8: Missile
 
 
 findProjectileSlot: ; 01:4FEE
@@ -1249,7 +1259,8 @@ findProjectileSlot: ; 01:4FEE
     jr nz, .loop
 ret
 
-
+;------------------------------------------------------------------------------
+; Beam handler
 handleProjectiles: ; 01:500D
     xor a
     ld [$d032], a
@@ -1266,7 +1277,7 @@ Jump_001_5011:
     ldh [$b9], a
     ld [$d08d], a
     cp $ff
-    jp z, Jump_001_52f3
+        jp z, Jump_001_52f3
 
     ld a, [hl+]
     ldh [$98], a
@@ -1281,191 +1292,164 @@ Jump_001_5011:
     inc a
     ldh [$bb], a
     ldh a, [$b9]
-    cp $02
-    jp z, Jump_001_50d4
-
-    cp $03
-    jr z, jr_001_504f
-
-    cp $08
-    jp z, Jump_001_51c3
-
-    jp Jump_001_5216
+    cp $02 ; Wave
+        jp z, Jump_001_50d4
+    cp $03 ; Spazer
+        jr z, jr_001_504f
+    cp $08 ; Missile
+        jp z, Jump_001_51c3
+    jp Jump_001_5216 ; Default (ice, power, plasma)
 
 
-jr_001_504f:
+jr_001_504f: ; Spazer
     ldh a, [$98]
     bit 0, a
     jr z, jr_001_5064
-
-    call Call_001_509a
-    ldh a, [$9a]
-    add $04
-    ld hl, $d035
-    add [hl]
-    ldh [$9a], a
-    jr jr_001_5097
-
-jr_001_5064:
-    bit 1, a
-    jr z, jr_001_5077
-
-    call Call_001_509a
-    ldh a, [$9a]
-    sub $04
-    ld hl, $d036
-    sub [hl]
-    ldh [$9a], a
-    jr jr_001_5097
-
-jr_001_5077:
-    bit 2, a
-    jr z, jr_001_508a
-
-    call Call_001_50b7
-    ldh a, [$99]
-    sub $04
-    ld hl, $d037
-    sub [hl]
-    ldh [$99], a
-    jr jr_001_5097
-
-jr_001_508a:
-    call Call_001_50b7
-    ldh a, [$99]
-    add $04
-    ld hl, $d038
-    add [hl]
-    ldh [$99], a
-
-jr_001_5097:
-    jp Jump_001_5282
-
+        call Call_001_509a
+        ldh a, [$9a]
+        add $04
+        ld hl, $d035
+        add [hl]
+        ldh [$9a], a
+        jr jr_001_5097
+    jr_001_5064:
+        bit 1, a
+        jr z, jr_001_5077
+            call Call_001_509a
+            ldh a, [$9a]
+            sub $04
+            ld hl, $d036
+            sub [hl]
+            ldh [$9a], a
+            jr jr_001_5097
+        jr_001_5077:
+            bit 2, a
+            jr z, jr_001_508a
+                call Call_001_50b7
+                ldh a, [$99]
+                sub $04
+                ld hl, $d037
+                sub [hl]
+                ldh [$99], a
+                jr jr_001_5097
+            jr_001_508a:
+                call Call_001_50b7
+                ldh a, [$99]
+                add $04
+                ld hl, $d038
+                add [hl]
+                ldh [$99], a
+    jr_001_5097:
+jp Jump_001_5282
 
 Call_001_509a:
     ldh a, [$bb]
     cp $05
-    ret nc
-
+        ret nc
     ld a, l
     and $f0
     cp $10
-    ret z
-
+        ret z
     cp $00
     jr nz, jr_001_50b0
-
-    ldh a, [$99]
-    sub $02
-    ldh [$99], a
-    ret
-
-
-jr_001_50b0:
-    ldh a, [$99]
-    add $02
-    ldh [$99], a
-    ret
-
+        ldh a, [$99]
+        sub $02
+        ldh [$99], a
+        ret
+    jr_001_50b0:
+        ldh a, [$99]
+        add $02
+        ldh [$99], a
+        ret
 
 Call_001_50b7:
     ldh a, [$bb]
     cp $05
-    ret nc
-
+        ret nc
     ld a, l
     and $f0
     cp $10
-    ret z
-
+        ret z
     cp $00
     jr nz, jr_001_50cd
+        ldh a, [$9a]
+        sub $02
+        ldh [$9a], a
+        ret
+    jr_001_50cd:
+        ldh a, [$9a]
+        add $02
+        ldh [$9a], a
+        ret
+; end case
 
-    ldh a, [$9a]
-    sub $02
-    ldh [$9a], a
-    ret
-
-
-jr_001_50cd:
-    ldh a, [$9a]
-    add $02
-    ldh [$9a], a
-    ret
-
-
-Jump_001_50d4:
-jr_001_50d4:
-    ld hl, $5183
-    ldh a, [$ba]
-    ld e, a
-    ld d, $00
-    add hl, de
-    ld a, [hl]
-    cp $80
-    jr nz, jr_001_50e7
-
-    xor a
-    ldh [$ba], a
+Jump_001_50d4: ; Wave
+    jr_001_50d4:
+        ld hl, table_5183
+        ldh a, [$ba]
+        ld e, a
+        ld d, $00
+        add hl, de
+        ld a, [hl]
+        cp $80
+            jr nz, jr_001_50e7
+        xor a
+        ldh [$ba], a
     jr jr_001_50d4
+    
+    jr_001_50e7:
 
-jr_001_50e7:
     ld b, a
     ldh a, [$98]
     and $0c
     jr nz, jr_001_5116
+        ldh a, [$99]
+        add b
+        ldh [$99], a
+        ldh a, [$ba]
+        inc a
+        ldh [$ba], a
+        ldh a, [$98]
+        bit 1, a
+        jr nz, jr_001_510a
+            ldh a, [$9a]
+            add $02
+            ld hl, $d035
+            add [hl]
+            ldh [$9a], a
+            jr jr_001_513c
+        jr_001_510a:
+            ldh a, [$9a]
+            sub $02
+            ld hl, $d036
+            sub [hl]
+            ldh [$9a], a
+            jr jr_001_513c
+    
+    jr_001_5116:
+        ldh a, [$9a]
+        add b
+        ldh [$9a], a
+        ldh a, [$ba]
+        inc a
+        ldh [$ba], a
+        ldh a, [$98]
+        bit 2, a
+        jr nz, jr_001_5132
+            ldh a, [$99]
+            add $02
+            ld hl, $d038
+            add [hl]
+            ldh [$99], a
+            jr jr_001_513c
+        jr_001_5132:
+            ldh a, [$99]
+            sub $02
+            ld hl, $d037
+            sub [hl]
+            ldh [$99], a
+    jr_001_513c:
 
-    ldh a, [$99]
-    add b
-    ldh [$99], a
-    ldh a, [$ba]
-    inc a
-    ldh [$ba], a
-    ldh a, [$98]
-    bit 1, a
-    jr nz, jr_001_510a
-
-    ldh a, [$9a]
-    add $02
-    ld hl, $d035
-    add [hl]
-    ldh [$9a], a
-    jr jr_001_513c
-
-jr_001_510a:
-    ldh a, [$9a]
-    sub $02
-    ld hl, $d036
-    sub [hl]
-    ldh [$9a], a
-    jr jr_001_513c
-
-jr_001_5116:
-    ldh a, [$9a]
-    add b
-    ldh [$9a], a
-    ldh a, [$ba]
-    inc a
-    ldh [$ba], a
-    ldh a, [$98]
-    bit 2, a
-    jr nz, jr_001_5132
-
-    ldh a, [$99]
-    add $02
-    ld hl, $d038
-    add [hl]
-    ldh [$99], a
-    jr jr_001_513c
-
-jr_001_5132:
-    ldh a, [$99]
-    sub $02
-    ld hl, $d037
-    sub [hl]
-    ldh [$99], a
-
-jr_001_513c:
     ldh a, [$b7]
     ld l, a
     ldh a, [$b8]
@@ -1484,180 +1468,151 @@ jr_001_513c:
     ld [hl], a
     ldh a, [frameCounter]
     and $01
-    jp z, Jump_001_52e0
-
+        jp z, Jump_001_52e0
     call beam_getTileIndex
     ld hl, beamSolidityIndex
     cp [hl]
-    jp nc, Jump_001_52e0
+        jp nc, Jump_001_52e0
 
     cp $04
     jr nc, jr_001_5172
+        call destroyRespawningBlock
+        jp Jump_001_52f3
+    jr_001_5172:
+        ld h, HIGH(collisionArray)
+        ld l, a
+        ld a, [hl]
+        bit blockType_shot, a
+        jp z, Jump_001_52f3
+            ld a, $ff
+            call Call_001_56e9
+        jp Jump_001_52f3
+; end case
 
-    call destroyRespawningBlock
-    jp Jump_001_52f3
-
-
-jr_001_5172:
-    ld h, HIGH(collisionArray)
-    ld l, a
-    ld a, [hl]
-    bit blockType_shot, a
-    jp z, Jump_001_52f3
-        ld a, $ff
-        call Call_001_56e9
-    jp Jump_001_52f3
-
-
+table_5183: ; 01:5183 - Wave speed table
     db $00, $07, $05, $02, $00, $fe, $fb, $f9, $00, $f9, $fb, $fe, $00, $02, $05, $07
     db $80
 
-    ld a, [bc]
-    or $f6
-    ld a, [bc]
-    ld a, [bc]
-    or $f6
-    ld a, [bc]
-    ld a, [bc]
-    or $f6
-    ld a, [bc]
-    add b
-    nop
+table_5194: ; 01:5194 - Unused (alternate wave table)
+    db $0A, $F6, $F6, $0A, $0A, $F6, $F6, $0A, $0A, $F6, $F6, $0A, $80
 
-    db $00, $01, $00, $00, $01, $00, $01, $00, $01, $00, $01, $01, $01, $01, $02, $01
-    db $02, $01, $02, $02, $02, $02, $03, $02, $02, $03, $02, $03, $03, $03, $03, $04
-    db $ff
+table_51A1: ; 01:51A1 - Missile speed table (first value in array is unused)
+    db $00, $00, $01, $00, $00, $01, $00, $01, $00, $01, $00, $01, $01, $01, $01, $02
+    db $01, $02, $01, $02, $02, $02, $02, $03, $02, $02, $03, $02, $03, $03, $03, $03
+    db $04, $FF
 
-Jump_001_51c3:
+Jump_001_51c3: ; Missile
     ldh a, [$bb]
     ld e, a
     ld d, $00
-    ld hl, $51a1
+    ld hl, table_51A1
     add hl, de
     ld a, [hl]
     cp $ff
     jr nz, jr_001_51d9
+        ldh a, [$bb]
+        dec a
+        ldh [$bb], a
+        ld a, [$51c1]
+    jr_001_51d9:
 
-    ldh a, [$bb]
-    dec a
-    ldh [$bb], a
-    ld a, [$51c1]
-
-jr_001_51d9:
     ld b, a
     ldh a, [$98]
     bit 0, a
     jr z, jr_001_51ec
+        ldh a, [$9a]
+        add b
+        ld hl, $d035
+        add [hl]
+        ldh [$9a], a
+        jp Jump_001_5282
+    jr_001_51ec:
+        bit 1, a
+        jr z, jr_001_51fc
+            ldh a, [$9a]
+            sub b
+            ld hl, $d036
+            sub [hl]
+            ldh [$9a], a
+            jp Jump_001_5282
+        jr_001_51fc:
+            bit 2, a
+            jr z, jr_001_520b
+                ldh a, [$99]
+                sub b
+                ld hl, $d037
+                sub [hl]
+                ldh [$99], a
+                jr jr_001_5282
+            jr_001_520b:
+                ldh a, [$99]
+                add b
+                ld hl, $d038
+                add [hl]
+                ldh [$99], a
+                jr jr_001_5282
+; End case
 
-    ldh a, [$9a]
-    add b
-    ld hl, $d035
-    add [hl]
-    ldh [$9a], a
-    jp Jump_001_5282
-
-
-jr_001_51ec:
-    bit 1, a
-    jr z, jr_001_51fc
-
-    ldh a, [$9a]
-    sub b
-    ld hl, $d036
-    sub [hl]
-    ldh [$9a], a
-    jp Jump_001_5282
-
-
-jr_001_51fc:
-    bit 2, a
-    jr z, jr_001_520b
-
-    ldh a, [$99]
-    sub b
-    ld hl, $d037
-    sub [hl]
-    ldh [$99], a
-    jr jr_001_5282
-
-jr_001_520b:
-    ldh a, [$99]
-    add b
-    ld hl, $d038
-    add [hl]
-    ldh [$99], a
-    jr jr_001_5282
-
-Jump_001_5216:
+Jump_001_5216: ; Default projectile
     ldh a, [$98]
     bit 0, a
     jr z, jr_001_5234
+        ldh a, [$9a]
+        add $04
+        ld hl, $d035
+        add [hl]
+        ldh [$9a], a
+        ldh a, [$b9]
+        cp $04 ; Plasma
+        jr nz, jr_001_5282
+            ldh a, [$9a]
+            add $02
+            ldh [$9a], a
+            jr jr_001_5282
+    jr_001_5234:
+        bit 1, a
+        jr z, jr_001_5250
+            ldh a, [$9a]
+            sub $04
+            ld hl, $d036
+            sub [hl]
+            ldh [$9a], a
+            ldh a, [$b9]
+            cp $04
+            jr nz, jr_001_5282
+                ldh a, [$9a]
+                sub $02
+                ldh [$9a], a
+                jr jr_001_5282
+        jr_001_5250:
+            bit 2, a
+            jr z, jr_001_526c
+                ldh a, [$99]
+                sub $04
+                ld hl, $d037
+                sub [hl]
+                ldh [$99], a
+                ldh a, [$b9]
+                cp $04
+                jr nz, jr_001_5282
+                    ldh a, [$99]
+                    sub $02
+                    ldh [$99], a
+                    jr jr_001_5282
+            jr_001_526c:
+                ldh a, [$99]
+                add $04
+                ld hl, $d038
+                add [hl]
+                ldh [$99], a
+                ldh a, [$b9]
+                cp $04
+                jr nz, jr_001_5282
+                    ldh a, [$99]
+                    add $02
+                    ldh [$99], a
 
-    ldh a, [$9a]
-    add $04
-    ld hl, $d035
-    add [hl]
-    ldh [$9a], a
-    ldh a, [$b9]
-    cp $04
-    jr nz, jr_001_5282
-
-    ldh a, [$9a]
-    add $02
-    ldh [$9a], a
-    jr jr_001_5282
-
-jr_001_5234:
-    bit 1, a
-    jr z, jr_001_5250
-
-    ldh a, [$9a]
-    sub $04
-    ld hl, $d036
-    sub [hl]
-    ldh [$9a], a
-    ldh a, [$b9]
-    cp $04
-    jr nz, jr_001_5282
-
-    ldh a, [$9a]
-    sub $02
-    ldh [$9a], a
-    jr jr_001_5282
-
-jr_001_5250:
-    bit 2, a
-    jr z, jr_001_526c
-
-    ldh a, [$99]
-    sub $04
-    ld hl, $d037
-    sub [hl]
-    ldh [$99], a
-    ldh a, [$b9]
-    cp $04
-    jr nz, jr_001_5282
-
-    ldh a, [$99]
-    sub $02
-    ldh [$99], a
-    jr jr_001_5282
-
-jr_001_526c:
-    ldh a, [$99]
-    add $04
-    ld hl, $d038
-    add [hl]
-    ldh [$99], a
-    ldh a, [$b9]
-    cp $04
-    jr nz, jr_001_5282
-
-    ldh a, [$99]
-    add $02
-    ldh [$99], a
-
-Jump_001_5282:
+Jump_001_5282: ; Common projectile code
 jr_001_5282:
     ldh a, [$b7]
     ld l, a
@@ -1689,27 +1644,25 @@ jr_001_5282:
     cp $04
     jr nc, jr_001_52b8
         call c, destroyRespawningBlock
-            jr jr_001_52c6
+        jr jr_001_52c6
     jr_001_52b8:
+        ld h, HIGH(collisionArray)
+        ld l, a
+        ld a, [hl]
+        bit blockType_shot, a
+        jp z, Jump_001_52c6
+            ld a, $ff
+            call Call_001_56e9
+        Jump_001_52c6:
+    jr_001_52c6:
 
-    ld h, HIGH(collisionArray)
-    ld l, a
-    ld a, [hl]
-    bit blockType_shot, a
-    jp z, Jump_001_52c6
-        ld a, $ff
-        call Call_001_56e9
-    Jump_001_52c6:
-
-jr_001_52c6:
     ldh a, [$b9]
-    cp $07
-    call z, Call_001_53af
-    cp $03
-    jr z, jr_001_52f3
-
-    cp $04
-    jr z, jr_001_52f3
+    cp $07 ; Bombs
+        call z, Call_001_53af
+    cp $03 ; Spazer
+        jr z, jr_001_52f3
+    cp $04 ; Plasma
+        jr z, jr_001_52f3
 
     ldh a, [$b7]
     ld l, a
@@ -1740,170 +1693,136 @@ jr_001_52f3:
     ld [$d032], a
     cp $03
     jp c, Jump_001_5011
-
-    ret
+ret
 
 
 Call_001_5300: ; draw projectiles ; 01:5300
     ld a, $00
     ld [$d032], a
 
-Jump_001_5305:
-    ld hl, projectileArray
-    ld a, [$d032]
-    swap a
-    ld e, a
-    ld d, $00
-    add hl, de
-    ld a, [hl+]
-    ld d, a
-    cp $ff
-    jp z, Jump_001_5390
-
-    ld a, [hl+]
-    ld c, a
-    ld a, [$c205]
-    ld b, a
-    ld a, [hl+]
-    sub b
-    ldh [hSpriteYPixel], a
-    ld a, [$c206]
-    ld b, a
-    ld a, [hl]
-    sub b
-    ldh [hSpriteXPixel], a
-    xor a
-    ldh [hSpriteAttr], a
-    ld a, d
-    cp $08
-    jr nz, jr_001_534c
-
-    push hl
-    ld hl, $539d
-    ld a, c
-    ld e, a
-    ld d, $00
-    add hl, de
-    ld a, [hl]
-    ldh [hSpriteId], a
-    ld hl, $53a6
-    ld a, c
-    ld e, a
-    ld d, $00
-    add hl, de
-    ld a, [hl]
-    ldh [hSpriteAttr], a
-    pop hl
-    jr jr_001_5359
-
-jr_001_534c:
-    ld a, $7e
-    ldh [hSpriteId], a
-    ld a, c
-    and $03
-    jr nz, jr_001_5359
-
-    ld a, $7f
-    ldh [hSpriteId], a
-
-jr_001_5359:
-    ldh a, [hSpriteXPixel]
-    cp $08
-    jr c, jr_001_538a
-
-    ldh a, [hSpriteXPixel]
-    cp $a4
-    jr nc, jr_001_538a
-
-    ldh a, [hSpriteYPixel]
-    cp $0c
-    jr c, jr_001_538a
-
-    ldh a, [hSpriteYPixel]
-    cp $94
-    jr nc, jr_001_538a
-
-    ld h, $c0
-    ldh a, [hOamBufferIndex]
-    ld l, a
-    ldh a, [hSpriteYPixel]
-    ld [hl+], a
-    ldh a, [hSpriteXPixel]
-    ld [hl+], a
-    ldh a, [hSpriteId]
-    ld [hl+], a
-    ldh a, [hSpriteAttr]
-    ld [hl+], a
-    ld a, l
-    ldh [hOamBufferIndex], a
-    xor a
-    ldh [hSpriteAttr], a
-    jr jr_001_5390
-
-jr_001_538a:
-    dec hl
-    dec hl
-    dec hl
-    ld a, $ff
-    ld [hl], a
-
-Jump_001_5390:
-jr_001_5390:
-    ld a, [$d032]
-    inc a
-    ld [$d032], a
-    cp $03
+    Jump_001_5305:
+        ld hl, projectileArray
+        ld a, [$d032]
+        swap a
+        ld e, a
+        ld d, $00
+        add hl, de
+        ld a, [hl+]
+        ld d, a
+        cp $ff
+        jp z, Jump_001_5390
+            ld a, [hl+]
+            ld c, a
+            ld a, [$c205]
+            ld b, a
+            ld a, [hl+]
+            sub b
+            ldh [hSpriteYPixel], a
+            ld a, [$c206]
+            ld b, a
+            ld a, [hl]
+            sub b
+            ldh [hSpriteXPixel], a
+            xor a
+            ldh [hSpriteAttr], a
+            ld a, d
+            cp $08
+            jr nz, jr_001_534c
+                push hl
+                ld hl, table_539D
+                ld a, c
+                ld e, a
+                ld d, $00
+                add hl, de
+                ld a, [hl]
+                ldh [hSpriteId], a
+                
+                ld hl, table_53A6
+                ld a, c
+                ld e, a
+                ld d, $00
+                add hl, de
+                ld a, [hl]
+                ldh [hSpriteAttr], a
+                pop hl
+                jr jr_001_5359
+            jr_001_534c:
+                ld a, $7e
+                ldh [hSpriteId], a
+                ld a, c
+                and $03
+                jr nz, jr_001_5359
+                    ld a, $7f
+                    ldh [hSpriteId], a
+            jr_001_5359:
+        
+            ldh a, [hSpriteXPixel]
+            cp $08
+            jr c, jr_001_538a
+                ldh a, [hSpriteXPixel]
+                cp $a4
+                jr nc, jr_001_538a
+                    ldh a, [hSpriteYPixel]
+                    cp $0c
+                    jr c, jr_001_538a
+                        ldh a, [hSpriteYPixel]
+                        cp $94
+                        jr nc, jr_001_538a
+                            ld h, $c0
+                            ldh a, [hOamBufferIndex]
+                            ld l, a
+                            ldh a, [hSpriteYPixel]
+                            ld [hl+], a
+                            ldh a, [hSpriteXPixel]
+                            ld [hl+], a
+                            ldh a, [hSpriteId]
+                            ld [hl+], a
+                            ldh a, [hSpriteAttr]
+                            ld [hl+], a
+                            ld a, l
+                            ldh [hOamBufferIndex], a
+                            xor a
+                            ldh [hSpriteAttr], a
+                            jr jr_001_5390
+            jr_001_538a:
+                dec hl
+                dec hl
+                dec hl
+                ld a, $ff
+                ld [hl], a
+            jr_001_5390:
+        Jump_001_5390:
+    
+        ld a, [$d032]
+        inc a
+        ld [$d032], a
+        cp $03
     jp c, Jump_001_5305
+ret
 
-    ret
+; 01:539D - Missile sprite table
+table_539D:
+    db $00, $98, $98, $00, $99, $00, $00, $00, $99
+; 01:53A6 - Missile attribute table
+table_53A6:
+    db $00, $00, $20, $00, $00, $00, $00, $00, $40
 
-
-    nop
-
-    db $98, $98
-
-    nop
-
-    db $99
-
-    nop
-    nop
-    nop
-
-    db $99
-
-    nop
-
-    db $00, $20
-
-    nop
-
-    db $00
-
-    nop
-    nop
-    nop
-
-    db $40
-
-Call_001_53af:
+;------------------------------------------------------------------------------
+; Bomb stuff
+Call_001_53af: ; Bomb beam code !?
     ld hl, $dd30
-
-jr_001_53b2:
-    ld a, [hl]
-    cp $ff
-    jr z, jr_001_53c3
-
-    ld de, $0010
-    add hl, de
-    ld a, l
-    swap a
-    cp $06
+    jr_001_53b2:
+        ld a, [hl]
+        cp $ff
+            jr z, jr_001_53c3
+        ld de, $0010
+        add hl, de
+        ld a, l
+        swap a
+        cp $06
     jr nz, jr_001_53b2
-
     ret
-
-
+    
 jr_001_53c3:
     ld a, $01
     ld [hl+], a
@@ -1917,18 +1836,15 @@ jr_001_53c3:
     ld [hl+], a
     ld a, $13
     ld [sfxRequest_square1], a
-    ret
+ret
 
-
-Jump_001_53d9:
+Jump_001_53d9: ; Lay bombs
     ld a, [samusItems]
     bit itemBit_bomb, a
-    ret z
-
+        ret z
     ldh a, [hInputRisingEdge]
     bit PADB_B, a
-    ret z
-
+        ret z
     ld hl, $dd30
 
     jr_001_53e7:
@@ -1941,10 +1857,9 @@ Jump_001_53d9:
         swap a
         cp $06
     jr nz, jr_001_53e7
-    ret
+    ret ; Return without laying a bomb
     
-    jr_001_53f8:
-
+jr_001_53f8:
     ld a, $01
     ld [hl+], a
     ld a, $60
@@ -1959,7 +1874,7 @@ Jump_001_53d9:
     ld [sfxRequest_square1], a
 ret
 
-
+; Draw bombs
 Call_001_540e:
     xor a
     ld [$d032], a
@@ -2045,6 +1960,7 @@ Call_001_540e:
     jp nz, Jump_001_5412
 ret
 
+; Bomb related
 Call_001_549d: ; 00:549D
     xor a
     ld [$d032], a
@@ -2088,8 +2004,8 @@ Call_001_549d: ; 00:549D
     call Call_001_540e
 ret
 
-
-Call_001_54d7:
+; Bombs - Destroy blocks
+Call_001_54d7: ; 01:54D7
     push bc
     push de
     push hl
@@ -2271,7 +2187,7 @@ table_55DD: ; 01:55DD - Pose related
 
 table_55FB: ; 01:55FB - Projectile X offsets
 ; Column index into table is based off of facing direction
-; Row index is based off of you facing direction of the table_5643
+; Row index is based off of your facing direction of the table_5643
     db $00, $00
     db $18, $1C ; Right
     db $04, $08 ; Left
@@ -2381,6 +2297,8 @@ table_5653: ; 01:5653 - Possible shot directions
     db $80
     db $00
     db $80
+
+;------------------------------------------------------------------------------
 
 destroyRespawningBlock: ; 01:5671
     ld hl, $d900
@@ -2861,7 +2779,7 @@ Call_001_5a3f:
     ld e, a
     sla e
     rl d
-    ld hl, $5ab1
+    ld hl, enemySpritePointerTable ;$5ab1
     add hl, de
     ld a, [hl+]
     ld e, a
@@ -3560,6 +3478,7 @@ jr_001_73ea:
 
     ret
 
+;------------------------------------------------------------------------------
 ; Draws sprites for title and credits
 drawNonGameSprite: ; 01:73F7
     ; Index into sprite pointer table
@@ -3644,6 +3563,8 @@ ret
 ; 01:744A
 include "data/sprites_credits.asm" ; Also title
 
+;------------------------------------------------------------------------------
+
 Call_001_79ef: ; 01:79EF: Handle earthquake (called from bank 0)
     ld a, [earthquakeTimer]
     and a
@@ -3707,7 +3628,7 @@ ret
 
 
 Call_001_7a45:
-    ld hl, $7a69
+    ld hl, table_7A69
     ld a, [$d09b]
     and $f0
     swap a
@@ -3721,13 +3642,12 @@ Call_001_7a45:
     dec a
     ld [$d09b], a
     cp $0e
-    ret nc
-
+        ret nc
     xor a
     ld [$d09b], a
-    ret
+ret
 
-; 01:7A69
+table_7A69: ; 01:7A69
     db $93, $e7, $fb
 
 

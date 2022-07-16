@@ -1,4 +1,5 @@
 ; Sprite Pointers
+enemySpritePointerTable:
 
     dw sprite5CB5
     dw sprite5CC6
