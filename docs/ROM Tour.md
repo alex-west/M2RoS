@@ -2,43 +2,76 @@
 ### A High-Level Look of the Game's Structure
 
 ## Bank 0
-Progress: 1%
+Progress: 30%
+
+Relocatable: Yes
 
 - Main game engine
+- Samus control routines
+- Common collision routines
+- Door transition script interpreter
+- Stubs used for jumping between banks
 
 ## Bank 1
-Progress: 0%
+Progress: 40%
 
-- Sprite handling code and data, perhaps (uncertain)
+Relocatable: Yes
+
+- Samus metasprite data
+- Samus drawing routines
+- Save/load routines
+- Initial savegame data
+- Bomb/beam routines
+- Destructible block routines
+- Enemy metasprite data
+- Misc. routines for Metroid AI
+- Title/credits metasprite data
+- Earthquake animation routine
 
 ## Bank 2
-Progress: 0%
+Progress: 50%
 
+Relocatable: Yes
+
+- Main enemy handler
+- Enemy specific collision routines
 - Enemy AI code
 
 ## Bank 3
-Progress: 5%
+Progress: 10%
 
+Relocatable: No
+
+- Enemy loading routines
 - Enemy position data 
 - Enemy headers
-- Many other enemy-related things to be discovered
+- Enemy damage table
+- Enemy hitboxes
+- Queen AI
 
 ## Bank 4
-Progress: 0%
+Progress: 1%
+
+Relocatable: No
+
 - Everything related to sound.
 
 ## Bank 5
-Progress: 90% - Code/data in the bank is now fully repointable.
+Progress: 90%
+
+Relocatable: Yes
 
 - Title screen code
 - Credits code
-- The door transition scripts
+- Door transition scripts
 - Title screen and ending graphics
 
-Remaining Work: Giving proper names to labels and some variables.
+TODO: Giving proper names to labels and some variables.
 
 ## Bank 6
-Progress: 90%
+Progress: 95%
+
+Relocatable: Yes
 
 - Graphics for the arm cannon and beams.
 - Various suit graphics that get swapped in when upgrades are collected.
@@ -46,17 +79,25 @@ Progress: 90%
 - Samus' Varia Suit graphics
 - Sprite graphics for the all non-Metroid enemies, and the landing site.
 - The text of the credits
-- A table that determines some aspect of the spider ball's behavior
+- Spider ball orientation table
+
+TODO: Converting graphics to an editable format.
 
 ## Bank 7
 Progress: 95%
+
+Relocatable: Yes
 
 - Tile graphics for the majority of the game's areas.
 - Graphics for each major item, and the item orb.
 - Some common sprite graphics.
 
+TODO: Converting graphics to an editable format.
+
 ## Bank 8
 Progress: 95%
+
+Relocatable: Yes
 
 - Base tilemap for the Queen's head.
 - Collision tables for each tileset.
@@ -66,8 +107,12 @@ Progress: 95%
 - A subroutine that checks if an earthquake should happen.
 - A table of solidity thresholds for each tileset.
 
+TODO: Converting graphics to an editable format.
+
 ## Level Data Banks
 Progress: 100%
+
+Relocatable: N/A
 
 The last 7 banks of the game contain the game's map data. Each bank is a 16x16 screen map capable of having 59 unique screens. Rooms are arranged in these maps like tetrominos, and glued together via the door transition scripts in bank 5.
 
