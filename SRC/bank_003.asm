@@ -1280,7 +1280,7 @@ jr_003_6daa:
     jr nz, jr_003_6daa
 
     call Call_003_6e22
-    ld hl, $7484
+    ld hl, table_7484
     ld a, l
     ld [$c3c4], a
     ld a, h
@@ -2421,40 +2421,40 @@ Call_003_746f:
     ld [$c3ce], a
     ret
 
-; 03:7484
+table_7484: ; 03:7484
     db $00, $02, $04, $02, $04, $06, $14, $ff
 
 Call_003_748c:
     ld a, [$c3c3] ; Queen's state?
     rst $28
-        dw $7821
-        dw $783C
-        dw $7864
-        dw $78EE
-        dw $78F7
-        dw $7932
-        dw $793B
-        dw $7954
-        dw $7970
-        dw $79D0
-        dw $79E1
-        dw $7A1D
-        dw $7846
-        dw $772B
-        dw $776F
-        dw $7785
-        dw $77DD
-        dw $7ABF
-        dw $7B05
-        dw $7B9D
-        dw $7519
-        dw $757B
-        dw $7BE7
-        dw func_74C4
-        dw $74EA
+        dw func_03_7821 ; 03:7821
+        dw func_03_783C ; 03:783C
+        dw func_03_7864 ; 03:7864
+        dw func_03_78EE ; 03:78EE
+        dw func_03_78F7 ; 03:78F7
+        dw func_03_7932 ; 03:7932
+        dw func_03_793B ; 03:793B
+        dw func_03_7954 ; 03:7954
+        dw func_03_7970 ; 03:7970
+        dw func_03_79D0 ; 03:79D0
+        dw func_03_79E1 ; 03:79E1
+        dw func_03_7A1D ; 03:7A1D
+        dw func_03_7846 ; 03:7846
+        dw func_03_772B ; 03:772B
+        dw func_03_776F ; 03:776F
+        dw func_03_7785 ; 03:7785
+        dw func_03_77DD ; 03:77DD
+        dw func_03_7ABF ; 03:7ABF
+        dw func_03_7B05 ; 03:7B05
+        dw func_03_7B9D ; 03:7B9D
+        dw func_03_7519 ; 03:7519
+        dw func_03_757B ; 03:757B
+        dw func_03_7BE7 ; 03:7BE7
+        dw func_03_74C4 ; 03:74C4
+        dw func_03_74EA ; 03:74EA
         dw enAI_NULL ; Wrong bank, you silly programmer.
 
-func_74C4:
+func_03_74C4:
     ld a, [$c3cf]
     and a
     jr z, jr_003_74cf
@@ -2484,6 +2484,7 @@ jr_003_74e3:
     ld a, $32
     jr jr_003_74cb
 
+func_03_74EA:
     ld a, [$c3cf]
     and a
     jr nz, jr_003_74ca
@@ -2519,7 +2520,7 @@ Call_003_74fb:
     ld [hl], a
     ret
 
-
+func_03_7519:
     call Call_003_74fb
     ld a, [$c3a9]
     add $20
@@ -2570,7 +2571,7 @@ Call_003_756c:
     ld [hl], d
     ret
 
-
+func_03_757B:
     ld a, [$c3cf]
     and a
     jr z, jr_003_758c
@@ -2927,7 +2928,7 @@ jr_003_7720:
     pop hl
     ret
 
-
+func_03_772B:
     ld a, [$c3a6]
     ld l, a
     ld a, [$c3a7]
@@ -2962,20 +2963,19 @@ jr_003_7750:
     dec hl
     jp Jump_003_7399
 
-
+func_03_776F:
     ld a, [$c3c1]
     cp $82
-    ret nz
-
+        ret nz
     ld a, $03
     ld [$d090], a
     ld a, $0f
     ld [$c3c3], a
     ld a, $01
     ld [queenAnimFootCounter], a
-    ret
+ret
 
-
+func_03_7785:
     ld a, [$d090]
     cp $04
     jr nz, jr_003_77b8
@@ -3031,6 +3031,7 @@ jr_003_77d5:
     ld a, $20
     jr jr_003_77c2
 
+func_03_77DD:
     ld a, [$c3d0]
     and a
     jr z, jr_003_77fd
@@ -3079,7 +3080,7 @@ jr_003_7817:
 
     ret
 
-
+func_03_7821:
     xor a
     ld [$c3a4], a
     ld [$c3ba], a
@@ -3091,16 +3092,16 @@ jr_003_7817:
     ld [queenAnimFootCounter], a
     ld a, $01
     ld [$c3c3], a
-    ret
+ret
 
-
+func_03_783C:
     ld a, [$c3bf]
     cp $81
-    ret nz
-
+        ret nz
     xor a
     ld [queenAnimFootCounter], a
 
+func_03_7846:
 Call_003_7846:
 Jump_003_7846:
     ld a, [$c3c4]
@@ -3124,9 +3125,10 @@ jr_003_7856:
 
 
 jr_003_785f:
-    ld hl, $7484
+    ld hl, table_7484
     jr jr_003_784e
 
+func_03_7864:
     ld hl, $c620
     ld [hl], $00
     ld a, $01
@@ -3206,14 +3208,13 @@ jr_003_78e4:
     inc hl
     jp Jump_003_7399
 
-
+func_03_78EE:
     ld a, [$c3c1]
     cp $81
-    ret nz
-
+        ret nz
     jp Jump_003_7846
 
-
+func_03_78F7:
     ld a, [$c3a6]
     ld l, a
     ld a, [$c3a7]
@@ -3244,14 +3245,13 @@ jr_003_791c:
     dec hl
     jp Jump_003_7399
 
-
+func_03_7932:
     ld a, [$c3c1]
     cp $82
-    ret nz
-
+        ret nz
     jp Jump_003_7846
 
-
+func_03_793B:
     ld a, $02
     ld [$c3bd], a
     ld a, $03
@@ -3262,20 +3262,20 @@ jr_003_791c:
     ld [queenAnimFootCounter], a
     ld a, $07
     ld [$c3c3], a
-    ret
+ret
 
-
+func_03_7954:
     ld a, [$c3bf]
     cp $82
-    ret nz
-
+        ret nz
     xor a
     ld [queenAnimFootCounter], a
     jp Jump_003_7846
 
-
+table_7961: ; 03:7961
     db $00, $00, $b5, $08, $00, $c5, $00, $08, $b6, $00, $10, $b7, $08, $0c, $c6
 
+func_03_7970:
     ld a, [$c3a9]
     cp $2c
     cp $71
@@ -3295,7 +3295,7 @@ jr_003_791c:
     ld a, [$c3a8]
     add $02
     ld c, a
-    ld de, $7961
+    ld de, table_7961
 
 jr_003_799f:
     ld a, [de]
@@ -3331,18 +3331,17 @@ jr_003_799f:
     inc hl
     jp Jump_003_7399
 
-
+func_03_79D0:
     ld a, [$c3c1]
     cp $81
-    ret nz
-
+        ret nz
     ld a, $50
     ld [$c3cf], a
     ld a, $0a
     ld [$c3c3], a
-    ret
+ret
 
-
+func_03_79E1:
     ld a, [$c3cf]
     and a
     jr z, jr_003_79f6
@@ -3351,8 +3350,7 @@ jr_003_799f:
     ld [$c3cf], a
     ld a, [queenAnimFootCounter]
     cp $02
-    ret nz
-
+        ret nz
     xor a
     ld [queenAnimFootCounter], a
     ret
@@ -3380,7 +3378,7 @@ jr_003_79f6:
     dec hl
     jp Jump_003_7399
 
-
+func_03_7A1D:
     ld a, [$c3c1]
     cp $82
     ret nz
@@ -3473,7 +3471,7 @@ jr_003_7ab5:
     ld [hl], $5e
     ret
 
-
+func_03_7ABF:
     ld a, [$c3c1]
     cp $81
     ret nz
@@ -3512,7 +3510,7 @@ jr_003_7ab5:
     ld [$d090], a
     ret
 
-
+func_03_7B05:
     ld a, [$c3cf]
     and a
     jr z, jr_003_7b1e
@@ -3626,7 +3624,7 @@ jr_003_7b91:
     ld [$c3e0], a
     ret
 
-
+func_03_7B9D:
     ld a, [$c3ec]
     ld l, a
     ld a, [$c3ed]
@@ -3673,6 +3671,7 @@ jr_003_7bce:
     ld [metroidCountShuffleTimer], a
     ld a, $17
     ld [sfxRequest_noise], a
+func_03_7BE7:
     ret
 
 
@@ -3699,7 +3698,7 @@ jr_003_7bfd:
     inc a
     ld [$c3a4], a
     ld h, $00
-    ld de, $7c39
+    ld de, table_7C39
     add hl, de
     ld a, b
     cp $01
@@ -3737,7 +3736,7 @@ jr_003_7c29:
     ld [$c3a4], a
     ret
 
-
+table_7C39: ; 03:7C39
     db $ff, $ff, $ff, $ff, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe
     db $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $ff, $ff, $ff
     db $ff, $ff, $81, $01, $01, $01, $01, $02, $02, $02, $02, $02, $02, $02, $02, $02

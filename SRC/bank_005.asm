@@ -59,7 +59,7 @@ credits_loadFont: ; 05:4030
     ld bc, $0200
     ld hl, gfx_creditsFont
     ld de, vramDest_creditsFont
-    call $038a
+    call copyToVram
 ret
 
 ;------------------------------------------------------------------------------
@@ -506,7 +506,7 @@ title_loadGraphics: ; 5:42C7
     ld bc, $1000
     ld hl, gfx_titleScreen
     ld de, $8800
-    call $038a
+    call copyToVram
 ret
 
 ;------------------------------------------------------------------------------
@@ -1075,17 +1075,17 @@ jr_005_58ab:
     ld bc, $1000
     ld hl, gfx_creditsSprTiles
     ld de, $8000
-    call $038a
+    call copyToVram
     
     ld bc, $0100
     ld hl, gfx_theEnd
     ld de, $9000
-    call $038a
+    call copyToVram
     
     ld bc, $0100
     ld hl, gfx_creditsNumbers
     ld de, $8f00
-    call $038a
+    call copyToVram
     
     ld a, LOW(creditsTextBuffer)
     ld [credits_textPointerLow], a

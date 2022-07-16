@@ -2018,7 +2018,7 @@ Call_001_540e:
                         add $31
                         ldh [hSpriteId], a
                         call drawSamusSprite
-                        call $30bb
+                        call Call_000_30bb
                         ld a, $0c
                         ld [sfxRequest_noise], a
                         jr jr_001_5490

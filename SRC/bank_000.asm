@@ -133,9 +133,9 @@ VBlankHandler: ; 00:0154
         call Call_000_08cf
         jr .endIf_B
     .else_B:
-        ld a, $01
+        ld a, BANK(VBlank_updateStatusBar)
         ld [rMBC_BANK_REG], a
-        call $493e
+        call VBlank_updateStatusBar
     .endIf_B:
 
     call OAM_DMA ; Sprite DMA
@@ -445,7 +445,7 @@ clearTilemaps: ; 00:037B
 ret
 
 ; hl: source, de: destination, bc: length
-copyToVram:
+copyToVram: ; 00:038A
     .loop:
         ld a, [hl+]
         ld [de], a
@@ -7285,6 +7285,7 @@ unusedDeathAnimation: ; 00:3062
 reti
 
 ; 00:30BB - Bomb-enemy collision detection
+Call_000_30bb: ; 00:30BB
     ldh a, [hSpriteYPixel]
     ldh [$98], a
     ldh a, [hSpriteXPixel]
@@ -7797,7 +7798,7 @@ Call_000_3324:
     and $7f
     ld e, a
     ld d, $00
-    ld hl, $369b
+    ld hl, table_369B
     add hl, de
     ld a, [hl+]
     ld b, a
@@ -8026,7 +8027,7 @@ Call_000_34ef:
     and $7f
     ld e, a
     ld d, $00
-    ld hl, $369b
+    ld hl, table_369B
     add hl, de
     ld a, [hl+]
     ld b, a
@@ -8304,10 +8305,9 @@ Jump_000_3698:
     ccf
     ret
 
-; 00:369B - Collision/pose related table
+table_369B: ; 00:369B - Collision/pose related table
     db $ec, $f4, $fc, $ec, $f6, $04, $04, $ec, $04, $ec, $ec, $04, $04, $04, $04, $ec
     db $04, $ec, $04, $ec, $04
-
 
 gameMode_dead: ; 00:36B0
     ; Wait until the death sound ends
@@ -9081,7 +9081,7 @@ jr_000_3c5d:
     call copyToVram
     ret
 
-
+; 00:3C61 - Unreferenced branch to the above
     ld a, [hl+]
     ld [de], a
     inc de
