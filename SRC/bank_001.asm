@@ -997,7 +997,7 @@ initialSaveFile:
 samusShoot: ; 01:4E8A
     ldh a, [hInputRisingEdge]
     bit PADB_B, a
-    jr nz, jr_001_4e9f
+    jr nz, .endIf_A
         ldh a, [hInputPressed]
         bit PADB_B, a
             ret z
@@ -1006,9 +1006,9 @@ samusShoot: ; 01:4E8A
         ld [samusBeamCooldown], a
         cp $10
             ret c
-    jr_001_4e9f:
+    .endIf_A:
 
-Jump_001_4e9f:
+.spazerLoop:
     ld a, [samusPose]
     bit 7, a
         ret nz
@@ -1018,36 +1018,40 @@ Jump_001_4e9f:
     ld d, $00
     add hl, de
     ld a, [hl]
-    and a
+    and a ; Return if pose does not allow shooting
         ret z
     cp $80 ; Check if it's a bomb-laying pose
-        jp z, Jump_001_53d9
-
-    ld b, a
+        jp z, samus_layBomb
+    ld b, a ; Save table entry to B
+    
+    ; Clear beam cooldown
     xor a
     ld [samusBeamCooldown], a
     
+    ; Determine beam firing direction
     ldh a, [hInputPressed]
     swap a
     and b
-    jr nz, jr_001_4ecf
+    jr nz, .else_B
         ld c, $01
         ld a, [samusFacingDirection]
         and a
-        jr nz, jr_001_4ed8
+        jr nz, .endIf_B
             ld c, $02
-            jr jr_001_4ed8
-    jr_001_4ecf:
+            jr .endIf_B
+    .else_B:
         ld hl, table_5643
         ld e, a
         ld d, $00
         add hl, de
         ld a, [hl]
         ld c, a
-    jr_001_4ed8:
+    .endIf_B:
 
     ld a, c
     ldh [$99], a
+    
+    ; Load table value to B
     ld hl, table_561D
     ld a, [samusPose]
     ld e, a
@@ -1055,6 +1059,7 @@ Jump_001_4e9f:
     add hl, de
     ld a, [hl]
     ld b, a
+    
     ld hl, table_5630
     ld a, c
     ld e, a
@@ -1065,6 +1070,7 @@ Jump_001_4e9f:
     sub $04
     ld b, a
     ldh [$9a], a
+    
     ld hl, table_55FB
     sla c
     ld a, [samusFacingDirection]
@@ -1076,11 +1082,12 @@ Jump_001_4e9f:
     ld a, [hl]
     sub $04
     ldh [$98], a
+    
     ld a, [samusActiveWeapon]
     cp $04 ; Plasma
-        jp z, Jump_001_4f7e
+        jp z, .plasmaBranch
 
-    call findProjectileSlot ; Projectile slot is returned in HL
+    call getFirstEmptyProjectileSlot ; Projectile slot is returned in HL
     ; Exit if projectile is 3
     ld a, l
     swap a
@@ -1089,19 +1096,19 @@ Jump_001_4e9f:
 
     ld a, [samusActiveWeapon]
     cp $08 ; Missiles
-    jr nz, jr_001_4f44
-        ; Decrement missiles if possible
+    jr nz, .endIf_C
+        ; Check if we have any missiles
         ld a, [samusCurMissilesLow]
         ld b, a
         ld a, [samusCurMissilesHigh]
         or b
-        jr nz, jr_001_4f32
-            ; Play sound effect and exit
+        jr nz, .endIf_D
+            ; If not, play sound effect and exit
             ld a, $19
             ld [sfxRequest_square1], a
             ret
-        jr_001_4f32:
-    
+        .endIf_D:
+        ; Decrement missile count
         ld a, [samusCurMissilesLow]
         sub $01
         daa
@@ -1110,8 +1117,8 @@ Jump_001_4e9f:
         sbc $00
         daa
         ld [samusCurMissilesHigh], a
-    jr_001_4f44:
-
+    .endIf_C:
+    ; Write weapon type
     ld a, [samusActiveWeapon]
     ld [hl+], a
     ; Write direction
@@ -1140,13 +1147,13 @@ Jump_001_4e9f:
 
     ld a, [samusActiveWeapon]
     cp $03 ; Spazer
-    jr nz, jr_001_4f6f
+    jr nz, .endIf_E
         ld a, l
         cp $20
-        jp c, Jump_001_4e9f
-    jr_001_4f6f:
+        jp c, .spazerLoop
+    .endIf_E:
 
-    ld hl, table_4FE5
+    ld hl, beamSoundTable
     ld a, [samusActiveWeapon]
     ld e, a
     ld d, $00
@@ -1155,38 +1162,37 @@ Jump_001_4e9f:
     ld [sfxRequest_square1], a
 ret
 
-
-Jump_001_4f7e: ; Plasma case
+.plasmaBranch: ; Plasma case
     ld hl, projectileArray
     ld a, [hl]
     cp $ff
     ret nz
 
-    Jump_001_4f85:
+    .plasmaLoop:
         ldh a, [$99]
         cp $04
-        jr nc, jr_001_4f9d
+        jr nc, .else_F
             ldh a, [$98]
             sub $08
             ldh [$98], a
             ld a, l
             and a
-            jr z, jr_001_4fad
+            jr z, .endIf_F
                 ldh a, [$98]
                 add $10
                 ldh [$98], a
-                jr jr_001_4fad
-        jr_001_4f9d:
+                jr .endIf_F
+        .else_F:
             ldh a, [$9a]
             sub $08
             ldh [$9a], a
             ld a, l
             and a
-            jr z, jr_001_4fad
+            jr z, .endIf_F
                 ldh a, [$9a]
                 add $10
                 ldh [$9a], a
-        jr_001_4fad:
+        .endIf_F:
     
         ld a, [samusActiveWeapon]
         ld [hl+], a
@@ -1213,9 +1219,9 @@ Jump_001_4f7e: ; Plasma case
         add $10
         ld l, a
         cp $30
-    jp c, Jump_001_4f85
+    jp c, .plasmaLoop
 
-    ld hl, table_4FE5 ;$4fe5
+    ld hl, beamSoundTable ;$4fe5
     ld a, [samusActiveWeapon]
     ld e, a
     ld d, $00
@@ -1225,7 +1231,7 @@ Jump_001_4f7e: ; Plasma case
 ret
 ; end of samusShoot
 
-table_4FE5: ; 01:4FE5 - Sound effect table
+beamSoundTable: ; 01:4FE5 - Sound effect table
     db $07 ; 0: Normal
     db $09 ; 1: Ice
     db $16 ; 2: Wave
@@ -1236,8 +1242,7 @@ table_4FE5: ; 01:4FE5 - Sound effect table
     db $07 ; 7: x
     db $08 ; 8: Missile
 
-
-findProjectileSlot: ; 01:4FEE
+getFirstEmptyProjectileSlot: ; 01:4FEE
     ld hl, projectileArray
     ld a, [samusActiveWeapon]
     cp $08
@@ -1263,22 +1268,23 @@ ret
 ; Beam handler
 handleProjectiles: ; 01:500D
     xor a
-    ld [$d032], a
+    ld [projectileIndex], a
 
 Jump_001_5011:
     ld a, $dd
     ld h, a
     ldh [$b8], a
-    ld a, [$d032]
+    ld a, [projectileIndex]
     swap a
     ld l, a
     ldh [$b7], a
+    ; Load projectile type
     ld a, [hl+]
     ldh [$b9], a
     ld [$d08d], a
     cp $ff
         jp z, Jump_001_52f3
-
+    ; Load direction
     ld a, [hl+]
     ldh [$98], a
     ld [$d012], a
@@ -1293,97 +1299,115 @@ Jump_001_5011:
     ldh [$bb], a
     ldh a, [$b9]
     cp $02 ; Wave
-        jp z, Jump_001_50d4
+        jp z, .waveBranch
     cp $03 ; Spazer
-        jr z, jr_001_504f
+        jr z, .spazerBranch
     cp $08 ; Missile
         jp z, Jump_001_51c3
     jp Jump_001_5216 ; Default (ice, power, plasma)
 
-
-jr_001_504f: ; Spazer
+.spazerBranch: ; Spazer
     ldh a, [$98]
+    ; Right
     bit 0, a
-    jr z, jr_001_5064
-        call Call_001_509a
+    jr z, .endIf_A
+        call .spazer_splitVertically
         ldh a, [$9a]
         add $04
         ld hl, $d035
         add [hl]
         ldh [$9a], a
-        jr jr_001_5097
-    jr_001_5064:
-        bit 1, a
-        jr z, jr_001_5077
-            call Call_001_509a
-            ldh a, [$9a]
-            sub $04
-            ld hl, $d036
-            sub [hl]
-            ldh [$9a], a
-            jr jr_001_5097
-        jr_001_5077:
-            bit 2, a
-            jr z, jr_001_508a
-                call Call_001_50b7
-                ldh a, [$99]
-                sub $04
-                ld hl, $d037
-                sub [hl]
-                ldh [$99], a
-                jr jr_001_5097
-            jr_001_508a:
-                call Call_001_50b7
-                ldh a, [$99]
-                add $04
-                ld hl, $d038
-                add [hl]
-                ldh [$99], a
-    jr_001_5097:
+        jr .spazerEnd
+    .endIf_A:
+        
+    ; Left
+    bit 1, a
+    jr z, .endIf_B
+        call .spazer_splitVertically
+        ldh a, [$9a]
+        sub $04
+        ld hl, $d036
+        sub [hl]
+        ldh [$9a], a
+        jr .spazerEnd
+    .endIf_B:
+
+    ; Up
+    bit 2, a
+    jr z, .endIf_C
+        call .spazer_splitHorizontally
+        ldh a, [$99]
+        sub $04
+        ld hl, $d037
+        sub [hl]
+        ldh [$99], a
+        jr .spazerEnd
+    .endIf_C:
+
+    ; Down
+    ; Default case (bit 3, a)
+        call .spazer_splitHorizontally
+        ldh a, [$99]
+        add $04
+        ld hl, $d038
+        add [hl]
+        ldh [$99], a
+        
+    .spazerEnd:
 jp Jump_001_5282
 
-Call_001_509a:
+.spazer_splitVertically:
+    ; Limit spread to first few frames
     ldh a, [$bb]
     cp $05
         ret nc
+    ; Middle beam doesn't move sideways
     ld a, l
     and $f0
     cp $10
         ret z
     cp $00
-    jr nz, jr_001_50b0
+    jr nz, .else_D
+        ; First beam moves up
         ldh a, [$99]
         sub $02
         ldh [$99], a
         ret
-    jr_001_50b0:
+    .else_D:
+        ; Third beam moves down
         ldh a, [$99]
         add $02
         ldh [$99], a
         ret
+; end proc
 
-Call_001_50b7:
+.spazer_splitHorizontally:
+    ; Limit spread to first few frames
     ldh a, [$bb]
     cp $05
         ret nc
+    ; Middle beam doesn't
     ld a, l
     and $f0
     cp $10
         ret z
     cp $00
-    jr nz, jr_001_50cd
+    jr nz, .else_E
+        ; First beam moves left
         ldh a, [$9a]
         sub $02
         ldh [$9a], a
         ret
-    jr_001_50cd:
+    .else_E:
+        ; Third beam moves right
         ldh a, [$9a]
         add $02
         ldh [$9a], a
         ret
-; end case
+; end proc
+; end Spazer case
 
-Jump_001_50d4: ; Wave
+.waveBranch: ; Wave
     jr_001_50d4:
         ld hl, table_5183
         ldh a, [$ba]
@@ -1493,10 +1517,10 @@ table_5183: ; 01:5183 - Wave speed table
     db $00, $07, $05, $02, $00, $fe, $fb, $f9, $00, $f9, $fb, $fe, $00, $02, $05, $07
     db $80
 
-table_5194: ; 01:5194 - Unused (alternate wave table)
+table_5194: ; 01:5194 - Unused (alternate wave table -- motion blur makes it looks very spazer-like)
     db $0A, $F6, $F6, $0A, $0A, $F6, $F6, $0A, $0A, $F6, $F6, $0A, $80
 
-table_51A1: ; 01:51A1 - Missile speed table (first value in array is unused)
+missileSpeedTable: ; 01:51A1 - Missile speed table (first value in array is unused)
     db $00, $00, $01, $00, $00, $01, $00, $01, $00, $01, $00, $01, $01, $01, $01, $02
     db $01, $02, $01, $02, $02, $02, $02, $03, $02, $02, $03, $02, $03, $03, $03, $03
     db $04, $FF
@@ -1505,15 +1529,17 @@ Jump_001_51c3: ; Missile
     ldh a, [$bb]
     ld e, a
     ld d, $00
-    ld hl, table_51A1
+    ld hl, missileSpeedTable
     add hl, de
     ld a, [hl]
     cp $ff
     jr nz, jr_001_51d9
+        ; Decrement value so it doesn't overflow on the next tick
         ldh a, [$bb]
         dec a
         ldh [$bb], a
-        ld a, [$51c1]
+        ; Load second to last value from table
+        ld a, [missileSpeedTable + $20]
     jr_001_51d9:
 
     ld b, a
@@ -1680,7 +1706,7 @@ jr_001_52e0:
     ld a, $dd
     ld h, a
     ldh [$b8], a
-    ld a, [$d032]
+    ld a, [projectileIndex]
     swap a
     ld l, a
     ld a, $ff
@@ -1688,9 +1714,9 @@ jr_001_52e0:
 
 Jump_001_52f3:
 jr_001_52f3:
-    ld a, [$d032]
+    ld a, [projectileIndex]
     inc a
-    ld [$d032], a
+    ld [projectileIndex], a
     cp $03
     jp c, Jump_001_5011
 ret
@@ -1698,11 +1724,11 @@ ret
 
 Call_001_5300: ; draw projectiles ; 01:5300
     ld a, $00
-    ld [$d032], a
+    ld [projectileIndex], a
 
     Jump_001_5305:
         ld hl, projectileArray
-        ld a, [$d032]
+        ld a, [projectileIndex]
         swap a
         ld e, a
         ld d, $00
@@ -1793,9 +1819,9 @@ Call_001_5300: ; draw projectiles ; 01:5300
             jr_001_5390:
         Jump_001_5390:
     
-        ld a, [$d032]
+        ld a, [projectileIndex]
         inc a
-        ld [$d032], a
+        ld [projectileIndex], a
         cp $03
     jp c, Jump_001_5305
 ret
@@ -1838,7 +1864,7 @@ jr_001_53c3:
     ld [sfxRequest_square1], a
 ret
 
-Jump_001_53d9: ; Lay bombs
+samus_layBomb: ; 01:53D9 - Lay bombs
     ld a, [samusItems]
     bit itemBit_bomb, a
         ret z
@@ -1877,11 +1903,11 @@ ret
 ; Draw bombs
 Call_001_540e:
     xor a
-    ld [$d032], a
+    ld [projectileIndex], a
 
     Jump_001_5412:
         ld hl, $dd30
-        ld a, [$d032]
+        ld a, [projectileIndex]
         swap a
         add l
         ld l, a
@@ -1953,9 +1979,9 @@ Call_001_540e:
                 ld [hl], a
         
         jr_001_5490:
-        ld a, [$d032]
+        ld a, [projectileIndex]
         inc a
-        ld [$d032], a
+        ld [projectileIndex], a
         cp $03
     jp nz, Jump_001_5412
 ret
@@ -1963,11 +1989,11 @@ ret
 ; Bomb related
 Call_001_549d: ; 00:549D
     xor a
-    ld [$d032], a
+    ld [projectileIndex], a
 
     jr_001_54a1:
         ld hl, $dd30
-        ld a, [$d032]
+        ld a, [projectileIndex]
         swap a
         add l
         ld l, a
@@ -1995,9 +2021,9 @@ Call_001_549d: ; 00:549D
                 ld [hl], a
         jr_001_54c8:
         
-        ld a, [$d032]
+        ld a, [projectileIndex]
         inc a
-        ld [$d032], a
+        ld [projectileIndex], a
         cp $03
     jr nz, jr_001_54a1
 
@@ -2154,36 +2180,36 @@ Call_001_54d7: ; 01:54D7
 ret
 
 table_55DD: ; 01:55DD - Pose related
-    db $11
-    db $11
-    db $11
-    db $11
-    db $11
-    db $12
-    db $12
-    db $11
-    db $12
-    db $11
-    db $11
-    db $12
-    db $12
-    db $12
-    db $12
-    db $11
-    db $12
-    db $11
-    db $12
-    db $11
-    db $00
-    db $00
-    db $00
-    db $00
-    db $12
-    db $12
-    db $1A
-    db $1B
-    db $1C
-    db $1D
+    db $11 ; $00 - Standing
+    db $11 ; $01 - Jumping
+    db $11 ; $02 - Spin-jumping
+    db $11 ; $03 - Running (set to 83h when turning)
+    db $11 ; $04 - Crouching
+    db $12 ; $05 - Morphball
+    db $12 ; $06 - Morphball jumping
+    db $11 ; $07 - Falling
+    db $12 ; $08 - Morphball falling
+    db $11 ; $09 - Starting to jump
+    db $11 ; $0A - Starting to spin-jump
+    db $12 ; $0B - Spider ball rolling
+    db $12 ; $0C - Spider ball falling
+    db $12 ; $0D - Spider ball jumping
+    db $12 ; $0E - Spider ball
+    db $11 ; $0F - Knockback
+    db $12 ; $10 - Morphball knockback
+    db $11 ; $11 - Standing bombed
+    db $12 ; $12 - Morphball bombed
+    db $11 ; $13 - Facing screen
+    db $00 ; 
+    db $00 ; 
+    db $00 ; 
+    db $00 ; 
+    db $12 ; $18 - Being eaten by Metroid Queen
+    db $12 ; $19 - In Metroid Queen's mouth
+    db $1A ; $1A - Being swallowed by Metroid Queen
+    db $1B ; $1B - In Metroid Queen's stomach
+    db $1C ; $1C - Escaping Metroid Queen
+    db $1D ; $1D - Escaped Metroid Queen
 
 table_55FB: ; 01:55FB - Projectile X offsets
 ; Column index into table is based off of facing direction
@@ -2207,47 +2233,47 @@ table_55FB: ; 01:55FB - Projectile X offsets
     db $10, $10
 
 table_561D: ; 01:561D - Projectile y-offsets per pose
-    db $17
-    db $1F
-    db $00
-    db $14
-    db $21
-    db $00
-    db $00
-    db $1D
-    db $00
-    db $15
-    db $15
-    db $00
-    db $00
-    db $00
-    db $00
-    db $1F
-    db $00
-    db $1F
-    db $00
+    db $17 ; Standing
+    db $1F ; Jumping
+    db $00 ; Spin-jumping
+    db $14 ; Running (set to 83h when turning)
+    db $21 ; Crouching
+    db $00 ; Morphball
+    db $00 ; Morphball jumping
+    db $1D ; Falling
+    db $00 ; Morphball falling
+    db $15 ; Starting to jump
+    db $15 ; Starting to spin-jump
+    db $00 ; Spider ball rolling
+    db $00 ; Spider ball falling
+    db $00 ; Spider ball jumping
+    db $00 ; Spider ball
+    db $1F ; Knockback
+    db $00 ; Morphball knockback
+    db $1F ; Standing bombed
+    db $00 ; Morphball bombed
     
 table_5630: ; 01:5630 - Projectile y offset due to firing direction
-    db $00
-    db $00
-    db $00
-    db $00
-    db $F0
-    db $00
-    db $00
-    db $00
-    db $08
-    db $00
-    db $00
-    db $00
-    db $00
-    db $00
-    db $00
-    db $00
-    db $1F
-    db $00
-    db $00
-    
+    db $00 ; Standing
+    db $00 ; Jumping
+    db $00 ; Spin-jumping
+    db $00 ; Running (set to 83h when turning)
+    db $F0 ; Crouching
+    db $00 ; Morphball
+    db $00 ; Morphball jumping
+    db $00 ; Falling
+    db $08 ; Morphball falling
+    db $00 ; Starting to jump
+    db $00 ; Starting to spin-jump
+    db $00 ; Spider ball rolling
+    db $00 ; Spider ball falling
+    db $00 ; Spider ball jumping
+    db $00 ; Spider ball
+    db $00 ; Knockback
+    db $1F ; Morphball knockback
+    db $00 ; Standing bombed
+    db $00 ; Morphball bombed
+
 table_5643: ; 01:5643 - Shot direction based on directional input
     db $00
     db $01
@@ -2267,36 +2293,36 @@ table_5643: ; 01:5643 - Shot direction based on directional input
     db $08
 
 table_5653: ; 01:5653 - Possible shot directions
-    db $07
-    db $0F
-    db $00
-    db $07
-    db $03
-    db $80
-    db $80
-    db $0F
-    db $80
-    db $0F
-    db $0F
-    db $80
-    db $80
-    db $80
-    db $80
-    db $0F
-    db $80
-    db $0F
-    db $80
-    db $00
-    db $00
-    db $00
-    db $00
-    db $00
-    db $00
-    db $80
-    db $00
-    db $80
-    db $00
-    db $80
+    db $07 ; $00 - Standing
+    db $0F ; $01 - Jumping
+    db $00 ; $02 - Spin-jumping
+    db $07 ; $03 - Running (set to 83h when turning)
+    db $03 ; $04 - Crouching
+    db $80 ; $05 - Morphball
+    db $80 ; $06 - Morphball jumping
+    db $0F ; $07 - Falling
+    db $80 ; $08 - Morphball falling
+    db $0F ; $09 - Starting to jump
+    db $0F ; $0A - Starting to spin-jump
+    db $80 ; $0B - Spider ball rolling
+    db $80 ; $0C - Spider ball falling
+    db $80 ; $0D - Spider ball jumping
+    db $80 ; $0E - Spider ball
+    db $0F ; $0F - Knockback
+    db $80 ; $10 - Morphball knockback
+    db $0F ; $11 - Standing bombed
+    db $80 ; $12 - Morphball bombed
+    db $00 ; $13 - Facing screen
+    db $00 ; 
+    db $00 ; 
+    db $00 ; 
+    db $00 ; 
+    db $00 ; $18 - Being eaten by Metroid Queen
+    db $80 ; $19 - In Metroid Queen's mouth
+    db $00 ; $1A - Being swallowed by Metroid Queen
+    db $80 ; $1B - In Metroid Queen's stomach
+    db $00 ; $1C - Escaping Metroid Queen
+    db $80 ; $1D - Escaped Metroid Queen
 
 ;------------------------------------------------------------------------------
 

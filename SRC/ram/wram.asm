@@ -634,7 +634,7 @@ def samusFacingDirection = $D02B ; Direction Samus is facing. Saved to SRAM, mir
 def samus_turnAnimTimer = $D02C ; Timer for turnaround animation (facing the screen). Used and decremented when MSB of samusPose is set.
 ;
 ;$D031: Unused?
-;$D032: Projectile index
+def projectileIndex = $D032 ; Index of working projectile
 ;$D033: Cleared by morph
 ;
 ;$D035: Screen right velocity

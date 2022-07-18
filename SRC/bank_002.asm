@@ -383,16 +383,14 @@ Call_002_4239:
     ld hl, $d05d
     ld a, [hl+]
     cp $ff
-    ret z
-
+        ret z
     ldh a, [$fc]
     cp [hl]
-    ret nz
-
+        ret nz
     inc hl
     ldh a, [$fd]
     cp [hl]
-    ret nz
+        ret nz
 
     ldh a, [hEnemyExplosionFlag]
     and a
@@ -547,7 +545,7 @@ jr_002_430d:
 jr_002_4314:
     ld e, a
     ld d, $00
-    ld hl, table_43C8
+    ld hl, weaponDamageTable
     add hl, de
     call Call_002_43a9
     ldh a, [hEnemyHealth]
@@ -657,6 +655,7 @@ Call_002_43a9:
     cp $02
         ret z
     ld c, a
+    ; Check for directional vulnerabilities
     ldh a, [$e8]
     and $f0
         ret z
@@ -674,8 +673,17 @@ Call_002_43a9:
     pop af
     jp Jump_002_4345
 
-table_43C8: ; 02:43C8
-    db $01, $02, $04, $08, $1E, $00, $00, $02, $14, $0A
+weaponDamageTable: ; 02:43C8
+    db $01 ; $00 - Power Beam
+    db $02 ; $01 - Ice Beam
+    db $04 ; $02 - Wave Beam
+    db $08 ; $03 - Spazer Beam
+    db $1E ; $04 - Plasma Beam (30!?)
+    db $00 ; $05 - x
+    db $00 ; $06 - x
+    db $02 ; $07 - Bomb Beam !?
+    db $14 ; $08 - Missiles (20!)
+    db $0A ; $09 - Bomb Explosion
 
 enemy_moveFromWramToHram: ; 02:43D2
     ld a, l
