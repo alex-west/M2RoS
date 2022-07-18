@@ -2767,7 +2767,7 @@ ret
 itemTextPointerTable: ; 01:58F1
     include "data/itemNames.asm"
 
-Call_001_5a11: ; Draw enemies - 01:5A11
+drawEnemies: ; Draw enemies - 01:5A11
     ld a, [$c426]
     and a
     ret z
@@ -2781,7 +2781,7 @@ Call_001_5a11: ; Draw enemies - 01:5A11
     jr_001_5a21:
         ld a, [hl]
         and a
-        call z, Call_001_5a3f
+            call z, drawEnemySprite
         ld a, [$c454]
         ld l, a
         ld a, [$c455]
@@ -2798,7 +2798,7 @@ Call_001_5a11: ; Draw enemies - 01:5A11
     ret
 
 ; Render enemy sprite
-Call_001_5a3f:
+drawEnemySprite: ; 01:5A3F
     call Call_001_5a9a
     ld a, [$c430]
     ld d, $00

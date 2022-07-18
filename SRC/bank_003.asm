@@ -828,7 +828,7 @@ hitbox6AE3: db   0, 55,   0, 47
 
 ; Enemy AI stuff
 Call_003_6ae7: ; 03:6AE7
-    ld hl, $ffe0
+    ld hl, hEnemyWorkingHram ; $FFE0
     ld c, [hl]
     ld a, $ff
     ld b, $0f
@@ -999,8 +999,9 @@ Call_003_6bd2: ; 03:6BD2
     ld a, [de]
     sub [hl]
     ld c, a
+    ; Return is scroll distance is zero
     or b
-    ret z
+        ret z
 
     ld a, [$c425]
     and a
@@ -1019,6 +1020,7 @@ Call_003_6bd2: ; 03:6BD2
     push hl
     call Call_003_6c58
     ld hl, hEnemyYPos
+    ; Check if we moved up or down
     bit 7, b
     jr z, jr_003_6c14
         ld a, b
@@ -1027,26 +1029,27 @@ Call_003_6bd2: ; 03:6BD2
         add [hl]
         ld [hl+], a
         jr nc, jr_003_6c24
-            ldh a, [$e0]
+            ldh a, [hEnemyStatus]
             cp $01
             jr nz, jr_003_6c24
-                ldh a, [$f3]
+                ldh a, [hEnemyYScreen]
                 inc a
-                ldh [$f3], a
+                ldh [hEnemyYScreen], a
                 jr jr_003_6c24
     jr_003_6c14:
         ld a, [hl]
         sub b
         ld [hl+], a
         jr nc, jr_003_6c24
-            ldh a, [$e0]
+            ldh a, [hEnemyStatus]
             cp $01
             jr nz, jr_003_6c24
-                ldh a, [$f3]
+                ldh a, [hEnemyYScreen]
                 dec a
-                ldh [$f3], a
+                ldh [hEnemyYScreen], a
     jr_003_6c24:
 
+    ; Check if we moved left or right
     bit 7, c
     jr z, jr_003_6c3b
         ld a, c
@@ -1055,10 +1058,10 @@ Call_003_6bd2: ; 03:6BD2
         add [hl]
         ld [hl], a
         jr nc, jr_003_6c4a
-            ldh a, [$e0]
+            ldh a, [hEnemyStatus]
             cp $01
             jr nz, jr_003_6c4a
-                ld hl, $fff4
+                ld hl, hEnemyXScreen
                 inc [hl]
                 jr jr_003_6c4a
     jr_003_6c3b:
@@ -1066,10 +1069,10 @@ Call_003_6bd2: ; 03:6BD2
         sub c
         ld [hl], a
         jr nc, jr_003_6c4a
-            ldh a, [$e0]
+            ldh a, [hEnemyStatus]
             cp $01
             jr nz, jr_003_6c4a
-                ld hl, $fff4
+                ld hl, hEnemyXScreen
                 dec [hl]
     jr_003_6c4a:
 
@@ -1088,18 +1091,18 @@ Call_003_6c58:
     ld a, h
     ld [$c451], a
     ld a, [hl+]
-    ldh [$e0], a
+    ldh [hEnemyStatus], a
     ld a, [hl+]
-    ldh [$e1], a
+    ldh [hEnemyYPos], a
     ld a, [hl]
-    ldh [$e2], a
+    ldh [hEnemyXPos], a
     ld a, l
     add $0d
     ld l, a
     ld a, [hl+]
-    ldh [$f3], a
+    ldh [hEnemyYScreen], a
     ld a, [hl]
-    ldh [$f4], a
+    ldh [hEnemyXScreen], a
 ret
 
 
@@ -1109,16 +1112,16 @@ Call_003_6c74:
     ld a, [$c451]
     ld h, a
     inc l
-    ldh a, [$e1]
+    ldh a, [hEnemyYPos]
     ld [hl+], a
-    ldh a, [$e2]
+    ldh a, [hEnemyXPos]
     ld [hl], a
     ld a, l
     add $0d
     ld l, a
-    ldh a, [$f3]
+    ldh a, [hEnemyYScreen]
     ld [hl+], a
-    ldh a, [$f4]
+    ldh a, [hEnemyXScreen]
     ld [hl], a
 ret
 
@@ -2110,7 +2113,7 @@ jr_003_729e:
     ld de, $0004
     add hl, de
     ld [hl], $ff
-    ld de, $fff4
+    ld de, $fff4 ; Unsure if this is hEnemyXScreen
     add hl, de
     ld a, $00
     cp l

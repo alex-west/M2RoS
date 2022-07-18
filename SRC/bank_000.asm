@@ -9217,8 +9217,8 @@ Call_000_3dba: ; 00:3DBA
     switchBank Call_002_4000
 ret
 
-Call_000_3dce: ; 00:3DCE
-    callFar Call_001_5a11
+drawEnemies_farCall: ; 00:3DCE
+    callFar drawEnemies
     switchBank Call_002_4000
 ret
 

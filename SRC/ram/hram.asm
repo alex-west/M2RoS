@@ -130,9 +130,10 @@ hCameraXScreen:: ds 1 ;$FFCB: Camera X position
 section "HRAM part enemy local", HRAM[$FFE0]
 ;{
 hEnemyWorkingHram:
-    ds 1 ; FFE0 - ??
-hEnemyYPos: ds 1 ; $FFE1: Enemy Y position. Incremented in $2:55AC
-hEnemyXPos: ds 1 ; $FFE2: Enemy X position
+
+hEnemyStatus: ds 1 ; $FFE0 - Active, offscreen, invisible, empty
+hEnemyYPos: ds 1 ; $FFE1: Enemy Y position (camera space).
+hEnemyXPos: ds 1 ; $FFE2: Enemy X position (camera space).
 ;    {
 ;        Sets $C40E = 0 if less than [Samus' X position on screen] else 2 by $2:45E4.
 ;        $C386 = [Samus' X position on screen] >= $FFE2.
@@ -189,8 +190,8 @@ def hEnemySpawnFlag = $FFEF ; Enemy spawn flag
 def hEnemySpawnNumber = $FFF0 ; The enemy's number on the map (for respawning)
 def hEnemyAI_low  = $FFF1 ; Enemy AI pointer (low byte)
 def hEnemyAI_high = $FFF2 ; Enemy AI pointer (high byte)
-; $FFF3 - ?
-; $FFF4 - ?
+def hEnemyYScreen = $FFF3 ; Enemy Y position (in screens in camera-space)
+def hEnemyXScreen = $FFF4 ; Enemy X position (in screens in camera-space)
 def hEnemyMaxHealth = $FFF5 ; Initial health value
 ; Determines enemy drops (used when setting the explosion flag):
 ; - If $FD or $FE - No drops
@@ -198,7 +199,6 @@ def hEnemyMaxHealth = $FFF5 ; Initial health value
 ; - If value is >$0A, drop large health
 ; - Else, drop small health
 ; - Note: Drops have a 50% chance of happening or being nothing
-
 ;}
 ;
 ;$FFFC: Enemy address in $2:409E

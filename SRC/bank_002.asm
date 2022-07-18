@@ -96,13 +96,13 @@ jr_002_4063:
     jr_002_408b:
 
     call Call_000_3dba
-    call Call_002_409e
-    call Call_002_45ca
+    call Call_002_409e ; Handle each enemy
+    call updateScrollHistory
     ld a, [rLY]
     cp $70
         ret nc
 
-    call Call_000_3dce
+    call drawEnemies_farCall
 ret
 
 
@@ -360,7 +360,7 @@ Call_002_4217:
     jr nz, jr_002_4220
 
     ld b, $16
-    ld hl, $ffe0
+    ld hl, hEnemyWorkingHram ;$ffe0
 
     jr_002_422a: ; Clear enemy temps in HRAM
         ld [hl+], a
@@ -701,9 +701,9 @@ enemy_moveFromWramToHram: ; 02:43D2
     jr nz, jr_002_43dd
 
     ld a, [hl+] ; enemyOffset + $0F
-    ldh [$f3], a
+    ldh [hEnemyYScreen], a
     ld a, [hl+] ; enemyOffset + $10
-    ldh [$f4], a
+    ldh [hEnemyXScreen], a
     ld a, [hl] ; enemyOffset + $11
     ldh [hEnemyMaxHealth], a
     
@@ -762,9 +762,9 @@ enemy_moveFromHramToWram: ; 02:4421
         dec b
     jr nz, jr_002_442c
 
-    ldh a, [$f3]
+    ldh a, [hEnemyYScreen]
     ld [hl+], a
-    ldh a, [$f4]
+    ldh a, [hEnemyXScreen]
     ld [hl+], a
     ldh a, [$fc]
     add $1c
@@ -801,43 +801,39 @@ enemy_moveFromHramToWram: ; 02:4421
     ld [hl], $ff
 ret
 
-
+; Delete enemies that are sufficiently off-screen
 Call_002_4464:
-    ld hl, $fff3
+    ld hl, hEnemyYScreen
     ld a, [hl+]
     cp $fe
-    jr z, jr_002_4470
-
+        jr z, jr_002_4470
     cp $03
-    jr nz, jr_002_44b6
+        jr nz, jr_002_44b6
 
 jr_002_4470:
-    ld hl, $ffe0
+    ld hl, hEnemyWorkingHram
     ld a, $ff
     ld b, $0f
 
-jr_002_4477:
-    ld [hl+], a
-    dec b
+    jr_002_4477:
+        ld [hl+], a
+        dec b
     jr nz, jr_002_4477
 
     ld a, [hl]
     cp $02
     jr z, jr_002_448e
+        cp $04
+        jr nz, jr_002_448b
+            ld a, $fe
+            ld [hl], a
+            ld a, $ff
+            jr jr_002_448e
+        jr_002_448b:
+            ld a, $ff
+            ld [hl], a
+    jr_002_448e:
 
-    cp $04
-    jr nz, jr_002_448b
-
-    ld a, $fe
-    ld [hl], a
-    ld a, $ff
-    jr jr_002_448e
-
-jr_002_448b:
-    ld a, $ff
-    ld [hl], a
-
-jr_002_448e:
     inc l
     inc l
     ld [hl+], a
@@ -854,37 +850,33 @@ jr_002_448e:
     ld a, [de]
     cp [hl]
     jr nz, jr_002_44b2
+        dec e
+        dec l
+        ld a, [de]
+        cp [hl]
+        jr nz, jr_002_44b2
+            dec l
+            ld a, $ff
+            ld [hl+], a
+            ld [hl+], a
+            ld [hl+], a
+            ld [hl], a
+    jr_002_44b2:
 
-    dec e
-    dec l
-    ld a, [de]
-    cp [hl]
-    jr nz, jr_002_44b2
-
-    dec l
-    ld a, $ff
-    ld [hl+], a
-    ld [hl+], a
-    ld [hl+], a
-    ld [hl], a
-
-jr_002_44b2:
     pop af
     jp Jump_002_40d8
-
 
 jr_002_44b6:
     ld a, [hl]
     cp $fe
-    jr z, jr_002_4470
-
+        jr z, jr_002_4470
     cp $03
-    ret nz
-
+        ret nz
     jr jr_002_4470
+; end proc
 
 Call_002_44c0:
-    ld hl, $fff3
+    ld hl, hEnemyYScreen
     ld de, hEnemyYPos
     ld a, [hl]
     cp $ff
@@ -966,13 +958,14 @@ jr_002_450b:
     jr c, jr_002_4500
 
 jr_002_4518:
-    ldh a, [$f3]
+    ; Exit if enemy is offscreen
+    ldh a, [hEnemyYScreen]
     ld b, a
-    ldh a, [$f4]
+    ldh a, [hEnemyXScreen]
     or b
-    ret nz
+        ret nz
 
-    ld hl, $ffe0
+    ld hl, hEnemyStatus
     ld [hl], $00
     ld hl, $c426
     inc [hl]
@@ -997,12 +990,12 @@ Call_002_452e:
     jr nc, jr_002_4551
 
     ld a, $ff
-    ldh [$f3], a
+    ldh [hEnemyYScreen], a
     jr jr_002_454c
 
 jr_002_4548:
     ld a, $01
-    ldh [$f3], a
+    ldh [hEnemyYScreen], a
 
 jr_002_454c:
     ld a, $01
@@ -1020,12 +1013,12 @@ jr_002_4551:
     jr nc, jr_002_456d
 
     ld a, $ff
-    ldh [$f4], a
+    ldh [hEnemyXScreen], a
     jr jr_002_4568
 
 jr_002_4564:
     ld a, $01
-    ldh [$f4], a
+    ldh [hEnemyXScreen], a
 
 jr_002_4568:
     ld a, $01
@@ -1036,7 +1029,7 @@ jr_002_456d:
     and a
     ret z
 
-    ld hl, $ffe0
+    ld hl, hEnemyStatus
     ld [hl], $01
     ldh a, [hEnemySpawnFlag]
     cp $02
@@ -1099,7 +1092,7 @@ jr_002_45c2:
     jp Jump_002_40d8
 
 
-Call_002_45ca:
+updateScrollHistory:
     ld de, $c40a
     ld hl, $c408
     ld a, [de]
@@ -1119,7 +1112,7 @@ Call_002_45ca:
     inc e
     ld a, [de]
     ld [hl], a
-    ret
+ret
 
 unknown_002_45E4: ; 02:45E4 - Unreferenced
     ld a, [samus_onscreenXPos]
@@ -3581,7 +3574,7 @@ Call_002_565f: ; 02:565F
         ret c
     cp $d0
     jr nc, .else_A
-        ld hl, $ffe0
+        ld hl, hEnemyStatus
         ld a, [hl]
         xor $80
         ld [hl], a
@@ -3597,7 +3590,7 @@ Call_002_565f: ; 02:565F
             ; Unfreeze
             xor a
             ldh [hEnemyStunCounter], a
-            ldh [$e0], a
+            ldh [hEnemyStatus], a
             ret
         .else_B:
             ; Kill
@@ -7597,7 +7590,7 @@ Jump_002_6bb2:
 
         jr_002_6bd1:        
         xor a
-        ldh [$e0], a
+        ldh [hEnemyStatus], a
         ld a, $ff
         ldh [$e8], a
         ld a, $a3 ; Alpha metroid
@@ -8251,7 +8244,7 @@ jr_002_6f87:
     ld a, $ff
     ldh [$e8], a
     xor a
-    ldh [$e0], a
+    ldh [hEnemyStatus], a
 
 jr_002_6f8e:
     ld a, [$c41c]
@@ -8781,7 +8774,7 @@ ret
 
 jr_002_72a0:
     xor a
-    ldh [$e0], a
+    ldh [hEnemyStatus], a
     ld a, $ff
     ldh [$e8], a
     ld a, $b7
@@ -10336,7 +10329,7 @@ larva_freeze:
     ld a, $44
     ldh [hEnemyIceCounter], a
     xor a
-    ldh [$e0], a
+    ldh [hEnemyStatus], a
 ret
 
 
@@ -10784,7 +10777,7 @@ Call_002_7df8:
     and $01
         ret nz
     ; Toggle visibility
-    ld hl, $ffe0
+    ld hl, hEnemyStatus
     ld a, [hl]
     xor $80
     ld [hl], a
