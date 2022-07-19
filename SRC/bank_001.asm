@@ -1739,12 +1739,12 @@ Call_001_5300: ; draw projectiles ; 01:5300
         jp z, Jump_001_5390
             ld a, [hl+]
             ld c, a
-            ld a, [$c205]
+            ld a, [scrollY]
             ld b, a
             ld a, [hl+]
             sub b
             ldh [hSpriteYPixel], a
-            ld a, [$c206]
+            ld a, [scrollX]
             ld b, a
             ld a, [hl]
             sub b
@@ -1917,13 +1917,13 @@ Call_001_540e:
         jr z, jr_001_5490
             ld a, [hl+]
             ld c, a
-            ld a, [$c205]
+            ld a, [scrollY]
             ld b, a
             ld a, [hl+]
             ld [$d04a], a
             sub b
             ldh [hSpriteYPixel], a
-            ld a, [$c206]
+            ld a, [scrollX]
             ld b, a
             ld a, [hl]
             ld [$d04b], a
@@ -2363,7 +2363,7 @@ handleRespawningBlocks: ; 01:5692
             inc a
             ld [hl+], a
             ; Compare scroll y and tile y
-            ld a, [$c205]
+            ld a, [scrollY]
             ld b, a
             ld a, [hl+]
             ld [$c203], a
@@ -2373,7 +2373,7 @@ handleRespawningBlocks: ; 01:5692
                 jr z, .removeBlock
         
             ; Control scroll x and tile x
-            ld a, [$c206]
+            ld a, [scrollX]
             ld b, a
             ld a, [hl]
             ld [$c204], a
@@ -2768,9 +2768,10 @@ itemTextPointerTable: ; 01:58F1
     include "data/itemNames.asm"
 
 drawEnemies: ; Draw enemies - 01:5A11
-    ld a, [$c426]
+    ; Exit if there are no enemies to render
+    ld a, [numActiveEnemies]
     and a
-    ret z
+        ret z
 
     ld hl, $c600
     ld a, l
@@ -2794,8 +2795,7 @@ drawEnemies: ; Draw enemies - 01:5A11
         ld [$c455], a
         cp $c8
     jr nz, jr_001_5a21
-
-    ret
+ret
 
 ; Render enemy sprite
 drawEnemySprite: ; 01:5A3F
@@ -3601,9 +3601,9 @@ Call_001_79ef: ; 01:79EF: Handle earthquake (called from bank 0)
     dec a
     ld b, a
     ; Adjust scroll
-    ld a, [$c205]
+    ld a, [scrollY]
     add b
-    ld [$c205], a
+    ld [scrollY], a
 
     ldh a, [frameCounter]
     and $01

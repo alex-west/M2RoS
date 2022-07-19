@@ -20,8 +20,8 @@ wram_oamBuffer:: ds $A0 ; $C000
 ;
 ;$C203: Tile Y (see $22BC)
 ;$C204: Tile X (see $22BC)
-;$C205: Scroll Y
-;$C206: Scroll X
+def scrollY = $C205 ; Scroll Y
+def scrollX = $C206 ; Scroll X
 ;
 ;$C215: Tilemap address of ([$C204], [$C203]) (see $22BC)
 ;
@@ -134,9 +134,10 @@ def samus_hurtFlag = $C422 ; Samus damage flag
 ;    FFh: Up-left
 ;}
 def samus_damageValue = $C424 ; Health to take from Samus
-;$C425: Number of enemies
-;$C426: Cleared in $2:412F/$2:4217. Incremented when number of enemies is incremented in enemy loading
-;$C427: Cleared in $2:4217
+
+def numEnemies = $C425 ; Number of enemies (both currently active and offscreen)
+def numActiveEnemies = $C426 ; Number of currently active enemies (used to exit drawEnemies early).
+def numOffscreenEnemies = $C427 ; Number of offscreen enemies loaded in. Unused?
 ;
 ;$C42E: Set to enemy Y position in $1:5A9A
 ;$C42F: Set to enemy X position in $1:5A9A

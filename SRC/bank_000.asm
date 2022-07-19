@@ -77,9 +77,9 @@ VBlankHandler: ; 00:0154
     push de
     push hl
     ; Update scrolling
-    ld a, [$c205]
+    ld a, [scrollY]
     ldh [rSCY], a
-    ld a, [$c206]
+    ld a, [scrollX]
     ldh [rSCX], a
     ; Update palettes
     ld a, [bg_palette]
@@ -624,10 +624,10 @@ gameMode_LoadB:
 
     ldh a, [hCameraYPixel]
     sub $78
-    ld [$c205], a
+    ld [scrollY], a
     ldh a, [hCameraXPixel]
     sub $30
-    ld [$c206], a
+    ld [scrollX], a
     ; Enable LCD
     ld a, $e3
     ldh [rLCDC], a
@@ -664,16 +664,15 @@ gameMode_Main:
     ld a, [$c463]
     and a
     jr z, jr_000_0522
+        ld a, [samusPose]
+        res 7, a
+        ld [samusPose], a
+        ldh a, [hInputRisingEdge]
+        bit PADB_SELECT, a
+        call nz, toggleMissiles
+        jr jr_000_053e
+    jr_000_0522:
 
-    ld a, [samusPose]
-    res 7, a
-    ld [samusPose], a
-    ldh a, [hInputRisingEdge]
-    bit PADB_SELECT, a
-    call nz, toggleMissiles
-    jr jr_000_053e
-
-jr_000_0522:
     ld a, [doorScrollDirection]
     and a
     jr nz, jr_000_053e
@@ -1975,7 +1974,7 @@ poseFunc_0DBE: ; $1A
         ld a, [$c3a8]
         add $06
         ld b, a
-        ld a, [$c206]
+        ld a, [scrollX]
         add b
         ld b, a
         ldh a, [hSamusXPixel]
@@ -5143,12 +5142,12 @@ gfxInfo_cannonBeam: db BANK(gfx_cannonBeam)
 ; Function returns the tile number for a particular x-y tile on the tilemap
 enemy_getTileIndex: ; 00:2250 - Called by enemy routines
     ; Adjust enemy coordinates (in camera-space) to map-space coordinates
-    ld a, [$c205]
+    ld a, [scrollY]
     ld b, a
     ld a, [enemy_testPointYPos]
     add b
     ld [$c203], a
-    ld a, [$c206]
+    ld a, [scrollX]
     ld b, a
     ld a, [enemy_testPointXPos]
     add b
@@ -5347,10 +5346,10 @@ ret
 Call_000_2366:
     ldh a, [hCameraYPixel]
     sub $48
-    ld [$c205], a
+    ld [scrollY], a
     ldh a, [hCameraXPixel]
     sub $50
-    ld [$c206], a
+    ld [scrollX], a
     call Call_000_3ced
 ret
 
@@ -6111,13 +6110,13 @@ Call_000_2887:
     ld a, [hl+]
     ldh [hCameraYPixel], a
     sub $48
-    ld [$c205], a
+    ld [scrollY], a
     ld a, [hl+]
     ldh [hCameraYScreen], a
     ld a, [hl+]
     ldh [hCameraXPixel], a
     sub $50
-    ld [$c206], a
+    ld [scrollX], a
     ld a, [hl+]
     ldh [hCameraXScreen], a
     ld a, [hl+]
@@ -6149,7 +6148,7 @@ Call_000_2887:
     ldh [rLCDC], a
     xor a
     ld [doorScrollDirection], a
-    ld [$c205], a
+    ld [scrollY], a
     ldh [rSCY], a
     ld a, [bg_palette]
     cp $93
@@ -6582,9 +6581,9 @@ Jump_000_2bf4:
         ld [deathAnimTimer], a
     jr_000_2c42:
     
-    ld a, [$c205]
+    ld a, [scrollY]
     ldh [rSCY], a
-    ld a, [$c206]
+    ld a, [scrollX]
     ldh [rSCX], a
     call OAM_DMA
     ld a, [bankRegMirror]
@@ -7194,9 +7193,9 @@ VBlank_deathSequence: ; 00:2FE1
             ldh [gameMode], a
     .endIf:
 
-    ld a, [$c205]
+    ld a, [scrollY]
     ldh [rSCY], a
-    ld a, [$c206]
+    ld a, [scrollX]
     ldh [rSCX], a
     call OAM_DMA
 
@@ -7269,9 +7268,9 @@ unusedDeathAnimation: ; 00:3062
             ld [deathAnimTimer], a
     .endIf_A:
 
-    ld a, [$c205]
+    ld a, [scrollY]
     ldh [rSCY], a
-    ld a, [$c206]
+    ld a, [scrollX]
     ldh [rSCX], a
     call OAM_DMA
     ld a, [bankRegMirror]
@@ -7461,12 +7460,12 @@ jr_000_31b2:
 ret
 
 Call_000_31b6: ; 00:31B6 - Projectile/enemy collision function
-    ld a, [$c205]
+    ld a, [scrollY]
     ld b, a
     ld a, [$c203]
     sub b
     ldh [$98], a
-    ld a, [$c206]
+    ld a, [scrollX]
     ld b, a
     ld a, [$c204]
     sub b
@@ -8355,8 +8354,8 @@ gameMode_dead: ; 00:36B0
     .exitLoop:
 
     xor a
-    ld [$c205], a
-    ld [$c206], a
+    ld [scrollY], a
+    ld [scrollX], a
     ldh [rSCY], a
     ldh [rSCX], a
     ld a, $c3
@@ -8881,8 +8880,8 @@ gameMode_unusedA: ; 00:3ACE
     .exitLoop:
 
     xor a
-    ld [$c205], a
-    ld [$c206], a
+    ld [scrollY], a
+    ld [scrollX], a
     ld a, $c3
     ldh [rLCDC], a
     ld a, $a0
@@ -8948,8 +8947,8 @@ gameMode_unusedC: ; 00:3B43
     .exitLoop:
 
     xor a
-    ld [$c205], a
-    ld [$c206], a
+    ld [scrollY], a
+    ld [scrollX], a
     ld a, $c3
     ldh [rLCDC], a
     ld a, $ff
@@ -9212,8 +9211,8 @@ Call_000_3da4: ; 00:3DA4
 samusShoot_longJump: ; 00:3DAF
     jpLong samusShoot
 
-Call_000_3dba: ; 00:3DBA
-    callFar Call_003_6bd2
+scrollEnemies_farCall: ; 00:3DBA
+    callFar scrollEnemies
     switchBank Call_002_4000
 ret
 
@@ -9369,9 +9368,9 @@ jr_000_3f34:
     ld [deathAnimTimer], a
 
 jr_000_3f44:
-    ld a, [$c205]
+    ld a, [scrollY]
     ldh [rSCY], a
-    ld a, [$c206]
+    ld a, [scrollX]
     ldh [rSCX], a
     call OAM_DMA
     ld a, [bankRegMirror]

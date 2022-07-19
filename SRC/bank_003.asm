@@ -10,12 +10,12 @@ Call_003_4000:
     ld hl, $c433
     ld a, [hl-]
     ld [hl+], a
-    ld a, [$c205]
+    ld a, [scrollY]
     ld [hl+], a
     inc l
     ld a, [hl-]
     ld [hl+], a
-    ld a, [$c206]
+    ld a, [scrollX]
     ld [hl], a
     ret
 
@@ -121,7 +121,7 @@ Call_003_4014:
     jp z, Jump_003_416a
 
     ld hl, $c432
-    ld a, [$c205]
+    ld a, [scrollY]
     sub [hl]
     ret z
 
@@ -254,7 +254,7 @@ jr_003_4165:
 
 Jump_003_416a:
     ld hl, $c434
-    ld a, [$c206]
+    ld a, [scrollX]
     sub [hl]
     ret z
 
@@ -415,13 +415,13 @@ Call_003_422f:
     xor a
     ld [hl+], a
     push de
-    ld a, [$c205]
+    ld a, [scrollY]
     ld b, a
     ld a, [de]
     add $10
     sub b
     ld [hl+], a
-    ld a, [$c206]
+    ld a, [scrollX]
     ld b, a
     dec de
     ld a, [de]
@@ -493,7 +493,7 @@ Call_003_422f:
     inc de
     ld a, [de]
     ld [hl], a
-    ld hl, $c425
+    ld hl, numEnemies
     inc [hl]
     inc l
     inc [hl]
@@ -880,7 +880,7 @@ jr_003_6b1f:
     ld [hl+], a
     ld [hl+], a
     ld [hl], a
-    ld hl, $c425
+    ld hl, numEnemies
     dec [hl]
     inc l
     dec [hl]
@@ -988,9 +988,10 @@ table_6BB1: ; 03:6BB1
     db $00, $00, $01, $01, $02, $02, $02, $01, $03, $03, $03, $02, $03, $04, $04, $05
     db $05
 
-Call_003_6bd2: ; 03:6BD2
+; Adjust enemy positions (which are in camera-space) due to scrolling
+scrollEnemies: ; 03:6BD2
     ld hl, $c40c
-    ld de, $c205
+    ld de, scrollY
     ld a, [de]
     sub [hl]
     ld b, a
@@ -1003,7 +1004,7 @@ Call_003_6bd2: ; 03:6BD2
     or b
         ret z
 
-    ld a, [$c425]
+    ld a, [numEnemies]
     and a
     ret z
 
@@ -1014,11 +1015,11 @@ Call_003_6bd2: ; 03:6BD2
     jr_003_6bf0:
         add hl, de
         ld a, [hl]
-        inc a
+        inc a ; Check if enemy status is $FF or not
     jr z, jr_003_6bf0
 
     push hl
-    call Call_003_6c58
+    call Call_003_6c58 ; Load enemy positions to HRAM
     ld hl, hEnemyYPos
     ; Check if we moved up or down
     bit 7, b
@@ -1076,7 +1077,7 @@ Call_003_6bd2: ; 03:6BD2
                 dec [hl]
     jr_003_6c4a:
 
-    call Call_003_6c74
+    call Call_003_6c74 ; Save enemy positions to WRAM
     pop hl
     ld a, [$c44c]
     dec a
@@ -1085,7 +1086,7 @@ Call_003_6bd2: ; 03:6BD2
 
     jr jr_003_6bf0
 
-Call_003_6c58:
+Call_003_6c58: ; 03:6C58
     ld a, l
     ld [$c450], a
     ld a, h
@@ -1106,7 +1107,7 @@ Call_003_6c58:
 ret
 
 
-Call_003_6c74:
+Call_003_6c74: ; 03:6C74
     ld a, [$c450]
     ld l, a
     ld a, [$c451]
@@ -1242,12 +1243,12 @@ jr_003_6d4f:
     ld [rSTAT], a
     ld a, $5c
     ld [$c3a1], a
-    ld a, [$c206]
+    ld a, [scrollX]
     ld [$c3c6], a
     ld a, $03
     ld [rWX], a
     ld [$c3a8], a
-    ld a, [$c205]
+    ld a, [scrollY]
     ld [$c3c7], a
     ld a, $70
     ld [rWY], a
@@ -1882,7 +1883,7 @@ jr_003_7163:
 Call_003_716e:
     ld a, [$c3c7]
     ld b, a
-    ld a, [$c205]
+    ld a, [scrollY]
     cp $f8
     jr c, jr_003_717a
 
@@ -1894,7 +1895,7 @@ jr_003_717a:
     ld [$c3bc], a
     ld a, [$c3c6]
     ld b, a
-    ld a, [$c206]
+    ld a, [scrollX]
     ld [$c3c6], a
     sub b
     ld [$c3bb], a
@@ -1915,7 +1916,7 @@ Call_003_7190:
     ld a, [$c3a9]
     sub b
     ld [$c3a9], a
-    ld a, [$c205]
+    ld a, [scrollY]
     cp $f8
     jr c, jr_003_71b5
 
@@ -3800,7 +3801,7 @@ jr_003_7cba:
     jr jr_003_7cd6
 
 jr_003_7ccb:
-    ld a, [$c206]
+    ld a, [scrollX]
     ld [rSCX], a
     ld a, $93
     ld [rBGP], a
@@ -3833,9 +3834,9 @@ ret
 VBlank_drawQueen: ; 03:7CF0
     call queenDrawFeet
     call Call_003_7b69
-    ld a, [$c206]
+    ld a, [scrollX]
     ld [rSCX], a
-    ld a, [$c205]
+    ld a, [scrollY]
     ld [rSCY], a
     ld a, [$c3a8]
     cp $a6

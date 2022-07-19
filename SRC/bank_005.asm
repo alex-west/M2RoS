@@ -173,7 +173,7 @@ loadTitleScreen: ; 05:408F
     ld a, $88
     ldh [rWY], a
     xor a
-    ld [$c205], a
+    ld [scrollY], a
     ld a, $c3
     ldh [rLCDC], a
     ; Play title music
@@ -1110,8 +1110,8 @@ jr_005_58ab:
 
     ; Initialize scroll
     xor a
-    ld [$c205], a
-    ld [$c206], a
+    ld [scrollY], a
+    ld [scrollX], a
 
     ld a, $c3
     ldh [rLCDC], a
@@ -1166,16 +1166,16 @@ credits_scrollHandler: ; 05:593E
     ret nz
     
     ; Scroll a pixel
-    ld a, [$c205]
+    ld a, [scrollY]
     inc a
-    ld [$c205], a
+    ld [scrollY], a
 
-    ld a, [$c205]
+    ld a, [scrollY]
     and $07
     ret nz
 
     ; Adjust cursor position
-    ld a, [$c205]
+    ld a, [scrollY]
     add $a0
     ld [$c203], a
     ld a, $08

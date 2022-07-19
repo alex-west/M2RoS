@@ -95,7 +95,7 @@ jr_002_4063:
         ld [$c436], a
     jr_002_408b:
 
-    call Call_000_3dba
+    call scrollEnemies_farCall ; Adjust enemy positions due to scrolling
     call Call_002_409e ; Handle each enemy
     call updateScrollHistory
     ld a, [rLY]
@@ -118,7 +118,7 @@ Call_002_409e:
         ldh a, [hEnemy_frameCounter]
         inc a
         ldh [hEnemy_frameCounter], a
-        ld a, [$c425]
+        ld a, [numEnemies]
         ld [$c439], a
     jr_002_40ba:
 
@@ -140,8 +140,8 @@ jr_002_40c1:
         
         jr_002_40cc:
             call enemy_moveFromWramToHram
-            call Call_002_4239
-            call Call_002_452e
+            call Call_002_4239 ; Explosion/drop handler?
+            call Call_002_452e ; Check if offscreen
             call Call_002_5630 ; Enemy AI and related stuffs
         
         Jump_002_40d8:
@@ -167,8 +167,8 @@ jr_002_40c1:
     jr_002_40f6:
     
     call enemy_moveFromWramToHram
-    call Call_002_4464
-    call Call_002_44c0
+    call Call_002_4464 ; Delete enemy that is sufficiently offscreen
+    call Call_002_44c0 ; Check if back onscreen
     jr jr_002_40d8
 
 jr_002_4101:
@@ -202,7 +202,7 @@ jr_002_4110:
     cp $6c
         ret nc
 
-    call Call_000_3de2
+    call Call_000_3de2 ; Load enemies?
 ret
 
 
@@ -235,9 +235,9 @@ Call_002_412f: ; Loads enemy save flags from save buffer to WRAM without saving 
     ld [$c41c], a
     ld [$c465], a
     ld [$c463], a
-    ld [$c425], a
-    ld [$c426], a
-    ld [$c427], a
+    ld [numEnemies], a
+    ld [numActiveEnemies], a
+    ld [numOffscreenEnemies], a
     ld [$c438], a
     ld a, $ff
     ld [$c466], a
@@ -245,10 +245,10 @@ Call_002_412f: ; Loads enemy save flags from save buffer to WRAM without saving 
     ld [$c468], a
     ld [$c46d], a
     ld hl, $c432
-    ld a, [$c205]
+    ld a, [scrollY]
     ld [hl+], a
     ld [hl+], a
-    ld a, [$c206]
+    ld a, [scrollX]
     ld [hl+], a
     ld [hl], a
     call blobThrower_loadSprite
@@ -337,10 +337,10 @@ Call_002_418c:
     ld [$c467], a
     ld [$c468], a
     ld hl, $c432
-    ld a, [$c205]
+    ld a, [scrollY]
     ld [hl+], a
     ld [hl+], a
-    ld a, [$c206]
+    ld a, [scrollX]
     ld [hl+], a
     ld [hl], a
     call Call_002_4217
@@ -368,7 +368,7 @@ Call_002_4217:
     jr nz, jr_002_422a
 
     xor a
-    ld hl, $c425
+    ld hl, numEnemies
     ld b, $03
 
     jr_002_4234:
@@ -840,7 +840,7 @@ jr_002_4470:
     ld [hl+], a
     ld [hl+], a
     ld [hl], a
-    ld hl, $c425
+    ld hl, numEnemies
     dec [hl]
     inc l
     inc l
@@ -875,18 +875,18 @@ jr_002_44b6:
     jr jr_002_4470
 ; end proc
 
+; Check if offscreen enemy needs to be reactivated
 Call_002_44c0:
+; ypos part
     ld hl, hEnemyYScreen
     ld de, hEnemyYPos
     ld a, [hl]
     cp $ff
-    jr z, jr_002_44d9
-
+        jr z, jr_002_44d9
     and a
-    jr z, jr_002_44e1
-
+        jr z, jr_002_44e1
     dec a
-    jr nz, jr_002_44ee
+        jr nz, jr_002_44ee
 
     ld a, [de]
     cp $c0
@@ -916,9 +916,10 @@ jr_002_44e1:
     cp $f0
     jr c, jr_002_44d6
 
+; xpos part
 jr_002_44ee:
-    inc l
-    inc e
+    inc l ; enemyXScreen
+    inc e ; enemyXPos
     ld a, [hl]
     cp $ff
     jr z, jr_002_4503
@@ -964,17 +965,17 @@ jr_002_4518:
     ldh a, [hEnemyXScreen]
     or b
         ret nz
-
+    ; Reactivate enemy
     ld hl, hEnemyStatus
     ld [hl], $00
-    ld hl, $c426
+    ld hl, numActiveEnemies
     inc [hl]
     inc l
     dec [hl]
     pop af
     jp Jump_002_40d8
 
-
+; Check if enemy needs to be deactivated for being offscreen
 Call_002_452e:
     xor a
     ld [$c479], a
@@ -1041,7 +1042,8 @@ jr_002_456d:
     and $0f
     jr z, jr_002_45a8
 
-    ld hl, $c426
+    ; Deactivate enemy
+    ld hl, numActiveEnemies
     dec [hl]
     inc l
     inc [hl]
@@ -1106,7 +1108,7 @@ updateScrollHistory:
     inc e
     ld a, [de]
     ld [hl+], a
-    ld de, $c205
+    ld de, scrollY
     ld a, [de]
     ld [hl+], a
     inc e
@@ -5155,7 +5157,7 @@ enAI_5F67: ; 02:5F67
     ld l, a
     ld a, [enemy_tempSpawnFlag]
     ld [hl], a
-    ld hl, $c425
+    ld hl, numEnemies
     inc [hl]
     inc l
     inc [hl]
@@ -8726,7 +8728,7 @@ enemy_spawnObject:
     ld l, a
     ld a, [enemy_tempSpawnFlag]
     ld [hl], a
-    ld hl, $c425
+    ld hl, numEnemies
     inc [hl]
     inc l
     inc [hl]
@@ -9629,7 +9631,7 @@ jr_002_7787:
     dec a
         jp z, Jump_002_7824
 
-    ld a, [$c425]
+    ld a, [numEnemies]
     dec a
         jr z, jr_002_7767
 
