@@ -1146,41 +1146,41 @@ sprite66E5:
 sprite66EA:
     db  -4, -4, $99, $10
     db $FF
-; 01:66EF - Unreferenced sprite
+; 01:66EF - Unreferenced sprite 0
     db  -8, -8, $B8, $00
     db   0, -8, $C8, $00
     db   8, -8, $D8, $00
     db $FF
-; 01:66FC - Unreferenced sprite
+; 01:66FC - Unreferenced sprite 1
     db  -8, -8, $B9, $00
     db   0, -8, $C9, $00
     db   8, -8, $D9, $00
     db $FF
-; 01:6709 - Unreferenced sprite
+; 01:6709 - Unreferenced sprite 2
     db  -8, -8, $C6, $00
     db  -8,  0, $C7, $00
     db   0, -8, $D6, $00
     db   0,  0, $D7, $00
     db $FF
-; 01:671A - Unreferenced sprite
+; 01:671A - Unreferenced sprite 3
     db  -8, -8, $BA, $00
     db  -8,  0, $BB, $00
     db   0, -8, $CA, $00
     db   0,  0, $CB, $00
     db $FF
-; 01:672B - Unreferenced sprite
+; 01:672B - Unreferenced sprite 4
     db  -8, -8, $DA, $00
     db  -8,  0, $DB, $00
     db   0, -8, $EA, $00
     db   0,  0, $EB, $00
     db $FF
-; 01:673C - Unreferenced sprite
+; 01:673C - Unreferenced sprite 5
     db  -8, -8, $DC, $00
     db  -8,  0, $DD, $00
     db   0, -8, $EC, $00
     db   0,  0, $ED, $00
     db $FF
-; 01:674D - Unreferenced sprite
+; 01:674D - Unreferenced sprite 6
     db  -8, -8, $E4, $00
     db  -8,  0, $E4, $20
     db   0,-16, $D0, $00
@@ -1188,7 +1188,7 @@ sprite66EA:
     db   0,  0, $D1, $20
     db   0,  8, $D0, $20
     db $FF
-; 01:6766 - Unreferenced sprite
+; 01:6766 - Unreferenced sprite 7
     db  -8, -8, $E3, $00
     db  -8,  0, $E3, $20
     db   0,-16, $D0, $00
@@ -1196,7 +1196,7 @@ sprite66EA:
     db   0,  0, $D1, $20
     db   0,  8, $D0, $20
     db $FF
-; 01:677F - Unreferenced sprite
+; 01:677F - Unreferenced sprite 8
     db -12, -8, $D2, $00
     db -12,  0, $D2, $20
     db  -4, -8, $E2, $00
@@ -1206,7 +1206,7 @@ sprite66EA:
     db   4,  0, $E1, $20
     db   4,  8, $E0, $20
     db $FF
-; 01:67A0 - Unreferenced sprite
+; 01:67A0 - Unreferenced sprite 9
     db -12, -8, $B1, $00
     db -12,  0, $B2, $00
     db  -4,-16, $C0, $00
@@ -1215,7 +1215,7 @@ sprite66EA:
     db   4, -8, $B6, $00
     db   4,  0, $B7, $00
     db $FF
-; 01:67BD - Unreferenced sprite
+; 01:67BD - Unreferenced sprite A
     db -12, -8, $B1, $00
     db -12,  0, $B2, $00
     db  -4,-16, $C0, $00
@@ -1224,7 +1224,7 @@ sprite66EA:
     db   4, -8, $B0, $00
     db   4,  0, $D5, $00
     db $FF
-; 01:67DA - Unreferenced sprite
+; 01:67DA - Unreferenced sprite B
     db -16,-12, $B3, $00
     db  -8,-12, $C3, $00
     db  -8, -4, $C4, $00
@@ -1233,7 +1233,7 @@ sprite66EA:
     db   0, -4, $D4, $00
     db   0,  4, $D5, $00
     db $FF
-; 01:67F7 - Unreferenced sprite
+; 01:67F7 - Unreferenced sprite C
     db -16,-12, $B3, $00
     db  -8,-12, $C3, $00
     db  -8, -4, $B4, $00
@@ -1242,26 +1242,26 @@ sprite66EA:
     db   0, -4, $D4, $00
     db   0,  4, $D5, $00
     db $FF
-; 01:6814 - Unreferenced sprite
+; 01:6814 - Unreferenced sprite D
     db  -4, -4, $E5, $00
     db $FF
-; 01:6819 - Unreferenced sprite
+; 01:6819 - Unreferenced sprite E
     db  -8, -8, $BC, $00
     db  -8,  0, $BD, $00
     db   0, -8, $CC, $00
     db   0,  0, $CD, $00
     db $FF
-; 01:682A - Unreferenced sprite
+; 01:682A - Unreferenced sprite F
     db  -8, -8, $BE, $00
     db  -8,  0, $BF, $00
     db   0, -8, $CE, $00
     db   0,  0, $CF, $00
     db $FF
-; 01:683B - Unreferenced sprite
+; 01:683B - Unreferenced sprite 10
     db  -4, -8, $DE, $00
     db  -4,  0, $DE, $20
     db $FF
-; 01:6844 - Unreferenced sprite
+; 01:6844 - Unreferenced sprite 11
     db  -8, -4, $DF, $00
     db -16, -4, $DF, $40
     db $FF
