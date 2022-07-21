@@ -1269,8 +1269,7 @@ ret
 handleProjectiles: ; 01:500D
     xor a
     ld [projectileIndex], a
-
-Jump_001_5011:
+.bigLoop:
     ld a, $dd
     ld h, a
     ldh [$b8], a
@@ -1283,7 +1282,7 @@ Jump_001_5011:
     ldh [$b9], a
     ld [$d08d], a
     cp $ff
-        jp z, Jump_001_52f3
+        jp z, .nextProjectile
     ; Load direction
     ld a, [hl+]
     ldh [$98], a
@@ -1303,8 +1302,8 @@ Jump_001_5011:
     cp $03 ; Spazer
         jr z, .spazerBranch
     cp $08 ; Missile
-        jp z, Jump_001_51c3
-    jp Jump_001_5216 ; Default (ice, power, plasma)
+        jp z, .missileBranch
+    jp .defaultBranch ; Default projectile (ice, power, plasma)
 
 .spazerBranch: ; Spazer
     ldh a, [$98]
@@ -1354,7 +1353,7 @@ Jump_001_5011:
         ldh [$99], a
         
     .spazerEnd:
-jp Jump_001_5282
+jp .commonBranch
 
 .spazer_splitVertically:
     ; Limit spread to first few frames
@@ -1408,317 +1407,365 @@ jp Jump_001_5282
 ; end Spazer case
 
 .waveBranch: ; Wave
-    jr_001_50d4:
-        ld hl, table_5183
+    ; Read from wave tranverse velocity table
+    .waveLoop:
+        ld hl, .waveSpeedTable
         ldh a, [$ba]
         ld e, a
         ld d, $00
         add hl, de
         ld a, [hl]
         cp $80
-            jr nz, jr_001_50e7
+            jr nz, .break
         xor a
         ldh [$ba], a
-    jr jr_001_50d4
-    
-    jr_001_50e7:
+    jr .waveLoop
+    .break:
+    ld b, a ; Save result from table
 
-    ld b, a
     ldh a, [$98]
-    and $0c
-    jr nz, jr_001_5116
+    and %1100 ; $0C ; Check if moving vertically
+    jr nz, .else_F
+        ; Horizontal case
+        ; Adjust vertical position of wave
         ldh a, [$99]
         add b
         ldh [$99], a
+        ; Increment wave index
         ldh a, [$ba]
         inc a
         ldh [$ba], a
+        ; Check direction
         ldh a, [$98]
         bit 1, a
-        jr nz, jr_001_510a
+        jr nz, .else_G
+            ; Move right
             ldh a, [$9a]
             add $02
-            ld hl, $d035
+            ld hl, $d035 ; Adjust for camera velocity
             add [hl]
             ldh [$9a], a
-            jr jr_001_513c
-        jr_001_510a:
+            jr .endIf_F
+        .else_G:
+            ; Move left
             ldh a, [$9a]
             sub $02
-            ld hl, $d036
+            ld hl, $d036 ; Adjust for camera velocity
             sub [hl]
             ldh [$9a], a
-            jr jr_001_513c
+            jr .endIf_F
     
-    jr_001_5116:
+    .else_F:
+        ; Vertical case
+        ; Adjust horizontal position of wave
         ldh a, [$9a]
         add b
         ldh [$9a], a
+        ; Increment wave index
         ldh a, [$ba]
         inc a
         ldh [$ba], a
+        ; Check direction
         ldh a, [$98]
         bit 2, a
-        jr nz, jr_001_5132
+        jr nz, .else_H
+            ; Move down
             ldh a, [$99]
             add $02
-            ld hl, $d038
+            ld hl, $d038 ; Adjust for camera velocity
             add [hl]
             ldh [$99], a
-            jr jr_001_513c
-        jr_001_5132:
+            jr .endIf_F
+        .else_H:
+            ; Move up
             ldh a, [$99]
             sub $02
-            ld hl, $d037
+            ld hl, $d037 ; Adjust for camera velocity
             sub [hl]
             ldh [$99], a
-    jr_001_513c:
+    .endIf_F:
 
+    ; Save wave beam projectile to WRAM
+    ; Get WRAM pointer for current projectile
     ldh a, [$b7]
     ld l, a
     ldh a, [$b8]
     ld h, a
     inc hl
     inc hl
+    ; Save Y position
     ldh a, [$99]
     ld [hl+], a
+    ; Adjust for collision
     add $04
     ld [$c203], a
+    ; Save X position
     ldh a, [$9a]
     ld [hl+], a
+    ; Adjust for collision
     add $04
     ld [$c204], a
+    ; Save wave index
     ldh a, [$ba]
     ld [hl], a
+    ; Only collide every other frame
     ldh a, [frameCounter]
     and $01
-        jp z, Jump_001_52e0
+        jp z, .checkEnemies
     call beam_getTileIndex
     ld hl, beamSolidityIndex
     cp [hl]
-        jp nc, Jump_001_52e0
-
+        jp nc, .checkEnemies ; Block not destroyed
+    ; Destroy a block
     cp $04
-    jr nc, jr_001_5172
+    jr nc, .else_I
         call destroyRespawningBlock
-        jp Jump_001_52f3
-    jr_001_5172:
+        jp .nextProjectile
+    .else_I:
         ld h, HIGH(collisionArray)
         ld l, a
         ld a, [hl]
         bit blockType_shot, a
-        jp z, Jump_001_52f3
+        jp z, .nextProjectile
             ld a, $ff
             call Call_001_56e9
-        jp Jump_001_52f3
+        jp .nextProjectile
 ; end case
 
-table_5183: ; 01:5183 - Wave speed table
+.waveSpeedTable: ; 01:5183 - Wave speed table (transverse velocity)
     db $00, $07, $05, $02, $00, $fe, $fb, $f9, $00, $f9, $fb, $fe, $00, $02, $05, $07
     db $80
 
-table_5194: ; 01:5194 - Unused (alternate wave table -- motion blur makes it looks very spazer-like)
+.waveSpeedTable_alt: ; 01:5194 - Unused (alternate wave table -- motion blur makes it looks very spazer-like)
     db $0A, $F6, $F6, $0A, $0A, $F6, $F6, $0A, $0A, $F6, $F6, $0A, $80
 
-missileSpeedTable: ; 01:51A1 - Missile speed table (first value in array is unused)
+.missileSpeedTable: ; 01:51A1 - Missile speed table (first value in array is unused)
     db $00, $00, $01, $00, $00, $01, $00, $01, $00, $01, $00, $01, $01, $01, $01, $02
     db $01, $02, $01, $02, $02, $02, $02, $03, $02, $02, $03, $02, $03, $03, $03, $03
     db $04, $FF
 
-Jump_001_51c3: ; Missile
+.missileBranch: ; Missile
+    ; Use projectile frame counter as index into table
     ldh a, [$bb]
     ld e, a
     ld d, $00
-    ld hl, missileSpeedTable
+    ld hl, .missileSpeedTable
     add hl, de
     ld a, [hl]
     cp $ff
-    jr nz, jr_001_51d9
+    jr nz, .endif_J
         ; Decrement value so it doesn't overflow on the next tick
         ldh a, [$bb]
         dec a
         ldh [$bb], a
         ; Load second to last value from table
-        ld a, [missileSpeedTable + $20]
-    jr_001_51d9:
-
-    ld b, a
+        ld a, [.missileSpeedTable + $20]
+    .endif_J:
+    ld b, a ; Save speed to B
+    
+    ; Handle directions
     ldh a, [$98]
     bit 0, a
-    jr z, jr_001_51ec
+    jr z, .endif_K
+        ; Go right
         ldh a, [$9a]
         add b
         ld hl, $d035
         add [hl]
         ldh [$9a], a
-        jp Jump_001_5282
-    jr_001_51ec:
-        bit 1, a
-        jr z, jr_001_51fc
-            ldh a, [$9a]
-            sub b
-            ld hl, $d036
-            sub [hl]
-            ldh [$9a], a
-            jp Jump_001_5282
-        jr_001_51fc:
-            bit 2, a
-            jr z, jr_001_520b
-                ldh a, [$99]
-                sub b
-                ld hl, $d037
-                sub [hl]
-                ldh [$99], a
-                jr jr_001_5282
-            jr_001_520b:
-                ldh a, [$99]
-                add b
-                ld hl, $d038
-                add [hl]
-                ldh [$99], a
-                jr jr_001_5282
+        jp .commonBranch
+    .endif_K:
+    
+    bit 1, a
+    jr z, .endif_L
+        ; Go left
+        ldh a, [$9a]
+        sub b
+        ld hl, $d036
+        sub [hl]
+        ldh [$9a], a
+        jp .commonBranch
+    .endif_L:
+    
+    bit 2, a
+    jr z, .endif_M
+        ; Go up
+        ldh a, [$99]
+        sub b
+        ld hl, $d037
+        sub [hl]
+        ldh [$99], a
+        jr .commonBranch
+    .endif_M:
+
+    ; bit 3, a
+        ; Go down
+        ldh a, [$99]
+        add b
+        ld hl, $d038
+        add [hl]
+        ldh [$99], a
+        jr .commonBranch
 ; End case
 
-Jump_001_5216: ; Default projectile
+.defaultBranch: ; Default projectile
+    ; Handle directions
     ldh a, [$98]
     bit 0, a
-    jr z, jr_001_5234
+    jr z, .endIf_N
+        ; Move right
         ldh a, [$9a]
         add $04
-        ld hl, $d035
+        ld hl, $d035 ; Adjust for camera
         add [hl]
         ldh [$9a], a
         ldh a, [$b9]
-        cp $04 ; Plasma
-        jr nz, jr_001_5282
+        cp $04 ; Plasma speed
+        jr nz, .commonBranch
             ldh a, [$9a]
+            add $02 ; Default speed
+            ldh [$9a], a
+            jr .commonBranch
+    .endIf_N:
+    
+    bit 1, a
+    jr z, .endIf_O
+        ; Move left
+        ldh a, [$9a]
+        sub $04
+        ld hl, $d036
+        sub [hl]
+        ldh [$9a], a
+        ldh a, [$b9]
+        cp $04
+        jr nz, .commonBranch
+            ldh a, [$9a]
+            sub $02
+            ldh [$9a], a
+            jr .commonBranch
+    .endIf_O:
+        
+    bit 2, a
+    jr z, .endIf_P
+        ; Move up
+        ldh a, [$99]
+        sub $04
+        ld hl, $d037
+        sub [hl]
+        ldh [$99], a
+        ldh a, [$b9]
+        cp $04
+        jr nz, .commonBranch
+            ldh a, [$99]
+            sub $02
+            ldh [$99], a
+            jr .commonBranch
+    .endIf_P:
+    
+    ; bit 3, a
+        ; Move down
+        ldh a, [$99]
+        add $04
+        ld hl, $d038
+        add [hl]
+        ldh [$99], a
+        ldh a, [$b9]
+        cp $04
+        jr nz, .commonBranch
+            ldh a, [$99]
             add $02
-            ldh [$9a], a
-            jr jr_001_5282
-    jr_001_5234:
-        bit 1, a
-        jr z, jr_001_5250
-            ldh a, [$9a]
-            sub $04
-            ld hl, $d036
-            sub [hl]
-            ldh [$9a], a
-            ldh a, [$b9]
-            cp $04
-            jr nz, jr_001_5282
-                ldh a, [$9a]
-                sub $02
-                ldh [$9a], a
-                jr jr_001_5282
-        jr_001_5250:
-            bit 2, a
-            jr z, jr_001_526c
-                ldh a, [$99]
-                sub $04
-                ld hl, $d037
-                sub [hl]
-                ldh [$99], a
-                ldh a, [$b9]
-                cp $04
-                jr nz, jr_001_5282
-                    ldh a, [$99]
-                    sub $02
-                    ldh [$99], a
-                    jr jr_001_5282
-            jr_001_526c:
-                ldh a, [$99]
-                add $04
-                ld hl, $d038
-                add [hl]
-                ldh [$99], a
-                ldh a, [$b9]
-                cp $04
-                jr nz, jr_001_5282
-                    ldh a, [$99]
-                    add $02
-                    ldh [$99], a
+            ldh [$99], a
+; end case
 
-Jump_001_5282: ; Common projectile code
-jr_001_5282:
+.commonBranch: ; Common projectile code
+    ; HL = WRAM address of working projectile
     ldh a, [$b7]
     ld l, a
     ldh a, [$b8]
     ld h, a
     inc hl
     inc hl
+    ; Save Y
     ldh a, [$99]
     ld [hl+], a
+    ; Adjust for collision
     add $04
     ld [$c203], a
+    ; Save X
     ldh a, [$9a]
     ld [hl+], a
+    ; Adjust for collision
     add $04
     ld [$c204], a
+    ; Save wave index
     ldh a, [$ba]
     ld [hl+], a
+    ; Save projectile frame counter
     ldh a, [$bb]
     ld [hl], a
+    
     ldh a, [frameCounter]
     and $01
-    jr z, jr_001_52e0
-
-    call beam_getTileIndex
-    ld hl, beamSolidityIndex
-    cp [hl]
-    jr nc, jr_001_52e0
-
-    cp $04
-    jr nc, jr_001_52b8
-        call c, destroyRespawningBlock
-        jr jr_001_52c6
-    jr_001_52b8:
-        ld h, HIGH(collisionArray)
-        ld l, a
-        ld a, [hl]
-        bit blockType_shot, a
-        jp z, Jump_001_52c6
+    jr z, .else_Q
+    
+        call beam_getTileIndex
+        ld hl, beamSolidityIndex
+        cp [hl]
+        jr nc, .else_Q
+    
+            cp $04
+            jr nc, .else_R
+                call c, destroyRespawningBlock
+                jr .endIf_R
+            .else_R:
+                ld h, HIGH(collisionArray)
+                ld l, a
+                ld a, [hl]
+                bit blockType_shot, a
+                jp z, .endIf_R
+                    ld a, $ff
+                    call Call_001_56e9
+;                Jump_001_52c6:
+            .endIf_R:
+        
+            ldh a, [$b9]
+            cp $07 ; Bomb beam
+                call z, Call_001_53af
+            ; This gives the spazer/plasma beam the wall-clip property
+            cp $03 ; Spazer
+                jr z, .nextProjectile
+            cp $04 ; Plasma
+                jr z, .nextProjectile
+            ; Delete projectile
+            ldh a, [$b7]
+            ld l, a
+            ldh a, [$b8]
+            ld h, a
             ld a, $ff
-            call Call_001_56e9
-        Jump_001_52c6:
-    jr_001_52c6:
+            ld [hl], a
+            jr .endIf_Q
+    .else_Q:
+    .checkEnemies: ; Enemy processing
+        call Call_000_31b6 ; Projectile-enemy collision routine
+        jr nc, .endIf_Q
+            ; Delete projectile
+            ld a, $dd
+            ld h, a
+            ldh [$b8], a
+            ld a, [projectileIndex]
+            swap a
+            ld l, a
+            ld a, $ff
+            ld [hl], a
+    .endIf_Q:
+    
+    .nextProjectile: ; Next projectile
 
-    ldh a, [$b9]
-    cp $07 ; Bombs
-        call z, Call_001_53af
-    cp $03 ; Spazer
-        jr z, jr_001_52f3
-    cp $04 ; Plasma
-        jr z, jr_001_52f3
-
-    ldh a, [$b7]
-    ld l, a
-    ldh a, [$b8]
-    ld h, a
-    ld a, $ff
-    ld [hl], a
-    jr jr_001_52f3
-
-Jump_001_52e0:
-jr_001_52e0:
-    call Call_000_31b6
-    jr nc, jr_001_52f3
-
-    ld a, $dd
-    ld h, a
-    ldh [$b8], a
-    ld a, [projectileIndex]
-    swap a
-    ld l, a
-    ld a, $ff
-    ld [hl], a
-
-Jump_001_52f3:
-jr_001_52f3:
     ld a, [projectileIndex]
     inc a
     ld [projectileIndex], a
     cp $03
-    jp c, Jump_001_5011
+    jp c, .bigLoop
 ret
 
 
