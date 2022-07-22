@@ -5425,7 +5425,7 @@ executeDoorScript: ; 00:239C
     cp $b0 ; LOAD_BG/LOAD_SPR
     jr nz, .doorToken_copy
         xor a
-        ld [$d088], a
+        ld [saveMessageCooldownTimer], a
         ld [saveContactFlag], a
         ld a, $88
         ldh [rWY], a
@@ -5436,7 +5436,7 @@ executeDoorScript: ; 00:239C
     cp $00 ; COPY_DATA/COPY_BG/COPY_SPR
     jr nz, .doorToken_tiletable
         xor a
-        ld [$d088], a
+        ld [saveMessageCooldownTimer], a
         ld [saveContactFlag], a
         ld a, $88
         ldh [rWY], a

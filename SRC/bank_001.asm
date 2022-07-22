@@ -2703,159 +2703,177 @@ ret
     db $10 ; $12 - Morphball bombed
 
 ;------------------------------------------------------------------------------
+; Handle window display and saving, earthquake, low heath beep, fade in, and Metroid Queen cry
 Call_001_57f2: ; 01:57F2
-    ld a, [$d088]
+; Handle window display stuff
+    ; Decrement cooldown
+    ld a, [saveMessageCooldownTimer]
     and a
-    jr z, jr_001_57fc
+    jr z, .endIf_A
         dec a
-        ld [$d088], a
-    jr_001_57fc:
+        ld [saveMessageCooldownTimer], a
+    .endIf_A:
 
+    ; Skip this if in the Queen fight
     ld a, [$d08b]
     cp $11
-    jr z, jr_001_5873
+    jr z, .endIf_B
+        ldh a, [rLCDC]
+        bit 5, a
+        jr nz, .endIf_C
+            set 5, a ; Enable window display
+            ldh [rLCDC], a
+        .endIf_C:
+        
+        ld a, $88 ; Default window position
+        ldh [rWY], a
+        ; Check different cases for raising the window
+        ld a, [saveContactFlag] ; Only unset by door transitions and this function
+        and a
+        jr nz, .else_D
+            ; Check if item being collected
+            ld a, [$d093]
+            and a
+            jr z, .endIf_B
+                ld a, [$d093]
+                cp $0b ; Check if not a common item or refill
+                jr nc, .endIf_B
+                    ld a, $80 ; Higher window position
+                    ldh [rWY], a
+                    jr .endIf_B
+        .else_D:
+            ; Touching a save point
+            ld a, $80 ; Higher window position
+            ldh [rWY], a
+            ; Don't allow saving while "Completed" is displayed
+            ld a, [saveMessageCooldownTimer]
+            and a
+            jr nz, .endIf_E
+                ; Check input
+                ldh a, [hInputRisingEdge]
+                cp PADF_START
+                jr nz, .endIf_E
+                    ; Save!
+                    ld a, $09
+                    ldh [gameMode], a
+                    ; Let the "Completed" message show
+                    ld a, $ff
+                    ld [saveMessageCooldownTimer], a
+            .endIf_E:
 
-    ldh a, [rLCDC]
-    bit 5, a
-    jr nz, jr_001_580d
-        set 5, a
-        ldh [rLCDC], a
-    jr_001_580d:
+            ; Draw completed text when timer is non-zero
+            ld a, [saveMessageCooldownTimer]
+            and a
+            jr z, .else_F
+                ; Draw save "Completed" sprite
+                ld a, $98
+                ldh [hSpriteYPixel], a
+                ld a, $44
+                ldh [hSpriteXPixel], a
+                ld a, $43
+                ldh [hSpriteId], a
+                call drawSamusSprite
+                jr .endIf_B
+            .else_F:
+                ; Clear flag
+                xor a
+                ld [saveContactFlag], a
+                ; Draw blinking "Press Start" sprite
+                ldh a, [frameCounter]
+                bit 3, a
+                jr z, .endIf_B
+                    ld a, $98
+                    ldh [hSpriteYPixel], a
+                    ld a, $44
+                    ldh [hSpriteXPixel], a
+                    ld a, $42
+                    ldh [hSpriteId], a
+                    call drawSamusSprite
+    .endIf_B:
 
-    ld a, $88
-    ldh [rWY], a
-    ld a, [saveContactFlag]
-    and a
-        jr nz, jr_001_582a
-
-    ld a, [$d093]
-    and a
-    jr z, jr_001_5873
-
-    ld a, [$d093]
-    cp $0b
-    jr nc, jr_001_5873
-
-    ld a, $80
-    ldh [rWY], a
-    jr jr_001_5873
-
-jr_001_582a:
-    ld a, $80
-    ldh [rWY], a
-    ld a, [$d088]
-    and a
-    jr nz, jr_001_5843
-        ldh a, [hInputRisingEdge]
-        cp PADF_START
-        jr nz, jr_001_5843
-            ld a, $09
-            ldh [gameMode], a
-            ld a, $ff
-            ld [$d088], a
-    jr_001_5843:
-
-    ld a, [$d088]
-    and a
-    jr z, jr_001_585a
-        ; Draw save "Completed" sprite
-        ld a, $98
-        ldh [hSpriteYPixel], a
-        ld a, $44
-        ldh [hSpriteXPixel], a
-        ld a, $43
-        ldh [hSpriteId], a
-        call drawSamusSprite
-        jr jr_001_5873
-    jr_001_585a:
-        ; Draw blinking "Press Start" sprite
-        xor a
-        ld [saveContactFlag], a
-        ldh a, [frameCounter]
-        bit 3, a
-        jr z, jr_001_5873
-            ld a, $98
-            ldh [hSpriteYPixel], a
-            ld a, $44
-            ldh [hSpriteXPixel], a
-            ld a, $42
-            ldh [hSpriteId], a
-            call drawSamusSprite
-    jr_001_5873:
-
+; Earthquake stuff
+    ; Only do this stuff once every 256 frames
     ldh a, [frameCounter]
     and a
-    jr nz, jr_001_589a
+    jr nz, .endIf_G
+        ; Check if this is non-zero
         ld a, [nextEarthquakeTimer]
         and a
-        jr z, jr_001_589a
+        jr z, .endIf_G
+            ; Decrement timer
             dec a
             ld [nextEarthquakeTimer], a
-            jr nz, jr_001_589a
+            jr nz, .endIf_G
+                ; Activate earthquake
                 ld a, $ff
                 ld [earthquakeTimer], a
                 ld a, $0e
                 ld [$cede], a
+                ; Special case for last metroid (Queen)
                 ld a, [metroidCountReal]
                 cp $01
-                jr nz, jr_001_589a
+                jr nz, .endIf_G
                     ld a, $60
                     ld [earthquakeTimer], a
-    jr_001_589a:
+    .endIf_G:
 
+; Handle low health beep
+    ; Only play the low-health beep after the intro has finished
     ld a, [samusPose]
     cp pose_faceScreen
-    jr nz, jr_001_58ab
+    jr nz, .then_H
+        ld a, [countdownTimerLow]
+        ld b, a
+        ld a, [countdownTimerHigh]
+        or b
+        jr nz, .endIf_H
+        .then_H:
+            ; Skip ahead if health isn't below 50
+            ld a, [samusCurHealthHigh]
+            and a
+            jr nz, .else_I
+                ld a, [samusCurHealthLow]
+                cp $50
+                jr nc, .else_I
+                    ; Check if health decreased from the last frame
+                    ld b, a
+                    ld a, [$d0a1]
+                    cp b
+                    jr z, .endIf_H
+                        ; Queue up new sound effect based on tens digit
+                        ld a, b
+                        ld [$d0a1], a
+                        and $f0
+                        swap a
+                        inc a
+                        ld [$cfe5], a
+                        jr .endIf_H
+            .else_I:
+                ; Check if not already clear
+                ld a, [$cfe6]
+                and a
+                jr z, .endIf_H
+                    ; Clear the low health beep
+                    ld a, $ff
+                    ld [$cfe5], a
+    .endIf_H:
 
-    ld a, [countdownTimerLow]
-    ld b, a
-    ld a, [countdownTimerHigh]
-    or b
-    jr nz, jr_001_58d8
-
-jr_001_58ab:
-    ld a, [samusCurHealthHigh]
-    and a
-    jr nz, jr_001_58cd
-
-    ld a, [samusCurHealthLow]
-    cp $50
-    jr nc, jr_001_58cd
-
-    ld b, a
-    ld a, [$d0a1]
-    cp b
-    jr z, jr_001_58d8
-
-    ld a, b
-    ld [$d0a1], a
-    and $f0
-    swap a
-    inc a
-    ld [$cfe5], a
-    jr jr_001_58d8
-
-jr_001_58cd:
-    ld a, [$cfe6]
-    and a
-    jr z, jr_001_58d8
-
-    ld a, $ff
-    ld [$cfe5], a
-
-jr_001_58d8:
+; Handle fade-in
     ld a, [$d09b]
     and a
-    call nz, Call_001_7a45
+        call nz, fadeIn
+
+; Handle Queen's roar
     ld a, [$d0a6]
     and a
-    jr z, jr_001_58f0
+    jr z, .else_J
+        ; Only roar every 128 frames
         ldh a, [frameCounter]
         and $7f
-        jr nz, jr_001_58f0
+        jr nz, .else_J
             ld a, $17
             ld [sfxRequest_noise], a
-    jr_001_58f0:
+    .else_J:
 ret
 
 ; Item message pointers and strings:
@@ -3748,8 +3766,8 @@ drawSamus_earthquakeAdjustment: ; 01:7A34
 ret
 
 
-Call_001_7a45:
-    ld hl, table_7A69
+fadeIn: ; 01:7A45
+    ld hl, .fadeTable
     ld a, [$d09b]
     and $f0
     swap a
@@ -3768,7 +3786,7 @@ Call_001_7a45:
     ld [$d09b], a
 ret
 
-table_7A69: ; 01:7A69
+.fadeTable: ; 01:7A69
     db $93, $e7, $fb
 
 

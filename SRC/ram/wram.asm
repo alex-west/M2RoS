@@ -829,7 +829,7 @@ def samusDispHealthLow  = $D084 ; Samus' health for display,   see also $D051/$D
 def samusDispHealthHigh = $D085 ; Samus' energy tanks for display, see also $D052/$D819
 def samusDispMissilesLow  = $D086 ; Samus' missiles for display, see also $D053/$D81C
 def samusDispMissilesHigh = $D087 ; Samus' missiles for display (high byte)
-;$D088: Game save cooldown timer
+def saveMessageCooldownTimer = $D088 ; Cooldown timer for game save message (for displaying the "Completed" text)
 def metroidCountReal = $D089 ; Real number of metroids remaining (BCD)
 def beamSolidityIndex = $D08A ; Projectile solid block threshold
 ;$D08B: Metroid Queen's room flag. 11h: In Metroid Queen's room (set by screen transition command 8)
