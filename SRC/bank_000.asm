@@ -645,14 +645,14 @@ gameMode_Main:
     ; Jump ahead if being eaten by the Queen
     cp $18
     jp nc, Jump_000_0578
-
-    call Call_000_3d6d
+    ; Handle window height, save text, earthquake, low heath beep, fade in, and Metroid Queen cry
+    call miscIngameTasks_longJump
     ; Check if dead (when displayed health is zero)
     ld a, [samusDispHealthLow]
     ld b, a
     ld a, [samusDispHealthHigh]
     or b
-    call z, killSamus
+        call z, killSamus
     ldh a, [hSamusYPixel]
     ld [$d029], a
     ldh a, [hSamusYScreen]
@@ -719,12 +719,13 @@ jr_000_0571:
 
 
 Jump_000_0578:
-    call Call_000_3d6d
+    ; Handle window height, save text, earthquake, low heath beep, fade in, and Metroid Queen cry
+    call miscIngameTasks_longJump
     ld a, [samusDispHealthLow]
     ld b, a
     ld a, [samusDispHealthHigh]
     or b
-    call z, killSamus
+        call z, killSamus
     ldh a, [hSamusYPixel]
     ld [$d029], a
     ldh a, [hSamusYScreen]
@@ -9190,8 +9191,8 @@ LCDCInterruptHandler: ; 00:3D5C
 reti
 
 
-Call_000_3d6d: ; 00:3D6D
-    jpLong Call_001_57f2
+miscIngameTasks_longJump: ; 00:3D6D
+    jpLong miscIngameTasks
 
 adjustHudValues_longJump: ; 00:3D78
     jpLong adjustHudValues

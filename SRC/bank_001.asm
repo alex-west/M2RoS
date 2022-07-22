@@ -2703,8 +2703,8 @@ ret
     db $10 ; $12 - Morphball bombed
 
 ;------------------------------------------------------------------------------
-; Handle window display and saving, earthquake, low heath beep, fade in, and Metroid Queen cry
-Call_001_57f2: ; 01:57F2
+; Handle window height, save text, earthquake, low heath beep, fade in, and Metroid Queen cry
+miscIngameTasks: ; 01:57F2
 ; Handle window display stuff
     ; Decrement cooldown
     ld a, [saveMessageCooldownTimer]
