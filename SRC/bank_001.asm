@@ -1528,7 +1528,7 @@ jp .commonBranch
         bit blockType_shot, a
         jp z, .nextProjectile
             ld a, $ff
-            call Call_001_56e9
+            call destroyBlock
         jp .nextProjectile
 ; end case
 
@@ -1724,13 +1724,13 @@ jp .commonBranch
                 bit blockType_shot, a
                 jp z, .endIf_R
                     ld a, $ff
-                    call Call_001_56e9
+                    call destroyBlock
 ;                Jump_001_52c6:
             .endIf_R:
         
             ldh a, [$b9]
             cp $07 ; Bomb beam
-                call z, Call_001_53af
+                call z, bombBeam_layBomb
             ; This gives the spazer/plasma beam the wall-clip property
             cp $03 ; Spazer
                 jr z, .nextProjectile
@@ -1768,82 +1768,94 @@ jp .commonBranch
     jp c, .bigLoop
 ret
 
-
-Call_001_5300: ; draw projectiles ; 01:5300
+; Draw projectiles
+drawProjectiles: ; 01:5300
     ld a, $00
     ld [projectileIndex], a
 
-    Jump_001_5305:
+    .projectileLoop:
+        ; Convert index into pointer
         ld hl, projectileArray
         ld a, [projectileIndex]
         swap a
         ld e, a
         ld d, $00
         add hl, de
+        ; Load weapon type to D, check if slot is used
         ld a, [hl+]
         ld d, a
         cp $ff
-        jp z, Jump_001_5390
+        jp z, .nextProjectile
+            ; Load direction to C (for missiles)
             ld a, [hl+]
             ld c, a
+            ; Load Y pos, adjust for camera
             ld a, [scrollY]
             ld b, a
             ld a, [hl+]
             sub b
             ldh [hSpriteYPixel], a
+            ; Load X pos, adjust for camera
             ld a, [scrollX]
             ld b, a
             ld a, [hl]
             sub b
             ldh [hSpriteXPixel], a
+            ; Set attribute
             xor a
             ldh [hSpriteAttr], a
+            ; Check if missile
             ld a, d
             cp $08
-            jr nz, jr_001_534c
+            jr nz, .else_A
+                ; Missile case
                 push hl
-                ld hl, table_539D
-                ld a, c
-                ld e, a
-                ld d, $00
-                add hl, de
-                ld a, [hl]
-                ldh [hSpriteId], a
-                
-                ld hl, table_53A6
-                ld a, c
-                ld e, a
-                ld d, $00
-                add hl, de
-                ld a, [hl]
-                ldh [hSpriteAttr], a
-                pop hl
-                jr jr_001_5359
-            jr_001_534c:
-                ld a, $7e
-                ldh [hSpriteId], a
-                ld a, c
-                and $03
-                jr nz, jr_001_5359
-                    ld a, $7f
+                    ; Load sprite tile for direction
+                    ld hl, .missileSpriteTileTable
+                    ld a, c
+                    ld e, a
+                    ld d, $00
+                    add hl, de
+                    ld a, [hl]
                     ldh [hSpriteId], a
-            jr_001_5359:
-        
+                    ; Load sprite attribute for direction
+                    ld hl, .missileSpriteAttributeTable
+                    ld a, c
+                    ld e, a
+                    ld d, $00
+                    add hl, de
+                    ld a, [hl]
+                    ldh [hSpriteAttr], a
+                pop hl
+                jr .endIf_A
+            .else_A:
+                ; Beam case
+                ld a, $7e ; Horizontal sprite
+                ldh [hSpriteId], a
+                ld a, c
+                and %0011 ; Left or right
+                jr nz, .endIf_A
+                    ld a, $7f ; Vertical sprite
+                    ldh [hSpriteId], a
+            .endIf_A:
+            ; Check if sprite is offscreen
             ldh a, [hSpriteXPixel]
             cp $08
-            jr c, jr_001_538a
+            jr c, .else_B
                 ldh a, [hSpriteXPixel]
                 cp $a4
-                jr nc, jr_001_538a
+                jr nc, .else_B
                     ldh a, [hSpriteYPixel]
                     cp $0c
-                    jr c, jr_001_538a
+                    jr c, .else_B
                         ldh a, [hSpriteYPixel]
                         cp $94
-                        jr nc, jr_001_538a
-                            ld h, $c0
+                        jr nc, .else_B
+                            ; Set HL to current top of OAM buffer
+                            ld h, HIGH(wram_oamBuffer)
                             ldh a, [hOamBufferIndex]
                             ld l, a
+                            ; Write the things
                             ldh a, [hSpriteYPixel]
                             ld [hl+], a
                             ldh a, [hSpriteXPixel]
@@ -1852,61 +1864,73 @@ Call_001_5300: ; draw projectiles ; 01:5300
                             ld [hl+], a
                             ldh a, [hSpriteAttr]
                             ld [hl+], a
+                            ; Update the OAM buffer index
                             ld a, l
                             ldh [hOamBufferIndex], a
+                            ; Clear this variable (why?)
                             xor a
                             ldh [hSpriteAttr], a
-                            jr jr_001_5390
-            jr_001_538a:
+                            jr .endIf_B
+            .else_B:
+                ; Abort rendering
                 dec hl
                 dec hl
                 dec hl
+                ; Delete projectile
                 ld a, $ff
                 ld [hl], a
-            jr_001_5390:
-        Jump_001_5390:
-    
+            .endIf_B:
+        .nextProjectile:
+        ; Move on to next projectile if it exists
         ld a, [projectileIndex]
         inc a
         ld [projectileIndex], a
         cp $03
-    jp c, Jump_001_5305
+    jp c, .projectileLoop
 ret
 
 ; 01:539D - Missile sprite table
-table_539D:
+.missileSpriteTileTable:
     db $00, $98, $98, $00, $99, $00, $00, $00, $99
 ; 01:53A6 - Missile attribute table
-table_53A6:
+.missileSpriteAttributeTable:
     db $00, $00, $20, $00, $00, $00, $00, $00, $40
 
 ;------------------------------------------------------------------------------
 ; Bomb stuff
-Call_001_53af: ; Bomb beam code !?
-    ld hl, $dd30
-    jr_001_53b2:
+
+; Bomb beam code
+bombBeam_layBomb: ; 01:53AF
+    ; Find first open bomb slot (if available)
+    ld hl, bombArray
+    .loop:
         ld a, [hl]
         cp $ff
-            jr z, jr_001_53c3
+            jr z, .break
         ld de, $0010
         add hl, de
         ld a, l
         swap a
         cp $06
-    jr nz, jr_001_53b2
-    ret
-    
-jr_001_53c3:
+    jr nz, .loop
+        ret
+    .break:
+
+    ; Set bomb type
     ld a, $01
     ld [hl+], a
+    ; Set timer
     ld a, $60
     ld [hl+], a
+    ; Set y pos
     ldh a, [$99]
     add $04
     ld [hl+], a
+    ; Set x pos
     ldh a, [$9a]
     add $04
     ld [hl+], a
+    ; Play sound
     ld a, $13
     ld [sfxRequest_square1], a
 ret
@@ -1918,31 +1942,36 @@ samus_layBomb: ; 01:53D9 - Lay bombs
     ldh a, [hInputRisingEdge]
     bit PADB_B, a
         ret z
-    ld hl, $dd30
-
-    jr_001_53e7:
+    ; Find first open bomb slot (if available)
+    ld hl, bombArray
+    .loop:
         ld a, [hl]
         cp $ff
-            jr z, jr_001_53f8
+            jr z, .break
         ld de, $0010
         add hl, de
         ld a, l
         swap a
         cp $06
-    jr nz, jr_001_53e7
-    ret ; Return without laying a bomb
-    
-jr_001_53f8:
+    jr nz, .loop
+        ret ; Return without laying a bomb
+    .break:
+
+    ; Set bomb type
     ld a, $01
     ld [hl+], a
+    ; Set timer
     ld a, $60
     ld [hl+], a
+    ; Set ypos
     ldh a, [hSamusYPixel]
     add $26
     ld [hl+], a
+    ; Set xpos
     ldh a, [hSamusXPixel]
     add $10
     ld [hl+], a
+    ; Play sound
     ld a, $13
     ld [sfxRequest_square1], a
 ret
@@ -2039,7 +2068,7 @@ Call_001_549d: ; 00:549D
     ld [projectileIndex], a
 
     jr_001_54a1:
-        ld hl, $dd30
+        ld hl, bombArray
         ld a, [projectileIndex]
         swap a
         add l
@@ -2140,7 +2169,7 @@ Call_001_54d7: ; 01:54D7
         bit blockType_bomb, a
         jp z, Jump_001_554d
             ld a, $ff
-            call Call_001_56e9
+            call destroyBlock
         Jump_001_554d:
     jr_001_554d:
 
@@ -2158,7 +2187,7 @@ Call_001_54d7: ; 01:54D7
         bit blockType_bomb, a
         jp z, Jump_001_556d
             ld a, $ff
-            call Call_001_56e9
+            call destroyBlock
         Jump_001_556d:
     jr_001_556d:
 
@@ -2177,7 +2206,7 @@ Call_001_54d7: ; 01:54D7
         bit blockType_bomb, a
         jp z, Jump_001_558f
             ld a, $ff
-            call Call_001_56e9
+            call destroyBlock
         Jump_001_558f:
     jr_001_558f:
 
@@ -2198,7 +2227,7 @@ Call_001_54d7: ; 01:54D7
         bit blockType_bomb, a
         jp z, Jump_001_55b7
             ld a, $ff
-            call Call_001_56e9
+            call destroyBlock
         Jump_001_55b7:
     jr_001_55b7:
 
@@ -2217,7 +2246,7 @@ Call_001_54d7: ; 01:54D7
         bit blockType_bomb, a
         jp z, Jump_001_55d9
             ld a, $ff
-            call Call_001_56e9
+            call destroyBlock
         Jump_001_55d9:
     jr_001_55d9:
 
@@ -2374,24 +2403,29 @@ table_5653: ; 01:5653 - Possible shot directions
 ;------------------------------------------------------------------------------
 
 destroyRespawningBlock: ; 01:5671
-    ld hl, $d900
-
+    ld hl, respawningBlockArray
     .findLoop:
+        ; Exit loop if frame counter is zero
         ld a, [hl]
         and a
-            jr z, .break    
+            jr z, .break
+        ; Iterate to next block
         ld a, l
         add $10
         ld l, a
+        ; Exit if we're at the end of the page
         cp $00
             ret z
     jr .findLoop
     .break:
 
+    ; Set frame counter
     ld a, $01
     ld [hl+], a
+    ; Set Y pos
     ld a, [$c203]
     ld [hl+], a
+    ; Set X pos
     ld a, [$c204]
     ld [hl+], a
     ; Request sound effect
@@ -2400,7 +2434,7 @@ destroyRespawningBlock: ; 01:5671
 ret
 
 handleRespawningBlocks: ; 01:5692
-    ld hl, $d900
+    ld hl, respawningBlockArray
     .loop:
         ; Skip block if timer is zero
         ld a, [hl]
@@ -2416,41 +2450,42 @@ handleRespawningBlocks: ; 01:5692
             ld [$c203], a
             sub b
             and $f0
-            cp $c0
+            cp $c0 ; Remove from table if offscreen
                 jr z, .removeBlock
         
-            ; Control scroll x and tile x
+            ; Compare scroll x and tile x
             ld a, [scrollX]
             ld b, a
             ld a, [hl]
             ld [$c204], a
             sub b
             and $f0
-            cp $d0
+            cp $d0 ; Remove from table if offscreen
                 jr z, .removeBlock
         
             dec hl
             dec hl
             ld a, [hl]
             cp $02
-                jp z, Jump_001_5742
+                jp z, destroyBlock.frame_A
             cp $07
-                jp z, Jump_001_5769
+                jp z, destroyBlock.frame_B
             cp $0d
-                jr z, jr_001_56e9
+                jr z, destroyBlock.empty ; Deleted
             cp $f6
-                jp z, Jump_001_5769
+                jp z, destroyBlock.frame_B
             cp $fa
-                jr z, jr_001_5742
+                jr z, destroyBlock.frame_A
             cp $fe
-                jr z, jr_001_5712
+                jr z, destroyBlock.reform ; Reformed
         
             jr .nextBlock
         
-        .removeBlock: ; Clear the 
+        .removeBlock: ; Clear the block from the array
             ld a, l
             and $f0
             ld l, a
+            ; Clear timer for block
             xor a
             ld [hl], a
     
@@ -2463,26 +2498,26 @@ handleRespawningBlocks: ; 01:5692
     jr nz, .loop
 ret
 
-
-Call_001_56e9:
-jr_001_56e9: ; Destroy block (frame 3)
+destroyBlock: ; 01:56E9
+.empty: ; Destroy block (frame 3 - empty)
     call getTilemapAddress
+    ; Load return arg into HL
     ld a, [$c215]
-    and $de
+    and $de ; Bit-fiddling to ensure it's the top-left corner of the tile?
     ld l, a
     ld a, [$c216]
     ld h, a
-    ld de, $001f
+    ld de, $001f ; Distance in memory between top-right and bottom-left tile
 
-    jr_001_56f9:
+    .waitLoop_A:
         ldh a, [rSTAT]
         and $03
-    jr nz, jr_001_56f9
+    jr nz, .waitLoop_A
 
-    jr_001_56ff:
+    .waitLoop_B:
         ldh a, [rSTAT]
         and $03
-    jr nz, jr_001_56ff
+    jr nz, .waitLoop_B
 
     ; Destroy block (turn to blank)
     ld a, $ff
@@ -2491,13 +2526,12 @@ jr_001_56e9: ; Destroy block (frame 3)
     add hl, de
     ld [hl+], a
     ld [hl], a
-
+    ; Play sound
     ld a, $04
     ld [sfxRequest_noise], a
 ret
 
-
-jr_001_5712: ; Restore block (frame 3)
+.reform: ; 01:5712 - Fully restore block (frame 6)
     xor a
     ld [hl], a
     call getTilemapAddress
@@ -2508,15 +2542,15 @@ jr_001_5712: ; Restore block (frame 3)
     ld h, a
     ld de, $001f
 
-    jr_001_5724:
+    .waitLoop_C:
         ldh a, [rSTAT]
         and $03
-    jr nz, jr_001_5724
+    jr nz, .waitLoop_C
 
-    jr_001_572a:
+    .waitLoop_D:
         ldh a, [rSTAT]
         and $03
-    jr nz, jr_001_572a
+    jr nz, .waitLoop_D
 
     xor a
     ld [hl+], a
@@ -2527,16 +2561,14 @@ jr_001_5712: ; Restore block (frame 3)
     ld [hl+], a
     inc a
     ld [hl], a
+    ; Hurt Samus if applicable
     ld a, [samusInvulnerableTimer]
     and a
         ret nz
-
-    call Call_001_5790
+    call .hurtSamus
 ret
 
-
-Jump_001_5742: ; Destroy block (frame 1), Restore block (frame 2)
-jr_001_5742:
+.frame_A: ; Destroy block (frames 1, 5)
     call getTilemapAddress
     ld a, [$c215]
     and $de
@@ -2545,15 +2577,15 @@ jr_001_5742:
     ld h, a
     ld de, $001f
 
-    jr_001_5752:
+    .waitLoop_E:
         ldh a, [rSTAT]
         and $03
-    jr nz, jr_001_5752
+    jr nz, .waitLoop_E
 
-    jr_001_5758:
+    .waitLoop_F:
         ldh a, [rSTAT]
         and $03
-    jr nz, jr_001_5758
+    jr nz, .waitLoop_F
 
     ld a, $04
     ld [hl+], a
@@ -2566,8 +2598,7 @@ jr_001_5742:
     ld [hl], a
 ret
 
-
-Jump_001_5769: ; Destroy block (frame 2), Restore block (frame 1)
+.frame_B: ; Destroy block (frames 2, 4)
     call getTilemapAddress
     ld a, [$c215]
     and $de
@@ -2576,15 +2607,15 @@ Jump_001_5769: ; Destroy block (frame 2), Restore block (frame 1)
     ld h, a
     ld de, $001f
 
-    jr_001_5779:
+    .waitLoop_G:
         ldh a, [rSTAT]
         and $03
-    jr nz, jr_001_5779
+    jr nz, .waitLoop_G
 
-    jr_001_577f:
+    .waitLoop_H:
         ldh a, [rSTAT]
         and $03
-    jr nz, jr_001_577f
+    jr nz, .waitLoop_H
 
     ld a, $08
     ld [hl+], a
@@ -2595,19 +2626,20 @@ Jump_001_5769: ; Destroy block (frame 2), Restore block (frame 1)
     ld [hl+], a
     inc a
     ld [hl], a
-    ret
+ret
 
-
-Call_001_5790:
-    ; Index into table with Samus' pose
-    ld hl, table_57DF
+.hurtSamus: ; 01:5790
+    ; Index into height table using Samus' pose
+    ld hl, .samusHeightTable
     ld a, [samusPose]
     ld e, a
     ld d, $00
     add hl, de
-    
+    ; Save height
     ld a, [hl]
     ld b, a
+
+    ; Bounds checking for y position
     ld a, [$c203]
     sub $10
     and $f0
@@ -2618,7 +2650,7 @@ Call_001_5790:
     sub c
     cp b
         jr nc, .exit
-
+    ; Bounds checking for x position
     ld a, [$c204]
     sub $08
     and $f0
@@ -2629,30 +2661,46 @@ Call_001_5790:
     sub b
     cp $18
         jr nc, .exit
-
+    ; Set damage boosting direction depending of x position
     cp $0c
     jr nc, .else
-        ld a, $ff
+        ld a, $ff ; Left
         ld [$c423], a
         jr .endIf
     .else:
-        ld a, $01
+        ld a, $01 ; Right
         ld [$c423], a
     .endIf:
-    
+    ; Hurt samus
     ld a, $01
     ld [samus_hurtFlag], a
     ld a, $02
     ld [samus_damageValue], a
     call destroyRespawningBlock
 
-.exit:
-    ret
+    .exit:
+ret
 
-; Pose related
-table_57DF: ; 01:57DF
-    db $20, $20, $20, $20, $20, $10, $10, $20, $10, $20, $20, $10, $10, $10, $10, $20
-    db $10, $20, $10
+.samusHeightTable: ; 01:57DF
+    db $20 ; $00 - Standing
+    db $20 ; $01 - Jumping
+    db $20 ; $02 - Spin-jumping
+    db $20 ; $03 - Running (set to 83h when turning)
+    db $20 ; $04 - Crouching
+    db $10 ; $05 - Morphball
+    db $10 ; $06 - Morphball jumping
+    db $20 ; $07 - Falling
+    db $10 ; $08 - Morphball falling
+    db $20 ; $09 - Starting to jump
+    db $20 ; $0A - Starting to spin-jump
+    db $10 ; $0B - Spider ball rolling
+    db $10 ; $0C - Spider ball falling
+    db $10 ; $0D - Spider ball jumping
+    db $10 ; $0E - Spider ball
+    db $20 ; $0F - Knockback
+    db $10 ; $10 - Morphball knockback
+    db $20 ; $11 - Standing bombed
+    db $10 ; $12 - Morphball bombed
 
 ;------------------------------------------------------------------------------
 Call_001_57f2: ; 01:57F2

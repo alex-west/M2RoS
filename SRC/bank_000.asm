@@ -692,7 +692,7 @@ jr_000_053e:
     call Call_000_2366 ; Calculate scroll offsets
     call handleItemPickup
     call drawSamus_longJump ; Draw Samus
-    call Call_000_3da4 ; Draw projectiles
+    call drawProjectiles_longJump ; Draw projectiles
     call handleRespawningBlocks_longJump ; Handle respawning blocks
     call adjustHudValues_longJump ; Handle missile/energy counters
     ; Decrease counter (minimum of zero)
@@ -744,7 +744,7 @@ Jump_000_0578:
     call Call_000_08fe
     call Call_000_2366
     call drawSamus_longJump
-    call Call_000_3da4
+    call drawProjectiles_longJump
     call handleRespawningBlocks_longJump
     call adjustHudValues_longJump
     ld a, [$d049]
@@ -9139,8 +9139,8 @@ Call_000_3cba: ; 00:3CBA
     ld [rMBC_BANK_REG], a
 ret
 
-Call_000_3cce: ; 00:3CCE
-    callFar Call_001_56e9 ; $56e9
+destroyBlock_farCall: ; 00:3CCE
+    callFar destroyBlock ; $56e9
     switchBank enAI_7BE5 ; The Baby
 ret
 
@@ -9205,8 +9205,8 @@ handleProjectiles_longJump: ; 00:3D8E
 Call_000_3d99: ; 00:3D99
     jpLong Call_001_549d ; $549d
 
-Call_000_3da4: ; 00:3DA4
-    jpLong Call_001_5300
+drawProjectiles_longJump: ; 00:3DA4
+    jpLong drawProjectiles
 
 samusShoot_longJump: ; 00:3DAF
     jpLong samusShoot

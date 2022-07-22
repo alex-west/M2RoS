@@ -950,6 +950,8 @@ saveBuf_gameTimeHours:   ds 1 ; $D824: In-game timer, hours
 saveBuf_metroidCountDisplayed: ds 1 ; $D825: Number of Metroids remaining
 ;}
 
+section "Tiletable Array", wramx[$d900]
+respawningBlockArray:: ds $100
 ;$D900..FF: Respawning block data. 10h byte slots
 ;{
 ;    + 0: Frame counter
@@ -957,7 +959,6 @@ saveBuf_metroidCountDisplayed: ds 1 ; $D825: Number of Metroids remaining
 ;    + 2: X position
 ;}
 
-section "Tiletable Array", wramx[$da00]
 tiletableArray:: ds $200 ;$DA00..DBFF: Metatile definitions
 collisionArray:: ds $100 ;$DC00..FF: Tile properties. Indexed by tilemap value. Note that tilemap value < 4 is a respawning shot block
 ;{  mask - bitnum
@@ -993,7 +994,7 @@ projectileArray:: ds $10 * 3 ;$DD00..2F: Projectile data. 10h byte slots
 ;    + 4: Wave index
 ;    + 5: Frame counter
 ;}
-;$DD30..5F: Bomb data. 10h byte slots
+bombArray:: ds $10 * 3 ;$DD30..5F: Bomb data. 10h byte slots
 ;{
 ;    + 0: Type
 ;        1: Bomb

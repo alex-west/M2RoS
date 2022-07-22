@@ -10670,7 +10670,7 @@ ret
 
 
 baby_clearBlock: ; 02:7D97
-    call Call_000_3cce
+    call destroyBlock_farCall
     ld a, $16
     ld [sfxRequest_noise], a
 ret
