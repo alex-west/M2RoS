@@ -1004,10 +1004,11 @@ bombArray:: ds $10 * 3 ;$DD30..5F: Bomb data. 10h byte slots
 ;    + 2: Y position
 ;    + 3: X position
 ;}
-;$DD60..FF: Unused
-;$DE00..FF: Metatile update entries
+unusedWRAM_DD60: ds $100 - $60 ;$DD60..FF: Unused
+metatileUpdateBuffer:: ds $100 ;$DE00..FF: Metatile update entries
 ;{
-;    + 0: VRAM background tilemap destination address. $0000 terminates update
+;    + 0: VRAM background tilemap destination address.
+;         - $0000 terminates update
 ;    + 2: Top-left tile
 ;    + 3: Top-right tile
 ;    + 4: Bottom-left tile

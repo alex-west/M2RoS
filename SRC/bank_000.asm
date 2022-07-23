@@ -111,7 +111,7 @@ VBlankHandler: ; 00:0154
     ld a, [deathAnimTimer]
     and a
         jp nz, VBlank_deathSequence
-    ; Some other VRAM 
+    ; VRAM data transfer
     ld a, [$d047]
     and a
         jp nz, Jump_000_2ba3
@@ -594,10 +594,10 @@ gameMode_LoadB:
     switchBankVar [currentLevelBank]
     ; Render map
     jr_000_048a:
-        ld a, $00
-        ldh [$af], a
-        ld a, $de
-        ldh [$b0], a
+        ld a, LOW(metatileUpdateBuffer)
+        ldh [metatileUpdateBufferPointerLow], a
+        ld a, HIGH(metatileUpdateBuffer)
+        ldh [metatileUpdateBufferPointerHigh], a
         call Call_000_06cc
         call Call_000_08cf
         ldh a, [hCameraYPixel]
@@ -669,24 +669,22 @@ gameMode_Main:
         ld [samusPose], a
         ldh a, [hInputRisingEdge]
         bit PADB_SELECT, a
-        call nz, toggleMissiles
+            call nz, toggleMissiles
         jr jr_000_053e
     jr_000_0522:
+        ld a, [doorScrollDirection]
+        and a
+        jr nz, jr_000_053e
+            xor a
+            ld [$d05c], a
+            call Call_000_2ee3 ; Damage Samus
+            call samus_handlePose ; Samus pose handler
+            call Call_000_32ab ; ? Samus/enemy collision logic
+            call Call_000_21fb ; Handle shooting or toggling cannon
+            call handleProjectiles_longJump ; Handle projectiles
+            call Call_000_3d99 ; Handle bombs
+    jr_000_053e:
 
-    ld a, [doorScrollDirection]
-    and a
-    jr nz, jr_000_053e
-
-    xor a
-    ld [$d05c], a
-    call Call_000_2ee3 ; Damage Samus
-    call samus_handlePose ; Samus pose handler
-    call Call_000_32ab ; ? Samus/enemy collision logic
-    call Call_000_21fb ; Handle shooting or toggling cannon
-    call handleProjectiles_longJump ; Handle projectiles
-    call Call_000_3d99 ; Handle bombs
-
-jr_000_053e:
     call Call_000_0698 ; Handle loading blocks
     call Call_000_08fe ; Handle scrolling/triggering door transitions
     call Call_000_2366 ; Calculate scroll offsets
@@ -709,13 +707,12 @@ jr_000_053e:
     ld a, [doorIndexLow]
     and a
     jr nz, jr_000_0571
+        call Call_000_05de ; Handle enemies
+    jr_000_0571:
 
-    call Call_000_05de ; Handle enemies
-
-jr_000_0571:
     call clearUnusedOamSlots_longJump ; Clear unused OAM
     call tryPausing ; Handle pausing ?
-    ret
+ret
 
 
 Jump_000_0578:
@@ -827,10 +824,10 @@ Call_000_0673:
     ldh [$cf], a
 
 jr_000_0680:
-    ld a, $00
-    ldh [$af], a
-    ld a, $de
-    ldh [$b0], a
+    ld a, LOW(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerLow], a
+    ld a, HIGH(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerHigh], a
     call Call_000_0788
     call Call_000_08cf
     ldh a, [$cc]
@@ -844,33 +841,27 @@ jr_000_0680:
 
 Call_000_0698:
     switchBankVar [currentLevelBank]
-    ld a, $00
-    ldh [$af], a
-    ld a, $de
-    ldh [$b0], a
+    ld a, LOW(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerLow], a
+    ld a, HIGH(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerHigh], a
     xor a
     ld [$d04c], a
     ldh a, [frameCounter]
     and $03
-    jr z, jr_000_06c1
-
+        jr z, jr_000_06c1
     cp $01
-    jr z, jr_000_06f3
-
+        jr z, jr_000_06f3
     cp $02
-    jr z, jr_000_0724
-
+        jr z, jr_000_0724
     cp $03
-    jp z, Jump_000_0756
-
-    ret
-
+        jp z, Jump_000_0756
+ret ; Should never end up here
 
 jr_000_06c1:
     ld a, [$d023]
     bit 6, a
-    ret z
-
+        ret z
     ld a, $ff
     ld [$d04c], a
 
@@ -898,8 +889,7 @@ Call_000_06cc:
 jr_000_06f3:
     ld a, [$d023]
     bit 7, a
-    ret z
-
+        ret z
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -924,8 +914,7 @@ jr_000_06f3:
 jr_000_0724:
     ld a, [$d023]
     bit 5, a
-    ret z
-
+        ret z
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -947,12 +936,10 @@ jr_000_0724:
     ld [$d023], a
     jp Jump_000_07e4
 
-
 Jump_000_0756:
     ld a, [$d023]
     bit 4, a
-    ret z
-
+        ret z
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -980,62 +967,61 @@ Jump_000_0788:
 jr_000_0788:
     call Call_000_0835
     ld a, $10
-    ldh [$ae], a
+    ldh [metatileUpdateSize], a
 
-jr_000_078f:
-    call Call_000_0886
-    ldh a, [$aa]
-    add $02
-    ldh [$aa], a
-    ldh a, [$ab]
-    adc $00
-    and $9b
-    ldh [$ab], a
-    ldh a, [$aa]
-    and $df
-    ldh [$aa], a
-    ldh a, [$ad]
-    add $01
-    ldh [$ad], a
-    and $0f
-    jr nz, jr_000_07d2
-
-    ldh a, [$ad]
-    sub $10
-    ldh [$ad], a
-    ldh a, [$ac]
-    and $f0
-    ld b, a
-    ldh a, [$ac]
-    inc a
-    and $0f
-    or b
-    ldh [$ac], a
-    ld e, a
-    ld d, $00
-    sla e
-    rl d
-    ld hl, $4000
-    add hl, de
-    ld a, [hl+]
-    ld c, a
-    ld a, [hl]
-    ld b, a
-
-jr_000_07d2:
-    ldh a, [$ae]
-    dec a
-    ldh [$ae], a
+    jr_000_078f:
+        call Call_000_0886
+        ldh a, [metatileDestAddrLow]
+        add $02
+        ldh [metatileDestAddrLow], a
+        ldh a, [metatileDestAddrHigh]
+        adc $00
+        and $9b
+        ldh [metatileDestAddrHigh], a
+        ldh a, [metatileDestAddrLow]
+        and $df
+        ldh [metatileDestAddrLow], a
+        ldh a, [metatileUpdateSourceBlock]
+        add $01
+        ldh [metatileUpdateSourceBlock], a
+        and $0f
+        jr nz, jr_000_07d2
+            ldh a, [metatileUpdateSourceBlock]
+            sub $10
+            ldh [metatileUpdateSourceBlock], a
+            ldh a, [metatileUpdateSourceScreen]
+            and $f0
+            ld b, a
+            ldh a, [metatileUpdateSourceScreen]
+            inc a
+            and $0f
+            or b
+            ldh [metatileUpdateSourceScreen], a
+            ld e, a
+            ld d, $00
+            sla e
+            rl d
+            ld hl, $4000
+            add hl, de
+            ld a, [hl+]
+            ld c, a
+            ld a, [hl]
+            ld b, a
+        jr_000_07d2:
+    
+        ldh a, [metatileUpdateSize]
+        dec a
+        ldh [metatileUpdateSize], a
     jr nz, jr_000_078f
 
-    ldh a, [$af]
+    ldh a, [metatileUpdateBufferPointerLow]
     ld l, a
-    ldh a, [$b0]
+    ldh a, [metatileUpdateBufferPointerHigh]
     ld h, a
     ld a, $00
     ld [hl+], a
     ld [hl], a
-    ret
+ret
 
 
 Call_000_07e4:
@@ -1045,51 +1031,50 @@ Jump_000_07e4:
     ld [$d023], a
     call Call_000_0835
     ld a, $10
-    ldh [$ae], a
+    ldh [metatileUpdateSize], a
 
-jr_000_07f3:
-    call Call_000_0886
-    ldh a, [$aa]
-    add $40
-    ldh [$aa], a
-    ldh a, [$ab]
-    adc $00
-    and $9b
-    ldh [$ab], a
-    ldh a, [$ad]
-    add $10
-    ldh [$ad], a
-    and $f0
-    jr nz, jr_000_0823
-
-    ldh a, [$ac]
-    add $10
-    ldh [$ac], a
-    ld e, a
-    ld d, $00
-    sla e
-    rl d
-    ld hl, $4000
-    add hl, de
-    ld a, [hl+]
-    ld c, a
-    ld a, [hl]
-    ld b, a
-
-jr_000_0823:
-    ldh a, [$ae]
-    dec a
-    ldh [$ae], a
+    jr_000_07f3:
+        call Call_000_0886
+        ldh a, [metatileDestAddrLow]
+        add $40
+        ldh [metatileDestAddrLow], a
+        ldh a, [metatileDestAddrHigh]
+        adc $00
+        and $9b
+        ldh [metatileDestAddrHigh], a
+        ldh a, [metatileUpdateSourceBlock]
+        add $10
+        ldh [metatileUpdateSourceBlock], a
+        and $f0
+        jr nz, jr_000_0823
+            ldh a, [metatileUpdateSourceScreen]
+            add $10
+            ldh [metatileUpdateSourceScreen], a
+            ld e, a
+            ld d, $00
+            sla e
+            rl d
+            ld hl, $4000
+            add hl, de
+            ld a, [hl+]
+            ld c, a
+            ld a, [hl]
+            ld b, a
+        jr_000_0823:
+    
+        ldh a, [metatileUpdateSize]
+        dec a
+        ldh [metatileUpdateSize], a
     jr nz, jr_000_07f3
 
-    ldh a, [$af]
+    ldh a, [metatileUpdateBufferPointerLow]
     ld l, a
-    ldh a, [$b0]
+    ldh a, [metatileUpdateBufferPointerHigh]
     ld h, a
     ld a, $00
     ld [hl+], a
     ld [hl], a
-    ret
+ret
 
 
 Call_000_0835:
@@ -1100,7 +1085,7 @@ Call_000_0835:
     ldh a, [$cf]
     and $0f
     or b
-    ldh [$ac], a
+    ldh [metatileUpdateSourceScreen], a
     ld e, a
     ld d, $00
     sla e
@@ -1118,7 +1103,7 @@ Call_000_0835:
     swap a
     and $0f
     or l
-    ldh [$ad], a
+    ldh [metatileUpdateSourceBlock], a
     ld hl, $9800
     ldh a, [$cc]
     and $f0
@@ -1138,18 +1123,22 @@ Call_000_0835:
     ld d, $00
     add hl, de
     ld a, l
-    ldh [$aa], a
+    ldh [metatileDestAddrLow], a
     ld a, h
-    ldh [$ab], a
+    ldh [metatileDestAddrHigh], a
     ret
 
-
-Call_000_0886:
-    ldh a, [$ad]
+; Load metatile from tiletable to WRAM buffer
+Call_000_0886: ; 00:0886
+    ; Load tile number from map
+    ;  BC is the address of the screen being loaded from
+    ;  [$AD] is the tile in that screen ($YX format)
+    ldh a, [metatileUpdateSourceBlock]
     ld l, a
     ld h, $00
     add hl, bc
     ld a, [hl]
+    ; HL = tiletableArray + (tileNumber * 4)
     ld e, a
     xor a
     ld d, a
@@ -1159,6 +1148,7 @@ Call_000_0886:
     rl d
     ld hl, tiletableArray
     add hl, de
+    ; Load tiles from tiletable to temp
     ld a, [hl+]
     ld [$d008], a
     ld a, [hl+]
@@ -1167,14 +1157,17 @@ Call_000_0886:
     ld [$d00a], a
     ld a, [hl+]
     ld [$d00b], a
-    ldh a, [$af]
+    ; Load WRAM buffer address to HL
+    ldh a, [metatileUpdateBufferPointerLow]
     ld l, a
-    ldh a, [$b0]
+    ldh a, [metatileUpdateBufferPointerHigh]
     ld h, a
-    ldh a, [$aa]
+    ; Load VRAM address to WRAM buffer
+    ldh a, [metatileDestAddrLow]
     ld [hl+], a
-    ldh a, [$ab]
+    ldh a, [metatileDestAddrHigh]
     ld [hl+], a
+    ; Load tiles from temp to WRAM buffer
     ld a, [$d008]
     ld [hl+], a
     ld a, [$d009]
@@ -1183,55 +1176,55 @@ Call_000_0886:
     ld [hl+], a
     ld a, [$d00b]
     ld [hl+], a
+    ; Save the WRAM buffer address
     ld a, l
-    ldh [$af], a
+    ldh [metatileUpdateBufferPointerLow], a
     ld a, h
-    ldh [$b0], a
-    ret
+    ldh [metatileUpdateBufferPointerHigh], a
+ret
 
 
 Call_000_08cf:
-    ld de, $ddff
+    ld de, metatileUpdateBuffer - 1 ;$ddff
 
-jr_000_08d2:
-    inc de
-    ld a, [de]
-    ld l, a
-    inc de
-    ld a, [de]
-    ld h, a
-    and a
-    jr z, jr_000_08f9
+    .loop:
+        inc de
+        ld a, [de]
+        ld l, a
+        inc de
+        ld a, [de]
+        ld h, a
+        and a
+            jr z, .break
+        inc de
+        ld a, [de]
+        ld [hl+], a
+        ld a, h
+        and $9b
+        ld h, a
+        inc de
+        ld a, [de]
+        ld [hl], a
+        ld bc, $001f
+        add hl, bc
+        ld a, h
+        and $9b
+        ld h, a
+        inc de
+        ld a, [de]
+        ld [hl+], a
+        ld a, h
+        and $9b
+        ld h, a
+        inc de
+        ld a, [de]
+        ld [hl], a
+    jr .loop
+    .break:
 
-    inc de
-    ld a, [de]
-    ld [hl+], a
-    ld a, h
-    and $9b
-    ld h, a
-    inc de
-    ld a, [de]
-    ld [hl], a
-    ld bc, $001f
-    add hl, bc
-    ld a, h
-    and $9b
-    ld h, a
-    inc de
-    ld a, [de]
-    ld [hl+], a
-    ld a, h
-    and $9b
-    ld h, a
-    inc de
-    ld a, [de]
-    ld [hl], a
-    jr jr_000_08d2
-
-jr_000_08f9:
     xor a
     ld [$de01], a
-    ret
+ret
 
 
 Call_000_08fe:
@@ -5982,23 +5975,21 @@ jr_000_27ba:
     ld a, $ff
     ld [$d047], a
 
-jr_000_27bf:
-    ld a, [$d08c]
-    and a
-    jr z, jr_000_27d9
-
-    call drawSamus_longJump
-    call Call_000_05de
-    callFar drawHudMetroid
-    call clearUnusedOamSlots_longJump
-
-jr_000_27d9:
-    call waitOneFrame
-    ld a, [$d047]
-    and a
+    jr_000_27bf:
+        ld a, [$d08c]
+        and a
+        jr z, jr_000_27d9
+            call drawSamus_longJump
+            call Call_000_05de
+            callFar drawHudMetroid
+            call clearUnusedOamSlots_longJump
+        jr_000_27d9:
+        ; Wait until WRAM transfer is done
+        call waitOneFrame
+        ld a, [$d047]
+        and a
     jr nz, jr_000_27bf
-
-    ret
+ret
 
 
 Call_000_27e3:
@@ -6206,10 +6197,10 @@ Jump_000_2918: ; Rerender screen ahead of Samus
 
 jr_000_2939:
     switchBankVar [currentLevelBank]
-    ld a, $00
-    ldh [$af], a
-    ld a, $de
-    ldh [$b0], a
+    ld a, LOW(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerLow], a
+    ld a, HIGH(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -6229,10 +6220,10 @@ jr_000_2939:
     call Call_000_07e4
     call waitOneFrame
     switchBankVar [currentLevelBank]
-    ld a, $00
-    ldh [$af], a
-    ld a, $de
-    ldh [$b0], a
+    ld a, LOW(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerLow], a
+    ld a, HIGH(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -6245,10 +6236,10 @@ jr_000_2939:
     call Call_000_07e4
     call waitOneFrame
     switchBankVar [currentLevelBank]
-    ld a, $00
-    ldh [$af], a
-    ld a, $de
-    ldh [$b0], a
+    ld a, LOW(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerLow], a
+    ld a, HIGH(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -6265,10 +6256,10 @@ jr_000_2939:
 
 Jump_000_29c4:
     switchBankVar [currentLevelBank]
-    ld a, $00
-    ldh [$af], a
-    ld a, $de
-    ldh [$b0], a
+    ld a, LOW(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerLow], a
+    ld a, HIGH(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -6288,10 +6279,10 @@ Jump_000_29c4:
     call Call_000_07e4
     call waitOneFrame
     switchBankVar [currentLevelBank]
-    ld a, $00
-    ldh [$af], a
-    ld a, $de
-    ldh [$b0], a
+    ld a, LOW(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerLow], a
+    ld a, HIGH(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -6304,10 +6295,10 @@ Jump_000_29c4:
     call Call_000_07e4
     call waitOneFrame
     switchBankVar [currentLevelBank]
-    ld a, $00
-    ldh [$af], a
-    ld a, $de
-    ldh [$b0], a
+    ld a, LOW(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerLow], a
+    ld a, HIGH(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -6324,10 +6315,10 @@ Jump_000_29c4:
 
 Jump_000_2a4f:
     switchBankVar [currentLevelBank]
-    ld a, $00
-    ldh [$af], a
-    ld a, $de
-    ldh [$b0], a
+    ld a, LOW(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerLow], a
+    ld a, HIGH(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -6347,10 +6338,10 @@ Jump_000_2a4f:
     call Call_000_0788
     call waitOneFrame
     switchBankVar [currentLevelBank]
-    ld a, $00
-    ldh [$af], a
-    ld a, $de
-    ldh [$b0], a
+    ld a, LOW(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerLow], a
+    ld a, HIGH(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraYPixel]
@@ -6363,10 +6354,10 @@ Jump_000_2a4f:
     call Call_000_0788
     call waitOneFrame
     switchBankVar [currentLevelBank]
-    ld a, $00
-    ldh [$af], a
-    ld a, $de
-    ldh [$b0], a
+    ld a, LOW(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerLow], a
+    ld a, HIGH(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraYPixel]
@@ -6379,10 +6370,10 @@ Jump_000_2a4f:
     call Call_000_0788
     call waitOneFrame
     switchBankVar [currentLevelBank]
-    ld a, $00
-    ldh [$af], a
-    ld a, $de
-    ldh [$b0], a
+    ld a, LOW(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerLow], a
+    ld a, HIGH(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraYPixel]
@@ -6399,10 +6390,10 @@ Jump_000_2a4f:
 
 Jump_000_2b04:
     switchBankVar [currentLevelBank]
-    ld a, $00
-    ldh [$af], a
-    ld a, $de
-    ldh [$b0], a
+    ld a, LOW(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerLow], a
+    ld a, HIGH(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -6422,10 +6413,10 @@ Jump_000_2b04:
     call Call_000_0788
     call waitOneFrame
     switchBankVar [currentLevelBank]
-    ld a, $00
-    ldh [$af], a
-    ld a, $de
-    ldh [$b0], a
+    ld a, LOW(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerLow], a
+    ld a, HIGH(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraYPixel]
@@ -6438,10 +6429,10 @@ Jump_000_2b04:
     call Call_000_0788
     call waitOneFrame
     switchBankVar [currentLevelBank]
-    ld a, $00
-    ldh [$af], a
-    ld a, $de
-    ldh [$b0], a
+    ld a, LOW(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerLow], a
+    ld a, HIGH(metatileUpdateBuffer)
+    ldh [metatileUpdateBufferPointerHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraYPixel]
@@ -6491,7 +6482,7 @@ Jump_000_2ba3:
         inc de
         dec bc
         ld a, c
-        and $3f
+        and $3f ; Limits updates to 4 tiles/frame
     jr nz, jr_000_2bc2
 
     ld a, c
@@ -6506,6 +6497,7 @@ Jump_000_2ba3:
     ldh [$b3], a
     ld a, d
     ldh [$b4], a
+    ; Clear update flag if done
     ld a, b
     or c
     jr nz, jr_000_2be5

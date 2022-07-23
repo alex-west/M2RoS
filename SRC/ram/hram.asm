@@ -79,13 +79,14 @@ hUnusedHRAM_3:: ds 4 ; $FF9C-$FF9F - 4 unused bytes
 
 OAM_DMA:: ds $0a ; $FFA0-$FFA9: OAM DMA routine
 
-;$FFAA: VRAM tilemap metatile update address. $FFAA = $9800 + ([row block to update] * 32 + [column block to update]) * 2
-;$FFAB
-;$FFAC: Index of screen for metatile update. $FFAC = [row screen to update] * 16 + [column screen to update]
-;$FFAD: Index of block for metatile update. $FFAD = [row block to update] * 16 + [column block to update]
-;$FFAE: Number of blocks to update
-;$FFAF: Stack pointer for metatile update entries
-;$FFB0
+metatileDestAddrLow:  ds 1 ; $FFAA - VRAM tilemap metatile update address. $FFAA = $9800 + ([row block to update] * 32 + [column block to update]) * 2
+metatileDestAddrHigh: ds 1 ; $FFAB - (high byte)
+metatileUpdateSourceScreen: ds 1 ; $FFAC - Map index of screen for metatile update. ($YX format)
+metatileUpdateSourceBlock:  ds 1 ; $FFAD - Screen index of block for metatile update. ($YX format)
+metatileUpdateSize: ds 1 ; $FFAE - Number of blocks to update
+metatileUpdateBufferPointerLow:  ds 1 ; $FFAF - Stack pointer for metatile update entries (low byte)
+metatileUpdateBufferPointerHigh: ds 1 ; $FFB0 - (high byte)
+
 ;$FFB1: VRAM tiles update source address
 ;$FFB2:
 ;$FFB3: VRAM tiles update dest address, also source offset from $CE20 when [$D08C] is set
