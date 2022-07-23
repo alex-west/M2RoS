@@ -555,12 +555,16 @@ def songPlaying = $CEDD ; Song playing
 ;
 ;
 ;;;; $D000..DFFF: WRAM bank 1 ;;;
+section "WRAM bank 0 - D000", wramx[$d000]
 ;{
-;$D000..07: Unused
-;$D008: Metatile top-left
-;$D009: Metatile top-right
-;$D00A: Metatile bottom-left
-;$D00B: Metatile bottom-right
+wramUnused_D000: ds 8 ; $D000..07: Unused
+
+tempMetatile:
+.topLeft:     ds 1 ; $D008: Metatile top-left
+.topRight:    ds 1 ; $D009: Metatile top-right
+.bottomLeft:  ds 1 ; $D00A: Metatile bottom-left
+.bottomRight: ds 1 ; $D00B: Metatile bottom-right
+
 ;$D00C: Samus' previous Y position. Used for scrolling, low byte only
 def samusBeamCooldown = $D00D ; Auto-fire cooldown counter
 def doorScrollDirection = $D00E ; Door transition direction
@@ -697,7 +701,7 @@ def spiderRotationState = $D044 ; Spider ball rotational direction
 def samusItems = $D045 ; Samus' equipment
 
 def debugItemIndex = $D046 ; Debug screen selector index
-;$D047: VRAM tiles update flag (see $FFB1..B6, $2BA3, $27BA)
+def vramTransferFlag = $D047 ; VRAM tiles update flag (see $FFB1..B6, $2BA3, $27BA)
 def waterContactFlag = $D048 ; Flag to tell if Samus is touching water
 ;$D049: Timer for something. Decremented every frame. Written to in several places, but only meaningfully read in the falling poseHandler
 ;
@@ -1004,11 +1008,15 @@ bombArray:: ds $10 * 3 ;$DD30..5F: Bomb data. 10h byte slots
 ;    + 2: Y position
 ;    + 3: X position
 ;}
-unusedWRAM_DD60: ds $100 - $60 ;$DD60..FF: Unused
-metatileUpdateBuffer:: ds $100 ;$DE00..FF: Metatile update entries
+wramUnused_DD60: ds $100 - $60 ;$DD60..FF: Unused
+
+; List of metatiles from the map to update to VRAM
+mapUpdateBuffer:: ds $100 ; $DE00..FF
+mapUpdateFlag = mapUpdateBuffer + 1 ; $DE01
 ;{
 ;    + 0: VRAM background tilemap destination address.
-;         - $0000 terminates update
+;         - $00xx terminates update
+;           - Thus, $DE01 is used as a flag that is cleared/checked in some places
 ;    + 2: Top-left tile
 ;    + 3: Top-right tile
 ;    + 4: Bottom-left tile

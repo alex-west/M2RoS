@@ -112,32 +112,31 @@ VBlankHandler: ; 00:0154
     and a
         jp nz, VBlank_deathSequence
     ; VRAM data transfer
-    ld a, [$d047]
+    ld a, [vramTransferFlag]
     and a
-        jp nz, Jump_000_2ba3
-
+        jp nz, VBlank_vramDataTransfer
+    ; Handle map updates during door transitions
     ld a, [doorIndexLow]
     and a
         jp nz, Jump_000_2b8f
-
     ; Branch for queen fight
     ld a, [$d08b]
     cp $11
-        jr z, jr_000_01d9
-
-    ld a, [$de01]
+        jr z, .queenBranch
+    ; Update a map row or the status bar
+    ld a, [mapUpdateFlag]
     and a
     jr z, .else_B
         ld a, [currentLevelBank]
         ld [rMBC_BANK_REG], a
-        call Call_000_08cf
+        call VBlank_updateMap
         jr .endIf_B
     .else_B:
         ld a, BANK(VBlank_updateStatusBar)
         ld [rMBC_BANK_REG], a
         call VBlank_updateStatusBar
     .endIf_B:
-
+; End vblank
     call OAM_DMA ; Sprite DMA
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
@@ -149,8 +148,7 @@ VBlankHandler: ; 00:0154
     pop af
 reti
 
-
-jr_000_01d9:
+.queenBranch:
     ld a, BANK(VBlank_updateStatusBar)
     ld [rMBC_BANK_REG], a
     call VBlank_updateStatusBar
@@ -316,7 +314,7 @@ bootRoutine: ; 00:01fB
 mainGameLoop: ; 00:02CD
     ; Clear vram update flag
     xor a
-    ld [$de01], a
+    ld [mapUpdateFlag], a
     ; Update buttons if not in a door transition
     ld a, [doorScrollDirection]
     and a
@@ -422,13 +420,13 @@ ret
 
 OAM_clearTable: ; 00:0370
     xor a
-    ld hl, $c000
+    ld hl, wram_oamBuffer
     ld b, $a0
 
-    jr_000_0376:
+    .loop:
         ld [hl+], a
         dec b
-    jr nz, jr_000_0376
+    jr nz, .loop
 ret
 
 ; Clears both the BG and window tilemaps
@@ -549,7 +547,7 @@ gameMode_LoadA:
     ld [doorScrollDirection], a
     ld [deathAnimTimer], a
     ld [deathFlag], a
-    ld [$d047], a
+    ld [vramTransferFlag], a
     ld [$d06b], a
     ld [itemCollected], a
     ld [itemCollectionFlag], a
@@ -594,12 +592,12 @@ gameMode_LoadB:
     switchBankVar [currentLevelBank]
     ; Render map
     jr_000_048a:
-        ld a, LOW(metatileUpdateBuffer)
-        ldh [metatileUpdateBufferPointerLow], a
-        ld a, HIGH(metatileUpdateBuffer)
-        ldh [metatileUpdateBufferPointerHigh], a
-        call Call_000_06cc
-        call Call_000_08cf
+        ld a, LOW(mapUpdateBuffer)
+        ldh [hMapUpdate.buffPtrLow], a
+        ld a, HIGH(mapUpdateBuffer)
+        ldh [hMapUpdate.buffPtrHigh], a
+        call Call_000_06cc ; Force row update
+        call VBlank_updateMap
         ldh a, [hCameraYPixel]
         add $10
         ldh [hCameraYPixel], a
@@ -685,7 +683,7 @@ gameMode_Main:
             call Call_000_3d99 ; Handle bombs
     jr_000_053e:
 
-    call Call_000_0698 ; Handle loading blocks
+    call Call_000_0698 ; Handle loading blocks from scrolling
     call Call_000_08fe ; Handle scrolling/triggering door transitions
     call Call_000_2366 ; Calculate scroll offsets
     call handleItemPickup
@@ -823,42 +821,41 @@ Call_000_0673:
     ldh a, [hCameraXScreen]
     ldh [$cf], a
 
-jr_000_0680:
-    ld a, LOW(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerLow], a
-    ld a, HIGH(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerHigh], a
-    call Call_000_0788
-    call Call_000_08cf
-    ldh a, [$cc]
-    add $10
-    ldh [$cc], a
-    and a
+    jr_000_0680:
+        ld a, LOW(mapUpdateBuffer)
+        ldh [hMapUpdate.buffPtrLow], a
+        ld a, HIGH(mapUpdateBuffer)
+        ldh [hMapUpdate.buffPtrHigh], a
+        call prepMapRowUpdate
+        call VBlank_updateMap
+        ldh a, [$cc]
+        add $10
+        ldh [$cc], a
+        and a
     jr nz, jr_000_0680
-
-    ret
+ret
 
 
 Call_000_0698:
     switchBankVar [currentLevelBank]
-    ld a, LOW(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerLow], a
-    ld a, HIGH(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerHigh], a
+    ld a, LOW(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrLow], a
+    ld a, HIGH(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrHigh], a
     xor a
     ld [$d04c], a
     ldh a, [frameCounter]
-    and $03
+    and $03 ; Up
         jr z, jr_000_06c1
-    cp $01
+    cp $01 ; Down
         jr z, jr_000_06f3
-    cp $02
+    cp $02 ; Left
         jr z, jr_000_0724
-    cp $03
+    cp $03 ; Right
         jp z, Jump_000_0756
 ret ; Should never end up here
 
-jr_000_06c1:
+jr_000_06c1: ; Up
     ld a, [$d023]
     bit 6, a
         ret z
@@ -883,15 +880,15 @@ Call_000_06cc:
     ld a, [$d023]
     res 6, a
     ld [$d023], a
-    jp Jump_000_0788
+jp prepMapRowUpdate
 
 
-jr_000_06f3:
+jr_000_06f3: ; Down
     ld a, [$d023]
     bit 7, a
         ret z
     ld a, $ff
-    ld [$d04c], a
+    ld [$d04c], a    
     ldh a, [hCameraXPixel]
     sub $80
     ldh [$ce], a
@@ -909,9 +906,9 @@ jr_000_06f3:
     ld a, [$d023]
     res 7, a
     ld [$d023], a
-    jr jr_000_0788
+jr prepMapRowUpdate
 
-jr_000_0724:
+jr_000_0724: ; Left
     ld a, [$d023]
     bit 5, a
         ret z
@@ -934,9 +931,9 @@ jr_000_0724:
     ld a, [$d023]
     res 5, a
     ld [$d023], a
-    jp Jump_000_07e4
+jp prepMapColumnUpdate
 
-Jump_000_0756:
+Jump_000_0756: ; Right
     ld a, [$d023]
     bit 4, a
         ret z
@@ -959,44 +956,45 @@ Jump_000_0756:
     ld a, [$d023]
     res 4, a
     ld [$d023], a
-    jp Jump_000_07e4
+jp prepMapColumnUpdate
 
 
-Call_000_0788:
-Jump_000_0788:
-jr_000_0788:
+prepMapRowUpdate: ; 00:0788
     call Call_000_0835
-    ld a, $10
-    ldh [metatileUpdateSize], a
 
-    jr_000_078f:
-        call Call_000_0886
-        ldh a, [metatileDestAddrLow]
+    ld a, $10
+    ldh [hMapUpdate.size], a
+    .loop:
+        call loadMapTileToBuffer
+        ; Iterate rightwards to next block
+        ldh a, [hMapUpdate.destAddrLow]
         add $02
-        ldh [metatileDestAddrLow], a
-        ldh a, [metatileDestAddrHigh]
+        ldh [hMapUpdate.destAddrLow], a
+        ldh a, [hMapUpdate.destAddrHigh]
         adc $00
         and $9b
-        ldh [metatileDestAddrHigh], a
-        ldh a, [metatileDestAddrLow]
+        ldh [hMapUpdate.destAddrHigh], a
+        ldh a, [hMapUpdate.destAddrLow]
         and $df
-        ldh [metatileDestAddrLow], a
-        ldh a, [metatileUpdateSourceBlock]
+        ldh [hMapUpdate.destAddrLow], a
+        ; Iterate rightwards to next source block
+        ldh a, [hMapUpdate.srcBlock]
         add $01
-        ldh [metatileUpdateSourceBlock], a
+        ldh [hMapUpdate.srcBlock], a
         and $0f
-        jr nz, jr_000_07d2
-            ldh a, [metatileUpdateSourceBlock]
+        jr nz, .endIf
+            ; Iterate rightwards to next source screen if necessary
+            ldh a, [hMapUpdate.srcBlock]
             sub $10
-            ldh [metatileUpdateSourceBlock], a
-            ldh a, [metatileUpdateSourceScreen]
+            ldh [hMapUpdate.srcBlock], a
+            ldh a, [hMapUpdate.srcScreen]
             and $f0
             ld b, a
-            ldh a, [metatileUpdateSourceScreen]
+            ldh a, [hMapUpdate.srcScreen]
             inc a
             and $0f
             or b
-            ldh [metatileUpdateSourceScreen], a
+            ldh [hMapUpdate.srcScreen], a
             ld e, a
             ld d, $00
             sla e
@@ -1007,49 +1005,50 @@ jr_000_0788:
             ld c, a
             ld a, [hl]
             ld b, a
-        jr_000_07d2:
+        .endIf:
     
-        ldh a, [metatileUpdateSize]
+        ldh a, [hMapUpdate.size]
         dec a
-        ldh [metatileUpdateSize], a
-    jr nz, jr_000_078f
-
-    ldh a, [metatileUpdateBufferPointerLow]
+        ldh [hMapUpdate.size], a
+    jr nz, .loop
+    ; Terminate buffer list
+    ldh a, [hMapUpdate.buffPtrLow]
     ld l, a
-    ldh a, [metatileUpdateBufferPointerHigh]
+    ldh a, [hMapUpdate.buffPtrHigh]
     ld h, a
     ld a, $00
     ld [hl+], a
     ld [hl], a
 ret
 
-
-Call_000_07e4:
-Jump_000_07e4:
+prepMapColumnUpdate: ; 00:07E4
     ld a, [$d023]
     and $cf
     ld [$d023], a
     call Call_000_0835
+    
     ld a, $10
-    ldh [metatileUpdateSize], a
-
-    jr_000_07f3:
-        call Call_000_0886
-        ldh a, [metatileDestAddrLow]
+    ldh [hMapUpdate.size], a
+    .loop:
+        call loadMapTileToBuffer
+        ; Iterate downwards to next block
+        ldh a, [hMapUpdate.destAddrLow]
         add $40
-        ldh [metatileDestAddrLow], a
-        ldh a, [metatileDestAddrHigh]
+        ldh [hMapUpdate.destAddrLow], a
+        ldh a, [hMapUpdate.destAddrHigh]
         adc $00
-        and $9b
-        ldh [metatileDestAddrHigh], a
-        ldh a, [metatileUpdateSourceBlock]
+        and $9b ; Clamp destination address to the tilemap 0
+        ldh [hMapUpdate.destAddrHigh], a
+        ; Iterate downwards to next source block
+        ldh a, [hMapUpdate.srcBlock]
         add $10
-        ldh [metatileUpdateSourceBlock], a
+        ldh [hMapUpdate.srcBlock], a
         and $f0
-        jr nz, jr_000_0823
-            ldh a, [metatileUpdateSourceScreen]
+        jr nz, .endIf
+            ; Iterate downwards to next source screen if necessary
+            ldh a, [hMapUpdate.srcScreen]
             add $10
-            ldh [metatileUpdateSourceScreen], a
+            ldh [hMapUpdate.srcScreen], a
             ld e, a
             ld d, $00
             sla e
@@ -1060,24 +1059,25 @@ Jump_000_07e4:
             ld c, a
             ld a, [hl]
             ld b, a
-        jr_000_0823:
+        .endIf:
     
-        ldh a, [metatileUpdateSize]
+        ldh a, [hMapUpdate.size]
         dec a
-        ldh [metatileUpdateSize], a
-    jr nz, jr_000_07f3
-
-    ldh a, [metatileUpdateBufferPointerLow]
+        ldh [hMapUpdate.size], a
+    jr nz, .loop
+    ; Terminate buffer list
+    ldh a, [hMapUpdate.buffPtrLow]
     ld l, a
-    ldh a, [metatileUpdateBufferPointerHigh]
+    ldh a, [hMapUpdate.buffPtrHigh]
     ld h, a
     ld a, $00
     ld [hl+], a
     ld [hl], a
 ret
 
-
-Call_000_0835:
+; Translates X and Y map/screen coordinates into map/screen array indeces
+;  and a VRAM address, for updating scrolling
+Call_000_0835: ; 00:0835
     ldh a, [$cd]
     swap a
     and $f0
@@ -1085,7 +1085,8 @@ Call_000_0835:
     ldh a, [$cf]
     and $0f
     or b
-    ldh [metatileUpdateSourceScreen], a
+    ldh [hMapUpdate.srcScreen], a
+    
     ld e, a
     ld d, $00
     sla e
@@ -1103,7 +1104,8 @@ Call_000_0835:
     swap a
     and $0f
     or l
-    ldh [metatileUpdateSourceBlock], a
+    ldh [hMapUpdate.srcBlock], a
+    
     ld hl, $9800
     ldh a, [$cc]
     and $f0
@@ -1123,17 +1125,17 @@ Call_000_0835:
     ld d, $00
     add hl, de
     ld a, l
-    ldh [metatileDestAddrLow], a
+    ldh [hMapUpdate.destAddrLow], a
     ld a, h
-    ldh [metatileDestAddrHigh], a
-    ret
+    ldh [hMapUpdate.destAddrHigh], a
+ret
 
-; Load metatile from tiletable to WRAM buffer
-Call_000_0886: ; 00:0886
+; Load metatile from map to WRAM buffer
+loadMapTileToBuffer: ; 00:0886
     ; Load tile number from map
     ;  BC is the address of the screen being loaded from
     ;  [$AD] is the tile in that screen ($YX format)
-    ldh a, [metatileUpdateSourceBlock]
+    ldh a, [hMapUpdate.srcBlock]
     ld l, a
     ld h, $00
     add hl, bc
@@ -1150,61 +1152,65 @@ Call_000_0886: ; 00:0886
     add hl, de
     ; Load tiles from tiletable to temp
     ld a, [hl+]
-    ld [$d008], a
+    ld [tempMetatile.topLeft], a
     ld a, [hl+]
-    ld [$d009], a
+    ld [tempMetatile.topRight], a
     ld a, [hl+]
-    ld [$d00a], a
+    ld [tempMetatile.bottomLeft], a
     ld a, [hl+]
-    ld [$d00b], a
+    ld [tempMetatile.bottomRight], a
     ; Load WRAM buffer address to HL
-    ldh a, [metatileUpdateBufferPointerLow]
+    ldh a, [hMapUpdate.buffPtrLow]
     ld l, a
-    ldh a, [metatileUpdateBufferPointerHigh]
+    ldh a, [hMapUpdate.buffPtrHigh]
     ld h, a
     ; Load VRAM address to WRAM buffer
-    ldh a, [metatileDestAddrLow]
+    ldh a, [hMapUpdate.destAddrLow]
     ld [hl+], a
-    ldh a, [metatileDestAddrHigh]
+    ldh a, [hMapUpdate.destAddrHigh]
     ld [hl+], a
     ; Load tiles from temp to WRAM buffer
-    ld a, [$d008]
+    ld a, [tempMetatile.topLeft]
     ld [hl+], a
-    ld a, [$d009]
+    ld a, [tempMetatile.topRight]
     ld [hl+], a
-    ld a, [$d00a]
+    ld a, [tempMetatile.bottomLeft]
     ld [hl+], a
-    ld a, [$d00b]
+    ld a, [tempMetatile.bottomRight]
     ld [hl+], a
     ; Save the WRAM buffer address
     ld a, l
-    ldh [metatileUpdateBufferPointerLow], a
+    ldh [hMapUpdate.buffPtrLow], a
     ld a, h
-    ldh [metatileUpdateBufferPointerHigh], a
+    ldh [hMapUpdate.buffPtrHigh], a
 ret
 
-
-Call_000_08cf:
-    ld de, metatileUpdateBuffer - 1 ;$ddff
+; Only call this when rendering is disabled
+VBlank_updateMap: ; 00:08CF
+    ld de, mapUpdateBuffer - 1 ;$ddff
 
     .loop:
+        ; Load address
         inc de
         ld a, [de]
         ld l, a
         inc de
         ld a, [de]
         ld h, a
-        and a
+        and a ; Exit if address is $00xx
             jr z, .break
+        ; Load and write top-left tile
         inc de
         ld a, [de]
         ld [hl+], a
+        ; Load and write top-right tile
         ld a, h
         and $9b
         ld h, a
         inc de
         ld a, [de]
         ld [hl], a
+        ; Load and write bottom-left tile
         ld bc, $001f
         add hl, bc
         ld a, h
@@ -1213,6 +1219,7 @@ Call_000_08cf:
         inc de
         ld a, [de]
         ld [hl+], a
+        ; Load and write bottom-right tile
         ld a, h
         and $9b
         ld h, a
@@ -1223,7 +1230,7 @@ Call_000_08cf:
     .break:
 
     xor a
-    ld [$de01], a
+    ld [mapUpdateFlag], a
 ret
 
 
@@ -5973,7 +5980,7 @@ Call_000_27ba:
 Jump_000_27ba:
 jr_000_27ba:
     ld a, $ff
-    ld [$d047], a
+    ld [vramTransferFlag], a
 
     jr_000_27bf:
         ld a, [$d08c]
@@ -5986,7 +5993,7 @@ jr_000_27ba:
         jr_000_27d9:
         ; Wait until WRAM transfer is done
         call waitOneFrame
-        ld a, [$d047]
+        ld a, [vramTransferFlag]
         and a
     jr nz, jr_000_27bf
 ret
@@ -6010,18 +6017,18 @@ Call_000_27e3:
     ld a, [hl+]
     ldh [$b6], a
     ld a, $ff
-    ld [$d047], a
+    ld [vramTransferFlag], a
 
-jr_000_2804:
-    ld a, $80
-    ldh [rWY], a
-    call drawSamus_longJump
-    call Call_000_05de
-    callFar drawHudMetroid
-    call clearUnusedOamSlots_longJump
-    call waitOneFrame
-    ldh a, [$b4]
-    cp $85
+    jr_000_2804:
+        ld a, $80
+        ldh [rWY], a
+        call drawSamus_longJump
+        call Call_000_05de
+        callFar drawHudMetroid
+        call clearUnusedOamSlots_longJump
+        call waitOneFrame
+        ldh a, [$b4]
+        cp $85
     jr c, jr_000_2804
 
     xor a
@@ -6177,30 +6184,30 @@ Jump_000_2918: ; Rerender screen ahead of Samus
     ; Right
     ld a, [doorScrollDirection]
     cp $01
-    jr z, jr_000_2939
+        jr z, jr_000_2939
     ; Left
     ld a, [doorScrollDirection]
     cp $02
-    jp z, Jump_000_29c4
+        jp z, Jump_000_29c4
     ; Up
     ld a, [doorScrollDirection]
     cp $04
-    jp z, Jump_000_2b04
+        jp z, Jump_000_2b04
     ; Down
     ld a, [doorScrollDirection]
     cp $08
-    jp z, Jump_000_2a4f
+        jp z, Jump_000_2a4f
     ; None
     pop hl
-    ret
+ret
 
 
 jr_000_2939:
     switchBankVar [currentLevelBank]
-    ld a, LOW(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerLow], a
-    ld a, HIGH(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerHigh], a
+    ld a, LOW(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrLow], a
+    ld a, HIGH(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -6217,13 +6224,14 @@ jr_000_2939:
     sbc $00
     and $0f
     ldh [$cd], a
-    call Call_000_07e4
+    call prepMapColumnUpdate
     call waitOneFrame
+    
     switchBankVar [currentLevelBank]
-    ld a, LOW(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerLow], a
-    ld a, HIGH(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerHigh], a
+    ld a, LOW(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrLow], a
+    ld a, HIGH(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -6233,13 +6241,14 @@ jr_000_2939:
     adc $00
     and $0f
     ldh [$cf], a
-    call Call_000_07e4
+    call prepMapColumnUpdate
     call waitOneFrame
+    
     switchBankVar [currentLevelBank]
-    ld a, LOW(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerLow], a
-    ld a, HIGH(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerHigh], a
+    ld a, LOW(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrLow], a
+    ld a, HIGH(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -6249,17 +6258,17 @@ jr_000_2939:
     adc $00
     and $0f
     ldh [$cf], a
-    call Call_000_07e4
+    call prepMapColumnUpdate
     pop hl
-    ret
+ret
 
 
 Jump_000_29c4:
     switchBankVar [currentLevelBank]
-    ld a, LOW(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerLow], a
-    ld a, HIGH(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerHigh], a
+    ld a, LOW(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrLow], a
+    ld a, HIGH(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -6276,13 +6285,14 @@ Jump_000_29c4:
     sbc $00
     and $0f
     ldh [$cd], a
-    call Call_000_07e4
+    call prepMapColumnUpdate
     call waitOneFrame
+    
     switchBankVar [currentLevelBank]
-    ld a, LOW(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerLow], a
-    ld a, HIGH(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerHigh], a
+    ld a, LOW(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrLow], a
+    ld a, HIGH(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -6292,13 +6302,14 @@ Jump_000_29c4:
     sbc $00
     and $0f
     ldh [$cf], a
-    call Call_000_07e4
+    call prepMapColumnUpdate
     call waitOneFrame
+    
     switchBankVar [currentLevelBank]
-    ld a, LOW(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerLow], a
-    ld a, HIGH(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerHigh], a
+    ld a, LOW(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrLow], a
+    ld a, HIGH(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -6308,17 +6319,17 @@ Jump_000_29c4:
     sbc $00
     and $0f
     ldh [$cf], a
-    call Call_000_07e4
+    call prepMapColumnUpdate
     pop hl
-    ret
+ret
 
 
 Jump_000_2a4f:
     switchBankVar [currentLevelBank]
-    ld a, LOW(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerLow], a
-    ld a, HIGH(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerHigh], a
+    ld a, LOW(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrLow], a
+    ld a, HIGH(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -6335,13 +6346,14 @@ Jump_000_2a4f:
     adc $00
     and $0f
     ldh [$cd], a
-    call Call_000_0788
+    call prepMapRowUpdate
     call waitOneFrame
+    
     switchBankVar [currentLevelBank]
-    ld a, LOW(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerLow], a
-    ld a, HIGH(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerHigh], a
+    ld a, LOW(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrLow], a
+    ld a, HIGH(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraYPixel]
@@ -6351,13 +6363,14 @@ Jump_000_2a4f:
     adc $00
     and $0f
     ldh [$cd], a
-    call Call_000_0788
+    call prepMapRowUpdate
     call waitOneFrame
+    
     switchBankVar [currentLevelBank]
-    ld a, LOW(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerLow], a
-    ld a, HIGH(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerHigh], a
+    ld a, LOW(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrLow], a
+    ld a, HIGH(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraYPixel]
@@ -6367,13 +6380,14 @@ Jump_000_2a4f:
     adc $00
     and $0f
     ldh [$cd], a
-    call Call_000_0788
+    call prepMapRowUpdate
     call waitOneFrame
+    
     switchBankVar [currentLevelBank]
-    ld a, LOW(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerLow], a
-    ld a, HIGH(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerHigh], a
+    ld a, LOW(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrLow], a
+    ld a, HIGH(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraYPixel]
@@ -6383,17 +6397,17 @@ Jump_000_2a4f:
     adc $00
     and $0f
     ldh [$cd], a
-    call Call_000_0788
+    call prepMapRowUpdate
     pop hl
-    ret
+ret
 
 
 Jump_000_2b04:
     switchBankVar [currentLevelBank]
-    ld a, LOW(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerLow], a
-    ld a, HIGH(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerHigh], a
+    ld a, LOW(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrLow], a
+    ld a, HIGH(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraXPixel]
@@ -6410,13 +6424,14 @@ Jump_000_2b04:
     sbc $00
     and $0f
     ldh [$cd], a
-    call Call_000_0788
+    call prepMapRowUpdate
     call waitOneFrame
+    
     switchBankVar [currentLevelBank]
-    ld a, LOW(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerLow], a
-    ld a, HIGH(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerHigh], a
+    ld a, LOW(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrLow], a
+    ld a, HIGH(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraYPixel]
@@ -6426,13 +6441,14 @@ Jump_000_2b04:
     sbc $00
     and $0f
     ldh [$cd], a
-    call Call_000_0788
+    call prepMapRowUpdate
     call waitOneFrame
+    
     switchBankVar [currentLevelBank]
-    ld a, LOW(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerLow], a
-    ld a, HIGH(metatileUpdateBuffer)
-    ldh [metatileUpdateBufferPointerHigh], a
+    ld a, LOW(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrLow], a
+    ld a, HIGH(mapUpdateBuffer)
+    ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [$d04c], a
     ldh a, [hCameraYPixel]
@@ -6442,25 +6458,25 @@ Jump_000_2b04:
     sbc $00
     and $0f
     ldh [$cd], a
-    call Call_000_0788
+    call prepMapRowUpdate
     pop hl
-    ret
+ret
 
 
 Jump_000_2b8f:
-    ld a, [$de01]
+    ld a, [mapUpdateFlag]
     and a
-    jr z, jr_000_2be5
-
+        jr z, VBlank_vramDataTransfer.exit
     switchBankVar [currentLevelBank]
-    call Call_000_08cf
-    jr jr_000_2be5
+    call VBlank_updateMap
+jr VBlank_vramDataTransfer.exit
 
-Jump_000_2ba3:
+VBlank_vramDataTransfer: ; 00:2BA3
     ld a, [$d08c]
     and a
     jp nz, Jump_000_2bf4
 
+    ; Load transfer parameters
     ld a, [$d065]
     ld [rMBC_BANK_REG], a
     ldh a, [$b5]
@@ -6476,15 +6492,16 @@ Jump_000_2ba3:
     ldh a, [$b4]
     ld d, a
 
-    jr_000_2bc2:
+    .transferLoop:
         ld a, [hl+]
         ld [de], a
         inc de
         dec bc
         ld a, c
         and $3f ; Limits updates to 4 tiles/frame
-    jr nz, jr_000_2bc2
+    jr nz, .transferLoop
 
+    ; Save transfer parameters
     ld a, c
     ldh [$b5], a
     ld a, b
@@ -6500,11 +6517,11 @@ Jump_000_2ba3:
     ; Clear update flag if done
     ld a, b
     or c
-    jr nz, jr_000_2be5
+    jr nz, .endIf
         xor a
-        ld [$d047], a
-    jr_000_2be5:
-
+        ld [vramTransferFlag], a
+    .endIf:
+.exit:
     ld a, $01
     ldh [hVBlankDoneFlag], a
     ld a, [bankRegMirror]
