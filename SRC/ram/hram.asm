@@ -88,12 +88,13 @@ hMapUpdate:
 .buffPtrLow:   ds 1 ; $FFAF - Stack pointer for metatile update entries (low byte)
 .buffPtrHigh:  ds 1 ; $FFB0 - (high byte)
 
-;$FFB1: VRAM tiles update source address
-;$FFB2:
-;$FFB3: VRAM tiles update dest address, also source offset from $CE20 when [$D08C] is set
-;$FFB4:
-;$FFB5: VRAM tiles update size
-;$FFB6:
+hVramTransfer:
+.srcAddrLow:   ds 1 ; $FFB1: VRAM tiles update source address
+.srcAddrHigh:  ds 1 ; $FFB2:
+.destAddrLow:  ds 1 ; $FFB3: VRAM tiles update dest address, also source offset from $CE20 when [$D08C] is set
+.destAddrHigh: ds 1 ; $FFB4:
+.sizeLow:      ds 1 ; $FFB5: VRAM tiles update size
+.sizeHigh:     ds 1 ; $FFB6:
 
 ;$FFB7..BB: Energy tank graphics, other stuff too though
 

@@ -557,7 +557,7 @@ drawSamus: ; 01:4BD9: Draw Samus
     .endIf_C:
 
     ; Check if cutsence is active (e.g. a metroid is transforming)
-    ld a, [$c463]
+    ld a, [cutsceneActive]
     and a
     jr z, .else_D
         ; Load dummy input to temp
@@ -2859,7 +2859,7 @@ miscIngameTasks: ; 01:57F2
     .endIf_H:
 
 ; Handle fade-in
-    ld a, [$d09b]
+    ld a, [fadeInTimer]
     and a
         call nz, fadeIn
 
@@ -3522,8 +3522,7 @@ func_7381: ld bc, $0284
 func_7385: ld bc, $0383
     ret
 
-func_7389:
-    ld bc, $0482
+func_7389: ld bc, $0482
     ret
 
 func_738D: ld bc, $0481
@@ -3768,7 +3767,7 @@ ret
 
 fadeIn: ; 01:7A45
     ld hl, .fadeTable
-    ld a, [$d09b]
+    ld a, [fadeInTimer]
     and $f0
     swap a
     ld e, a
@@ -3777,13 +3776,13 @@ fadeIn: ; 01:7A45
     ld a, [hl]
     ld [bg_palette], a
     ld [ob_palette0], a
-    ld a, [$d09b]
+    ld a, [fadeInTimer]
     dec a
-    ld [$d09b], a
+    ld [fadeInTimer], a
     cp $0e
         ret nc
     xor a
-    ld [$d09b], a
+    ld [fadeInTimer], a
 ret
 
 .fadeTable: ; 01:7A69

@@ -30,12 +30,12 @@ Call_002_4000: ; 02:4000
         ld [hl], a
     jr_002_4029:
 
-    ld a, [$c465]
+    ld a, [metroid_fightActive]
     and a
-    jr z, jr_002_4063
-
+        jr z, jr_002_4063 ; case 0 - no metroids
     cp $02
-    jr z, jr_002_4039
+        jr z, jr_002_4039 ; case 2 - metroid exploding
+    ; case 1 (default) - metroid fight active
 
     ld a, e
     and a
@@ -69,7 +69,7 @@ jr_002_404b:
     xor a
     ld [$c41b], a
     ld [$c41c], a
-    ld [$c465], a
+    ld [metroid_fightActive], a
 
 jr_002_4063:
     ld a, [enemySolidityIndex_canon]
@@ -233,8 +233,8 @@ Call_002_412f: ; Loads enemy save flags from save buffer to WRAM without saving 
     xor a
     ld [$c452], a
     ld [$c41c], a
-    ld [$c465], a
-    ld [$c463], a
+    ld [metroid_fightActive], a
+    ld [cutsceneActive], a
     ld [numEnemies], a
     ld [numActiveEnemies], a
     ld [numOffscreenEnemies], a
@@ -3740,7 +3740,7 @@ Jump_002_5732:
     cp $e8
         jp nc, Jump_002_5648
 
-    ld hl, $c463
+    ld hl, cutsceneActive
     ld a, [hl]
     and a
     jr nz, jr_002_5750
@@ -3779,7 +3779,7 @@ Jump_002_5732:
     ldh [hEnemySpawnFlag], a
     xor a
     ld [$c41c], a
-    ld [$c463], a
+    ld [cutsceneActive], a
     ret
 
 
@@ -7556,7 +7556,7 @@ enAI_6B83: ; 02:6B83
         ld [songRequest], a
         
         ld a, $01
-        ld [$c463], a
+        ld [cutsceneActive], a
         ret
     jr_002_6ba6:
     ; Delete self
@@ -7565,7 +7565,7 @@ enAI_6B83: ; 02:6B83
     ldh [hEnemySpawnFlag], a
     
     xor a
-    ld [$c463], a
+    ld [cutsceneActive], a
 ret
 
 ;------------------------------------------------------------------------------
@@ -7615,7 +7615,7 @@ Jump_002_6bb2:
     cp $a1 ; Metroid hatching
         jp z, Jump_002_6db5
 
-    ld a, [$c463]
+    ld a, [cutsceneActive]
     and a
     jr nz, jr_002_6c2e
         ldh a, [hEnemy_frameCounter]
@@ -7637,9 +7637,9 @@ Jump_002_6bb2:
             ret nc
         
         ld a, $01
-        ld [$c463], a
+        ld [cutsceneActive], a
         ld a, $01
-        ld [$c465], a
+        ld [metroid_fightActive], a
         ; Trigger Metroid fight music
         ld a, [songPlaying]
         cp $0c
@@ -7666,7 +7666,7 @@ Jump_002_6bb2:
 ;------------------------------------------------------------------------------
 ; Alpha Metroid ?
 enAI_alphaMetroid: ; 02:6C44
-    ld a, [$c465]
+    ld a, [metroid_fightActive]
     and a
         jp nz, Jump_002_6bb2 ; Jump to actual AI?
     ; Routine for before it attacks
@@ -7691,7 +7691,7 @@ jr_002_6c4f: ; Jump from previous enemy
     xor a
     ld [alpha_stunCounter], a
     ld a, $01
-    ld [$c465], a
+    ld [metroid_fightActive], a
     ld a, $02
     ld [$c41c], a
     ld a, [songPlaying]
@@ -7870,7 +7870,7 @@ alpha_die:
     ld [songRequest], a
 
     ld a, $02
-    ld [$c465], a
+    ld [metroid_fightActive], a
     ldh [hEnemySpawnFlag], a
     ; Adjust Metroid counts
     ld hl, metroidCountReal
@@ -7898,7 +7898,7 @@ jr_002_6d99:
     ld a, $04
     ldh [hEnemySpawnFlag], a
     xor a
-    ld [$c463], a
+    ld [cutsceneActive], a
     ld a, $02
     ld [$c41c], a
     ret
@@ -8259,7 +8259,7 @@ jr_002_6f8e:
     and $0f
         jr z, jr_002_6f7f
 
-    ld a, [$c463]
+    ld a, [cutsceneActive]
     and a
     jr nz, jr_002_6fc2
         ; Check if Samus is in range
@@ -8274,12 +8274,12 @@ jr_002_6f8e:
             ret nc
     
         ld a, $01
-        ld [$c463], a
+        ld [cutsceneActive], a
         ; Trigger Metroid fight music
         ld a, $0c
         ld [songRequest], a
         ld a, $01
-        ld [$c465], a
+        ld [metroid_fightActive], a
     jr_002_6fc2:
     ldh a, [hEnemy_frameCounter]
     and $03
@@ -8316,7 +8316,7 @@ jr_002_6fd8:
     inc a
     ld [$c41c], a
     ld a, $01
-    ld [$c465], a
+    ld [metroid_fightActive], a
     ; Trigger Metroid fight music
     ld a, [songPlaying]
     cp $0c
@@ -8332,7 +8332,7 @@ Jump_002_7003:
     ld a, $ad
     ldh [hEnemySpriteType], a
     xor a
-    ld [$c463], a
+    ld [cutsceneActive], a
     inc a
     ld [$c41c], a
     ld a, $04
@@ -8505,7 +8505,7 @@ gamma_die:
     ld a, $0f
     ld [songRequest], a
     ld a, $02
-    ld [$c465], a
+    ld [metroid_fightActive], a
     ldh [hEnemySpawnFlag], a
     ; Adjust Metroid counts
     ld hl, metroidCountReal
@@ -8805,7 +8805,7 @@ jr_002_72b1:
     dec a
         jp z, Jump_002_757f
 
-    ld a, [$c463]
+    ld a, [cutsceneActive]
     and a
         jr nz, jr_002_7301
 
@@ -8828,12 +8828,12 @@ jr_002_72b1:
         ret nc
     ; Start fight
     ld a, $01
-    ld [$c463], a
+    ld [cutsceneActive], a
     ; Play Metroid fight song
     ld a, $0c
     ld [songRequest], a
     ld a, $01
-    ld [$c465], a
+    ld [metroid_fightActive], a
 ret
 
 
@@ -8875,7 +8875,7 @@ jr_002_7326:
     xor a
     ld [zeta_stunCounter], a
     ld a, $01
-    ld [$c465], a
+    ld [metroid_fightActive], a
     ld a, $03
     ld [$c41c], a
     ld a, [songPlaying]
@@ -9074,7 +9074,7 @@ zeta_die:
     ld [songRequest], a
     
     ld a, $02
-    ld [$c465], a
+    ld [metroid_fightActive], a
     ldh [hEnemySpawnFlag], a
     ; Adjust metroid counts
     ld hl, metroidCountReal
@@ -9205,7 +9205,7 @@ Jump_002_751b:
     ld a, $04
     ldh [hEnemySpawnFlag], a
     xor a
-    ld [$c463], a
+    ld [cutsceneActive], a
     ld a, $03
     ld [$c41c], a
     ret
@@ -9527,7 +9527,7 @@ jr_002_76e1:
     ld a, $0f
     ld [songRequest], a
     ld a, $02
-    ld [$c465], a
+    ld [metroid_fightActive], a
     ldh [hEnemySpawnFlag], a
     ld hl, metroidCountReal
     ld a, [hl]
@@ -9744,7 +9744,7 @@ Jump_002_7824:
 
 
 omega_fireball: ; Omega fireball?
-    ld a, [$c465]
+    ld a, [metroid_fightActive]
     cp $02
         jp z, Jump_002_78c8
 
@@ -9850,7 +9850,7 @@ Jump_002_78dc:
     cp $04
     jp z, Jump_002_7950
 
-    ld a, [$c463]
+    ld a, [cutsceneActive]
     and a
     jr nz, jr_002_790c
 
@@ -9870,12 +9870,12 @@ Jump_002_78dc:
         ret nc
 
     ld a, $01
-    ld [$c463], a
+    ld [cutsceneActive], a
     ; Trigger Metroid fight music
     ld a, $0c
     ld [songRequest], a
     ld a, $01
-    ld [$c465], a
+    ld [metroid_fightActive], a
 
 jr_002_790c:
     ldh a, [hEnemy_frameCounter]
@@ -9951,7 +9951,7 @@ Jump_002_7950:
     inc a
     ld [$c41c], a
     ld a, $01
-    ld [$c465], a
+    ld [metroid_fightActive], a
     ld a, $ff
     ldh [$e8], a
     ; Trigger Metroid fight music
@@ -9969,7 +9969,7 @@ Jump_002_798b:
     ld a, $bf
     ldh [hEnemySpriteType], a
     xor a
-    ld [$c463], a
+    ld [cutsceneActive], a
     inc a
     ld [$c41c], a
     ld a, $04
@@ -10417,7 +10417,7 @@ ret
     ld hl, $c41c
     inc [hl]
     xor a
-    ld [$c463], a
+    ld [cutsceneActive], a
 ret
 
 
@@ -10448,7 +10448,7 @@ ret
             ret nc
 
         ld a, $01
-        ld [$c463], a
+        ld [cutsceneActive], a
         call Call_002_7cbc ; Animate egg hatching
         ld hl, hEnemyState
         inc [hl]
@@ -10461,7 +10461,7 @@ ret
         ldh [hEnemyStunCounter], a
         ld a, $03 ; State 3
         ld [$c41c], a
-        ld hl, $c465
+        ld hl, metroid_fightActive
         inc [hl]
         ld a, $04
         ldh [hEnemySpawnFlag], a
@@ -10483,7 +10483,7 @@ ret
             ret nc
 
         ld a, $01
-        ld [$c465], a
+        ld [metroid_fightActive], a
         ld a, $02 ; State 2
         ld [$c41c], a
         ld a, $16

@@ -166,11 +166,12 @@ def omega_tempSpriteType = $C44F ; Used to preserve sprite type when stunned
 def previousLevelBank = $C459 ; Previous level bank --- used during door transitions to make sure that the enemySaveFlags are saved to the correct location
 ;
 ;$C45C: Used as index for table at $1:729C, value for $FFEA
+;
 def omega_stunCounter = $C462 ; Omega Metroid stun counter
-;$C463: Metroid is hatching flag (freeze time)
+def cutsceneActive = $C463 ; Set to 1 if a cutscene is active (e.g. Metroid is appearing). Freezes time.
 def alpha_stunCounter = $C464 ; Alpha Metroid stun counter
-;$C465: Checked and cleared in $2:4000, cleared in $2:412F
-;  Possibly a flag for being in a metroid fight
+def metroid_fightActive = $C465 ; 0 = no fight, 1 = fight active, 2 = metroid exploding
+; Checked and cleared in $2:4000, cleared in $2:412F
 ;$C466..69: Set to [$D05D..60] in $2:438F
 ;$C468 is a pointer compared against in $2:7DA0
 def gamma_stunCounter = $C46A ; Gamma Metroid stun counter
@@ -867,7 +868,7 @@ def credits_samusAnimState = $D097 ; Samus' animation state during the credits
 def gameTimeMinutes = $D098 ; In-game timer, minutes
 def gameTimeHours   = $D099 ; In-game timer, hours
 def metroidCountDisplayed = $D09A ; Number of Metroids remaining (displayed, not real)
-;$D09B: Fade in timer. Max value of 3Fh, is set to zero when Dh reached
+def fadeInTimer = $D09B ; Fade in timer. Max value of 3Fh, is set to zero when Dh reached
 def credits_runAnimFrame   = $D09C ; Tracks current animation frame of run animation
 def credits_runAnimCounter = $D09D ; Counts video frames between animation frames
 ;$D09E: Flag to play room song

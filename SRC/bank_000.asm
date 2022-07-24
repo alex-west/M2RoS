@@ -170,19 +170,20 @@ reti
 reti
 
 
-bootRoutine: ; 00:01fB
+bootRoutine: ; 00:01FB
+    ; Clear $D000-$DFFF
     xor a
     ld hl, $dfff
     ld c, $10
     ld b, $00
-
-    jr_000_0203:
+    .clearLoop_A:
             ld [hl-], a
             dec b
-        jr nz, jr_000_0203
+        jr nz, .clearLoop_A
         dec c
-    jr nz, jr_000_0203
-
+    jr nz, .clearLoop_A
+    
+    ; Initialize registers
     ld a, $01
     di
     ldh [rIF], a
@@ -195,12 +196,13 @@ bootRoutine: ; 00:01fB
     ldh [rSC], a
     ld a, $80
     ldh [rLCDC], a
-
-    jr_000_0220:
+    
+    ; Wait for rendering to be off
+    .waitLoop:
         ldh a, [rLY]
         cp $94
-    jr nz, jr_000_0220
-
+    jr nz, .waitLoop
+    ; Init LCD parameters
     ld a, $03
     ldh [rLCDC], a
     ld a, $93
@@ -209,82 +211,88 @@ bootRoutine: ; 00:01fB
     ld [ob_palette0], a
     ld a, $43
     ld [ob_palette1], a
+    
+    ; Init stack pointer before calling a function
     ld sp, $dfff
     call initializeAudio_longJump
+    ; Enable SRAM (?)
     ld a, $0a
     ld [$0000], a
+    
+    ; Clear $DF00-$DF00 (stack)
     xor a
     ld hl, $dfff
     ld b, $00
-
-    jr_000_024a:
+    .clearLoop_B:
         ld [hl-], a
         dec b
-    jr nz, jr_000_024a
-
+    jr nz, .clearLoop_B
+    
+    ; Clear $C000-$CFFF
     ld hl, $cfff
     ld c, $10
     ld b, $00
-
-    jr_000_0255:
+    .clearLoop_C:
             ld [hl-], a
             dec b
-            jr nz, jr_000_0255
+            jr nz, .clearLoop_C
         dec c
-    jr nz, jr_000_0255
-
+    jr nz, .clearLoop_C
+    
+    ; Fill $C500-$CAFF with $FF
     ld a, $ff
     ld hl, $caff
     ld c, $06
     ld b, $00
-
-    jr_000_0265:
+    .clearLoop_D:
             ld [hl-], a
             dec b
-            jr nz, jr_000_0265
+            jr nz, .clearLoop_D
         dec c
-    jr nz, jr_000_0265
+    jr nz, .clearLoop_D
 
+    ; Clear $8000-$9FFF (VRAM)
     xor a
     ld hl, $9fff
     ld c, $20
     ld b, $00
-
-    jr_000_0274:
+    .clearLoop_E:
             ld [hl-], a
             dec b
-            jr nz, jr_000_0274
+            jr nz, .clearLoop_E
         dec c
-    jr nz, jr_000_0274
+    jr nz, .clearLoop_E
 
+    ; Clear OAM
     ld hl, $feff
     ld b, $00
-
-    jr_000_0280:
+    .clearLoop_F:
         ld [hl-], a
         dec b
-    jr nz, jr_000_0280
+    jr nz, .clearLoop_F
 
+    ; Clear HRAM
     ld hl, $fffe
     ld b, $80
-
-    jr_000_0289:
+    .clearLoop_G:
         ld [hl-], a
         dec b
-    jr nz, jr_000_0289
+    jr nz, .clearLoop_G
 
     ; Load OAM DMA routine to HRAM
     ld c, LOW(OAM_DMA)
     ld b, $0a
     ld hl, oamDMA_routine
-    jr_000_0294:
+    .loadLoop:
         ld a, [hl+]
         ld [c], a
         inc c
         dec b
-    jr nz, jr_000_0294
+    jr nz, .loadLoop
 
+    ; Fill tilemaps with $FF
     call clearTilemaps
+    ; Init video registers for use
     ld a, $01
     ldh [rIE], a
     ld a, $07
@@ -296,18 +304,22 @@ bootRoutine: ; 00:01fB
     ldh [rIF], a
     ldh [rWY], a
     ldh [rTMA], a
+
+    ; Enable SRAM
     ld a, $0a
     ld [$0000], a
+    ; Set active save slot based on SRAM
     xor a
     ld [activeSaveSlot], a
     ld a, [saveLastSlot]
     cp $03
-    jr nc, jr_000_02c4
+    jr nc, .endIf
         ld [activeSaveSlot], a
-    jr_000_02c4:
-
+    .endIf:
+    ; Set game mode
     ld a, $00
     ldh [gameMode], a
+    ; Disable SRAM
     ld a, $00
     ld [$0000], a
 
@@ -356,7 +368,7 @@ main_handleGameMode: ; 0:02F0
         dw gameMode_prepareCredits ; $12
         dw gameMode_Credits        ; $13
 
-gameMode_None:
+gameMode_None: ; 00:031B
     ret
 
 
@@ -455,7 +467,7 @@ copyToVram: ; 00:038A
 ret
 
 ; de: source, hl: destination, $FF terminated
-unusedCopyRoutine:
+unusedCopyRoutine: ; 00:0393
     .loop:
         ld a, [de]
         cp $ff
@@ -464,11 +476,10 @@ unusedCopyRoutine:
         inc de
     jr .loop
 
-TimerOverflowInterruptStub:
+TimerOverflowInterruptStub: ; 00:039B
     reti
 
-
-disableLCD:
+disableLCD: ; 00:039C
     ldh a, [rIE]
     ldh [$99], a
     res 0, a
@@ -484,7 +495,7 @@ disableLCD:
     ldh [rIE], a
 ret
 
-gameMode_LoadA:
+gameMode_LoadA: ; 00:03B5
     call loadGame_samusData
     switchBank metatilePointerTable
     ld a, [saveBuf_tiletableSrcLow]
@@ -575,7 +586,7 @@ gameMode_LoadA:
     ldh [gameMode], a
 ret
 
-gameMode_LoadB:
+gameMode_LoadB: ; 00:0464
     call disableLCD
     call loadGame_loadGraphics
     call loadGame_SamusItemGraphics
@@ -591,7 +602,7 @@ gameMode_LoadB:
     
     switchBankVar [currentLevelBank]
     ; Render map
-    jr_000_048a:
+    .renderLoop:
         ld a, LOW(mapUpdateBuffer)
         ldh [hMapUpdate.buffPtrLow], a
         ld a, HIGH(mapUpdateBuffer)
@@ -609,7 +620,7 @@ gameMode_LoadB:
         ld b, a
         ld a, [saveBuf_cameraYPixel]
         cp b
-    jr nz, jr_000_048a
+    jr nz, .renderLoop
 
     ld a, [saveBuf_cameraYPixel]
     ldh [hCameraYPixel], a
@@ -639,11 +650,11 @@ ret
 
 gameMode_Main:
     ld a, [samusPose]
-    and $7f
+    and %01111111 ; Mask out upper bit (for turnaround animation)
     ; Jump ahead if being eaten by the Queen
     cp $18
-    jp nc, Jump_000_0578
-    ; Handle window height, save text, earthquake, low heath beep, fade in, and Metroid Queen cry
+        jp nc, .queenBranch
+    ; Handle window height, save sprite text, earthquake, low heath beep, fade in, and Metroid Queen cry
     call miscIngameTasks_longJump
     ; Check if dead (when displayed health is zero)
     ld a, [samusDispHealthLow]
@@ -651,6 +662,7 @@ gameMode_Main:
     ld a, [samusDispHealthHigh]
     or b
         call z, killSamus
+    ; Update Samus position history
     ldh a, [hSamusYPixel]
     ld [$d029], a
     ldh a, [hSamusYScreen]
@@ -659,20 +671,21 @@ gameMode_Main:
     ld [$d027], a
     ldh a, [hSamusXScreen]
     ld [$d028], a
-    ld a, [$c463]
+    ; Check if a cutscene is active (i.e. a Metroid is transforming)
+    ld a, [cutsceneActive]
     and a
-    jr z, jr_000_0522
+    jr z, .else_A
         ld a, [samusPose]
         res 7, a
         ld [samusPose], a
         ldh a, [hInputRisingEdge]
         bit PADB_SELECT, a
             call nz, toggleMissiles
-        jr jr_000_053e
-    jr_000_0522:
+        jr .endIf_A
+    .else_A:
         ld a, [doorScrollDirection]
         and a
-        jr nz, jr_000_053e
+        jr nz, .endIf_A
             xor a
             ld [$d05c], a
             call Call_000_2ee3 ; Damage Samus
@@ -681,7 +694,7 @@ gameMode_Main:
             call Call_000_21fb ; Handle shooting or toggling cannon
             call handleProjectiles_longJump ; Handle projectiles
             call Call_000_3d99 ; Handle bombs
-    jr_000_053e:
+    .endIf_A:
 
     call Call_000_0698 ; Handle loading blocks from scrolling
     call Call_000_08fe ; Handle scrolling/triggering door transitions
@@ -694,33 +707,34 @@ gameMode_Main:
     ; Decrease counter (minimum of zero)
     ld a, [$d049]
     and a
-    jr z, jr_000_0560
+    jr z, .endIf_B
         dec a
         ld [$d049], a
-    jr_000_0560:
+    .endIf_B:
 
     call drawHudMetroid_longJump
     ldh a, [hOamBufferIndex]
     ld [$d064], a
     ld a, [doorIndexLow]
     and a
-    jr nz, jr_000_0571
+    jr nz, .endIf_C
         call Call_000_05de ; Handle enemies
-    jr_000_0571:
+    .endIf_C:
 
     call clearUnusedOamSlots_longJump ; Clear unused OAM
     call tryPausing ; Handle pausing ?
 ret
 
-
-Jump_000_0578:
+.queenBranch:
     ; Handle window height, save text, earthquake, low heath beep, fade in, and Metroid Queen cry
     call miscIngameTasks_longJump
+    ; Check if dead (when displayed health is zero)
     ld a, [samusDispHealthLow]
     ld b, a
     ld a, [samusDispHealthHigh]
     or b
         call z, killSamus
+    ; Update Samus position history
     ldh a, [hSamusYPixel]
     ld [$d029], a
     ldh a, [hSamusYScreen]
@@ -811,8 +825,8 @@ loadGame_loadGraphics:
     call copyToVram
 ret
 
-
-Call_000_0673:
+; Only called when entering the queen's room
+Call_000_0673: ; 00:0673
     xor a
     ldh [$cc], a
     ldh [$ce], a
@@ -821,7 +835,7 @@ Call_000_0673:
     ldh a, [hCameraXScreen]
     ldh [$cf], a
 
-    jr_000_0680:
+    .loop:
         ld a, LOW(mapUpdateBuffer)
         ldh [hMapUpdate.buffPtrLow], a
         ld a, HIGH(mapUpdateBuffer)
@@ -832,7 +846,7 @@ Call_000_0673:
         add $10
         ldh [$cc], a
         and a
-    jr nz, jr_000_0680
+    jr nz, .loop
 ret
 
 
@@ -999,7 +1013,7 @@ prepMapRowUpdate: ; 00:0788
             ld d, $00
             sla e
             rl d
-            ld hl, $4000
+            ld hl, map_screenPointers ; $4000
             add hl, de
             ld a, [hl+]
             ld c, a
@@ -1053,7 +1067,7 @@ prepMapColumnUpdate: ; 00:07E4
             ld d, $00
             sla e
             rl d
-            ld hl, $4000
+            ld hl, map_screenPointers ; $4000
             add hl, de
             ld a, [hl+]
             ld c, a
@@ -1077,6 +1091,7 @@ ret
 
 ; Translates X and Y map/screen coordinates into map/screen array indeces
 ;  and a VRAM address, for updating scrolling
+; Also loads the screen pointer into BC
 Call_000_0835: ; 00:0835
     ldh a, [$cd]
     swap a
@@ -1091,12 +1106,13 @@ Call_000_0835: ; 00:0835
     ld d, $00
     sla e
     rl d
-    ld hl, $4000
+    ld hl, map_screenPointers ;$4000
     add hl, de
     ld a, [hl+]
     ld c, a
     ld a, [hl]
     ld b, a
+    
     ldh a, [$cc]
     and $f0
     ld l, a
@@ -1237,7 +1253,7 @@ ret
 Call_000_08fe:
     ld a, [doorScrollDirection]
     and a
-    jp nz, Jump_000_0b44
+        jp nz, Jump_000_0b44 ; Handle scrolling
 
     ; Get screen index from coordinates
     ldh a, [hCameraYScreen]
@@ -1249,170 +1265,153 @@ Call_000_08fe:
     ld d, $00
     
     ; Load scroll data for screen
-    ld hl, $4200
+    ld hl, map_scrollData ;$4200
     add hl, de
     ld a, [hl]
     ldh [$98], a
+    
     ldh a, [$98]
-    bit 0, a
+    bit 0, a ; Check right
     jr z, jr_000_0949
+        ldh a, [hCameraXPixel]
+        cp $b0
+        jp nz, Jump_000_0936        
+            ld a, [samus_onscreenXPos]
+            cp $a1
+                jr c, jr_000_0991
+            ld a, $01 ; Right
+            ld [doorScrollDirection], a
+            call loadDoorIndex
+            jp Jump_000_0991
+        Jump_000_0936:
+    
+        jr c, jr_000_0949
+            ldh a, [hCameraXPixel]
+            sub $01
+            ldh [hCameraXPixel], a
+            ldh a, [hCameraXScreen]
+            sbc $00
+            and $0f
+            ldh [hCameraXScreen], a
+            jp Jump_000_0991
+    jr_000_0949:
 
-    ldh a, [hCameraXPixel]
-    cp $b0
-    jp nz, Jump_000_0936
-
-    ld a, [samus_onscreenXPos]
-    cp $a1
-    jr c, jr_000_0991
-
-    ld a, $01
-    ld [doorScrollDirection], a
-    call Call_000_0c37
-    jp Jump_000_0991
-
-
-Jump_000_0936:
-    jr c, jr_000_0949
-
-    ldh a, [hCameraXPixel]
-    sub $01
-    ldh [hCameraXPixel], a
-    ldh a, [hCameraXScreen]
-    sbc $00
-    and $0f
-    ldh [hCameraXScreen], a
-    jp Jump_000_0991
-
-
-jr_000_0949:
     ld a, [$d035]
     and a
     jr z, jr_000_0991
-
-    ld b, a
-    ldh a, [hCameraXPixel]
-    add b
-    ldh [hCameraXPixel], a
-    ld b, a
-    ldh a, [hCameraXScreen]
-    adc $00
-    and $0f
-    ldh [hCameraXScreen], a
-    ld a, [$d023]
-    set 4, a
-    ld [$d023], a
-    ldh a, [hSamusXPixel]
-    sub b
-    add $60
-    cp $40
-    jr c, jr_000_097f
-
-    ldh a, [hCameraXPixel]
-    add $01
-    ldh [hCameraXPixel], a
-    ldh a, [hCameraXScreen]
-    adc $00
-    and $0f
-    ldh [hCameraXScreen], a
-    jr jr_000_0991
-
-jr_000_097f:
-    cp $3f
-    jr nc, jr_000_0991
-
-    ldh a, [hCameraXPixel]
-    sub $01
-    ldh [hCameraXPixel], a
-    ldh a, [hCameraXScreen]
-    sbc $00
-    and $0f
-    ldh [hCameraXScreen], a
+        ld b, a
+        ldh a, [hCameraXPixel]
+        add b
+        ldh [hCameraXPixel], a
+        ld b, a
+        ldh a, [hCameraXScreen]
+        adc $00
+        and $0f
+        ldh [hCameraXScreen], a
+        ld a, [$d023]
+        set 4, a
+        ld [$d023], a
+        ldh a, [hSamusXPixel]
+        sub b
+        add $60
+        cp $40
+        jr c, jr_000_097f
+            ldh a, [hCameraXPixel]
+            add $01
+            ldh [hCameraXPixel], a
+            ldh a, [hCameraXScreen]
+            adc $00
+            and $0f
+            ldh [hCameraXScreen], a
+            jr jr_000_0991
+        jr_000_097f:
+            cp $3f
+            jr nc, jr_000_0991
+                ldh a, [hCameraXPixel]
+                sub $01
+                ldh [hCameraXPixel], a
+                ldh a, [hCameraXScreen]
+                sbc $00
+                and $0f
+                ldh [hCameraXScreen], a
+    jr_000_0991:
 
 Jump_000_0991:
-jr_000_0991:
+
     ldh a, [$98]
-    bit 1, a
+    bit 1, a ; Check left
     jr z, jr_000_09cd
+        ldh a, [hCameraXPixel]
+        cp $50
+        jr nz, jr_000_09bb
+            ld a, [samus_onscreenXPos]
+            cp $0f
+                jp nc, Jump_000_0a18
+            ld a, $02 ; Left
+            ld [doorScrollDirection], a
+            ld a, $00
+            ldh [hSamusXPixel], a
+            ldh a, [hSamusXScreen]
+            inc a
+            and $0f
+            ldh [hSamusXScreen], a
+            call loadDoorIndex
+            jp Jump_000_0a18
+        jr_000_09bb:
+    
+        jr nc, jr_000_09cd
+            ldh a, [hCameraXPixel]
+            add $01
+            ldh [hCameraXPixel], a
+            ldh a, [hCameraXScreen]
+            adc $00
+            and $0f
+            ldh [hCameraXScreen], a
+            jr jr_000_0a18
+    jr_000_09cd:
 
-    ldh a, [hCameraXPixel]
-    cp $50
-    jr nz, jr_000_09bb
-
-    ld a, [samus_onscreenXPos]
-    cp $0f
-    jp nc, Jump_000_0a18
-
-    ld a, $02
-    ld [doorScrollDirection], a
-    ld a, $00
-    ldh [hSamusXPixel], a
-    ldh a, [hSamusXScreen]
-    inc a
-    and $0f
-    ldh [hSamusXScreen], a
-    call Call_000_0c37
-    jp Jump_000_0a18
-
-
-jr_000_09bb:
-    jr nc, jr_000_09cd
-
-    ldh a, [hCameraXPixel]
-    add $01
-    ldh [hCameraXPixel], a
-    ldh a, [hCameraXScreen]
-    adc $00
-    and $0f
-    ldh [hCameraXScreen], a
-    jr jr_000_0a18
-
-jr_000_09cd:
     ld a, [$d036]
     and a
     jr z, jr_000_0a18
-
-    ld a, [$d036]
-    ld b, a
-    ldh a, [hCameraXPixel]
-    sub b
-    ldh [hCameraXPixel], a
-    ld b, a
-    ldh a, [hCameraXScreen]
-    sbc $00
-    and $0f
-    ldh [hCameraXScreen], a
-    ld a, [$d023]
-    set 5, a
-    ld [$d023], a
-    ldh a, [hSamusXPixel]
-    sub b
-    add $60
-    cp $70
-    jr nc, jr_000_0a06
-
-    ldh a, [hCameraXPixel]
-    sub $01
-    ldh [hCameraXPixel], a
-    ldh a, [hCameraXScreen]
-    sbc $00
-    and $0f
-    ldh [hCameraXScreen], a
-    jr jr_000_0a18
-
-jr_000_0a06:
-    cp $71
-    jr c, jr_000_0a18
-
-    ldh a, [hCameraXPixel]
-    add $01
-    ldh [hCameraXPixel], a
-    ldh a, [hCameraXScreen]
-    adc $00
-    and $0f
-    ldh [hCameraXScreen], a
+        ld a, [$d036]
+        ld b, a
+        ldh a, [hCameraXPixel]
+        sub b
+        ldh [hCameraXPixel], a
+        ld b, a
+        ldh a, [hCameraXScreen]
+        sbc $00
+        and $0f
+        ldh [hCameraXScreen], a
+        ld a, [$d023]
+        set 5, a
+        ld [$d023], a
+        ldh a, [hSamusXPixel]
+        sub b
+        add $60
+        cp $70
+        jr nc, jr_000_0a06
+            ldh a, [hCameraXPixel]
+            sub $01
+            ldh [hCameraXPixel], a
+            ldh a, [hCameraXScreen]
+            sbc $00
+            and $0f
+            ldh [hCameraXScreen], a
+            jr jr_000_0a18
+        jr_000_0a06:
+            cp $71
+            jr c, jr_000_0a18
+                ldh a, [hCameraXPixel]
+                add $01
+                ldh [hCameraXPixel], a
+                ldh a, [hCameraXScreen]
+                adc $00
+                and $0f
+                ldh [hCameraXScreen], a
+    jr_000_0a18:
 
 Jump_000_0a18:
-jr_000_0a18:
     xor a
     ld [$d035], a
     ld [$d036], a
@@ -1426,175 +1425,155 @@ jr_000_0a18:
     ld b, a
     ldh a, [hSamusYPixel]
     sub b
-    jp z, Jump_000_0b2c
-
+        jp z, Jump_000_0b2c
     bit 7, a
     jp nz, Jump_000_0ab6
+        ld [$d038], a
+        ld a, [$d023]
+        set 7, a
+        ld [$d023], a
+        
+        ; Why's this case so different from the others
+        ldh a, [$98]
+        bit 3, a ; Check down
+        jr z, jr_000_0a9d
+            ld a, [$d08b]
+            cp $11
+            jr nz, jr_000_0a58
+                ldh a, [hCameraYPixel]
+                cp $a0
+                    jr nz, jr_000_0a71
+                jr jr_000_0a5e
+            jr_000_0a58:
+                ldh a, [hCameraYPixel]
+                cp $c0
+                jr nz, jr_000_0a71
+    
+                jr_000_0a5e:
+                    ld a, [samus_onscreenYPos]
+                    cp $78
+                        jp c, Jump_000_0b2c
+                    ld a, $08 ; Down
+                    ld [doorScrollDirection], a
+                    call loadDoorIndex
+                    jp Jump_000_0ab6
+            jr_000_0a71:
+        
+            jr c, jr_000_0a84
+                ldh a, [hCameraYPixel]
+                sub $01
+                ldh [hCameraYPixel], a
+                ldh a, [hCameraYScreen]
+                sbc $00
+                and $0f
+                ldh [hCameraYScreen], a
+                jp Jump_000_0b2c
+            jr_000_0a84:
+                ldh a, [$99]
+                cp $40
+                jp c, Jump_000_0b2c
+                    ld a, [$d038]
+                    ld b, a
+                    ldh a, [hCameraYPixel]
+                    add b
+                    ldh [hCameraYPixel], a
+                    ldh a, [hCameraYScreen]
+                    adc $00
+                    ldh [hCameraYScreen], a
+                    jp Jump_000_0b2c
+        jr_000_0a9d:
+            ldh a, [$99]
+            cp $50
+            jp c, Jump_000_0b2c
+                ld a, [$d038]
+                ld b, a
+                ldh a, [hCameraYPixel]
+                add b
+                ldh [hCameraYPixel], a
+                ldh a, [hCameraYScreen]
+                adc $00
+                ldh [hCameraYScreen], a
+                jp Jump_000_0b2c
+    Jump_000_0ab6:
 
-    ld [$d038], a
-    ld a, [$d023]
-    set 7, a
-    ld [$d023], a
-    ldh a, [$98]
-    bit 3, a
-    jr z, jr_000_0a9d
-
-    ld a, [$d08b]
-    cp $11
-    jr nz, jr_000_0a58
-
-    ldh a, [hCameraYPixel]
-    cp $a0
-    jr nz, jr_000_0a71
-
-    jr jr_000_0a5e
-
-jr_000_0a58:
-    ldh a, [hCameraYPixel]
-    cp $c0
-    jr nz, jr_000_0a71
-
-jr_000_0a5e:
-    ld a, [samus_onscreenYPos]
-    cp $78
-    jp c, Jump_000_0b2c
-
-    ld a, $08
-    ld [doorScrollDirection], a
-    call Call_000_0c37
-    jp Jump_000_0ab6
-
-
-jr_000_0a71:
-    jr c, jr_000_0a84
-
-    ldh a, [hCameraYPixel]
-    sub $01
-    ldh [hCameraYPixel], a
-    ldh a, [hCameraYScreen]
-    sbc $00
-    and $0f
-    ldh [hCameraYScreen], a
-    jp Jump_000_0b2c
-
-
-jr_000_0a84:
-    ldh a, [$99]
-    cp $40
-    jp c, Jump_000_0b2c
-
-    ld a, [$d038]
-    ld b, a
-    ldh a, [hCameraYPixel]
-    add b
-    ldh [hCameraYPixel], a
-    ldh a, [hCameraYScreen]
-    adc $00
-    ldh [hCameraYScreen], a
-    jp Jump_000_0b2c
-
-
-jr_000_0a9d:
-    ldh a, [$99]
-    cp $50
-    jp c, Jump_000_0b2c
-
-    ld a, [$d038]
-    ld b, a
-    ldh a, [hCameraYPixel]
-    add b
-    ldh [hCameraYPixel], a
-    ldh a, [hCameraYScreen]
-    adc $00
-    ldh [hCameraYScreen], a
-    jp Jump_000_0b2c
-
-
-Jump_000_0ab6:
     cpl
     inc a
     ld [$d037], a
     ld a, [$d023]
     set 6, a
     ld [$d023], a
+        
     ldh a, [$98]
-    bit 2, a
+    bit 2, a ; Check up
     jr z, jr_000_0b17
-
-    ldh a, [hCameraYPixel]
-    cp $48
-    jr nz, jr_000_0aee
-
-    ld a, [samus_onscreenYPos]
-    cp $1b
-    jr nc, jr_000_0b2c
-
-    ld a, $04
-    ld [doorScrollDirection], a
-    ld a, $00
-    ldh [hSamusYPixel], a
-    ldh a, [hCameraYScreen]
-    ldh [hSamusYScreen], a
-    ld a, [$d08b]
-    cp $11
-    call nz, Call_000_0c37
-    jp Jump_000_0b2c
-
-
-jr_000_0aee:
-    jr nc, jr_000_0b00
-
-    ldh a, [hCameraYPixel]
-    add $01
-    ldh [hCameraYPixel], a
-    ldh a, [hCameraYScreen]
-    adc $00
-    and $0f
-    ldh [hCameraYScreen], a
-    jr jr_000_0b2c
-
-jr_000_0b00:
-    ldh a, [$99]
-    cp $3e
-    jr nc, jr_000_0b2c
-
-    ld a, [$d037]
-    ld b, a
-    ldh a, [hCameraYPixel]
-    sub b
-    ldh [hCameraYPixel], a
-    ldh a, [hCameraYScreen]
-    sbc $00
-    ldh [hCameraYScreen], a
-    jr jr_000_0b2c
-
-jr_000_0b17:
-    ldh a, [$99]
-    cp $4e
-    jr nc, jr_000_0b2c
-
-    ld a, [$d037]
-    ld b, a
-    ldh a, [hCameraYPixel]
-    sub b
-    ldh [hCameraYPixel], a
-    ldh a, [hCameraYScreen]
-    sbc $00
-    ldh [hCameraYScreen], a
+        ldh a, [hCameraYPixel]
+        cp $48
+        jr nz, jr_000_0aee
+            ld a, [samus_onscreenYPos]
+            cp $1b
+                jr nc, jr_000_0b2c
+            ld a, $04 ; Up
+            ld [doorScrollDirection], a
+            ld a, $00
+            ldh [hSamusYPixel], a
+            ldh a, [hCameraYScreen]
+            ldh [hSamusYScreen], a
+            ld a, [$d08b]
+            cp $11
+                call nz, loadDoorIndex
+            jp Jump_000_0b2c
+        jr_000_0aee:
+    
+        jr nc, jr_000_0b00
+            ldh a, [hCameraYPixel]
+            add $01
+            ldh [hCameraYPixel], a
+            ldh a, [hCameraYScreen]
+            adc $00
+            and $0f
+            ldh [hCameraYScreen], a
+            jr jr_000_0b2c
+        jr_000_0b00:
+            ldh a, [$99]
+            cp $3e
+            jr nc, jr_000_0b2c
+                ld a, [$d037]
+                ld b, a
+                ldh a, [hCameraYPixel]
+                sub b
+                ldh [hCameraYPixel], a
+                ldh a, [hCameraYScreen]
+                sbc $00
+                ldh [hCameraYScreen], a
+                jr jr_000_0b2c   
+    jr_000_0b17:
+        ldh a, [$99]
+        cp $4e
+        jr nc, jr_000_0b2c
+            ld a, [$d037]
+            ld b, a
+            ldh a, [hCameraYPixel]
+            sub b
+            ldh [hCameraYPixel], a
+            ldh a, [hCameraYScreen]
+            sbc $00
+            ldh [hCameraYScreen], a
+    jr_000_0b2c:
 
 Jump_000_0b2c:
-jr_000_0b2c:
     xor a
     ld [$d038], a
     ld [$d037], a
     ldh a, [hSamusYPixel]
     ld [$d00c], a
-    ret
+ret
 
 ; 00:0B39 - Unreferenced data?
     db $00, $01, $01, $00, $00, $00, $01, $02, $02, $01, $01
 
+; Already in a door transition?
 Jump_000_0b44:
+    ; Make sure spinning animation happens during transition
     ld a, [samus_spinAnimationTimer]
     inc a
     ld [samus_spinAnimationTimer], a
@@ -1602,165 +1581,171 @@ Jump_000_0b44:
     ld a, [doorScrollDirection]
     bit 0, a
     jr z, jr_000_0b82
+        ; Scroll right
+        ldh a, [hCameraXPixel]
+        add $04
+        ldh [hCameraXPixel], a
+        ldh a, [hCameraXScreen]
+        adc $00
+        and $0f
+        ldh [hCameraXScreen], a
+        ; Also force the running/rolling animation to happen if applicable
+        ld a, [samus_animationTimer]
+        inc a
+        inc a
+        inc a
+        ld [samus_animationTimer], a
+        ; Set screen movement direction
+        ld a, $10
+        ld [$d023], a
+        ; Move Samus
+        ldh a, [hSamusXPixel]
+        add $01
+        ldh [hSamusXPixel], a
+        ldh a, [hSamusXScreen]
+        adc $00
+        ldh [hSamusXScreen], a
+        ldh a, [hCameraXPixel]
+        cp $50
+            ret nz
+        jp Jump_000_0c24
+    jr_000_0b82:
 
-    ldh a, [hCameraXPixel]
-    add $04
-    ldh [hCameraXPixel], a
-    ldh a, [hCameraXScreen]
-    adc $00
-    and $0f
-    ldh [hCameraXScreen], a
-    ; Play running animation
-    ld a, [samus_animationTimer]
-    inc a
-    inc a
-    inc a
-    ld [samus_animationTimer], a
-
-    ld a, $10
-    ld [$d023], a
-    ldh a, [hSamusXPixel]
-    add $01
-    ldh [hSamusXPixel], a
-    ldh a, [hSamusXScreen]
-    adc $00
-    ldh [hSamusXScreen], a
-    ldh a, [hCameraXPixel]
-    cp $50
-    ret nz
-
-    jp Jump_000_0c24
-
-
-jr_000_0b82:
     bit 1, a
     jr z, jr_000_0bb5
+        ; Scroll left
+        ldh a, [hCameraXPixel]
+        sub $04
+        ldh [hCameraXPixel], a
+        ldh a, [hCameraXScreen]
+        sbc $00
+        and $0f
+        ldh [hCameraXScreen], a
+        ; Also force the running/rolling animation to happen if applicable
+        ld a, [samus_animationTimer]
+        inc a
+        inc a
+        inc a
+        ld [samus_animationTimer], a
+        ; Set screen movement direction
+        ld a, $20
+        ld [$d023], a
+        ; Move Samus
+        ldh a, [hSamusXPixel]
+        sub $01
+        ldh [hSamusXPixel], a
+        ldh a, [hSamusXScreen]
+        sbc $00
+        ldh [hSamusXScreen], a
+        ldh a, [hCameraXPixel]
+        cp $b0
+            ret nz
+        jr jr_000_0c24
+    jr_000_0bb5:
 
-    ldh a, [hCameraXPixel]
-    sub $04
-    ldh [hCameraXPixel], a
-    ldh a, [hCameraXScreen]
-    sbc $00
-    and $0f
-    ldh [hCameraXScreen], a
-    ld a, [samus_animationTimer]
-    inc a
-    inc a
-    inc a
-    ld [samus_animationTimer], a
-    ld a, $20
-    ld [$d023], a
-    ldh a, [hSamusXPixel]
-    sub $01
-    ldh [hSamusXPixel], a
-    ldh a, [hSamusXScreen]
-    sbc $00
-    ldh [hSamusXScreen], a
-    ldh a, [hCameraXPixel]
-    cp $b0
-    ret nz
-
-    jr jr_000_0c24
-
-jr_000_0bb5:
     bit 2, a
     jr z, jr_000_0bee
+        ; Scroll up
+        ldh a, [hCameraYPixel]
+        sub $04
+        ldh [hCameraYPixel], a
+        ldh a, [hCameraYScreen]
+        sbc $00
+        and $0f
+        ldh [hCameraYScreen], a
+        ; Also force the running/rolling animation to happen if applicable
+        ld a, [samus_animationTimer]
+        inc a
+        inc a
+        inc a
+        ld [samus_animationTimer], a
+        ; Set screen movement direction
+        ld a, $40
+        ld [$d023], a
+        ; Move Samus 1.5 px/frame
+        ldh a, [frameCounter]
+        and $01
+        add $01
+        ld b, a
+        ldh a, [hSamusYPixel]
+        sub b
+        ldh [hSamusYPixel], a
+        ldh a, [hSamusYScreen]
+        sbc $00
+        ldh [hSamusYScreen], a
+        ldh a, [hCameraYPixel]
+        cp $b8
+            ret nz
+        jr jr_000_0c24
+    jr_000_0bee:
 
-    ldh a, [hCameraYPixel]
-    sub $04
-    ldh [hCameraYPixel], a
-    ldh a, [hCameraYScreen]
-    sbc $00
-    and $0f
-    ldh [hCameraYScreen], a
-    ld a, [samus_animationTimer]
-    inc a
-    inc a
-    inc a
-    ld [samus_animationTimer], a
-    ld a, $40
-    ld [$d023], a
-    ldh a, [frameCounter]
-    and $01
-    add $01
-    ld b, a
-    ldh a, [hSamusYPixel]
-    sub b
-    ldh [hSamusYPixel], a
-    ldh a, [hSamusYScreen]
-    sbc $00
-    ldh [hSamusYScreen], a
-    ldh a, [hCameraYPixel]
-    cp $b8
-    ret nz
-
-    jr jr_000_0c24
-
-jr_000_0bee:
     bit 3, a
     ret z
-
-    ldh a, [hCameraYPixel]
-    add $04
-    ldh [hCameraYPixel], a
-    ldh a, [hCameraYScreen]
-    adc $00
-    and $0f
-    ldh [hCameraYScreen], a
-    ld a, [samus_animationTimer]
-    inc a
-    inc a
-    inc a
-    ld [samus_animationTimer], a
-    ld a, $80
-    ld [$d023], a
-    ldh a, [frameCounter]
-    and $01
-    add $01
-    ld b, a
-    ldh a, [hSamusYPixel]
-    add b
-    ldh [hSamusYPixel], a
-    ldh a, [hSamusYScreen]
-    adc $00
-    ldh [hSamusYScreen], a
-    ldh a, [hCameraYPixel]
-    cp $48
-    ret nz
+        ; Scroll down
+        ldh a, [hCameraYPixel]
+        add $04
+        ldh [hCameraYPixel], a
+        ldh a, [hCameraYScreen]
+        adc $00
+        and $0f
+        ldh [hCameraYScreen], a
+        ; Also force the running/rolling animation to happen if applicable
+        ld a, [samus_animationTimer]
+        inc a
+        inc a
+        inc a
+        ld [samus_animationTimer], a
+        ; Set screen movement direction
+        ld a, $80
+        ld [$d023], a
+        ; Move Samus 1.5 px/frame
+        ldh a, [frameCounter]
+        and $01
+        add $01
+        ld b, a
+        ldh a, [hSamusYPixel]
+        add b
+        ldh [hSamusYPixel], a
+        ldh a, [hSamusYScreen]
+        adc $00
+        ldh [hSamusYScreen], a
+        ldh a, [hCameraYPixel]
+        cp $48
+            ret nz
+    ; end cases
 
 Jump_000_0c24:
 jr_000_0c24:
     xor a
     ld [doorScrollDirection], a
-    ld [$c463], a
+    ld [cutsceneActive], a
+    ; Apply fade-in if we have faded out.
     ld a, [bg_palette]
     cp $93
-    ret z
-
+        ret z
     ld a, $2f
-    ld [$d09b], a
-    ret
+    ld [fadeInTimer], a
+ret
 
-
-Call_000_0c37:
+loadDoorIndex: ; 00:0C37
+    ; Check related to being in the Queen fight
     ld a, [$d08b]
     cp $11
-    jr nz, jr_000_0c4e
+    jr nz, .endIf
+        ; If in a spider ball pose, return to morph ball
+        ld a, [samusPose]
+        cp $0b
+        jr c, .endIf
+            cp $0f
+            jr nc, .endIf
+                ld a, $05
+                ld [samusPose], a
+    .endIf:
 
-    ld a, [samusPose]
-    cp $0b
-    jr c, jr_000_0c4e
-
-    cp $0f
-    jr nc, jr_000_0c4e
-
-    ld a, $05
-    ld [samusPose], a
-
-jr_000_0c4e:
     xor a
     ld [samus_hurtFlag], a
     ld [saveContactFlag], a
+    ; Clear bomb slots
     ld a, $ff
     ld hl, $dd30
     ld [hl], a
@@ -1768,6 +1753,7 @@ jr_000_0c4e:
     ld [hl], a
     ld hl, $dd50
     ld [hl], a
+
     ld [$d09e], a
     ; Get screen ID from coordinates
     ldh a, [hCameraYScreen]
@@ -1779,26 +1765,27 @@ jr_000_0c4e:
     ld d, $00
     sla e
     rl d
-    ld hl, $4300 ; Door transition table
+    ld hl, map_doorIndexes ; $4300 - Door transition table
     add hl, de
     ld a, [hl+]
     ld [doorIndexLow], a
     ld a, [hl]
     res 3, a ; Remove sprite priority bit from door index in ROM
     ld [doorIndexHigh], a
+
     ld a, $02
     ld [$c458], a
     xor a
-    ld [$d09b], a
+    ld [fadeInTimer], a
+    ; If in debug mode, check cheat to warp to queen
     ld a, [debugFlag]
     and a
-    ret z
-
+        ret z
     ; Check if either A or Start is pressed
     ldh a, [hInputPressed]
     and PADF_START | PADF_SELECT | PADF_B | PADF_A ;$0f
     cp PADF_SELECT | PADF_B ;$06
-    ret nz
+        ret nz
     ; Force transition to queen
     ld a, $9d
     ld [doorIndexLow], a
@@ -1861,13 +1848,13 @@ loadGame_samusData:
     ld [samusCurMissilesHigh], a
     ld [samusDispMissilesHigh], a
     
+    ; Prep the Samus appearance sequence
     ld a, $13
     ld [samusPose], a
     ld a, $40
     ld [countdownTimerLow], a
     ld a, $01
     ld [countdownTimerHigh], a
-    ; Play Samus' appearance fanfare
     ld a, $12
     ld [songRequest], a
 ret
@@ -5511,19 +5498,19 @@ executeDoorScript: ; 00:239C
         ldh [hCameraXPixel], a
         ; Source
         ld a, LOW(hudBaseTilemap) ; bank 5
-        ldh [$b1], a
+        ldh [hVramTransfer.srcAddrLow], a
         ld a, HIGH(hudBaseTilemap)
-        ldh [$b2], a
+        ldh [hVramTransfer.srcAddrHigh], a
         ; Dest
         ld a, LOW(vramDest_statusBar)
-        ldh [$b3], a
+        ldh [hVramTransfer.destAddrLow], a
         ld a, HIGH(vramDest_statusBar)
-        ldh [$b4], a
+        ldh [hVramTransfer.destAddrHigh], a
         ; Length
         ld a, $14
-        ldh [$b5], a
+        ldh [hVramTransfer.sizeLow], a
         ld a, $00
-        ldh [$b6], a
+        ldh [hVramTransfer.sizeHigh], a
         
         ld a, $05
         ld [$d065], a
@@ -5560,19 +5547,19 @@ executeDoorScript: ; 00:239C
             ldh [rIE], a
             
             ld a, LOW(hudBaseTilemap) ; bank 5
-            ldh [$b1], a
+            ldh [hVramTransfer.srcAddrLow], a
             ld a, HIGH(hudBaseTilemap)
-            ldh [$b2], a
+            ldh [hVramTransfer.srcAddrHigh], a
             
             ld a, LOW(vramDest_statusBar)
-            ldh [$b3], a
+            ldh [hVramTransfer.destAddrLow], a
             ld a, HIGH(vramDest_statusBar)
-            ldh [$b4], a
+            ldh [hVramTransfer.destAddrHigh], a
             
             ld a, $14
-            ldh [$b5], a
+            ldh [hVramTransfer.sizeLow], a
             ld a, $00
-            ldh [$b6], a
+            ldh [hVramTransfer.sizeHigh], a
             
             ld a, $05
             ld [$d065], a
@@ -5746,33 +5733,33 @@ executeDoorScript: ; 00:239C
         ld hl, gfx_items
         add hl, de
         ld a, l
-        ldh [$b1], a
+        ldh [hVramTransfer.srcAddrLow], a
         ld a, h
-        ldh [$b2], a
+        ldh [hVramTransfer.srcAddrHigh], a
 
         ld a, LOW(vramDest_item)
-        ldh [$b3], a
+        ldh [hVramTransfer.destAddrLow], a
         ld a, HIGH(vramDest_item)
 
-        ldh [$b4], a
+        ldh [hVramTransfer.destAddrHigh], a
         ld a, $40
-        ldh [$b5], a
+        ldh [hVramTransfer.sizeLow], a
         ld a, $00
-        ldh [$b6], a
+        ldh [hVramTransfer.sizeHigh], a
         call Call_000_27ba
         ; Load item orb
         ld a, LOW(gfx_itemOrb)
-        ldh [$b1], a
+        ldh [hVramTransfer.srcAddrLow], a
         ld a, HIGH(gfx_itemOrb)
-        ldh [$b2], a
+        ldh [hVramTransfer.srcAddrHigh], a
         ld a, $00
-        ldh [$b3], a
+        ldh [hVramTransfer.destAddrLow], a
         ld a, $8b
-        ldh [$b4], a
+        ldh [hVramTransfer.destAddrHigh], a
         ld a, $40
-        ldh [$b5], a
+        ldh [hVramTransfer.sizeLow], a
         ld a, $00
-        ldh [$b6], a
+        ldh [hVramTransfer.sizeHigh], a
         call Call_000_27ba
         ; Load item font text
         ld a, BANK(gfx_itemFont)
@@ -5780,19 +5767,19 @@ executeDoorScript: ; 00:239C
         ld [$d065], a
         ld [rMBC_BANK_REG], a
         ld a, LOW(gfx_itemFont) ;$34
-        ldh [$b1], a
+        ldh [hVramTransfer.srcAddrLow], a
         ld a, HIGH(gfx_itemFont) ;$6c
-        ldh [$b2], a
+        ldh [hVramTransfer.srcAddrHigh], a
         ; VRAM Dest
         ld a, LOW(vramDest_itemFont)
-        ldh [$b3], a
+        ldh [hVramTransfer.destAddrLow], a
         ld a, HIGH(vramDest_itemFont)
-        ldh [$b4], a
+        ldh [hVramTransfer.destAddrHigh], a
         ; Write length
         ld a, $30
-        ldh [$b5], a
+        ldh [hVramTransfer.sizeLow], a
         ld a, $02
-        ldh [$b6], a
+        ldh [hVramTransfer.sizeHigh], a
         call Call_000_27ba
     
         pop hl
@@ -5816,18 +5803,18 @@ executeDoorScript: ; 00:239C
         ld a, e
         ld l, a
         ld a, l
-        ldh [$b1], a
+        ldh [hVramTransfer.srcAddrLow], a
         ld a, h
-        ldh [$b2], a
+        ldh [hVramTransfer.srcAddrHigh], a
         
         ld a, LOW(vramDest_itemText)
-        ldh [$b3], a
+        ldh [hVramTransfer.destAddrLow], a
         ld a, HIGH(vramDest_itemText)
-        ldh [$b4], a
+        ldh [hVramTransfer.destAddrHigh], a
         ld a, $10
-        ldh [$b5], a
+        ldh [hVramTransfer.sizeLow], a
         ld a, $00
-        ldh [$b6], a
+        ldh [hVramTransfer.sizeHigh], a
         call Call_000_27ba
         pop hl
         jr .nextToken
@@ -5859,22 +5846,22 @@ door_loadGraphics: ; door script load graphics routine
         ld [rMBC_BANK_REG], a
         
         ld a, [hl+]
-        ldh [$b1], a
+        ldh [hVramTransfer.srcAddrLow], a
         ld [saveBuf_enGfxSrcLow], a
         
         ld a, [hl+]
-        ldh [$b2], a
+        ldh [hVramTransfer.srcAddrHigh], a
         ld [saveBuf_enGfxSrcHigh], a
         
         ld a, LOW(vramDest_enemies)
-        ldh [$b3], a
+        ldh [hVramTransfer.destAddrLow], a
         ld a, HIGH(vramDest_enemies)
-        ldh [$b4], a
+        ldh [hVramTransfer.destAddrHigh], a
 
         ld a, $00
-        ldh [$b5], a
+        ldh [hVramTransfer.sizeLow], a
         ld a, $04
-        ldh [$b6], a
+        ldh [hVramTransfer.sizeHigh], a
     jp Jump_000_27ba
 
     jr_000_271c:
@@ -5885,21 +5872,21 @@ door_loadGraphics: ; door script load graphics routine
         ld [rMBC_BANK_REG], a
         
         ld a, [hl+]
-        ldh [$b1], a
+        ldh [hVramTransfer.srcAddrLow], a
         ld [saveBuf_bgGfxSrcLow], a
         ld a, [hl+]
-        ldh [$b2], a
+        ldh [hVramTransfer.srcAddrHigh], a
         ld [saveBuf_bgGfxSrcHigh], a
         
         ld a, LOW(vramDest_bgTiles)
-        ldh [$b3], a
+        ldh [hVramTransfer.destAddrLow], a
         ld a, HIGH(vramDest_bgTiles)
-        ldh [$b4], a
+        ldh [hVramTransfer.destAddrHigh], a
         
         ld a, $00
-        ldh [$b5], a
+        ldh [hVramTransfer.sizeLow], a
         ld a, $08
-        ldh [$b6], a
+        ldh [hVramTransfer.sizeHigh], a
     jr jr_000_27ba
 
 door_copyData: ; door script copy data routine
@@ -5919,19 +5906,19 @@ Call_000_2753:
     ld [rMBC_BANK_REG], a
     
     ld a, [hl+]
-    ldh [$b1], a
+    ldh [hVramTransfer.srcAddrLow], a
     ld a, [hl+]
-    ldh [$b2], a
+    ldh [hVramTransfer.srcAddrHigh], a
     
     ld a, [hl+]
-    ldh [$b3], a
+    ldh [hVramTransfer.destAddrLow], a
     ld a, [hl+]
-    ldh [$b4], a
+    ldh [hVramTransfer.destAddrHigh], a
     
     ld a, [hl+]
-    ldh [$b5], a
+    ldh [hVramTransfer.sizeLow], a
     ld a, [hl+]
-    ldh [$b6], a
+    ldh [hVramTransfer.sizeHigh], a
     jr jr_000_27ba
 
 jr_000_2771:
@@ -5941,19 +5928,19 @@ jr_000_2771:
     ld [saveBuf_bgGfxSrcBank], a
     ld [rMBC_BANK_REG], a
     ld a, [hl+]
-    ldh [$b1], a
+    ldh [hVramTransfer.srcAddrLow], a
     ld [saveBuf_bgGfxSrcLow], a
     ld a, [hl+]
-    ldh [$b2], a
+    ldh [hVramTransfer.srcAddrHigh], a
     ld [saveBuf_bgGfxSrcHigh], a
     ld a, [hl+]
-    ldh [$b3], a
+    ldh [hVramTransfer.destAddrLow], a
     ld a, [hl+]
-    ldh [$b4], a
+    ldh [hVramTransfer.destAddrHigh], a
     ld a, [hl+]
-    ldh [$b5], a
+    ldh [hVramTransfer.sizeLow], a
     ld a, [hl+]
-    ldh [$b6], a
+    ldh [hVramTransfer.sizeHigh], a
     jr jr_000_27ba
 
 jr_000_2798:
@@ -5962,19 +5949,19 @@ jr_000_2798:
     ld [$d065], a
     ld [rMBC_BANK_REG], a
     ld a, [hl+]
-    ldh [$b1], a
+    ldh [hVramTransfer.srcAddrLow], a
     ld [saveBuf_enGfxSrcLow], a
     ld a, [hl+]
-    ldh [$b2], a
+    ldh [hVramTransfer.srcAddrHigh], a
     ld [saveBuf_enGfxSrcHigh], a
     ld a, [hl+]
-    ldh [$b3], a
+    ldh [hVramTransfer.destAddrLow], a
     ld a, [hl+]
-    ldh [$b4], a
+    ldh [hVramTransfer.destAddrHigh], a
     ld a, [hl+]
-    ldh [$b5], a
+    ldh [hVramTransfer.sizeLow], a
     ld a, [hl+]
-    ldh [$b6], a
+    ldh [hVramTransfer.sizeHigh], a
 
 Call_000_27ba:
 Jump_000_27ba:
@@ -6005,17 +5992,17 @@ Call_000_27e3:
     ld [$d065], a
     ld [rMBC_BANK_REG], a
     ld a, [hl+]
-    ldh [$b1], a
+    ldh [hVramTransfer.srcAddrLow], a
     ld a, [hl+]
-    ldh [$b2], a
+    ldh [hVramTransfer.srcAddrHigh], a
     ld a, [hl+]
-    ldh [$b3], a
+    ldh [hVramTransfer.destAddrLow], a
     ld a, [hl+]
-    ldh [$b4], a
+    ldh [hVramTransfer.destAddrHigh], a
     ld a, [hl+]
-    ldh [$b5], a
+    ldh [hVramTransfer.sizeLow], a
     ld a, [hl+]
-    ldh [$b6], a
+    ldh [hVramTransfer.sizeHigh], a
     ld a, $ff
     ld [vramTransferFlag], a
 
@@ -6027,7 +6014,7 @@ Call_000_27e3:
         callFar drawHudMetroid
         call clearUnusedOamSlots_longJump
         call waitOneFrame
-        ldh a, [$b4]
+        ldh a, [hVramTransfer.destAddrHigh]
         cp $85
     jr c, jr_000_2804
 
@@ -6097,8 +6084,8 @@ door_loadCollision:
     pop hl
 ret
 
-
-Call_000_2887:
+; Only called from the ENTER_QUEEN
+Call_000_2887: ; 00:2887
     ld a, [hl+]
     and $0f
     ld [currentLevelBank], a
@@ -6127,38 +6114,35 @@ Call_000_2887:
     ld a, [hl+]
     ldh [hSamusXScreen], a
     push hl
-    call disableLCD
-    call Call_000_0673
-    callFar Call_003_6d4a
-    
-    ldh a, [hCameraXPixel]
-    ld b, a
-    ldh a, [hSamusXPixel]
-    sub b
-    add $60
-    ld [samus_onscreenXPos], a
-    ldh a, [hCameraYPixel]
-    ld b, a
-    ldh a, [hSamusYPixel]
-    sub b
-    add $62
-    ld [samus_onscreenYPos], a
-    ld a, $e3
-    ldh [rLCDC], a
-    xor a
-    ld [doorScrollDirection], a
-    ld [scrollY], a
-    ldh [rSCY], a
-    ld a, [bg_palette]
-    cp $93
-    jr z, jr_000_28f9
-
-    ld a, $2f
-    ld [$d09b], a
-
-jr_000_28f9:
+        call disableLCD
+        call Call_000_0673
+        callFar Call_003_6d4a
+        ldh a, [hCameraXPixel]
+        ld b, a
+        ldh a, [hSamusXPixel]
+        sub b
+        add $60
+        ld [samus_onscreenXPos], a
+        ldh a, [hCameraYPixel]
+        ld b, a
+        ldh a, [hSamusYPixel]
+        sub b
+        add $62
+        ld [samus_onscreenYPos], a
+        ld a, $e3
+        ldh [rLCDC], a
+        xor a
+        ld [doorScrollDirection], a
+        ld [scrollY], a
+        ldh [rSCY], a
+        ld a, [bg_palette]
+        cp $93
+        jr z, jr_000_28f9
+            ld a, $2f
+            ld [fadeInTimer], a
+        jr_000_28f9:
     pop hl
-    ret
+ret
 
 
 door_warp:
@@ -6479,17 +6463,17 @@ VBlank_vramDataTransfer: ; 00:2BA3
     ; Load transfer parameters
     ld a, [$d065]
     ld [rMBC_BANK_REG], a
-    ldh a, [$b5]
+    ldh a, [hVramTransfer.sizeLow]
     ld c, a
-    ldh a, [$b6]
+    ldh a, [hVramTransfer.sizeHigh]
     ld b, a
-    ldh a, [$b1]
+    ldh a, [hVramTransfer.srcAddrLow]
     ld l, a
-    ldh a, [$b2]
+    ldh a, [hVramTransfer.srcAddrHigh]
     ld h, a
-    ldh a, [$b3]
+    ldh a, [hVramTransfer.destAddrLow]
     ld e, a
-    ldh a, [$b4]
+    ldh a, [hVramTransfer.destAddrHigh]
     ld d, a
 
     .transferLoop:
@@ -6503,17 +6487,17 @@ VBlank_vramDataTransfer: ; 00:2BA3
 
     ; Save transfer parameters
     ld a, c
-    ldh [$b5], a
+    ldh [hVramTransfer.sizeLow], a
     ld a, b
-    ldh [$b6], a
+    ldh [hVramTransfer.sizeHigh], a
     ld a, l
-    ldh [$b1], a
+    ldh [hVramTransfer.srcAddrLow], a
     ld a, h
-    ldh [$b2], a
+    ldh [hVramTransfer.srcAddrHigh], a
     ld a, e
-    ldh [$b3], a
+    ldh [hVramTransfer.destAddrLow], a
     ld a, d
-    ldh [$b4], a
+    ldh [hVramTransfer.destAddrHigh], a
     ; Clear update flag if done
     ld a, b
     or c
@@ -6540,9 +6524,9 @@ Jump_000_2bf4:
 
     ld a, [$d065]
     ld [rMBC_BANK_REG], a
-    ldh a, [$b3]
+    ldh a, [hVramTransfer.destAddrLow] ; ??
     ld l, a
-    ldh a, [$b4]
+    ldh a, [hVramTransfer.destAddrHigh] ; ??
     ld h, a
     ld de, $0010
 
@@ -6582,9 +6566,9 @@ Jump_000_2bf4:
     jr_000_2c34:
 
     ld a, l
-    ldh [$b3], a
+    ldh [hVramTransfer.destAddrLow], a
     ld a, h
-    ldh [$b4], a
+    ldh [hVramTransfer.destAddrHigh], a
     cp $85
     jr nz, jr_000_2c42
         xor a
@@ -9315,7 +9299,7 @@ loadScreenSpritePriorityBit: ; 00:3ED5
     ld d, $00
     sla e
     rl d
-    ld hl, $4300 ; Base address for door transition indexes
+    ld hl, map_doorIndexes ; $4300 - Base address for door transition indexes
     add hl, de
     ; Load the high byte of the transition index
     inc hl

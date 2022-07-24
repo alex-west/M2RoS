@@ -3,6 +3,12 @@
 ; Hardware related constants (not covered by hardware.inc)
 rMBC_BANK_REG = $2100 ; Dunno why it just doesn't use $2000
 
+; Map related memory locations (fixed in each bank)
+map_screenPointers = $4000 ; $200 bytes
+map_scrollData     = $4200 ; $100 bytes
+map_doorIndexes    = $4300 ; $200 bytes - Also contains sprite priority bits per screen
+; Note: Map data starts at $4500
+
 ; Samus' Gear constants
 ;  Bitfields
 itemMask_bomb   = %00000001 ; 01: Bombs
@@ -60,5 +66,4 @@ pose_faceScreen  = $13 ;Facing screen
 ;pose_          = $1B ;In Metroid Queen's stomach
 ;pose_          = $1C ;Escaping Metroid Queen
 ;pose_          = $1D ;Escaped Metroid Queen
-; TODO: Figure out the meaning of having bit 7 set in the pose
 
