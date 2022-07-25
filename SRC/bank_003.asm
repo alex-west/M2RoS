@@ -906,9 +906,22 @@ jr_003_6b1f:
 
 ; Used for seeking towards Samus
 ; takes B, D, and E as arguements
-; $E9 and $EA appear to be some sort of directional vector
-Call_003_6b44: ; 03:6B44
-    ld hl, $c43f
+; $E9 and $EA form a directional vector (centered at $10, $10)
+;
+; Caller arguments
+;        B   D   E
+; Zeta  $02 $20 $00
+; Omega $02 $20 $00
+; Larva $01 $1E $02
+; Baby  $02 $20 $00
+; D is the maximum for $E9/$EA
+; E is the minimum for $E9/$EA
+; B is the movement step in the table (acceleration, basically)
+;
+; Caller functions should validate the movement afterwards to make sure it doesn't clip into anything.
+enemy_seekSamus: ; 03:6B44
+    ; Load Samus/Enemy positions to adjusted temp variables
+    ld hl, seekSamusTemp.samusX
     ld a, [samus_onscreenXPos]
     add $10
     ld [hl-], a
@@ -922,50 +935,54 @@ Call_003_6b44: ; 03:6B44
     add $10
     ld [hl], a
     
-    ; Compare y positions
-    ld a, [$c43e]
-    sub [hl]
-    jr z, jr_003_6b77
-        jr c, jr_003_6b6f
+    ; Compare Y positions to modify Y component of vector
+    ld a, [seekSamusTemp.samusY]
+    sub [hl] ; HL = seekSamusTemp.enemyY
+    jr z, .endIf_A
+        jr c, .else_B
+            ; Samus below
             ldh a, [$e9]
-            cp d
-            jr z, jr_003_6b77
+            cp d ; Clamp vector Y to max value
+            jr z, .endIf_A
                 add b
                 ldh [$e9], a
-                jr jr_003_6b77
-        jr_003_6b6f:
+                jr .endIf_A
+        .else_B:
+            ; Samus above
             ldh a, [$e9]
-            cp e
-            jr z, jr_003_6b77
+            cp e ; Clamp vector Y to min value
+            jr z, .endIf_A
                 sub b
                 ldh [$e9], a
-    jr_003_6b77:
+    .endIf_A:
 
-    ; Compare x positions
+    ; Compare X positions to modify X component of vector
     inc l
-    ld a, [$c43f]
-    sub [hl]
-    jr z, jr_003_6b92
-        jr c, jr_003_6b8a
+    ld a, [seekSamusTemp.samusX]
+    sub [hl] ; HL = seekSamusTemp.enemyX
+    jr z, .endIf_C
+        jr c, .else_D
+            ; Samus right
             ldh a, [hEnemyState]
-            cp d
-            jr z, jr_003_6b92
+            cp d ; Clamp vector x to max value
+            jr z, .endIf_C
                 add b
                 ldh [hEnemyState], a
-                jr jr_003_6b92
-        jr_003_6b8a:
+                jr .endIf_C
+        .else_D:
+            ; Samus left
             ldh a, [hEnemyState]
-            cp e
-            jr z, jr_003_6b92
+            cp e ; Clamp vector x to min value
+            jr z, .endIf_C
                 sub b
                 ldh [hEnemyState], a
-    jr_003_6b92:
+    .endIf_C:
 
     ; Adjust y position
     ldh a, [$e9]
     ld e, a
     ld d, $00
-    ld hl, table_6BB1
+    ld hl, .speedTable
     add hl, de
     ld a, [hl]
     ld hl, hEnemyYPos
@@ -975,7 +992,7 @@ Call_003_6b44: ; 03:6B44
     ldh a, [hEnemyState]
     ld e, a
     ld d, $00
-    ld hl, table_6BB1
+    ld hl, .speedTable
     add hl, de
     ld a, [hl]
     ld hl, hEnemyXPos
@@ -983,7 +1000,7 @@ Call_003_6b44: ; 03:6B44
     ld [hl], a
 ret
 
-table_6BB1: ; 03:6BB1
+.speedTable: ; 03:6BB1
     db $FB, $FB, $FC, $FC, $FD, $FE, $FD, $FD, $FD, $FF, $FE, $FE, $FE, $FF, $FF, $00
     db $00, $00, $01, $01, $02, $02, $02, $01, $03, $03, $03, $02, $03, $04, $04, $05
     db $05
@@ -1127,106 +1144,39 @@ Call_003_6c74: ; 03:6C74
 ret
 
 ; Uncertain data
-    db $9c, $6c
+table_6C8E: ; 03:6C8E - Indexed by $C3CC
+    dw table_6C9C ; 0
+    dw table_6CB2 ; 1
+    dw table_6D00 ; 2
+    dw table_6CC8 ; 3
+    dw table_6D1E ; 4
+    dw table_6D27 ; 5
+    dw table_6CE7 ; 6
 
-    or d
-    ld l, h
-
-    db $00, $6d
-
-    ret z
-
-    ld l, h
-
-    db $1e, $6d, $27, $6d
-
-    rst $20
-    ld l, h
-
+table_6C9C: ; 03:6C9C - 0
     db $81, $33, $33, $32, $32, $32, $32, $33, $23, $23, $24, $23, $23, $23, $24, $13
     db $13, $13, $13, $13, $00, $80
-
-    add c
-    db $e3
-    db $e3
-    db $e3
-    db $e3
-    db $e3
-    ld [c], a
-    ld [c], a
-    ld [c], a
-    ld [c], a
-    ld [c], a
-    ld [c], a
-    jp nc, $d2d2
-
-    jp nc, $d2d2
-
-    nop
-    nop
-    nop
-    add b
-    add c
-    ld bc, $0101
-    ld bc, $01f1
-    pop af
-    pop af
-    pop af
-    pop af
-    pop af
-    pop af
-    ld a, [c]
-    ld a, [c]
-    ld [c], a
-    ld [c], a
-    ld [c], a
-    ld [c], a
-    ld [c], a
-    ld [c], a
-    ld [c], a
-    jp nc, $d2d2
-
-    jp nc, $00d2
-
-    nop
-    nop
-    add b
-    add c
-    ld bc, $1202
-    ld [bc], a
-    ld [de], a
-    ld [de], a
-    ld [de], a
-    ld [de], a
-    inc de
-    inc de
-    inc de
-    di
-    inc bc
-    inc bc
-    di
-    inc bc
-    di
-    di
-    di
-    nop
-    nop
-    nop
-    nop
-    add b
-
+table_6CB2: ; 03:6CB2 - 1
+    db $81, $E3, $E3, $E3, $E3, $E3, $E2, $E2, $E2, $E2, $E2, $E2, $D2, $D2, $D2, $D2
+    db $D2, $D2, $00, $00, $00, $80
+table_6CC8: ; 03:6CC8 - 3
+    db $81, $01, $01, $01, $01, $F1, $01, $F1, $F1, $F1, $F1, $F1, $F1, $F2, $F2, $E2
+    db $E2, $E2, $E2, $E2, $E2, $E2, $D2, $D2, $D2, $D2, $D2, $00, $00, $00, $80
+table_6CE7: ; 03:6CE7 - 6
+    db $81, $01, $02, $12, $02, $12, $12, $12, $12, $13, $13, $13, $F3, $03, $03, $F3
+    db $03, $F3, $F3, $F3, $00, $00, $00, $00, $80
+table_6D00: ; 03:6D00 - 2
     db $81, $01, $01, $01, $01, $01, $01, $02, $02, $12, $02, $12, $02, $12, $12, $12
-    db $12, $12, $22, $22, $22, $23, $23, $33, $33, $33, $00, $00, $00, $80, $81, $93
-    db $93, $93, $d3, $00, $00, $00, $80
-
-    add c
-
-    db $10, $20, $20, $20, $20, $20, $21, $21, $20, $20, $20, $20, $20, $20, $21, $21
-    db $20, $20, $20, $20, $20, $21, $21, $21, $20, $20, $20, $20, $20, $21, $21, $21
-    db $00, $80
+    db $12, $12, $22, $22, $22, $23, $23, $33, $33, $33, $00, $00, $00, $80
+table_6D1E: ; 03:6D1E - 4
+    db $81, $93, $93, $93, $D3, $00, $00, $00, $80
+table_6D27: ; 03:6D27 - 5
+    db $81, $10, $20, $20, $20, $20, $20, $21, $21, $20, $20, $20, $20, $20, $20, $21
+    db $21, $20, $20, $20, $20, $20, $21, $21, $21, $20, $20, $20, $20, $20, $21, $21
+    db $21, $00, $80
 
 Call_003_6d4a: ; 03:6D4A
-    ld hl, $c300
+    ld hl, spriteC300
     xor a
     ld b, a
 
@@ -1262,7 +1212,7 @@ jr_003_6d4f:
     ld a, $09
     ld [$c3b7], a
     ld [$c3b6], a
-    ld hl, $c300
+    ld hl, spriteC300
     ld a, l
     ld [$c3b8], a
     ld a, h
@@ -1302,7 +1252,7 @@ jr_003_6dd2:
     or c
     jr nz, jr_003_6dd2
 
-    ld a, $96
+    ld a, $96 ; Set initial health
     ld [$c3d3], a
     call Call_003_6f07
     ld hl, $c603
@@ -1318,10 +1268,10 @@ jr_003_6dd2:
     ld b, $06
     ld a, $f0
 
-jr_003_6dfc:
-    ld [hl], a
-    add hl, de
-    dec b
+    jr_003_6dfc:
+        ld [hl], a
+        add hl, de
+        dec b
     jr nz, jr_003_6dfc
 
     call Call_003_6e12
@@ -1370,58 +1320,51 @@ queenHandler: ; 03:6E36
     ld a, [deathFlag]
     and a
     jr z, jr_003_6e4a
+        xor a
+        ld [queenAnimFootCounter], a
+        ld [$c3ca], a
+        ld [$c3e0], a
+        call Call_003_7140
+        ret
+    jr_003_6e4a:
 
-    xor a
-    ld [queenAnimFootCounter], a
-    ld [$c3ca], a
-    ld [$c3e0], a
-    call Call_003_7140
-    ret
-
-
-jr_003_6e4a:
     ld a, [frameCounter]
     and $03
     jr nz, jr_003_6e6b
+        ld a, [$c3d2]
+        and a
+        jr z, jr_003_6e6b
+            xor $90
+            ld [$c3d2], a
+            ld b, $0c
+            ld hl, $c308
+        
+            jr_003_6e61:
+                inc l
+                inc l
+                inc l
+                ld a, $10
+                xor [hl]
+                ld [hl+], a
+                dec b
+            jr nz, jr_003_6e61
+    jr_003_6e6b:
 
-    ld a, [$c3d2]
-    and a
-    jr z, jr_003_6e6b
-
-    xor $90
-    ld [$c3d2], a
-    ld b, $0c
-    ld hl, $c308
-
-jr_003_6e61:
-    inc l
-    inc l
-    inc l
-    ld a, $10
-    xor [hl]
-    ld [hl+], a
-    dec b
-    jr nz, jr_003_6e61
-
-jr_003_6e6b:
     ld a, [$c3d3]
     and a
     jr z, jr_003_6e85
+        cp $64
+        jr nc, jr_003_6e85
+            ld b, a
+            ld a, $01
+            ld [$c3f1], a
+            ld a, b
+            cp $32
+            jr nc, jr_003_6e85
+                ld a, $01
+                ld [$c3ef], a
+    jr_003_6e85:
 
-    cp $64
-    jr nc, jr_003_6e85
-
-    ld b, a
-    ld a, $01
-    ld [$c3f1], a
-    ld a, b
-    cp $32
-    jr nc, jr_003_6e85
-
-    ld a, $01
-    ld [$c3ef], a
-
-jr_003_6e85:
     call Call_003_748c
     call Call_003_7be8
     call Call_003_72b8
@@ -1433,7 +1376,7 @@ jr_003_6e85:
     call Call_003_6e22
     call Call_003_7140
     call Call_003_6ea7
-    ret
+ret
 
 
 Call_003_6ea7:
@@ -1499,11 +1442,9 @@ jr_003_6efa:
 
 jr_003_6efe:
     cp $40
-    jr z, jr_003_6ede
-
+        jr z, jr_003_6ede
     cp $60
-    jr z, jr_003_6ede
-
+        jr z, jr_003_6ede
     ret
 
 
@@ -2357,7 +2298,7 @@ jr_003_73fc:
     ld [$d090], a
     ld hl, $c623
     ld [hl], $f5
-    ld hl, $c300
+    ld hl, spriteC300
     ld a, l
     ld [$c3b8], a
     ld a, h
@@ -2381,12 +2322,11 @@ Jump_003_742a:
 Call_003_7436:
     ld a, [$c3d3]
     and a
-    ret z
-
-    dec a
+        ret z
+    dec a ; Hurt for one damage
     ld [$c3d3], a
-    ret nz
-
+        ret nz
+    ; Do this is the hit was fatal
     ld a, $81
     ld [$c3c1], a
     ld a, $11
@@ -2401,7 +2341,7 @@ Call_003_7436:
     ld hl, $c600
     call Call_003_6e17
     call Call_003_7aa8
-    ret
+ret
 
 
 Call_003_7466:
@@ -2417,7 +2357,7 @@ Call_003_746f:
     sla a
     ld e, a
     ld d, $00
-    ld hl, $6c8e
+    ld hl, table_6C8E
     add hl, de
     ld a, [hl+]
     ld [$c3cd], a
@@ -2431,32 +2371,32 @@ table_7484: ; 03:7484
 Call_003_748c:
     ld a, [$c3c3] ; Queen's state?
     rst $28
-        dw func_03_7821 ; 03:7821
-        dw func_03_783C ; 03:783C
-        dw func_03_7864 ; 03:7864
-        dw func_03_78EE ; 03:78EE
-        dw func_03_78F7 ; 03:78F7
-        dw func_03_7932 ; 03:7932
-        dw func_03_793B ; 03:793B
-        dw func_03_7954 ; 03:7954
-        dw func_03_7970 ; 03:7970
-        dw func_03_79D0 ; 03:79D0
-        dw func_03_79E1 ; 03:79E1
-        dw func_03_7A1D ; 03:7A1D
-        dw func_03_7846 ; 03:7846
-        dw func_03_772B ; 03:772B
-        dw func_03_776F ; 03:776F
-        dw func_03_7785 ; 03:7785
-        dw func_03_77DD ; 03:77DD
-        dw func_03_7ABF ; 03:7ABF
-        dw func_03_7B05 ; 03:7B05
-        dw func_03_7B9D ; 03:7B9D
-        dw func_03_7519 ; 03:7519
-        dw func_03_757B ; 03:757B
-        dw func_03_7BE7 ; 03:7BE7
-        dw func_03_74C4 ; 03:74C4
-        dw func_03_74EA ; 03:74EA
-        dw enAI_NULL ; Wrong bank, you silly programmer.
+        dw func_03_7821 ; $00 - 03:7821
+        dw func_03_783C ; $01 - 03:783C
+        dw func_03_7864 ; $02 - 03:7864
+        dw func_03_78EE ; $03 - 03:78EE
+        dw func_03_78F7 ; $04 - 03:78F7
+        dw func_03_7932 ; $05 - 03:7932
+        dw func_03_793B ; $06 - 03:793B
+        dw func_03_7954 ; $07 - 03:7954
+        dw func_03_7970 ; $08 - 03:7970
+        dw func_03_79D0 ; $09 - 03:79D0
+        dw func_03_79E1 ; $0A - 03:79E1
+        dw func_03_7A1D ; $0B - 03:7A1D
+        dw func_03_7846 ; $0C - 03:7846
+        dw func_03_772B ; $0D - 03:772B
+        dw func_03_776F ; $0E - 03:776F
+        dw func_03_7785 ; $0F - 03:7785
+        dw func_03_77DD ; $10 - 03:77DD
+        dw func_03_7ABF ; $11 - 03:7ABF
+        dw func_03_7B05 ; $12 - 03:7B05
+        dw func_03_7B9D ; $13 - 03:7B9D
+        dw func_03_7519 ; $14 - 03:7519
+        dw func_03_757B ; $15 - 03:757B
+        dw func_03_7BE7 ; $16 - 03:7BE7
+        dw func_03_74C4 ; $17 - 03:74C4
+        dw func_03_74EA ; $18 - 03:74EA
+        dw enAI_NULL ; $19 - Wrong bank, you silly programmer.
 
 func_03_74C4:
     ld a, [$c3cf]
@@ -2663,7 +2603,7 @@ jr_003_75e8:
     call Call_003_7846
     xor a
     ld [$c3e3], a
-    ld hl, $c300
+    ld hl, spriteC300
     jp Jump_003_7288
 
 
@@ -2979,13 +2919,13 @@ func_03_776F:
     ld [queenAnimFootCounter], a
 ret
 
-func_03_7785:
+func_03_7785: ; 03:7785 - State $0F
     ld a, [$d090]
     cp $04
     jr nz, jr_003_77b8
 
     ld a, [$c3d3]
-    sub $0a
+    sub $0a ; Hurt for 10 damage?
     ld [$c3d3], a
     jr c, jr_003_77d5
 
@@ -3155,20 +3095,18 @@ func_03_7864:
     ld b, $02
     cp $46
     jr c, jr_003_78a5
-
-    ld b, $03
-    ld a, [$c3a9]
-    add $f0
-    ld [$c3a9], a
-    ld a, $03
-    ld [$c3ca], a
-    ld [$c3cb], a
-
-jr_003_78a5:
+        ld b, $03
+        ld a, [$c3a9]
+        add $f0
+        ld [$c3a9], a
+        ld a, $03
+        ld [$c3ca], a
+        ld [$c3cb], a
+    jr_003_78a5:
+    
     ld a, b
     ld [$c3cc], a
     jp Jump_003_78e4
-
 
 jr_003_78ac:
     ld a, [$c3a9]
@@ -3367,7 +3305,7 @@ jr_003_79f6:
     and a
     jr z, jr_003_7a4d
 
-    sub $1e
+    sub $1e ; Hurt for 30 damage with bombs
     ld [$c3d3], a
     jr c, jr_003_7a4d
 
@@ -3405,7 +3343,7 @@ jr_003_7a34:
     dec b
     jr nz, jr_003_7a34
 
-    ld hl, $c300
+    ld hl, spriteC300
     ld a, l
     ld [$c3b8], a
     ld a, h

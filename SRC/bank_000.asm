@@ -9126,8 +9126,8 @@ Call_000_3ca6: ; 00:3CA6 - enemy routine: Delete self?
     ld [rMBC_BANK_REG], a
 ret
 
-Call_000_3cba: ; 00:3CBA
-    callFar Call_003_6b44
+enemy_seekSamus_farCall: ; 00:3CBA
+    callFar enemy_seekSamus
     ld a, $02 ; Callees are metroids
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a

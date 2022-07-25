@@ -8919,7 +8919,7 @@ jr_002_736f:
 
     ld b, $02
     ld de, $2000
-    call Call_000_3cba
+    call enemy_seekSamus_farCall
     ld hl, hEnemyXPos
     ld a, [samus_onscreenXPos]
     sub [hl]
@@ -9667,7 +9667,7 @@ jr_002_77d0:
     ; Chase Samus
     ld b, $02
     ld de, $2000
-    call Call_000_3cba
+    call enemy_seekSamus_farCall
     ld hl, hEnemyXPos
     ld a, [samus_onscreenXPos]
     sub [hl]
@@ -10116,9 +10116,9 @@ enAI_7A4F: ; 02:7A4F
     ; Check if latched?
     ldh a, [$e7]
     and a
-        jr z, jr_002_7ac0
+        jr z, jr_002_7ac0 ; Not latched
 
-    call Call_002_7bcc
+    call larva_animate
     ld a, [$c475]
     and a
         jr z, jr_002_7ab0
@@ -10181,7 +10181,7 @@ jr_002_7ab0:
     ldh [hEnemyState], a
 ret
 
-
+; Normal AI (not latched)
 jr_002_7ac0:
     ld hl, $c473
     ld a, [hl]
@@ -10195,8 +10195,9 @@ jr_002_7ac0:
 
     ldh a, [hEnemyIceCounter]
     and a
-        jr z, jr_002_7b43
+        jr z, jr_002_7b43 ; Not frozen
 
+; Frozen
     call Call_002_565f ; Generic ice stuff
     ldh a, [hEnemyIceCounter]
     and a
@@ -10274,7 +10275,7 @@ ret
 
 
 jr_002_7b43: ; Normal shot reactions
-    call Call_002_7bcc
+    call larva_animate
     ld a, [$c46d]
     cp $ff ; Nothing
         jp z, larva_notHit
@@ -10356,12 +10357,12 @@ larva_notHit:
         ; Chase Samus
         ld b, $01
         ld de, $1e02
-        call Call_000_3cba
-        call Call_002_7cdd
+        call enemy_seekSamus_farCall ; Move
+        call Call_002_7cdd ; Correct position
         ret
 
 
-Call_002_7bcc:
+larva_animate:
     ldh a, [hEnemy_frameCounter]
     and $03
         ret nz
@@ -10395,7 +10396,7 @@ enAI_7BE5: ; the baby?
     ; Chase Samus
     ld b, $02
     ld de, $2000
-    call Call_000_3cba
+    call enemy_seekSamus_farCall
     
     call baby_checkBlocks
     call baby_keepOnscreen
@@ -10584,11 +10585,11 @@ Call_002_7cdd: ; 02:7CDD
     ldh a, [hEnemyState]
     cp $10
     jr c, jr_002_7d19
-
         call enCollision_right.farWide
         ld a, [en_bgCollisionResult]
         bit 0, a
             ret z
+            
         jr_002_7d13:
         ld a, [enemy_xPosMirror]
         ldh [hEnemyXPos], a
@@ -10608,7 +10609,7 @@ baby_checkBlocks: ; 02:7D2A - Check if blocks need to be cleared
     ; Some really messy if statements in this function
     ld hl, hEnemyXPos
     ld a, [hl]
-    ld [$c43b], a
+    ld [baby_tempXpos], a
     ld a, [enemy_xPosMirror]
     ld [hl], a
     ldh a, [$e9]
@@ -10638,7 +10639,7 @@ baby_checkBlocks: ; 02:7D2A - Check if blocks need to be cleared
             jr nz, jr_002_7d45
     jr_002_7d64:
 
-    ld a, [$c43b]
+    ld a, [baby_tempXpos]
     ldh [hEnemyXPos], a
     ldh a, [hEnemyState]
     cp $10

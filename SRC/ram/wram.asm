@@ -89,6 +89,8 @@ def arachnus_health = $C394 ; Set in procedure at 02:511C
 ;    FFh: End
 ;    Otherwise: Disable window display, scroll X = 0, scroll Y = 70h. End
 ;}
+
+; $C3C3 - Metroid Queen's state?
 ;
 def queenAnimFootCounter = $C3C8 ; Metroid Queen's foot animation frame. Very similar to the head. Cleared in $3:6E36
 def queenAnimFootDelay = $C3C9;
@@ -152,6 +154,17 @@ def numOffscreenEnemies = $C427 ; Number of offscreen enemies loaded in. Unused?
 ;$C438: Enemy handling incomplete flag. In $2:409E, if 0: sets $C439 = [number of enemies]
 ;$C439: Current enemy index
 def samus_onSolidSprite = $C43A ; Is Samus atop a solid sprite
+
+section "WRAM C43B", wram0[$C43B]
+baby_tempXpos: ds 1 ; $C43B: Used by the baby's AI so it's vertical collision detection can used the previous x position instead
+
+; Temp variables used in enemy_seekSamus (03:6B44)
+seekSamusTemp:
+.enemyY: ds 1 ; $C43C: enemy Y pos + $10
+.enemyX: ds 1 ; $C43D: enemy X pos + $10
+.samusY: ds 1 ; $C43E: samus Y pos + $10
+.samusX: ds 1 ; $C43F: samus X pos + $10
+
 ;$C44B: Request to execute $2:418C (save/load spawn/save flags). Set by doorExitStatus in the door script function
 ;
 def enemy_testPointYPos = $C44D ; Test point for enemy collision (in camera-space)
