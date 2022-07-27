@@ -90,15 +90,17 @@ def arachnus_health = $C394 ; Set in procedure at 02:511C
 ;    Otherwise: Disable window display, scroll X = 0, scroll Y = 70h. End
 ;}
 
-; $C3C3 - Metroid Queen's state?
+queen_state = $C3C3 ; Metroid Queen's state
 ;
 def queenAnimFootCounter = $C3C8 ; Metroid Queen's foot animation frame. Very similar to the head. Cleared in $3:6E36
 def queenAnimFootDelay = $C3C9;
 
 ;$C3CA: Metroid Queen's head animation frame. FFh = resume previous tilemap update, 0 = disabled, 1 = frame 0, 2 = frame 1, otherwise frame 2. Cleared in $3:6E36
+
+;$C3CF: Queen-related delay timer
 ;
 ;$C3D2: LCD interrupt handler background palette
-;$C3D3: Metroid Queen health
+queen_health = $C3D3 ; Metroid Queen health
 ;
 ;$C3E0: Cleared in $3:6E36
 ;
