@@ -1143,15 +1143,15 @@ Call_003_6c74: ; 03:6C74
     ld [hl], a
 ret
 
-; Uncertain data
-table_6C8E: ; 03:6C8E - Indexed by $C3CC
-    dw table_6C9C ; 0
-    dw table_6CB2 ; 1
-    dw table_6D00 ; 2
-    dw table_6CC8 ; 3
-    dw table_6D1E ; 4
-    dw table_6D27 ; 5
-    dw table_6CE7 ; 6
+; Neck swoop patterns
+queen_neckPatternPointers: ; 03:6C8E - Indexed by queen_neckPattern
+    dw table_6C9C ; 0 - Down 1 (curving up)
+    dw table_6CB2 ; 1 - Up 1
+    dw table_6D00 ; 2 - Down 2 (curving down)
+    dw table_6CC8 ; 3 - Up 2
+    dw table_6D1E ; 4 - Up, steep (being spat out)
+    dw table_6D27 ; 5 - Down, steep, clips through floor (used during death)
+    dw table_6CE7 ; 6 - Straight ahead (slight U shape)
 
 table_6C9C: ; 03:6C9C - 0
     db $81, $33, $33, $32, $32, $32, $32, $33, $23, $23, $24, $23, $23, $23, $24, $13
@@ -1193,17 +1193,17 @@ Call_003_6d4a: ; 03:6D4A
     ld a, $44
     ld [rSTAT], a
     ld a, $5c
-    ld [$c3a1], a
+    ld [queen_bodyXScroll], a
     ld a, [scrollX]
-    ld [$c3c6], a
+    ld [queen_cameraX], a
     ld a, $03
     ld [rWX], a
-    ld [$c3a8], a
+    ld [queen_headX], a
     ld a, [scrollY]
-    ld [$c3c7], a
+    ld [queen_cameraY], a
     ld a, $70
     ld [rWY], a
-    ld [$c3a9], a
+    ld [queen_headY], a
     ld hl, $c3ad
     ld [hl], $ff
     ld a, l
@@ -1237,9 +1237,9 @@ Call_003_6d4a: ; 03:6D4A
     call Call_003_6e22
     ld hl, table_7484
     ld a, l
-    ld [$c3c4], a
+    ld [queen_pNextStateLow], a
     ld a, h
-    ld [$c3c5], a
+    ld [queen_pNextStateHigh], a
     ld a, $17
     ld [queen_state], a
     ld hl, $c600
@@ -1277,11 +1277,11 @@ Call_003_6d4a: ; 03:6D4A
 
     call Call_003_6e12
     ld a, $01
-    ld [$c3ca], a
-    ld [$c3cb], a
+    ld [queen_headFrameNext], a
+    ld [queen_headFrame], a
     ; Set initial delay
     ld a, $8c
-    ld [$c3cf], a
+    ld [queen_delayTimer], a
 ret
 
 
@@ -1302,7 +1302,7 @@ ret
 Call_003_6e22:
     ld hl, $c354
     ld b, $05
-    ld a, [$c3a9]
+    ld a, [queen_headY]
     add $10
 
     .loop:
@@ -1320,8 +1320,8 @@ queenHandler: ; 03:6E36
     and a
     jr z, jr_003_6e4a
         xor a
-        ld [queenAnimFootCounter], a
-        ld [$c3ca], a
+        ld [queen_footFrame], a
+        ld [queen_headFrameNext], a
         ld [$c3e0], a
         call Call_003_7140
         ret
@@ -1447,22 +1447,22 @@ Call_003_6f07:
     ld a, [$c3a0]
     add $18
     ld [hl+], a
-    ld a, [$c3a1]
+    ld a, [queen_bodyXScroll]
     cpl
     inc a
     add $30
     ld [hl], a
     ld l, $41
-    ld a, [$c3a9]
+    ld a, [queen_headY]
     add $10
     ld [hl+], a
-    ld a, [$c3a8]
+    ld a, [queen_headX]
     ld [hl], a
     ld l, $61
-    ld a, [$c3a9]
+    ld a, [queen_headY]
     add $10
     ld [hl+], a
-    ld a, [$c3a8]
+    ld a, [queen_headX]
     add $20
     ld [hl], a
     ld l, $23
@@ -1475,10 +1475,10 @@ Call_003_6f07:
         ld c, $12
     jr_003_6f41:
 
-    ld a, [$c3a8]
+    ld a, [queen_headX]
     add b
     ld [hl-], a
-    ld a, [$c3a9]
+    ld a, [queen_headY]
     add c
     ld [hl], a
     call Call_003_6e12
@@ -1542,21 +1542,21 @@ Call_003_6f07:
         ret
 
 ; Queen head tilemaps
-table_6FA2: ; 03:6FA2
+queen_headFrameA: ; 03:6FA2
     db $BB, $B1, $B2, $B3, $B4, $FF
     db $C0, $C1, $C2, $C3, $C4, $FF
     db $D0, $D1, $D2, $D3, $D4, $D5
     db $FF, $FF, $E2, $E3, $E4, $E5
     db $FF, $FF, $FF, $FF, $FF, $FF
     db $FF, $FF, $FF, $FF, $FF, $FF
-table_6FC6: ; 03:6FC6
+queen_headFrameB: ; 03:6FC6
     db $BB, $B1, $F5, $B8, $B9, $BA
     db $C0, $C1, $C7, $C8, $C9, $CA
     db $D0, $E6, $D7, $D8, $FF, $FF
     db $FF, $F6, $E7, $E8, $FF, $FF
     db $FF, $FF, $F7, $F8, $FF, $FF
     db $FF, $FF, $FF, $FF, $FF, $FF
-table_6FEA: ; 03:6FEA
+queen_headFrameC: ; 03:6FEA
     db $FF, $BC, $BD, $BE, $FF, $FF
     db $FF, $CB, $CC, $CD, $FF, $FF
     db $DA, $DB, $DC, $DD, $FF, $FF
@@ -1564,96 +1564,91 @@ table_6FEA: ; 03:6FEA
     db $FA, $FB, $FC, $FD, $EE, $D9
     db $FF, $FF, $FF, $FF, $FF, $FF
 
-jr_003_700e:
-    ld a, [$c3f2]
-    ld l, a
-    ld a, [$c3f3]
-    ld d, a
-    ld a, [$c3f4]
-    ld e, a
-    ld h, $9c
-    jr jr_003_703b
-
-jr_003_701e:
-    ld a, [$c3ca]
+queen_drawHead:
+    .resume_A: ; 03:700E
+        ld a, [queen_headDest]
+        ld l, a
+        ld a, [queen_headSrcHigh]
+        ld d, a
+        ld a, [queen_headSrcLow]
+        ld e, a
+        ld h, $9c
+        jr .resume_B
+.entry: ; 03:701E - Entry point
+    ld a, [queen_headFrameNext]
     and a
-    ret z
-
+        ret z
     cp $ff
-    jr z, jr_003_700e
+        jr z, .resume_A
 
-    ld de, table_6FA2
+    ld de, queen_headFrameA
     cp $01
-    jr z, jr_003_7038
+    jr z, .endIf
+        ld de, queen_headFrameB
+        cp $02
+        jr z, .endIf
+            ld de, queen_headFrameC
+    .endIf:
 
-    ld de, table_6FC6
-    cp $02
-    jr z, jr_003_7038
-
-    ld de, table_6FEA
-
-jr_003_7038:
     ld hl, $9c00
+  .resume_B:
+    ld c, $03 ; Draw only 3 rows per frame (split update into two frames)
 
-jr_003_703b:
-    ld c, $03
+    .drawLoop:
+        ld b, $06
+        .rowLoop:
+            ld a, [de]
+            ld [hl+], a
+            inc de
+            dec b
+        jr nz, .rowLoop
+    
+        ld a, $1a
+        add l
+        ld l, a
+        dec c
+    jr nz, .drawLoop
 
-jr_003_703d:
-    ld b, $06
-
-jr_003_703f:
-    ld a, [de]
-    ld [hl+], a
-    inc de
-    dec b
-    jr nz, jr_003_703f
-
-    ld a, $1a
-    add l
-    ld l, a
-    dec c
-    jr nz, jr_003_703d
-
-    ld a, [$c3ca]
+    ld a, [queen_headFrameNext]
     cp $ff
-    jr nz, jr_003_7058
-
-    xor a
-    ld [$c3ca], a
-    ret
-
-
-jr_003_7058:
-    ld a, l
-    ld [$c3f2], a
-    ld a, d
-    ld [$c3f3], a
-    ld a, e
-    ld [$c3f4], a
-    ld a, $ff
-    ld [$c3ca], a
-    ret
+    jr nz, .else
+        ; Finished rendering
+        xor a
+        ld [queen_headFrameNext], a
+        ret
+    .else:
+        ; Continue rendering next frame
+        ld a, l
+        ld [queen_headDest], a
+        ld a, d
+        ld [queen_headSrcHigh], a
+        ld a, e
+        ld [queen_headSrcLow], a
+        ld a, $ff
+        ld [queen_headFrameNext], a
+        ret
+; end proc
 
 ; 03:706A - Rendering the Queen's feet
 queenDrawFeet:
     ; Skip rendering feet if zero
-    ld a, [queenAnimFootCounter]
+    ld a, [queen_footFrame]
     and a
-    jr z, jr_003_701e
+        jr z, queen_drawHead.entry
 
     ld b, a
     ; Exit this routine (jump to another) if the animation delay is not zero
-    ld a, [queenAnimFootDelay]
+    ld a, [queen_footAnimCounter]
     and a
     jr z, .selectFrontOrRear
     
     dec a
-    ld [queenAnimFootDelay], a
-    jr jr_003_701e
+    ld [queen_footAnimCounter], a
+    jr queen_drawHead.entry
 
 .selectFrontOrRear:
     ld a, $01
-    ld [queenAnimFootDelay], a
+    ld [queen_footAnimCounter], a
     ld a, b
     bit 7, a ; Bit 7 == 0 -> do the front foot, else do the rear foot
     ld hl, queenFrontFootPointers
@@ -1695,7 +1690,7 @@ queenDrawFeet:
     jr nz, .vramUpdateLoop
 
     ; Don't increment the frame counter if we rendered the front foot
-    ld a, [queenAnimFootCounter]
+    ld a, [queen_footFrame]
     bit 7, a
     jr z, .swapFeet
         inc a
@@ -1708,7 +1703,7 @@ queenDrawFeet:
         inc a
 
 .return:
-    ld [queenAnimFootCounter], a
+    ld [queen_footFrame], a
     ret
 
 ; Pointers, tile numbers, and tilemap offsets for the rear and front feet.
@@ -1755,7 +1750,7 @@ queenFrontFoot3:
 queenRearFootOffsets:
     db     $01,$02,$03,$04
     db $20,$21,$22,$23
-    db $40,$41,$42,    $44,
+    db $40,$41,$42,    $44
     db $60,$61,$62,$63
 queenFrontFootOffsets:
     db $08,$09,$0a 
@@ -1807,40 +1802,40 @@ ret
 
 
 Call_003_716e:
-    ld a, [$c3c7]
+    ld a, [queen_cameraY]
     ld b, a
     ld a, [scrollY]
     cp $f8
-    jr c, jr_003_717a
+    jr c, .endIf
         xor a
-    jr_003_717a:
-
-    ld [$c3c7], a
+    .endIf:
+    ld [queen_cameraY], a
     sub b
-    ld [$c3bc], a
-    ld a, [$c3c6]
+    ld [queen_cameraDeltaY], a
+    
+    ld a, [queen_cameraX]
     ld b, a
     ld a, [scrollX]
-    ld [$c3c6], a
+    ld [queen_cameraX], a
     sub b
-    ld [$c3bb], a
+    ld [queen_cameraDeltaX], a
 ret
 
 
 Call_003_7190:
-    ld a, [$c3bb]
+    ld a, [queen_cameraDeltaX]
     ld b, a
-    ld a, [$c3a1]
+    ld a, [queen_bodyXScroll]
     add b
-    ld [$c3a1], a
-    ld a, [$c3a8]
+    ld [queen_bodyXScroll], a
+    ld a, [queen_headX]
     sub b
-    ld [$c3a8], a
-    ld a, [$c3bc]
+    ld [queen_headX], a
+    ld a, [queen_cameraDeltaY]
     ld b, a
-    ld a, [$c3a9]
+    ld a, [queen_headY]
     sub b
-    ld [$c3a9], a
+    ld [queen_headY], a
     ld a, [scrollY]
     cp $f8
     jr c, jr_003_71b5
@@ -1872,9 +1867,9 @@ Call_003_71cf:
         ld d, $01
     jr_003_71d9:
 
-    ld a, [$c3bb]
+    ld a, [queen_cameraDeltaX]
     ld b, a
-    ld a, [$c3bc]
+    ld a, [queen_cameraDeltaY]
     ld c, a
     ld a, [$c3b8]
     cp $00
@@ -1975,19 +1970,18 @@ jr_003_724e:
     ld de, $0008
     add hl, de
     push hl
-    ld a, [$c3cb]
+    ld a, [queen_headFrame]
     ld b, $15
     cp $03
     jr nz, jr_003_7269
+        ld b, $27
+    jr_003_7269:
 
-    ld b, $27
-
-jr_003_7269:
-    ld a, [$c3a9]
+    ld a, [queen_headY]
     add b
     ld [hl+], a
     ld b, a
-    ld a, [$c3a8]
+    ld a, [queen_headX]
     sub $00
     ld [hl+], a
     ld c, a
@@ -2048,62 +2042,52 @@ Call_003_72b8:
     jp z, Jump_003_742a
 
     ld b, a
-    ld a, [$c3a6]
+    ld a, [queen_pNeckPatternLow]
     ld l, a
-    ld a, [$c3a7]
+    ld a, [queen_pNeckPatternHigh]
     ld h, a
     ld a, b
     cp $01
     jp nz, Jump_003_73b1
 
-    ld a, [$d090]
-    cp $10
+    ld a, [queen_eatingState]
+    cp $10 ; Check if paralyzed
     jr nz, jr_003_7314
+        ld hl, $c623
+        ld a, [hl]
+        cp $f6
+        jr z, jr_003_72ff
+            ld a, [queen_stunTimer]
+            and a
+            jr z, jr_003_72f5
+                dec a
+                ld [queen_stunTimer], a
+                cp $58
+                    ret nz
+                xor a
+                ld [$c3d2], a
+                call Call_003_7812
+                ret
+            jr_003_72f5:
+                xor a
+                ld [queen_eatingState], a
+                ld hl, $c623
+                ld [hl], $f6
+                ret
+        jr_003_72ff:
+            ld a, $60
+            ld [queen_stunTimer], a
+            ld a, $93
+            ld [$c3d2], a
+            ld a, $0a
+            ld [sfxRequest_noise], a
+            ld hl, $c623
+            ld [hl], $f7
+            ret
+    jr_003_7314:
 
-    ld hl, $c623
-    ld a, [hl]
-    cp $f6
-    jr z, jr_003_72ff
-
-    ld a, [$c3d0]
-    and a
-    jr z, jr_003_72f5
-
-    dec a
-    ld [$c3d0], a
-    cp $58
-    ret nz
-
-    xor a
-    ld [$c3d2], a
-    call Call_003_7812
-    ret
-
-
-jr_003_72f5:
-    xor a
-    ld [$d090], a
-    ld hl, $c623
-    ld [hl], $f6
-    ret
-
-
-jr_003_72ff:
-    ld a, $60
-    ld [$c3d0], a
-    ld a, $93
-    ld [$c3d2], a
-    ld a, $0a
-    ld [sfxRequest_noise], a
-    ld hl, $c623
-    ld [hl], $f7
-    ret
-
-
-jr_003_7314:
     cp $01
-    ret z
-
+        ret z
     cp $02
     jr nz, jr_003_7328
 
@@ -2120,16 +2104,14 @@ jr_003_7328:
     cp $80
     jr z, jr_003_73a2
 
-    ld a, [$c3a9]
+    ld a, [queen_headY]
     ld c, a
     ld a, [hl]
     and $f0
     bit 7, a
     jr z, jr_003_733a
-
-    or $0f
-
-jr_003_733a:
+        or $0f
+    jr_003_733a:
     swap a
     add c
     cp $d0
@@ -2152,7 +2134,7 @@ jr_003_7355:
     jr jr_003_7399
 
 jr_003_735c:
-    ld [$c3a9], a
+    ld [queen_headY], a
     ld a, [hl]
     and $f0
     swap a
@@ -2172,9 +2154,9 @@ jr_003_736e:
     ld a, [hl]
     and $0f
     ld c, a
-    ld a, [$c3a8]
+    ld a, [queen_headX]
     add c
-    ld [$c3a8], a
+    ld [queen_headX], a
     ld a, [$c3b6]
     add c
     ld [$c3b6], a
@@ -2193,9 +2175,9 @@ jr_003_736e:
 Jump_003_7399:
 jr_003_7399:
     ld a, l
-    ld [$c3a6], a
+    ld [queen_pNeckPatternLow], a
     ld a, h
-    ld [$c3a7], a
+    ld [queen_pNeckPatternHigh], a
     ret
 
 
@@ -2235,9 +2217,9 @@ jr_003_73cc:
     ld b, a
 
 jr_003_73cf:
-    ld a, [$c3a9]
+    ld a, [queen_headY]
     add b
-    ld [$c3a9], a
+    ld [queen_headY], a
     bit 7, b
     jr nz, jr_003_73de
 
@@ -2255,9 +2237,9 @@ jr_003_73de:
     cpl
     inc a
     ld b, a
-    ld a, [$c3a8]
+    ld a, [queen_headX]
     add b
-    ld [$c3a8], a
+    ld [queen_headX], a
     ld a, [$c3b6]
     add b
     ld [$c3b6], a
@@ -2271,7 +2253,7 @@ jr_003_73fc:
     ld a, $82
     ld [$c3c1], a
     xor a
-    ld [$d090], a
+    ld [queen_eatingState], a
     ld hl, $c623
     ld [hl], $f5
     ld hl, spriteC300
@@ -2287,11 +2269,11 @@ jr_003_73fc:
 
 
 Jump_003_742a:
-    ld a, [$c3c2]
+    ld a, [queen_walkSpeed]
     ld b, a
-    ld a, [$c3a8]
+    ld a, [queen_headX]
     add b
-    ld [$c3a8], a
+    ld [queen_headX], a
 ret
 
 
@@ -2310,8 +2292,8 @@ Call_003_7436:
     xor a
     ld [$c3c0], a
     ld [$c3bd], a
-    ld [queenAnimFootCounter], a
-    ld [$c3ca], a
+    ld [queen_footFrame], a
+    ld [queen_headFrameNext], a
     call Call_003_6e12
     ld b, $04
     ld hl, $c600
@@ -2321,24 +2303,24 @@ ret
 
 
 Call_003_7466:
-    ld a, [$c3cd]
+    ld a, [queen_pNeckPatternBaseLow]
     ld l, a
-    ld a, [$c3ce]
+    ld a, [queen_pNeckPatternBaseHigh]
     ld h, a
 ret
 
 
 Call_003_746f:
-    ld a, [$c3cc]
+    ld a, [queen_neckPattern]
     sla a
     ld e, a
     ld d, $00
-    ld hl, table_6C8E
+    ld hl, queen_neckPatternPointers
     add hl, de
     ld a, [hl+]
-    ld [$c3cd], a
+    ld [queen_pNeckPatternBaseLow], a
     ld a, [hl]
-    ld [$c3ce], a
+    ld [queen_pNeckPatternBaseHigh], a
 ret
 
 ; Queen state table
@@ -2377,7 +2359,7 @@ Call_003_748c:
         dw enAI_NULL ; $19 - Wrong bank, you silly programmer.
 
 func_03_74C4:
-    ld a, [$c3cf]
+    ld a, [queen_delayTimer]
     and a
     jr z, jr_003_74cf
 
@@ -2385,13 +2367,13 @@ jr_003_74ca:
     dec a
 
 jr_003_74cb:
-    ld [$c3cf], a
+    ld [queen_delayTimer], a
     ret
 
 
 jr_003_74cf:
     ld a, $02
-    ld [$c3ca], a
+    ld [queen_headFrameNext], a
     ld a, $18
     ld [queen_state], a
     ld a, [$c3ef]
@@ -2405,11 +2387,11 @@ jr_003_74cf:
     jr jr_003_74cb
 
 func_03_74EA:
-    ld a, [$c3cf]
+    ld a, [queen_delayTimer]
     and a
         jr nz, jr_003_74ca
     ld a, $01
-    ld [$c3ca], a
+    ld [queen_headFrameNext], a
     ld a, $0c
     ld [queen_state], a
 ret
@@ -2441,10 +2423,10 @@ Call_003_74fb:
 
 func_03_7519:
     call Call_003_74fb
-    ld a, [$c3a9]
+    ld a, [queen_headY]
     add $20
     ld b, a
-    ld a, [$c3a8]
+    ld a, [queen_headX]
     add $1c
     ld c, a
     ld hl, $c740
@@ -2463,9 +2445,9 @@ func_03_7519:
     ld a, $0e
     ld [$c3ee], a
     ld a, $02
-    ld [$c3ca], a
+    ld [queen_headFrameNext], a
     ld a, $20
-    ld [$c3cf], a
+    ld [queen_delayTimer], a
     ld a, $10
     ld [$c3e5], a
     ld a, $15
@@ -2491,16 +2473,16 @@ Call_003_756c:
     ret
 
 func_03_757B:
-    ld a, [$c3cf]
+    ld a, [queen_delayTimer]
     and a
     jr z, jr_003_758c
 
     dec a
-    ld [$c3cf], a
+    ld [queen_delayTimer], a
     jr nz, jr_003_758c
 
     ld a, $01
-    ld [$c3ca], a
+    ld [queen_headFrameNext], a
 
 jr_003_758c:
     call Call_003_7658
@@ -2842,9 +2824,9 @@ jr_003_7720:
     ret
 
 func_03_772B:
-    ld a, [$c3a6]
+    ld a, [queen_pNeckPatternLow]
     ld l, a
-    ld a, [$c3a7]
+    ld a, [queen_pNeckPatternHigh]
     ld h, a
     ld a, [hl]
     cp $81
@@ -2853,18 +2835,17 @@ func_03_772B:
     ld a, $02
     ld [$c3ba], a
     ld [$c3c0], a
-    ld a, [$c3cb]
+    ld a, [queen_headFrame]
     cp $03
     jr nz, jr_003_7750
+        ld a, [queen_headY]
+        add $10
+        ld [queen_headY], a
+    jr_003_7750:
 
-    ld a, [$c3a9]
-    add $10
-    ld [$c3a9], a
-
-jr_003_7750:
     ld a, $01
-    ld [$c3ca], a
-    ld [$c3cb], a
+    ld [queen_headFrameNext], a
+    ld [queen_headFrame], a
     xor a
     ld [$c3c1], a
     ld a, $ff
@@ -2881,15 +2862,15 @@ func_03_776F:
     cp $82
         ret nz
     ld a, $03
-    ld [$d090], a
+    ld [queen_eatingState], a
     ld a, $0f
     ld [queen_state], a
     ld a, $01
-    ld [queenAnimFootCounter], a
+    ld [queen_footFrame], a
 ret
 
 func_03_7785: ; 03:7785 - State $0F
-    ld a, [$d090]
+    ld a, [queen_eatingState]
     cp $04
     jr nz, jr_003_77b8
 
@@ -2899,14 +2880,14 @@ func_03_7785: ; 03:7785 - State $0F
     jr c, jr_003_77d5
 
     ld a, $05
-    ld [$d090], a
+    ld [queen_eatingState], a
     ld a, $02
-    ld [$c3ca], a
-    ld [$c3cb], a
+    ld [queen_headFrameNext], a
+    ld [queen_headFrame], a
     ld a, $10
     ld [queen_state], a
     ld a, $3e
-    ld [$c3d0], a
+    ld [queen_stunTimer], a
     ld a, $93
     ld [$c3d2], a
     ld a, $0a
@@ -2928,7 +2909,7 @@ jr_003_77bd:
     ld a, $08
 
 jr_003_77c2:
-    ld [$d090], a
+    ld [queen_eatingState], a
     ld a, $08
     ld [queen_state], a
     ld a, $93
@@ -2945,12 +2926,12 @@ jr_003_77d5:
     jr jr_003_77c2
 
 func_03_77DD:
-    ld a, [$c3d0]
+    ld a, [queen_stunTimer]
     and a
     jr z, jr_003_77fd
 
     dec a
-    ld [$c3d0], a
+    ld [queen_stunTimer], a
     cp $2e
     jr nz, jr_003_77f2
 
@@ -2959,50 +2940,48 @@ func_03_77DD:
     call Call_003_7812
 
 jr_003_77f2:
-    ld a, [queenAnimFootCounter]
+    ld a, [queen_footFrame]
     cp $02
-    ret nz
-
+        ret nz
     xor a
-    ld [queenAnimFootCounter], a
+    ld [queen_footFrame], a
     ret
 
 
 jr_003_77fd:
-    ld [$d090], a
+    ld [queen_eatingState], a
     ld a, $01
-    ld [$c3ca], a
-    ld [$c3cb], a
+    ld [queen_headFrameNext], a
+    ld [queen_headFrame], a
     ld a, $06
     ld [queen_state], a
     ld hl, table_7484 + 6 ;$748a
-    jr jr_003_7856
+    jr jr_003_7856 ; Set state to queen_stateTable[6]
 
+; Set sprite attributes for neck
 Call_003_7812:
     ld b, $0c
-    ld hl, $c308
-
-jr_003_7817:
-    inc l
-    inc l
-    inc l
-    ld a, $80
-    ld [hl+], a
-    dec b
-    jr nz, jr_003_7817
-
-    ret
+    ld hl, spriteC300 + 8 ;$c308
+    .loop:
+        inc l
+        inc l
+        inc l
+        ld a, OAMF_PRI ;$80
+        ld [hl+], a
+        dec b
+    jr nz, .loop
+ret
 
 func_03_7821:
     xor a
-    ld [$c3a4], a
+    ld [queen_walkCounter], a
     ld [$c3ba], a
     inc a
     ld [$c3bd], a
     ld a, $03
     ld [$c3c0], a
     ld a, $02
-    ld [queenAnimFootCounter], a
+    ld [queen_footFrame], a
     ld a, $01
     ld [queen_state], a
 ret
@@ -3012,33 +2991,30 @@ func_03_783C:
     cp $81
         ret nz
     xor a
-    ld [queenAnimFootCounter], a
+    ld [queen_footFrame], a
 
 func_03_7846:
 Call_003_7846:
 Jump_003_7846:
-    ld a, [$c3c4]
+    ld a, [queen_pNextStateLow]
     ld l, a
-    ld a, [$c3c5]
+    ld a, [queen_pNextStateHigh]
     ld h, a
 
 jr_003_784e:
     ld a, [hl+]
     cp $ff
     jr z, jr_003_785f
-
-    ld [queen_state], a
-
-jr_003_7856:
-    ld a, l
-    ld [$c3c4], a
-    ld a, h
-    ld [$c3c5], a
-    ret
-
-jr_003_785f:
-    ld hl, table_7484
-    jr jr_003_784e
+        ld [queen_state], a
+      jr_003_7856: ; Jump to set next state pointer directly
+        ld a, l
+        ld [queen_pNextStateLow], a
+        ld a, h
+        ld [queen_pNextStateHigh], a
+        ret
+    jr_003_785f:
+        ld hl, table_7484
+        jr jr_003_784e
 ; end proc?
 
 func_03_7864:
@@ -3060,41 +3036,39 @@ func_03_7864:
     and a
     jr z, jr_003_78ac
 
-    ld a, [$c3a9]
+    ld a, [queen_headY]
     ld b, $02
     cp $46
     jr c, jr_003_78a5
         ld b, $03
-        ld a, [$c3a9]
+        ld a, [queen_headY]
         add $f0
-        ld [$c3a9], a
+        ld [queen_headY], a
         ld a, $03
-        ld [$c3ca], a
-        ld [$c3cb], a
+        ld [queen_headFrameNext], a
+        ld [queen_headFrame], a
     jr_003_78a5:
     
     ld a, b
-    ld [$c3cc], a
+    ld [queen_neckPattern], a
     jp Jump_003_78e4
 
 jr_003_78ac:
-    ld a, [$c3a9]
+    ld a, [queen_headY]
     ld b, $00
     cp $29
     jr c, jr_003_78c5
+        ld b, $06
+        cp $4c
+        jr c, jr_003_78c5
+            ld b, $01
+            ld a, [queen_headY]
+            add $f0
+            ld [queen_headY], a
+    jr_003_78c5:
 
-    ld b, $06
-    cp $4c
-    jr c, jr_003_78c5
-
-    ld b, $01
-    ld a, [$c3a9]
-    add $f0
-    ld [$c3a9], a
-
-jr_003_78c5:
     ld a, b
-    ld [$c3cc], a
+    ld [queen_neckPattern], a
     ld b, $03
     cp $01
     jr z, jr_003_78dd
@@ -3109,8 +3083,8 @@ jr_003_78c5:
 
 jr_003_78dd:
     ld a, b
-    ld [$c3ca], a
-    ld [$c3cb], a
+    ld [queen_headFrameNext], a
+    ld [queen_headFrame], a
 
 Jump_003_78e4:
 jr_003_78e4:
@@ -3126,9 +3100,9 @@ func_03_78EE:
     jp Jump_003_7846
 
 func_03_78F7:
-    ld a, [$c3a6]
+    ld a, [queen_pNeckPatternLow]
     ld l, a
-    ld a, [$c3a7]
+    ld a, [queen_pNeckPatternHigh]
     ld h, a
     ld a, [hl]
     cp $81
@@ -3137,18 +3111,18 @@ func_03_78F7:
     ld a, $02
     ld [$c3ba], a
     ld [$c3c0], a
-    ld a, [$c3cb]
+    ld a, [queen_headFrame]
     cp $03
     jr nz, jr_003_791c
 
-    ld a, [$c3a9]
+    ld a, [queen_headY]
     add $10
-    ld [$c3a9], a
+    ld [queen_headY], a
 
 jr_003_791c:
     ld a, $01
-    ld [$c3ca], a
-    ld [$c3cb], a
+    ld [queen_headFrameNext], a
+    ld [queen_headFrame], a
     ld a, $f5
     ld [$c623], a
     ld a, $05
@@ -3170,7 +3144,7 @@ func_03_793B:
     xor a
     ld [$c3ba], a
     ld a, $82
-    ld [queenAnimFootCounter], a
+    ld [queen_footFrame], a
     ld a, $07
     ld [queen_state], a
 ret
@@ -3180,14 +3154,14 @@ func_03_7954:
     cp $82
         ret nz
     xor a
-    ld [queenAnimFootCounter], a
+    ld [queen_footFrame], a
     jp Jump_003_7846
 
 table_7961: ; 03:7961
     db $00, $00, $b5, $08, $00, $c5, $00, $08, $b6, $00, $10, $b7, $08, $0c, $c6
 
 func_03_7970:
-    ld a, [$c3a9]
+    ld a, [queen_headY]
     cp $2c
     cp $71
     ld a, $01
@@ -3195,15 +3169,15 @@ func_03_7970:
     xor a
     ld [$c3ba], a
     ld a, $03
-    ld [$c3ca], a
-    ld [$c3cb], a
+    ld [queen_headFrameNext], a
+    ld [queen_headFrame], a
     ld a, $09
     ld [queen_state], a
     ld hl, $c308
-    ld a, [$c3a9]
+    ld a, [queen_headY]
     add $14
     ld b, a
-    ld a, [$c3a8]
+    ld a, [queen_headX]
     add $02
     ld c, a
     ld de, table_7961
@@ -3235,7 +3209,7 @@ jr_003_799f:
     ld a, h
     ld [$c3b9], a
     ld a, $04
-    ld [$c3cc], a
+    ld [queen_neckPattern], a
     ld [$c3d1], a
     call Call_003_746f
     call Call_003_7466
@@ -3247,23 +3221,23 @@ func_03_79D0:
     cp $81
         ret nz
     ld a, $50
-    ld [$c3cf], a
+    ld [queen_delayTimer], a
     ld a, $0a
     ld [queen_state], a
 ret
 
 func_03_79E1:
-    ld a, [$c3cf]
+    ld a, [queen_delayTimer]
     and a
     jr z, jr_003_79f6
 
     dec a
-    ld [$c3cf], a
-    ld a, [queenAnimFootCounter]
+    ld [queen_delayTimer], a
+    ld a, [queen_footFrame]
     cp $02
         ret nz
     xor a
-    ld [queenAnimFootCounter], a
+    ld [queen_footFrame], a
     ret
 
 
@@ -3282,9 +3256,9 @@ jr_003_79f6:
     ld [$c3c0], a
     ld a, $0b
     ld [queen_state], a
-    ld a, [$c3a6]
+    ld a, [queen_pNeckPatternLow]
     ld l, a
-    ld a, [$c3a7]
+    ld a, [queen_pNeckPatternHigh]
     ld h, a
     dec hl
     jp Jump_003_7399
@@ -3295,21 +3269,21 @@ func_03_7A1D:
     ret nz
 
     ld a, $01
-    ld [$c3ca], a
-    ld [$c3cb], a
+    ld [queen_headFrameNext], a
+    ld [queen_headFrame], a
     xor a
     ld [$c3d1], a
     ld hl, $c308
     ld b, $05
 
-jr_003_7a34:
-    ld [hl], $ff
-    inc l
-    inc l
-    inc l
-    ld [hl], $80
-    inc l
-    dec b
+    jr_003_7a34:
+        ld [hl], $ff
+        inc l
+        inc l
+        inc l
+        ld [hl], $80
+        inc l
+        dec b
     jr nz, jr_003_7a34
 
     ld hl, spriteC300
@@ -3335,8 +3309,8 @@ jr_003_7a4d:
     ld [$c3d1], a
     ld [queen_health], a
     ld [$c3c1], a
-    ld [queenAnimFootCounter], a
-    ld [$c3ca], a
+    ld [queen_footFrame], a
+    ld [queen_headFrameNext], a
     ld [$c3ef], a
     ld hl, $c308
     ld a, l
@@ -3356,7 +3330,7 @@ jr_003_7a4d:
     ld a, $0f
     ld [sfxRequest_noise], a
     ld a, $05
-    ld [$c3cc], a
+    ld [queen_neckPattern], a
     call Call_003_746f
     call Call_003_7466
     inc hl
@@ -3385,10 +3359,9 @@ jr_003_7ab5:
 func_03_7ABF:
     ld a, [$c3c1]
     cp $81
-    ret nz
-
+        ret nz
     ld a, $50
-    ld [$c3cf], a
+    ld [queen_delayTimer], a
     ld a, $12
     ld [queen_state], a
     ld a, $05
@@ -3418,15 +3391,15 @@ func_03_7ABF:
     ld a, $0e
     ld [songRequest], a
     ld a, $22
-    ld [$d090], a
+    ld [queen_eatingState], a
     ret
 
 func_03_7B05: ; State $12
-    ld a, [$c3cf]
+    ld a, [queen_delayTimer]
     and a
     jr z, jr_003_7b1e
         dec a
-        ld [$c3cf], a
+        ld [queen_delayTimer], a
         cp $4c
             ret nz
         ; Refill Samus health
@@ -3560,7 +3533,7 @@ jr_003_7bb0:
 
 jr_003_7bce:
     xor a
-    ld [$d090], a
+    ld [queen_eatingState], a
     ld [metroidCountDisplayed], a
     ld [metroidCountReal], a
     ld a, $16
@@ -3573,66 +3546,58 @@ func_03_7BE7: ; State $16
     ret
 
 
-Call_003_7be8:
+Call_003_7be8: ; 03:7BE8
     xor a
-    ld [$c3c2], a
+    ld [queen_walkSpeed], a
     ld a, [$c3bd]
     and a
-    ret z
-
+        ret z
     ld b, a
-    ld a, [$c3a3]
+    ld a, [queen_walkWaitTimer]
     and a
-    jr z, jr_003_7bfd
-
-    dec a
-    ld [$c3a3], a
-    ret
-
-
-jr_003_7bfd:
-    ld a, [$c3a4]
-    ld l, a
-    inc a
-    ld [$c3a4], a
-    ld h, $00
-    ld de, table_7C39
-    add hl, de
-    ld a, b
-    cp $01
-    jr nz, jr_003_7c29
-
-    ld a, [hl]
-    cp $81
-    jr nz, jr_003_7c1d
-
-    ld [$c3bf], a
-    xor a
-    ld [$c3bd], a
-    ret
-
-
-jr_003_7c1d:
-    cpl
-    inc a
-    ld [$c3c2], a
-    ld a, [hl]
-    ld hl, $c3a1
-    add [hl]
-    ld [hl], a
-    ret
-
-
-jr_003_7c29:
-    ld a, [hl]
-    cp $82
-    jr nz, jr_003_7c1d
-
-    ld [$c3bf], a
-    xor a
-    ld [$c3bd], a
-    ld [$c3a4], a
-    ret
+    jr z, .else_A
+        dec a
+        ld [queen_walkWaitTimer], a
+        ret
+    .else_A:
+        ld a, [queen_walkCounter]
+        ld l, a
+        inc a
+        ld [queen_walkCounter], a
+        ld h, $00
+        ld de, table_7C39
+        add hl, de
+        ld a, b
+        cp $01
+        jr nz, .else_B
+            ld a, [hl]
+            cp $81
+            jr nz, .move
+                ld [$c3bf], a
+                xor a
+                ld [$c3bd], a
+                ret
+                
+            .move: ; Common case between the above and below branches
+                cpl
+                inc a
+                ld [queen_walkSpeed], a
+                ld a, [hl]
+                ld hl, queen_bodyXScroll
+                add [hl]
+                ld [hl], a
+                ret
+        
+        .else_B:
+            ld a, [hl]
+            cp $82
+                jr nz, .move
+            ld [$c3bf], a
+            xor a
+            ld [$c3bd], a
+            ld [queen_walkCounter], a
+            ret
+; end proc
 
 table_7C39: ; 03:7C39
     db $ff, $ff, $ff, $ff, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe
@@ -3683,7 +3648,7 @@ jr_003_7cb1:
     jr jr_003_7cd6
 
 jr_003_7cba:
-    ld a, [$c3a1]
+    ld a, [queen_bodyXScroll]
     ld [rSCX], a
     ld a, [$c3d2]
     and a
@@ -3730,14 +3695,14 @@ VBlank_drawQueen: ; 03:7CF0
     ld [rSCX], a
     ld a, [scrollY]
     ld [rSCY], a
-    ld a, [$c3a8]
+    ld a, [queen_headX]
     cp $a6
     jr nz, jr_003_7d0b
         ld a, $a7
     jr_003_7d0b:
 
     ld [rWX], a
-    ld a, [$c3a9]
+    ld a, [queen_headY]
     ld [rWY], a
     add $26
     cp $90

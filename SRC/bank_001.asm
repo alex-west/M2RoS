@@ -11,7 +11,7 @@ include "data/sprites_samus.asm"
 ; 01:493E: Update status bar
 VBlank_updateStatusBar:
     ; Exit if the queen's head is being animated (vblank time optimization?)
-    ld a, [$c3ca]
+    ld a, [queen_headFrameNext]
     and a
         ret nz
     ; Don't update while an item is being collected

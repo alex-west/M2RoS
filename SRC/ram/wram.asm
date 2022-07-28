@@ -70,11 +70,18 @@ def arachnus_health = $C394 ; Set in procedure at 02:511C
 ;$C395: unused
 ;$C396: unused
 
-
-;$C3A1: LCD interrupt handler scroll X
-;
-;$C3A8: X position of Metroid Queen's head on screen
-;$C3A9: Y position of Metroid Queen's head on screen
+section "Queen Stuff 1", wram0[$C3A0]
+; Queen variables appear to start at $C3A0
+ds 1 ; $C3A0 - Body X scroll related?
+queen_bodyXScroll: ds 1 ; $C3A1 - LCD interrupt handler scroll X (higher numbers -> body is more left)
+ds 1 ; $C3A2 - Queen body height? (used for timing the bottom of the raster split)
+queen_walkWaitTimer: ds 1 ; $C3A3 - If non-zero, decrements and pauses the Queen's walking animation
+queen_walkCounter: ds 1 ; $C3A4 - Index into the queen's walk speed table
+ds 1 ; $C3A5 - Unused? (perhaps the walk counter used to be a pointer?)
+queen_pNeckPatternLow:  ds 1 ; $C3A6 - Pointer to the current working byte of the current neck pattern
+queen_pNeckPatternHigh: ds 1 ; $C3A7 - "" (high byte)
+queen_headX: ds 1 ;$C3A8: X position of Metroid Queen's head on screen
+queen_headY: ds 1 ;$C3A9: Y position of Metroid Queen's head on screen
 ;$C3AA: Pointer to LCD interrupt data
 ;$C3AC: min(8Fh, [Y position of Metroid Queen's head on screen] + 26h])
 ;$C3AD: LCD interrupt Y position
@@ -90,26 +97,44 @@ def arachnus_health = $C394 ; Set in procedure at 02:511C
 ;    Otherwise: Disable window display, scroll X = 0, scroll Y = 70h. End
 ;}
 
-queen_state = $C3C3 ; Metroid Queen's state
-;
-def queenAnimFootCounter = $C3C8 ; Metroid Queen's foot animation frame. Very similar to the head. Cleared in $3:6E36
-def queenAnimFootDelay = $C3C9;
+; $C3B8/$C3B9 - Pointer used in constructing the sprite at C600 ?
 
-;$C3CA: Metroid Queen's head animation frame. FFh = resume previous tilemap update, 0 = disabled, 1 = frame 0, 2 = frame 1, otherwise frame 2. Cleared in $3:6E36
+queen_cameraDeltaX = $C3BB ; Change in camera X position from the last frame
+queen_cameraDeltaY = $C3BC ; Change in camera Y position from the last frame
 
-;$C3CF: Queen-related delay timer
-;
+section "Queen Stuff 2", wram0[$c3c2]
+
+queen_walkSpeed: ds 1 ; $C3C2 - Used for adjusting the queen's head's position
+queen_state: ds 1 ; $C3C3 - Metroid Queen's state
+queen_pNextStateLow:  ds 1 ; $C3C4 - Pointer to the next state number (low byte)
+queen_pNextStateHigh: ds 1 ; $C3C5 -  "" (high byte)
+queen_cameraX: ds 1 ; $C3C6 - Current camera position in room
+queen_cameraY: ds 1 ; $C3C7 -  ""
+queen_footFrame: ds 1 ; $C3C8 - Metroid Queen's foot animation frame. Very similar to the head. Cleared in $3:6E36
+queen_footAnimCounter: ds 1 ; $C3C9 - Delay value until next frame
+queen_headFrameNext: ds 1 ; $C3CA - Metroid Queen's head animation frame to draw. FFh = resume previous tilemap update, 0 = disabled, 1 = frame 0, 2 = frame 1, otherwise frame 2. Cleared in $3:6E36
+queen_headFrame: ds 1 ; $C3CB - Currently display head frame of Queen
+queen_neckPattern: ds 1 ; $C3CC - Index for the queen's neck swoop pattern
+queen_pNeckPatternBaseLow:  ds 1 ; $C3CD - Pointer to the start of the currently active neck pattern
+queen_pNeckPatternBaseHigh: ds 1 ; $C3CE -  "" (high byte)
+queen_delayTimer: ds 1 ; $C3CF - Generic delay timer between states/actions
+queen_stunTimer: ds 1 ; $C3D0 - Stun timer when hit with mouth open
+; $C3D1 - Neck related state?
 ;$C3D2: LCD interrupt handler background palette
 queen_health = $C3D3 ; Metroid Queen health
-;
-;$C3E0: Cleared in $3:6E36
+;$C3D4: Queen death related
+;$C3D5: Queen death related
+;$C3D6-$C3DD: Queen death related table (disintegration animation?)
+;$C3DE/C3DF: Queen death VRAM pointer?
+;$C3E0: Queen death related (disintegration bitmask?) Cleared in $3:6E36
 ;
 ;$C3EF: Set to 1 in $3:6E36 if 0 < [Metroid Queen's health] < 32h, probably an aggression flag
 ;
 ;$C3F1: Set to 1 in $3:6E36 if 0 < [Metroid Queen's health] < 64h, probably an aggression flag
-;$C3F2: Metroid Queen's head lower half tilemap VRAM address low byte
-;$C3F3: Metroid Queen's head lower half tilemap source address (bank 3)
-;
+
+queen_headDest = $C3F2 ; Metroid Queen's head lower half tilemap VRAM address low byte
+queen_headSrcHigh = $C3F3 ; Metroid Queen's head lower half tilemap source address (bank 3)
+queen_headSrcLow  = $C3F4 ; (rare instance of a big-endian variable!!)
 
 en_bgCollisionResult = $C402 ; Enemy tilemap collision routine return value (initialized to $11, $22, $44, or $88)
 
@@ -857,7 +882,7 @@ def beamSolidityIndex = $D08A ; Projectile solid block threshold
 ;$D08D: Value for $D05D in $31F1. Projectile type in $1:500D
 def doorIndexLow  = $D08E ; Index of screen transition command set. Set to [$4300 + ([screen Y position high] * 10h + [screen X position high]) * 2] & ~800h by set up door transition
 def doorIndexHigh = $D08F
-;$D090: Metroid Queen eating pose
+def queen_eatingState = $D090 ; Metroid Queen eating pose
 ;{
 ;    Sets Samus pose = escaping Metroid Queen when 7, checked for 5/20h and set to 6 in in Metroid Queen's mouth
 ;    0: Otherwise

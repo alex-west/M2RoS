@@ -1959,7 +1959,7 @@ poseFunc_0DBE: ; $1A
     ldh a, [hSamusXPixel]
     cp $68
     jr z, jr_000_0dea
-        ld a, [$c3a8]
+        ld a, [queen_headX]
         add $06
         ld b, a
         ld a, [scrollX]
@@ -1994,7 +1994,7 @@ poseFunc_0DF0: ; $19
     ld a, $a6
     ldh [hSamusXPixel], a
     call applyDamage.queenStomach
-    ld a, [$d090]
+    ld a, [queen_eatingState]
     cp $05
     jr nz, jr_000_0e12
         ld a, $01
@@ -2021,12 +2021,12 @@ poseFunc_0DF0: ; $19
             ld a, $1a
             ld [samusPose], a
             ld a, $06
-            ld [$d090], a
+            ld [queen_eatingState], a
             ret
 
 poseFunc_0E36: ; $18
     call applyDamage.queenStomach
-    ld a, [$d090]
+    ld a, [queen_eatingState]
     cp $03
     jr nz, jr_000_0e46
         ld a, $19
@@ -2035,7 +2035,7 @@ poseFunc_0E36: ; $18
     jr_000_0e46:
 
     ld c, $00
-    ld a, [$c3a9]
+    ld a, [queen_headY]
     add $13
     ld b, a
     ld a, [samus_onscreenYPos]
@@ -2061,7 +2061,7 @@ poseFunc_0E36: ; $18
     ld [$d038], a
 
 jr_000_0e72:
-    ld a, [$c3a8]
+    ld a, [queen_headX]
     add $1a
     ld b, a
     ld a, [samus_onscreenXPos]
@@ -2091,7 +2091,7 @@ jr_000_0e9b:
     cp $02
         ret nz
     ld a, $02
-    ld [$d090], a
+    ld [queen_eatingState], a
 ret
 
 poseFunc_faceScreen: ; 00:0EA5 - poses $13-$17
@@ -5084,7 +5084,7 @@ Call_000_21fb:
     ld a, [samusPose]
     cp pose_faceScreen
         jp z, samusShoot_longJump
-    ld a, [$d090]
+    ld a, [queen_eatingState]
     cp $22
         jp z, samusShoot_longJump
     ldh a, [hInputRisingEdge]
@@ -7420,24 +7420,24 @@ Call_000_30ea:
     ld [$d05e], a
     ld a, h
     ld [$d05f], a
-    ld a, [$d090]
+    ld a, [queen_eatingState]
     cp $03
     jr nz, jr_000_3199
         ldh a, [$b9]
         cp $f1
         jr nz, jr_000_3199
             ld a, $04
-            ld [$d090], a
+            ld [queen_eatingState], a
     jr_000_3199:
 
-    ld a, [$d090]
+    ld a, [queen_eatingState]
     cp $06
     jr nz, jr_000_31b0
         ldh a, [$b9]
         cp $f3
         jr nz, jr_000_31b0
             ld a, $07
-            ld [$d090], a
+            ld [queen_eatingState], a
             ld a, $1c
             ld [samusPose], a
     jr_000_31b0:
@@ -7609,7 +7609,7 @@ Call_000_31f1:
         cp $f6
         jr nz, jr_000_32a5
             ld a, $10
-            ld [$d090], a
+            ld [queen_eatingState], a
     jr_000_32a5:
     ; A collision happened
     scf
@@ -7888,7 +7888,7 @@ jr_000_3426:
                     jr nz, jr_000_3446
             jr_000_343c:
                 ld a, $01
-                ld [$d090], a
+                ld [queen_eatingState], a
                 ld a, $18
                 ld [samusPose], a
     jr_000_3446:
@@ -8230,7 +8230,7 @@ jr_000_362e:
                 jr nz, jr_000_364e
             jr_000_3644:
                 ld a, $01
-                ld [$d090], a
+                ld [queen_eatingState], a
                 ld a, $18
                 ld [samusPose], a
     jr_000_364e:
