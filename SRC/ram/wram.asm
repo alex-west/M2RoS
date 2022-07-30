@@ -72,7 +72,7 @@ def arachnus_health = $C394 ; Set in procedure at 02:511C
 
 section "Queen Stuff 1", wram0[$C3A0]
 ; Queen variables appear to start at $C3A0
-ds 1 ; $C3A0 - Body X scroll related?
+ds 1 ; $C3A0 - LCD Y position for the raster split that moves the Queen's body
 queen_bodyXScroll: ds 1 ; $C3A1 - LCD interrupt handler scroll X (higher numbers -> body is more left)
 ds 1 ; $C3A2 - Queen body height? (used for timing the bottom of the raster split)
 queen_walkWaitTimer: ds 1 ; $C3A3 - If non-zero, decrements and pauses the Queen's walking animation

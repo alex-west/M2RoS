@@ -1630,37 +1630,38 @@ queen_drawHead:
 ; end proc
 
 ; 03:706A - Rendering the Queen's feet
-queenDrawFeet:
-    ; Skip rendering feet if zero
+queen_drawFeet:
+    ; Try drawing the head if the next frame is zero
     ld a, [queen_footFrame]
     and a
         jr z, queen_drawHead.entry
-
+    ; Save frame to B
     ld b, a
-    ; Exit this routine (jump to another) if the animation delay is not zero
+    ; Try drawing the head if the animation delay is non-zero
     ld a, [queen_footAnimCounter]
     and a
-    jr z, .selectFrontOrRear
-    
-    dec a
-    ld [queen_footAnimCounter], a
-    jr queen_drawHead.entry
+    jr z, .endIf_A
+        dec a
+        ld [queen_footAnimCounter], a
+            jr queen_drawHead.entry
+    .endIf_A:
 
-.selectFrontOrRear:
+    ; Reload the animation counter
     ld a, $01
     ld [queen_footAnimCounter], a
+    ; Select the front or back feet depending on the LSB of the animation frame
     ld a, b
     bit 7, a ; Bit 7 == 0 -> do the front foot, else do the rear foot
-    ld hl, queenFrontFootPointers
-    ld de, queenFrontFootOffsets
-    ld b, $0c
-    jr z, .getTilemapPointer
-
-    ld hl, queenRearFootPointers
-    ld de, queenRearFootOffsets
-    ld b, $10
-
-    .getTilemapPointer:
+    ld hl, queen_frontFootPointers
+    ld de, queen_frontFootOffsets
+    ld b, $0c ; Number of tiles to update
+    jr z, .endIf_B
+        ld hl, queen_rearFootPointers
+        ld de, queen_rearFootOffsets
+        ld b, $10 ; Number of tiles to update
+    .endIf_B:
+    
+    ; Get the foot tilemap/tile-offset pointers
     push de
         and $7f ; Mask out the bit determining which foot to render
         dec a   ; Adjusting because the value zero earlier meant "skip rendering"
@@ -1680,9 +1681,9 @@ queenDrawFeet:
             ; VRAM Offset: BC = $9A00 + [HL]
             ld b, $9a
             ld c, [hl]
-            ; DE points to the table holding the current frame of data
+            ; DE points to the current tile number to render
             ld a, [de]
-            ld [bc], a ; Write to 
+            ld [bc], a ; Write to VRAM
             inc hl
             inc de
         pop bc ; pop the loop counter from the stack
@@ -1692,73 +1693,72 @@ queenDrawFeet:
     ; Don't increment the frame counter if we rendered the front foot
     ld a, [queen_footFrame]
     bit 7, a
-    jr z, .swapFeet
+    jr z, .endIf_C
         inc a
-
-    .swapFeet:
-    xor $80 ; Swap which foot to render
+    .endIf_C:
+    
+    xor $80 ; Swap which foot to render next frame
     and $83 ; Mask frame numbers greater than 3
     ; inc if zero so we don't stop animating the feet
-    jr nz, .return
+    jr nz, .endIf_D
         inc a
-
-.return:
+    .endIf_D:
     ld [queen_footFrame], a
-    ret
+ret
 
 ; Pointers, tile numbers, and tilemap offsets for the rear and front feet.
-queenRearFootPointers:
-    dw queenRearFoot1, queenRearFoot2, queenRearFoot3
-queenFrontFootPointers:
-    dw queenFrontFoot1, queenFrontFoot2, queenFrontFoot3
+queen_rearFootPointers:
+    dw queen_rearFoot1, queen_rearFoot2, queen_rearFoot3
+queen_frontFootPointers:
+    dw queen_frontFoot1, queen_frontFoot2, queen_frontFoot3
     
 ; 03:70D0
-queenRearFoot1:
+queen_rearFoot1:
     db     $21,$22,$23,$24
     db $30,$31,$32,$33
     db $40,$41,$42,    $44
     db $50,$51,$52,$53
-queenRearFoot2:
+queen_rearFoot2:
     db     $2c,$2d,$2e,$2f
     db $3b,$3c,$3d,$3e
     db $4b,$4c,$4d,    $4f
     db $7f,$f2,$ef,$df
-queenRearFoot3:
+queen_rearFoot3:
     db     $2c,$2d,$2e,$2f 
     db $3b,$3c,$3d,$3e
     db $4b,$4c,$4d,    $4f
     db $10,$11,$12,$df
 
 ; 03:7100
-queenFrontFoot1:
+queen_frontFoot1:
     db $28,$29,$2a
     db $38,$39,$3a
     db $48,$49,$4a
     db $fe,$f9,$f4
-queenFrontFoot2:
+queen_frontFoot2:
     db $1b,$1c,$1d
     db $03,$04,$05
     db $0e,$0f,$1f
     db $ff,$ff,$ff
-queenFrontFoot3:
+queen_frontFoot3:
     db $1b,$1c,$1d
     db $03,$04,$05
     db $0e,$0f,$1f
     db $00,$01,$02
     
 ; 03:7124
-queenRearFootOffsets:
+queen_rearFootOffsets:
     db     $01,$02,$03,$04
     db $20,$21,$22,$23
     db $40,$41,$42,    $44
     db $60,$61,$62,$63
-queenFrontFootOffsets:
+queen_frontFootOffsets:
     db $08,$09,$0a 
     db $28,$29,$2a 
     db $48,$49,$4a
     db $68,$69,$6a
 
-; End of the Queen's Feet ordeal
+; No more code about the Queen's feet, please.
 
 
 Call_003_7140:
@@ -3689,7 +3689,7 @@ ret
 
 
 VBlank_drawQueen: ; 03:7CF0
-    call queenDrawFeet
+    call queen_drawFeet ; Also draws head if no foot animation is ready
     call Call_003_7b69
     ld a, [scrollX]
     ld [rSCX], a
