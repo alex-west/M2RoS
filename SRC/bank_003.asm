@@ -1176,7 +1176,7 @@ table_6D27: ; 03:6D27 - 5
     db $21, $00, $80
 
 ; Initialize Queen AI
-Call_003_6d4a: ; 03:6D4A
+queen_initialize: ; 03:6D4A
     ld hl, spriteC300
     xor a
     ld b, a
@@ -1187,9 +1187,9 @@ Call_003_6d4a: ; 03:6D4A
     jr nz, jr_003_6d4f
 
     ld a, $67
-    ld [$c3a0], a
+    ld [queen_bodyY], a
     ld a, $37
-    ld [$c3a2], a
+    ld [queen_bodyHeight], a
     ld a, $44
     ld [rSTAT], a
     ld a, $5c
@@ -1204,12 +1204,12 @@ Call_003_6d4a: ; 03:6D4A
     ld a, $70
     ld [rWY], a
     ld [queen_headY], a
-    ld hl, $c3ad
+    ld hl, queen_interruptList
     ld [hl], $ff
     ld a, l
-    ld [$c3aa], a
+    ld [queen_pInterruptListLow], a
     ld a, h
-    ld [$c3ab], a
+    ld [queen_pInterruptListHigh], a
     ld a, $09
     ld [$c3b7], a
     ld [$c3b6], a
@@ -1218,10 +1218,10 @@ Call_003_6d4a: ; 03:6D4A
     ld [$c3b8], a
     ld a, h
     ld [$c3b9], a
+    ; Initialize wall sprites
     ld hl, $c338
     ld b, $0c
     ld a, $78
-
     jr_003_6daa:
         ld [hl+], a
         ld [hl], $a2
@@ -1234,7 +1234,7 @@ Call_003_6d4a: ; 03:6D4A
         dec b
     jr nz, jr_003_6daa
 
-    call Call_003_6e22
+    call queen_adjustWallSpriteToHead
     ld hl, table_7484
     ld a, l
     ld [queen_pNextStateLow], a
@@ -1298,8 +1298,8 @@ Call_003_6e17:
     jr nz, jr_003_6e1c
 ret
 
-
-Call_003_6e22:
+; Adjust the wall sprites pertaining to the head to match y position
+queen_adjustWallSpriteToHead: ; 03:6E22
     ld hl, $c354
     ld b, $05
     ld a, [queen_headY]
@@ -1364,16 +1364,16 @@ queenHandler: ; 03:6E36
                 ld [$c3ef], a
     jr_003_6e85:
 
-    call Call_003_748c
-    call Call_003_7be8
+    call queen_handleState
+    call queen_walk
     call Call_003_72b8
     call Call_003_7230
     call Call_003_716e
     call Call_003_7190
     call Call_003_71cf
-    call Call_003_6f07
-    call Call_003_6e22
-    call Call_003_7140
+    call Call_003_6f07 ; Set actor positions (for collision detection?)
+    call queen_adjustWallSpriteToHead
+    call Call_003_7140 ; Copy sprites from C600 area to OAM buffer
     call Call_003_6ea7
 ret
 
@@ -1405,13 +1405,11 @@ Call_003_6ea7:
     ld h, a
     ld a, [$d05e]
     cp $20
-    jr nz, jr_003_6efe
-
+        jr nz, jr_003_6efe
     ld l, $23
     ld a, [hl]
     cp $f6
-    ret z
-
+        ret z
 jr_003_6ede:
     call Call_003_7436
     ld a, $08
@@ -1426,10 +1424,9 @@ jr_003_6ede:
     and a
     ld a, $09
     jr z, jr_003_6efa
+        ld a, $0a
+    jr_003_6efa:
 
-    ld a, $0a
-
-jr_003_6efa:
     ld [sfxRequest_noise], a
     ret
 
@@ -1441,10 +1438,11 @@ jr_003_6efe:
         jr z, jr_003_6ede
     ret
 
-
+; Set actor positions
 Call_003_6f07:
+    ; Queen body 
     ld hl, $c601
-    ld a, [$c3a0]
+    ld a, [queen_bodyY]
     add $18
     ld [hl+], a
     ld a, [queen_bodyXScroll]
@@ -1452,12 +1450,14 @@ Call_003_6f07:
     inc a
     add $30
     ld [hl], a
+    ; Queen head left half
     ld l, $41
     ld a, [queen_headY]
     add $10
     ld [hl+], a
     ld a, [queen_headX]
     ld [hl], a
+    ; Queen head right half
     ld l, $61
     ld a, [queen_headY]
     add $10
@@ -1465,6 +1465,7 @@ Call_003_6f07:
     ld a, [queen_headX]
     add $20
     ld [hl], a
+
     ld l, $23
     ld b, $12
     ld c, $0e
@@ -1760,14 +1761,14 @@ queen_frontFootOffsets:
 
 ; No more code about the Queen's feet, please.
 
-
+; Copy sprites to OAM buffer
 Call_003_7140:
+    ; Copy the 6 segments of the neck (or the spit projectiles)
     ld hl, $c308
     ld a, [hOamBufferIndex]
     ld e, a
-    ld d, $c0
+    ld d, HIGH(wram_oamBuffer)
     ld c, $06
-
     jr_003_714b:
         ld a, [$c3b8]
         add $08
@@ -1786,9 +1787,9 @@ Call_003_7140:
     
     jr_003_715e:
 
+    ; Copy the wall segments
     ld hl, $c338
     ld b, $30
-
     jr_003_7163:
         ld a, [hl+]
         ld [de], a
@@ -1846,16 +1847,16 @@ Call_003_7190:
     ld a, $67
     sub c
     jr c, jr_003_71c4
-        ld [$c3a0], a
+        ld [queen_bodyY], a
         ld a, $37
-        ld [$c3a2], a
+        ld [queen_bodyHeight], a
         ret
     jr_003_71c4:
         ld d, $37
         add d
-        ld [$c3a2], a
+        ld [queen_bodyHeight], a
         xor a
-        ld [$c3a0], a
+        ld [queen_bodyY], a
         ret
 
 
@@ -1926,7 +1927,7 @@ Call_003_71cf:
         dec d
     jr nz, jr_003_721a
 
-    call Call_003_6e22
+    call queen_adjustWallSpriteToHead
 ret
 
 
@@ -2036,8 +2037,7 @@ jr_003_729e:
 Call_003_72b8:
     ld a, [$c3c0]
     and a
-    ret z
-
+        ret z
     cp $03
     jp z, Jump_003_742a
 
@@ -2116,24 +2116,21 @@ jr_003_7328:
     add c
     cp $d0
     jr c, jr_003_735c
+        ld a, [$c3d1]
+        and a
+        jr nz, jr_003_7355
+            ld a, $04
+            ld [queen_state], a
+            xor a
+            ld [$c3bf], a
+            ld [$c3c1], a
+            jr jr_003_7399
+        jr_003_7355:
+            ld a, $0a
+            ld [queen_state], a
+            jr jr_003_7399
+    jr_003_735c:
 
-    ld a, [$c3d1]
-    and a
-    jr nz, jr_003_7355
-
-    ld a, $04
-    ld [queen_state], a
-    xor a
-    ld [$c3bf], a
-    ld [$c3c1], a
-    jr jr_003_7399
-
-jr_003_7355:
-    ld a, $0a
-    ld [queen_state], a
-    jr jr_003_7399
-
-jr_003_735c:
     ld [queen_headY], a
     ld a, [hl]
     and $f0
@@ -2141,13 +2138,12 @@ jr_003_735c:
     ld b, a
     bit 3, a
     jr z, jr_003_736e
+        or $f0
+        cpl
+        inc a
+        ld b, a
+    jr_003_736e:
 
-    or $f0
-    cpl
-    inc a
-    ld b, a
-
-jr_003_736e:
     ld a, [$c3b7]
     add b
     ld [$c3b7], a
@@ -2199,73 +2195,69 @@ Jump_003_73b1:
     cp $81
     jr z, jr_003_73fc
 
-    ld a, [hl]
-    and $f0
-    swap a
-    bit 3, a
-    jr z, jr_003_73cc
-
-    or $f0
-    cpl
-    inc a
-    ld b, a
-    jr jr_003_73cf
-
-jr_003_73cc:
-    cpl
-    inc a
-    ld b, a
-
-jr_003_73cf:
-    ld a, [queen_headY]
-    add b
-    ld [queen_headY], a
-    bit 7, b
-    jr nz, jr_003_73de
-
-    ld a, b
-    cpl
-    inc a
-    ld b, a
-
-jr_003_73de:
-    ld a, [$c3b7]
-    add b
-    ld [$c3b7], a
-    ld a, [hl]
-    and $0f
-    cpl
-    inc a
-    ld b, a
-    ld a, [queen_headX]
-    add b
-    ld [queen_headX], a
-    ld a, [$c3b6]
-    add b
-    ld [$c3b6], a
-    dec hl
-    jr jr_003_7399
-
-jr_003_73fc:
-    xor a
-    ld [$c3c0], a
-    ld [$c3ba], a
-    ld a, $82
-    ld [$c3c1], a
-    xor a
-    ld [queen_eatingState], a
-    ld hl, $c623
-    ld [hl], $f5
-    ld hl, spriteC300
-    ld a, l
-    ld [$c3b8], a
-    ld a, h
-    ld [$c3b9], a
-    ld a, $09
-    ld [$c3b6], a
-    ld [$c3b7], a
-    call Call_003_7466
-    jp Jump_003_7399
+        ld a, [hl]
+        and $f0
+        swap a
+        bit 3, a
+        jr z, jr_003_73cc
+            or $f0
+            cpl
+            inc a
+            ld b, a
+            jr jr_003_73cf
+        jr_003_73cc:
+            cpl
+            inc a
+            ld b, a
+        jr_003_73cf:
+    
+        ld a, [queen_headY]
+        add b
+        ld [queen_headY], a
+        bit 7, b
+        jr nz, jr_003_73de
+            ld a, b
+            cpl
+            inc a
+            ld b, a
+        jr_003_73de:
+    
+        ld a, [$c3b7]
+        add b
+        ld [$c3b7], a
+        ld a, [hl]
+        and $0f
+        cpl
+        inc a
+        ld b, a
+        ld a, [queen_headX]
+        add b
+        ld [queen_headX], a
+        ld a, [$c3b6]
+        add b
+        ld [$c3b6], a
+        dec hl
+        jr jr_003_7399
+    jr_003_73fc:
+        xor a
+        ld [$c3c0], a
+        ld [$c3ba], a
+        ld a, $82
+        ld [$c3c1], a
+        xor a
+        ld [queen_eatingState], a
+        ld hl, $c623
+        ld [hl], $f5
+        ld hl, spriteC300
+        ld a, l
+        ld [$c3b8], a
+        ld a, h
+        ld [$c3b9], a
+        ld a, $09
+        ld [$c3b6], a
+        ld [$c3b7], a
+        call Call_003_7466
+        jp Jump_003_7399
 
 
 Jump_003_742a:
@@ -2328,7 +2320,7 @@ table_7484: ; 03:7484
     db $00, $02, $04, $02, $04, $06, $14, $ff
 ; Walk forward, shove head forward twice, walk back, spit blobs, repeat
 
-Call_003_748c:
+queen_handleState: ; 03:748C
     ld a, [queen_state] ; Queen's state!
     rst $28
         dw func_03_7821 ; $00 - 03:7821 - Prep forward walk
@@ -2457,20 +2449,25 @@ func_03_7519:
     add hl, de
     jp Jump_003_7288
 
-
-Call_003_756c:
+; Spawn Queen's spit
+Call_003_756c: ; 03:756C
+    ; Set status
     ld [hl], $00
+    ; Set Y
     inc l
     ld [hl], b
+    ; Set X
     inc l
     ld [hl], c
+    ; Set sprite type
     inc l
     ld [hl], $f2
+    ; Set flip flags
     ld a, l
     add $05
     ld l, a
     ld [hl], d
-    ret
+ret
 
 func_03_757B:
     ld a, [queen_delayTimer]
@@ -2519,18 +2516,18 @@ jr_003_75b4:
     ld hl, $c740
     ld b, $03
 
-jr_003_75c1:
-    ld a, [hl]
-    cp $ff
-    jr nz, jr_003_75cc
-
-    add hl, de
-    dec b
+    jr_003_75c1:
+        ld a, [hl]
+        cp $ff
+            jr nz, jr_003_75cc
+        add hl, de
+        dec b
     jr nz, jr_003_75c1
 
     jr jr_003_75d0
 
 jr_003_75cc:
+
     call Call_003_75fa
     ret
 
@@ -3031,67 +3028,67 @@ func_03_7864:
     ld a, [$c3f1]
     and a
     jr nz, jr_003_78ac
-
-    ld a, [$c3be]
-    and a
-    jr z, jr_003_78ac
-
-    ld a, [queen_headY]
-    ld b, $02
-    cp $46
-    jr c, jr_003_78a5
-        ld b, $03
+        ld a, [$c3be]
+        and a
+        jr z, jr_003_78ac
+            ld a, [queen_headY]
+            ld b, $02 ; downwards neck pattern
+            cp $46
+            jr c, jr_003_78a5
+                ld b, $03 ; Upwards neck pattern
+                ld a, [queen_headY]
+                add $f0
+                ld [queen_headY], a
+                ld a, $03
+                ld [queen_headFrameNext], a
+                ld [queen_headFrame], a
+            jr_003_78a5:
+            
+            ld a, b
+            ld [queen_neckPattern], a
+            jp Jump_003_78e4
+    jr_003_78ac:
         ld a, [queen_headY]
-        add $f0
-        ld [queen_headY], a
-        ld a, $03
+        ld b, $00 ; downwards neck pattern
+        cp $29
+        jr c, jr_003_78c5
+            ld b, $06 ; Forwards neck pattern
+            cp $4c
+            jr c, jr_003_78c5
+                ld b, $01 ; Upwards neck pattern
+                ld a, [queen_headY]
+                add $f0
+                ld [queen_headY], a
+        jr_003_78c5:
+    
+        ld a, b
+        ld [queen_neckPattern], a
+        
+        ; Randomly select head pose
+        ld b, $03
+        cp $01
+        jr z, jr_003_78dd
+            ld b, $02
+            ld a, [rDIV]
+            and $03
+            jr z, jr_003_78e4
+                ld hl, $c623
+                ld [hl], $f6
+        jr_003_78dd:
+    
+        ld a, b
         ld [queen_headFrameNext], a
         ld [queen_headFrame], a
-    jr_003_78a5:
-    
-    ld a, b
-    ld [queen_neckPattern], a
-    jp Jump_003_78e4
+    Jump_003_78e4:
+    jr_003_78e4:
 
-jr_003_78ac:
-    ld a, [queen_headY]
-    ld b, $00
-    cp $29
-    jr c, jr_003_78c5
-        ld b, $06
-        cp $4c
-        jr c, jr_003_78c5
-            ld b, $01
-            ld a, [queen_headY]
-            add $f0
-            ld [queen_headY], a
-    jr_003_78c5:
-
-    ld a, b
-    ld [queen_neckPattern], a
-    ld b, $03
-    cp $01
-    jr z, jr_003_78dd
-
-    ld b, $02
-    ld a, [rDIV]
-    and $03
-    jr z, jr_003_78e4
-
-    ld hl, $c623
-    ld [hl], $f6
-
-jr_003_78dd:
-    ld a, b
-    ld [queen_headFrameNext], a
-    ld [queen_headFrame], a
-
-Jump_003_78e4:
-jr_003_78e4:
+    ; Load neck pattern pointer
     call Call_003_746f
-    call Call_003_7466
-    inc hl
-    jp Jump_003_7399
+    ; Skip first entry in the neck pattern table
+    call Call_003_7466 ; Load
+    inc hl 
+    jp Jump_003_7399 ; Store
+; end proc
 
 func_03_78EE:
     ld a, [$c3c1]
@@ -3114,12 +3111,11 @@ func_03_78F7:
     ld a, [queen_headFrame]
     cp $03
     jr nz, jr_003_791c
+        ld a, [queen_headY]
+        add $10
+        ld [queen_headY], a
+    jr_003_791c:
 
-    ld a, [queen_headY]
-    add $10
-    ld [queen_headY], a
-
-jr_003_791c:
     ld a, $01
     ld [queen_headFrameNext], a
     ld [queen_headFrame], a
@@ -3182,22 +3178,22 @@ func_03_7970:
     ld c, a
     ld de, table_7961
 
-jr_003_799f:
-    ld a, [de]
-    add b
-    ld [hl+], a
-    inc de
-    ld a, [de]
-    add c
-    ld [hl+], a
-    inc de
-    ld a, [de]
-    ld [hl+], a
-    ld [hl], $80
-    inc l
-    inc de
-    ld a, l
-    cp $1c
+    jr_003_799f:
+        ld a, [de]
+        add b
+        ld [hl+], a
+        inc de
+        ld a, [de]
+        add c
+        ld [hl+], a
+        inc de
+        ld a, [de]
+        ld [hl+], a
+        ld [hl], $80
+        inc l
+        inc de
+        ld a, l
+        cp $1c
     jr nz, jr_003_799f
 
     dec l
@@ -3208,7 +3204,7 @@ jr_003_799f:
     ld [$c3b8], a
     ld a, h
     ld [$c3b9], a
-    ld a, $04
+    ld a, $04 ; Steep neck pattern (barfing samus
     ld [queen_neckPattern], a
     ld [$c3d1], a
     call Call_003_746f
@@ -3226,42 +3222,39 @@ func_03_79D0:
     ld [queen_state], a
 ret
 
-func_03_79E1:
+func_03_79E1: ; 03:79E1 - Queen spitting Samus out of stomach
     ld a, [queen_delayTimer]
     and a
     jr z, jr_003_79f6
+        dec a
+        ld [queen_delayTimer], a
+        ld a, [queen_footFrame]
+        cp $02
+            ret nz
+        xor a
+        ld [queen_footFrame], a
+        ret
+    jr_003_79f6:
+        xor a
+        ld [$c3d2], a
+        ld a, [queen_health]
+        and a
+            jr z, jr_003_7a4d
+        sub $1e ; Hurt for 30 damage with bombs
+        ld [queen_health], a
+            jr c, jr_003_7a4d
+        ld a, $02
+        ld [$c3c0], a
+        ld a, $0b
+        ld [queen_state], a
+        ; Set neck pattern
+        ld a, [queen_pNeckPatternLow]
+        ld l, a
+        ld a, [queen_pNeckPatternHigh]
+        ld h, a
+        dec hl
+        jp Jump_003_7399
 
-    dec a
-    ld [queen_delayTimer], a
-    ld a, [queen_footFrame]
-    cp $02
-        ret nz
-    xor a
-    ld [queen_footFrame], a
-    ret
-
-
-jr_003_79f6:
-    xor a
-    ld [$c3d2], a
-    ld a, [queen_health]
-    and a
-    jr z, jr_003_7a4d
-
-    sub $1e ; Hurt for 30 damage with bombs
-    ld [queen_health], a
-    jr c, jr_003_7a4d
-
-    ld a, $02
-    ld [$c3c0], a
-    ld a, $0b
-    ld [queen_state], a
-    ld a, [queen_pNeckPatternLow]
-    ld l, a
-    ld a, [queen_pNeckPatternHigh]
-    ld h, a
-    dec hl
-    jp Jump_003_7399
 
 func_03_7A1D:
     ld a, [$c3c1]
@@ -3294,7 +3287,7 @@ func_03_7A1D:
     jp Jump_003_7846
 
 
-jr_003_7a4d:
+jr_003_7a4d: ; Kill Queen?
     ld b, $0d
     ld hl, $c600
     call Call_003_6e17
@@ -3329,7 +3322,7 @@ jr_003_7a4d:
     call Call_003_7aa8
     ld a, $0f
     ld [sfxRequest_noise], a
-    ld a, $05
+    ld a, $05 ; Dying neck pattern
     ld [queen_neckPattern], a
     call Call_003_746f
     call Call_003_7466
@@ -3546,7 +3539,7 @@ func_03_7BE7: ; State $16
     ret
 
 
-Call_003_7be8: ; 03:7BE8
+queen_walk: ; 03:7BE8
     xor a
     ld [queen_walkSpeed], a
     ld a, [$c3bd]
@@ -3565,7 +3558,7 @@ Call_003_7be8: ; 03:7BE8
         inc a
         ld [queen_walkCounter], a
         ld h, $00
-        ld de, table_7C39
+        ld de, .walkSpeedTable
         add hl, de
         ld a, b
         cp $01
@@ -3599,88 +3592,92 @@ Call_003_7be8: ; 03:7BE8
             ret
 ; end proc
 
-table_7C39: ; 03:7C39
+; Values are negated due to how the raster split works
+.walkSpeedTable: ; 03:7C39
     db $ff, $ff, $ff, $ff, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe
     db $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $ff, $ff, $ff
     db $ff, $ff, $81, $01, $01, $01, $01, $02, $02, $02, $02, $02, $02, $02, $02, $02
     db $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02
     db $01, $01, $01, $01, $01, $82
 
-Call_003_7c7f: ; 03:7C7F - LCDCInterruptHandler
-    push af
+; LCDCInterruptHandler
+LCDCInterruptHandler: ; 03:7C7F
+    push af ; Caller function already pushed af, so this may be unnecessary
     push bc
     push de
     push hl
-    ld a, [$c3aa]
+    ld a, [queen_pInterruptListLow]
     ld l, a
-    ld a, [$c3ab]
+    ld a, [queen_pInterruptListHigh]
     ld h, a
 
-jr_003_7c8b:
-    ld a, [hl]
-    cp $ff
-    jr z, jr_003_7ce3
+    .loop:
+        ; If token is FF, do nothing and don't set up another interrupt
+        ld a, [hl]
+        cp $ff
+            jr z, .exitLastInterrupt
+        and $7f
+        cp $01
+            jr z, .case_1 ; Set scroll X and palette to queen's
+        cp $02
+            jr z, .case_2 ; Set scroll X and palette to room's
+        cp $03
+            jr z, .case_3 ; Disable window (queen's head)
+    
+        ; case 4 (default) ; Draw status bar
+            push hl
+                ld hl, rLCDC
+                res 5, [hl] ; Disable window
+            pop hl
+            ; Set scroll for status bar
+            xor a
+            ld [rSCX], a
+            ld a, $70
+            ld [rSCY], a
+            inc l
+        jr .exitLastInterrupt
+        
+        .case_3: ; Disable window
+            push hl
+            ld hl, rLCDC
+            res 5, [hl]
+            pop hl
+        jr .nextToken
+        
+        .case_1:
+            ld a, [queen_bodyXScroll]
+            ld [rSCX], a
+            ld a, [$c3d2]
+            and a
+                jr z, .nextToken
+            ld [rBGP], a
+        jr .nextToken
+        
+        .case_2:
+            ld a, [scrollX]
+            ld [rSCX], a
+            ld a, $93 ; FIXME: Causes palette issues if pausing is enabled
+            ld [rBGP], a
+        ; end case
+    
+    .nextToken:
+        bit 7, [hl]
+            jr z, .exitAndPrepNextInterrupt
+        inc l
+        inc l
+    jr .loop
 
-    and $7f
-    cp $01
-        jr z, jr_003_7cba
-    cp $02
-        jr z, jr_003_7ccb
-    cp $03
-        jr z, jr_003_7cb1
-
-    push hl
-    ld hl, $ff40
-    res 5, [hl]
-    pop hl
-    xor a
-    ld [rSCX], a
-    ld a, $70
-    ld [rSCY], a
-    inc l
-    jr jr_003_7ce3
-
-jr_003_7cb1:
-    push hl
-    ld hl, $ff40
-    res 5, [hl]
-    pop hl
-    jr jr_003_7cd6
-
-jr_003_7cba:
-    ld a, [queen_bodyXScroll]
-    ld [rSCX], a
-    ld a, [$c3d2]
-    and a
-    jr z, jr_003_7cd6
-
-    ld [rBGP], a
-    jr jr_003_7cd6
-
-jr_003_7ccb:
-    ld a, [scrollX]
-    ld [rSCX], a
-    ld a, $93
-    ld [rBGP], a
-
-jr_003_7cd6:
-    bit 7, [hl]
-    jr z, jr_003_7cde
-
-    inc l
-    inc l
-    jr jr_003_7c8b
-
-jr_003_7cde:
+.exitAndPrepNextInterrupt:
+    ; Load Y position for next interrupt
     inc l
     ld a, [hl+]
     ld [rLYC], a
-
-jr_003_7ce3:
+.exitLastInterrupt:
+    ; Save interrupt instruction pointer
     ld a, l
-    ld [$c3aa], a
+    ld [queen_pInterruptListLow], a
     ld a, h
-    ld [$c3ab], a
+    ld [queen_pInterruptListHigh], a
     pop hl
     pop de
     pop bc
@@ -3690,123 +3687,148 @@ ret
 
 VBlank_drawQueen: ; 03:7CF0
     call queen_drawFeet ; Also draws head if no foot animation is ready
-    call Call_003_7b69
+    call Call_003_7b69 ; Disintegration effect?
+    ; Set scroll position
     ld a, [scrollX]
     ld [rSCX], a
     ld a, [scrollY]
     ld [rSCY], a
+    ; Set head X position
     ld a, [queen_headX]
     cp $a6
-    jr nz, jr_003_7d0b
+    jr nz, .endIf_A
         ld a, $a7
-    jr_003_7d0b:
-
+    .endIf_A:
     ld [rWX], a
+; Start preparing the interrupt list
+    ; Set head Y position
     ld a, [queen_headY]
     ld [rWY], a
     add $26
     cp $90
-    jr c, jr_003_7d1c
+    jr c, .endIf_B
         ld a, $8f
-    jr_003_7d1c:
-
-    ld [$c3ac], a
-    ld a, [$c3a0]
+    .endIf_B:
+    ld [queen_headBottomY], a
+    
+    ld a, [queen_bodyY]
     ld b, a
-    ld a, [$c3a2]
+    ld a, [queen_bodyHeight]
     add b
     cp $90
-    jr c, jr_003_7d2d
+    jr c, .endIf_C
         ld a, $8f
-    jr_003_7d2d:
-
+    .endIf_C:
     ld d, a
-    ld hl, $c3ad
-    ld a, [$c3ac]
-    ld b, a
-    ld a, [$c3a0]
-    sub b
-    jr c, jr_003_7d52
-        ld c, $83
-        jr z, jr_003_7d41
-            ld c, $03
-        jr_003_7d41:
     
+    ld hl, queen_interruptList
+    ld a, [queen_headBottomY]
+    ld b, a
+    ld a, [queen_bodyY]
+    sub b
+    jr c, .elseIf_D
+        ; Decide whether "disable window" is the only interrupt for its scanline or not
+        ld c, $83
+        jr z, .endIf_E
+            ld c, $03
+        .endIf_E:
+        ; Write y pos of initial interrupt
         ld [hl], b
+        ; Set interrupt type to "disable window"
         inc l
         ld [hl], c
+        ; Set y pos of 2nd interrupt to the top of the queen's body
         inc l
-        ld a, [$c3a0]
+        ld a, [queen_bodyY]
         ld [hl+], a
+        ; Set interrupt tyoe to "queen's body"
         ld [hl], $01
+        ; Set the ypos of the 3rd interrupt to the bottom of the queen's body
         inc l
         ld [hl], d
+        ; Set interrupt type to "restore room"
         inc l
         ld [hl], $02
-        jr jr_003_7d81
-    jr_003_7d52:
-
+        jr .endIf_D
+    .elseIf_D:
+    
     ld a, b
     sub d
-    jr c, jr_003_7d6f
+    jr c, .else_D
+        ; Decide whether the "restore room" command will be the only iterrupt on its scanline
         ld c, $82
-        jr z, jr_003_7d5c
+        jr z, .endIf_F
             ld c, $02
-        jr_003_7d5c:
-    
-        ld a, [$c3a0]
+        .endIf_F:
+        ; Set the y position of the initial interrupt to the top of the queen's body
+        ld a, [queen_bodyY]
         ld [hl+], a
+        ; Set initial interrupt type to "queen's body"
         ld [hl], $01
+        ; Set the ypos of next interrupt to the bottom of the queen's body
         inc l
         ld [hl], d
+        ; Set interrupt type to "restore room"
         inc l
         ld [hl], c
+        ; Set y pos of next interrupt to bottom of Queen's head
         inc l
-        ld a, [$c3ac]
+        ld a, [queen_headBottomY]
         ld [hl+], a
+        ; Set interrupt type to "disable window"
         ld [hl], $03
-        jr jr_003_7d81
-    jr_003_7d6f:
+        jr .endIf_D
+    .else_D:
+        ; Set y pos of inital interrupt to top of queen's body
+        ld a, [queen_bodyY]
+        ld [hl+], a
+        ; Set interrupt type to "queen's body"
+        ld [hl], $01
+        ; Set y pos of 2nd interrupt to bottom of queen's head
+        inc l
+        ld a, [queen_headBottomY]
+        ld [hl+], a
+        ; Set interrupt type to "disable window"
+        ld [hl], $03
+        ; Set y pos of 3rd interrupt to bottom of queen's body
+        inc l
+        ld [hl], d
+        ; Set interrupt type to "restore room"
+        inc l
+        ld [hl], $02
+    .endIf_D:
 
-    ld a, [$c3a0]
-    ld [hl+], a
-    ld [hl], $01
-    inc l
-    ld a, [$c3ac]
-    ld [hl+], a
-    ld [hl], $03
-    inc l
-    ld [hl], d
-    inc l
-    ld [hl], $02
-
-jr_003_7d81:
+; This displays the status bar by finding the first interrupt command with a scanline of 87 or greater and replacing it.
     ld b, $03
-    ld hl, $c3ad
-
-    jr_003_7d86:
+    ld hl, queen_interruptList
+    .loop:
         ld a, [hl]
         cp $87
-            jr nc, jr_003_7d90
+            jr nc, .break
         inc l
         inc l
         dec b
-    jr nz, jr_003_7d86
-    jr_003_7d90:
-
+    jr nz, .loop
+    .break:
+    ; Set y position of last interrupt to $87 (scanline 135)
     ld [hl], $87
+    ; Set interrupt type to "status bar"
     inc l
     ld [hl], $04
+    ; Add interrupt list terminator
     inc l
     ld [hl], $ff
-    ld hl, $c3ad
+    ; Prep initial interrupt
+    ld hl, queen_interruptList
     ld a, [hl+]
     ld [rLYC], a
+    ; Prep interrupt pointer
     ld a, l
-    ld [$c3aa], a
+    ld [queen_pInterruptListLow], a
     ld a, h
-    ld [$c3ab], a
-    ld hl, $ff40
+    ld [queen_pInterruptListHigh], a
+    ; Enable window display
+    ld hl, rLCDC
     set 5, [hl]
 ret
 

@@ -34,7 +34,7 @@ RST_28:: ; Jump table routine (index = a)
 VBlankInterrupt:: jp VBlankHandler
     db $00,$00,$00,$00,$00
 
-LCDCInterrupt:: jp LCDCInterruptHandler
+LCDCInterrupt:: jp LCDCInterruptHandler_farCall
     db $00,$00,$00,$00,$00
 
 TimerOverflowInterrupt:: jp TimerOverflowInterruptStub
@@ -6116,7 +6116,7 @@ Call_000_2887: ; 00:2887
     push hl
         call disableLCD
         call Call_000_0673
-        callFar Call_003_6d4a
+        callFar queen_initialize
         ldh a, [hCameraXPixel]
         ld b, a
         ldh a, [hSamusXPixel]
@@ -9172,12 +9172,12 @@ Call_000_3d48: ; 00:3D48
 ret
 
 
-LCDCInterruptHandler: ; 00:3D5C
+LCDCInterruptHandler_farCall: ; 00:3D5C
     push af
         ; Presuming this non-standard convention is because this is an interrupt handler
         ld a, $03
         ld [rMBC_BANK_REG], a
-        call Call_003_7c7f
+        call LCDCInterruptHandler
         ld a, [bankRegMirror]
         ld [rMBC_BANK_REG], a
     pop af

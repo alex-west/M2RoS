@@ -47,8 +47,10 @@ def spriteC300 = $C300 ;$C300..3D: Set to [$2:4FFE..503A] in $2:4DB1
 ;    $C322/2E: XOR'd with Dh in $2:4EA1
 ;    $C334: Set to E8h in $2:4EA1 if [$C382] = 0
 ;}
-;$C308..37: Metroid Queen neck OAM. Ch slots of 4 bytes (Y position, X position, tile number, attributes)
-;
+; $C308..37: Metroid Queen neck OAM. Ch slots of 4 bytes (Y position, X position, tile number, attributes)
+; $C338 - Queen Wall OAM (body portion) - 7 slots
+; $C354 - Queen Wall OAM (head portion) - 5 slots
+
 def hitboxC360 = $C360 ;-$C363: Set to [$2:503B..3E] in $2:4DB1
 ;
 def blobThrower_actionTimer = $C380 ; Cleared in $2:4DB1. Used as index in $2:4FD4
@@ -72,35 +74,43 @@ def arachnus_health = $C394 ; Set in procedure at 02:511C
 
 section "Queen Stuff 1", wram0[$C3A0]
 ; Queen variables appear to start at $C3A0
-ds 1 ; $C3A0 - LCD Y position for the raster split that moves the Queen's body
+queen_bodyY: ds 1 ; $C3A0 - Y position of the Queen's body (used for the setting the raster split and setting the hitbox)
 queen_bodyXScroll: ds 1 ; $C3A1 - LCD interrupt handler scroll X (higher numbers -> body is more left)
-ds 1 ; $C3A2 - Queen body height? (used for timing the bottom of the raster split)
+queen_bodyHeight: ds 1 ; $C3A2 - Queen body height? (used for timing the bottom of the raster split)
 queen_walkWaitTimer: ds 1 ; $C3A3 - If non-zero, decrements and pauses the Queen's walking animation
 queen_walkCounter: ds 1 ; $C3A4 - Index into the queen's walk speed table
 ds 1 ; $C3A5 - Unused? (perhaps the walk counter used to be a pointer?)
 queen_pNeckPatternLow:  ds 1 ; $C3A6 - Pointer to the current working byte of the current neck pattern
 queen_pNeckPatternHigh: ds 1 ; $C3A7 - "" (high byte)
-queen_headX: ds 1 ;$C3A8: X position of Metroid Queen's head on screen
-queen_headY: ds 1 ;$C3A9: Y position of Metroid Queen's head on screen
-;$C3AA: Pointer to LCD interrupt data
-;$C3AC: min(8Fh, [Y position of Metroid Queen's head on screen] + 26h])
-;$C3AD: LCD interrupt Y position
-;$C3AE..B6: LCD interrupt data. 4 slots of 2 bytes and a FFh terminator
+queen_headX: ds 1 ;$C3A8 - X position of Metroid Queen's head on screen
+queen_headY: ds 1 ;$C3A9 - Y position of Metroid Queen's head on screen
+queen_pInterruptListLow:  ds 1 ; $C3AA - Pointer to LCD interrupt data
+queen_pInterruptListHigh: ds 1 ; $C3AB -  "" (high byte)
+queen_headBottomY: ds 1 ; $C3AC: Y position of the bottom of the visible portion of the queen's head
+; Set to min(8Fh, [Y position of Metroid Queen's head on screen] + 26h])
+queen_interruptList: ds 9 ;$C3AD..B5: LCD interrupt data: Initial slot for a y position, 4 slots of 2 bytes commands
 ;{
-;    01 yy: Set scroll X and background palette.          LCD interrupt Y position = yy. End
-;    02 yy: Update scroll X and background palette = 93h. LCD interrupt Y position = yy. End
-;    03 yy: Disable window display.                       LCD interrupt Y position = yy. End
-;    81 yy: Set scroll X and background palette.          Process next instruction
-;    82 yy: Update scroll X and background palette = 93h. Process next instruction
-;    83 yy: Disable window display.                       Process next instruction
-;    FFh: End
-;    Otherwise: Disable window display, scroll X = 0, scroll Y = 70h. End
+;    yy: Y position of initial interrupt ($C3AD)
+;    x1 yy: Set scroll X and background palette to Queen's.          LCD interrupt Y position = yy. End
+;    x2 yy: Update scroll X and background palette to default = 93h. LCD interrupt Y position = yy. End
+;    x3 yy: Disable window display.                       LCD interrupt Y position = yy. End
+;    x4 (or otherwise): Set status bar (disable window, scroll = (0, 70h). End interrupts for frame.
+;    0x yy: Set next LCD interrupt position to yy, and end current interrupt
+;    8x yy: Ignore yy and execute next interrupt command now.
+;    FFh: End interrupts for frame (possibly unneeded with the x4 command)
 ;}
+
+; $C3B6 - Neck related counter
+; $C3B7 - Neck related counter
 
 ; $C3B8/$C3B9 - Pointer used in constructing the sprite at C600 ?
 
 queen_cameraDeltaX = $C3BB ; Change in camera X position from the last frame
 queen_cameraDeltaY = $C3BC ; Change in camera Y position from the last frame
+
+; queen_walkingStatus = $C3BD ; 0x00 = Don't walk (used to activate walking behavior)
+; queen_ ??? = $C3BE ; alternates between 0x00 and 0x01 often
+; queen_walkingStatus = $C3BF ; 0x81/0x82 = just stopped walking (used to halt the foot animation)
 
 section "Queen Stuff 2", wram0[$c3c2]
 
@@ -295,7 +305,24 @@ def enemyDataSlots = $C600;..C7FF ; Enemy data. 20h byte slots
 ;    + 1Dh: Enemy map ID. Used to $C500
 ;    + 1Eh: AI pointer(?)
 ;}
-;
+
+; Enemy Data Slots used by Queen:
+; - The Queen only cares about the first 4 bytes of each slot: status, Y, X, and ID (no AI pointer!)
+; - Though her projectiles use $C608 for something
+; - Each slot has a hardcoded purpose
+;  Slot - Sprite ID
+; $C600 - $F3 - Queen Body
+; $C620 - $F5/$F6/$F7 - Queen Mouth (closed/open/stunned)
+; $C640 - $F1 - Head Left Half
+; $C660 - $F2 - Head Right Half
+; $C680 - $F0 - Queen Neck <- This one get set to $82 when spitting Samus out?
+;  ...
+; $C720 - $F0 - Queen Neck
+; $C740 - $F2 - Queen Projectile
+; $C760 - $F2 - Queen Projectile
+; $C780 - $F2 - Queen Projectile
+; Sprite ID $F4 is unused?
+
 saveBuf_enemySaveFlags = $C900 ;$C900..CABF: Copied to/from SRAM ($B000 + [save slot] * 200h). 40h byte slots, one for each level data bank
 
 
