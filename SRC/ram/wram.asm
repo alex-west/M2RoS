@@ -104,16 +104,17 @@ queen_interruptList: ds 9 ;$C3AD..B5: LCD interrupt data: Initial slot for a y p
 ; $C3B7 - Neck related counter
 
 ; $C3B8/$C3B9 - Pointer used in constructing the sprite at C600 ?
-
+; $C3BA
 queen_cameraDeltaX = $C3BB ; Change in camera X position from the last frame
 queen_cameraDeltaY = $C3BC ; Change in camera Y position from the last frame
-
-; queen_walkingStatus = $C3BD ; 0x00 = Don't walk (used to activate walking behavior)
+queen_walkControl  = $C3BD ; 0x00 = Don't walk, non-zero: start walking (used to activate walking behavior)
 ; queen_ ??? = $C3BE ; alternates between 0x00 and 0x01 often
-; queen_walkingStatus = $C3BF ; 0x81/0x82 = just stopped walking (used to halt the foot animation)
+queen_walkStatus = $C3BF ; 0x81 = "done walking forward", 0x82 = "done walking backward"
+
+; $C3C0 - Neck related?
+; queen_neckStatus = $C3C1 ; 0x81 = "done extending", 0x82 = "done retracting"
 
 section "Queen Stuff 2", wram0[$c3c2]
-
 queen_walkSpeed: ds 1 ; $C3C2 - Used for adjusting the queen's head's position
 queen_state: ds 1 ; $C3C3 - Metroid Queen's state
 queen_pNextStateLow:  ds 1 ; $C3C4 - Pointer to the next state number (low byte)
@@ -130,7 +131,7 @@ queen_pNeckPatternBaseHigh: ds 1 ; $C3CE -  "" (high byte)
 queen_delayTimer: ds 1 ; $C3CF - Generic delay timer between states/actions
 queen_stunTimer: ds 1 ; $C3D0 - Stun timer when hit with mouth open
 ; $C3D1 - Neck related state?
-;$C3D2: LCD interrupt handler background palette
+queen_bodyPalette = $C3D2 ; LCD interrupt handler background palette
 queen_health = $C3D3 ; Metroid Queen health
 ;$C3D4: Queen death related
 ;$C3D5: Queen death related

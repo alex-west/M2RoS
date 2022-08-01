@@ -1316,29 +1316,31 @@ queen_adjustWallSpriteToHead: ; 03:6E22
 ret
 
 queenHandler: ; 03:6E36
+    ; Limit actions if Samus is dying
     ld a, [deathFlag]
     and a
-    jr z, jr_003_6e4a
+    jr z, .endIf_A
         xor a
         ld [queen_footFrame], a
         ld [queen_headFrameNext], a
         ld [$c3e0], a
         call Call_003_7140
         ret
-    jr_003_6e4a:
+    .endIf_A:
 
+    ; Change palette of neck sprites when hurt
     ld a, [frameCounter]
     and $03
-    jr nz, jr_003_6e6b
-        ld a, [$c3d2]
+    jr nz, .endIf_B
+        ld a, [queen_bodyPalette]
         and a
-        jr z, jr_003_6e6b
+        jr z, .endIf_B
             xor $90
-            ld [$c3d2], a
+            ld [queen_bodyPalette], a
             ld b, $0c
             ld hl, $c308
         
-            jr_003_6e61:
+            .loop:
                 inc l
                 inc l
                 inc l
@@ -1346,27 +1348,28 @@ queenHandler: ; 03:6E36
                 xor [hl]
                 ld [hl+], a
                 dec b
-            jr nz, jr_003_6e61
-    jr_003_6e6b:
+            jr nz, .loop
+    .endIf_B:
 
+    ; Set aggression flags?
     ld a, [queen_health]
     and a
-    jr z, jr_003_6e85
+    jr z, .endIf_C
         cp $64
-        jr nc, jr_003_6e85
+        jr nc, .endIf_C
             ld b, a
             ld a, $01
             ld [$c3f1], a
             ld a, b
             cp $32
-            jr nc, jr_003_6e85
+            jr nc, .endIf_C
                 ld a, $01
                 ld [$c3ef], a
-    jr_003_6e85:
+    .endIf_C:
 
     call queen_handleState
     call queen_walk
-    call Call_003_72b8
+    call Call_003_72b8 ; Neck related?
     call Call_003_7230
     call Call_003_716e
     call Call_003_7190
@@ -1386,7 +1389,7 @@ Call_003_6ea7:
         ld [$c3f0], a
         jr nz, jr_003_6eba
             xor a
-            ld [$c3d2], a
+            ld [queen_bodyPalette], a
             call Call_003_7812
     jr_003_6eba:
 
@@ -1414,12 +1417,12 @@ jr_003_6ede:
     call Call_003_7436
     ld a, $08
     ld [$c3f0], a
-    ld a, [$c3d2]
+    ld a, [queen_bodyPalette]
     and a
     ret nz
 
     ld a, $93
-    ld [$c3d2], a
+    ld [queen_bodyPalette], a
     ld a, [$c3ef]
     and a
     ld a, $09
@@ -2065,7 +2068,7 @@ Call_003_72b8:
                 cp $58
                     ret nz
                 xor a
-                ld [$c3d2], a
+                ld [queen_bodyPalette], a
                 call Call_003_7812
                 ret
             jr_003_72f5:
@@ -2078,7 +2081,7 @@ Call_003_72b8:
             ld a, $60
             ld [queen_stunTimer], a
             ld a, $93
-            ld [$c3d2], a
+            ld [queen_bodyPalette], a
             ld a, $0a
             ld [sfxRequest_noise], a
             ld hl, $c623
@@ -2092,7 +2095,7 @@ Call_003_72b8:
     jr nz, jr_003_7328
 
     xor a
-    ld [$c3d2], a
+    ld [queen_bodyPalette], a
     call Call_003_7812
     ld a, $0d
     ld [queen_state], a
@@ -2122,7 +2125,7 @@ jr_003_7328:
             ld a, $04
             ld [queen_state], a
             xor a
-            ld [$c3bf], a
+            ld [queen_walkStatus], a
             ld [$c3c1], a
             jr jr_003_7399
         jr_003_7355:
@@ -2283,7 +2286,7 @@ Call_003_7436:
     ld [queen_state], a
     xor a
     ld [$c3c0], a
-    ld [$c3bd], a
+    ld [queen_walkControl], a
     ld [queen_footFrame], a
     ld [queen_headFrameNext], a
     call Call_003_6e12
@@ -2469,19 +2472,18 @@ Call_003_756c: ; 03:756C
     ld [hl], d
 ret
 
-func_03_757B:
+; Queen state - blobs out
+func_03_757B: ; 03:757B
     ld a, [queen_delayTimer]
     and a
     jr z, jr_003_758c
+        dec a
+        ld [queen_delayTimer], a
+        jr nz, jr_003_758c
+            ld a, $01
+            ld [queen_headFrameNext], a
+    jr_003_758c:
 
-    dec a
-    ld [queen_delayTimer], a
-    jr nz, jr_003_758c
-
-    ld a, $01
-    ld [queen_headFrameNext], a
-
-jr_003_758c:
     call Call_003_7658
     ld a, [$d05d]
     cp $ff
@@ -2641,7 +2643,7 @@ Call_003_764f:
     inc l
     ret
 
-
+; Handle queen's spit
 Call_003_7658:
     ld b, $03
     ld hl, $c740
@@ -2786,37 +2788,32 @@ Call_003_7701:
     ld b, $02
     inc hl
     push hl
-    ld a, l
-    add $07
-    ld l, a
-    ld a, [hl]
-    ld [$c3e4], a
+        ld a, l
+        add $07
+        ld l, a
+        ld a, [hl]
+        ld [$c3e4], a
     pop hl
     push hl
-    ld a, [$c3e4]
-
-jr_003_7712:
-    and $0f
-    jr z, jr_003_7720
-
-    bit 3, a
-    jr nz, jr_003_771e
-
-    inc [hl]
-    inc [hl]
-    jr jr_003_7720
-
-jr_003_771e:
-    dec [hl]
-    dec [hl]
-
-jr_003_7720:
-    inc hl
-    ld a, [$c3e4]
-    swap a
-    dec b
-    jr nz, jr_003_7712
-
+        ld a, [$c3e4]
+        jr_003_7712:
+            and $0f
+            jr z, jr_003_7720
+                bit 3, a
+                jr nz, jr_003_771e
+                    inc [hl]
+                    inc [hl]
+                    jr jr_003_7720
+                jr_003_771e:
+                    dec [hl]
+                    dec [hl]
+            jr_003_7720:
+        
+            inc hl
+            ld a, [$c3e4]
+            swap a
+            dec b
+        jr nz, jr_003_7712
     pop hl
     ret
 
@@ -2886,7 +2883,7 @@ func_03_7785: ; 03:7785 - State $0F
     ld a, $3e
     ld [queen_stunTimer], a
     ld a, $93
-    ld [$c3d2], a
+    ld [queen_bodyPalette], a
     ld a, $0a
     ld [sfxRequest_noise], a
     ret
@@ -2910,7 +2907,7 @@ jr_003_77c2:
     ld a, $08
     ld [queen_state], a
     ld a, $93
-    ld [$c3d2], a
+    ld [queen_bodyPalette], a
     ld a, $0a
     ld [sfxRequest_noise], a
     ret
@@ -2933,7 +2930,7 @@ func_03_77DD:
     jr nz, jr_003_77f2
 
     xor a
-    ld [$c3d2], a
+    ld [queen_bodyPalette], a
     call Call_003_7812
 
 jr_003_77f2:
@@ -2974,7 +2971,7 @@ func_03_7821:
     ld [queen_walkCounter], a
     ld [$c3ba], a
     inc a
-    ld [$c3bd], a
+    ld [queen_walkControl], a
     ld a, $03
     ld [$c3c0], a
     ld a, $02
@@ -2984,7 +2981,7 @@ func_03_7821:
 ret
 
 func_03_783C:
-    ld a, [$c3bf]
+    ld a, [queen_walkStatus]
     cp $81
         ret nz
     xor a
@@ -3134,7 +3131,7 @@ func_03_7932:
 
 func_03_793B:
     ld a, $02
-    ld [$c3bd], a
+    ld [queen_walkControl], a
     ld a, $03
     ld [$c3c0], a
     xor a
@@ -3146,15 +3143,20 @@ func_03_793B:
 ret
 
 func_03_7954:
-    ld a, [$c3bf]
+    ld a, [queen_walkStatus]
     cp $82
         ret nz
     xor a
     ld [queen_footFrame], a
     jp Jump_003_7846
 
+; Queen's neck sprite while she is vomiting Samus
 table_7961: ; 03:7961
-    db $00, $00, $b5, $08, $00, $c5, $00, $08, $b6, $00, $10, $b7, $08, $0c, $c6
+    db $00, $00, $b5
+    db $08, $00, $c5
+    db $00, $08, $b6
+    db $00, $10, $b7
+    db $08, $0c, $c6
 
 func_03_7970:
     ld a, [queen_headY]
@@ -3182,13 +3184,16 @@ func_03_7970:
         ld a, [de]
         add b
         ld [hl+], a
+        
         inc de
         ld a, [de]
         add c
         ld [hl+], a
+        
         inc de
         ld a, [de]
         ld [hl+], a
+        
         ld [hl], $80
         inc l
         inc de
@@ -3204,7 +3209,7 @@ func_03_7970:
     ld [$c3b8], a
     ld a, h
     ld [$c3b9], a
-    ld a, $04 ; Steep neck pattern (barfing samus
+    ld a, $04 ; Steep neck pattern (barfing samus)
     ld [queen_neckPattern], a
     ld [$c3d1], a
     call Call_003_746f
@@ -3236,7 +3241,7 @@ func_03_79E1: ; 03:79E1 - Queen spitting Samus out of stomach
         ret
     jr_003_79f6:
         xor a
-        ld [$c3d2], a
+        ld [queen_bodyPalette], a
         ld a, [queen_health]
         and a
             jr z, jr_003_7a4d
@@ -3542,7 +3547,7 @@ func_03_7BE7: ; State $16
 queen_walk: ; 03:7BE8
     xor a
     ld [queen_walkSpeed], a
-    ld a, [$c3bd]
+    ld a, [queen_walkControl]
     and a
         ret z
     ld b, a
@@ -3566,9 +3571,9 @@ queen_walk: ; 03:7BE8
             ld a, [hl]
             cp $81
             jr nz, .move
-                ld [$c3bf], a
+                ld [queen_walkStatus], a
                 xor a
-                ld [$c3bd], a
+                ld [queen_walkControl], a
                 ret
                 
             .move: ; Common case between the above and below branches
@@ -3585,14 +3590,16 @@ queen_walk: ; 03:7BE8
             ld a, [hl]
             cp $82
                 jr nz, .move
-            ld [$c3bf], a
+            ld [queen_walkStatus], a
             xor a
-            ld [$c3bd], a
+            ld [queen_walkControl], a
             ld [queen_walkCounter], a
             ret
 ; end proc
 
 ; Values are negated due to how the raster split works
+;  $81 means "done walking forward"
+;  $82 means "done walking backward"
 .walkSpeedTable: ; 03:7C39
     db $ff, $ff, $ff, $ff, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe
     db $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $fe, $ff, $ff, $ff
@@ -3647,7 +3654,7 @@ LCDCInterruptHandler: ; 03:7C7F
         .case_1:
             ld a, [queen_bodyXScroll]
             ld [rSCX], a
-            ld a, [$c3d2]
+            ld a, [queen_bodyPalette]
             and a
                 jr z, .nextToken
             ld [rBGP], a
