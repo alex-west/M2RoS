@@ -720,7 +720,7 @@ en66D7: ; Enemy CEh (metroid) ; ??
     dw enAI_7A4F
 en66E2: ; Enemy A6h (baby metroid egg)
     db $80,$00,$00,$00,$FF,$00,$00,$00,$FF
-    dw enAI_7BE5
+    dw enAI_babyMetroid
 en66ED: ; Enemy 80h..99h/9Bh/9Dh (item / item orb / enemy/missile refill)
     db $80,$00,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_itemOrb

@@ -10382,16 +10382,17 @@ larva_stayAttached: ; Stay attached to Samus
 ret
 
 ;------------------------------------------------------------------------------
-enAI_7BE5: ; the baby?
+; Baby Metroid AI
+enAI_babyMetroid: ; 02:7BE5
     ld a, [$c41c]
     and a
         jr z, .case_0 ; case 0
     dec a
         jr z, .case_1 ; case 1
-    dec a
-        jp nz, .case_2 ; case 2
+    dec a ; v--- sneaky nz instead of z
+        jp nz, .case_3 ; default case (3)
         
-; default case (3)
+; case 2 (active)
     call enemy_flipSpriteId.fourFrame
     ; Chase Samus
     ld b, $02
@@ -10403,8 +10404,9 @@ enAI_7BE5: ; the baby?
 ret
 
 
-.case_1: ; case 1
+.case_1: ; case 1 - Metroid moves up from the egg
     call Call_002_75ff ; Oscillate horizontally
+    ; Move up
     ld hl, hEnemyYPos
     dec [hl]
     ld hl, $ffe9
@@ -10412,21 +10414,24 @@ ret
     ld a, [hl]
     cp $0c
         ret nz
+    ; Set up $E9/$EA for seekSamus
     ld a, $10
     ld [hl+], a
     ld [hl], a
+    ; Set to state 2 (active)
     ld hl, $c41c
     inc [hl]
+    ; Clear cutscene
     xor a
     ld [cutsceneActive], a
 ret
 
 
-.case_0: ; case 0
+.case_0: ; case 0 - Waiting
     ldh a, [hEnemySpawnFlag]
     cp $04
     jr z, .else_A
-        call Call_002_7caf
+        call .animateFlash
         ; Check if Samus is in range
         ld hl, hEnemyXPos
         ld a, [samus_onscreenXPos]
@@ -10450,7 +10455,7 @@ ret
 
         ld a, $01
         ld [cutsceneActive], a
-        call Call_002_7cbc ; Animate egg hatching
+        call .animateEggWiggle ; Animate egg hatching
         ld hl, hEnemyState
         inc [hl]
         ld a, [hl]
@@ -10485,14 +10490,15 @@ ret
 
         ld a, $01
         ld [metroid_fightActive], a
-        ld a, $02 ; State 2
+        ; Set to state 2 (active)
+        ld a, $02
         ld [$c41c], a
         ld a, $16
         ld [sfxRequest_noise], a
         ret
 ; end proc
 
-.case_2: ; Case 2 - Egg exploding
+.case_3: ; Case 2 - Egg exploding
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
@@ -10504,58 +10510,60 @@ ret
         ret
     .else_E:
         cp $0c
-            call z, Call_002_7ca7
+            call z, .prepState1
         ld a, $a8
         ldh [hEnemySpriteType], a
         ret
 ; end proc
 
-Call_002_7ca7:
+.prepState1:
     ; Reset timer
     ld [hl], $00
-    ld a, $01 ; state 1
+    ; Set state to 1
+    ld a, $01
     ld [$c41c], a
 ret
 
 
-Call_002_7caf:
-    ; Flash every 4 frames
+.animateFlash:
+    ; Do every 4 frames
     ldh a, [hEnemy_frameCounter]
     and $03
         ret nz
+    ; Flash by oscillating this value between $00 and $10
     ld hl, hEnemyStunCounter
     ld a, [hl]
     xor $10
     ld [hl], a
 ret
 
-
-Call_002_7cbc: ; Animate egg hatching
+.animateEggWiggle: ; Animate egg hatching
     ldh a, [hEnemy_frameCounter]
     and $01
         ret nz
     ld hl, hEnemySpriteType
     ldh a, [$e9]
     dec a
-    jr z, jr_002_7cd6
+    jr z, .else
         inc [hl]
         ld a, [hl]
-        cp $a7
+        cp $a7 ; Upper threshold of wiggle
             ret nz
-        
-        jr_002_7cce:
+    
+    ; Switch direction of wiggle
+      .switchDirection:
         ld hl, $ffe9
         ld a, [hl]
         xor $01
         ld [hl], a
         ret
         
-    jr_002_7cd6:
+    .else:
         dec [hl]
         ld a, [hl]
-        cp $a5
+        cp $a5 ; Lower threshold of wiggle
             ret nz
-        jr jr_002_7cce
+        jr .switchDirection
 
 
 Call_002_7cdd: ; 02:7CDD

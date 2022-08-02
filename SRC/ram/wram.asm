@@ -161,7 +161,7 @@ enemySolidityIndex = $C407 ; Copy of enemySolidityIndex_canon (actually used by 
 ;$C418: Set to [room bank] in $2:4000
 ;
 ;$C41B: Checked and cleared in $2:4000, 90h frame timer?
-;$C41C: Cleared in $2:4000/$2:412F
+;$C41C: Metroid related status? Cleared in $2:4000/$2:412F
 ;
 def enemy_yPosMirror = $C41E ; Initial y position for the current working enemy for the current frame
 def enemy_xPosMirror = $C41F ; Initial x position for the current working enemy for the current frame

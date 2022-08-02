@@ -9135,7 +9135,7 @@ ret
 
 destroyBlock_farCall: ; 00:3CCE
     callFar destroyBlock ; $56e9
-    switchBank enAI_7BE5 ; The Baby
+    switchBank enAI_babyMetroid ; The Baby
 ret
 
 gameMode_saveGame: ; 00:3CE2
