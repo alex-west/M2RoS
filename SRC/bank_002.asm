@@ -7582,7 +7582,7 @@ Jump_002_6bb2:
         jr z, jr_002_6bd1
             ; Stunned case
             call Call_002_6ef0 ; Knockback
-            call Call_002_7df8 ; Blink
+            call enemy_toggleVisibility ; Blink
             ld a, [$c46d]
             cp $10
                 ret nc
@@ -8224,8 +8224,8 @@ enAI_6F60: ; 02:6F60
     dec [hl]
         jr z, jr_002_6f87
     ; Stunned case
-    call Call_002_6ef0
-    call Call_002_7df8
+    call Call_002_6ef0 ; Knockback
+    call enemy_toggleVisibility ; Blink
     ; Only process screw attack collision while stunned
     ld a, [$c46d]
     cp $10
@@ -8233,7 +8233,6 @@ enAI_6F60: ; 02:6F60
     ld a, $0f
     ld [sfxRequest_square1], a
 ret
-
 
 jr_002_6f7f: ; Delete self (don't save it)
     call Call_000_3ca6
@@ -8249,27 +8248,29 @@ jr_002_6f87:
     ldh [hEnemyStatus], a
 
 jr_002_6f8e:
+    ; Act if fight is happening
     ld a, [$c41c]
     and a
         jp nz, Jump_002_7016
 
     ldh a, [hEnemySpawnFlag]
-    cp $04
-        jr z, jr_002_6fd8
-    and $0f
-        jr z, jr_002_6f7f
+    cp $04 ; Check if we've already seen this one
+        jr z, .quickIntro ; Quick entrance
+    and $0f ; Check if killed (?)
+        jr z, jr_002_6f7f ; Despawn self
 
+    ; Fancy entrance
     ld a, [cutsceneActive]
     and a
-    jr nz, jr_002_6fc2
+    jr nz, .endIf_A
         ; Check if Samus is in range
         ld hl, hEnemyXPos
         ld a, [samus_onscreenXPos]
         sub [hl]
-        jr nc, jr_002_6fb0
+        jr nc, .endIf_B
             cpl
             inc a
-        jr_002_6fb0:
+        .endIf_B:
         cp $50
             ret nc
     
@@ -8280,34 +8281,33 @@ jr_002_6f8e:
         ld [songRequest], a
         ld a, $01
         ld [metroid_fightActive], a
-    jr_002_6fc2:
+    .endIf_A:
+    
     ldh a, [hEnemy_frameCounter]
     and $03
         ret nz
-
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $10
-    jp z, Jump_002_7003
-
+        jp z, Jump_002_7003
     ldh a, [hEnemySpriteType]
-    xor $0e
+    xor $A3^$AD ; $0E -- Switch between Alpha and Gamma sprites
     ldh [hEnemySpriteType], a
-    ret
+ret
 
-
-jr_002_6fd8:
+.quickIntro:
+    ; Load proper Gamma sprite
     ld a, $ad
     ldh [hEnemySpriteType], a
     ; Check if Samus is in range
     ld hl, hEnemyXPos
     ld a, [samus_onscreenXPos]
     sub [hl]
-    jr nc, jr_002_6fe7
+    jr nc, .endIf_C
         cpl
         inc a
-    jr_002_6fe7:
+    .endIf_C:
     cp $50
         ret nc
 
@@ -8327,48 +8327,46 @@ ret
 
 
 Jump_002_7003:
+    ; Clear [$E9]
     xor a
     ld [hl], a
+    ; Load proper Gamma sprite
     ld a, $ad
     ldh [hEnemySpriteType], a
     xor a
     ld [cutsceneActive], a
     inc a
     ld [$c41c], a
+    ; Set spawn flag to "seen"
     ld a, $04
     ldh [hEnemySpawnFlag], a
-    ret
+ret
 
 
 Jump_002_7016:
     ldh a, [hEnemySpawnFlag]
     cp $05
-    ret z
-
+        ret z
     and $0f
     jr nz, jr_002_702e
-
-    call Call_002_71da
-    ld a, [$c46d]
-    cp $10
-    ret nc
-
-    ld a, $0f
-    ld [sfxRequest_square1], a
-    ret
-
-
-jr_002_702e:
-    ld a, [$c46d]
-    cp $20
-        jp nc, Jump_002_713d
-    cp $10
-        jr z, gamma_screw
-    cp $08
-        jr z, gamma_hurt
-    ld a, $0f
-    ld [sfxRequest_square1], a
-ret
+        call Call_002_71da
+        ld a, [$c46d]
+        cp $10
+            ret nc
+        ld a, $0f
+        ld [sfxRequest_square1], a
+        ret
+    jr_002_702e:
+        ld a, [$c46d]
+        cp $20
+            jp nc, Jump_002_713d ; Standard action if not hit with projectile
+        cp $10
+            jr z, gamma_screw
+        cp $08
+            jr z, gamma_hurt
+        ld a, $0f
+        ld [sfxRequest_square1], a
+        ret
 
 
 gamma_screw:
@@ -10176,6 +10174,7 @@ jr_002_7ab0:
     ld [$c474], a
     ldh [$e7], a
     ld [$c475], a
+    ; Reset seek vector
     ld a, $10
     ldh [$e9], a
     ldh [hEnemyState], a
@@ -10782,7 +10781,7 @@ baby_keepOnscreen:
         ret
 ; end proc
 
-Call_002_7df8:
+enemy_toggleVisibility: ; 02:7DF8
     ; Exit if the frame is odd
     ldh a, [hEnemy_frameCounter]
     and $01
