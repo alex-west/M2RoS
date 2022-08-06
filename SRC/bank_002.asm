@@ -7744,7 +7744,7 @@ jr_002_6c93:
     and a
     jr nz, jr_002_6cd1
         ; Get direction of next lunge
-        call Call_000_3d0c
+        call alpha_getAngle_farCall
         ; Face Samus
         ld hl, hEnemyXPos
         ld a, [hl]
@@ -7772,7 +7772,7 @@ jr_002_6c93:
         ld [hl], $00
     jr_002_6cdf:
 
-    call Call_000_3d34 ; Translate angle to velocity vector
+    call alpha_getSpeedVector_farCall ; Translate angle to velocity vector
     call Call_002_6dd4 ; Move
     call Call_002_6e39 ; Animate
 ret
@@ -8555,7 +8555,7 @@ Jump_002_713d:
     ld a, [hl]
     and a
     jr nz, jr_002_717f
-        call Call_000_3d20
+        call gamma_getAngle_farCall
         ld hl, hEnemyXPos
         ld a, [hl]
         add $10
@@ -8577,7 +8577,7 @@ Jump_002_713d:
     cp $0f
     jr nc, jr_002_7193
 
-    call Call_000_3d48
+    call gamma_getSpeedVector_farCall
     call Call_002_6dd4
     ld a, $b0
     ldh [hEnemySpriteType], a
@@ -9761,10 +9761,10 @@ omega_fireball: ; Omega fireball?
     and a
     jr nz, jr_002_7861
         ld [hl], $01
-        call Call_000_3d20
+        call gamma_getAngle_farCall
     jr_002_7861:
 
-    call Call_000_3d48
+    call gamma_getSpeedVector_farCall
     ld a, b
     and a
     jr z, jr_002_7890

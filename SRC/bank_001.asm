@@ -3008,10 +3008,10 @@ ret
 ; 01:5AB1
 include "data/sprites_enemies.asm"
 
-; Somehow get an angle from you position
-Call_001_70ba: ; 01:70BA - called from bank 2 (Alpha Metroid related)
+; Alpha Metroid - get angle based on relative positions
+alpha_getAngle: ; 01:70BA - called from bank 2
     call Call_001_70c1
-    call Call_001_70fe
+    call alpha_getAngleFromTable
     ret
 
 Call_001_70c1:
@@ -3021,16 +3021,16 @@ Call_001_70c1:
     ld b, a
     ld a, [samus_onscreenYPos]
     sub b
-    jr c, jr_001_70d5
+    jr c, .else_A
         ld b, $00
-        jr z, jr_001_70d9
+        jr z, .endIf_A
             inc b
-            jr jr_001_70d9
-    jr_001_70d5:
+            jr .endIf_A
+    .else_A:
         cpl
         inc a
         ld b, $ff
-    jr_001_70d9:
+    .endIf_A:
 
     ld [$c45d], a
     ld a, b
@@ -3041,16 +3041,16 @@ Call_001_70c1:
     ld b, a
     ld a, [samus_onscreenXPos]
     sub b
-    jr c, jr_001_70f2
+    jr c, .else_B
         ld b, $00
-        jr z, jr_001_70f6
+        jr z, .endIf_B
             inc b
-            jr jr_001_70f6
-    jr_001_70f2:
+            jr .endIf_B
+    .else_B:
         cpl
         inc a
         ld b, $ff
-    jr_001_70f6:
+    .endIf_B:
 
     ld [$c45e], a
     ld a, b
@@ -3058,77 +3058,81 @@ Call_001_70c1:
 ret
 
 
-Call_001_70fe:
+alpha_getAngleFromTable: ; 01:70FE
     ld a, [$c45a]
     and a
-    jr z, jr_001_7147
-
+        jr z, .pickVerticalDirection
     ld c, a
     ld a, [$c45b]
     and a
-    jr z, jr_001_713a
+        jr z, .pickHorizontalDirection
 
+    ; Determine base table index for quadrant
     inc a
-    jr z, jr_001_7119
+    jr z, .else_A
+        inc c
+        jr z, .else_B
+            ld a, $04 ; Bottom right quadrant
+            jr .endIf_A
+        .else_B:
+            ld a, $09 ; Bottom left quadrant
+            jr .endIf_A
+    .else_A:
+        inc c
+        jr z, .else_C
+            ld a, $0e ; Top right quadrant
+            jr .endIf_A
+        .else_C:
+            ld a, $13 ; Top left quadrant
+    .endIf_A:
 
-    inc c
-    jr z, jr_001_7115
-        ld a, $04
-        jr jr_001_7122
-    jr_001_7115:
-        ld a, $09
-        jr jr_001_7122
-
-jr_001_7119:
-    inc c
-    jr z, jr_001_7120
-        ld a, $0e
-        jr jr_001_7122
-    jr_001_7120:
-        ld a, $13
-
-jr_001_7122:
     ld [$c45c], a
-    call Call_001_7170
-    call Call_001_7189
+    call Call_001_7170 ; Do some arithmetic
+    call alpha_adjustAngle ; Adjust the angle index
 
-jr_001_712b:
+.getAngleFromTable:
     ld a, [$c45c]
     ld e, a
     ld d, $00
-    ld hl, table_7158
+    ld hl, alpha_angleTable
     add hl, de
     ld a, [hl]
     ld [hEnemyState], a
-    ret
+ret
 
-
-jr_001_713a:
-    ld a, [$c45a]
-    dec a
-    jr z, jr_001_7144
-        ld a, $01
-        jr jr_001_7153
-    jr_001_7144:
-        xor a
-        jr jr_001_7153
-
-jr_001_7147:
-    ld a, [$c45b]
-    dec a
-    jr z, jr_001_7151
-        ld a, $03
-        jr jr_001_7153
-    jr_001_7151:
-        ld a, $02
-
-jr_001_7153:
+    .pickHorizontalDirection:
+        ld a, [$c45a]
+        dec a
+        jr z, .else_D
+            ld a, $01 ; Left
+            jr .setTableIndex
+        .else_D:
+            xor a ; Right
+            jr .setTableIndex
+    .pickVerticalDirection:
+        ld a, [$c45b]
+        dec a
+        jr z, .else_E
+            ld a, $03 ; Up
+            jr .setTableIndex
+        .else_E:
+            ld a, $02 ; Down
+.setTableIndex:
     ld [$c45c], a
-    jr jr_001_712b
+    jr .getAngleFromTable
+; end proc
 
-table_7158: ; 01:7158 - Alpha Metroid angle table?
-    db $00, $01, $02, $03, $00, $04, $05, $06, $02, $01, $07, $08, $09, $02, $00, $0A
-    db $0B, $0C, $03, $01, $0D, $0E, $0F, $03
+alpha_angleTable: ; 01:7158
+    ; $00 - Cardinal directions
+    db $00, $01, $02, $03
+    ; $04 - Bottom right quadrant
+    db $00, $04, $05, $06, $02
+    ; $09 - Bottom left quadrant
+    db $01, $07, $08, $09, $02
+    ; $0E - Top right quadrant
+    db $00, $0A, $0B, $0C, $03
+    ; $13 - Top left quadrant
+    db $01, $0D, $0E, $0F, $03
 
 Call_001_7170:
     ld b, $64
@@ -3144,68 +3148,54 @@ Call_001_7170:
     ld [$c460], a
 ret
 
-
-Call_001_7189:
+; Adjusts the travel angle of the Alpha Metroid from one of the cardinal angles
+alpha_adjustAngle: ; 01:7189
     ld a, [$c460]
     and a
-    jr nz, jr_001_71a0
+    jr nz, .else_A
+        ld a, [$c45f]
+        cp $14
+            jr c, .add_0
+        cp $3c
+            jr c, .add_1
+        cp $c8
+            jr c, .add_2
+        jr .add_3
+    .else_A:
+        cp $02
+        jr z, .else_B
+            jr nc, .add_4
+            jr .add_3
+        .else_B:
+            ld a, [$c45f]
+            cp $58
+                jr nc, .add_4
+            jr .add_3
 
-    ld a, [$c45f]
-    cp $14
-    jr c, jr_001_71b1
-
-    cp $3c
-    jr c, jr_001_71b5
-
-    cp $c8
-    jr c, jr_001_71b9
-
-    jr jr_001_71bd
-
-jr_001_71a0:
-    cp $02
-    jr z, jr_001_71a8
-
-    jr nc, jr_001_71c1
-
-    jr jr_001_71bd
-
-jr_001_71a8:
-    ld a, [$c45f]
-    cp $58
-    jr nc, jr_001_71c1
-
-    jr jr_001_71bd
-
-jr_001_71b1:
-    ld b, $00
-    jr jr_001_71c3
-
-jr_001_71b5:
-    ld b, $01
-    jr jr_001_71c3
-
-jr_001_71b9:
-    ld b, $02
-    jr jr_001_71c3
-
-jr_001_71bd:
-    ld b, $03
-    jr jr_001_71c3
-
-jr_001_71c1:
-    ld b, $04
-
-jr_001_71c3:
+    .add_0: ; Keep horizontal
+        ld b, $00
+        jr .exit
+    .add_1: ; Shallow angle
+        ld b, $01
+        jr .exit
+    .add_2: ; Diagonal
+        ld b, $02
+        jr .exit
+    .add_3: ; Steep angle
+        ld b, $03
+        jr .exit
+    .add_4: ; Vertical
+        ld b, $04
+.exit:
     ld a, [$c45c]
     add b
     ld [$c45c], a
 ret
 
 ; Alpha Metroid speed/direction vectors
-; Load a (Y,X) velocity pair to BC
-Call_001_71cb: ; 01:71CB
-    ld hl, table_71DB
+; Load a (Y,X) sign-magnitude velocity pair to BC
+alpha_getSpeedVector: ; 01:71CB
+    ld hl, .jumpTable
     ld a, [hEnemyState] ; $EA - Metroid angle
     add a
     ld e, a
@@ -3217,242 +3207,209 @@ Call_001_71cb: ; 01:71CB
     ld l, a
     jp hl
     
-    table_71DB: ; 01:71DB
-        dw func_71FB ; $00
-        dw func_71FF ; $01
-        dw func_7203 ; $02
-        dw func_7207 ; $03
-        dw func_720B ; $04
-        dw func_720F ; $05
-        dw func_7213 ; $06
-        dw func_7217 ; $07
-        dw func_721B ; $08
-        dw func_721F ; $09
-        dw func_7223 ; $0A
-        dw func_7227 ; $0B
-        dw func_722B ; $0C
-        dw func_722F ; $0D
-        dw func_7233 ; $0E
-        dw func_7237 ; $0F
+    .jumpTable: ; 01:71DB
+        dw func_71FB ; $00 - Right                 (3,0)
+        dw func_71FF ; $01 - Left                 (-3,0)
+        dw func_7203 ; $02 - Down                  (0,3)
+        dw func_7207 ; $03 - Up                    (0,-3)
+        dw func_720B ; $04 - Bottom right quadrant (3,1)
+        dw func_720F ; $05 -  ""                   (2,2)
+        dw func_7213 ; $06 -  ""                   (1,3)
+        dw func_7217 ; $07 - Bottom left quadrant (-3,1)
+        dw func_721B ; $08 -  ""                  (-2,2)
+        dw func_721F ; $09 -  ""                  (-1,3)
+        dw func_7223 ; $0A - Upper right quadrant (3,-1)
+        dw func_7227 ; $0B -  ""                  (2,-2)
+        dw func_722B ; $0C -  ""                  (1,-3)
+        dw func_722F ; $0D - Upper left quadrant (-3,-1)
+        dw func_7233 ; $0E -  ""                 (-2,-2)
+        dw func_7237 ; $0F -  ""                 (-1,-3)
 
 func_71FB: ld bc, $0003
     ret
-
 func_71FF: ld bc, $0083
     ret
-
 func_7203: ld bc, $0300
     ret
-
 func_7207: ld bc, $8300
     ret
 
 func_720B: ld bc, $0103
     ret
-
 func_720F: ld bc, $0202
     ret
-
 func_7213: ld bc, $0301
     ret
 
 func_7217: ld bc, $0183
     ret
-
 func_721B: ld bc, $0282
     ret
-
 func_721F: ld bc, $0381
     ret
 
 func_7223: ld bc, $8103
     ret
-
 func_7227: ld bc, $8202
     ret
-
 func_722B: ld bc, $8301
     ret
 
 func_722F: ld bc, $8183
     ret
-
 func_7233: ld bc, $8282
     ret
-
 func_7237: ld bc, $8381
     ret
 
-; Called from bank 2. Gamma Metroid related?
-Call_001_723b: ; 01:723B
-    call Call_001_70c1
-    call Call_001_7242
-    ret
+;------------------------------------------------------------------------------
+; Gamma Metroid - get angle based on relative positions
+;  Also used by the Omega Metroids' fireballs
+gamma_getAngle: ; 01:723B
+    call Call_001_70c1 ; Do some arithmetic
+    call gamma_getAngleFromTable ; Get angle
+ret
 
-
-Call_001_7242:
+gamma_getAngleFromTable: ; 01:7242
     ld a, [$c45a]
     and a
-    jr z, jr_001_728b
-
+        jr z, .pickVerticalDirection
     ld c, a
     ld a, [$c45b]
     and a
-    jr z, jr_001_727e
+        jr z, .pickHorizontalDirection
 
+    ; Determine base table index for quadrant
     inc a
-    jr z, jr_001_725d
+    jr z, .else_A
+        inc c
+        jr z, .else_B
+            ld a, $04 ; Bottom right quadrant
+            jr .endIf_A
+        .else_B:
+            ld a, $0b ; Bottom left quadrant
+            jr .endIf_A
+    .else_A:
+        inc c
+        jr z, .else_C
+            ld a, $12 ; Top right quadrant
+            jr .endIf_A
+        .else_C:
+            ld a, $19 ; Top left quadrant
+    .endIf_A:
 
-    inc c
-    jr z, jr_001_7259
-
-    ld a, $04
-    jr jr_001_7266
-
-jr_001_7259:
-    ld a, $0b
-    jr jr_001_7266
-
-jr_001_725d:
-    inc c
-    jr z, jr_001_7264
-
-    ld a, $12
-    jr jr_001_7266
-
-jr_001_7264:
-    ld a, $19
-
-jr_001_7266:
     ld [$c45c], a
-    call Call_001_7170
-    call Call_001_72bc
+    call Call_001_7170 ; Do some arithmetic
+    call gamma_adjustAngle
 
-jr_001_726f:
+.getAngleFromTable:
     ld a, [$c45c]
     ld e, a
     ld d, $00
-    ld hl, table_729C
+    ld hl, gamma_angleTable
     add hl, de
     ld a, [hl]
     ld [hEnemyState], a
-    ret
+ret
 
-
-jr_001_727e:
-    ld a, [$c45a]
-    dec a
-    jr z, jr_001_7288
-
-    ld a, $01
-    jr jr_001_7297
-
-jr_001_7288:
-    xor a
-    jr jr_001_7297
-
-jr_001_728b:
-    ld a, [$c45b]
-    dec a
-    jr z, jr_001_7295
-
-    ld a, $03
-    jr jr_001_7297
-
-jr_001_7295:
-    ld a, $02
-
-jr_001_7297:
+    .pickHorizontalDirection:
+        ld a, [$c45a]
+        dec a
+        jr z, .else_D
+            ld a, $01 ; Left
+            jr .setTableIndex
+        .else_D:
+            xor a ; Right
+            jr .setTableIndex
+    .pickVerticalDirection:
+        ld a, [$c45b]
+        dec a
+        jr z, .else_E
+            ld a, $03 ; Up
+            jr .setTableIndex
+        .else_E:
+            ld a, $02 ; Down
+.setTableIndex:
     ld [$c45c], a
-    jr jr_001_726f
+    jr .getAngleFromTable
+; end proc
 
-table_729C: ; 01:729C - State transition table?
-    db $00, $01, $02, $03, $00, $04, $05, $06, $07, $08, $02, $01, $09, $0A, $0B, $0C
-    db $0D, $02, $00, $0E, $0F, $10, $11, $12, $03, $01, $13, $14, $15, $16, $17, $03
+gamma_angleTable: ; 01:729C - Gamma angle table
+    ; $00 - Cardinal directions
+    db $00, $01, $02, $03
+    ; $04 - Bottom right quadrant
+    db $00, $04, $05, $06, $07, $08, $02
+    ; $0B - Bottom left quadrant
+    db $01, $09, $0A, $0B, $0C, $0D, $02
+    ; $12 - Top right quadrant
+    db $00, $0E, $0F, $10, $11, $12, $03
+    ; $19 - Top left quadrant
+    db $01, $13, $14, $15, $16, $17, $03
 
-
-Call_001_72bc:
+gamma_adjustAngle:
     ld a, [$c460]
     and a
-    jr nz, jr_001_72d7
+    jr nz, .else_A
+        ld a, [$c45f]
+        cp $0c
+            jr c, .add_0
+        cp $26
+            jr c, .add_1
+        cp $4b
+            jr c, .add_2
+        cp $96
+            jr c, .add_3
+        jr .add_4
+    .else_A:
+        cp $03
+        jr z, .else_B
+            jr nc, .add_6
+            cp $01
+                jr z, .else_C ; Odd jump
+            jr nc, .add_5
+            jr .add_4
+        .else_B:
+            ld a, [$c45f]
+            cp $20
+                jr nc, .add_6
+            jr .add_5
 
-    ld a, [$c45f]
-    cp $0c
-    jr c, jr_001_72f7
+        .else_C: ; Odd jump
+            ld a, [$c45f]
+            cp $2c
+                jr nc, .add_5
+            jr .add_4
 
-    cp $26
-    jr c, jr_001_72fb
-
-    cp $4b
-    jr c, jr_001_72ff
-
-    cp $96
-    jr c, jr_001_7303
-
-    jr jr_001_7307
-
-jr_001_72d7:
-    cp $03
-    jr z, jr_001_72e5
-
-    jr nc, jr_001_730f
-
-    cp $01
-    jr z, jr_001_72ee
-
-    jr nc, jr_001_730b
-
-    jr jr_001_7307
-
-jr_001_72e5:
-    ld a, [$c45f]
-    cp $20
-    jr nc, jr_001_730f
-
-    jr jr_001_730b
-
-jr_001_72ee:
-    ld a, [$c45f]
-    cp $2c
-    jr nc, jr_001_730b
-
-    jr jr_001_7307
-
-jr_001_72f7:
-    ld b, $00
-    jr jr_001_7311
-
-jr_001_72fb:
-    ld b, $01
-    jr jr_001_7311
-
-jr_001_72ff:
-    ld b, $02
-    jr jr_001_7311
-
-jr_001_7303:
-    ld b, $03
-    jr jr_001_7311
-
-jr_001_7307:
-    ld b, $04
-    jr jr_001_7311
-
-jr_001_730b:
-    ld b, $05
-    jr jr_001_7311
-
-jr_001_730f:
-    ld b, $06
-
-jr_001_7311:
+    .add_0: ; Keep horizontal
+        ld b, $00
+        jr .exit
+    .add_1:
+        ld b, $01 ; Shallow angle
+        jr .exit
+    .add_2:
+        ld b, $02 ; Less shallow angle
+        jr .exit
+    .add_3: ; Diagonal
+        ld b, $03
+        jr .exit
+    .add_4:
+        ld b, $04 ; Steep angle
+        jr .exit
+    .add_5:
+        ld b, $05 ; Even steeper angle
+        jr .exit
+    .add_6: ; Vertical
+        ld b, $06
+.exit:
     ld a, [$c45c]
     add b
     ld [$c45c], a
-    ret
+ret
 
-Call_001_7319: ; 01:7319
-    ld hl, table_7329
+; Gamma Metroid speed/direction vectors
+; Load a (Y,X) sign-magnitude velocity pair to BC
+gamma_getSpeedVector: ; 01:7319
+    ld hl, .jumpTable
     ld a, [hEnemyState]
     add a
     ld e, a
@@ -3464,130 +3421,107 @@ Call_001_7319: ; 01:7319
     ld l, a
     jp hl
 
-table_7329: ; 01:7329
-    dw func_7359
-    dw func_735D
-    dw func_7361
-    dw func_7365
-    dw func_7369
-    dw func_736D
-    dw func_7371
-    dw func_7375
-    dw func_7379
-    dw func_737D
-    dw func_7381
-    dw func_7385
-    dw func_7389
-    dw func_738D
-    dw func_7391
-    dw func_7395
-    dw func_7399
-    dw func_739D
-    dw func_73A1
-    dw func_73A5
-    dw func_73A9
-    dw func_73AD
-    dw func_73B1
-    dw func_73B5 ; Possibly unused?
+    .jumpTable: ; 01:7329
+        dw func_7359 ; $00 - Right
+        dw func_735D ; $01 - Left
+        dw func_7361 ; $02 - Down
+        dw func_7365 ; $03 - Up
+        dw func_7369 ; $04 - Bottom right quadrant
+        dw func_736D ; $05
+        dw func_7371 ; $06
+        dw func_7375 ; $07
+        dw func_7379 ; $08
+        dw func_737D ; $09 - Bottom left quadrant
+        dw func_7381 ; $0A
+        dw func_7385 ; $0B
+        dw func_7389 ; $0C
+        dw func_738D ; $0D
+        dw func_7391 ; $0E - Top right quadrant
+        dw func_7395 ; $0F
+        dw func_7399 ; $10
+        dw func_739D ; $11
+        dw func_73A1 ; $12
+        dw func_73A5 ; $13 - Top left quadrant
+        dw func_73A9 ; $14
+        dw func_73AD ; $15
+        dw func_73B1 ; $16
+        dw func_73B5 ; $17
 
 func_7359: ld bc, $0004
     ret
-
 func_735D: ld bc, $0084
     ret
-
 func_7361: ld bc, $0400
     ret
-
 func_7365: ld bc, $8400
     ret
 
 func_7369: ld bc, $0104
     ret
-
 func_736D: ld bc, $0204
     ret
-
 func_7371: ld bc, $0303
     ret
-
 func_7375: ld bc, $0402
     ret
-
 func_7379: ld bc, $0401
     ret
 
 func_737D: ld bc, $0184
     ret
-
 func_7381: ld bc, $0284
     ret
-
 func_7385: ld bc, $0383
     ret
-
 func_7389: ld bc, $0482
     ret
-
 func_738D: ld bc, $0481
     ret
 
 func_7391: ld bc, $8104
     ret
-
 func_7395: ld bc, $8204
     ret
-
 func_7399: ld bc, $8303
     ret
-
 func_739D: ld bc, $8402
     ret
-
 func_73A1: ld bc, $8401
     ret
 
 func_73A5: ld bc, $8184
     ret
-
 func_73A9: ld bc, $8284
     ret
-
 func_73AD: ld bc, $8383
     ret
-
 func_73B1: ld bc, $8482
     ret
-
 func_73B5: ld bc, $8481
     ret
 
 
-Call_001_73b9:
+Call_001_73b9: ; 01:73B9
     ld hl, $0000
     ld c, l
     ld a, $08
 
-jr_001_73bf:
-    srl b
-    rr c
-    sla e
-    jr nc, jr_001_73c8
-
-    add hl, bc
-
-jr_001_73c8:
-    dec a
-    jr nz, jr_001_73bf
-
-    ret
+    .loop:
+        srl b
+        rr c
+        sla e
+        jr nc, .endIf
+            add hl, bc
+        .endIf:
+        dec a
+    jr nz, .loop
+ret
 
 
-Call_001_73cc:
+Call_001_73cc: ; 01:73CC
     ld a, h
     or l
-    ret z
-
+        ret z
     ld de, $0000
     ld b, $10
     sla l
@@ -3595,30 +3529,27 @@ Call_001_73cc:
     rl e
     rl d
 
-jr_001_73dc:
-    ld a, e
-    sub c
-    ld a, d
-    sbc $00
-    jr c, jr_001_73ea
-
-    ld a, e
-    sub c
-    ld e, a
-    ld a, d
-    sbc $00
-    ld d, a
-
-jr_001_73ea:
-    ccf
-    rl l
-    rl h
-    rl e
-    rl d
-    dec b
-    jr nz, jr_001_73dc
-
-    ret
+    .loop:
+        ld a, e
+        sub c
+        ld a, d
+        sbc $00
+        jr c, .endIf
+            ld a, e
+            sub c
+            ld e, a
+            ld a, d
+            sbc $00
+            ld d, a
+        .endIf:
+        ccf
+        rl l
+        rl h
+        rl e
+        rl d
+        dec b
+    jr nz, .loop
+ret
 
 ;------------------------------------------------------------------------------
 ; Draws sprites for title and credits

@@ -9149,28 +9149,25 @@ drawNonGameSprite_longCall: ; 00:3CF8
     switchBank titleCreditsBank
 ret
 
-Call_000_3d0c: ; 00:3D0C
-    callFar Call_001_70ba ; $70ba
+alpha_getAngle_farCall: ; 00:3D0C
+    callFar alpha_getAngle ; $70ba
     switchBank enAI_alphaMetroid ; Bank 2 - Alpha Metroid AI?
 ret
 
-Call_000_3d20: ; 00:3D20
-    callFar Call_001_723b
-    switchBank enAI_6F60 ; Gamma Metroid AI?
+gamma_getAngle_farCall: ; 00:3D20
+    callFar gamma_getAngle
+    switchBank enAI_6F60 ; Gamma Metroid AI (also used by Omega Metroid fireball)
 ret
 
-Call_000_3d34: ; 00:3D34
-    callFar Call_001_71cb ; $71cb
+alpha_getSpeedVector_farCall: ; 00:3D34
+    callFar alpha_getSpeedVector ; $71cb
     switchBank enAI_alphaMetroid ; Also Alpha Metroid AI?
 ret
 
-Call_000_3d48: ; 00:3D48
-    callFar Call_001_7319 ; $7319
-    ld a, $02 ; Callees are Metroids
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+gamma_getSpeedVector_farCall: ; 00:3D48
+    callFar gamma_getSpeedVector ; $7319
+    switchBank enAI_6F60 ; Gamma Metroid AI (also used by Omega Metroid fireball)
 ret
-
 
 LCDCInterruptHandler_farCall: ; 00:3D5C
     push af
