@@ -7718,6 +7718,7 @@ Jump_002_6c7d: ; Shot reactions?
 
 Jump_002_6c93:
 jr_002_6c93:
+; Check if knockback direction not $FF
     ldh a, [$e8]
     inc a
     jr z, jr_002_6cb1
@@ -7737,11 +7738,14 @@ jr_002_6c93:
         ret
     jr_002_6cb1:
 
+; $E9 is used as a counter between lunges
     ld hl, $ffe9
     ld a, [hl]
     and a
     jr nz, jr_002_6cd1
+        ; Get direction of next lunge
         call Call_000_3d0c
+        ; Face Samus
         ld hl, hEnemyXPos
         ld a, [hl]
         add $10
@@ -7757,6 +7761,7 @@ jr_002_6c93:
             ldh [hEnemyAttr], a
     jr_002_6cd1:
 
+; Lunge for a few frames, pause for a few, then restart
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
@@ -7767,8 +7772,8 @@ jr_002_6c93:
         ld [hl], $00
     jr_002_6cdf:
 
-    call Call_000_3d34
-    call Call_002_6dd4
+    call Call_000_3d34 ; Translate angle to velocity vector
+    call Call_002_6dd4 ; Move
     call Call_002_6e39 ; Animate
 ret
 
@@ -8524,6 +8529,7 @@ ret
 
 
 Jump_002_713d:
+    ; Check knockback direction
     ldh a, [$e8]
     inc a
     jr z, jr_002_715f

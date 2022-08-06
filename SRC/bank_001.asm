@@ -3008,7 +3008,8 @@ ret
 ; 01:5AB1
 include "data/sprites_enemies.asm"
 
-Call_001_70ba: ; 01:70BA - called from bank 2 (Alpha Metroid related?)
+; Somehow get an angle from you position
+Call_001_70ba: ; 01:70BA - called from bank 2 (Alpha Metroid related)
     call Call_001_70c1
     call Call_001_70fe
     ret
@@ -3125,7 +3126,7 @@ jr_001_7153:
     ld [$c45c], a
     jr jr_001_712b
 
-table_7158: ; 01:7158 - Enemy state transition table?
+table_7158: ; 01:7158 - Alpha Metroid angle table?
     db $00, $01, $02, $03, $00, $04, $05, $06, $02, $01, $07, $08, $09, $02, $00, $0A
     db $0B, $0C, $03, $01, $0D, $0E, $0F, $03
 
@@ -3201,9 +3202,11 @@ jr_001_71c3:
     ld [$c45c], a
 ret
 
+; Alpha Metroid speed/direction vectors
+; Load a (Y,X) velocity pair to BC
 Call_001_71cb: ; 01:71CB
     ld hl, table_71DB
-    ld a, [hEnemyState]
+    ld a, [hEnemyState] ; $EA - Metroid angle
     add a
     ld e, a
     ld d, $00
@@ -3215,22 +3218,22 @@ Call_001_71cb: ; 01:71CB
     jp hl
     
     table_71DB: ; 01:71DB
-        dw func_71FB
-        dw func_71FF
-        dw func_7203
-        dw func_7207 ; Possibly unused?
-        dw func_720B
-        dw func_720F
-        dw func_7213
-        dw func_7217
-        dw func_721B
-        dw func_721F
-        dw func_7223
-        dw func_7227
-        dw func_722B
-        dw func_722F
-        dw func_7233
-        dw func_7237
+        dw func_71FB ; $00
+        dw func_71FF ; $01
+        dw func_7203 ; $02
+        dw func_7207 ; $03
+        dw func_720B ; $04
+        dw func_720F ; $05
+        dw func_7213 ; $06
+        dw func_7217 ; $07
+        dw func_721B ; $08
+        dw func_721F ; $09
+        dw func_7223 ; $0A
+        dw func_7227 ; $0B
+        dw func_722B ; $0C
+        dw func_722F ; $0D
+        dw func_7233 ; $0E
+        dw func_7237 ; $0F
 
 func_71FB: ld bc, $0003
     ret
@@ -3280,6 +3283,7 @@ func_7233: ld bc, $8282
 func_7237: ld bc, $8381
     ret
 
+; Called from bank 2. Gamma Metroid related?
 Call_001_723b: ; 01:723B
     call Call_001_70c1
     call Call_001_7242
@@ -3498,7 +3502,7 @@ func_7361: ld bc, $0400
 func_7365: ld bc, $8400
     ret
 
-func_7369: ld bc, HeaderLogo
+func_7369: ld bc, $0104
     ret
 
 func_736D: ld bc, $0204
