@@ -2934,35 +2934,35 @@ drawEnemySprite: ; 01:5A3F
     ld a, [$c42f]
     ld c, a
 
-    jr_001_5a61:
+    .spriteLoop:
         ld a, [de]
         cp $ff
-            jr z, jr_001_5a99
+            jr z, .exit
     
         ld a, [$c431]
         bit 6, a
-        jr z, jr_001_5a73
+        jr z, .else_A
             ld a, [de]
             cpl
             sub $07
-            jr jr_001_5a74
-        jr_001_5a73:
+            jr .endIf_A
+        .else_A:
             ld a, [de]
-        jr_001_5a74:
+        .endIf_A:
     
         add b
         ld [hl+], a
         inc de
         ld a, [$c431]
         bit 5, a
-        jr z, jr_001_5a84
+        jr z, .else_B
             ld a, [de]
             cpl
             sub $07
-            jr jr_001_5a85
-        jr_001_5a84:
+            jr .endIf_B
+        .else_B:
             ld a, [de]
-        jr_001_5a85:
+        .endIf_B:
     
         add c
         ld [hl+], a
@@ -2979,9 +2979,9 @@ drawEnemySprite: ; 01:5A3F
         ld a, l
         ldh [hOamBufferIndex], a
         inc de
-    jr jr_001_5a61
+    jr .spriteLoop
 
-jr_001_5a99: ; .break
+    .exit:
 ret
 
 ; Get base information for enemy sprite to render
@@ -3008,13 +3008,14 @@ ret
 ; 01:5AB1
 include "data/sprites_enemies.asm"
 
+;------------------------------------------------------------------------------
 ; Alpha Metroid - get angle based on relative positions
 alpha_getAngle: ; 01:70BA - called from bank 2
-    call Call_001_70c1
+    call metroid_getDistanceAndDirection
     call alpha_getAngleFromTable
     ret
 
-Call_001_70c1:
+metroid_getDistanceAndDirection: ; 01:70C1
     ld hl, hEnemyYPos
     ld a, [hl]
     add $10
@@ -3032,9 +3033,9 @@ Call_001_70c1:
         ld b, $ff
     .endIf_A:
 
-    ld [$c45d], a
+    ld [metroid_absSamusDistY], a
     ld a, b
-    ld [$c45b], a
+    ld [metroid_samusYDir], a
     inc l
     ld a, [hl]
     add $10
@@ -3052,18 +3053,18 @@ Call_001_70c1:
         ld b, $ff
     .endIf_B:
 
-    ld [$c45e], a
+    ld [metroid_absSamusDistX], a
     ld a, b
-    ld [$c45a], a
+    ld [metroid_samusXDir], a
 ret
 
 
 alpha_getAngleFromTable: ; 01:70FE
-    ld a, [$c45a]
+    ld a, [metroid_samusXDir]
     and a
         jr z, .pickVerticalDirection
     ld c, a
-    ld a, [$c45b]
+    ld a, [metroid_samusYDir]
     and a
         jr z, .pickHorizontalDirection
 
@@ -3086,12 +3087,12 @@ alpha_getAngleFromTable: ; 01:70FE
             ld a, $13 ; Top left quadrant
     .endIf_A:
 
-    ld [$c45c], a
+    ld [metroid_angleTableIndex], a
     call Call_001_7170 ; Do some arithmetic
     call alpha_adjustAngle ; Adjust the angle index
 
 .getAngleFromTable:
-    ld a, [$c45c]
+    ld a, [metroid_angleTableIndex]
     ld e, a
     ld d, $00
     ld hl, alpha_angleTable
@@ -3101,7 +3102,7 @@ alpha_getAngleFromTable: ; 01:70FE
 ret
 
     .pickHorizontalDirection:
-        ld a, [$c45a]
+        ld a, [metroid_samusXDir]
         dec a
         jr z, .else_D
             ld a, $01 ; Left
@@ -3110,7 +3111,7 @@ ret
             xor a ; Right
             jr .setTableIndex
     .pickVerticalDirection:
-        ld a, [$c45b]
+        ld a, [metroid_samusYDir]
         dec a
         jr z, .else_E
             ld a, $03 ; Up
@@ -3118,7 +3119,7 @@ ret
         .else_E:
             ld a, $02 ; Down
 .setTableIndex:
-    ld [$c45c], a
+    ld [metroid_angleTableIndex], a
     jr .getAngleFromTable
 ; end proc
 
@@ -3136,10 +3137,10 @@ alpha_angleTable: ; 01:7158
 
 Call_001_7170:
     ld b, $64
-    ld a, [$c45d]
+    ld a, [metroid_absSamusDistY]
     ld e, a
     call Call_001_73b9
-    ld a, [$c45e]
+    ld a, [metroid_absSamusDistX]
     ld c, a
     call Call_001_73cc
     ld a, l
@@ -3187,9 +3188,9 @@ alpha_adjustAngle: ; 01:7189
     .add_4: ; Vertical
         ld b, $04
 .exit:
-    ld a, [$c45c]
+    ld a, [metroid_angleTableIndex]
     add b
-    ld [$c45c], a
+    ld [metroid_angleTableIndex], a
 ret
 
 ; Alpha Metroid speed/direction vectors
@@ -3266,16 +3267,16 @@ func_7237: ld bc, $8381
 ; Gamma Metroid - get angle based on relative positions
 ;  Also used by the Omega Metroids' fireballs
 gamma_getAngle: ; 01:723B
-    call Call_001_70c1 ; Do some arithmetic
+    call metroid_getDistanceAndDirection
     call gamma_getAngleFromTable ; Get angle
 ret
 
 gamma_getAngleFromTable: ; 01:7242
-    ld a, [$c45a]
+    ld a, [metroid_samusXDir]
     and a
         jr z, .pickVerticalDirection
     ld c, a
-    ld a, [$c45b]
+    ld a, [metroid_samusYDir]
     and a
         jr z, .pickHorizontalDirection
 
@@ -3298,12 +3299,12 @@ gamma_getAngleFromTable: ; 01:7242
             ld a, $19 ; Top left quadrant
     .endIf_A:
 
-    ld [$c45c], a
+    ld [metroid_angleTableIndex], a
     call Call_001_7170 ; Do some arithmetic
     call gamma_adjustAngle
 
 .getAngleFromTable:
-    ld a, [$c45c]
+    ld a, [metroid_angleTableIndex]
     ld e, a
     ld d, $00
     ld hl, gamma_angleTable
@@ -3313,7 +3314,7 @@ gamma_getAngleFromTable: ; 01:7242
 ret
 
     .pickHorizontalDirection:
-        ld a, [$c45a]
+        ld a, [metroid_samusXDir]
         dec a
         jr z, .else_D
             ld a, $01 ; Left
@@ -3322,7 +3323,7 @@ ret
             xor a ; Right
             jr .setTableIndex
     .pickVerticalDirection:
-        ld a, [$c45b]
+        ld a, [metroid_samusYDir]
         dec a
         jr z, .else_E
             ld a, $03 ; Up
@@ -3330,7 +3331,7 @@ ret
         .else_E:
             ld a, $02 ; Down
 .setTableIndex:
-    ld [$c45c], a
+    ld [metroid_angleTableIndex], a
     jr .getAngleFromTable
 ; end proc
 
@@ -3401,9 +3402,9 @@ gamma_adjustAngle:
     .add_6: ; Vertical
         ld b, $06
 .exit:
-    ld a, [$c45c]
+    ld a, [metroid_angleTableIndex]
     add b
-    ld [$c45c], a
+    ld [metroid_angleTableIndex], a
 ret
 
 ; Gamma Metroid speed/direction vectors
@@ -3500,8 +3501,11 @@ func_73B1: ld bc, $8482
 func_73B5: ld bc, $8481
     ret
 
-
+; A cursory look at these two functions seems to indicate that they use
+;  some sort of CORDIC-related algorithm
 Call_001_73b9: ; 01:73B9
+    ; B is set to $64 before entry
+    ; E is metroid_absSamusDistY
     ld hl, $0000
     ld c, l
     ld a, $08
@@ -3517,8 +3521,8 @@ Call_001_73b9: ; 01:73B9
     jr nz, .loop
 ret
 
-
 Call_001_73cc: ; 01:73CC
+    ; C is metroid_absSamusDistX
     ld a, h
     or l
         ret z

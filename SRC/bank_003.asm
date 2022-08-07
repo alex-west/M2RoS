@@ -708,7 +708,7 @@ en66AB: ; Enemy A4h (alpha metroid)
     dw enAI_alphaMetroid
 en66B6: ; Enemy A3h (alpha metroid) ; gamma?
     db $00,$00,$00,$00,$FF,$00,$00,$00,$0A
-    dw enAI_6F60
+    dw enAI_gammaMetroid
 en66C1: ; Enemy ADh (gamma metroid) ; zeta?
     db $00,$00,$00,$00,$FF,$00,$00,$00,$14
     dw enAI_7276

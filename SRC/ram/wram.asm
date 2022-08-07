@@ -216,11 +216,11 @@ def omega_tempSpriteType = $C44F ; Used to preserve sprite type when stunned
 ;$C458: doorExitStatus - $2 is normal, $1 is if WARP or ENTER_QUEEN is used. Value is written to $C44B and then cleared
 def previousLevelBank = $C459 ; Previous level bank --- used during door transitions to make sure that the enemySaveFlags are saved to the correct location
 ;
-;$C45A: Metroid chase X direction ($FF: up, $00: equal, $01: down)
-;$C45B: Metroid chase Y direction ($FF: up, $00: equal, $01: down)
-;$C45C: Used as index for table at $1:729C, value for $FFEA
-;$C45D: abs(samusY-enemyY) (used for metroid seeking)
-;$C45E: abs(samusX-enemyX) (used for metroid seeking)
+metroid_samusXDir = $C45A ; Relative X direction of Samus from a metroid ($FF: up, $00: equal, $01: down)
+metroid_samusYDir = $C45B ; Relative Y direction of Samus from a metroid ($FF: up, $00: equal, $01: down)
+metroid_angleTableIndex = $C45C ; Used as index for table at $1:729C, value for $FFEA
+metroid_absSamusDistY = $C45D ; abs(samusY-enemyY) (used for metroid seeking)
+metroid_absSamusDistX = $C45E ; abs(samusX-enemyX) (used for metroid seeking)
 ;$C45F: Metroid seeking related
 ;$C460: Metroid seeking related
 

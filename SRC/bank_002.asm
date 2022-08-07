@@ -8219,19 +8219,19 @@ Call_002_6f5b: ; Forwards
 ret
 
 ;------------------------------------------------------------------------------
-; Gamma Metroid ?
-enAI_6F60: ; 02:6F60
+; Gamma Metroid AI
+enAI_gammaMetroid: ; 02:6F60
     call enemy_getSamusCollisionResults
     ld hl, gamma_stunCounter
     ld a, [hl]
     and a
-        jr z, jr_002_6f8e
+        jr z, .checkIfActing
     dec [hl]
-        jr z, jr_002_6f87
+        jr z, .stunEnd
     ; Stunned case
     call Call_002_6ef0 ; Knockback
     call enemy_toggleVisibility ; Blink
-    ; Only process screw attack collision while stunned
+    ; When stunned, only process screw attack collision
     ld a, [$c46d]
     cp $10
         ret nc
@@ -8239,30 +8239,28 @@ enAI_6F60: ; 02:6F60
     ld [sfxRequest_square1], a
 ret
 
-jr_002_6f7f: ; Delete self (don't save it)
+.despawn: ; Delete self (don't save it)
     call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
 ret
 
-
-jr_002_6f87:
+.stunEnd:
     ld a, $ff
     ldh [$e8], a
     xor a
     ldh [hEnemyStatus], a
-
-jr_002_6f8e:
+.checkIfActing:
     ; Act if fight is happening
     ld a, [$c41c]
     and a
-        jp nz, Jump_002_7016
+        jp nz, .checkIfHurt
 
     ldh a, [hEnemySpawnFlag]
     cp $04 ; Check if we've already seen this one
         jr z, .quickIntro ; Quick entrance
     and $0f ; Check if killed (?)
-        jr z, jr_002_6f7f ; Despawn self
+        jr z, .despawn ; Despawn self
 
     ; Fancy entrance
     ld a, [cutsceneActive]
@@ -8295,7 +8293,7 @@ jr_002_6f8e:
     inc [hl]
     ld a, [hl]
     cp $10
-        jp z, Jump_002_7003
+        jp z, .longIntroEnd
     ldh a, [hEnemySpriteType]
     xor $A3^$AD ; $0E -- Switch between Alpha and Gamma sprites
     ldh [hEnemySpriteType], a
@@ -8330,8 +8328,7 @@ ret
     ld [songRequest], a
 ret
 
-
-Jump_002_7003:
+.longIntroEnd:
     ; Clear [$E9]
     xor a
     ld [hl], a
@@ -8348,45 +8345,45 @@ Jump_002_7003:
 ret
 
 
-Jump_002_7016:
+.checkIfHurt:
     ldh a, [hEnemySpawnFlag]
     cp $05
         ret z
+    ; Check if a Gamma projectile
     and $0f
-    jr nz, jr_002_702e
-        call Call_002_71da
+    jr nz, .else_D
+        call .projectileCode
         ld a, [$c46d]
         cp $10
             ret nc
         ld a, $0f
         ld [sfxRequest_square1], a
         ret
-    jr_002_702e:
+    .else_D:
         ld a, [$c46d]
         cp $20
-            jp nc, Jump_002_713d ; Standard action if not hit with projectile
+            jp nc, .standardAction ; Standard action if not hit with projectile
         cp $10
-            jr z, gamma_screw
+            jr z, .screwReaction
         cp $08
-            jr z, gamma_hurt
+            jr z, .hurtReaction
         ld a, $0f
         ld [sfxRequest_square1], a
         ret
+; end branch
 
-
-gamma_screw:
+.screwReaction:
     call metroid_screwReaction
     ld a, $1a
     ld [sfxRequest_square1], a
 ret
 
-
-gamma_hurt:
+.hurtReaction:
     ld hl, hEnemyHealth
     dec [hl]
     ld a, [hl]
     and a
-        jp z, gamma_die
+        jp z, .death
 
     ld a, $08
     ld [gamma_stunCounter], a
@@ -8394,107 +8391,103 @@ gamma_hurt:
     ld [sfxRequest_noise], a
     ld hl, $ffe8
     ld [hl], $00
-    ; Prep knockback based on hit direction?
+    ; Prep knockback based on hit direction
     ld a, [$c46e]
     ld b, a
-    bit 0, b
-        jr nz, jr_002_70bc
-    bit 3, b
-        jr nz, jr_002_709a
-    bit 1, b
-        jr nz, jr_002_70dd
+    bit 0, b ; Right
+        jr nz, .case_setKnockbackRight
+    bit 3, b ; Down
+        jr nz, .case_setKnockbackDown
+    bit 1, b ; Left
+        jr nz, .case_setKnockbackLeft
 
-    ldh a, [hEnemyYPos]
-    sub $05
-    cp $10
-    jr c, jr_002_70af
+; Vertical cases
+    ;case_setKnockbackUp:
+        ldh a, [hEnemyYPos]
+        sub $05
+        cp $10
+            jr c, .knockback_randHorizontal
+        ldh [hEnemyYPos], a
+        call enCollision_up.farWide
+        ld a, [en_bgCollisionResult]
+        bit 3, a
+        jr nz, .knockback_resetYPos
+            ld hl, $ffe8
+            set 3, [hl]
+            jr .knockback_randHorizontal
 
-    ldh [hEnemyYPos], a
-    call enCollision_up.farWide
-    ld a, [en_bgCollisionResult]
-    bit 3, a
-    jr nz, jr_002_7090
+        .knockback_resetYPos:
+            ld a, [enemy_yPosMirror]
+            ldh [hEnemyYPos], a
+            ld hl, $ffe8
+            jr .knockback_randHorizontal
 
-    ld hl, $ffe8
-    set 3, [hl]
-    jr jr_002_70af
+    .case_setKnockbackDown:
+        ldh a, [hEnemyYPos]
+        add $05
+        ldh [hEnemyYPos], a
+        call enCollision_down.farWide
+        ld a, [en_bgCollisionResult]
+        bit 1, a
+            jr nz, .knockback_resetYPos
+        ld hl, $ffe8
+        set 1, [hl]
 
-jr_002_7090:
-    ld a, [enemy_yPosMirror]
-    ldh [hEnemyYPos], a
-    ld hl, $ffe8
-    jr jr_002_70af
-
-jr_002_709a:
-    ldh a, [hEnemyYPos]
-    add $05
-    ldh [hEnemyYPos], a
-    call enCollision_down.farWide
-    ld a, [en_bgCollisionResult]
-    bit 1, a
-    jr nz, jr_002_7090
-
-    ld hl, $ffe8
-    set 1, [hl]
-
-jr_002_70af:
+.knockback_randHorizontal:
     ld a, [rDIV]
     and $01
-    jr z, jr_002_70b9
+    jr z, .else_E
         set 0, [hl]
         ret
-    jr_002_70b9:
+    .else_E:
         set 2, [hl]
         ret
 
+; Horizontal cases
+    .case_setKnockbackRight:
+        ldh a, [hEnemyXPos]
+        add $05
+        ldh [hEnemyXPos], a
+        call enCollision_right.farWide
+        ld a, [en_bgCollisionResult]
+        bit 0, a
+        jr nz, .knockback_resetXPos
+            ld hl, $ffe8
+            set 0, [hl]
+            jr .knockback_randVertical
 
-jr_002_70bc:
-    ldh a, [hEnemyXPos]
-    add $05
-    ldh [hEnemyXPos], a
-    call enCollision_right.farWide
-    ld a, [en_bgCollisionResult]
-    bit 0, a
-    jr nz, jr_002_70d3
+        .knockback_resetXPos:
+            ld a, [enemy_xPosMirror]
+            ldh [hEnemyXPos], a
+            ld hl, $ffe8
+            jr .knockback_randVertical
 
-    ld hl, $ffe8
-    set 0, [hl]
-    jr jr_002_70f8
+    .case_setKnockbackLeft:
+        ldh a, [hEnemyXPos]
+        cp $10
+            jr c, .knockback_randVertical
+        sub $05
+        ldh [hEnemyXPos], a
+        call enCollision_left.farWide
+        ld a, [en_bgCollisionResult]
+        bit 2, a
+            jr nz, .knockback_resetXPos
+        ld hl, $ffe8
+        set 2, [hl]
+        jr .knockback_randVertical
 
-jr_002_70d3:
-    ld a, [enemy_xPosMirror]
-    ldh [hEnemyXPos], a
-    ld hl, $ffe8
-    jr jr_002_70f8
-
-jr_002_70dd:
-    ldh a, [hEnemyXPos]
-    cp $10
-    jr c, jr_002_70f8
-
-    sub $05
-    ldh [hEnemyXPos], a
-    call enCollision_left.farWide
-    ld a, [en_bgCollisionResult]
-    bit 2, a
-    jr nz, jr_002_70d3
-
-    ld hl, $ffe8
-    set 2, [hl]
-    jr jr_002_70f8
-
-jr_002_70f8:
+.knockback_randVertical:
     ld a, [rDIV]
     and $01
-    jr z, jr_002_7102
+    jr z, .else_F
         set 1, [hl]
         ret
-    jr_002_7102:
+    .else_F:
         set 3, [hl]
         ret
+; end branch
 
-
-gamma_die:
+.death:
     xor a
     ldh [$e9], a
     ldh [hEnemyState], a
@@ -8527,12 +8520,11 @@ gamma_die:
     call earthquakeCheck_farCall
 ret
 
-
-Jump_002_713d:
+.standardAction:
     ; Check knockback direction
     ldh a, [$e8]
     inc a
-    jr z, jr_002_715f
+    jr z, .endIf_G
         call Call_002_6e7f
         ld hl, $c471
         ld a, [hl]
@@ -8549,12 +8541,12 @@ Jump_002_713d:
         ld a, $ad
         ldh [hEnemySpriteType], a
         ret
-    jr_002_715f:
+    .endIf_G:
 
     ld hl, $ffe9
     ld a, [hl]
     and a
-    jr nz, jr_002_717f
+    jr nz, .endIf_H
         call gamma_getAngle_farCall
         ld hl, hEnemyXPos
         ld a, [hl]
@@ -8562,80 +8554,77 @@ Jump_002_713d:
         ld b, a
         ld a, [samus_onscreenXPos]
         sub b
-        jr c, jr_002_717c
+        jr c, .else_I
             ld a, OAMF_XFLIP
             ldh [hEnemyAttr], a
-            jr jr_002_717f
-        jr_002_717c:
+            jr .endIf_H
+        .else_I:
             xor a
             ldh [hEnemyAttr], a
-    jr_002_717f:
+    .endIf_H:
 
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $0f
-    jr nc, jr_002_7193
+    jr nc, .else_J
+        call gamma_getSpeedVector_farCall
+        call Call_002_6dd4
+        ld a, $b0
+        ldh [hEnemySpriteType], a
+        ret
+    .else_J:
+        cp $14
+            ret c
+        call findFirstEmptyEnemySlot_longJump
+        xor a
+        ld [hl+], a
+        ldh a, [hEnemyYPos]
+        add $0c
+        ld [hl+], a
+        ldh a, [hEnemyAttr]
+        ; Adjust attack xpos based on facing direction
+        bit OAMB_XFLIP, a
+        jr nz, .else_K
+            ldh a, [hEnemyXPos]
+            sub $08
+            jr .endIf_K
+        .else_K:
+            ldh a, [hEnemyXPos]
+            add $08
+        .endIf_K:
+    
+        ld [hl+], a
+        ld a, $ae
+        ld [hl+], a
+        ld a, $00
+        ld [hl+], a
+        ldh a, [hEnemyAttr]
+        ld [hl+], a
+        ld de, .projectileHeader
+        call enemy_createLinkForChildObject
+        call enemy_spawnObject.shortHeader
+        ld a, $05
+        ldh [hEnemySpawnFlag], a
+        xor a
+        ldh [$e9], a
+        ld a, $14
+        ld [sfxRequest_noise], a
+        ret
 
-    call gamma_getSpeedVector_farCall
-    call Call_002_6dd4
-    ld a, $b0
-    ldh [hEnemySpriteType], a
-    ret
-
-
-jr_002_7193:
-    cp $14
-        ret c
-    call findFirstEmptyEnemySlot_longJump
-    xor a
-    ld [hl+], a
-    ldh a, [hEnemyYPos]
-    add $0c
-    ld [hl+], a
-    ldh a, [hEnemyAttr]
-    ; Adjust attack xpos based on facing direction
-    bit OAMB_XFLIP, a
-    jr nz, jr_002_71ac
-        ldh a, [hEnemyXPos]
-        sub $08
-        jr jr_002_71b0
-    jr_002_71ac:
-        ldh a, [hEnemyXPos]
-        add $08
-    jr_002_71b0:
-
-    ld [hl+], a
-    ld a, $ae
-    ld [hl+], a
-    ld a, $00
-    ld [hl+], a
-    ldh a, [hEnemyAttr]
-    ld [hl+], a
-    ld de, header_71D0
-    call enemy_createLinkForChildObject
-    call enemy_spawnObject.shortHeader
-    ld a, $05
-    ldh [hEnemySpawnFlag], a
-    xor a
-    ldh [$e9], a
-    ld a, $14
-    ld [sfxRequest_noise], a
-    ret
-
-header_71D0:
+.projectileHeader: ; 02:71D0
     db $00, $00, $ff, $00, $00, $00, $ff, $07
-    dw enAI_6F60
+    dw enAI_gammaMetroid
 
-Call_002_71da:
+; Gamma Projectile code
+.projectileCode: ; 02:71DA
     ldh a, [hEnemy_frameCounter]
     and $01
         ret nz
-
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $ae
-    jr z, jr_002_7208
+    jr z, .endIf_L
         dec [hl]
         ldh a, [hEnemyAttr]
         set OAMB_YFLIP, a
@@ -8645,44 +8634,45 @@ Call_002_71da:
         ldh [hEnemyYPos], a
         ldh a, [hEnemyAttr]
         bit OAMB_XFLIP, a
-        jr nz, jr_002_7201
+        jr nz, .else_M
             ldh a, [hEnemyXPos]
             add $04
             ldh [hEnemyXPos], a
             ret
-        jr_002_7201:
+        .else_M:
             ldh a, [hEnemyXPos]
             sub $04
             ldh [hEnemyXPos], a
             ret
-    jr_002_7208:
+    .endIf_L:
 
     ldh a, [hEnemyAttr]
     bit OAMB_YFLIP, a
-    jr nz, jr_002_7229
+    jr nz, .endIf_N
         inc [hl]
         ldh a, [hEnemyYPos]
         sub $10
         ldh [hEnemyYPos], a
         ldh a, [hEnemyAttr]
         bit OAMB_XFLIP, a
-        jr nz, jr_002_7222
+        jr nz, .else_O
             ldh a, [hEnemyXPos]
             sub $04
             ldh [hEnemyXPos], a
             ret
-        jr_002_7222:
+        .else_O:
             ldh a, [hEnemyXPos]
             add $04
             ldh [hEnemyXPos], a
             ret
-    jr_002_7229:
+    .endIf_N:
 
     call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
 ret
 
+;------------------------------------------------------------------------------
 
 enemy_spawnObject:
     .shortHeader: ; 02:7231

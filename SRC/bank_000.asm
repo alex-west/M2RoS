@@ -9156,7 +9156,7 @@ ret
 
 gamma_getAngle_farCall: ; 00:3D20
     callFar gamma_getAngle
-    switchBank enAI_6F60 ; Gamma Metroid AI (also used by Omega Metroid fireball)
+    switchBank enAI_gammaMetroid ; Gamma Metroid AI (also used by Omega Metroid fireball)
 ret
 
 alpha_getSpeedVector_farCall: ; 00:3D34
@@ -9166,7 +9166,7 @@ ret
 
 gamma_getSpeedVector_farCall: ; 00:3D48
     callFar gamma_getSpeedVector ; $7319
-    switchBank enAI_6F60 ; Gamma Metroid AI (also used by Omega Metroid fireball)
+    switchBank enAI_gammaMetroid ; Gamma Metroid AI (also used by Omega Metroid fireball)
 ret
 
 LCDCInterruptHandler_farCall: ; 00:3D5C
