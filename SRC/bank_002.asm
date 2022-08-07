@@ -68,7 +68,7 @@ jr_002_404b:
 
     xor a
     ld [$c41b], a
-    ld [$c41c], a
+    ld [metroid_state], a
     ld [metroid_fightActive], a
 
 jr_002_4063:
@@ -232,7 +232,7 @@ Call_002_412f: ; Loads enemy save flags from save buffer to WRAM without saving 
     ld [$c453], a
     xor a
     ld [$c452], a
-    ld [$c41c], a
+    ld [metroid_state], a
     ld [metroid_fightActive], a
     ld [cutsceneActive], a
     ld [numEnemies], a
@@ -1082,7 +1082,7 @@ jr_002_45b3:
     ldh [hEnemySpawnFlag], a
     xor a
     ld [$c41b], a
-    ld [$c41c], a
+    ld [metroid_state], a
     pop af
     jp Jump_002_40d8
 
@@ -3532,7 +3532,7 @@ Call_002_5630:
     and a
         jr nz, jr_002_5652
     ; Check if metroid has been killed?
-    ld a, [$c41c]
+    ld a, [metroid_state]
     cp $80
         jp z, Jump_002_5732
 
@@ -3778,7 +3778,7 @@ Jump_002_5732:
     ld a, $02
     ldh [hEnemySpawnFlag], a
     xor a
-    ld [$c41c], a
+    ld [metroid_state], a
     ld [cutsceneActive], a
     ret
 
@@ -7569,7 +7569,7 @@ enAI_6B83: ; 02:6B83
 ret
 
 ;------------------------------------------------------------------------------
-; First alpha metroid ? (with appearance cutscene)
+; Hatching Alpha Metroid AI
 enAI_hatchingAlpha: ; 02:6BB2
 ;Jump_002_6bb2:
     call enemy_getSamusCollisionResults
@@ -7599,7 +7599,7 @@ enAI_hatchingAlpha: ; 02:6BB2
             ldh [hEnemySpriteType], a
     .endIf_A:
     
-    ld a, [$c41c]
+    ld a, [metroid_state]
     cp $02
         jp z, enAI_alphaMetroid.checkIfHurt
     ld b, a
@@ -7607,8 +7607,9 @@ enAI_hatchingAlpha: ; 02:6BB2
     ldh a, [hEnemySpawnFlag]
     cp $04
         jr z, enAI_alphaMetroid.checkIfInRange
-
     ld c, a
+    
+    ;
     ld a, b
     cp $01
         jp z, enAI_alphaMetroid.startFight
@@ -7667,7 +7668,7 @@ enAI_hatchingAlpha: ; 02:6BB2
 ; end proc
 
 ;------------------------------------------------------------------------------
-; Alpha Metroid ?
+; Alpha Metroid AI
 enAI_alphaMetroid: ; 02:6C44
     ld a, [metroid_fightActive]
     and a
@@ -7694,7 +7695,7 @@ enAI_alphaMetroid: ; 02:6C44
     ld a, $01
     ld [metroid_fightActive], a
     ld a, $02
-    ld [$c41c], a
+    ld [metroid_state], a
     ld a, [songPlaying]
     cp $0c
         jr z, .standardAction
@@ -7859,7 +7860,7 @@ ret
     ldh [$e9], a
     ldh [hEnemyState], a
     ld a, $80
-    ld [$c41c], a
+    ld [metroid_state], a
     ; Explode
     ld a, $e2
     ldh [hEnemySpriteType], a
@@ -7899,7 +7900,7 @@ ret
     xor a
     ld [cutsceneActive], a
     ld a, $02
-    ld [$c41c], a
+    ld [metroid_state], a
 ret
 
 .appearanceFaceScreen:
@@ -7929,11 +7930,11 @@ ret
     ld a, [hl]
     cp $0d
         ret nz
-    ;
+    ; Clear timer
     xor a
     ld [hl], a
     inc a
-    ld [$c41c], a
+    ld [metroid_state], a
 jr .startFight
 
 
@@ -8251,7 +8252,7 @@ ret
     ldh [hEnemyStatus], a
 .checkIfActing:
     ; Act if fight is happening
-    ld a, [$c41c]
+    ld a, [metroid_state]
     and a
         jp nz, .checkIfHurt
 
@@ -8316,7 +8317,7 @@ ret
     xor a
     ld [gamma_stunCounter], a
     inc a
-    ld [$c41c], a
+    ld [metroid_state], a
     ld a, $01
     ld [metroid_fightActive], a
     ; Trigger Metroid fight music
@@ -8337,7 +8338,7 @@ ret
     xor a
     ld [cutsceneActive], a
     inc a
-    ld [$c41c], a
+    ld [metroid_state], a
     ; Set spawn flag to "seen"
     ld a, $04
     ldh [hEnemySpawnFlag], a
@@ -8491,7 +8492,7 @@ ret
     ldh [$e9], a
     ldh [hEnemyState], a
     ld a, $80
-    ld [$c41c], a
+    ld [metroid_state], a
     ld a, $e2
     ldh [hEnemySpriteType], a
     ld a, $0d
@@ -8536,7 +8537,7 @@ ret
         ldh [$e9], a
         ldh [hEnemyState], a
         inc a
-        ld [$c41c], a
+        ld [metroid_state], a
         ld a, $ad
         ldh [hEnemySpriteType], a
         ret
@@ -8739,26 +8740,26 @@ ret
         ret
 
 ;------------------------------------------------------------------------------
-; Zeta Metroid ?
-enAI_7276: ; 02:7276
+; Zeta Metroid AI
+enAI_zetaMetroid: ; 02:7276
     call enemy_getSamusCollisionResults
     ldh a, [hEnemySpawnFlag]
     cp $06
-        jp z, zeta_fireball
-    
-    ld a, [$c41c]
+        jp z, .fireball
+    ; Force zeta to say onscreen
+    ld a, [metroid_state]
     and a
         call nz, Call_002_7dc6
     ; Check if not stunned
     ld hl, zeta_stunCounter
     ld a, [hl]
     and a
-        jr z, jr_002_72b1
+        jr z, .checkIfActing
     dec [hl]
-        jr z, jr_002_72a0
+        jr z, .stunEnd
     ; Stunned case
     call zeta_animateHurt
-    ; Only process screw touch reaction when stunned
+    ; When stunned, only process screw touch reaction
     ld a, [$c46d]
     cp $10
         ret nc
@@ -8766,41 +8767,39 @@ enAI_7276: ; 02:7276
     ld [sfxRequest_square1], a
 ret
 
-
-jr_002_72a0:
+.stunEnd:
     xor a
     ldh [hEnemyStatus], a
     ld a, $ff
     ldh [$e8], a
     ld a, $b7
     ldh [hEnemySpriteType], a
+    ; Reset chasing vector
     ld a, $10
     ldh [$e9], a
     ldh [hEnemyState], a
-
-jr_002_72b1:
-    ld a, [$c41c]
+.checkIfActing:
+    ld a, [metroid_state]
     cp $03
-    jp nc, Jump_002_73cc
-
+        jp nc, .checkIfHurt
     ld b, a
+    ; Check if we've seen this zeta before
     ldh a, [hEnemySpawnFlag]
     cp $04
-    jr z, jr_002_7317
-
-    ld c, a
+        jr z, .quickIntro
+    ld c, a    
+; Fancy intro stuff
     ld a, b
-    cp $02
-        jp z, Jump_002_751b
+    cp $02 ; When the husk has fallen offscreen
+        jp z, .startFight
     ldh a, [hEnemySpriteType]
     sub $b2
-        jp z, Jump_002_7534
+        jp z, .gammaHuskBranch
     dec a
-        jp z, Jump_002_757f
-
+        jp z, .appearanceRise
     ld a, [cutsceneActive]
     and a
-        jr nz, jr_002_7301
+        jr nz, .longIntroStart
 
     ldh a, [hEnemy_frameCounter]
     and $03
@@ -8813,10 +8812,10 @@ jr_002_72b1:
     ld hl, hEnemyXPos
     ld a, [samus_onscreenXPos]
     sub [hl]
-    jr nc, jr_002_72ee
+    jr nc, .endIf_A
         cpl
         inc a
-    jr_002_72ee:
+    .endIf_A:
     cp $50
         ret nc
     ; Start fight
@@ -8829,39 +8828,37 @@ jr_002_72b1:
     ld [metroid_fightActive], a
 ret
 
-
-jr_002_7301:
+; Flash for a few frames and then let the husk fall off
+.longIntroStart:
+    ; Act every 4th frame
     ldh a, [hEnemy_frameCounter]
     and $03
-    ret nz
-
+        ret nz
+    ; Wait a few frames before shedding husk
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $08
-    jp z, Jump_002_7559
-
+        jp z, .spawnGammaHusk
+    ; Blink in the meantime
     ldh a, [hEnemyStunCounter]
     xor $10
     ldh [hEnemyStunCounter], a
-    ret
+ret
 
-
-jr_002_7317:
+.quickIntro:
     ld a, $b7
     ldh [hEnemySpriteType], a
     ld hl, hEnemyXPos
     ld a, [samus_onscreenXPos]
     sub [hl]
-    jr nc, jr_002_7326
-
-    cpl
-    inc a
-
-jr_002_7326:
+    jr nc, .endIf_B
+        cpl
+        inc a
+    .endIf_B:
     cp $50
-    ret nc
-
+        ret nc
+    
     ld a, $10
     ldh [$e9], a
     ldh [hEnemyState], a
@@ -8870,135 +8867,125 @@ jr_002_7326:
     ld a, $01
     ld [metroid_fightActive], a
     ld a, $03
-    ld [$c41c], a
+    ld [metroid_state], a
     ld a, [songPlaying]
     cp $0c
-    jr z, jr_002_734b
-
+        jr z, .standardAction
     ; Play metroid fight song
     ld a, $0c
     ld [songRequest], a
-    jr jr_002_734b
+jr .standardAction
 
-Jump_002_734b:
-jr_002_734b:
+.standardAction:
+    ; Check about screw knockback
     ldh a, [$e8]
     inc a
-    jr z, jr_002_736f
+    jr z, .endIf_C
+        call Call_002_6e7f
+        ld hl, $c471
+        ld a, [hl]
+        and a
+            ret z
+        ld [hl], $00
+        ld a, $ff
+        ldh [$e8], a
+        ld a, $b7
+        ldh [hEnemySpriteType], a
+        ld a, $10
+        ldh [$e9], a
+        ldh [hEnemyState], a
+        ld a, $03
+        ld [metroid_state], a
+        ret
+    .endIf_C:
 
-    call Call_002_6e7f
-    ld hl, $c471
-    ld a, [hl]
-    and a
-    ret z
-
-    ld [hl], $00
-    ld a, $ff
-    ldh [$e8], a
-    ld a, $b7
-    ldh [hEnemySpriteType], a
-    ld a, $10
-    ldh [$e9], a
-    ldh [hEnemyState], a
-    ld a, $03
-    ld [$c41c], a
-    ret
-
-
-jr_002_736f:
-    ld a, [$c41c]
+    ld a, [metroid_state]
     cp $04
-    jp nc, Jump_002_748a
+        jp nc, .states4AndUp
 
+; State 3 - Chase Samus
     ld b, $02
     ld de, $2000
     call enemy_seekSamus_farCall
+    ; Check if Samus is within $20 pixels on the x axis
     ld hl, hEnemyXPos
     ld a, [samus_onscreenXPos]
     sub [hl]
-    jr c, jr_002_7397
-
-    cp $20
-    jr nc, jr_002_7391
-
-    ld a, $01
-    ld [$c437], a
-
-jr_002_7391:
-    ld a, OAMF_XFLIP
-    ldh [hEnemyAttr], a
-    jr jr_002_73a3
-
-jr_002_7397:
-    cp $e0
-    jr c, jr_002_73a0
-
-    ld a, $01
-    ld [$c437], a
-
-jr_002_73a0:
-    xor a
-    ldh [hEnemyAttr], a
-
-jr_002_73a3:
-    ld hl, $c437
+    jr c, .else_D
+        cp $20
+        jr nc, .endIf_E
+            ld a, $01
+            ld [zeta_xProximityFlag], a
+        .endIf_E:
+        ld a, OAMF_XFLIP
+        ldh [hEnemyAttr], a
+        jr .endIf_D
+    .else_D:
+        cp -$20 ;$e0
+        jr c, .endIf_F
+            ld a, $01
+            ld [zeta_xProximityFlag], a
+        .endIf_F:
+        xor a
+        ldh [hEnemyAttr], a
+    .endIf_D:
+    ld hl, zeta_xProximityFlag
     ld a, [hl]
     and a
-    ret z
-
+        ret z
+    ; Clear proximity flag for next frame's check    
     ld [hl], $00
+    ; Check if Samus is within $20 pixels underneath Zeta
     ld hl, hEnemyYPos
     ld a, [samus_onscreenYPos]
     sub [hl]
-    ret c
-
+        ret c
     cp $20
-    ret nc
-
-    call Call_002_75ac
+        ret nc
+    ; Spit fireball, move to next state
+    call .spawnFireball
     ld a, $05
     ldh [hEnemySpawnFlag], a
     ld a, $04
-    ld [$c41c], a
+    ld [metroid_state], a
     xor a
     ldh [$e9], a
     ldh [hEnemyState], a
     ld a, $b8
     ldh [hEnemySpriteType], a
-    ret
+ret
 
-
-Jump_002_73cc:
+.checkIfHurt:
     ld a, [$c46d]
     cp $20
-        jp nc, Jump_002_734b
+        jp nc, .standardAction
     cp $10
-        jr z, zeta_screw
+        jr z, .screwReaction
     cp $08
-        jr z, zeta_hurt
-zeta_plink:
+        jr z, .hurtReaction
+.plink:
     ld a, $0f
     ld [sfxRequest_square1], a
 ret
 
-zeta_screw:
+.screwReaction:
     call metroid_screwReaction
     ld a, $1a
     ld [sfxRequest_square1], a
 ret
 
-zeta_hurt:
+.hurtReaction:
     ; Invulnerable to upwards shots
     ld a, [$c46e]
     ld b, a
     bit 2, b
-        jr nz, zeta_plink
+        jr nz, .plink
 
     ld hl, hEnemyHealth
     dec [hl]
     ld a, [hl]
     and a
-        jr z, zeta_die
+        jr z, .death
 
     ld a, $ba
     ldh [hEnemySpriteType], a
@@ -9008,56 +8995,57 @@ zeta_hurt:
     ld [sfxRequest_noise], a
     ld hl, $ffe8
     ld [hl], $00
-    bit 0, b
-    jr nz, jr_002_742f
+    bit 0, b ; Check if missile was going right
+    jr nz, .setKnockbackRight
         inc a
-        bit 3, b
-        jr nz, jr_002_741a
+        bit 3, b ; Check if missile was going down
+        jr nz, .else_G
             inc a
-                jr jr_002_7439
-        jr_002_741a:
-            set 1, [hl]
+            jr .setKnockbackLeft
+        .else_G:
+            set 1, [hl] ; Knock Zeta down
             ldh a, [hEnemyYPos]
             add $05
             ldh [hEnemyYPos], a
             ld a, [rDIV]
             and $01
-            jr z, jr_002_742c
-                set 0, [hl]
+            jr z, .else_H
+                set 0, [hl] ; Knock Zeta right
                 ret
-            jr_002_742c:
-                set 2, [hl]
+            .else_H:
+                set 2, [hl] ; Knock Zeta left
                 ret
-    jr_002_742f:
-        set 0, [hl]
+    .setKnockbackRight:
+        set 0, [hl] ; Knock Zeta right
         ldh a, [hEnemyXPos]
         add $05
         ldh [hEnemyXPos], a
-            jr jr_002_7445
-    jr_002_7439:
+            jr .knockback_randVertical
+    .setKnockbackLeft:
         ldh a, [hEnemyXPos]
         sub $05
         cp $10
-        jr c, jr_002_7445
+        jr c, .knockback_randVertical
             ldh [hEnemyXPos], a
-            set 2, [hl]
-    jr_002_7445:
+            set 2, [hl] ; Knock Zeta left
+    .knockback_randVertical:
         ld a, [rDIV]
         and $01
-        jr z, jr_002_744f
-            set 1, [hl]
+        jr z, .else_I
+            set 1, [hl] ; Knock Zeta down
             ret
-        jr_002_744f:
-            set 3, [hl]
+        .else_I:
+            set 3, [hl] ; Knock Zeta up
             ret
 ; end branch
 
-zeta_die:
+.death:
+    ; Set up explosion
     xor a
     ldh [$e9], a
     ldh [hEnemyState], a
     ld a, $80
-    ld [$c41c], a
+    ld [metroid_state], a
     ld a, $e2
     ldh [hEnemySpriteType], a
     ld a, $0d
@@ -9080,65 +9068,70 @@ zeta_die:
     sub $01
     daa
     ld [hl], a
+    ; Shuffle counter and prep earthquake
     ld a, $c0
     ld [metroidCountShuffleTimer], a
     call earthquakeCheck_farCall
 ret
 
 
-Jump_002_748a:
-    ld a, [$c41c]
+.states4AndUp:
+    ld a, [metroid_state]
     cp $05
-        jr z, jr_002_74dc
+        jr z, .state5
     cp $06
-        jr z, jr_002_74fe
+        jr z, .state6
 
+; State 4 - Spitting animation
+    ; Act every other frame
     ldh a, [hEnemy_frameCounter]
     and $01
-    ret nz
-
+        ret nz
+    ; Animate from $B8 -> $B9 -> $B8 -> $B7
+    ; [$E9] is used as a flag to start decrementing the animation
     ldh a, [$e9]
     ld hl, hEnemySpriteType
     and a
-    jr z, jr_002_74a9
+    jr z, .else_J
         ld a, [hl]
         cp $b7
-        jr z, jr_002_74af
+        jr z, .moveToState5
             dec [hl]
             ret
-    jr_002_74a9:
+    .else_J:
         inc [hl]
         ld a, $01
         ldh [$e9], a
         ret
-    jr_002_74af:
-        xor a
-        ldh [$e9], a
-        ld a, $05
-        ld [$c41c], a
-        ret
+        
+.moveToState5:
+    xor a
+    ldh [$e9], a
+    ld a, $05
+    ld [metroid_state], a
+ret
+; end state
 
-
-zeta_fireball: ; Projectile code
-    ld a, [$c41c]
+.fireball: ; Projectile code
+    ld a, [metroid_state]
     cp $06
-    jr z, .else_A
+    jr z, .else_K
         ld hl, hEnemyYPos
         ld a, [hl]
         add $03
         cp $90
-        jr nc, .else_A
+        jr nc, .else_K
             ld [hl+], a
             ; Move
             ldh a, [hEnemyAttr]
             bit OAMB_XFLIP, a
-            jr nz, .else_B
+            jr nz, .else_L
                 dec [hl]
                 ret
-            .else_B:
+            .else_L:
                 inc [hl]
                 ret
-    .else_A:
+    .else_K:
         ; Delete self
         call Call_000_3ca6
         ld a, $ff
@@ -9146,52 +9139,60 @@ zeta_fireball: ; Projectile code
         ret
 ; end proc
 
-jr_002_74dc:
+.state5: ; Ascend
+    ; Move Up
     ld hl, hEnemyYPos
     call enemy_accelBackwards
+    ; Check if within $30 pixels of the top of the screen
     ld a, [hl+]
     cp $30
-    jr c, jr_002_74f1
+    jr c, .else_M
+        ; Move forward
         ldh a, [hEnemyAttr]
         bit OAMB_XFLIP, a
-        jr nz, jr_002_74ef
+        jr nz, .else_N
             dec [hl]
             ret
-        jr_002_74ef:
+        .else_N:
             inc [hl]
             ret
-    jr_002_74f1:
+    .else_M:
+        ; Move on to next state
         ld a, $06
-        ld [$c41c], a
+        ld [metroid_state], a
         xor a
         ldh [$e7], a
         ld a, $b3
         ldh [hEnemySpriteType], a
         ret
+; end state
 
-
-jr_002_74fe:
+.state6: ; Wait for state 3
+    ; Wait a few frames
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $20
-    jr z, jr_002_750b
-        call Call_002_7614
+    jr z, .else_O
+        call zeta_animateWait ; Animate
         ret
-    jr_002_750b:
+    .else_O:
+        ; Clear counter
         ld [hl], $00
+        ; Return to state 3
         ld a, $03
-        ld [$c41c], a
+        ld [metroid_state], a
         ld a, $04
         ldh [hEnemySpawnFlag], a
         ld a, $b7
         ldh [hEnemySpriteType], a
         ret
+; end state
 
-
-Jump_002_751b:
+.startFight:
     ld hl, hEnemySpriteType
     ld [hl], $b7
+    ; Initialize chasing vector
     ld a, $10
     ldh [$e9], a
     ldh [hEnemyState], a
@@ -9200,37 +9201,35 @@ Jump_002_751b:
     xor a
     ld [cutsceneActive], a
     ld a, $03
-    ld [$c41c], a
-    ret
+    ld [metroid_state], a
+ret
 
-
-Jump_002_7534:
-    ld a, [$c41c]
+.gammaHuskBranch:
+    ld a, [metroid_state]
     and a
-    jr nz, jr_002_753e
+    jr nz, .else_P
+        call Call_002_75ff ; Oscillate
+        ret
+    .else_P:
+        ; Change palette
+        ld a, $10
+        ldh [hEnemyStunCounter], a
+        ; Move downwards
+        ld hl, hEnemyYPos
+        call enemy_accelForwards
+        ld a, [hl]
+        cp $90
+            ret c
+        ; Despawn
+        call Call_000_3ca6
+        ld a, $02
+        ldh [hEnemySpawnFlag], a
+        ld a, $02
+        ld [metroid_state], a
+        ret
+; end branch
 
-    call Call_002_75ff
-    ret
-
-
-jr_002_753e:
-    ld a, $10
-    ldh [hEnemyStunCounter], a
-    ld hl, hEnemyYPos
-    call enemy_accelForwards
-    ld a, [hl]
-    cp $90
-    ret c
-
-    call Call_000_3ca6
-    ld a, $02
-    ldh [hEnemySpawnFlag], a
-    ld a, $02
-    ld [$c41c], a
-    ret
-
-
-Jump_002_7559:
+.spawnGammaHusk:
     xor a
     ld [hl], a
     ldh [hEnemyStunCounter], a
@@ -9241,46 +9240,52 @@ Jump_002_7559:
     ld [hl+], a
     ldh a, [hEnemyXPos]
     ld [hl+], a
-    ld de, header_759F
+    ld de, .gammaHuskHeader
     ld a, $03
     ld [enemy_tempSpawnFlag], a
     call enemy_spawnObject.longHeader
+    ; Adjust position of zeta
     ld hl, hEnemyYPos
     ld a, [hl]
     sub $08
     ld [hl], a
+    ; Set sprite type to zeta
     ld a, $b3
     ldh [hEnemySpriteType], a
-    ret
+ret
 
-
-Jump_002_757f:
-    ld a, [$c41c]
+.appearanceRise:
+    ld a, [metroid_state]
     and a
-    ret nz
-
-    call Call_002_75ec
+        ret nz
+    call Call_002_75ec ; Oscillate
+    ; Continue every 8th frame
     ldh a, [hEnemy_frameCounter]
     and $07
         ret nz
+    ; Move up
     ld hl, hEnemyYPos
     dec [hl]
+    ; Wait a few frames
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $06
         ret nz
+    ; Reset counter
     xor a
     ld [hl], a
+    ; Next state
     inc a
-    ld [$c41c], a
+    ld [metroid_state], a
 ret
 
-header_759F:
+; Gamma husk header
+.gammaHuskHeader: ; 02:759F
     db $b2, $80, $00, $00, $00, $00, $00, $00, $00, $ff, $06
-    dw enAI_7276
+    dw enAI_zetaMetroid
 
-Call_002_75ac:
+.spawnFireball: ; 02:75AC
     call findFirstEmptyEnemySlot_longJump
     xor a
     ld [hl+], a
@@ -9290,26 +9295,24 @@ Call_002_75ac:
     ldh a, [hEnemyAttr]
     ld b, a
     bit OAMB_XFLIP, a
-    jr nz, jr_002_75c4
+    jr nz, .else_Q
+        ldh a, [hEnemyXPos]
+        sub $18
+        ld [hl+], a
+        jr .endIf_Q
+    .else_Q:
+        ldh a, [hEnemyXPos]
+        add $18
+        ld [hl+], a
+    .endIf_Q:
 
-    ldh a, [hEnemyXPos]
-    sub $18
-    ld [hl+], a
-    jr jr_002_75c9
-
-jr_002_75c4:
-    ldh a, [hEnemyXPos]
-    add $18
-    ld [hl+], a
-
-jr_002_75c9:
     ld a, $be
     ld [hl+], a
     ld a, $80
     ld [hl+], a
     ld a, b
     ld [hl+], a
-    ld de, header_75E2
+    ld de, .fireballHeader
     ld a, $06
     ld [enemy_tempSpawnFlag], a
     call enemy_spawnObject.shortHeader
@@ -9317,9 +9320,12 @@ jr_002_75c9:
     ld [sfxRequest_noise], a
     ret
 
-header_75E2:
+; Fireball header
+.fireballHeader:
     db $00, $00, $ff, $00, $00, $00, $ff, $08
-    dw enAI_7276
+    dw enAI_zetaMetroid
+
+;------------------------------------------------------------------------------
 
 Call_002_75ec: ; 02:75EC - Weird horizontal oscillation pattern
     ldh a, [hEnemy_frameCounter]
@@ -9358,8 +9364,8 @@ Call_002_75ff: ; 02:75FF - Another weird horizontal oscillation pattern
         inc [hl]
         ret
 
-
-Call_002_7614:
+; Does a cute animation of the Zeta's tail :)
+zeta_animateWait: ; 02:7614
     ldh a, [hEnemy_frameCounter]
     and $03
         ret nz
@@ -9391,7 +9397,7 @@ enAI_7631: ; 02:7631
     cp $06
         jp z, omega_fireball
 
-    ld a, [$c41c]
+    ld a, [metroid_state]
     and a
         call nz, Call_002_7dc6
     ; Act if not stunned
@@ -9421,7 +9427,7 @@ jr_002_7660:
     ldh [hEnemySpriteType], a
 
 jr_002_7665:
-    ld a, [$c41c]
+    ld a, [metroid_state]
     and a
     jp z, Jump_002_78dc
 
@@ -9466,15 +9472,15 @@ omega_hurt:
         ld hl, hEnemyHealth
         ld a, [hl]
         sub $03
-            jr c, jr_002_76e1
-            jr z, jr_002_76e1
+            jr c, omega_death
+            jr z, omega_death
         ld [hl], a
         ld a, $10
         jr omega_endBranch
     omega_oneDamage:
         ld hl, hEnemyHealth
         dec [hl]
-            jr z, jr_002_76e1
+            jr z, omega_death
         ld a, $03
     omega_endBranch:
 
@@ -9504,14 +9510,14 @@ omega_hurt:
         ret
 ; end branch
 
-jr_002_76e1:
+omega_death:
     xor a
     ldh [$e9], a
     ldh [hEnemyState], a
     ld [$c46f], a
     ld [$c478], a
     ld a, $80
-    ld [$c41c], a
+    ld [metroid_state], a
     ld a, $e2
     ldh [hEnemySpriteType], a
     ld a, $0e
@@ -9563,7 +9569,7 @@ omega_touch:
     ld a, $c3
     ldh [hEnemySpriteType], a
     ld a, $05
-    ld [$c41c], a
+    ld [metroid_state], a
 ret
 
 
@@ -9578,7 +9584,7 @@ jr_002_7752:
     jr_002_775f:
         ld [hl], $00
         ld a, $01
-        ld [$c41c], a
+        ld [metroid_state], a
         ret
 
 
@@ -9587,7 +9593,7 @@ jr_002_7767:
     ldh [$e9], a
     ldh [hEnemyState], a
     ld a, $01
-    ld [$c41c], a
+    ld [metroid_state], a
 
 jr_002_7771:
     ld a, $bf
@@ -9609,7 +9615,7 @@ jr_002_7776:
 
 
 jr_002_7787:
-    ld a, [$c41c]
+    ld a, [metroid_state]
     cp $05
         jr z, jr_002_77bc
     cp $06
@@ -9618,7 +9624,7 @@ jr_002_7787:
         jr z, jr_002_7752
 
     call Call_002_79a8
-    ld a, [$c41c]
+    ld a, [metroid_state]
     cp $04
         jr z, jr_002_7767
     dec a
@@ -9681,7 +9687,7 @@ ret
 
 jr_002_77f3:
     ld a, $06
-    ld [$c41c], a
+    ld [metroid_state], a
     xor a
     ldh [$e7], a
     ldh [$e9], a
@@ -9707,7 +9713,7 @@ jr_002_7800:
             ret
     jr_002_7817:
         ld a, $07
-        ld [$c41c], a
+        ld [metroid_state], a
         xor a
         ldh [$e7], a
         ld a, $bf
@@ -9726,7 +9732,7 @@ Jump_002_7824:
     ld [hl], $00
     call Call_002_7922
     ld a, $02
-    ld [$c41c], a
+    ld [metroid_state], a
     ld a, $05
     ldh [hEnemySpawnFlag], a
     ld a, $c1
@@ -9828,14 +9834,13 @@ jr_002_78c8:
     call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
-    ld hl, $c41c
+    ld hl, metroid_state
     ld a, [hl]
     cp $02
-    ret nz
-
+        ret nz
     ld a, $04
-    ld [$c41c], a
-    ret
+    ld [metroid_state], a
+ret
 
 
 Jump_002_78dc:
@@ -9942,7 +9947,7 @@ Jump_002_7950:
     ld [$c46f], a
     ld [$c478], a
     inc a
-    ld [$c41c], a
+    ld [metroid_state], a
     ld a, $01
     ld [metroid_fightActive], a
     ld a, $ff
@@ -9964,7 +9969,7 @@ Jump_002_798b:
     xor a
     ld [cutsceneActive], a
     inc a
-    ld [$c41c], a
+    ld [metroid_state], a
     ld a, $04
     ldh [hEnemySpawnFlag], a
     ret
@@ -10031,7 +10036,7 @@ Call_002_79a8:
     ld a, $2d
     ld [sfxRequest_square1], a
     ld a, $05
-    ld [$c41c], a
+    ld [metroid_state], a
     pop af
 ret
 
@@ -10378,7 +10383,7 @@ ret
 ;------------------------------------------------------------------------------
 ; Baby Metroid AI
 enAI_babyMetroid: ; 02:7BE5
-    ld a, [$c41c]
+    ld a, [metroid_state]
     and a
         jr z, .case_0 ; case 0
     dec a
@@ -10413,7 +10418,7 @@ ret
     ld [hl+], a
     ld [hl], a
     ; Set to state 2 (active)
-    ld hl, $c41c
+    ld hl, metroid_state
     inc [hl]
     ; Clear cutscene
     xor a
@@ -10460,7 +10465,7 @@ ret
         ld [hl], a
         ldh [hEnemyStunCounter], a
         ld a, $03 ; State 3
-        ld [$c41c], a
+        ld [metroid_state], a
         ld hl, metroid_fightActive
         inc [hl]
         ld a, $04
@@ -10486,7 +10491,7 @@ ret
         ld [metroid_fightActive], a
         ; Set to state 2 (active)
         ld a, $02
-        ld [$c41c], a
+        ld [metroid_state], a
         ld a, $16
         ld [sfxRequest_noise], a
         ret
@@ -10515,7 +10520,7 @@ ret
     ld [hl], $00
     ; Set state to 1
     ld a, $01
-    ld [$c41c], a
+    ld [metroid_state], a
 ret
 
 

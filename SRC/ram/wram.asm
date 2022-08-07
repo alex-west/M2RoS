@@ -161,8 +161,8 @@ enemySolidityIndex = $C407 ; Copy of enemySolidityIndex_canon (actually used by 
 ;$C418: Set to [room bank] in $2:4000
 ;
 ;$C41B: Checked and cleared in $2:4000, 90h frame timer?
-;$C41C: Metroid related status? Cleared in $2:4000/$2:412F
-;
+def metroid_state = $C41C ; General Metroid related state. $00 = inactive, $80 = dying/dead, others depend on the metroid type
+;$C41D : Appears unused
 def enemy_yPosMirror = $C41E ; Initial y position for the current working enemy for the current frame
 def enemy_xPosMirror = $C41F ; Initial x position for the current working enemy for the current frame
 ;
@@ -188,7 +188,7 @@ def numOffscreenEnemies = $C427 ; Number of offscreen enemies loaded in. Unused?
 ;$C434: Scroll X two frames ago (according to $3:4000)
 ;$C435: Scroll X one frame ago (according to $3:4000)
 ;$C436: Executes $2:412F in $2:4000 if zero, set to 1 afterwards. Flag for updating $C540..7F. Cleared when exiting Metroid Queen's room, and when loading from save
-;
+def zeta_xProximityFlag = $C437 ; Set to 1 in the Zeta's AI if within $20 pixels on the x axis
 ;$C438: Enemy handling incomplete flag. In $2:409E, if 0: sets $C439 = [number of enemies]
 ;$C439: Current enemy index
 def samus_onSolidSprite = $C43A ; Is Samus atop a solid sprite

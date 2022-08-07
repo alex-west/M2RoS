@@ -711,7 +711,7 @@ en66B6: ; Enemy A3h (alpha metroid) ; gamma?
     dw enAI_gammaMetroid
 en66C1: ; Enemy ADh (gamma metroid) ; zeta?
     db $00,$00,$00,$00,$FF,$00,$00,$00,$14
-    dw enAI_7276
+    dw enAI_zetaMetroid
 en66CC: ; Enemy B3h (zeta metroid hatching) ; omega?
     db $00,$00,$00,$00,$FF,$00,$00,$00,$28
     dw enAI_7631
