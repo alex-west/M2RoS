@@ -221,8 +221,8 @@ metroid_samusYDir = $C45B ; Relative Y direction of Samus from a metroid ($FF: u
 metroid_angleTableIndex = $C45C ; Used as index for table at $1:729C, value for $FFEA
 metroid_absSamusDistY = $C45D ; abs(samusY-enemyY) (used for metroid seeking)
 metroid_absSamusDistX = $C45E ; abs(samusX-enemyX) (used for metroid seeking)
-;$C45F: Metroid seeking related
-;$C460: Metroid seeking related
+;$C45F: Metroid seeking related (low byte)
+;$C460: Metroid seeking related (high byte)
 
 ;$C461: Enemy spawn flag related
 

@@ -7570,16 +7570,16 @@ ret
 
 ;------------------------------------------------------------------------------
 ; First alpha metroid ? (with appearance cutscene)
-enAI_6BB2: ; 02:6BB2
-Jump_002_6bb2:
+enAI_hatchingAlpha: ; 02:6BB2
+;Jump_002_6bb2:
     call enemy_getSamusCollisionResults
     ; Check if stunned
     ld hl, alpha_stunCounter
     ld a, [hl]
     and a
-    jr z, jr_002_6bdc
+    jr z, .endIf_A
         dec [hl]
-        jr z, jr_002_6bd1
+        jr z, .else_B
             ; Stunned case
             call Call_002_6ef0 ; Knockback
             call enemy_toggleVisibility ; Blink
@@ -7589,35 +7589,38 @@ Jump_002_6bb2:
             ld a, $0f
             ld [sfxRequest_square1], a
             ret
-
-        jr_002_6bd1:        
-        xor a
-        ldh [hEnemyStatus], a
-        ld a, $ff
-        ldh [$e8], a
-        ld a, $a3 ; Alpha metroid
-        ldh [hEnemySpriteType], a
-    jr_002_6bdc:
+        .else_B:
+            ; End stun
+            xor a
+            ldh [hEnemyStatus], a
+            ld a, $ff
+            ldh [$e8], a
+            ld a, $a3 ; Alpha metroid
+            ldh [hEnemySpriteType], a
+    .endIf_A:
+    
     ld a, [$c41c]
     cp $02
-        jp z, Jump_002_6c7d
+        jp z, enAI_alphaMetroid.checkIfHurt
     ld b, a
+    
     ldh a, [hEnemySpawnFlag]
     cp $04
-        jr z, jr_002_6c4f
+        jr z, enAI_alphaMetroid.checkIfInRange
 
     ld c, a
     ld a, b
     cp $01
-        jp z, Jump_002_6d99
+        jp z, enAI_alphaMetroid.startFight
 
+    ; Check if in screen-facing pose
     ldh a, [hEnemySpriteType]
     cp $a1 ; Metroid hatching
-        jp z, Jump_002_6db5
+        jp z, enAI_alphaMetroid.appearanceRise
 
     ld a, [cutsceneActive]
     and a
-    jr nz, jr_002_6c2e
+    jr nz, .else_C
         ldh a, [hEnemy_frameCounter]
         and $03
             ret nz
@@ -7629,10 +7632,10 @@ Jump_002_6bb2:
         ld hl, hEnemyXPos
         ld a, [samus_onscreenXPos]
         sub [hl]
-        jr nc, jr_002_6c15
+        jr nc, .endIf_D
             cpl
             inc a
-        jr_002_6c15:    
+        .endIf_D:    
         cp $50
             ret nc
         
@@ -7647,7 +7650,7 @@ Jump_002_6bb2:
         ld a, $0c
         ld [songRequest], a
         ret
-    jr_002_6c2e:
+    .else_C:
         ldh a, [hEnemy_frameCounter]
         and $03
             ret nz
@@ -7655,7 +7658,7 @@ Jump_002_6bb2:
         inc [hl]
         ld a, [hl]
         cp $08
-            jp z, Jump_002_6dac
+            jp z, enAI_alphaMetroid.appearanceFaceScreen
         ; Flash sprite
         ldh a, [hEnemyStunCounter]
         xor $10
@@ -7668,26 +7671,24 @@ Jump_002_6bb2:
 enAI_alphaMetroid: ; 02:6C44
     ld a, [metroid_fightActive]
     and a
-        jp nz, Jump_002_6bb2 ; Jump to actual AI?
-    ; Routine for before it attacks
-
+        jp nz, enAI_hatchingAlpha ; Jump to actual AI is here, for some reason
+    ; Check for before it attacks
     ld a, $04
     ldh [hEnemySpawnFlag], a
-
-jr_002_6c4f: ; Jump from previous enemy
+.checkIfInRange: ; Jump from hatchingAlpha
     ld a, $a3 ; Alpha metroid
     ldh [hEnemySpriteType], a
     ; Check if samus is within $50 pixels
     ld hl, hEnemyXPos
     ld a, [samus_onscreenXPos]
     sub [hl]
-    jr nc, jr_002_6c5e
+    jr nc, .endIf_A
         cpl
         inc a
-    jr_002_6c5e:
+    .endIf_A:
     cp $50
         ret nc
-
+    ; Start fight
     xor a
     ld [alpha_stunCounter], a
     ld a, $01
@@ -7696,33 +7697,30 @@ jr_002_6c4f: ; Jump from previous enemy
     ld [$c41c], a
     ld a, [songPlaying]
     cp $0c
-        jr z, jr_002_6c93
+        jr z, .standardAction
     ; Trigger Metroid fight music
     ld a, $0c
     ld [songRequest], a
-jr jr_002_6c93
+jr .standardAction
 
-
-Jump_002_6c7d: ; Shot reactions?
+.checkIfHurt: ; Shot reactions
     ld a, [$c46d]
-    cp $20 ; Touch
-        jp nc, Jump_002_6c93
+    cp $20 ; Not shot
+        jp nc, .standardAction
     cp $10
-        jr z, alpha_screw
+        jr z, .screwReaction
     cp $08
-        jr z, alpha_hurt
+        jr z, .hurtReaction
     ld a, $0f
     ld [sfxRequest_square1], a
-    ret
+ret
 
-
-Jump_002_6c93:
-jr_002_6c93:
+.standardAction:
 ; Check if knockback direction not $FF
     ldh a, [$e8]
     inc a
-    jr z, jr_002_6cb1
-        call Call_002_6e7f
+    jr z, .endIf_B
+        call Call_002_6e7f ; Screw attack knockback?
         ld hl, $c471
         ld a, [hl]
         and a
@@ -7736,13 +7734,13 @@ jr_002_6c93:
         ldh [$e9], a
         ldh [hEnemyState], a
         ret
-    jr_002_6cb1:
+    .endIf_B:
 
 ; $E9 is used as a counter between lunges
     ld hl, $ffe9
     ld a, [hl]
     and a
-    jr nz, jr_002_6cd1
+    jr nz, .endIf_C
         ; Get direction of next lunge
         call alpha_getAngle_farCall
         ; Face Samus
@@ -7752,45 +7750,43 @@ jr_002_6c93:
         ld b, a
         ld a, [samus_onscreenXPos]
         sub b
-        jr c, jr_002_6cce
+        jr c, .else_D
             ld a, OAMF_XFLIP
             ldh [hEnemyAttr], a
-            jr jr_002_6cd1
-        jr_002_6cce:
+            jr .endIf_C
+        .else_D:
             xor a
             ldh [hEnemyAttr], a
-    jr_002_6cd1:
+    .endIf_C:
 
 ; Lunge for a few frames, pause for a few, then restart
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $0e
-    jr c, jr_002_6cdf
+    jr c, .endIf_E
         cp $14
             ret nz
         ld [hl], $00
-    jr_002_6cdf:
+    .endIf_E:
 
     call alpha_getSpeedVector_farCall ; Translate angle to velocity vector
-    call Call_002_6dd4 ; Move
-    call Call_002_6e39 ; Animate
+    call metroid_lungeMovement ; Move
+    call alpha_animate ; Animate
 ret
 
-
-alpha_screw:
+.screwReaction:
     call metroid_screwReaction
     ld a, $1a
     ld [sfxRequest_square1], a
 ret
 
-
-alpha_hurt:
+.hurtReaction:
     ld hl, hEnemyHealth
     dec [hl]
     ld a, [hl]
     and a
-        jr z, alpha_die
+        jr z, .death
     ld a, $08
     ld [alpha_stunCounter], a
     ld a, $05
@@ -7801,65 +7797,64 @@ alpha_hurt:
     ; Check direction and handle knockback
     ld a, [$c46e]
     ld b, a
-    bit 0, b
-        jr nz, jr_002_6d3c
-    bit 3, b
-        jr nz, jr_002_6d27
-    bit 1, b
-        jr nz, jr_002_6d46
+    bit 0, b ; Right
+        jr nz, .case_setKnockbackRight
+    bit 3, b ; Down
+        jr nz, .case_setKnockbackDown
+    bit 1, b ; Left
+        jr nz, .case_setKnockbackLeft
 
-    ldh a, [hEnemyYPos]
-    sub $05
-    cp $10
-    jr c, jr_002_6d2f
-        ldh [hEnemyYPos], a
-        set 3, [hl]
-        jr jr_002_6d2f
-
-jr_002_6d27:
-    set 1, [hl]
-    ldh a, [hEnemyYPos]
-    add $05
-    ldh [hEnemyYPos], a
-
-jr_002_6d2f:
-    ld a, [rDIV]
-    and $01
-    jr z, jr_002_6d39
-        set 0, [hl]
-        ret
-    jr_002_6d39:
-        set 2, [hl]
-        ret
-
-jr_002_6d3c:
-    set 0, [hl]
-    ldh a, [hEnemyXPos]
-    add $05
-    ldh [hEnemyXPos], a
-    jr jr_002_6d54
-
-jr_002_6d46:
-    ldh a, [hEnemyXPos]
-    sub $05
-    cp $08
-    jr c, jr_002_6d54
-        ldh [hEnemyXPos], a
-        set 2, [hl]
-        jr jr_002_6d54
-
-jr_002_6d54:
-    ld a, [rDIV]
-    and $01
-    jr z, jr_002_6d5e
+; Vertical cases
+    ;case_setKnockbackUp:
+        ldh a, [hEnemyYPos]
+        sub $05
+        cp $10
+        jr c, .knockback_randHorizontal
+            ldh [hEnemyYPos], a
+            set 3, [hl]
+            jr .knockback_randHorizontal
+    .case_setKnockbackDown:
         set 1, [hl]
+        ldh a, [hEnemyYPos]
+        add $05
+        ldh [hEnemyYPos], a
+.knockback_randHorizontal:
+    ld a, [rDIV]
+    and $01
+    jr z, .else_F
+        set 0, [hl] ; Right
         ret
-    jr_002_6d5e:
-        set 3, [hl]
+    .else_F:
+        set 2, [hl] ; Left
         ret
-; end proc
 
-alpha_die:
+; Horizontal cases
+    .case_setKnockbackRight:
+        set 0, [hl]
+        ldh a, [hEnemyXPos]
+        add $05
+        ldh [hEnemyXPos], a
+        jr .knockback_randVertical
+    .case_setKnockbackLeft:
+        ldh a, [hEnemyXPos]
+        sub $05
+        cp $08
+        jr c, .knockback_randVertical
+            ldh [hEnemyXPos], a
+            set 2, [hl]
+            jr .knockback_randVertical
+.knockback_randVertical:
+    ld a, [rDIV]
+    and $01
+    jr z, .else_G
+        set 1, [hl] ; Down
+        ret
+    .else_G:
+        set 3, [hl] ; Up
+        ret
+; end branch
+
+.death:
     xor a
     ldh [$e9], a
     ldh [hEnemyState], a
@@ -7895,9 +7890,8 @@ alpha_die:
     call earthquakeCheck_farCall
 ret
 
-
-Jump_002_6d99:
-jr_002_6d99:
+; Appearance related branches
+.startFight:
     ld hl, hEnemySpriteType
     ld [hl], $a3
     ld a, $04
@@ -7906,19 +7900,19 @@ jr_002_6d99:
     ld [cutsceneActive], a
     ld a, $02
     ld [$c41c], a
-    ret
+ret
 
-
-Jump_002_6dac:
+.appearanceFaceScreen:
+    ; Clear counter
     xor a
     ld [hl], a
     ldh [hEnemyStunCounter], a
+    ; Screen-facing pose
     ld a, $a1
     ldh [hEnemySpriteType], a
-    ret
+ret
 
-
-Jump_002_6db5:
+.appearanceRise:
     call Call_002_75ec ; Osciallate horizontally
     ; Continue 1 out of 8 frames
     ldh a, [hEnemy_frameCounter]
@@ -7940,18 +7934,20 @@ Jump_002_6db5:
     ld [hl], a
     inc a
     ld [$c41c], a
-jr jr_002_6d99
+jr .startFight
 
 
-
-Call_002_6dd4: ; Shared with gammas?
+; BC should contain the YYXX movement vector
+; (each component is in sign-magnitude format)
+metroid_lungeMovement: ; 02:6DD4
     push bc
         ld a, b
         and a
-        jr z, jr_002_6e08
+        jr z, .endIf_A
             ld hl, hEnemyYPos
             bit 7, b
-            jr z, jr_002_6df6
+            jr z, .else_B
+                ; Move up
                 res 7, b
                 ld a, [hl]
                 sub b
@@ -7959,21 +7955,22 @@ Call_002_6dd4: ; Shared with gammas?
                 call enCollision_up.farWide
                 ld a, [en_bgCollisionResult]
                 bit 3, a
-                jr z, jr_002_6e08
+                jr z, .endIf_A
                     ld a, [enemy_yPosMirror]
                     ldh [hEnemyYPos], a
-                    jr jr_002_6e08
-            jr_002_6df6:
+                    jr .endIf_A
+            .else_B:
+                ; Move down
                 ld a, [hl]
                 add b
                 ld [hl], a
                 call enCollision_down.farWide
                 ld a, [en_bgCollisionResult]
                 bit 1, a
-                jr z, jr_002_6e08
+                jr z, .endIf_A
                     ld a, [enemy_yPosMirror]
                     ldh [hEnemyYPos], a
-        jr_002_6e08:
+        .endIf_A:
     pop bc
     
     ld a, c
@@ -7981,7 +7978,8 @@ Call_002_6dd4: ; Shared with gammas?
         ret z
     ld hl, hEnemyXPos
     bit 7, c
-    jr z, jr_002_6e27
+    jr z, .else_C
+        ; Move left
         res 7, c
         ld a, [hl]
         sub c
@@ -7993,7 +7991,8 @@ Call_002_6dd4: ; Shared with gammas?
         ld a, [enemy_xPosMirror]
         ldh [hEnemyXPos], a
         ret
-    jr_002_6e27:
+    .else_C:
+        ; Move right
         ld a, [hl]
         add c
         ld [hl], a
@@ -8006,7 +8005,7 @@ Call_002_6dd4: ; Shared with gammas?
         ret
 ; end proc
 
-Call_002_6e39:
+alpha_animate: ; 02:6E39
     ld hl, hEnemySpriteType
     ld a, [hl]
     xor $07
@@ -8437,10 +8436,10 @@ ret
     ld a, [rDIV]
     and $01
     jr z, .else_E
-        set 0, [hl]
+        set 0, [hl] ; Right
         ret
     .else_E:
-        set 2, [hl]
+        set 2, [hl] ; Left
         ret
 
 ; Horizontal cases
@@ -8480,10 +8479,10 @@ ret
     ld a, [rDIV]
     and $01
     jr z, .else_F
-        set 1, [hl]
+        set 1, [hl] ; Down
         ret
     .else_F:
-        set 3, [hl]
+        set 3, [hl] ; Up
         ret
 ; end branch
 
@@ -8569,7 +8568,7 @@ ret
     cp $0f
     jr nc, .else_J
         call gamma_getSpeedVector_farCall
-        call Call_002_6dd4
+        call metroid_lungeMovement
         ld a, $b0
         ldh [hEnemySpriteType], a
         ret

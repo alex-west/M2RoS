@@ -575,8 +575,8 @@ enemyHeaderPointers:
     dw enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   en6695, enXX,   enXX,   enXX,   enXX,   enXX,   enXX
 
 ;                                         v--- Working address in HRAM 
-;        ______________________________ $FFE3 - Base sprite attributes - not modified during runtime (apparently)
-;       |    ___________________________ $FFE4 - Sprite attributes (flipping, etc.) - modified during runtime
+;        ______________________________ $FFE4 - Base sprite attributes - not modified during runtime (apparently)
+;       |    ___________________________ $FFE5 - Sprite attributes (flipping, etc.) - modified during runtime
 ;       |   |    ________________________ $FFE6 - Stun counter? (dummy value in header)
 ;       |   |   |    _____________________ $FFE7 - General variable (dummy value in header)
 ;       |   |   |   |    __________________ $FFE8 - Upper nybble - directional invulnerability flags, lower nybble - flip related?
@@ -700,9 +700,9 @@ en668A: ; Enemy D8h (gullugg)
 en6695: ; Enemy F8h (missile door)
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_missileDoor
-en66A0: ; Enemy A0h (metroid) ; First Alpha metroid
+en66A0: ; Enemy A0h (hatching alpha metroid)
     db $00,$00,$00,$00,$FF,$00,$00,$00,$05
-    dw enAI_6BB2
+    dw enAI_hatchingAlpha
 en66AB: ; Enemy A4h (alpha metroid)
     db $00,$00,$00,$00,$FF,$00,$00,$00,$05
     dw enAI_alphaMetroid
