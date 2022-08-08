@@ -249,7 +249,8 @@ def zeta_stunCounter = $C46C ; Zeta Metroid stun counter
 ; $FF - Nothing
 ;$C46E: Enemy-Beam collision direction results
 
-;$C46F: Omega Metroid waiting counter of some sort
+def omega_waitCounter = $C46F ; Omega Metroid waiting counter of some sort
+def omega_samusPrevHealth = $C470 ; Samus's previous health value (low byte only)
 
 ;$C471: Metroid touching related variable
 
@@ -257,7 +258,8 @@ def zeta_stunCounter = $C46C ; Zeta Metroid stun counter
 ;$C475: Cleared in $2:4000 - Larva metroid related
 ;
 def enemy_tempSpawnFlag = $C477 ; Spawn flag for child object to be spawned
-;
+
+def omega_chaseTimerIndex = $C478 ; Selects duration of chase timer. Goes from 0,1,2,3,4,0,etc. Screw attack sets this to 3.
 
 ; These two arrays follow the same format, but one is saved and the other is not.
 def enemySpawnFlags = $C500 ;$C500..3F: Filled with FFh by $2:418C. Apparently off-screen enemy bytes for current map

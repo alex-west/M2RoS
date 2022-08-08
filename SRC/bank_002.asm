@@ -9390,13 +9390,13 @@ zeta_animateHurt:
 ret
 
 ;------------------------------------------------------------------------------
-; Omega Metroid ?
-enAI_7631: ; 02:7631
+; Omega Metroid AI
+enAI_omegaMetroid: ; 02:7631
     call enemy_getSamusCollisionResults
     ldh a, [hEnemySpawnFlag]
     cp $06
-        jp z, omega_fireball
-
+        jp z, .fireball
+    ; For omega to stay onscreen
     ld a, [metroid_state]
     and a
         call nz, Call_002_7dc6
@@ -9404,15 +9404,15 @@ enAI_7631: ; 02:7631
     ld hl, omega_stunCounter
     ld a, [hl]
     and a
-        jr z, jr_002_7665
+        jr z, .checkIfHurt
     dec [hl]
-        jr z, jr_002_7660
+        jr z, .stunEnd
     ; Stun animation
     ldh a, [hEnemy_frameCounter]
     and $01
         ret nz
     call enemy_flipSpriteId.now
-    ; Only hit reaction while stunned is screw (?)
+    ; While stunned, only hit reaction is screw attack
     ld a, [$c46d]
     cp $10
         ret nc
@@ -9421,68 +9421,68 @@ enAI_7631: ; 02:7631
 ret
 
 
-jr_002_7660:
+.stunEnd:
     ; Reset sprite type
     ld a, [omega_tempSpriteType]
     ldh [hEnemySpriteType], a
-
-jr_002_7665:
+.checkIfHurt:
+    ; Check if fight has even started
     ld a, [metroid_state]
     and a
-    jp z, Jump_002_78dc
-
+        jp z, .tryStartingFight
+    ; Check for hit reactions
     ld a, [$c46d]
-    cp $20 ; Touch
-        jp nc, omega_touch
+    cp $20 ; Standard action
+        jp nc, .standardAction
     cp $10 ; Screw
-        jr z, omega_screw
+        jr z, .screwReaction
     cp $08 ; Missiles
-        jr z, omega_hurt
-omega_plink:
+        jr z, .hurtReaction
+.plink:
     ld a, $0f
     ld [sfxRequest_square1], a
 ret
 
-omega_screw:
+.screwReaction:
     call metroid_screwReaction
     ld a, $1a
     ld [sfxRequest_square1], a
 ret
 
-omega_hurt:
+.hurtReaction:
     ; Ignore vertical shots
     ld a, [$c46e]
     ld b, a
     ld a, b
     and $03
-        jr z, omega_plink
+        jr z, .plink
     ; Check if hit from front or behind
     ldh a, [hEnemyAttr]
     bit OAMB_XFLIP, a
     jr nz, .else_A
         bit 1, b
-            jr z, omega_oneDamage
-        jr omega_weakPoint
+            jr z, .hurtOneDamage
+        jr .hurtWeakPoint
     .else_A:
         bit 0, b
-            jr z, omega_oneDamage
+            jr z, .hurtOneDamage
 
-    omega_weakPoint:
+    .hurtWeakPoint:
         ; Omega Metroid was hit in the back (do 3x damage)
         ld hl, hEnemyHealth
         ld a, [hl]
         sub $03
-            jr c, omega_death
-            jr z, omega_death
+            jr c, .death
+            jr z, .death
         ld [hl], a
-        ld a, $10
-        jr omega_endBranch
-    omega_oneDamage:
+        ld a, $10 ; Longer stun timer
+        jr .endIf_hurt
+    .hurtOneDamage:
         ld hl, hEnemyHealth
         dec [hl]
-            jr z, omega_death
-        ld a, $03
-    omega_endBranch:
+            jr z, .death
+        ld a, $03 ; Shorter stun timer
+    .endIf_hurt:
 
     ld [omega_stunCounter], a
     ; Save sprite type to temp
@@ -9494,7 +9494,7 @@ omega_hurt:
     ; Noise
     ld a, $09
     ld [sfxRequest_noise], a
-    ; omega knockback
+    ; Apply knockback
     bit 0, b
     jr z, .else_B
         ldh a, [hEnemyXPos]
@@ -9510,24 +9510,29 @@ omega_hurt:
         ret
 ; end branch
 
-omega_death:
+.death:
+    ; Clear variables
     xor a
     ldh [$e9], a
     ldh [hEnemyState], a
-    ld [$c46f], a
-    ld [$c478], a
+    ld [omega_waitCounter], a
+    ld [omega_chaseTimerIndex], a
+    ; Prep explosion
     ld a, $80
     ld [metroid_state], a
     ld a, $e2
     ldh [hEnemySpriteType], a
+    ; Play noise
     ld a, $0e
     ld [sfxRequest_noise], a
     ; Play metroid killed jingle
     ld a, $0f
     ld [songRequest], a
+    ; Adjust flags
     ld a, $02
     ld [metroid_fightActive], a
     ldh [hEnemySpawnFlag], a
+    ; Adjust Metroid counts
     ld hl, metroidCountReal
     ld a, [hl]
     sub $01
@@ -9538,16 +9543,17 @@ omega_death:
     sub $01
     daa
     ld [hl], a
+    ; Shuffle counter and check for earthquake
     ld a, $c0
     ld [metroidCountShuffleTimer], a
     call earthquakeCheck_farCall
-    ret
+ret
 
-
-omega_touch:
+.standardAction:
     ldh a, [$e8]
     inc a
-        jr z, jr_002_7787
+        jr z, .handleStates
+    ; Screw knockback stuff
     call Call_002_6e7f
     ld hl, $c471
     ld a, [hl]
@@ -9557,9 +9563,9 @@ omega_touch:
     ld a, $ff
     ldh [$e8], a
     xor a
-    ld [$c46f], a
+    ld [omega_waitCounter], a
     ld a, $03
-    ld [$c478], a
+    ld [omega_chaseTimerIndex], a
     ld a, $10
     ldh [$e7], a
     ld a, $10
@@ -9572,97 +9578,102 @@ omega_touch:
     ld [metroid_state], a
 ret
 
-
-jr_002_7752:
+; Wait before returning to state 1
+.state7:
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $38
-    jr z, jr_002_775f
-        call Call_002_7a42
+    jr z, .else_C
+        call .animateTail
         ret
-    jr_002_775f:
+    .else_C:
         ld [hl], $00
         ld a, $01
         ld [metroid_state], a
         ret
+; end state 7
 
-
-jr_002_7767:
+; Return to state 1
+.state4:
+    ; Reset counters
     xor a
     ldh [$e9], a
     ldh [hEnemyState], a
     ld a, $01
     ld [metroid_state], a
-
-jr_002_7771:
+  .closeMouth:
     ld a, $bf
     ldh [hEnemySpriteType], a
     ret
+; end state 4
 
-
-jr_002_7776:
+.animateState2:
+    ; Animate tail for several frames before facing Samus
     ld hl, hEnemyState
     ld a, [hl]
     cp $24
-    jr z, jr_002_7783
+    jr z, .else_D
         inc [hl]
-        call Call_002_7a42
+        call .animateTail
         ret
-    jr_002_7783:
-        call omega_faceSamus
+    .else_D:
+        call .faceSamus
         ret
+; end proc
 
-
-jr_002_7787:
+.handleStates:
     ld a, [metroid_state]
-    cp $05
-        jr z, jr_002_77bc
-    cp $06
-        jr z, jr_002_7800
-    cp $07
-        jr z, jr_002_7752
+    cp $05 ; Chase Samus
+        jr z, .state5
+    cp $06 ; Move up and forwards
+        jr z, .state6
+    cp $07 ; Wait before returning to state 1
+        jr z, .state7
 
-    call Call_002_79a8
+    call .selectChaseTimer ; Sets metroid_state to 5 when omega_waitCounter expires
     ld a, [metroid_state]
-    cp $04
-        jr z, jr_002_7767
-    dec a
-        jp z, Jump_002_7824
+    cp $04 ; Prep state 1
+        jr z, .state4
+    dec a ; Shoot fireball
+        jp z, .state1
 
+; State 2 - Idle while fireballs are onscreen (can be preempted by .selectChaseTimer)
+;  (note: state 3 appears to be unused for Omega Metroids, while state 0 is used for setup)
+    ; Set state to 1 once there are no more fireballs
     ld a, [numEnemies]
     dec a
-        jr z, jr_002_7767
-
+        jr z, .state4
+    ; Wait some frames before using .animateState2
     ld b, $18
     ld hl, $ffe9
     ld a, [hl]
     cp b
-        jr z, jr_002_7776
-
+        jr z, .animateState2
+    ; Increment timer in the meantime before closing mouth
     inc [hl]
     ld a, [hl]
     cp b
-        jr z, jr_002_7771
-
+        jr z, .closeMouth
+    ; Wiggle tail with mouth open in the mean time
     call enemy_flipSpriteId_2Bits.twoFrame
 ret
 
-
-jr_002_77bc:
+; Chase Samus
+.state5:
+    ; Stop chasing once time has depleted
     ld hl, $ffe7
     dec [hl]
-        jr z, jr_002_77f3
-
-    ld a, [$c478]
+        jr z, .moveToState6
+    ; Force chase if index is 4
+    ld a, [omega_chaseTimerIndex]
     cp $04
-        jr z, jr_002_77d0
-
+        jr z, .chaseSamus
+    ; If crouching, skip/stop chasing
     ld a, [samusPose]
     cp pose_crouch
-        jr z, jr_002_77f3
-
-jr_002_77d0:
+        jr z, .moveToState6
+.chaseSamus:
     ; Chase Samus
     ld b, $02
     ld de, $2000
@@ -9670,22 +9681,21 @@ jr_002_77d0:
     ld hl, hEnemyXPos
     ld a, [samus_onscreenXPos]
     sub [hl]
-    jr c, jr_002_77eb
+    jr c, .else_E
         cp $10
-        jr c, jr_002_77f2
+        jr c, .endIf_E
             ld a, OAMF_XFLIP
             ldh [hEnemyAttr], a
-            jr jr_002_77f2
-    jr_002_77eb:
+            jr .endIf_E
+    .else_E:
         cp $f0
-        jr nc, jr_002_77f2
+        jr nc, .endIf_E
             xor a
             ldh [hEnemyAttr], a
-    jr_002_77f2:
+    .endIf_E:
 ret
 
-
-jr_002_77f3:
+.moveToState6:
     ld a, $06
     ld [metroid_state], a
     xor a
@@ -9693,25 +9703,30 @@ jr_002_77f3:
     ldh [$e9], a
     ldh [hEnemyState], a
 ret
+; end of state 5
 
-
-jr_002_7800:
+; Move up and forwards
+.state6:
+    ; Move upwards
     ld hl, hEnemyYPos
     call enemy_accelBackwards
+    ; Check y pos
     ld a, [hl+]
     cp $34
-    jr c, jr_002_7817
+    jr c, .else_F
+        ; Move forwards
         ldh a, [hEnemyAttr]
         bit OAMB_XFLIP, a
-        jr nz, jr_002_7814
+        jr nz, .else_G
             dec [hl]
             dec [hl]
             ret
-        jr_002_7814:
+        .else_G:
             inc [hl]
             inc [hl]
             ret
-    jr_002_7817:
+    .else_F:
+        ; Next state
         ld a, $07
         ld [metroid_state], a
         xor a
@@ -9719,18 +9734,19 @@ jr_002_7800:
         ld a, $bf
         ldh [hEnemySpriteType], a
         ret
+; end state 6
 
-
-Jump_002_7824:
-    call omega_faceSamus
+.state1: ; State 1 - Shoot fireball
+    call .faceSamus
+    ; Wait a few frames
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $10
-    ret nz
-
+        ret nz
+    ; Reset counter
     ld [hl], $00
-    call Call_002_7922
+    call .spawnFireball
     ld a, $02
     ld [metroid_state], a
     ld a, $05
@@ -9739,32 +9755,35 @@ Jump_002_7824:
     ldh [hEnemySpriteType], a
     ld a, $15
     ld [sfxRequest_noise], a
-    ret
+ret
 
-
-omega_fireball: ; Omega fireball?
+; start fireball code
+.fireball: ; Omega fireball?
     ld a, [metroid_fightActive]
     cp $02
-        jp z, Jump_002_78c8
+        jp z, .fireballDelete
 
     ldh a, [hEnemySpriteType]
     cp $c8
-        jr nc, jr_002_78b9
+        jr nc, .fireballExplode
 
+    ; Get angle if we haven't yet
     ld hl, $ffe9
     ld a, [hl]
     and a
-    jr nz, jr_002_7861
+    jr nz, .endIf_H
         ld [hl], $01
         call gamma_getAngle_farCall
-    jr_002_7861:
+    .endIf_H:
 
+    ; Get the speed vector for the angle and move
     call gamma_getSpeedVector_farCall
+    ; Vertical movement and collision check
     ld a, b
     and a
-    jr z, jr_002_7890
+    jr z, .endIf_I
         bit 7, b
-        jr z, jr_002_7880
+        jr z, .else_J
             res 7, b
             ld hl, hEnemyYPos
             ld a, [hl]
@@ -9773,40 +9792,39 @@ omega_fireball: ; Omega fireball?
             call enCollision_up.nearSmall
             ld a, [en_bgCollisionResult]
             bit 3, a
-                jr nz, jr_002_78a9
-            jr jr_002_7890
-        jr_002_7880:
-    
-        ld hl, hEnemyYPos
-        ld a, [hl]
-        add b
-        ld [hl], a
-        call enCollision_down.nearSmall
-        ld a, [en_bgCollisionResult]
-        bit 1, a
-            jr nz, jr_002_78a9
-    jr_002_7890:
-
+                jr nz, .fireballHit
+            jr .endIf_I
+        .else_J:
+            ld hl, hEnemyYPos
+            ld a, [hl]
+            add b
+            ld [hl], a
+            call enCollision_down.nearSmall
+            ld a, [en_bgCollisionResult]
+            bit 1, a
+                jr nz, .fireballHit
+    .endIf_I:
+    ; Horizontal movement
     ld hl, hEnemyXPos
     bit 7, c
-    jr z, jr_002_789d
+    jr z, .else_K
         res 7, c
         ld a, [hl]
         sub c
-        jr jr_002_789f
-    jr_002_789d:
+        jr .endIf_K
+    .else_K:
         ld a, [hl]
         add c
-    jr_002_789f:
+    .endIf_K:
 
     ld [hl], a
     ldh a, [hEnemy_frameCounter]
     and $03
         ret nz
     call enemy_flipSpriteId.now
-    ret
+ret
 
-jr_002_78a9:
+.fireballHit:
     ld a, [en_bgCollisionResult]
     ld [$c42d], a
     xor a
@@ -9814,23 +9832,20 @@ jr_002_78a9:
     ldh [hEnemyState], a
     ld a, $c8
     ldh [hEnemySpriteType], a
-    ret
+ret
 
-
-jr_002_78b9: ; Animate fireball explosion
+.fireballExplode: ; Animate fireball explosion
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $cc
-        jr z, jr_002_78c8
+        jr z, .fireballDelete
     ldh a, [hEnemy_frameCounter]
     and $01
         ret nz
     inc [hl]
 ret
 
-
-Jump_002_78c8:
-jr_002_78c8:
+.fireballDelete:
     call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
@@ -9841,58 +9856,57 @@ jr_002_78c8:
     ld a, $04
     ld [metroid_state], a
 ret
+; end fireball code
 
-
-Jump_002_78dc:
+.tryStartingFight:
     ldh a, [hEnemySpawnFlag]
     cp $04
-    jp z, Jump_002_7950
-
+        jp z, .quickIntro
+    ; Check if cutscene active
     ld a, [cutsceneActive]
     and a
-    jr nz, jr_002_790c
+    jr nz, .endIf_L
+        ; Check if Samus is in range
+        ld hl, hEnemyXPos
+        ld a, [hl]
+        add $10
+        ld b, a
+        ld a, [samus_onscreenXPos]
+        add $10
+        sub b
+        jr nc, .endIf_M
+            cpl
+            inc a
+        .endIf_M:
+        cp $50
+            ret nc
+        ; Activate cutscene
+        ld a, $01
+        ld [cutsceneActive], a
+        ; Trigger Metroid fight music
+        ld a, $0c
+        ld [songRequest], a
+        ld a, $01
+        ld [metroid_fightActive], a
+    .endIf_L:
 
-    ; Check if Samus is in range
-    ld hl, hEnemyXPos
-    ld a, [hl]
-    add $10
-    ld b, a
-    ld a, [samus_onscreenXPos]
-    add $10
-    sub b
-    jr nc, jr_002_78fa
-        cpl
-        inc a
-    jr_002_78fa:
-    cp $50
-        ret nc
-
-    ld a, $01
-    ld [cutsceneActive], a
-    ; Trigger Metroid fight music
-    ld a, $0c
-    ld [songRequest], a
-    ld a, $01
-    ld [metroid_fightActive], a
-
-jr_002_790c:
+    ; Continue every 4th frame
     ldh a, [hEnemy_frameCounter]
     and $03
-    ret nz
-
+        ret nz
+    ; Wait several frames to start fight
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $18
-    jp z, Jump_002_798b
-
+        jp z, .startFight
+    ; Switch between zeta and omega sprites
     ldh a, [hEnemySpriteType]
     xor $0c
     ldh [hEnemySpriteType], a
-    ret
+ret
 
-
-Call_002_7922:
+.spawnFireball:
     call findFirstEmptyEnemySlot_longJump
     xor a
     ld [hl+], a
@@ -9901,16 +9915,16 @@ Call_002_7922:
     ldh a, [hEnemyAttr]
     ld b, a
     bit OAMB_XFLIP, a
-    jr nz, jr_002_7938
+    jr nz, .else_N
         ldh a, [hEnemyXPos]
         sub $10
         ld [hl+], a
-        jr jr_002_793d
-    jr_002_7938:
+        jr .endIf_N
+    .else_N:
         ldh a, [hEnemyXPos]
         add $10
         ld [hl+], a
-    jr_002_793d:
+    .endIf_N:
 
     ld a, $c6
     ld [hl+], a
@@ -9918,34 +9932,34 @@ Call_002_7922:
     ld [hl+], a
     ld a, b
     ld [hl+], a
-    ld de, header_799E
+    ld de, .fireballHeader
     ld a, $06
     ld [enemy_tempSpawnFlag], a
     call enemy_spawnObject.shortHeader
-    ret
+ret
 
-
-Jump_002_7950:
+.quickIntro:
     ld a, $bf
     ldh [hEnemySpriteType], a
     ; Check if Samus is in range
     ld hl, hEnemyXPos
     ld a, [samus_onscreenXPos]
     sub [hl]
-    jr nc, jr_002_795f
+    jr nc, .endIf_O
         cpl
         inc a
-    jr_002_795f:
+    .endIf_O:
     cp $50
         ret nc
-
+    ; Init variables
     xor a
     ldh [$e7], a
     ldh [$e9], a
     ldh [hEnemyState], a
     ld [omega_stunCounter], a
-    ld [$c46f], a
-    ld [$c478], a
+    ld [omega_waitCounter], a
+    ld [omega_chaseTimerIndex], a
+    ; Increment state to 1
     inc a
     ld [metroid_state], a
     ld a, $01
@@ -9960,150 +9974,159 @@ Jump_002_7950:
     ld [songRequest], a
 ret
 
-
-Jump_002_798b:
+.startFight:
+    ; Clear counter
     xor a
     ld [hl], a
     ld a, $bf
     ldh [hEnemySpriteType], a
     xor a
     ld [cutsceneActive], a
+    ; Increment state to 1
     inc a
     ld [metroid_state], a
     ld a, $04
     ldh [hEnemySpawnFlag], a
-    ret
+ret
 
-header_799E:
+.fireballHeader: ; 02:799E
     db $00, $00, $ff, $00, $00, $00, $ff, $08
-    dw enAI_7631
+    dw enAI_omegaMetroid
 
-Call_002_79a8:
-    ld hl, $c46f
+.selectChaseTimer: ; 02:79A8
+    ld hl, omega_waitCounter
     ld a, [hl]
     cp $40
-    jr z, jr_002_79b2
+    jr z, .endIf_P
         inc [hl]
         ret
-    jr_002_79b2:
+    .endIf_P:
     ld [hl], $00 ; Loop back to zero
     
-    ; If Samus has lost enough health since last time this was called, do something?
+    ; If Samus has lost enough health since last time this was called, reset timer index to zero
     ld hl, samusCurHealthLow
-    ld a, [$c470]
+    ld a, [omega_samusPrevHealth]
     sub [hl]
     cp $30
-        jr nc, .case_default
+        jr nc, .timerCase_default
 
-    ld hl, $c478
+    ld hl, omega_chaseTimerIndex
     inc [hl]
     ld a, [hl]
     dec a
-        jr z, .case_1
+        jr z, .timerCase_1
     dec a
-        jr z, .case_2
+        jr z, .timerCase_2
     dec a
-        jr z, .case_3
+        jr z, .timerCase_3
     dec a
-        jr z, .case_4
+        jr z, .timerCase_4
 
-.case_default:
-    xor a
-    ld [$c478], a
-    ld a, $0c
-        jr .exit
-.case_1:
-    ld a, $14
-        jr .exit
-.case_2:
-    ld a, $28
-        jr .exit
-.case_3:
-    ld a, $40
-        jr .exit
-.case_4:
-    ld a, $60
-.exit:
+    .timerCase_default:
+        xor a
+        ld [omega_chaseTimerIndex], a
+        ld a, $0c
+        jr .endTimerCases
+    .timerCase_1:
+        ld a, $14
+        jr .endTimerCases
+    .timerCase_2:
+        ld a, $28
+        jr .endTimerCases
+    .timerCase_3:
+        ld a, $40
+        jr .endTimerCases
+    .timerCase_4:
+        ld a, $60
+.endTimerCases:
+    ; Load chase timer value
     ldh [$e7], a
+    ; Update health
     ld a, [samusCurHealthLow]
-    ld [$c470], a
+    ld [omega_samusPrevHealth], a
+    ; Initialize chasing vector
     ld a, $10
     ldh [$e9], a
     ld a, $10
     ldh [hEnemyState], a
+    ; Set sprite type, SFX, and state
     ld a, $c3
     ldh [hEnemySpriteType], a
     ld a, $2d
     ld [sfxRequest_square1], a
     ld a, $05
     ld [metroid_state], a
-    pop af
+; Force the parent function to return as well
+pop af
 ret
 
-; 02:7A06 - Unused?
+.unusedProc: ; 02:7A06 - Unused?
     ld b, $05
     ld de, hEnemyYPos
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     dec a
-        jr z, jr_002_7a1d
+        jr z, .unusedCase_1 ; Up-left
     dec a
-        jr z, jr_002_7a25
+        jr z, .unusedCase_2 ; Up-right
     dec a
-        jr z, jr_002_7a2d
+        jr z, .unusedCase_3 ; Down-right
     ld [hl], $00
-        jr jr_002_7a20
+        jr .unusedCase_4 ; Left
 
-jr_002_7a1d:
+.unusedCase_1: ; Move up
     ld a, [de]
     sub b
     ld [de], a
-jr_002_7a20:
+.unusedCase_4: ; Move left
     inc e
     ld a, [de]
     sub b
     ld [de], a
     ret
 
-jr_002_7a25:
+.unusedCase_2: ; Move up
     ld a, [de]
     sub b
     ld [de], a
-jr_002_7a28:
+.unusedRightBranch: ; Move right
     inc e
     ld a, [de]
     add b
     ld [de], a
     ret
 
-jr_002_7a2d:
+.unusedCase_3: ; Move down
     ld a, [de]
     add b
     ld [de], a
-    jr jr_002_7a28
-; end unused?
+    jr .unusedRightBranch
+; end unused proc
 
-omega_faceSamus: ; 02:7A32
+.faceSamus: ; 02:7A32
+    ; Compare x positions
     ld hl, hEnemyXPos
     ld a, [samus_onscreenXPos]
     sub [hl]
-    jr nc, jr_002_7a3e
+    jr nc, .else_Q
         xor a
-        jr jr_002_7a40
-    jr_002_7a3e:
+        jr .endIf_Q
+    .else_Q:
         ld a, OAMF_XFLIP
-    jr_002_7a40:
-
+    .endIf_Q:
     ldh [hEnemyAttr], a
+; fallthrough to next proc (!)
 
-Call_002_7a42:
+.animateTail: ; 02:7A42
+    ; Continue every 4th frame
     ldh a, [hEnemy_frameCounter]
     and $03
         ret nz
+    ; Oscillate between two values
     ld hl, hEnemySpriteType
     ld a, [hl]
-    xor $7f ; Osciallate between $BF and $C0
+    xor $BF^$C0 ; $7f - Osciallates between $BF and $C0
     ld [hl], a
 ret
 
