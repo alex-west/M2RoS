@@ -15,8 +15,8 @@ Call_002_4000: ; 02:4000
     jr z, jr_002_4029
         ld e, a
         xor a
-        ld [$c474], a
-        ld [$c475], a
+        ld [larva_bombState], a
+        ld [larva_latchState], a
         ld [$d09e], a
         ld a, $ff
         ld hl, $c466
@@ -7532,14 +7532,14 @@ enemy_flipVertical: ; Procedure has 3 entry points
 ret    
 
 ;------------------------------------------------------------------------------
-; Baby egg ? (with musical stinger moment)
-; - TODO: Verify whether this is a visible sprite or an invisible trigger
-enAI_6B83: ; 02:6B83
+; Metroid stinger event
+enAI_metroidStinger: ; 02:6B83
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $8a
-    jr z, jr_002_6ba6
+    jr z, .else
+        ; Only do this stuff on the first frame
         dec a
             ret nz
         ; Increment displayed metroid count
@@ -7554,19 +7554,19 @@ enAI_6B83: ; 02:6B83
         ; Play metroid hive song with intro
         ld a, $1f
         ld [songRequest], a
-        
+        ; Freeze Samus
         ld a, $01
         ld [cutsceneActive], a
         ret
-    jr_002_6ba6:
-    ; Delete self
-    call Call_000_3ca6
-    ld a, $02
-    ldh [hEnemySpawnFlag], a
-    
-    xor a
-    ld [cutsceneActive], a
-ret
+    .else:
+        ; Delete self
+        call Call_000_3ca6
+        ld a, $02
+        ldh [hEnemySpawnFlag], a
+        ; Unfreeze Samus
+        xor a
+        ld [cutsceneActive], a
+        ret
 
 ;------------------------------------------------------------------------------
 ; Hatching Alpha Metroid AI
@@ -7581,7 +7581,7 @@ enAI_hatchingAlpha: ; 02:6BB2
         dec [hl]
         jr z, .else_B
             ; Stunned case
-            call Call_002_6ef0 ; Knockback
+            call metroid_missileKnockback ; Knockback
             call enemy_toggleVisibility ; Blink
             ld a, [$c46d]
             cp $10
@@ -7721,8 +7721,8 @@ ret
     ldh a, [$e8]
     inc a
     jr z, .endIf_B
-        call Call_002_6e7f ; Screw attack knockback?
-        ld hl, $c471
+        call metroid_screwKnockback ; Screw attack knockback?
+        ld hl, metroid_screwKnockbackDone
         ld a, [hl]
         and a
             ret z
@@ -8016,6 +8016,7 @@ ret
 ;--------------------------------------
 ; Common metroid routines
 
+; Determine direction of screw attack knockback
 metroid_screwReaction: ; 02:6E41
     ; Clear D and E
     ld d, $00
@@ -8025,79 +8026,88 @@ metroid_screwReaction: ; 02:6E41
     ld hl, hEnemyYPos
     ld a, [samus_onscreenYPos]
     sub [hl]
-    jr nc, jr_002_6e50
+    jr nc, .endIf_A
         cpl
         inc a
         inc e
-    jr_002_6e50:
+    .endIf_A:
+    ; Store difference in B
+    ld b, a
 
     ; Get absolute value of X distance between Samus and metroid
     ; (set direction in D)
-    ld b, a
     inc l
     ld a, [samus_onscreenXPos]
     sub [hl]
-    jr nc, jr_002_6e5b
+    jr nc, .endIf_B
         cpl
         inc a
         inc d
-    jr_002_6e5b:
-
+    .endIf_B:
+    ; Store difference in C
     ld c, a
+
+    ; Check if X or Y difference is greater
     cp b
-        jr c, jr_002_6e73
+        jr c, .setVertical
+
+    ; Check horizontal direction
     ld a, d
     and a
-        jr nz, jr_002_6e70
+        jr nz, .setRight
+    ld a, $02 ; Left
 
-    ld a, $02
-
-jr_002_6e65:
+.exit:
     ldh [$e8], a
     xor a
     ldh [$e9], a
     ldh [hEnemyState], a
-    call Call_002_6e7f
-    ret
+    call metroid_screwKnockback
+ret
 
-jr_002_6e70:
-    xor a
-    jr jr_002_6e65
+.setRight:
+    xor a ; Right
+    jr .exit
 
-jr_002_6e73:
+.setVertical:
+    ; Check vertical direction
     ld a, e
     and a
-    jr nz, jr_002_6e7b
-        ld a, $03
-        jr jr_002_6e65
-    jr_002_6e7b:
-    
-    ld a, $01
-    jr jr_002_6e65
+    jr nz, .else_C
+        ld a, $03 ; Up
+        jr .exit
+    .else_C:
+        ld a, $01 ; Down
+        jr .exit
 ; End proc
 
 
-Call_002_6e7f: ; Screw attack knockback ?
+; Screw attack knockback routine
+metroid_screwKnockback: ; 02:6E7F
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $06
-    jr nz, jr_002_6e8e
+    jr nz, .endIf
         ld a, $01
-        ld [$c471], a
+        ld [metroid_screwKnockbackDone], a
         ret
-    jr_002_6e8e:
+    .endIf:
 
     ld hl, hEnemyXPos
     ldh a, [$e8]
-    and a
-        jr z, jr_002_6eca
-    cp $02
-        jr z, jr_002_6eb4
-    dec l
-    dec a
-        jr z, jr_002_6edd
+    ; Horizontal cases
+    and a ; Case 0
+        jr z, .moveRight
+    cp $02 ; Case 2
+        jr z, .moveLeft
+    dec l ; yPos
+    ; Vertical cases
+    dec a ; Case 1
+        jr z, .moveDown
+    ; Case 3 - moveUp
 
+; Move up
     ld a, [hl]
     sub $05
     cp $10
@@ -8109,10 +8119,9 @@ Call_002_6e7f: ; Screw attack knockback ?
         ret z
     ld a, [enemy_yPosMirror]
     ldh [hEnemyYPos], a
-    ret
+ret
 
-
-jr_002_6eb4:
+.moveLeft:
     ld a, [hl]
     sub $05
     cp $10
@@ -8126,8 +8135,7 @@ jr_002_6eb4:
     ldh [hEnemyXPos], a
 ret
 
-
-jr_002_6eca:
+.moveRight:
     ld a, [hl]
     add $05
     ld [hl], a
@@ -8139,7 +8147,7 @@ jr_002_6eca:
     ldh [hEnemyXPos], a
 ret
 
-jr_002_6edd:
+.moveDown:
     ld a, [hl]
     add $05
     ld [hl], a
@@ -8153,38 +8161,44 @@ ret
 ; end proc
 
 
-Call_002_6ef0: ; Alpha/Gamma missile knockback
+; Alpha/Gamma missile knockback
+metroid_missileKnockback: ; 02:6EF0
+    ; Vertical movement
     ld hl, hEnemyYPos
     ldh a, [$e8]
     bit 1, a
-    jr nz, jr_002_6f11
+    jr nz, .else_A
         bit 3, a
-        jr z, jr_002_6f23
-            call Call_002_6f53
+        jr z, .endIf_A
+            ; Move up
+            call .moveBack
             call enCollision_up.farWide
             ld a, [en_bgCollisionResult]
             bit 3, a
-            jr z, jr_002_6f23
+            jr z, .endIf_A
                 ld a, [enemy_yPosMirror]
                 ldh [hEnemyYPos], a
-                jr jr_002_6f23
-    jr_002_6f11:
-        call Call_002_6f5b
+                jr .endIf_A
+    .else_A:
+        ; Move down
+        call .moveForwards
         call enCollision_down.farWide
         ld a, [en_bgCollisionResult]
         bit 1, a
-        jr z, jr_002_6f23
+        jr z, .endIf_A
             ld a, [enemy_yPosMirror]
             ldh [hEnemyYPos], a
-    jr_002_6f23:
+    .endIf_A:
 
+    ; Horizontal movement
     ld hl, hEnemyXPos
     ldh a, [$e8]
     bit 0, a
-    jr nz, jr_002_6f41
+    jr nz, .else_B
         bit 2, a
             ret z
-        call Call_002_6f53
+        ; Move left
+        call .moveBack
         call enCollision_left.farWide
         ld a, [en_bgCollisionResult]
         bit 2, a
@@ -8192,8 +8206,9 @@ Call_002_6ef0: ; Alpha/Gamma missile knockback
         ld a, [enemy_xPosMirror]
         ldh [hEnemyXPos], a
         ret
-    jr_002_6f41:
-        call Call_002_6f5b
+    .else_B:
+        ; Move right
+        call .moveForwards
         call enCollision_right.farWide
         ld a, [en_bgCollisionResult]
         bit 0, a
@@ -8201,9 +8216,10 @@ Call_002_6ef0: ; Alpha/Gamma missile knockback
         ld a, [enemy_xPosMirror]
         ldh [hEnemyXPos], a
         ret
+; end proc
 
-
-Call_002_6f53: ; Back
+; Subroutines to the above
+.moveBack: ; Back
     ld a, [hl]
     sub $04
     cp $10
@@ -8211,8 +8227,7 @@ Call_002_6f53: ; Back
     ld [hl], a
 ret
 
-
-Call_002_6f5b: ; Forwards
+.moveForwards: ; Forwards
     ld a, [hl]
     add $04
     ld [hl], a
@@ -8229,7 +8244,7 @@ enAI_gammaMetroid: ; 02:6F60
     dec [hl]
         jr z, .stunEnd
     ; Stunned case
-    call Call_002_6ef0 ; Knockback
+    call metroid_missileKnockback ; Knockback
     call enemy_toggleVisibility ; Blink
     ; When stunned, only process screw attack collision
     ld a, [$c46d]
@@ -8525,8 +8540,8 @@ ret
     ldh a, [$e8]
     inc a
     jr z, .endIf_G
-        call Call_002_6e7f
-        ld hl, $c471
+        call metroid_screwKnockback
+        ld hl, metroid_screwKnockbackDone
         ld a, [hl]
         and a
             ret z
@@ -8728,16 +8743,17 @@ enemy_spawnObject:
     inc [hl]
 ret
 
-; 02:7269 - Unused?
+; Unused partner function to enemy_createLinkForChildObject
+enemy_getAddressOfParentObject: ; 02:7269 - Unused
     ld h, $c6
     ldh a, [hEnemySpawnFlag]
     bit 4, a
-    jr z, jr_002_7274
+    jr z, .endIf
         sub $10
         inc h
-    jr_002_7274:
-        ld l, a
-        ret
+    .endIf:
+    ld l, a
+ret
 
 ;------------------------------------------------------------------------------
 ; Zeta Metroid AI
@@ -8881,8 +8897,8 @@ jr .standardAction
     ldh a, [$e8]
     inc a
     jr z, .endIf_C
-        call Call_002_6e7f
-        ld hl, $c471
+        call metroid_screwKnockback
+        ld hl, metroid_screwKnockbackDone
         ld a, [hl]
         and a
             ret z
@@ -9554,8 +9570,8 @@ ret
     inc a
         jr z, .handleStates
     ; Screw knockback stuff
-    call Call_002_6e7f
-    ld hl, $c471
+    call metroid_screwKnockback
+    ld hl, metroid_screwKnockbackDone
     ld a, [hl]
     and a
         ret z
@@ -10060,7 +10076,7 @@ ret
 pop af
 ret
 
-.unusedProc: ; 02:7A06 - Unused?
+.unusedProc: ; 02:7A06 - Unused movement proc
     ld b, $05
     ld de, hEnemyYPos
     ld hl, $ffe9
@@ -10131,53 +10147,55 @@ ret
 ret
 
 ;------------------------------------------------------------------------------
-; Larval Metroid?
-enAI_7A4F: ; 02:7A4F
+; Standard (larval) Metroid AI
+enAI_normalMetroid: ; 02:7A4F
     call enemy_getSamusCollisionResults
-    ; Check if latched?
+    ; Check if latched
     ldh a, [$e7]
     and a
-        jr z, jr_002_7ac0 ; Not latched
+        jr z, .unlatchedActions ; Not latched
 
-    call larva_animate
-    ld a, [$c475]
-    and a
-        jr z, jr_002_7ab0
-    dec a
-        jr z, jr_002_7a71
-
-    call larva_stayAttached
+; Latched
+    call .animate
+    ld a, [larva_latchState]
+    and a ; State 0
+        jr z, .restart
+    dec a ; State 1
+        jr z, .unlatch
+; State 2
+    call .stayAttached
     ; Unlatch if bombed
     ld a, [$c46d]
     cp $09
         ret nz
-    ld hl, $c475
+    ld hl, larva_latchState
     dec [hl]
 ret
 
-
-jr_002_7a71:
+.unlatch:
+    ; Return to normal floating state after a few frames
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $18
-        jr z, jr_002_7ab0
-
+        jr z, .restart
+    ; Set bomb state to prevent erroneous relatching by other metroids
     ld a, $02
-    ld [$c474], a
+    ld [larva_bombState], a
+    ; Move up and check collision
     ldh a, [hEnemyYPos]
     sub $03
     cp $10
-    jr c, jr_002_7a98
+    jr c, .endIf_A
         ldh [hEnemyYPos], a
         call enCollision_up.farWide
         ld a, [en_bgCollisionResult]
         bit 3, a
-        jr z, jr_002_7a98
+        jr z, .endIf_A
             ld a, [enemy_yPosMirror]
             ldh [hEnemyYPos], a
-    jr_002_7a98:
-
+    .endIf_A:
+    ; Move left and check collision
     ldh a, [hEnemyXPos]
     sub $03
     cp $10
@@ -10191,12 +10209,12 @@ jr_002_7a71:
     ldh [hEnemyXPos], a
 ret
 
-
-jr_002_7ab0:
+.restart:
+    ; Clear flags
     xor a
-    ld [$c474], a
+    ld [larva_bombState], a
     ldh [$e7], a
-    ld [$c475], a
+    ld [larva_latchState], a
     ; Reset seek vector
     ld a, $10
     ldh [$e9], a
@@ -10204,75 +10222,80 @@ jr_002_7ab0:
 ret
 
 ; Normal AI (not latched)
-jr_002_7ac0:
-    ld hl, $c473
+.unlatchedActions:
+    ; Hurt animation
+    ld hl, larva_hurtAnimCounter
     ld a, [hl]
     and a
-    jr z, jr_002_7acd
+    jr z, .endIf_B
         dec [hl]
             ret nz
         ld a, $ce
         ldh [hEnemySpriteType], a
-    jr_002_7acd:
+    .endIf_B:
 
     ldh a, [hEnemyIceCounter]
     and a
-        jr z, jr_002_7b43 ; Not frozen
+        jr z, .unfrozenActions ; Not frozen
 
 ; Frozen
     call Call_002_565f ; Generic ice stuff
     ldh a, [hEnemyIceCounter]
     and a
-        jr z, jr_002_7aee
+        jr z, .unfreeze
 
     ; Frozen shot reactions
     ld a, [$c46d]
     cp $20 ; Touch
         ret nc
     cp $08 ; Missiles
-        jr z, larva_hurt
+        jr z, .hurtReaction
     dec a ; $01 - Ice (refreeze)
-        jp z, larva_freeze
+        jp z, .freeze
     ; Plink
     ld a, $0f
     ld [sfxRequest_square1], a
 ret
 
-
-jr_002_7aee:
+.unfreeze:
+    ; Reset chase vector
     ld a, $10
     ldh [$e9], a
     ldh [hEnemyState], a
+    ; Reset sprite type
     ld a, $ce
     ldh [hEnemySpriteType], a
+    ; Reset health
     ld a, $05
     ldh [hEnemyHealth], a
 ret
 
-
-larva_hurt:
+.hurtReaction:
+    ; Take health
     ld hl, hEnemyHealth
     dec [hl]
     ld a, [hl]
     and a
-        jr z, larva_die
+        jr z, .death
+    ; Animate and make sound
     ld a, $03
-    ld [$c473], a
+    ld [larva_hurtAnimCounter], a
     ld a, $cf
     ldh [hEnemySpriteType], a
     ld a, $05
     ld [sfxRequest_noise], a
 ret
 
-
-larva_die:
+.death:
+    ; Clear variables
     xor a
     ldh [$e9], a
-    ld [$c474], a
-    ld [$c475], a
-    
+    ld [larva_bombState], a
+    ld [larva_latchState], a
+    ; Set spawn flag to dead
     ld a, $02
     ldh [hEnemySpawnFlag], a
+    ; Prep explosion
     ld a, $10
     ldh [hEnemyExplosionFlag], a
     ld a, $0d
@@ -10295,49 +10318,50 @@ larva_die:
     call earthquakeCheck_farCall
 ret
 
-
-jr_002_7b43: ; Normal shot reactions
-    call larva_animate
+.unfrozenActions: ; Normal shot reactions
+    call .animate
     ld a, [$c46d]
-    cp $ff ; Nothing
-        jp z, larva_notHit
+    cp $ff ; Not hit
+        jp z, .standardAction
     cp $20 ; Touch
-        jp z, larva_touch
+        jp z, .touchReaction
     cp $10 ; Screw
-        jr z, larva_screwBomb
+        jr z, .screwReaction
     cp $09 ; Bomb
-        jr z, larva_screwBomb
+        jr z, .bombReaction
     dec a ; $01 - Ice
-        jr z, larva_freeze
+        jr z, .freeze
     ld a, $0f
     ld [sfxRequest_square1], a
 ret
 
-larva_touch:
-    ld hl, $c474
+.touchReaction:
+    ld hl, larva_bombState
     ld a, [hl]
     cp $02
-    jr z, jr_002_7b79
+    jr z, .else_C
         cp $01
-        jr z, jr_002_7b75
+        jr z, .endIf_D
             ld a, $01
-            ld [$c474], a
-        jr_002_7b75:
-            ld a, $02
-            jr jr_002_7b7b
-    jr_002_7b79:
-        ld a, $01
-    jr_002_7b7b:
+            ld [larva_bombState], a
+        .endIf_D:
+        ld a, $02 ; Latch state = latched on
+        jr .endIf_C
+    .else_C:
+        ld a, $01 ; Latch state = fly away
+    .endIf_C:
     
-    ld [$c475], a
+    ld [larva_latchState], a
+    ; Latch on
     ld a, $01
     ldh [$e7], a
     xor a
     ldh [$e9], a
 ret
 
-
-larva_screwBomb:
+.screwReaction:
+.bombReaction:
+    ; Set screw knockback timer to zero
     xor a
     ldh [$e9], a
     call metroid_screwReaction
@@ -10345,8 +10369,7 @@ larva_screwBomb:
     ld [sfxRequest_square1], a
 ret
 
-
-larva_freeze:
+.freeze:
     ld a, $1a
     ld [sfxRequest_square1], a
     ld a, $10
@@ -10357,13 +10380,14 @@ larva_freeze:
     ldh [hEnemyStatus], a
 ret
 
-
-larva_notHit:
+.standardAction:
+    ; Check if $FF
     ldh a, [$e8]
     inc a
-    jr z, jr_002_7bc0
-        call Call_002_6e7f ; Screw attack knockback?
-        ld hl, $c471
+    jr z, .else_E
+        ; Screw attack knockback
+        call metroid_screwKnockback
+        ld hl, metroid_screwKnockbackDone
         ld a, [hl]
         and a
             ret z
@@ -10375,16 +10399,16 @@ larva_notHit:
         ld a, $10
         ldh [hEnemyState], a
         ret
-    jr_002_7bc0:
+    .else_E:
         ; Chase Samus
         ld b, $01
         ld de, $1e02
         call enemy_seekSamus_farCall ; Move
         call Call_002_7cdd ; Correct position
         ret
+; end branch
 
-
-larva_animate:
+.animate:
     ldh a, [hEnemy_frameCounter]
     and $03
         ret nz
@@ -10394,8 +10418,7 @@ larva_animate:
     ld [hl], a
 ret
 
-
-larva_stayAttached: ; Stay attached to Samus
+.stayAttached: ; Stay attached to Samus
     ld hl, hEnemyYPos
     ld a, [samus_onscreenYPos]
     ld [hl+], a
@@ -10431,6 +10454,7 @@ ret
     ; Move up
     ld hl, hEnemyYPos
     dec [hl]
+    ; Wait a few frames before proceeding
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
@@ -10455,6 +10479,7 @@ ret
     jr z, .else_A
         call .animateFlash
         ; Check if Samus is in range
+        ; On x axis
         ld hl, hEnemyXPos
         ld a, [samus_onscreenXPos]
         sub [hl]
@@ -10464,7 +10489,7 @@ ret
         .endIf_B:
         cp $18
             ret nc
-            
+        ; On y axis
         dec l
         ld a, [samus_onscreenYPos]
         sub [hl]
@@ -10474,21 +10499,26 @@ ret
         .endIf_C:    
         cp $10
             ret nc
-
+        ; Freeze Samus in place
         ld a, $01
         ld [cutsceneActive], a
         call .animateEggWiggle ; Animate egg hatching
+        ; Increment counter
         ld hl, hEnemyState
         inc [hl]
         ld a, [hl]
         cp $30
             ret nz
+        ; Clear variables
         xor a
         ld [hl-], a
         ld [hl], a
+        ; Unblink
         ldh [hEnemyStunCounter], a
-        ld a, $03 ; State 3
+        ; Set state to egg exploding
+        ld a, $03
         ld [metroid_state], a
+        ; Sure, why not?
         ld hl, metroid_fightActive
         inc [hl]
         ld a, $04
@@ -10509,7 +10539,7 @@ ret
         .endIf_D:
         cp $60
             ret nc
-
+        ; Sure, why not?
         ld a, $01
         ld [metroid_fightActive], a
         ; Set to state 2 (active)

@@ -252,10 +252,12 @@ def zeta_stunCounter = $C46C ; Zeta Metroid stun counter
 def omega_waitCounter = $C46F ; Omega Metroid waiting counter of some sort
 def omega_samusPrevHealth = $C470 ; Samus's previous health value (low byte only)
 
-;$C471: Metroid touching related variable
+metroid_screwKnockbackDone = $C471 ; Set to 1 when a Metroid's screw attack knockback is finished.
+; $C472: Unused?
+def larva_hurtAnimCounter = $C473 ; Set to 3, counts down to 0 before resetting sprite type to $CE
+def larva_bombState = $C474 ; Weird variable. Set to $02 when a metroid is bombed to prevent others from latching on to you for a bit. Set to $01 when touched normally, but never acknowledged elsewhere.
+def larva_latchState = $C475 ; Larva Metroid variable: $02: Latched, $01: Flying away, $00: Unlatch
 
-;$C474: Cleared in $2:4000
-;$C475: Cleared in $2:4000 - Larva metroid related
 ;
 def enemy_tempSpawnFlag = $C477 ; Spawn flag for child object to be spawned
 

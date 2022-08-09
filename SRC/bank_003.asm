@@ -673,9 +673,9 @@ en6627: ; Enemy 6Ah (halzyn)
 en6632: ; Enemy 6Bh (ramulken)
     db $00,$20,$00,$00,$B0,$00,$02,$00,$0C
     dw enAI_hopper
-en663D: ; Enemy 6Dh - Metroid egg
+en663D: ; Enemy 6Dh - Metroid stinger event
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
-    dw enAI_6B83
+    dw enAI_metroidStinger
 en6648: ; Enemy 6Eh (proboscum (flipped))
     db $00,$20,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_65D5
@@ -706,19 +706,19 @@ en66A0: ; Enemy A0h (hatching alpha metroid)
 en66AB: ; Enemy A4h (alpha metroid)
     db $00,$00,$00,$00,$FF,$00,$00,$00,$05
     dw enAI_alphaMetroid
-en66B6: ; Enemy A3h (alpha metroid) ; gamma?
+en66B6: ; Enemy A3h (gamma metroid)
     db $00,$00,$00,$00,$FF,$00,$00,$00,$0A
     dw enAI_gammaMetroid
-en66C1: ; Enemy ADh (gamma metroid) ; zeta?
+en66C1: ; Enemy ADh (zeta metroid)
     db $00,$00,$00,$00,$FF,$00,$00,$00,$14
     dw enAI_zetaMetroid
-en66CC: ; Enemy B3h (zeta metroid hatching) ; omega?
+en66CC: ; Enemy B3h (omega metroid hatching)
     db $00,$00,$00,$00,$FF,$00,$00,$00,$28
     dw enAI_omegaMetroid
-en66D7: ; Enemy CEh (metroid) ; ??
+en66D7: ; Enemy CEh (normal metroid)
     db $00,$00,$00,$00,$FF,$10,$10,$00,$05
-    dw enAI_7A4F
-en66E2: ; Enemy A6h (baby metroid egg)
+    dw enAI_normalMetroid
+en66E2: ; Enemy A6h (baby metroid)
     db $80,$00,$00,$00,$FF,$00,$00,$00,$FF
     dw enAI_babyMetroid
 en66ED: ; Enemy 80h..99h/9Bh/9Dh (item / item orb / enemy/missile refill)
