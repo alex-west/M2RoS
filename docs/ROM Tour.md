@@ -24,12 +24,12 @@ Relocatable: Yes
 - Bomb/beam routines
 - Destructible block routines
 - Enemy metasprite data
-- Misc. routines for Metroid AI
+- Alpha/Gamma Metroid movement routines
 - Title/credits metasprite data
 - Earthquake animation routine
 
 ## Bank 2
-Progress: 50%
+Progress: 60%
 
 Relocatable: Yes
 
@@ -38,16 +38,19 @@ Relocatable: Yes
 - Enemy AI code
 
 ## Bank 3
-Progress: 10%
+Progress: 15%
 
-Relocatable: No
+Relocatable: Yes
 
 - Enemy loading routines
 - Enemy position data 
 - Enemy headers
 - Enemy damage table
 - Enemy hitboxes
+- Metroid seeking routine
+- Enemy Scrolling Routine
 - Queen AI
+- LCD Interrupt Handler
 
 ## Bank 4
 Progress: 1%

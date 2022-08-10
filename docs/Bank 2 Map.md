@@ -4,47 +4,47 @@ TODO: Verify that code in the bank is fully relocatable.
 
 Legend
 - S - Satisfactory (possibly improvable, but low priority)
-- N - Needs Work (comments, label names, etc.)
+- NW - Needs Work (comments, label names, etc.)
 - X - Critical Errors (e.g. pointers need to be converted to labels)
 
 | Code                    | Addr  | Status (comment)               |
 |-------------------------|-------|--------------------------------|
-| Core Enemy Routines     | $4000 | N                              |
+| Core Enemy Routines     | $4000 | NW                             |
 | Enemy BG Collision      | $4608 | S (condense code w/macros)     |
-| Misc. Blob Thrower Code | $4DB1 | N                              |
-| Item Orb AI             | $4DD3 | N (WRAM vars)                  |
+| Misc. Blob Thrower Code | $4DB1 | NW                             |
+| Item Orb AI             | $4DD3 | NW (WRAM vars)                 |
 | Blob Thrower AI         | $4EA1 | S                              |
 | Arachnus AI             | $5109 | S                              |
 | Blob Projectile         | $536F | S                              |
 | Glow Fly AI             | $54A1 | S                              |
 | Rock Icicle AI          | $5542 | S                              |
-| Common Enemy Handler    | $5630 | N (structure, labels)          |
-| Crawler AI (type A)     | $57DE | N                              |
-| Shared Crawler Code     | $5895 | N                              |
-| Crawler AI (type B)     | $58DE | N                              |
-| Skreek Projectile       | $59A6 | N (labels)                     |
-| Skreek AI               | $59C7 | N                              |
+| Common Enemy Handler    | $5630 | NW (structure, labels)         |
+| Crawler AI (type A)     | $57DE | NW                             |
+| Shared Crawler Code     | $5895 | NW                             |
+| Crawler AI (type B)     | $58DE | NW                             |
+| Skreek Projectile       | $59A6 | NW (labels)                    |
+| Skreek AI               | $59C7 | NW                             |
 | Small Bug AI            | $5ABF | S                              |
 | Drivel AI               | $5AE2 | S                              |
 | Drivel Projectile       | $5BD4 | S                              |
 | Senjoo/Shirk AI         | $5C36 | S                              |
 | Gullugg AI              | $5CE0 | S                              |
 | Chute Leech AI          | $5E0B | S                              |
-| Pipe Bug AI             | $5F67 | N                              |
-| Skorp AI (type A)       | $60AB | N                              |
-| Skorp AI (type B)       | $60F8 | N                              |
+| Pipe Bug AI             | $5F67 | NW                             |
+| Skorp AI (type A)       | $60AB | NW                             |
+| Skorp AI (type B)       | $60F8 | NW                             |
 | Autrack AI              | $6145 | S                              |
 | Hornoad/Hopper AI       | $61DB | S                              |
-| Wallfire AI             | $62B4 | N                              |
-| Gunzoo AI               | $638C | N                              |
+| Wallfire AI             | $62B4 | NW                             |
+| Gunzoo AI               | $638C | NW                             |
 | Autom AI                | $6540 | S                              |
-| Proboscum AI            | $65D5 | N (identify states)            |
-| Missile Block AI        | $6622 | N (feels unclear)              |
+| Proboscum AI            | $65D5 | NW (identify states)           |
+| Missile Block AI        | $6622 | NW (feels unclear)             |
 | Moto AI                 | $66F3 | S                              |
 | Halzyn AI               | $6746 | S                              |
-| Common Enemy Code       | $677C | N (purpose unclear)            |
+| Common Enemy Code       | $677C | NW (purpose unclear)           |
 | Septogg AI              | $6841 | S                              |
-| Flitt AI (type A)       | $68A0 | N (identify states)            |
+| Flitt AI (type A)       | $68A0 | NW (identify states)           |
 | Flitt AI (type B)       | $68FC | S                              |
 | Gravitt AI              | $695F | S                              |
 | Missile Door AI         | $6A14 | S                              |
@@ -52,12 +52,12 @@ Legend
 | Accel Backwards         | $6AAE | S                              |
 | Unknown Function        | $6AE1 | S (good enough)                |
 | Common Enemy Routines   | $6B21 | S                              |
-| Baby Egg (?)            | $6B83 | N                              |
-| First Alpha Metroid     | $6BB2 | N                              |
-| Alpha Metroid AI        | $6C44 | N                              |
-| Gamma Metroid AI        | $6F60 | N                              |
-| Zeta Metroid AI         | $7276 | N                              |
-| Omega Metroid AI        | $7631 | N                              |
-| Normal Metroid AI       | $7A4F | N                              |
-| Baby Metroid AI         | $7BE5 | N (closest of the Metroid AIs) |
-| Common Enemy Code       | $7DA0 | N (function names)             |
+| Musical Sting Trigger   | $6B83 | S                              |
+| First Alpha Metroid     | $6BB2 | S                              |
+| Alpha Metroid AI        | $6C44 | S                              |
+| Gamma Metroid AI        | $6F60 | S                              |
+| Zeta Metroid AI         | $7276 | S                              |
+| Omega Metroid AI        | $7631 | S                              |
+| Normal Metroid AI       | $7A4F | S                              |
+| Baby Metroid AI         | $7BE5 | S                              |
+| Common Enemy Code       | $7DA0 | S                              |
