@@ -669,7 +669,7 @@ en661C: ; Enemy 68h (moto)
     dw enAI_moto
 en6627: ; Enemy 6Ah (halzyn)
     db $00,$00,$00,$00,$30,$00,$00,$00,$03
-    dw enAI_6746
+    dw enAI_halzyn
 en6632: ; Enemy 6Bh (ramulken)
     db $00,$20,$00,$00,$B0,$00,$02,$00,$0C
     dw enAI_hopper
@@ -1240,7 +1240,7 @@ queen_initialize: ; 03:6D4A
     ld [queen_pNextStateLow], a
     ld a, h
     ld [queen_pNextStateHigh], a
-    ld a, $17
+    ld a, $17 ; Init fight pt 1 (wait to scream)
     ld [queen_state], a
     ld hl, $c600
     ld bc, $01a0
@@ -2038,20 +2038,21 @@ jr_003_729e:
     jr jr_003_7288
 
 Call_003_72b8:
-    ld a, [$c3c0]
-    and a
+    ld a, [queen_neckControl]
+    and a ; Case 0 - Do nothing
         ret z
-    cp $03
-    jp z, Jump_003_742a
-
+    cp $03 ; Case 3 - Follow body walking
+        jp z, Jump_003_742a
     ld b, a
+    ; Load pointer
     ld a, [queen_pNeckPatternLow]
     ld l, a
     ld a, [queen_pNeckPatternHigh]
     ld h, a
+    
     ld a, b
     cp $01
-    jp nz, Jump_003_73b1
+        jp nz, Jump_003_73b1
 
     ld a, [queen_eatingState]
     cp $10 ; Check if paralyzed
@@ -2097,7 +2098,7 @@ Call_003_72b8:
     xor a
     ld [queen_bodyPalette], a
     call Call_003_7812
-    ld a, $0d
+    ld a, $0d ; Prep Samus in mouth
     ld [queen_state], a
     ret
 
@@ -2122,14 +2123,14 @@ jr_003_7328:
         ld a, [$c3d1]
         and a
         jr nz, jr_003_7355
-            ld a, $04
+            ld a, $04 ; Prep retraction
             ld [queen_state], a
             xor a
             ld [queen_walkStatus], a
-            ld [$c3c1], a
+            ld [queen_neckStatus], a
             jr jr_003_7399
         jr_003_7355:
-            ld a, $0a
+            ld a, $0a ; Spitting Samus out
             ld [queen_state], a
             jr jr_003_7399
     jr_003_735c:
@@ -2172,7 +2173,7 @@ jr_003_7328:
     jr jr_003_7328
 
 Jump_003_7399:
-jr_003_7399:
+jr_003_7399: ; Save neck pattern and exit
     ld a, l
     ld [queen_pNeckPatternLow], a
     ld a, h
@@ -2182,12 +2183,12 @@ jr_003_7399:
 
 jr_003_73a2:
     xor a
-    ld [$c3c0], a
+    ld [queen_neckControl], a
     ld [$c3ba], a
     ld a, $81
-    ld [$c3c1], a
+    ld [queen_neckStatus], a
     dec hl
-    jr jr_003_7399
+    jr jr_003_7399 ; Save Neck Pattern and Exit
 
 Jump_003_73b1:
     ld a, [frameCounter]
@@ -2243,10 +2244,10 @@ Jump_003_73b1:
         jr jr_003_7399
     jr_003_73fc:
         xor a
-        ld [$c3c0], a
+        ld [queen_neckControl], a
         ld [$c3ba], a
         ld a, $82
-        ld [$c3c1], a
+        ld [queen_neckStatus], a
         xor a
         ld [queen_eatingState], a
         ld hl, $c623
@@ -2281,11 +2282,11 @@ Call_003_7436:
         ret nz
     ; Do this is the hit was fatal
     ld a, $81
-    ld [$c3c1], a
-    ld a, $11
+    ld [queen_neckStatus], a
+    ld a, $11 ; Prep death
     ld [queen_state], a
     xor a
-    ld [$c3c0], a
+    ld [queen_neckControl], a
     ld [queen_walkControl], a
     ld [queen_footFrame], a
     ld [queen_headFrameNext], a
@@ -2369,7 +2370,7 @@ jr_003_74cb:
 jr_003_74cf:
     ld a, $02
     ld [queen_headFrameNext], a
-    ld a, $18
+    ld a, $18 ; Init fight part 2 (wait to start)
     ld [queen_state], a
     ld a, [$c3ef]
     and a
@@ -2387,7 +2388,7 @@ func_03_74EA:
         jr nz, jr_003_74ca
     ld a, $01
     ld [queen_headFrameNext], a
-    ld a, $0c
+    ld a, $0c ; Init fight part 3
     ld [queen_state], a
 ret
 
@@ -2445,7 +2446,7 @@ func_03_7519:
     ld [queen_delayTimer], a
     ld a, $10
     ld [$c3e5], a
-    ld a, $15
+    ld a, $15 ; Blobs out
     ld [queen_state], a
     ld [$c3e3], a
     ld de, $fff8
@@ -2817,7 +2818,8 @@ Call_003_7701:
     pop hl
     ret
 
-func_03_772B:
+; Prep Samus in mouth
+func_03_772B: ; 03:772B
     ld a, [queen_pNeckPatternLow]
     ld l, a
     ld a, [queen_pNeckPatternHigh]
@@ -2828,7 +2830,7 @@ func_03_772B:
 
     ld a, $02
     ld [$c3ba], a
-    ld [$c3c0], a
+    ld [queen_neckControl], a
     ld a, [queen_headFrame]
     cp $03
     jr nz, jr_003_7750
@@ -2841,23 +2843,23 @@ func_03_772B:
     ld [queen_headFrameNext], a
     ld [queen_headFrame], a
     xor a
-    ld [$c3c1], a
+    ld [queen_neckStatus], a
     ld a, $ff
     ld [$c620], a
     ld a, $f5
     ld [$c623], a
-    ld a, $0e
+    ld a, $0e ; Samus in mouth (head retracting)
     ld [queen_state], a
     dec hl
     jp Jump_003_7399
 
 func_03_776F:
-    ld a, [$c3c1]
+    ld a, [queen_neckStatus]
     cp $82
         ret nz
     ld a, $03
     ld [queen_eatingState], a
-    ld a, $0f
+    ld a, $0f ; Samus in mouth/stomach (head retracted)
     ld [queen_state], a
     ld a, $01
     ld [queen_footFrame], a
@@ -2878,7 +2880,7 @@ func_03_7785: ; 03:7785 - State $0F
     ld a, $02
     ld [queen_headFrameNext], a
     ld [queen_headFrame], a
-    ld a, $10
+    ld a, $10 ; Spitting Samus out of mouth
     ld [queen_state], a
     ld a, $3e
     ld [queen_stunTimer], a
@@ -2904,7 +2906,7 @@ jr_003_77bd:
 
 jr_003_77c2:
     ld [queen_eatingState], a
-    ld a, $08
+    ld a, $08 ; Queen just bombed
     ld [queen_state], a
     ld a, $93
     ld [queen_bodyPalette], a
@@ -2947,7 +2949,8 @@ jr_003_77fd:
     ld a, $01
     ld [queen_headFrameNext], a
     ld [queen_headFrame], a
-    ld a, $06
+    ; Pointless state assignment given the jump right there
+    ld a, $06 ; Prep walking backwards
     ld [queen_state], a
     ld hl, table_7484 + 6 ;$748a
     jr jr_003_7856 ; Set state to queen_stateTable[6]
@@ -2973,10 +2976,10 @@ func_03_7821:
     inc a
     ld [queen_walkControl], a
     ld a, $03
-    ld [$c3c0], a
+    ld [queen_neckControl], a
     ld a, $02
     ld [queen_footFrame], a
-    ld a, $01
+    ld a, $01 ; Walking forward
     ld [queen_state], a
 ret
 
@@ -3015,9 +3018,9 @@ func_03_7864:
     ld hl, $c620
     ld [hl], $00
     ld a, $01
-    ld [$c3c0], a
+    ld [queen_neckControl], a
     ld [$c3ba], a
-    ld a, $03
+    ld a, $03 ; Extending neck
     ld [queen_state], a
     ld a, [$c3be]
     xor $01
@@ -3087,13 +3090,16 @@ func_03_7864:
     jp Jump_003_7399 ; Store
 ; end proc
 
-func_03_78EE:
-    ld a, [$c3c1]
+; Extending neck
+func_03_78EE: ; 03:78EE
+    ; Wait until status is $81
+    ld a, [queen_neckStatus]
     cp $81
         ret nz
     jp Jump_003_7846
 
-func_03_78F7:
+; Prep neck retraction
+func_03_78F7: ; 03:78F7
     ld a, [queen_pNeckPatternLow]
     ld l, a
     ld a, [queen_pNeckPatternHigh]
@@ -3104,7 +3110,7 @@ func_03_78F7:
 
     ld a, $02
     ld [$c3ba], a
-    ld [$c3c0], a
+    ld [queen_neckControl], a
     ld a, [queen_headFrame]
     cp $03
     jr nz, jr_003_791c
@@ -3118,13 +3124,15 @@ func_03_78F7:
     ld [queen_headFrame], a
     ld a, $f5
     ld [$c623], a
-    ld a, $05
+    ld a, $05 ; Retracting neck
     ld [queen_state], a
     dec hl
     jp Jump_003_7399
 
-func_03_7932:
-    ld a, [$c3c1]
+; Retracting neck
+func_03_7932: ; 03:7932
+    ; Wait until status is $82
+    ld a, [queen_neckStatus]
     cp $82
         ret nz
     jp Jump_003_7846
@@ -3133,12 +3141,12 @@ func_03_793B:
     ld a, $02
     ld [queen_walkControl], a
     ld a, $03
-    ld [$c3c0], a
+    ld [queen_neckControl], a
     xor a
     ld [$c3ba], a
     ld a, $82
     ld [queen_footFrame], a
-    ld a, $07
+    ld a, $07 ; Walking backward
     ld [queen_state], a
 ret
 
@@ -3163,13 +3171,13 @@ func_03_7970:
     cp $2c
     cp $71
     ld a, $01
-    ld [$c3c0], a
+    ld [queen_neckControl], a
     xor a
     ld [$c3ba], a
     ld a, $03
     ld [queen_headFrameNext], a
     ld [queen_headFrame], a
-    ld a, $09
+    ld a, $09 ; Prep spitting Samus out of stomach
     ld [queen_state], a
     ld hl, $c308
     ld a, [queen_headY]
@@ -3218,12 +3226,12 @@ func_03_7970:
     jp Jump_003_7399
 
 func_03_79D0:
-    ld a, [$c3c1]
+    ld a, [queen_neckStatus]
     cp $81
         ret nz
     ld a, $50
     ld [queen_delayTimer], a
-    ld a, $0a
+    ld a, $0a ; Spitting Samus out
     ld [queen_state], a
 ret
 
@@ -3249,8 +3257,8 @@ func_03_79E1: ; 03:79E1 - Queen spitting Samus out of stomach
         ld [queen_health], a
             jr c, jr_003_7a4d
         ld a, $02
-        ld [$c3c0], a
-        ld a, $0b
+        ld [queen_neckControl], a
+        ld a, $0b ; Done spitting Samus out
         ld [queen_state], a
         ; Set neck pattern
         ld a, [queen_pNeckPatternLow]
@@ -3262,7 +3270,7 @@ func_03_79E1: ; 03:79E1 - Queen spitting Samus out of stomach
 
 
 func_03_7A1D:
-    ld a, [$c3c1]
+    ld a, [queen_neckStatus]
     cp $82
     ret nz
 
@@ -3297,16 +3305,16 @@ jr_003_7a4d: ; Kill Queen?
     ld hl, $c600
     call Call_003_6e17
     ld a, $01
-    ld [$c3c0], a
+    ld [queen_neckControl], a
     ld [$c3ba], a
-    ld a, $11
+    ld a, $11 ; Prep death
     ld [queen_state], a
     xor a
     ld [$c3b6], a
     ld [$c3b7], a
     ld [$c3d1], a
     ld [queen_health], a
-    ld [$c3c1], a
+    ld [queen_neckStatus], a
     ld [queen_footFrame], a
     ld [queen_headFrameNext], a
     ld [$c3ef], a
@@ -3355,12 +3363,12 @@ jr_003_7ab5:
     ret
 
 func_03_7ABF:
-    ld a, [$c3c1]
+    ld a, [queen_neckStatus]
     cp $81
         ret nz
     ld a, $50
     ld [queen_delayTimer], a
-    ld a, $12
+    ld a, $12 ; Dying part 1 (disintegrating)
     ld [queen_state], a
     ld a, $05
     ld [$c3d5], a
@@ -3450,7 +3458,7 @@ func_03_7B05: ; State $12
             ld [$c3ec], a
             ld a, $99
             ld [$c3ed], a
-            ld a, $13
+            ld a, $13 ; Dying part 2
             ld [queen_state], a
             ret
 
@@ -3534,7 +3542,7 @@ jr_003_7bce:
     ld [queen_eatingState], a
     ld [metroidCountDisplayed], a
     ld [metroidCountReal], a
-    ld a, $16
+    ld a, $16 ; Dying part 3
     ld [queen_state], a
     ld a, $80
     ld [metroidCountShuffleTimer], a

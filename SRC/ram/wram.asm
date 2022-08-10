@@ -111,8 +111,8 @@ queen_walkControl  = $C3BD ; 0x00 = Don't walk, non-zero: start walking (used to
 ; queen_ ??? = $C3BE ; alternates between 0x00 and 0x01 often
 queen_walkStatus = $C3BF ; 0x81 = "done walking forward", 0x82 = "done walking backward"
 
-; $C3C0 - Neck related?
-; queen_neckStatus = $C3C1 ; 0x81 = "done extending", 0x82 = "done retracting"
+queen_neckControl = $C3C0 ; $00 - nothing, $01 - Extending, $02 - Retracting, $03 - In place (used when walking)
+queen_neckStatus = $C3C1 ; 0x81 = "done extending", 0x82 = "done retracting"
 
 section "Queen Stuff 2", wram0[$c3c2]
 queen_walkSpeed: ds 1 ; $C3C2 - Used for adjusting the queen's head's position

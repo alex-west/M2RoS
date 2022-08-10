@@ -6401,9 +6401,9 @@ enAI_6622: ; 02:6622
     ld hl, hEnemyState
     ld a, [hl]
     dec a
-        jr z, .case_1 ; state 1 - falling 1
+        jr z, .case_1 ; state 1 - falling 1 (curved)
     dec a
-        jr z, .case_2 ; state 2 - falling 2
+        jr z, .case_2 ; state 2 - falling 2 (linear)
     dec a
         jp z, .case_exploding ; state 3 - exploding
 
@@ -6450,16 +6450,16 @@ enAI_6622: ; 02:6622
     cp $0a
         jr z, .prepCase_2
 
-    call Call_002_677c ; Y movement
+    call enAI_halzyn.moveVertical ; Y movement
     ; Check direction hit from
     ldh a, [$e8]
     and a
     ; X movement
     jr z, .else_B
-        call Call_002_67d9
+        call enAI_halzyn.moveLeft
         jr .endIf_B
     .else_B:
-        call Call_002_6803
+        call enAI_halzyn.moveRight
     .endIf_B:
 
 .common_exit:
@@ -6654,14 +6654,14 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Halzyn (flying enemy with sheilds on the sides)
-enAI_6746: ; 02:6746
+enAI_halzyn: ; 02:6746
     call enemy_flipHorizontal.fourFrame ; Animate
-    call Call_002_677c ; Y Movment
+    call .moveVertical ; Y Movment
     ; Check direction of movement
     ldh a, [$e8]
     and $0f
-    jr z, .else
-        call Call_002_67d9 ; X Movement
+    jr z, .else_A
+        call .moveLeft ; X Movement
         ; Check collision
         call enCollision_left.farMedium
         ld a, [en_bgCollisionResult]
@@ -6670,11 +6670,11 @@ enAI_6746: ; 02:6746
         ; Turn around
         ld hl, $ffe8
         ld a, [hl]
-        and $f0
+        and $f0 ; Preserve directional vulnerabilities
         ld [hl], a
             ret
-    .else:
-        call Call_002_6803 ; X Movement
+    .else_A:
+        call .moveRight ; X Movement
         ; Check collision
         call enCollision_right.farMedium
         ld a, [en_bgCollisionResult]
@@ -6683,150 +6683,169 @@ enAI_6746: ; 02:6746
         ; Turn around
         ld hl, $ffe8
         ld a, [hl]
-        and $f0
+        and $f0 ; Preserve directional vulnerabilities
         add $02
         ld [hl], a
             ret
 ; end proc
 
-;------------------------------------------------------------------------------
-; Used by Missile Block and Halzyn
-Call_002_677c:
+; Psuedo-Sinusoidal motion routines (shared with missile block!!)
+;  Vertical movement
+.moveVertical: ; 02:677C
+    ; BC = yPos
     ld bc, hEnemyYPos
+    ; Note: Incrementing [$E9] is handled by using one of the accompanying horizontal functions
     ld hl, $ffe9
     ld a, [hl]
     cp $0a
-    jr nz, jr_002_679d
+    jr nz, .endIf_B
+        ; Reset table index
         ld [hl], $00
+        ; Cycle through movement states
         ld hl, hEnemyState
         ld a, [hl]
         cp $03
-        jr z, jr_002_6794
+        jr z, .else_C
             inc [hl]
-            jr jr_002_679d
-        jr_002_6794:
+            jr .endIf_B
+        .else_C:
             ld [hl], $00
+            ; Toggle speed between normal and double
             ld hl, $ffe7
             ld a, [hl]
             xor $01
             ld [hl], a
-    jr_002_679d:
+    .endIf_B:
 
+    ; Use [$E9] as the index
     ldh a, [$e9]
     ld e, a
     ld d, $00
     ldh a, [hEnemyState]
     dec a
-        jr z, jr_002_67b2 ; State 1
+        jr z, .vertState1 ; State 1
     dec a
-        jr z, jr_002_67b7 ; State 2
+        jr z, .vertState2 ; State 2
     dec a
-        jr z, jr_002_67bc ; State 3
+        jr z, .vertState3 ; State 3
+    ; State 0 (default)
 
-; State 0
-    ld hl, table_682D
-        jr jr_002_67bf
-jr_002_67b2:
-    ld hl, table_6837
-        jr jr_002_67cc
-jr_002_67b7:
-    ld hl, table_682D
-        jr jr_002_67cc
-jr_002_67bc:
-    ld hl, table_6837
-        ; implicit jump to jr_002_67bf
+    ; .vertState0
+        ld hl, .concaveSpeedTable
+        jr .moveBack
+    .vertState1:
+        ld hl, .convexSpeedTable
+        jr .moveAhead
+    .vertState2:
+        ld hl, .concaveSpeedTable
+        jr .moveAhead
+    .vertState3:
+        ld hl, .convexSpeedTable
+        ; jr .moveBack (implicit)
 
-
-jr_002_67bf: ; Move back
+; HL = table
+; DE = index into table
+; BC = position
+; [$E7] = Double speed flag
+.moveBack: ; Move back
     add hl, de
-    ldh a, [$e7]
+    ldh a, [$e7] ; Load double speed flag
     ld d, a
     ld a, [bc]
     sub [hl]
     bit 0, d
-        jr z, jr_002_67ca
+        jr z, .exit
+    ; Double speed
     sub [hl]
 
-
-jr_002_67ca: ; Exit
+.exit: ; Save result
     ld [bc], a
 ret
 
-
-jr_002_67cc: ; Move ahead
+.moveAhead: ; Move ahead
     add hl, de
-    ldh a, [$e7]
+    ldh a, [$e7] ; Load double speed flag
     ld d, a
     ld a, [bc]
     add [hl]
     bit 0, d
-        jr z, jr_002_67ca
-
+        jr z, .exit
+    ; Double speed
     add [hl]
     ld [bc], a
 ret
 
-; Called by multiple enemies
-Call_002_67d9:
+; Leftward movement
+; Called by multiple enemies (Missile block and Halzyn)
+.moveLeft: ; 02:67D9
     ld bc, hEnemyXPos
+    ; Use [$E9] as an index
     ld hl, $ffe9
     ld a, [hl]
     ld e, a
     ld d, $00
-    inc [hl] ; Table index incremented
+    ; Increment table index
+    inc [hl]
     ldh a, [hEnemyState]
     dec a
-        jr z, jr_002_67f4 ; State 1
+        jr z, .leftState1 ; State 1
     dec a
-        jr z, jr_002_67f9 ; State 2
+        jr z, .leftState2 ; State 2
     dec a
-        jr z, jr_002_67fe ; State 3
+        jr z, .leftState3 ; State 3
+    ; State 0 (default)
 
-; State 0
-    ld hl, table_6837
-        jr jr_002_67bf
-jr_002_67f4:
-    ld hl, table_682D
-        jr jr_002_67bf
-jr_002_67f9:
-    ld hl, table_6837
-        jr jr_002_67bf
-jr_002_67fe:
-    ld hl, table_682D
-        jr jr_002_67bf
+    ; .leftState0
+        ld hl, .convexSpeedTable
+        jr .moveBack
+    .leftState1:
+        ld hl, .concaveSpeedTable
+        jr .moveBack
+    .leftState2:
+        ld hl, .convexSpeedTable
+        jr .moveBack
+    .leftState3:
+        ld hl, .concaveSpeedTable
+        jr .moveBack
 
-; Called by multiple enemies
-Call_002_6803:
+; Rightward movement
+; Called by multiple enemies (Missile block and Halzyn)
+.moveRight: ; 02:6803
     ld bc, hEnemyXPos
+    ; Use $E9 as an index
     ld hl, $ffe9
     ld a, [hl]
     ld e, a
     ld d, $00
-    inc [hl] ; Table index incremented
+    ; Increment table index
+    inc [hl]
     ldh a, [hEnemyState]
     dec a
-        jr z, jr_002_681e ; State 1
+        jr z, .rightState1 ; State 1
     dec a
-        jr z, jr_002_6823 ; State 2
+        jr z, .rightState2 ; State 2
     dec a
-        jr z, jr_002_6828 ; State 3
+        jr z, .rightState3 ; State 3
+    ; State 0 (default)
 
-; State 0
-    ld hl, table_6837
-        jr jr_002_67cc
-jr_002_681e:
-    ld hl, table_682D
-        jr jr_002_67cc
-jr_002_6823:
-    ld hl, table_6837
-        jr jr_002_67cc
-jr_002_6828:
-    ld hl, table_682D
-        jr jr_002_67cc
+    ; .rightState0
+        ld hl, .convexSpeedTable
+        jr .moveAhead
+    .rightState1:
+        ld hl, .concaveSpeedTable
+        jr .moveAhead
+    .rightState2:
+        ld hl, .convexSpeedTable
+        jr .moveAhead
+    .rightState3:
+        ld hl, .concaveSpeedTable
+        jr .moveAhead
 
-table_682D: ; 02:682D
+; Curve that is slightly slowing down
+.concaveSpeedTable: ; 02:682D
     db $01, $01, $01, $01, $01, $01, $01, $00, $01, $00 
-table_6837: ; 02:6837
+; Curve that is slightly speeding up
+.convexSpeedTable: ; 02:6837
     db $00, $01, $00, $01, $01, $01, $01, $01, $01, $01
 
 ;------------------------------------------------------------------------------

@@ -42,7 +42,6 @@ Legend
 | Missile Block AI        | $6622 | NW (feels unclear)             |
 | Moto AI                 | $66F3 | S                              |
 | Halzyn AI               | $6746 | S                              |
-| Common Enemy Code       | $677C | NW (purpose unclear)           |
 | Septogg AI              | $6841 | S                              |
 | Flitt AI (type A)       | $68A0 | NW (identify states)           |
 | Flitt AI (type B)       | $68FC | S                              |
