@@ -158,7 +158,7 @@ enemySolidityIndex = $C407 ; Copy of enemySolidityIndex_canon (actually used by 
 ;$C40D: Scroll X one frame ago (according to $2:45CA)
 ;$C40E: Set to 0 if [$FFE2] < [Samus' X position on screen] else 2 by $2:45E4
 ;
-;$C418: Set to [room bank] in $2:4000
+;$C418: Set to [room bank+1] in $2:4000
 ;
 ;$C41B: Checked and cleared in $2:4000, 90h frame timer?
 def metroid_state = $C41C ; General Metroid related state. $00 = inactive, $80 = dying/dead, others depend on the metroid type

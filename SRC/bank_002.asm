@@ -6690,7 +6690,7 @@ enAI_6746: ; 02:6746
 ; end proc
 
 ;------------------------------------------------------------------------------
-; Used by multiple enemies
+; Used by Missile Block and Halzyn
 Call_002_677c:
     ld bc, hEnemyYPos
     ld hl, $ffe9
@@ -7598,22 +7598,21 @@ enAI_hatchingAlpha: ; 02:6BB2
             ld a, $a3 ; Alpha metroid
             ldh [hEnemySpriteType], a
     .endIf_A:
-    
+    ; State 2 = fight is happening
     ld a, [metroid_state]
     cp $02
         jp z, enAI_alphaMetroid.checkIfHurt
     ld b, a
-    
+    ; Jump to quickIntro if we've already seen this Metroid
     ldh a, [hEnemySpawnFlag]
     cp $04
         jr z, enAI_alphaMetroid.checkIfInRange
     ld c, a
-    
-    ;
+; Fancy intro
+    ; State 1 = start fight
     ld a, b
     cp $01
         jp z, enAI_alphaMetroid.startFight
-
     ; Check if in screen-facing pose
     ldh a, [hEnemySpriteType]
     cp $a1 ; Metroid hatching
@@ -7639,7 +7638,7 @@ enAI_hatchingAlpha: ; 02:6BB2
         .endIf_D:    
         cp $50
             ret nc
-        
+        ; Activate fight
         ld a, $01
         ld [cutsceneActive], a
         ld a, $01
@@ -7652,15 +7651,18 @@ enAI_hatchingAlpha: ; 02:6BB2
         ld [songRequest], a
         ret
     .else_C:
+        ; Cutscene is active
+        ; Continue every 4th frame
         ldh a, [hEnemy_frameCounter]
         and $03
             ret nz
+        ; Wait a few frames before facing the screen
         ld hl, $ffe9
         inc [hl]
         ld a, [hl]
         cp $08
             jp z, enAI_alphaMetroid.appearanceFaceScreen
-        ; Flash sprite
+        ; Flash sprite in the meantime
         ldh a, [hEnemyStunCounter]
         xor $10
         ldh [hEnemyStunCounter], a
@@ -7772,8 +7774,8 @@ ret
     .endIf_E:
 
     call alpha_getSpeedVector_farCall ; Translate angle to velocity vector
-    call metroid_lungeMovement ; Move
-    call alpha_animate ; Animate
+    call .lungeMovement ; Move
+    call .animate ; Animate
 ret
 
 .screwReaction:
@@ -7914,8 +7916,8 @@ ret
 ret
 
 .appearanceRise:
-    call Call_002_75ec ; Osciallate horizontally
-    ; Continue 1 out of 8 frames
+    call enAI_zetaMetroid.oscillateNarrow ; Osciallate horizontally
+    ; Continue every 8th frame
     ldh a, [hEnemy_frameCounter]
     and $07
         ret nz
@@ -7940,14 +7942,15 @@ jr .startFight
 
 ; BC should contain the YYXX movement vector
 ; (each component is in sign-magnitude format)
-metroid_lungeMovement: ; 02:6DD4
+; Also used by the Gamma Metroid
+.lungeMovement: ; 02:6DD4
     push bc
         ld a, b
         and a
-        jr z, .endIf_A
+        jr z, .endIf_H
             ld hl, hEnemyYPos
             bit 7, b
-            jr z, .else_B
+            jr z, .else_I
                 ; Move up
                 res 7, b
                 ld a, [hl]
@@ -7956,11 +7959,11 @@ metroid_lungeMovement: ; 02:6DD4
                 call enCollision_up.farWide
                 ld a, [en_bgCollisionResult]
                 bit 3, a
-                jr z, .endIf_A
+                jr z, .endIf_H
                     ld a, [enemy_yPosMirror]
                     ldh [hEnemyYPos], a
-                    jr .endIf_A
-            .else_B:
+                    jr .endIf_H
+            .else_I:
                 ; Move down
                 ld a, [hl]
                 add b
@@ -7968,10 +7971,10 @@ metroid_lungeMovement: ; 02:6DD4
                 call enCollision_down.farWide
                 ld a, [en_bgCollisionResult]
                 bit 1, a
-                jr z, .endIf_A
+                jr z, .endIf_H
                     ld a, [enemy_yPosMirror]
                     ldh [hEnemyYPos], a
-        .endIf_A:
+        .endIf_H:
     pop bc
     
     ld a, c
@@ -7979,7 +7982,7 @@ metroid_lungeMovement: ; 02:6DD4
         ret z
     ld hl, hEnemyXPos
     bit 7, c
-    jr z, .else_C
+    jr z, .else_J
         ; Move left
         res 7, c
         ld a, [hl]
@@ -7992,7 +7995,7 @@ metroid_lungeMovement: ; 02:6DD4
         ld a, [enemy_xPosMirror]
         ldh [hEnemyXPos], a
         ret
-    .else_C:
+    .else_J:
         ; Move right
         ld a, [hl]
         add c
@@ -8006,7 +8009,7 @@ metroid_lungeMovement: ; 02:6DD4
         ret
 ; end proc
 
-alpha_animate: ; 02:6E39
+.animate: ; 02:6E39
     ld hl, hEnemySpriteType
     ld a, [hl]
     xor $07
@@ -8584,7 +8587,7 @@ ret
     cp $0f
     jr nc, .else_J
         call gamma_getSpeedVector_farCall
-        call metroid_lungeMovement
+        call enAI_alphaMetroid.lungeMovement
         ld a, $b0
         ldh [hEnemySpriteType], a
         ret
@@ -8765,7 +8768,7 @@ enAI_zetaMetroid: ; 02:7276
     ; Force zeta to say onscreen
     ld a, [metroid_state]
     and a
-        call nz, Call_002_7dc6
+        call nz, metroid_keepOnscreen
     ; Check if not stunned
     ld hl, zeta_stunCounter
     ld a, [hl]
@@ -8774,7 +8777,7 @@ enAI_zetaMetroid: ; 02:7276
     dec [hl]
         jr z, .stunEnd
     ; Stunned case
-    call zeta_animateHurt
+    call .animateHurt
     ; When stunned, only process screw touch reaction
     ld a, [$c46d]
     cp $10
@@ -9190,7 +9193,7 @@ ret
     ld a, [hl]
     cp $20
     jr z, .else_O
-        call zeta_animateWait ; Animate
+        call .animateWait ; Animate
         ret
     .else_O:
         ; Clear counter
@@ -9224,7 +9227,7 @@ ret
     ld a, [metroid_state]
     and a
     jr nz, .else_P
-        call Call_002_75ff ; Oscillate
+        call .oscillateWide ; Oscillate
         ret
     .else_P:
         ; Change palette
@@ -9274,7 +9277,7 @@ ret
     ld a, [metroid_state]
     and a
         ret nz
-    call Call_002_75ec ; Oscillate
+    call .oscillateNarrow ; Oscillate
     ; Continue every 8th frame
     ldh a, [hEnemy_frameCounter]
     and $07
@@ -9341,47 +9344,53 @@ ret
     db $00, $00, $ff, $00, $00, $00, $ff, $08
     dw enAI_zetaMetroid
 
-;------------------------------------------------------------------------------
-
-Call_002_75ec: ; 02:75EC - Weird horizontal oscillation pattern
+; Horizontally oscillate 2 pixels left and right
+; Shared with the alpha metroid
+.oscillateNarrow: ; 02:75EC
+    ; Continue 3 frames out of 4
     ldh a, [hEnemy_frameCounter]
     and $03
         ret z
+    ; Move right 2px when A is 1, left 2px when a is 2, otherwise do nothing
     ld hl, hEnemyXPos
     dec a
-    jr z, .else
+    jr z, .else_R
         dec a
             ret z
         dec [hl]
         dec [hl]
         ret
-    .else:
+    .else_R:
         inc [hl]
         inc [hl]
         ret
 ; end proc
 
-Call_002_75ff: ; 02:75FF - Another weird horizontal oscillation pattern
+; Horizontally oscillate 3 pixels left and right
+.oscillateWide: ; 02:75FF
+    ; Continue 3 frames out of 4
     ldh a, [hEnemy_frameCounter]
     and $03
         ret z
+    ; Move right 3px when A is 1, left 3px when a is 2, otherwise do nothing
     ld hl, hEnemyXPos
     dec a
-    jr z, jr_002_7610
+    jr z, .else_S
         dec a
             ret z
         dec [hl]
         dec [hl]
         dec [hl]
         ret
-    jr_002_7610:
+    .else_S:
         inc [hl]
         inc [hl]
         inc [hl]
         ret
+; end proc
 
 ; Does a cute animation of the Zeta's tail :)
-zeta_animateWait: ; 02:7614
+.animateWait: ; 02:7614
     ldh a, [hEnemy_frameCounter]
     and $03
         ret nz
@@ -9395,13 +9404,13 @@ zeta_animateWait: ; 02:7614
     inc [hl]
 ret
 
-zeta_animateHurt:
+.animateHurt:
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $bd
-    jr nz, .endIf
+    jr nz, .endIf_T
         ld [hl], $ba
-    .endIf:
+    .endIf_T:
     inc [hl]
 ret
 
@@ -9415,7 +9424,7 @@ enAI_omegaMetroid: ; 02:7631
     ; For omega to stay onscreen
     ld a, [metroid_state]
     and a
-        call nz, Call_002_7dc6
+        call nz, metroid_keepOnscreen
     ; Act if not stunned
     ld hl, omega_stunCounter
     ld a, [hl]
@@ -10404,7 +10413,7 @@ ret
         ld b, $01
         ld de, $1e02
         call enemy_seekSamus_farCall ; Move
-        call Call_002_7cdd ; Correct position
+        call metroid_correctPosition ; Correct position
         ret
 ; end branch
 
@@ -10448,9 +10457,8 @@ enAI_babyMetroid: ; 02:7BE5
     call baby_keepOnscreen
 ret
 
-
 .case_1: ; case 1 - Metroid moves up from the egg
-    call Call_002_75ff ; Oscillate horizontally
+    call enAI_zetaMetroid.oscillateWide ; Oscillate horizontally
     ; Move up
     ld hl, hEnemyYPos
     dec [hl]
@@ -10471,7 +10479,6 @@ ret
     xor a
     ld [cutsceneActive], a
 ret
-
 
 .case_0: ; case 0 - Waiting
     ldh a, [hEnemySpawnFlag]
@@ -10576,7 +10583,6 @@ ret
     ld [metroid_state], a
 ret
 
-
 .animateFlash:
     ; Do every 4 frames
     ldh a, [hEnemy_frameCounter]
@@ -10617,118 +10623,119 @@ ret
             ret nz
         jr .switchDirection
 
-
-Call_002_7cdd: ; 02:7CDD
-    ; Some really messy if statements in this function
+; Used by normal metroids to correct their position when moving
+metroid_correctPosition: ; 02:7CDD
     ldh a, [$e9]
     cp $10
-    jr c, jr_002_7cf4
+    jr c, .else_A
         call enCollision_down.farWide
         ld a, [en_bgCollisionResult]
         bit 1, a
-            jr z, jr_002_7d04
+            jr z, .endIf_A
     
-        jr_002_7ced:
+        .revertYPos:
         ld a, [enemy_yPosMirror]
         ldh [hEnemyYPos], a
-            jr jr_002_7d04
-    jr_002_7cf4:
+            jr .endIf_A
+    .else_A:
         ldh a, [hEnemyYPos]
         cp $10
-            jr c, jr_002_7ced
+            jr c, .revertYPos
         call enCollision_up.farWide
         ld a, [en_bgCollisionResult]
         bit 3, a
-            jr nz, jr_002_7ced
-    jr_002_7d04:
+            jr nz, .revertYPos
+    .endIf_A:
 
     ldh a, [hEnemyState]
     cp $10
-    jr c, jr_002_7d19
+    jr c, .else_B
         call enCollision_right.farWide
         ld a, [en_bgCollisionResult]
         bit 0, a
             ret z
             
-        jr_002_7d13:
+        .revertXPos:
         ld a, [enemy_xPosMirror]
         ldh [hEnemyXPos], a
         ret
-    jr_002_7d19:
+    .else_B:
         ldh a, [hEnemyXPos]
         cp $10
-            jr c, jr_002_7d13
+            jr c, .revertXPos
         call enCollision_left.farWide
         ld a, [en_bgCollisionResult]
         bit 2, a
-            jr nz, jr_002_7d13
+            jr nz, .revertXPos
 ret
 
-
 baby_checkBlocks: ; 02:7D2A - Check if blocks need to be cleared
-    ; Some really messy if statements in this function
+    ; Save prospective x position to temp
     ld hl, hEnemyXPos
     ld a, [hl]
     ld [baby_tempXpos], a
+    ; Load previous x position when testing y collision
     ld a, [enemy_xPosMirror]
     ld [hl], a
+    ; Check Y chasing vector to choose between checking up or down
     ldh a, [$e9]
     cp $10
-    jr c, jr_002_7d54
+    jr c, .else_A
         call enCollision_down.midMedium
         ld a, [en_bgCollisionResult]
         bit 1, a
-            jr z, jr_002_7d64
+            jr z, .endIf_A
 
-        jr_002_7d45:
+        .clearBlockY:
         ld a, [$c417]
         cp $64 ; Tile ID of the block the baby can clear
         call z, baby_clearBlock
     
-        jr_002_7d4d:
+        .revertYPos:
         ld a, [enemy_yPosMirror]
         ldh [hEnemyYPos], a
-            jr jr_002_7d64
-    jr_002_7d54:
+            jr .endIf_A
+    .else_A:
         ldh a, [hEnemyYPos]
         cp $10
-            jr c, jr_002_7d4d
+            jr c, .revertYPos
         call enCollision_up.midMedium
         ld a, [en_bgCollisionResult]
         bit 3, a
-            jr nz, jr_002_7d45
-    jr_002_7d64:
-
+            jr nz, .clearBlockY
+    .endIf_A:
+    ; Reload x position from temp
     ld a, [baby_tempXpos]
     ldh [hEnemyXPos], a
+
+    ; Check x chasing vector to chose between checking left or right
     ldh a, [hEnemyState]
     cp $10
-    jr c, jr_002_7d86
+    jr c, .else_B
         call enCollision_right.midMedium
         ld a, [en_bgCollisionResult]
         bit 0, a
             ret z
     
-        jr_002_7d78:
+        .clearBlockX:
         ld a, [$c417]
         cp $64 ; Tile ID of the block the baby can clear
             call z, baby_clearBlock
     
-        jr_002_7d80:
+        .revertXPos:
         ld a, [enemy_xPosMirror]
         ldh [hEnemyXPos], a
         ret
-    jr_002_7d86:
+    .else_B:
         ldh a, [hEnemyXPos]
         cp $10
-            jr c, jr_002_7d80
+            jr c, .revertXPos
     
         call enCollision_left.midMedium
         ld a, [en_bgCollisionResult]
         bit 2, a
-            jr nz, jr_002_7d78
+            jr nz, .clearBlockX
 ret
-
 
 baby_clearBlock: ; 02:7D97
     call destroyBlock_farCall
@@ -10782,23 +10789,26 @@ enemy_getSamusCollisionResults: ; 02:7DA0
     ld [$c46e], a ; Direction hit from
 ret
 
-
-Call_002_7dc6: ; Used to keep zeta and omegas onscreen?
+; Used to keep zeta and omegas onscreen
+metroid_keepOnscreen: ; 02:7DC6
     ld bc, $1890 ; Not a pointer. This is just loading two different values into B and C.
+    ; Clamp enemy y pos to top of screen
     ld hl, hEnemyYPos
     ld a, [hl]
     cp b
-    jr nc, jr_002_7dd1
+    jr nc, .endIf
         ld [hl], b
-    jr_002_7dd1:
-    
+    .endIf:
+    ; This function doesn't prevent them from going below the screen
+
+    ; Clamp the x position between B and C
     inc l
     ld a, [hl]
     cp b
-    jr nc, jr_002_7dd8
+    jr nc, .else
         ld [hl], b
         ret
-    jr_002_7dd8:
+    .else:
         cp c
             ret c
         ld [hl], c
