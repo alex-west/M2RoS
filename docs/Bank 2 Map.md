@@ -38,12 +38,12 @@ Legend
 | Wallfire AI             | $62B4 | NW                             |
 | Gunzoo AI               | $638C | NW                             |
 | Autom AI                | $6540 | S                              |
-| Proboscum AI            | $65D5 | NW (identify states)           |
-| Missile Block AI        | $6622 | NW (feels unclear)             |
+| Proboscum AI            | $65D5 | S                              |
+| Missile Block AI        | $6622 | S                              |
 | Moto AI                 | $66F3 | S                              |
 | Halzyn AI               | $6746 | S                              |
 | Septogg AI              | $6841 | S                              |
-| Flitt AI (type A)       | $68A0 | NW (identify states)           |
+| Flitt AI (type A)       | $68A0 | S                              |
 | Flitt AI (type B)       | $68FC | S                              |
 | Gravitt AI              | $695F | S                              |
 | Missile Door AI         | $6A14 | S                              |

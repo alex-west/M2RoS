@@ -1149,9 +1149,8 @@ unknown_002_45FA: ; 02:45FA - Unreferenced
 ;
 ; "$11 routines" = Check right side of object
 ; 8 routines (2 unused)
-enCollision_right:
-
-.nearSmall: ; 02:4608
+enCollision_right: ;{ 02:4608
+.nearSmall: 
 ;(3,-3)
 ;(3, 3)
     ld a, $11
@@ -1401,13 +1400,12 @@ enCollision_right:
     cp [hl]
         ret c
     jr .exitB
+;}
 
-;------------------------------------------------------------------------------
 ; "$44 functions" = Check left edge of object
 ; 8 functions (2 unused)
-enCollision_left:
-
-.nearSmall: ; 02:47E1
+enCollision_left: ;{ 02:47E1
+.nearSmall: 
 ;(-3,-3)
 ;(-3, 3)
     ld a, $44
@@ -1657,13 +1655,12 @@ enCollision_left:
     cp [hl]
         ret c
     jr .exitB
+;}
 
-;------------------------------------------------------------------------------
 ; "$22 functions" - Check bottom edge of object
 ; 9 functions (2 unused)
-enCollision_down:
-
-.nearSmall: ; 02:49BA
+enCollision_down: ;{ 02:49BA
+.nearSmall: 
 ;(-3,3)
 ;( 3,3)
     ld a, $22
@@ -1940,13 +1937,12 @@ ret
     ld hl, en_bgCollisionResult
     res 1, [hl]
     ret
+;}
 
-;------------------------------------------------------------------------------
 ; "$88 functions" - Check top edge of object
 ; 8 functions (3 unused)
-enCollision_up:
-
-.nearSmall: ; 02:4BC2
+enCollision_up: ;{ 02:4BC2
+.nearSmall:
 ;(-3,-3)
 ;( 3,-3)
     ld a, $88
@@ -2208,13 +2204,14 @@ enCollision_up:
     ld hl, en_bgCollisionResult
     res 3, [hl]
     ret
+;}
 
 ; End of enemy tilemap collision routines
 ;------------------------------------------------------------------------------
 
 ; Loads the Blob Thrower sprite and hitbox into RAM
 blobThrower_loadSprite: ; 02:4DB1
-    ld hl, blobThrower.sprite ;$4ffe
+    ld hl, enAI_blobThrower.sprite ;$4ffe
     ld de, spriteC300
     ld b, $3e
 
@@ -2225,7 +2222,7 @@ blobThrower_loadSprite: ; 02:4DB1
         dec b
     jr nz, jr_002_4db9
 
-    ld hl, blobThrower.hitbox
+    ld hl, enAI_blobThrower.hitbox
     ld de, hitboxC360
     ld b, $04
 
@@ -2393,8 +2390,7 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Blob Thrower AI (plant that spits out spores)
-enAI_blobThrower: ; 02:4EA1
-blobThrower:
+enAI_blobThrower: ;{ 02:4EA1
     ; Make stem blink periodically by changing tile numbers
     ld a, [frameCounter]
     and $0e
@@ -2684,11 +2680,11 @@ ret
     dw blobMovementTable_D
     db $00, $02, $05
     dw enAI_blobProjectile
+;}
 
 ;------------------------------------------------------------------------------
 ; Arachnus / Arachnus Orb
-enAI_arachnus: ; 02:5109
-arachnus:
+enAI_arachnus: ;{ 02:5109
     ldh a, [$e7]
     rst $28
         dw .state_0 ; Init and start fight
@@ -2822,9 +2818,9 @@ ret
 .state_2: ; 02:51B9 - State 2 - An additional small bounce
     ld hl, .jumpSpeedTable_low
   .jumpAndAnimate:
-    call arachnus.jump
+    call enAI_arachnus.jump
     jr nz, .else_D ; Animate spin
-        jr arachnus.flipSpriteId
+        jr enAI_arachnus.flipSpriteId
     .else_D: ; Done bouncing
         ; Set timer
         ld a, $04
@@ -2840,7 +2836,7 @@ ret
     jr z, .else_E
         dec a
         ld [arachnus_actionTimer], a
-        jr arachnus.flipSpriteId
+        jr enAI_arachnus.flipSpriteId
     .else_E:
         call .faceSamus
         ; Stand up
@@ -2851,7 +2847,7 @@ ret
       .nextStateAndSetSprite:
         ldh [hEnemySpriteType], a
         ld a, $04 ; value for animation timer
-        jp arachnus.nextState
+        jp enAI_arachnus.nextState
 ; end state
 
 .state_4: ; 02:51EC - State 4 - Standing up (part 2)
@@ -2963,7 +2959,7 @@ ret
 ; end state
 
 .faceSamus: ; 02:529A
-    call blobThrower.getFacingDirection
+    call enAI_blobThrower.getFacingDirection
     and a
     ld a, OAMF_XFLIP ;$20
     jr z, .endIf_K
@@ -3047,10 +3043,11 @@ ret
 .jumpSpeedTable_low: ; 02:5356 - State 2
     db $FD, $FE, $FE, $FE, $FF, $FF, $00, $FF, $FF, $00, $FF, $00, $00, $01, $00, $01
     db $01, $00, $01, $01, $02, $02, $02, $03, $81
+;}
 
 ;------------------------------------------------------------------------------
 ; Blob thrower projectile
-enAI_blobProjectile: ; 02:536F
+enAI_blobProjectile: ;{ 02:536F
     ldh a, [hEnemy_frameCounter]
     ld b, a
     and $01
@@ -3173,10 +3170,11 @@ blobMovementTable_D: ; 02:5463
     db $43, $54, $54, $45, $89, $9B, $9B, $A9, $A8, $B1, $B2, $C2, $C3, $D4, $D4, $C5
     db $09, $1B, $1B, $29, $28, $31, $32, $42, $43, $54, $54, $45, $EB, $FA, $FA, $E9
     db $E9, $D8, $D8, $C1, $C1, $B2, $B2, $A3, $A3, $94, $94, $85, $85, $80
+;}
 
 ;------------------------------------------------------------------------------
 ; Glow Fly AI (thing that goes back and forth between walls)
-enAI_glowFly: ; 02:54A1
+enAI_glowFly: ;{ 02:54A1
     ; Move if state is non-zero
     ldh a, [hEnemyState]
     and a
@@ -3313,10 +3311,11 @@ ret
             ld a, $2c
             ldh [hEnemySpriteType], a
             ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Rock Icicle (discount skree)
-enAI_rockIcicle: ; 02:5542
+enAI_rockIcicle: ;{ 02:5542
     ldh a, [hEnemyState] ; state
     cp $00
         jp z, .case_0
@@ -3513,10 +3512,9 @@ ret
     ld a, $36
     ldh [hEnemySpriteType], a
 ret
+;}
 
-; End of the rock icicle's code
 ;------------------------------------------------------------------------------
-
 ; Common enemy handler
 Call_002_5630:
     ; Check if a drop
@@ -4342,9 +4340,9 @@ Call_002_5aa8:
 ; Yumbos, Meboids, Mumbos, Pincher Flies, Seerooks, and TPOs
 ; (TODO: verify they all actually use this)
 ; Uses spritemaps 12h and 13h
-enAI_smallBug: ; 02:5ABF
+enAI_smallBug: ;{ 02:5ABF
     call enemy_flipSpriteId.now ; Animate
-    call .act ; Act
+    call .act
 ret
 
 .act:
@@ -4373,9 +4371,11 @@ ret
     ld [hl], $00
     call enemy_flipHorizontal.now
 ret
+;}
+
 ;------------------------------------------------------------------------------
 ; Drivel AI (acid-spitting bat)
-enAI_drivel: ; 02:5AE2
+enAI_drivel: ;{ 02:5AE2
     call .animate
     ldh a, [hEnemyState]
     and a
@@ -4532,10 +4532,10 @@ ret
     ; Set next frame
     inc [hl]
 ret
+;}
 
-;--------------------------------------
 ; Drivel projectile code
-enAI_drivelSpit: ; 02:5BD4
+enAI_drivelSpit: ;{ 02:5BD4
     ; Initial enemySpriteType is $0C
     ld hl, hEnemySpriteType
     ld a, [hl]
@@ -4614,10 +4614,11 @@ ret
     ld a, $ff
     ldh [hEnemySpawnFlag], a
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Senjoo/Shirk AI (things that move in a diamond shaped loop)
-enAI_senjooShirk: ; 02:5C36
+enAI_senjooShirk: ;{ 02:5C36
     call .animate ; animate
     ; Get absolute value of distance between enemy and Samus
     ld a, [samus_onscreenXPos]
@@ -4786,11 +4787,11 @@ ret
         xor $07
         ld [hl], a
         ret
-; end proc
+;} end proc
 
 ;------------------------------------------------------------------------------
 ; gullugg AI - Thing that flies in a circle
-enAI_gullugg: ; 02:5CE0
+enAI_gullugg: ;{ 02:5CE0
     call .animate
     ; [$E9] appears to be an animation counter
     ld hl, $ffe9
@@ -4863,10 +4864,11 @@ ret
     .endIf:
     ld [hl], $d8
 ret
-; End of gullugg code
+;} End of gullugg code
+
 ;------------------------------------------------------------------------------
 ; enemy octroll/chute leech
-enAI_chuteLeech: ; 02:5E0B
+enAI_chuteLeech: ;{ 02:5E0B
     ldh a, [hEnemyState]
     dec a
         jr z, .case_ascend ; if state = 1
@@ -5043,6 +5045,7 @@ ret
     db $01, $02, $01, $01, $01, $01, $01, $01, $01, $01, $00, $01, $00, $01, $00, $01
     db $00, $00, $02, $03, $02, $02, $01, $02, $02, $01, $01, $02, $02, $01, $01, $00
     db $01, $01, $00, $00, $03, $02, $02, $01, $02, $02, $01, $01, $01, $01, $00
+;}
 
 ; End of octroll/chute leech code
 ;------------------------------------------------------------------------------
@@ -5167,7 +5170,8 @@ ret
 
 ; Pipe bug enemy header
 pipeBugHeader: ; 02:5FFF
-    db $80, $00, $00, $00, $00, $00, $00, $00, $01, $67, $5f
+    db $80, $00, $00, $00, $00, $00, $00, $00, $01
+    dw enAI_5F67
 
 Jump_002_600a:
     call Call_002_609b
@@ -5455,7 +5459,7 @@ jr_002_613c:
 
 ;------------------------------------------------------------------------------
 ; Autrack AI (laser turret)
-enAI_autrack: ; 02:6145
+enAI_autrack: ;{ 02:6145
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $1e ; Check to change the flipped version to refer to the proper sprite
@@ -5523,7 +5527,7 @@ enAI_autrack: ; 02:6145
     ld a, b
     ld [hl+], a
     ; Load data from header
-    ld de, header_61D1
+    ld de, .laserHeader
     ld a, $06
     ld [enemy_tempSpawnFlag], a
     call enemy_spawnObject.shortHeader
@@ -5572,16 +5576,18 @@ ret
 ; end proc
 
 ; Enemy header for laser
-header_61D1:
+.laserHeader: ; 02:61D1
     db $00, $00, $00, $00, $00, $00, $fe, $00
     dw enAI_autrack
+;}
 
-; -----------------------------------------------------------------------------
+;------------------------------------------------------------------------------
 ; hornoad/autotoad/ramulken AI (enemy 14h)
 ; various hoppers
-enAI_hopper: ; 02:61DB
+enAI_hopper: ;{ 02:61DB
     ld bc, hEnemyYPos
     ; Check state
+    ; Note: Initial state is 2 thanks to the enemy header
     ldh a, [hEnemyState]
     dec a
         jr z, .case_pastApex ; if state = 1
@@ -5606,7 +5612,7 @@ ret
     ; DE = [$E9]
     ld e, a
     ld d, $00
-    ld hl, hopper_jumpYSpeedTable
+    ld hl, .jumpYSpeedTable
     add hl, de
     ld a, [bc] ; BC is the y position
     sub [hl]   ; subtraction is upwards movement
@@ -5614,7 +5620,7 @@ ret
 
     ; Handle x movement
     inc c ; BC now refers to the x position
-    ld hl, hopper_jumpXSpeedTable
+    ld hl, .jumpXSpeedTable
     add hl, de
     ldh a, [hEnemyAttr]
     and a
@@ -5634,19 +5640,18 @@ ret
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
+    ; Animate on the 5th frame of the jump
     cp $05
         ret nz
-    ; Animate on the 5th frame of the jump
     ld hl, hEnemySpriteType
     inc [hl]
     ld a, [hl]
+    ; Play jumping SFX if a certain enemy type during a certain frame
     cp $47
         ret nz
-    ; Play jumping SFX if a certain enemy type
     ld a, $1a
     ld [sfxRequest_noise], a
 ret
-
 
 .case_pastApex: ; Handles downward movement in general
     ldh a, [$e9]
@@ -5680,7 +5685,6 @@ jr .moveDown
     call enemy_flipHorizontal.now
 ret
 
-
 .moveDown: ; Handle downward half of jumping arc
     ; yPos = yPos + ySpeedTable[$0F-[$E9]]
     ;  Function iterates through the speed table backwards
@@ -5689,7 +5693,7 @@ ret
     sub e
     ld e, a
     ld d, $00
-    ld hl, hopper_jumpYSpeedTable
+    ld hl, .jumpYSpeedTable
     add hl, de
     ld a, [bc]
     add [hl]
@@ -5704,7 +5708,7 @@ ret
 
     ; Handle X movemnt
     ld bc, hEnemyXPos
-    ld hl, hopper_jumpXSpeedTable
+    ld hl, .jumpXSpeedTable
     add hl, de
     ldh a, [hEnemyAttr]
     and a
@@ -5738,11 +5742,12 @@ ret
 ret
 
 ; 02:6294 - jump arc? y velocity?
-hopper_jumpYSpeedTable:
+.jumpYSpeedTable:
     db $04, $03, $04, $03, $03, $02, $03, $02, $02, $02, $01, $01, $01, $01, $00, $00
 ; 02:62A4 - jump arc? x velocity?
-hopper_jumpXSpeedTable:
+.jumpXSpeedTable:
     db $00, $01, $01, $01, $01, $01, $02, $01, $01, $01, $01, $01, $01, $01, $01, $01
+;}
 
 ;------------------------------------------------------------------------------
 ; Wallfire AI (bird mask on wall that shoots you)
@@ -5840,7 +5845,7 @@ jr_002_632b:
     ret
 
 
-jr_002_633a:
+jr_002_633a: ; Projectile code
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $4f
@@ -6201,7 +6206,7 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Autom AI (robot that shoots a flamethrower downwards)
-enAI_autom: ; 02:6540
+enAI_autom: ;{ 02:6540
     ; Don't do anything while shooting stuff
     ldh a, [hEnemySpawnFlag]
     cp $03
@@ -6276,7 +6281,6 @@ enAI_autom: ; 02:6540
     ldh [hEnemySpawnFlag], a
 ret
 
-
 .projectileCode:
     ld a, $07
     ld [sfxRequest_square2], a
@@ -6319,45 +6323,46 @@ ret
 .header_65C8:
     db $5e, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $00
     dw enAI_autom
+;}
 
 ;------------------------------------------------------------------------------
 ; Proboscum AI (nose on wall that is acts as a platform)
-enAI_65D5: ; 02:65D5
+enAI_proboscum: ;{ 02:65D5
     ld hl, hEnemySpriteType
     ld a, [hl]
-    cp $6e ; Check to make sure the flipped version has the correct sprite
-    jr nz, jr_002_65df
+    cp $6E ; Check to make sure the flipped version has the correct sprite
+    jr nz, .endIf
         ld [hl], $72
-    jr_002_65df:
+    .endIf:
 
+    ; State graph is a simple 0->1->2->3->0 loop, but with a clever trick that makes states 0 and 2 use the same code
     ldh a, [hEnemyState]
-    dec a
-        jr z, .case_1 ; State 1
-    dec a
-        jr z, .case_2 ; State 2
-    dec a
-        jr z, .case_3 ; State 3
-    ; Fall-through state
+    dec a ; State 1
+        jr z, .case_1 ; Diagonal nose waiting to go down
+    dec a ; State 2
+        jr z, .case_2 ; Lowered nose waiting to go up
+    dec a ; State 3
+        jr z, .case_3 ; Diagonal nose waiting to go up
+    ; Case 0 - Raised nose waiting to go down
 
-.case_2:
+.case_2: ; Both states 0 and 2 here are "waiting to become diagonal"
     ; Wait for 64 frames
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
-    cp $40
+    cp $40 ; Long wait
         ret nz
 
     ; Reset counter
     ld [hl], $00
-    ; Change sprite (half-extended)
-    ld a, $73
+    ld a, $73 ; Nose half-extended
     ldh [hEnemySpriteType], a
     ; state becomes 1 or 3, depending on if we fell-through to here or not
     ld hl, hEnemyState
     inc [hl]
 ret
 
-.case_1:
+.case_1: ; Diagonal nose waiting to go down
     ; Wait for two frames
     ld hl, $ffe9
     inc [hl]
@@ -6368,14 +6373,14 @@ ret
     ; Reset counter
     ld [hl], $00
     ; Change sprite
-    ld a, $74
+    ld a, $74 ; Nose down
     ldh [hEnemySpriteType], a
     ; state = 2
     ld a, $02
     ldh [hEnemyState], a
 ret
 
-.case_3:
+.case_3: ; Diagonal nose waiting to go up
     ; Wait for two frames
     ld hl, $ffe9
     inc [hl]
@@ -6386,33 +6391,33 @@ ret
     ; Reset counter
     ld [hl], $00
     ; Change sprite
-    ld a, $72
+    ld a, $72 ; Nose forward
     ldh [hEnemySpriteType], a
     ; state = 0 (fall-through to 2)
     xor a
     ldh [hEnemyState], a
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Missile block AI
-enAI_6622: ; 02:6622
+enAI_missileBlock: ;{ 02:6622
     call enemy_getSamusCollisionResults
     ; Check state
     ld hl, hEnemyState
     ld a, [hl]
     dec a
-        jr z, .case_1 ; state 1 - falling 1 (curved)
+        jr z, .case_rising ; state 1
     dec a
-        jr z, .case_2 ; state 2 - falling 2 (linear)
+        jr z, .case_falling ; state 2
     dec a
-        jp z, .case_exploding ; state 3 - exploding
+        jp z, .case_exploding ; state 3
 
-    ; default state
+; Case 0 (default state)
     ; Exit if not hit by a projectile
     ld a, [$c46d]
     cp $20
         ret nc
-    
     ld b, a
     ; Play plink sound
     ld a, $0f
@@ -6432,20 +6437,21 @@ enAI_6622: ; 02:6622
     ld a, [$c46e]
     bit 0, a
     jr nz, .endIf_A
-        ; Set a flag in [$E8] (used for animation)
+        ; Set directional flag
         ld a, $02
         ldh [$e8], a
     .endIf_A:
 
-    ; Set state
+    ; Next state
     ld a, $01
     ldh [hEnemyState], a
-    
+    ; Set double speed flag for the curved movement routine
     ld a, $01
     ldh [$e7], a
 ; continue to case_1
 
-.case_1:
+.case_rising: ; State 1
+    ; Check movement counter used by the call below
     ldh a, [$e9]
     cp $0a
         jr z, .prepCase_2
@@ -6461,10 +6467,12 @@ enAI_6622: ; 02:6622
     .else_B:
         call enAI_halzyn.moveRight
     .endIf_B:
+; continue to common exit
 
 .common_exit:
     call .animate
-    call enCollision_down.midMedium ; Check bg collision
+    ; Check BG collision
+    call enCollision_down.midMedium
     ld a, [en_bgCollisionResult]
     bit 1, a
         ret z
@@ -6476,7 +6484,6 @@ enAI_6622: ; 02:6622
     ldh [hEnemySpriteType], a
 ret
 
-
 .prepCase_2:
     ; Reset counter
     xor a
@@ -6484,15 +6491,16 @@ ret
     ; Set state
     ld a, $02
     ldh [hEnemyState], a
+; continue to case 2
 
-.case_2:
+.case_falling: ; State 2
     ; Move block down
     ld hl, hEnemyYPos
     ld a, [hl]
     add $04
     ld [hl], a
     call enemy_accelForwards ; Downwards
-
+    ; Move block horizontally
     inc l ; HL is now x position
     ld b, $01
     ldh a, [$e8]
@@ -6509,9 +6517,9 @@ ret
         add b
         ld [hl], a
         jr .common_exit
-; end proc
+; end branch
 
-.case_exploding:
+.case_exploding: ; State 3
     ; Animate from $E2 to $E7
     ld hl, hEnemySpriteType
     ld a, [hl]
@@ -6574,11 +6582,11 @@ ret
     cp OAMF_YFLIP
         jr z, .setNoFlip
     jr .setYFlip
-; end proc
+;} end proc
 
 ;------------------------------------------------------------------------------
 ; Moto AI (the animal with a face-plate)
-enAI_moto: ; 02:66F3
+enAI_moto: ;{ 02:66F3
     call .animate
     ; Act every other frame
     ldh a, [hEnemy_frameCounter]
@@ -6651,10 +6659,12 @@ ret
     xor $01
     ld [hl], a
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Halzyn (flying enemy with sheilds on the sides)
-enAI_halzyn: ; 02:6746
+;  Shares subroutines with the missile block, of all things
+enAI_halzyn: ;{ 02:6746
     call enemy_flipHorizontal.fourFrame ; Animate
     call .moveVertical ; Y Movment
     ; Check direction of movement
@@ -6847,11 +6857,12 @@ ret
 ; Curve that is slightly speeding up
 .convexSpeedTable: ; 02:6837
     db $00, $01, $00, $01, $01, $01, $01, $01, $01, $01
+;}
 
 ;------------------------------------------------------------------------------
 ; Septogg AI (floating platforms)
 ;  Uses $E9 and $EA as a 16-bit distance-travelled counter
-enAI_septogg: ; 02:6841
+enAI_septogg: ;{ 02:6841
     call enemy_flipSpriteId_2Bits.twoFrame
     call enemy_getSamusCollisionResults ; Get sprite collision results
     ; Check if shot
@@ -6930,23 +6941,23 @@ enAI_septogg: ; 02:6841
         inc l
         dec [hl]
         ret
-; end proc
+;} end proc
 
 ;------------------------------------------------------------------------------
 ; Flitt AI (weird platforms) (vanishing type)
-enAI_flittVanishing: ; 02:68A0
+enAI_flittVanishing: ;{ 02:68A0
     ld de, hEnemySpriteType ; This line doesn't appear to get used
     ; State graph is a simple loop of 0 -> 1 -> 2 -> 3 -> 0...
     ld hl, hEnemyState
     ld a, [hl]
+    dec a ; Case 1
+        jr z, .case_1 ; Wait to disappear
+    dec a ; Case 2
+        jr z, .case_2 ; Wait to reappear (mouth closed)
     dec a
-        jr z, .case_1 ; case 1
-    dec a
-        jr z, .case_2 ; case 2
-    dec a
-        jr z, .case_3 ; case 3
+        jr z, .case_3 ; Wait to open mouth wide
 
-; default case (case 0)
+; Case 0 (default) - Wait to close mouth
     ; Check timer
     ld hl, $ffe9
     inc [hl]
@@ -6957,11 +6968,11 @@ enAI_flittVanishing: ; 02:68A0
     ; Animate
     ld a, $01
     ldh [hEnemyState], a
-    ld a, $d1
+    ld a, $d1 ; Close mouth
     ldh [hEnemySpriteType], a
 ret
 
-.case_1:
+.case_1: ; Wait to disappear
     ; Check timer
     ld hl, $ffe9
     inc [hl]
@@ -6972,11 +6983,13 @@ ret
     ; Disappear
     ld a, $02
     ldh [hEnemyState], a
-    ld a, $fd ; No graphics
+    ld a, $fd ; Disappear (no graphics)
     ldh [hEnemySpriteType], a
 ret
+; Funny note: Sprite $FD uses the same hitbox as the Queen's body, so it's absolutely huge (nearly 50x50 pixels)
+;  However, you'd only notice if you brought the Screw Attack into its room, because it makes noise on contact for some reason.
 
-.case_2:
+.case_2: ; Wait to reappear (with mouth closed)
     ; Check timer
     ld hl, $ffe9
     inc [hl]
@@ -6987,11 +7000,11 @@ ret
     ; Reappear
     ld a, $03
     ldh [hEnemyState], a
-    ld a, $d1
+    ld a, $d1 ; Closed mouth
     ldh [hEnemySpriteType], a
 ret
 
-.case_3:
+.case_3: ; Wait to open mouth wide
     ; Check timer
     ld hl, $ffe9
     inc [hl]
@@ -7002,13 +7015,14 @@ ret
     ; Animate
     ld a, $00
     ldh [hEnemyState], a
-    ld a, $d0
+    ld a, $d0 ; Open mouth
     ldh [hEnemySpriteType], a
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Flitt AI (weird platforms) (moving type)
-enAI_flittMoving: ; 02:68FC
+enAI_flittMoving: ;{ 02:68FC
     call enemy_flipSpriteId.fourFrame
     call enemy_getSamusCollisionResults ; Get collision results
     ; Check logical direction
@@ -7024,7 +7038,7 @@ enAI_flittMoving: ; 02:68FC
             ; Move right
             ld hl, hEnemyXPos
             inc [hl]
-            ; Check collision results
+            ; Check if Samus is touching and standing on sprite
             ld a, [$c46d]
             cp $20
                 ret nz
@@ -7056,7 +7070,7 @@ enAI_flittMoving: ; 02:68FC
             ; Move left
             ld hl, hEnemyXPos
             dec [hl]
-            ; Check collision results
+            ; Check if Samus is touching and standing on sprite
             ld a, [$c46d]
             cp $20
                 ret nz
@@ -7083,10 +7097,11 @@ enAI_flittMoving: ; 02:68FC
             ldh [$e8], a
             ret
 ; end proc
+;}
 
 ;------------------------------------------------------------------------------
 ; Gravitt AI (crawler with a hat that pops out of the ground)
-enAI_gravitt: ; 02:695F
+enAI_gravitt: ;{ 02:695F
     ld hl, hEnemyState
     ld a, [hl]
     dec a
@@ -7248,10 +7263,11 @@ ret
         ret nz
     ld [hl], $d4
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Missile Door
-enAI_missileDoor: ; 02:6A14
+enAI_missileDoor: ;{ 02:6A14
     ; Load results of collision tests with this object
     call enemy_getSamusCollisionResults
     ; If not the door sprite, jump ahead
@@ -7338,14 +7354,13 @@ ret
     ld a, $02
     ldh [hEnemySpawnFlag], a
 ret
-
 ; end of missile door code
-;------------------------------------------------------------------------------
+;}
 
 ; Called by multiple enemies
 ; Used to move enemies "forwards" (right or down) in an accelerating fashion
 ; Takes HL as an argument/return
-enemy_accelForwards: ; 02:6A7B
+enemy_accelForwards: ;{ 02:6A7B
     push bc
     push de
         push hl
@@ -7374,11 +7389,12 @@ ret
 .speedTable: ; 02:6A96 - First entry is unused
     db $00, $00, $01, $00, $01, $00, $01, $01, $02, $01, $02, $01, $02, $02, $03, $02
     db $03, $03, $04, $03, $04, $04, $03, $04
+;}
 
 ; Called by multiple enemies
 ; Used to move enemies "forwards" (right or down) in an accelerating fashion
 ; Takes HL as an argument/return
-enemy_accelBackwards: ; 02:6AAE
+enemy_accelBackwards: ;{ 02:6AAE
     push bc
     push de
         push hl
@@ -7407,11 +7423,12 @@ ret
 .speedTable: ; 02:6AC9 First entry is unused
     db $00, $00, $ff, $00, $ff, $00, $ff, $ff, $fe, $ff, $fe, $ff, $fe, $fe, $fd, $fe
     db $fd, $fd, $fc, $fd, $fc, $fc, $fd, $fc
+;}
 
 ; Unused (?) but similar to the above routines
 ; Takes HL as an argument/return
 ; Seems unnecessarily complex with the separate positive/negative cases
-unknownProc_6AE1: ; 02:6AE1
+unknownProc_6AE1: ;{ 02:6AE1
     push bc
     push de
         push hl
@@ -7456,7 +7473,7 @@ ret
 .unknownTable: ; 02:6B09
     db $00, $FE, $FE, $FE, $FF, $FE, $FE, $FF, $FF, $FE, $FF, $FF, $FF, $00, $FF, $FF
     db $00, $FF, $00, $00, $FF, $00, $00, $00
-
+;}
 
 ; When used in conjunction with a child-object spawner routine,
 ;  this makes a child object point to its parent
@@ -7552,7 +7569,7 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Metroid stinger event
-enAI_metroidStinger: ; 02:6B83
+enAI_metroidStinger: ;{ 02:6B83
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
@@ -7586,10 +7603,11 @@ enAI_metroidStinger: ; 02:6B83
         xor a
         ld [cutsceneActive], a
         ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Hatching Alpha Metroid AI
-enAI_hatchingAlpha: ; 02:6BB2
+enAI_hatchingAlpha: ;{ 02:6BB2
 ;Jump_002_6bb2:
     call enemy_getSamusCollisionResults
     ; Check if stunned
@@ -7687,10 +7705,11 @@ enAI_hatchingAlpha: ; 02:6BB2
         ldh [hEnemyStunCounter], a
         ret
 ; end proc
+;}
 
 ;------------------------------------------------------------------------------
 ; Alpha Metroid AI
-enAI_alphaMetroid: ; 02:6C44
+enAI_alphaMetroid: ;{ 02:6C44
     ld a, [metroid_fightActive]
     and a
         jp nz, enAI_hatchingAlpha ; Jump to actual AI is here, for some reason
@@ -8034,12 +8053,13 @@ jr .startFight
     xor $07
     ld [hl], a
 ret
+;}
 
 ;--------------------------------------
 ; Common metroid routines
 
 ; Determine direction of screw attack knockback
-metroid_screwReaction: ; 02:6E41
+metroid_screwReaction: ;{ 02:6E41
     ; Clear D and E
     ld d, $00
     ld e, d
@@ -8101,11 +8121,11 @@ ret
     .else_C:
         ld a, $01 ; Down
         jr .exit
-; End proc
+;} end proc
 
 
 ; Screw attack knockback routine
-metroid_screwKnockback: ; 02:6E7F
+metroid_screwKnockback: ;{ 02:6E7F
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
@@ -8254,10 +8274,11 @@ ret
     add $04
     ld [hl], a
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Gamma Metroid AI
-enAI_gammaMetroid: ; 02:6F60
+enAI_gammaMetroid: ;{ 02:6F60
     call enemy_getSamusCollisionResults
     ld hl, gamma_stunCounter
     ld a, [hl]
@@ -8708,6 +8729,7 @@ ret
     ld a, $ff
     ldh [hEnemySpawnFlag], a
 ret
+;}
 
 ;------------------------------------------------------------------------------
 
@@ -8779,7 +8801,7 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Zeta Metroid AI
-enAI_zetaMetroid: ; 02:7276
+enAI_zetaMetroid: ;{ 02:7276
     call enemy_getSamusCollisionResults
     ldh a, [hEnemySpawnFlag]
     cp $06
@@ -9432,10 +9454,11 @@ ret
     .endIf_T:
     inc [hl]
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Omega Metroid AI
-enAI_omegaMetroid: ; 02:7631
+enAI_omegaMetroid: ;{ 02:7631
     call enemy_getSamusCollisionResults
     ldh a, [hEnemySpawnFlag]
     cp $06
@@ -10173,10 +10196,11 @@ ret
     xor $BF^$C0 ; $7f - Osciallates between $BF and $C0
     ld [hl], a
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Standard (larval) Metroid AI
-enAI_normalMetroid: ; 02:7A4F
+enAI_normalMetroid: ;{ 02:7A4F
     call enemy_getSamusCollisionResults
     ; Check if latched
     ldh a, [$e7]
@@ -10453,6 +10477,7 @@ ret
     ld a, [samus_onscreenXPos]
     ld [hl], a
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Baby Metroid AI

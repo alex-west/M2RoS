@@ -678,13 +678,13 @@ en663D: ; Enemy 6Dh - Metroid stinger event
     dw enAI_metroidStinger
 en6648: ; Enemy 6Eh (proboscum (flipped))
     db $00,$20,$00,$00,$00,$00,$00,$00,$FF
-    dw enAI_65D5
+    dw enAI_proboscum
 en6653: ; Enemy 72h (proboscum)
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
-    dw enAI_65D5
+    dw enAI_proboscum
 en665E: ; Enemy 75h (missile block)
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
-    dw enAI_6622
+    dw enAI_missileBlock
 en6669: ; Enemy D0h (flitt) (vanishing type)
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_flittVanishing
