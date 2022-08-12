@@ -621,7 +621,7 @@ en656C: ; Enemy 1Eh (autrack (flipped))
     dw enAI_autrack
 en6577: ; Enemy 1Fh (wallfire (flipped))
     db $00,$20,$00,$00,$00,$00,$00,$00,$FF
-    dw enAI_62B4
+    dw enAI_wallfire
 en6582: ; Enemy 28h (skorp)
     db $80,$00,$00,$00,$00,$00,$00,$00,$04
     dw enAI_60AB
@@ -651,7 +651,7 @@ en65DA: ; Enemy 46h (autoad)
     dw enAI_hopper
 en65E5: ; Enemy 4Ah (wallfire)
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
-    dw enAI_62B4
+    dw enAI_wallfire
 en65F0: ; Enemy 51h (gunzoo)
     db $00,$00,$00,$00,$01,$00,$00,$00,$15
     dw enAI_638C

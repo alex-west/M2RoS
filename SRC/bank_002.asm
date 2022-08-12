@@ -5751,28 +5751,29 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Wallfire AI (bird mask on wall that shoots you)
-enAI_62B4: ; 02:62B4
+enAI_wallfire: ;{ 02:62B4
+    ; Set the opposite facing ones to the right direction
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $1f
-    jr nz, jr_002_62be
+    jr nz, .endIf_A
         ld [hl], $4a
-    jr_002_62be:
-
+    .endIf_A:
+    ; Check if a projectile
     call enemy_getSamusCollisionResults
     ldh a, [hEnemySpawnFlag]
     cp $06
-        jr z, jr_002_633a
-
+        jr z, .projectileCode
+    ; Exit if destroyed
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $4c
         ret z
-
+    ; Check if damaged
     ld a, [$c46d]
     cp $20 ; Touch
-        jr nc, jr_002_62e3
-
+        jr nc, .normalAction
+    ; Become destroyed
     ld a, $4c
     ld [hl], a
     ld a, $ff
@@ -5781,126 +5782,135 @@ enAI_62B4: ; 02:62B4
     ld [sfxRequest_noise], a
 ret
 
-
-jr_002_62e3:
+.normalAction:
     ld a, [hl]
-    cp $4b
-    jr z, jr_002_632b
-
+    cp $4b ; Check if mouth is open
+        jr z, .closeMouth
+    ; Wait until timer reaches $50 before spitting fire
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $50
-    ret nz
-
+        ret nz
+    ; Reset timer
     ld [hl], $00
+; Spawn projectile
+    ; Get base address of new enemy
     call findFirstEmptyEnemySlot_longJump
+    ; Set status
     xor a
     ld [hl+], a
+    ; Set y position
     ldh a, [hEnemyYPos]
     sub $04
     ld [hl+], a
+    ; Set x position depending on facing direction
     ldh a, [hEnemyAttr]
     ld b, a
     bit OAMB_XFLIP, a
-    jr nz, jr_002_6309
-
-    ldh a, [hEnemyXPos]
-    add $08
-    jr jr_002_630d
-
-jr_002_6309:
-    ldh a, [hEnemyXPos]
-    sub $08
-
-jr_002_630d:
+    jr nz, .else_B
+        ldh a, [hEnemyXPos]
+        add $08
+        jr .endIf_B
+    .else_B:
+        ldh a, [hEnemyXPos]
+        sub $08
+    .endIf_B:
     ld [hl+], a
+    ; Set sprite type
     ld a, $4d
     ld [hl+], a
+    ; Set base sprite attributes
     ld a, $00
     ld [hl+], a
+    ; Set sprite attributes
     ld a, b
     ld [hl+], a
-    ld de, header_6382
+    ld de, .fireballHeader
+    ; Set spawn flag in indicate projectile status
     ld a, $06
     ld [enemy_tempSpawnFlag], a
+    ; Spawn
     call enemy_spawnObject.shortHeader
+    ; Open mouth
     ld a, $4b
     ldh [hEnemySpriteType], a
     ld a, $12
     ld [sfxRequest_noise], a
-    ret
+ret
 
-
-jr_002_632b:
+.closeMouth: ; Open mouth
+    ; Wait 8 frames before closing mouth
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $08
-    ret nz
-
+        ret nz
+    ; Reset timer
     ld [hl], $00
-    ld a, $4a
+    ld a, $4a ; Close mouth
     ldh [hEnemySpriteType], a
-    ret
+ret
 
-
-jr_002_633a: ; Projectile code
+.projectileCode:
     ld hl, hEnemySpriteType
     ld a, [hl]
-    cp $4f
-    jr nc, jr_002_6374
-
+    cp $4f ; Check in an explosion sprite type
+        jr nc, .explode
+    ; Animate
     call enemy_flipSpriteId_2Bits.twoFrame
+    
     ld hl, hEnemyXPos
+    ; Check direction
     ldh a, [hEnemyAttr]
     bit OAMB_XFLIP, a
-    jr nz, jr_002_6365
+    jr nz, .else_C
+        ; Move right
+        ld a, [hl]
+        add $04
+        ld [hl], a
+        ; Check collision
+        call enCollision_right.nearSmall
+        ld a, [en_bgCollisionResult]
+        bit 0, a
+            ret z
+    .startExploding: ; Explode if collision is made
+        ; Set sprite type and make noise
+        ld a, $4f
+        ldh [hEnemySpriteType], a
+        ld a, $03
+        ld [sfxRequest_noise], a
+        ret
+    .else_C:
+        ; Move left
+        ld a, [hl]
+        sub $04
+        ld [hl], a
+        ; Check collision
+        call enCollision_left.nearSmall
+        ld a, [en_bgCollisionResult]
+        bit 2, a
+            ret z
+        jr .startExploding
 
-    ld a, [hl]
-    add $04
-    ld [hl], a
-    call enCollision_right.nearSmall
-    ld a, [en_bgCollisionResult]
-    bit 0, a
-    ret z
-
-jr_002_635b:
-    ld a, $4f
-    ldh [hEnemySpriteType], a
-    ld a, $03
-    ld [sfxRequest_noise], a
-    ret
-
-
-jr_002_6365:
-    ld a, [hl]
-    sub $04
-    ld [hl], a
-    call enCollision_left.nearSmall
-    ld a, [en_bgCollisionResult]
-    bit 2, a
-    ret z
-
-    jr jr_002_635b
-
-jr_002_6374:
+.explode:
+    ; Check if at end of explosion animation or not
     cp $50
-    jr z, jr_002_637a
+    jr z, .else_D
+        ; Increment sprite type
+        inc [hl]
+        ret
+    .else_D:
+        ; Delete self
+        call Call_000_3ca6
+        ld a, $ff
+        ldh [hEnemySpawnFlag], a
+        ret
 
-    inc [hl]
-    ret
-
-
-jr_002_637a:
-    call Call_000_3ca6
-    ld a, $ff
-    ldh [hEnemySpawnFlag], a
-    ret
-
-header_6382:
+.fireballHeader:
     db $00, $00, $00, $00, $00, $00, $fe, $01
-    dw enAI_62B4
+    dw enAI_wallfire
+;}
 
 ;------------------------------------------------------------------------------
 ; Gunzoo AI (floating robot with gun's)
