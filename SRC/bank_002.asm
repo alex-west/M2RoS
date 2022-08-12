@@ -5047,7 +5047,6 @@ ret
     db $01, $01, $00, $00, $03, $02, $02, $01, $02, $02, $01, $01, $01, $01, $00
 ;}
 
-; End of octroll/chute leech code
 ;------------------------------------------------------------------------------
 ; pipe bug spawner
 enAI_5F67: ; 02:5F67
@@ -5302,160 +5301,165 @@ ret
 ; end of pipe bug code?
 
 ;------------------------------------------------------------------------------
-; Skorp AI - Things with circular saws that poke out of walls (which type?)
-enAI_60AB: ; 02:60AB
+; Skorp AI (vertical type) - Things with circular saws that poke out of walls
+enAI_skorpVert: ;{ 02:60AB
     ld hl, hEnemyState
-    ld a, [hl-]
-    dec a
-        jr z, jr_002_60d2
-    dec a
-        jr z, jr_002_60d9
-    dec a
-        jr z, jr_002_60ef
+    ld a, [hl-] ; HL decrements to the state counter
+    dec a ; Wait while extended
+        jr z, .case_1
+    dec a ; Retract
+        jr z, .case_2
+    dec a ; Wait while retracted
+        jr z, .case_3
 
+;.case_0 - Extend
+    ; Increment counter
     inc [hl]
     ld a, [hl]
     cp $20
-        jr z, jr_002_60ce
-
-    call enemy_flipHorizontal.twoFrame
-    ld hl, hEnemyYPos
-    ldh a, [hEnemyAttr]
-    bit OAMB_YFLIP, a
-    jr nz, jr_002_60cc
-        dec [hl]
-        ret
-    jr_002_60cc:
+    jr z, .nextState
+        ; Animate
+        call enemy_flipHorizontal.twoFrame
+        ; Extend based on direction in header
+        ld hl, hEnemyYPos
+        ldh a, [hEnemyAttr]
+        bit OAMB_YFLIP, a
+        jr nz, .else_A
+            dec [hl]
+            ret
+        .else_A:
+            inc [hl]
+            ret
+    .nextState:
+        ; Clear counter, increment state
+        xor a
+        ld [hl+], a
         inc [hl]
         ret
-; end proc
+; end state
 
-jr_002_60ce:
-    xor a
-    ld [hl+], a
-    inc [hl]
-ret
-
-
-jr_002_60d2:
+.case_1: ; Wait while extended
+    ; Increment counter
     inc [hl]
     ld a, [hl]
     cp $08
-        jr z, jr_002_60ce
-ret
+        jr z, .nextState
+    ret
 
-
-jr_002_60d9:
+.case_2: ; Retract
+    ; Increment counter
     inc [hl]
     ld a, [hl]
     cp $20
-    jr z, jr_002_60ce
-
+        jr z, .nextState
+    ; Animate
     call enemy_flipHorizontal.twoFrame
+    ; Retract based on direction in header
     ld hl, hEnemyYPos
     ldh a, [hEnemyAttr]
     bit OAMB_YFLIP, a
-    jr nz, jr_002_60ed
+    jr nz, .else_B
+        inc [hl]
+        ret
+    .else_B:
+        dec [hl]
+        ret
+; end state
 
-    inc [hl]
-    ret
-
-
-jr_002_60ed:
-    dec [hl]
-    ret
-
-
-jr_002_60ef:
+.case_3: ; Wait while retracted
+    ; Increment counter
     inc [hl]
     ld a, [hl]
     cp $08
-    ret nz
-
+        ret nz
+    ; Clear counter
     xor a
     ld [hl+], a
+    ; Back to state 0
     ld [hl], a
-    ret
+ret
+;}
 
 ;------------------------------------------------------------------------------
-; Skorp AI - Things with circular saws that poke out of walls (which type?)
-enAI_60F8: ; 02:60F8
+; Skorp AI (horizontal type) - Things with circular saws that poke out of walls
+enAI_skorpHori: ;{ 02:60F8
     ld hl, hEnemyState
     ld a, [hl-]
-    dec a
-        jr z, jr_002_611f
-    dec a
-        jr z, jr_002_6126
-    dec a
-        jr z, jr_002_613c
+    dec a ; Wait while extended
+        jr z, .case_1 
+    dec a ; Extend
+        jr z, .case_2
+    dec a ; Wait while retracted
+        jr z, .case_3
 
+;.case_0 - Extend
+    ; Increment counter
     inc [hl]
     ld a, [hl]
     cp $20
-    jr z, jr_002_611b
+    jr z, .nextState
+        ; Animate
+        call enemy_flipVertical.twoFrame
+        ; Extend based on direction in header
+        ld hl, hEnemyXPos
+        ldh a, [hEnemyAttr]
+        bit OAMB_XFLIP, a
+        jr z, .else_A
+            dec [hl]
+            ret
+        .else_A:
+            inc [hl]
+            ret
+    .nextState:
+        ; Clear counter, increment state
+        xor a
+        ld [hl+], a
+        inc [hl]
+        ret
+; end state
 
-    call enemy_flipVertical.twoFrame
-    ld hl, hEnemyXPos
-    ldh a, [hEnemyAttr]
-    bit OAMB_XFLIP, a
-    jr z, jr_002_6119
-
-    dec [hl]
-    ret
-
-
-jr_002_6119:
-    inc [hl]
-    ret
-
-
-jr_002_611b:
-    xor a
-    ld [hl+], a
-    inc [hl]
-    ret
-
-
-jr_002_611f:
+.case_1: ; Wait while extended
+    ; Increment counter
     inc [hl]
     ld a, [hl]
     cp $08
-    jr z, jr_002_611b
-
+        jr z, .nextState
     ret
+; end state
 
-
-jr_002_6126:
+.case_2: ; Retract
+    ; Increment counter
     inc [hl]
     ld a, [hl]
     cp $20
-    jr z, jr_002_611b
-
+        jr z, .nextState
+    ; Animate
     call enemy_flipVertical.twoFrame
+    ; Retract based on direction in header
     ld hl, hEnemyXPos
     ldh a, [hEnemyAttr]
     bit OAMB_XFLIP, a
-    jr z, jr_002_613a
+    jr z, .else_B
+        inc [hl]
+        ret
+    .else_B:
+        dec [hl]
+        ret
+; end state
 
-    inc [hl]
-    ret
-
-
-jr_002_613a:
-    dec [hl]
-    ret
-
-
-jr_002_613c:
+.case_3: ; Wait while retracted
+    ; Increment counter
     inc [hl]
     ld a, [hl]
     cp $08
-    ret nz
-
+        ret nz
+    ; Clear counter
     xor a
     ld [hl+], a
+    ; Back to state 0
     ld [hl], a
-    ret
+ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Autrack AI (laser turret)

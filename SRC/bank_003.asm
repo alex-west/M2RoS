@@ -622,18 +622,18 @@ en656C: ; Enemy 1Eh (autrack (flipped))
 en6577: ; Enemy 1Fh (wallfire (flipped))
     db $00,$20,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_wallfire
-en6582: ; Enemy 28h (skorp)
+en6582: ; Enemy 28h (skorp (vertical, upwards))
     db $80,$00,$00,$00,$00,$00,$00,$00,$04
-    dw enAI_60AB
-en658D: ; Enemy 29h (skorp)
+    dw enAI_skorpVert
+en658D: ; Enemy 29h (skorp (vertical, downwards))
     db $80,$40,$00,$00,$00,$00,$00,$00,$04
-    dw enAI_60AB
-en6598: ; Enemy 2Ah (skorp)
+    dw enAI_skorpVert
+en6598: ; Enemy 2Ah (skorp (horizontal, rightwards))
     db $80,$00,$00,$00,$00,$00,$00,$00,$04
-    dw enAI_60F8
-en65A3: ; Enemy 2Bh (skorp)
+    dw enAI_skorpHori
+en65A3: ; Enemy 2Bh (skorp (horizontal, leftwards))
     db $80,$20,$00,$00,$00,$00,$00,$00,$04
-    dw enAI_60F8
+    dw enAI_skorpHori
 en65AE: ; Enemy 30h (moheek facing right)
     db $00,$20,$00,$00,$00,$FF,$00,$00,$05
     dw enAI_57DE

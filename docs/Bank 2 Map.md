@@ -31,8 +31,8 @@ Legend
 | Gullugg AI              | $5CE0 | S                              |
 | Chute Leech AI          | $5E0B | S                              |
 | Pipe Bug AI             | $5F67 | NW                             |
-| Skorp AI (type A)       | $60AB | NW                             |
-| Skorp AI (type B)       | $60F8 | NW                             |
+| Skorp AI (vertical)     | $60AB | S                              |
+| Skorp AI (horizontal)   | $60F8 | S                              |
 | Autrack AI              | $6145 | S                              |
 | Hornoad/Hopper AI       | $61DB | S                              |
 | Wallfire AI             | $62B4 | S                              |
@@ -43,8 +43,8 @@ Legend
 | Moto AI                 | $66F3 | S                              |
 | Halzyn AI               | $6746 | S                              |
 | Septogg AI              | $6841 | S                              |
-| Flitt AI (type A)       | $68A0 | S                              |
-| Flitt AI (type B)       | $68FC | S                              |
+| Flitt AI (vanishing)    | $68A0 | S                              |
+| Flitt AI (moving)       | $68FC | S                              |
 | Gravitt AI              | $695F | S                              |
 | Missile Door AI         | $6A14 | S                              |
 | Accel Forwards          | $6A7B | S                              |
