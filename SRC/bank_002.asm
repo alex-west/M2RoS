@@ -5918,123 +5918,153 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Gunzoo AI (floating robot with gun's)
-enAI_638C: ; 02:638C
+enAI_gunzoo: ; 02:638C
     ldh a, [hEnemySpawnFlag]
     cp $06
-        jp z, Jump_002_64a7
+        jp z, gunzoo_projectiles
 
+; Note about the directional values used here in [$E8]
+;  0 (b:00) - Right
+;  1 (b:01) - Down
+;  2 (b:10) - Left
+;  3 (b:11) - Up
+; Essentially, bit 0 controls the axis while bit 1 controls whether it goes
+;  forward or backwards on the given axis.
     ldh a, [$e8]
-    bit 0, a
-    jp z, Jump_002_6441
+    bit 0, a ; Horizontal case
+        jp z, gunzoo_horizontalCase
 
+; Vertical case
+    ; Animate
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $51
-    call nz, Call_002_6538
-    ; Check state
+        call nz, gunzoo_resetSpriteType
+
+    ; Check state (number of shots fired, for this case)
     ldh a, [hEnemyState]
-    dec a
-        jr z, jr_002_6409 ; state 1
-    dec a
-        jr z, jr_002_63b4 ; state 2
-    ; default state
+    dec a ; Do this if the random shot has been shot
+        jr z, gunzoo_shootHorizontalRegular ; State 1
+    dec a ; Do this is the random and regular shot have been shot
+        jr z, gunzoo_moveVertical ; State 2
+; State 0
+    ; Shoot at random
     ld a, [rDIV]
     and $1f
-    jr z, jr_002_63e1
+        jr z, gunzoo_shootHorizontalRandom
+    jr gunzoo_moveVertical
 
-    jr jr_002_63b4
-
-jr_002_63b4:
+gunzoo_moveVertical:
     ld de, hEnemyYPos
     ld hl, $ffe9
+    ; Check direction
     ldh a, [$e8]
     bit 1, a
-    jr nz, jr_002_63d9
+        jr nz, gunzoo_moveUp
 
+; moveDown
+    ; Increment and check counter
     inc [hl]
     ld a, [hl]
     cp $20
-    jr z, jr_002_63d1
-
+        jr z, gunzoo_flipVerticalDirection
+    ; Move down
     ld a, [de]
     add $02
     ld [de], a
+ret
+
+    ; Common spaghetti between the up and down branches
+    gunzoo_checkIfSwitchToHorizontal:
+        ; Don't switch to horizontal unless the random and regular shot have been fired
+        ldh a, [hEnemyState]
+        cp $02
+            jr z, gunzoo_switchToHorizontal
+    gunzoo_flipVerticalDirection:
+        ld hl, $ffe8
+        ld a, [hl]
+        xor $02
+        ld [hl], a
     ret
 
-
-jr_002_63cb:
-    ldh a, [hEnemyState]
-    cp $02
-        jr z, jr_002_6435
-
-jr_002_63d1:
-    ld hl, $ffe8
-    ld a, [hl]
-    xor $02
-    ld [hl], a
-    ret
-
-
-jr_002_63d9:
+gunzoo_moveUp:
     dec [hl]
-    jr z, jr_002_63cb
-
+        jr z, gunzoo_checkIfSwitchToHorizontal
     ld a, [de]
     sub $02
     ld [de], a
-    ret
+ret
+; end main vertical movement logic
 
-
-jr_002_63e1:
+; Shoot from the upper cannon
+gunzoo_shootHorizontalRandom:
     call findFirstEmptyEnemySlot_longJump
+    ; Set status
     xor a
     ld [hl+], a
+    ; Set y pos
     ldh a, [hEnemyYPos]
     sub $08
     ld [hl+], a
+    ; Set x pos
     ldh a, [hEnemyXPos]
     sub $10
     ld [hl+], a
+    ; Set spawn flag (to let it know it's a projectile)
     ld a, $06
     ld [enemy_tempSpawnFlag], a
+    ; Load header
     ld de, header_6511
     call enemy_spawnObject.longHeader
+    
+    ; Animate (upper cannon fired)
     ld hl, hEnemySpriteType
     inc [hl]
+    ; Increment state
     ld hl, hEnemyState
     inc [hl]
+    ; Make noise
     ld a, $12
     ld [sfxRequest_noise], a
-    ret
+ret
 
-
-jr_002_6409:
+; Shoot from the lower cannon
+gunzoo_shootHorizontalRegular:
+    ; Wait to shoot
     ldh a, [hEnemy_frameCounter]
     and $1f
-    jr nz, jr_002_63b4
-
+        jr nz, gunzoo_moveVertical
+    
     call findFirstEmptyEnemySlot_longJump
+    ; Set status
     xor a
     ld [hl+], a
+    ; Set y pos
     ldh a, [hEnemyYPos]
     ld [hl+], a
+    ; Set x pos
     ldh a, [hEnemyXPos]
     sub $10
     ld [hl+], a
+    ; Set spawn flag (to let it know it's a projectile)
     ld a, $06
     ld [enemy_tempSpawnFlag], a
+    ; Load header
     ld de, header_651E
     call enemy_spawnObject.longHeader
+
+    ; Animate (lower cannon fired)
     ld a, $53
     ldh [hEnemySpriteType], a
+    ; Increment state
     ld hl, hEnemyState
     inc [hl]
+    ; Make noise
     ld a, $12
     ld [sfxRequest_noise], a
-    ret
+ret
 
-
-jr_002_6435:
+gunzoo_switchToHorizontal:
     ld a, $51
     ldh [hEnemySpriteType], a
     xor a
@@ -6043,175 +6073,186 @@ jr_002_6435:
     ldh [hEnemyState], a
     ret
 
-
-Jump_002_6441:
+; Horizontal case
+gunzoo_horizontalCase:
     ldh a, [hEnemyState]
     and a
-        jr nz, jr_002_644d
+    jr nz, .endIf_A
+        ld a, [rDIV]
+        and $1f
+        jr z, gunzoo_shootDiagonal ; Shoot diagonal
+    .endIf_A:
 
-    ld a, [rDIV]
-    and $1f
-    jr z, jr_002_6483
-
-jr_002_644d:
     ld de, hEnemyXPos
     ld hl, $ffe9
     ldh a, [$e8]
     bit 1, a
-    jr nz, jr_002_647b
+        jr nz, gunzoo_moveLeft
 
+; moveRight
+    ; Increment and check timer
     inc [hl]
     ld a, [hl]
     cp $20
-    jr z, jr_002_6469
-
+        jr z, gunzoo_flipHorizontalDirection
+    ; Move right
     ld a, [de]
     add $02
     ld [de], a
-    ret
+ret
 
+    ; Common spaghetti between the left and right branches
+    gunzoo_checkIfSwitchToVertical:
+        ldh a, [hEnemyState]
+        and a ; Only switch to vertical if a shot has been fired
+        jr nz, gunzoo_switchToVertical
+    gunzoo_flipHorizontalDirection: ; Switch between left and right
+            ld hl, $ffe8
+            ld a, [hl]
+            xor $02
+            ld [hl], a
+            ret
+        gunzoo_switchToVertical: ; Switch to moving down
+            xor a
+            ldh [$e9], a
+            ldh [hEnemyState], a
+            ld a, $01
+            ldh [$e8], a
+            ret
 
-jr_002_6464:
-    ldh a, [hEnemyState]
-    and a
-        jr nz, jr_002_6471
-
-jr_002_6469:
-    ld hl, $ffe8
-    ld a, [hl]
-    xor $02
-    ld [hl], a
-    ret
-
-
-jr_002_6471:
-    xor a
-    ldh [$e9], a
-    ldh [hEnemyState], a
-    ld a, $01
-    ldh [$e8], a
-    ret
-
-
-jr_002_647b:
+gunzoo_moveLeft:
+    ; Decrement and check timer
     dec [hl]
-    jr z, jr_002_6464
-
+        jr z, gunzoo_checkIfSwitchToVertical
+    ; Move left
     ld a, [de]
     sub $02
     ld [de], a
-    ret
+ret
+; end horizontal case logic
 
-
-jr_002_6483:
+gunzoo_shootDiagonal:
     call findFirstEmptyEnemySlot_longJump
+    ; Set initial status
     xor a
     ld [hl+], a
+    ; Set y pos
     ldh a, [hEnemyYPos]
     add $08
     ld [hl+], a
+    ; Set x pos
     ldh a, [hEnemyXPos]
     sub $08
     ld [hl+], a
+    ; Set spawn flag (to let it know it's a projectile)
     ld a, $06
     ld [enemy_tempSpawnFlag], a
+    ; Load header
     ld de, header_652B
     call enemy_spawnObject.longHeader
+
+    ; Set "has shot" flag
     ld a, $01
     ldh [hEnemyState], a
     ld a, $12
     ld [sfxRequest_noise], a
-    ret
+ret
 
-
-Jump_002_64a7: ; Gunzoo projectile
+; Projectile code
+gunzoo_projectiles:
     ld hl, hEnemySpriteType
     ld a, [hl]
-    cp $57
-        jr nc, jr_002_64ed
-    sub $55
-        jr z, jr_002_64db
-    dec a
-        jr z, jr_002_64e5
+    cp $57 ; Sprite $57+ (left)
+        jr nc, .horizontalShot
+; Diagonal projectile
+    sub $55 ; Sprite $55
+        jr z, .diagonalShotExplosion
+    dec a ; Sprite $56
+        jr z, .projectileDelete
 
+; Sprite $54 (diagonal)
+    ; Move down
     ld hl, hEnemyYPos
     ld a, [hl]
     add $02
     ld [hl+], a
+    ; Move left
     ld a, [hl]
     sub $02
     ld [hl], a
     call enCollision_down.nearSmall
     ld a, [en_bgCollisionResult]
     bit 1, a
-    ret z
-
+        ret z
+    ; Set sprite type
     ld a, $55
     ldh [hEnemySpriteType], a
+    ; Move up
     ld hl, hEnemyYPos
     ld a, [hl]
     sub $04
     ld [hl], a
+    ; Noise
     ld a, $03
     ld [sfxRequest_noise], a
-    ret
+ret
 
-
-jr_002_64db:
+.diagonalShotExplosion:
+    ; Increment sprite type
     ld [hl], $56
+    ; Move up
     ld hl, hEnemyYPos
     ld a, [hl]
     sub $08
     ld [hl], a
-    ret
+ret
 
-
-jr_002_64e5:
+.projectileDelete:
     call Call_000_3ca6
     ld a, $ff
     ldh [hEnemySpawnFlag], a
-    ret
+ret
 
-
-jr_002_64ed:
+.horizontalShot:
+    ; Check if at end of explosion
     cp $5b
-    jr z, jr_002_64e5
-
+        jr z, .projectileDelete
     cp $59
-    jr nc, jr_002_650f
-
-    ld hl, hEnemyXPos
-    ld a, [hl]
-    sub $03
-    ld [hl], a
-    call enCollision_left.nearSmall
-    ld a, [en_bgCollisionResult]
-    bit 2, a
-    ret z
-
-    ld a, $59
-    ldh [hEnemySpriteType], a
-    ld a, $03
-    ld [sfxRequest_noise], a
-    ret
-
-
-jr_002_650f:
-    inc [hl]
-    ret
+    jr nc, .else
+        ; Move left
+        ld hl, hEnemyXPos
+        ld a, [hl]
+        sub $03
+        ld [hl], a
+        ; Test collision
+        call enCollision_left.nearSmall
+        ld a, [en_bgCollisionResult]
+        bit 2, a
+            ret z
+        ; Change sprite to explosion
+        ld a, $59
+        ldh [hEnemySpriteType], a
+        ; Make noise
+        ld a, $03
+        ld [sfxRequest_noise], a
+        ret
+    .else:
+        ; Animate explosion
+        inc [hl]
+        ret
 
 ; Enemy Headers
-header_6511: ; 02:6511
+header_6511: ; 02:6511 - Horizontal (random)
     db $57, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $01
-    dw enAI_638C
-header_651E: ; 02:651E
+    dw enAI_gunzoo
+header_651E: ; 02:651E - Horizontal (regular)
     db $57, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $02
-    dw enAI_638C
-header_652B: ; 92:651E
+    dw enAI_gunzoo
+header_652B: ; 92:651E - Diagonal
     db $54, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $03
-    dw enAI_638C
+    dw enAI_gunzoo
 
-Call_002_6538:
+gunzoo_resetSpriteType:
     ldh a, [hEnemy_frameCounter]
     and $07
         ret nz

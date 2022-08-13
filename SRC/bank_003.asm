@@ -654,7 +654,7 @@ en65E5: ; Enemy 4Ah (wallfire)
     dw enAI_wallfire
 en65F0: ; Enemy 51h (gunzoo)
     db $00,$00,$00,$00,$01,$00,$00,$00,$15
-    dw enAI_638C
+    dw enAI_gunzoo
 en65FB: ; Enemy 5Ch (autom)
     db $00,$00,$00,$00,$00,$00,$00,$00,$FF
     dw enAI_autom
