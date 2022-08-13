@@ -5918,10 +5918,10 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Gunzoo AI (floating robot with gun's)
-enAI_gunzoo: ; 02:638C
+enAI_gunzoo: ;{ 02:638C
     ldh a, [hEnemySpawnFlag]
     cp $06
-        jp z, gunzoo_projectiles
+        jp z, .projectileCode
 
 ; Note about the directional values used here in [$E8]
 ;  0 (b:00) - Right
@@ -5932,42 +5932,41 @@ enAI_gunzoo: ; 02:638C
 ;  forward or backwards on the given axis.
     ldh a, [$e8]
     bit 0, a ; Horizontal case
-        jp z, gunzoo_horizontalCase
+        jp z, .horizontalCase
 
 ; Vertical case
     ; Animate
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $51
-        call nz, gunzoo_resetSpriteType
+        call nz, .resetSpriteType
 
     ; Check state (number of shots fired, for this case)
     ldh a, [hEnemyState]
-    dec a ; Do this if the random shot has been shot
-        jr z, gunzoo_shootHorizontalRegular ; State 1
-    dec a ; Do this is the random and regular shot have been shot
-        jr z, gunzoo_moveVertical ; State 2
-; State 0
+    dec a ; State 1 - Fire a shot based on the global timer, and move
+        jr z, .shootHorizontalRegular ; State 1
+    dec a ; State 2 - Just move
+        jr z, .moveVertical ; State 2
+; State 0 - Shoot at random, and move
     ; Shoot at random
     ld a, [rDIV]
     and $1f
-        jr z, gunzoo_shootHorizontalRandom
-    jr gunzoo_moveVertical
+        jr z, .shootHorizontalRandom
+    jr .moveVertical
 
-gunzoo_moveVertical:
+.moveVertical:
     ld de, hEnemyYPos
     ld hl, $ffe9
     ; Check direction
     ldh a, [$e8]
     bit 1, a
-        jr nz, gunzoo_moveUp
-
+        jr nz, .moveUp
 ; moveDown
     ; Increment and check counter
     inc [hl]
     ld a, [hl]
     cp $20
-        jr z, gunzoo_flipVerticalDirection
+        jr z, .flipVerticalDirection
     ; Move down
     ld a, [de]
     add $02
@@ -5975,21 +5974,21 @@ gunzoo_moveVertical:
 ret
 
     ; Common spaghetti between the up and down branches
-    gunzoo_checkIfSwitchToHorizontal:
+    .checkIfSwitchToHorizontal:
         ; Don't switch to horizontal unless the random and regular shot have been fired
         ldh a, [hEnemyState]
         cp $02
-            jr z, gunzoo_switchToHorizontal
-    gunzoo_flipVerticalDirection:
+            jr z, .switchToHorizontal
+    .flipVerticalDirection:
         ld hl, $ffe8
         ld a, [hl]
         xor $02
         ld [hl], a
     ret
 
-gunzoo_moveUp:
+.moveUp:
     dec [hl]
-        jr z, gunzoo_checkIfSwitchToHorizontal
+        jr z, .checkIfSwitchToHorizontal
     ld a, [de]
     sub $02
     ld [de], a
@@ -5997,7 +5996,7 @@ ret
 ; end main vertical movement logic
 
 ; Shoot from the upper cannon
-gunzoo_shootHorizontalRandom:
+.shootHorizontalRandom:
     call findFirstEmptyEnemySlot_longJump
     ; Set status
     xor a
@@ -6014,7 +6013,7 @@ gunzoo_shootHorizontalRandom:
     ld a, $06
     ld [enemy_tempSpawnFlag], a
     ; Load header
-    ld de, header_6511
+    ld de, .upperCannonShotHeader
     call enemy_spawnObject.longHeader
     
     ; Animate (upper cannon fired)
@@ -6029,11 +6028,11 @@ gunzoo_shootHorizontalRandom:
 ret
 
 ; Shoot from the lower cannon
-gunzoo_shootHorizontalRegular:
+.shootHorizontalRegular:
     ; Wait to shoot
     ldh a, [hEnemy_frameCounter]
     and $1f
-        jr nz, gunzoo_moveVertical
+        jr nz, .moveVertical
     
     call findFirstEmptyEnemySlot_longJump
     ; Set status
@@ -6050,7 +6049,7 @@ gunzoo_shootHorizontalRegular:
     ld a, $06
     ld [enemy_tempSpawnFlag], a
     ; Load header
-    ld de, header_651E
+    ld de, .lowerCannonShotHeader
     call enemy_spawnObject.longHeader
 
     ; Animate (lower cannon fired)
@@ -6064,37 +6063,43 @@ gunzoo_shootHorizontalRegular:
     ld [sfxRequest_noise], a
 ret
 
-gunzoo_switchToHorizontal:
+.switchToHorizontal:
+    ; Reset sprite type
     ld a, $51
     ldh [hEnemySpriteType], a
+    ; Set movement direction to right
     xor a
     ldh [$e8], a
+    ; Clear movement counter
     ldh [$e9], a
+    ; Clear shot counter
     ldh [hEnemyState], a
     ret
+; end of everything relating to the vertical case
 
-; Horizontal case
-gunzoo_horizontalCase:
+.horizontalCase:
+    ; Randomly shoot diagonally if we haven't shot diagonally before
     ldh a, [hEnemyState]
     and a
     jr nz, .endIf_A
         ld a, [rDIV]
         and $1f
-        jr z, gunzoo_shootDiagonal ; Shoot diagonal
+        jr z, .shootDiagonal ; Shoot diagonal
     .endIf_A:
 
     ld de, hEnemyXPos
     ld hl, $ffe9
+    ; Check direction
     ldh a, [$e8]
     bit 1, a
-        jr nz, gunzoo_moveLeft
+        jr nz, .moveLeft
 
 ; moveRight
     ; Increment and check timer
     inc [hl]
     ld a, [hl]
     cp $20
-        jr z, gunzoo_flipHorizontalDirection
+        jr z, .flipHorizontalDirection
     ; Move right
     ld a, [de]
     add $02
@@ -6102,28 +6107,31 @@ gunzoo_horizontalCase:
 ret
 
     ; Common spaghetti between the left and right branches
-    gunzoo_checkIfSwitchToVertical:
+    .checkIfSwitchToVertical:
         ldh a, [hEnemyState]
-        and a ; Only switch to vertical if a shot has been fired
-        jr nz, gunzoo_switchToVertical
-    gunzoo_flipHorizontalDirection: ; Switch between left and right
+        and a ; Only switch to vertical if at least one diagonal shot has been fired
+        jr nz, .switchToVertical
+    .flipHorizontalDirection: ; Switch between left and right
             ld hl, $ffe8
             ld a, [hl]
             xor $02
             ld [hl], a
             ret
-        gunzoo_switchToVertical: ; Switch to moving down
+        .switchToVertical: ; Switch to moving down
+            ; Clear movement counter
             xor a
             ldh [$e9], a
+            ; Clear shot fired flag
             ldh [hEnemyState], a
+            ; Set direction to down
             ld a, $01
             ldh [$e8], a
             ret
 
-gunzoo_moveLeft:
+.moveLeft:
     ; Decrement and check timer
     dec [hl]
-        jr z, gunzoo_checkIfSwitchToVertical
+        jr z, .checkIfSwitchToVertical
     ; Move left
     ld a, [de]
     sub $02
@@ -6131,7 +6139,7 @@ gunzoo_moveLeft:
 ret
 ; end horizontal case logic
 
-gunzoo_shootDiagonal:
+.shootDiagonal:
     call findFirstEmptyEnemySlot_longJump
     ; Set initial status
     xor a
@@ -6148,10 +6156,10 @@ gunzoo_shootDiagonal:
     ld a, $06
     ld [enemy_tempSpawnFlag], a
     ; Load header
-    ld de, header_652B
+    ld de, .diagonalShotHeader
     call enemy_spawnObject.longHeader
 
-    ; Set "has shot" flag
+    ; Set flag to indicate a diagonal shot has been fired
     ld a, $01
     ldh [hEnemyState], a
     ld a, $12
@@ -6159,7 +6167,7 @@ gunzoo_shootDiagonal:
 ret
 
 ; Projectile code
-gunzoo_projectiles:
+.projectileCode:
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $57 ; Sprite $57+ (left)
@@ -6218,7 +6226,7 @@ ret
     cp $5b
         jr z, .projectileDelete
     cp $59
-    jr nc, .else
+    jr nc, .else_B
         ; Move left
         ld hl, hEnemyXPos
         ld a, [hl]
@@ -6236,28 +6244,29 @@ ret
         ld a, $03
         ld [sfxRequest_noise], a
         ret
-    .else:
+    .else_B:
         ; Animate explosion
         inc [hl]
         ret
 
 ; Enemy Headers
-header_6511: ; 02:6511 - Horizontal (random)
+.upperCannonShotHeader: ; 02:6511 - Horizontal from upper cannon (random)
     db $57, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $01
     dw enAI_gunzoo
-header_651E: ; 02:651E - Horizontal (regular)
+.lowerCannonShotHeader: ; 02:651E - Horizontal from lower cannon (regular)
     db $57, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $02
     dw enAI_gunzoo
-header_652B: ; 92:651E - Diagonal
+.diagonalShotHeader: ; 92:651E - Diagonal
     db $54, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $03
     dw enAI_gunzoo
 
-gunzoo_resetSpriteType:
+.resetSpriteType:
     ldh a, [hEnemy_frameCounter]
     and $07
         ret nz
     ld [hl], $51
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Autom AI (robot that shoots a flamethrower downwards)

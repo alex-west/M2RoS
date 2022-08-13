@@ -36,7 +36,7 @@ Legend
 | Autrack AI              | $6145 | S                              |
 | Hornoad/Hopper AI       | $61DB | S                              |
 | Wallfire AI             | $62B4 | S                              |
-| Gunzoo AI               | $638C | NW                             |
+| Gunzoo AI               | $638C | S                              |
 | Autom AI                | $6540 | S                              |
 | Proboscum AI            | $65D5 | S                              |
 | Missile Block AI        | $6622 | S                              |
