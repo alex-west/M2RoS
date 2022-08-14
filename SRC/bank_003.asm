@@ -612,7 +612,7 @@ en654B: ; Enemy 16h (senjoo)
     dw enAI_senjooShirk
 en6556: ; Enemy 19h/1Ah/3Ch/3Dh (gawron/yumee spawner (pipe bugs))
     db $80,$00,$00,$00,$00,$00,$00,$00,$FF
-    dw enAI_5F67
+    dw enAI_pipeBug
 en6561: ; Enemy 1Bh (chute leech)
     db $00,$00,$00,$00,$00,$00,$00,$00,$03
     dw enAI_chuteLeech
@@ -827,82 +827,92 @@ hitbox6ADF: db -24, 23, -24, 23
 hitbox6AE3: db   0, 55,   0, 47
 
 ; Enemy AI stuff
-Call_003_6ae7: ; 03:6AE7
+
+; Deletes the enemy currently loaded in HRAM
+enemy_deleteSelf: ; 03:6AE7
     ld hl, hEnemyWorkingHram ; $FFE0
+    ; Save hEnemyStatus to C
     ld c, [hl]
+    ; Clear first 15 bytes of enemy data in HRAM
     ld a, $ff
     ld b, $0f
-
-    jr_003_6aef:
+    .clearLoop:
         ld [hl+], a
         dec b
-    jr nz, jr_003_6aef
+    jr nz, .clearLoop
 
+    ; Read hEnemySpawnFlag to see if enemy has a parent
     ld a, [hl]
     and $0f
-    jr nz, jr_003_6b1f
+    jr nz, .endIf_A
+        ; Get address of parent object from link in hEnemySpawnFlag
+        ld a, [hl]
+        ld h, HIGH(enemyDataSlots)
+        bit 4, a
+        jr nz, .else_B
+            add $1c
+            ld l, a
+            jr .endIf_B
+        .else_B:
+            add $0c
+            ld l, a
+            inc h ; $C700 address
+        .endIf_B:
 
-    ld a, [hl]
-    ld h, $c6
-    bit 4, a
-    jr nz, jr_003_6b04
-        add $1c
+        ; Check the enemy spawn flag of the parent
+        ; If 3, set to 1
+        ; If 5, set to 4
+        ld a, [hl]
+        cp $03 ; Deactivated because of child
+        jr z, .else_C
+            cp $05 ; ??
+                jr nz, .endIf_A
+            ld a, $04 ; ??
+            jr .endIf_C
+        .else_C:
+            ld a, $01 ; Active
+        .endIf_C:        
+        ld [hl+], a
+        
+        ld b, a
+        ld a, [hl]
+        ld hl, enemySpawnFlags
         ld l, a
-        jr jr_003_6b08
-    jr_003_6b04:
-        add $0c
-        ld l, a
-        inc h
-    jr_003_6b08:
+        ld [hl], b
+    .endIf_A:
 
-    ld a, [hl]
-    cp $03
-    jr z, jr_003_6b15
-        cp $05
-            jr nz, jr_003_6b1f
-        ld a, $04
-        jr jr_003_6b17
-    jr_003_6b15:
-        ld a, $01
-    jr_003_6b17:
-    
-    ld [hl+], a
-    ld b, a
-    ld a, [hl]
-    ld hl, enemySpawnFlags
-    ld l, a
-    ld [hl], b
-
-jr_003_6b1f:
-    ld hl, $fff1
+    ; Clear enemy AI pointer, and screen coordinates
+    ld hl, hEnemyAI_low
     ld a, $ff
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
     ld [hl], a
+    ; Decrement number of total enemies and number of active enemies
     ld hl, numEnemies
     dec [hl]
     inc l
     dec [hl]
+    ; Check if $C468 = $FFFD
     ld hl, $c468
     ld de, $fffd
     ld a, [de]
     cp [hl]
-    ret nz
-
+        ret nz
+    ; Check if $C467 = $FFFE
     dec e
     dec l
     ld a, [de]
     cp [hl]
-    ret nz
-
+        ret nz
+    ; Clear $C466, $C467, $C468, $C469
     dec l
     ld a, $ff
     ld [hl+], a
     ld [hl+], a
     ld [hl+], a
     ld [hl], a
-    ret
+ret
 
 ; Used for seeking towards Samus
 ; takes B, D, and E as arguements
@@ -1142,6 +1152,9 @@ Call_003_6c74: ; 03:6C74
     ldh a, [hEnemyXScreen]
     ld [hl], a
 ret
+
+;------------------------------------------------------------------------------
+; Start of queen code
 
 ; Neck swoop patterns
 queen_neckPatternPointers: ; 03:6C8E - Indexed by queen_neckPattern

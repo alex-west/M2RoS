@@ -30,7 +30,7 @@ Legend
 | Senjoo/Shirk AI         | $5C36 | S                              |
 | Gullugg AI              | $5CE0 | S                              |
 | Chute Leech AI          | $5E0B | S                              |
-| Pipe Bug AI             | $5F67 | NW                             |
+| Pipe Bug AI             | $5F67 | S                              |
 | Skorp AI (vertical)     | $60AB | S                              |
 | Skorp AI (horizontal)   | $60F8 | S                              |
 | Autrack AI              | $6145 | S                              |

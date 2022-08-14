@@ -9119,8 +9119,8 @@ earthquakeCheck_farCall: ; 00:3C92
     ld [rMBC_BANK_REG], a
 ret
 
-Call_000_3ca6: ; 00:3CA6 - enemy routine: Delete self?
-    callFar Call_003_6ae7
+enemy_deleteSelf_farCall: ; 00:3CA6 - enemy routine: Delete self?
+    callFar enemy_deleteSelf
     ld a, $02 ; Enemy AI bank
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a

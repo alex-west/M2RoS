@@ -443,7 +443,7 @@ jr_002_4276:
     ld [hl], $99
 
 jr_002_428b:
-    call Call_000_3ca6
+    call enemy_deleteSelf_farCall
     ld a, $02
     ldh [hEnemySpawnFlag], a
     call Call_002_438f
@@ -625,7 +625,7 @@ jr_002_437f:
     jp Jump_002_40d8 ; Skip to next enemy
 
 ; 02:4386 - Unused branch
-    call Call_000_3ca6
+    call enemy_deleteSelf_farCall
     ld a, $ff
     ldh [hEnemySpawnFlag], a
     jr jr_002_437f
@@ -1062,7 +1062,7 @@ jr_002_456d:
 
 
 jr_002_459d:
-    call Call_000_3ca6
+    call enemy_deleteSelf_farCall
     ld a, $02
     ldh [hEnemySpawnFlag], a
     pop af
@@ -1070,7 +1070,7 @@ jr_002_459d:
 
 
 jr_002_45a8:
-    call Call_000_3ca6
+    call enemy_deleteSelf_farCall
     ld a, $ff
     ldh [hEnemySpawnFlag], a
     pop af
@@ -2383,7 +2383,7 @@ ret
     cp $9d ; Exit if missile refill
         ret z
     ; Delete the items
-    call Call_000_3ca6 ; Delete self
+    call enemy_deleteSelf_farCall ; Delete self
     ld a, $02 ; Set collected flag
     ldh [hEnemySpawnFlag], a
 ret
@@ -3144,7 +3144,7 @@ ret
         ret
     .else:
         ; Delete self
-        call Call_000_3ca6
+        call enemy_deleteSelf_farCall
         ld a, $ff
         ldh [hEnemySpawnFlag], a
         ret
@@ -3596,7 +3596,7 @@ Call_002_565f: ; 02:565F
             ; Kill
             ld a, $02
             ld [sfxRequest_noise], a
-            call Call_000_3ca6
+            call enemy_deleteSelf_farCall
             ld a, $02
             ldh [hEnemySpawnFlag], a
             ret
@@ -3632,7 +3632,7 @@ jr_002_5692:
         ld [hl], a
         ldh [hEnemyDropType], a
         ; Die
-        call Call_000_3ca6
+        call enemy_deleteSelf_farCall
         ld a, $02
         ldh [hEnemySpawnFlag], a
         ret
@@ -3710,7 +3710,7 @@ jr_002_56e7:
 ret
 
 .dropNothing: ; Delete self
-    call Call_000_3ca6
+    call enemy_deleteSelf_farCall
     ld a, $02
     ldh [hEnemySpawnFlag], a
     ret
@@ -3772,7 +3772,7 @@ Jump_002_5732:
     ld [hl+], a
     ld [hl+], a
     ld [hl], a
-    call Call_000_3ca6
+    call enemy_deleteSelf_farCall
     ld a, $02
     ldh [hEnemySpawnFlag], a
     xor a
@@ -3813,7 +3813,7 @@ jr_002_57a2:
 
 
 jr_002_57ab:
-    call Call_000_3ca6
+    call enemy_deleteSelf_farCall
     ld a, $ff
     ldh [hEnemySpawnFlag], a
     ret
@@ -4177,7 +4177,7 @@ jr_002_59a6: ; 02:59A6
         ret
 
 jr_002_59bf:
-    call Call_000_3ca6
+    call enemy_deleteSelf_farCall
     ld a, $ff
     ldh [hEnemySpawnFlag], a
 ret
@@ -4608,7 +4608,7 @@ ret
     .endIf_B:
 
     ; Delete self
-    call Call_000_3ca6
+    call enemy_deleteSelf_farCall
     ld a, $03
     ld [sfxRequest_noise], a
     ld a, $ff
@@ -5048,109 +5048,127 @@ ret
 ;}
 
 ;------------------------------------------------------------------------------
-; pipe bug spawner
-enAI_5F67: ; 02:5F67
+; Gawron/Yumee spawner/bug AI (pipe bugs)
+enAI_pipeBug: ;{ 02:5F67
+    ; Do nothing while child is active
     ldh a, [hEnemySpawnFlag]
     cp $03
         ret z
-
+    ; If a bug, do bug things
     cp $01
-        jp nz, Jump_002_600a
-
+        jp nz, .pipeBugAI
+; Spawner AI
+    ; Increment wait timer
     ld hl, $ffe9
     inc [hl]
     ld a, [hl]
     cp $18
         ret c
-
+    ; Reset wait timer
     ld [hl], $00
+
+    ; Check the number of bugs we've spawned
     ld hl, $ffe7
     ld a, [hl]
     cp $0a
-    jr c, jr_002_5f90
-        ; Delete self?
-        call Call_000_3ca6
+    jr c, .endIf_A
+        ; Delete self
+        call enemy_deleteSelf_farCall
         ; Play sound
         ld a, $14
         ld [sfxRequest_square1], a
+        ; Kill permanently if spawn number is within the saved range of $40-$7F (!)
         ld a, $02
         ldh [hEnemySpawnFlag], a
-            ret
-    jr_002_5f90:
-
-    ; Load in new pipe bug
+        ret
+    .endIf_A:
+    ; Increment the number of bugs we've spawned
     inc [hl]
-    call findFirstEmptyEnemySlot_longJump ; Get first unused slot
+
+; Load in new pipe bug
+    ; Get first unused slot
+    call findFirstEmptyEnemySlot_longJump
+    ; Set status
     xor a
     ld [hl+], a
+    ; Set y pos
     ldh a, [hEnemyYPos]
     ld [hl+], a
+    ; Set x pos
     ldh a, [hEnemyXPos]
     ld [hl+], a
+
+    ; Set sprite type depending on current sprite type
     ldh a, [hEnemySpriteType]
     cp $3c
-    jr nc, jr_002_5fa6
-        ld a, $17
-        jr jr_002_5fa8
-    jr_002_5fa6:
-        ld a, $38
-    jr_002_5fa8:
-
+    jr nc, .else_B
+        ld a, $17 ; Gawron
+        jr .endIf_B
+    .else_B:
+        ld a, $38 ; Yumee
+    .endIf_B:
     ld [hl+], a
-    ld de, pipeBugHeader ;$5fff
-    ld b, $09
 
-    jr_002_5fae:
+    ; Load header
+    ld de, .pipeBugHeader ;$5fff
+    ld b, $09
+    .loadLoop_A:
         ld a, [de]
         ld [hl+], a
         inc de
         dec b
-    jr nz, jr_002_5fae
-
+    jr nz, .loadLoop_A
+    ; Save max health to C
     ld c, a
+
+    ; Clear 4 bytes (drop type, explosion flag, Y/X screens away)
     xor a
     ld b, $04
-
-    jr_002_5fb8:
+    .clearLoop:
         ld [hl+], a
         dec b
-    jr nz, jr_002_5fb8
-
+    jr nz, .clearLoop
+    ; Save max health properly
     ld [hl], c
+
+    ; Similar to enemy_createLinkForChildObject
+    ;  Set the spawn flag so the pipe bug can tell its parent when it's dead
     ld a, l
     add $0b
     ld l, a
     ldh a, [$fd]
     cp $c6
-    jr nz, jr_002_5fcb
+    jr nz, .else_C
         ldh a, [$fc]
-        jr jr_002_5fcf
-    jr_002_5fcb:
+        jr .endIf_C
+    .else_C:
         ldh a, [$fc]
         add $10
-    jr_002_5fcf:
-
+    .endIf_C:
     ld [hl+], a
     ld [enemy_tempSpawnFlag], a
+    
+    ; Load spawn number depending on parent sprite type (why?)
     ldh a, [hEnemySpriteType]
     bit 0, a
-    jr nz, jr_002_5fdc
+    jr nz, .else_D
         xor a
-        jr jr_002_5fde
-    jr_002_5fdc:
+        jr .endIf_D
+    .else_D:
         ld a, $01
-    jr_002_5fde:
-
+    .endIf_D:
     ld [hl+], a
+    
+    ; Load AI pointer
     ld b, $02
-
-    jr_002_5fe1:
+    .loadLoop_B:
         ld a, [de]
         ld [hl+], a
         inc e
         dec b
-    jr nz, jr_002_5fe1
+    jr nz, .loadLoop_B
 
+    ; Load spawn flag of child into enemySpawnFlags[spawnNumber]
     dec l
     dec l
     dec l
@@ -5159,61 +5177,66 @@ enAI_5F67: ; 02:5F67
     ld l, a
     ld a, [enemy_tempSpawnFlag]
     ld [hl], a
+    ; Increment total number of enemies and number of active enemies
     ld hl, numEnemies
     inc [hl]
     inc l
     inc [hl]
+    ; Set spawner status to dormant
     ld hl, hEnemySpawnFlag
     ld [hl], $03
 ret
 
-; Pipe bug enemy header
-pipeBugHeader: ; 02:5FFF
+; Pipe bug enemy header (non-standard 11 byte header)
+.pipeBugHeader: ; 02:5FFF
     db $80, $00, $00, $00, $00, $00, $00, $00, $01
-    dw enAI_5F67
+    dw enAI_pipeBug
 
-Jump_002_600a:
-    call Call_002_609b
+.pipeBugAI:
+    call .animate
     ldh a, [hEnemyState]
-    and a
-        jr z, jr_002_6017 ; state == 0
-    dec a
-        jr z, jr_002_603e ; state == 1
-    ; last case
-        jr jr_002_605a
+    and a ; State 0
+        jr z, .case_wait
+    dec a ; State 1
+        jr z, .case_rise
+    ; State 2
+        jr .case_moveHorizontal
 
-jr_002_6017: ; state 0
-    ld c, $02
+.case_wait: ; State 0
+    ld c, $02 ; Used to make bug face left
+    ; Check if Samus is within range
     ld a, [samus_onscreenXPos]
     ld b, a
     ld hl, hEnemyXPos
     ld a, [hl]
     sub b
-    jr nc, jr_002_6028
+    jr nc, .endIf_E
         cpl
         inc a
-        ld c, $00
-    jr_002_6028:
-
+        ld c, $00 ; Used to make bug face right
+    .endIf_E:
     cp $50
         ret nc
 
+    ; Apply C to set the direction of the bug
     ld a, c
     ldh [$e8], a
     and a
-    jr z, jr_002_6036
+    jr z, .else_F
         xor a
         ldh [hEnemyAttr], a
-        jr jr_002_603a
-    jr_002_6036:
+        jr .endIf_F
+    .else_F:
         ld a, OAMF_XFLIP
         ldh [hEnemyAttr], a
-    jr_002_603a:
-
+    .endIf_F:
+    ; Increment to the next state
     ld a, $01
     ldh [hEnemyState], a
+; continue to next state
 
-jr_002_603e:
+.case_rise: ; State 1
+    ; Check if Samus is within vertical range
     ld hl, hEnemyYPos
     ld a, [hl]
     sub $04
@@ -5222,83 +5245,87 @@ jr_002_603e:
     add $05
     cp [hl]
         ret c
-
+    ; Increment state to moving forward
     ld hl, hEnemyState
     inc [hl]
+    ; Animate if a Yumee
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $38
         ret c
-
     ld [hl], $3a
 ret
 
-
-jr_002_605a:
+.case_moveHorizontal: ; State 2
     ld hl, hEnemyXPos
     ld a, [hl]
     cp $a8
-    jr nc, jr_002_6073
+    jr nc, .else_G
         ; Check behavioral flip flag
         ldh a, [$e8]
         and a
-        jr z, jr_002_606d
+        jr z, .else_H
+            ; Move left
             dec [hl]
             dec [hl]
             call enemy_accelBackwards
-                ret
-        jr_002_606d:
+            ret
+        .else_H:
+            ; Move right
             inc [hl]
             inc [hl]
             call enemy_accelForwards
-                ret
-    jr_002_6073:
-    
-    ld h, $c6
-    ldh a, [hEnemySpawnFlag]
-    bit 4, a
-    jr nz, jr_002_6080
-        add $1c
-        ld l, a
-        jr jr_002_6084
-    jr_002_6080:
-        add $0c
-        ld l, a
-        inc h
-    jr_002_6084:
-
-    ld a, [hl]
-    cp $03
-    jr nz, jr_002_6093
-        ld a, $01
-        ld [hl+], a
+            ret
+    .else_G:
+        ; Get address of spawn flag of parent object
+        ld h, $c6
+        ldh a, [hEnemySpawnFlag]
+        bit 4, a
+        jr nz, .else_I
+            add $1c
+            ld l, a
+            jr .endIf_I
+        .else_I:
+            add $0c
+            ld l, a
+            inc h
+        .endIf_I:
+        
+        ; Check if parent object is inactive
         ld a, [hl]
-        ld hl, enemySpawnFlags
-        ld l, a
-        ld [hl], $01
-    jr_002_6093:
+        cp $03
+        jr nz, .endIf_J
+            ; Set it to active
+            ld a, $01
+            ld [hl+], a
+            ; Set its spawn flag in the enemySpawnFlags array
+            ld a, [hl]
+            ld hl, enemySpawnFlags
+            ld l, a
+            ld [hl], $01
+        .endIf_J:
+        ; Delete self
+        call enemy_deleteSelf_farCall
+        ld a, $ff
+        ldh [hEnemySpawnFlag], a
+        ret
+; end state
 
-    call Call_000_3ca6
-    ld a, $ff
-    ldh [hEnemySpawnFlag], a
-ret
-
-
-Call_002_609b:
+.animate: ; 02:609B
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $38
-    jr nc, jr_002_60a7
+    jr nc, .else_K
+        ; Yumee animation
         xor $0f
-        jr jr_002_60a9
-    jr_002_60a7:
+        jr .endIf_K
+    .else_K:
+        ; Gawron animation
         xor $01
-    jr_002_60a9:
-    
+    .endIf_K:    
     ld [hl], a
 ret
-
-; end of pipe bug code?
+;} end pipe bug AI
 
 ;------------------------------------------------------------------------------
 ; Skorp AI (vertical type) - Things with circular saws that poke out of walls
@@ -5906,7 +5933,7 @@ ret
         ret
     .else_D:
         ; Delete self
-        call Call_000_3ca6
+        call enemy_deleteSelf_farCall
         ld a, $ff
         ldh [hEnemySpawnFlag], a
         ret
@@ -6216,7 +6243,7 @@ ret
 ret
 
 .projectileDelete:
-    call Call_000_3ca6
+    call enemy_deleteSelf_farCall
     ld a, $ff
     ldh [hEnemySpawnFlag], a
 ret
@@ -6378,7 +6405,7 @@ ret
         cp $20
             ret nz
         ; Delete self
-        call Call_000_3ca6
+        call enemy_deleteSelf_farCall
         ld a, $ff
         ldh [hEnemySpawnFlag], a
         ret
@@ -6593,7 +6620,7 @@ ret
 ret
 
 .deleteSelf:
-    call Call_000_3ca6 ; Delete self
+    call enemy_deleteSelf_farCall ; Delete self
     ; Delete self for good
     ld a, $02
     ldh [hEnemySpawnFlag], a
@@ -7413,7 +7440,7 @@ ret
 ret
 
 .deleteDoor:
-    call Call_000_3ca6 ; Delete self?
+    call enemy_deleteSelf_farCall ; Delete self?
     ; Set enemy spawn flag to dead
     ld a, $02
     ldh [hEnemySpawnFlag], a
@@ -7660,7 +7687,7 @@ enAI_metroidStinger: ;{ 02:6B83
         ret
     .else:
         ; Delete self
-        call Call_000_3ca6
+        call enemy_deleteSelf_farCall
         ld a, $02
         ldh [hEnemySpawnFlag], a
         ; Unfreeze Samus
@@ -8362,7 +8389,7 @@ enAI_gammaMetroid: ;{ 02:6F60
 ret
 
 .despawn: ; Delete self (don't save it)
-    call Call_000_3ca6
+    call enemy_deleteSelf_farCall
     ld a, $ff
     ldh [hEnemySpawnFlag], a
 ret
@@ -8789,14 +8816,18 @@ ret
             ret
     .endIf_N:
 
-    call Call_000_3ca6
+    call enemy_deleteSelf_farCall
     ld a, $ff
     ldh [hEnemySpawnFlag], a
 ret
 ;}
 
 ;------------------------------------------------------------------------------
-
+; Note that the caller function needs to set enemy_tempSpawnFlag
+; - $06 is a common value for spawned projectiles
+; - If the spawned object should tell the parent it is dead, then
+;    the return value of enemy_createLinkForChildObject may be used
+;    (I've only seen this with the pipe bugs, which don't use this function for some reason)
 enemy_spawnObject:
     .shortHeader: ; 02:7231
         ld b, $07
@@ -8813,9 +8844,9 @@ enemy_spawnObject:
     jr nz, .loadLoop_A
     ; Save max health to C
     ld c, a
+    ; Clear 4 bytes (drop type, explosion flag, Y/X screens away)
     xor a
     ld b, $04
-
     .clearLoop:
         ld [hl+], a
         dec b
@@ -8823,13 +8854,15 @@ enemy_spawnObject:
     ; Save max health properly
     ld [hl], c
     
+    ; Set spawn flag to provided temp value
     ld a, l
     add $0b
     ld l, a
     ld a, [enemy_tempSpawnFlag]
     ld [hl+], a
+    
+    ; Load spawn number and AI pointer
     ld b, $03
-
     .loadLoop_B:
         ld a, [de]
         ld [hl+], a
@@ -8837,6 +8870,7 @@ enemy_spawnObject:
         dec b
     jr nz, .loadLoop_B
 
+    ; Load spawn flag into enemySpawnFlags[spawnNumber]
     dec l
     dec l
     dec l
@@ -8845,6 +8879,7 @@ enemy_spawnObject:
     ld l, a
     ld a, [enemy_tempSpawnFlag]
     ld [hl], a
+    ; Increment total number of enemies and number of active enemies
     ld hl, numEnemies
     inc [hl]
     inc l
@@ -9257,7 +9292,7 @@ ret
                 ret
     .else_K:
         ; Delete self
-        call Call_000_3ca6
+        call enemy_deleteSelf_farCall
         ld a, $ff
         ldh [hEnemySpawnFlag], a
         ret
@@ -9345,7 +9380,7 @@ ret
         cp $90
             ret c
         ; Despawn
-        call Call_000_3ca6
+        call enemy_deleteSelf_farCall
         ld a, $02
         ldh [hEnemySpawnFlag], a
         ld a, $02
@@ -9977,7 +10012,7 @@ ret
 ret
 
 .fireballDelete:
-    call Call_000_3ca6
+    call enemy_deleteSelf_farCall
     ld a, $ff
     ldh [hEnemySpawnFlag], a
     ld hl, metroid_state
