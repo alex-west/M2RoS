@@ -19,9 +19,9 @@ Legend
 | Glow Fly AI             | $54A1 | S                              |
 | Rock Icicle AI          | $5542 | S                              |
 | Common Enemy Handler    | $5630 | NW (structure, labels)         |
-| Crawler AI (type A)     | $57DE | NW                             |
-| Shared Crawler Code     | $5895 | NW                             |
-| Crawler AI (type B)     | $58DE | NW                             |
+| Crawler AI (type A)     | $57DE | S                              |
+| Shared Crawler Code     | $5895 | S                              |
+| Crawler AI (type B)     | $58DE | S                              |
 | Skreek Projectile       | $59A6 | NW (labels)                    |
 | Skreek AI               | $59C7 | NW                             |
 | Small Bug AI            | $5ABF | S                              |

@@ -591,10 +591,10 @@ enXX: ; Default - 03:64FE
     dw enAI_NULL
 en6509: ; Enemy 0/20h (tsumari / needler facing right)
     db $00,$20,$00,$00,$00,$FF,$00,$00,$01
-    dw enAI_57DE ;$57DE
+    dw enAI_crawlerA ;$57DE
 en6514: ; Enemy 1/21h (tsumari / needler facing left)
     db $00,$00,$00,$00,$02,$FF,$00,$00,$01
-    dw enAI_58DE
+    dw enAI_crawlerB
 en651F: ; Enemy 4 (skreek)
     db $80,$00,$00,$00,$00,$00,$00,$00,$0B
     dw enAI_59C7
@@ -636,10 +636,10 @@ en65A3: ; Enemy 2Bh (skorp (horizontal, leftwards))
     dw enAI_skorpHori
 en65AE: ; Enemy 30h (moheek facing right)
     db $00,$20,$00,$00,$00,$FF,$00,$00,$05
-    dw enAI_57DE
+    dw enAI_crawlerA
 en65B9: ; Enemy 31h (moheek facing left)
     db $00,$00,$00,$00,$02,$FF,$00,$00,$05
-    dw enAI_58DE
+    dw enAI_crawlerB
 en65C4: ; Enemy 40h (octroll)
     db $00,$00,$00,$00,$00,$00,$00,$00,$0F
     dw enAI_chuteLeech

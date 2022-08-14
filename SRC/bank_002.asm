@@ -3858,18 +3858,29 @@ jr_002_57db:
 
 ;------------------------------------------------------------------------------
 ; Tsumuri/Needler/Moheek AI (crawlers)
-; - Right facing variant
-enAI_57DE: ; 02:57DE
-    jr jr_002_5838
+; - Type A (faces right when on top of a platform)
+;  - Goes counter-clockwise in enclosed spaces
+;  - Goes clockwise on floating platforms
+;
+; Note about the directional values used here in [$E8]
+;  0 (b:00) - Right
+;  1 (b:01) - Down
+;  2 (b:10) - Left
+;  3 (b:11) - Up
+; Essentially, bit 0 controls the axis while bit 1 controls whether it goes
+;  forward or backwards on the given axis.
+; The Gunzoo uses the same schema.
+enAI_crawlerA: ;{ 02:57DE
+    jr .convexChecks
 
-Jump_002_57e0:
-jr_002_57e0:
+.gotoConcaveChecks:
+    ; I don't know why this is here
     ld a, $ff
     ldh [$e9], a
-        jr jr_002_57f5
+jr .concaveChecks
 
-jr_002_57e6:
-    call Call_002_587e
+.moveAndAnimate:
+    call crawler_move
     ldh a, [hEnemy_frameCounter]
     and $01
         ret nz
@@ -3877,283 +3888,310 @@ jr_002_57e6:
     call enemy_flipSpriteId.now
 ret
 
-jr_002_57f5:
+; Check inside corners
+.concaveChecks:
+    ; Check movement direction
     ldh a, [$e8]
-    and a
-        jr z, jr_002_580e ; State 0 - right?
-    dec a                 
-        jr z, jr_002_581c ; State 1 - down?
-    dec a                 
-        jr z, jr_002_582a ; State 2 - left?
+    and a ; Case 0 - Right
+        jr z, .insideCornerCheck_bottomRight
+    dec a ; Case 1 - Down                 
+        jr z, .insideCornerCheck_bottomLeft
+    dec a ; Case 2 - Left
+        jr z, .insideCornerCheck_topLeft
+    ; Case 3 - Up
 
-; State 3 - up?
+;.insideCornerCheck_topRight:
     call enCollision_up.crawlA
     ld a, [en_bgCollisionResult]
     bit 3, a
-        jr z, jr_002_57e6
-    call Call_002_58b8
+        jr z, .moveAndAnimate
+    call crawler_turn.left
 ret
 
-jr_002_580e:
+.insideCornerCheck_bottomRight: ; Right
     call enCollision_right.crawlA
     ld a, [en_bgCollisionResult]
     bit 0, a
-        jr z, jr_002_57e6
-    call Call_002_58cc
+        jr z, .moveAndAnimate
+    call crawler_turn.up
 ret
 
-jr_002_581c:
+.insideCornerCheck_bottomLeft: ; Down
     call enCollision_down.crawlA
     ld a, [en_bgCollisionResult]
     bit 1, a
-        jr z, jr_002_57e6
-    call Call_002_5895
+        jr z, .moveAndAnimate
+    call crawler_turn.right
 ret
 
-jr_002_582a:
+.insideCornerCheck_topLeft: ; Left
     call enCollision_left.crawlA
     ld a, [en_bgCollisionResult]
     bit 2, a
-        jr z, jr_002_57e6
-    call Call_002_58a7
+        jr z, .moveAndAnimate
+    call crawler_turn.down
 ret
+; end concave checks
 
-
-jr_002_5838:
+; Check the outside corners
+.convexChecks:
+    ; Check movement direction
     ldh a, [$e8]
-    and a
-        jr z, jr_002_5851 ; State 0 - right?
-    dec a
-        jr z, jr_002_5860 ; State 1 - down?
-    dec a
-        jr z, jr_002_586f ; State 2 - left?
+    and a ; Case 0 - Right
+        jr z, .outsideCornerCheck_topRight
+    dec a ; Case 1 - Down
+        jr z, .outsideCornerCheck_bottomRight
+    dec a ; Case 2 - Left
+        jr z, .outsideCornerCheck_bottomLeft
+    ; Case 3 - Up
 
-; State 3 - up?
+;.outsideCornerCheck_topLeft:
     call enCollision_right.crawlA
     ld a, [en_bgCollisionResult]
     bit 0, a
-        jr nz, jr_002_57e0
-    call Call_002_5895
+        jr nz, .gotoConcaveChecks
+    call crawler_turn.right
 ret
 
-jr_002_5851:
+.outsideCornerCheck_topRight: ; Right
     call enCollision_down.crawlA
     ld a, [en_bgCollisionResult]
     bit 1, a
-        jp nz, Jump_002_57e0
-    call Call_002_58a7
+        jp nz, .gotoConcaveChecks
+    call crawler_turn.down
 ret
 
-jr_002_5860:
+.outsideCornerCheck_bottomRight: ; Down
     call enCollision_left.crawlA
     ld a, [en_bgCollisionResult]
     bit 2, a
-        jp nz, Jump_002_57e0
-    call Call_002_58b8
+        jp nz, .gotoConcaveChecks
+    call crawler_turn.left
 ret
 
-jr_002_586f:
+.outsideCornerCheck_bottomLeft: ; Left
     call enCollision_up.crawlA
     ld a, [en_bgCollisionResult]
     bit 3, a
-        jp nz, Jump_002_57e0
-    call Call_002_58cc
+        jp nz, .gotoConcaveChecks
+    call crawler_turn.up
 ret
+;}
 
-; Shared movement subroutine
-Call_002_587e:
+;--------------------------------------
+; Shared movement subroutine for the crawlers
+crawler_move: ;{ 02:587E
     ld hl, hEnemyYPos
     ldh a, [$e8]
     and $0f
-    cp $01
-        jr z, jr_002_5893 ; case 1 - go down
-    cp $03
-        jr z, jr_002_5891 ; case 3 - go up
-    ; x movement cases
+    ; Y movement cases
+    cp $01 ; Case 1 - go down
+        jr z, .moveForward
+    cp $03 ; Case 3 - go up
+        jr z, .moveBack
+    ; X movement cases
     inc l
-    and a
-        jr z, jr_002_5893 ; case 0 - go right
-    ; case 2 - go left
-jr_002_5891:
-    dec [hl]
-    ret
+    and a ; Case 0 - go right
+        jr z, .moveForward
+    ; Case 2 - go left
+    
+    .moveBack:
+        dec [hl]
+        ret
+    .moveForward:
+        inc [hl]
+        ret
+;} end crawler_move
 
-jr_002_5893:
-    inc [hl]
-    ret
-
-; Rotation (?) functions for the crawlers (shared)
-Call_002_5895:
+; Shared rotation functions for the crawlers
+crawler_turn: ;{
+.right: ; 02:5895
+    ; Set direction to right (0)
     ldh a, [$e8]
     and $f0
     ldh [$e8], a
+    ; Set sprite type to $x0
     ld hl, hEnemySpriteType
     ld a, [hl]
     and $f0
-
-jr_002_58a1:
+.xFlip:
+    ; Set attributes
     ld [hl+], a
     inc l
-    ld a, $20
+    ld a, OAMF_XFLIP
     ld [hl], a
 ret
 
-Call_002_58a7:
+.down: ; 02:58A7
+    ; Set direction to down (1)
     ldh a, [$e8]
     and $f0
     inc a
     ldh [$e8], a
+    ; Set sprite type to $x2
     ld hl, hEnemySpriteType
     ld a, [hl]
     and $f0
     add $02
-    jr jr_002_58a1
+jr .xFlip
 
-Call_002_58b8:
+.left: ; 02:58B8
+    ; Set direction to left (2)
     ldh a, [$e8]
     and $f0
     add $02
     ldh [$e8], a
+    ; Set sprite type to $x0
     ld hl, hEnemySpriteType
     ld a, [hl]
     and $f0
-
-jr_002_58c6:
+.yFlip:
     ld [hl+], a
+    ; Set attributes
     inc l
-    ld a, $40
+    ld a, OAMF_YFLIP
     ld [hl], a
-    ret
+ret
 
-Call_002_58cc:
+.up: ; 02:58CC
+    ; Set direction to up (3)
     ldh a, [$e8]
     and $f0
     add $03
     ldh [$e8], a
+    ; Set sprite type to $x2
     ld hl, hEnemySpriteType
     ld a, [hl]
     and $f0
     add $02
-    jr jr_002_58c6
+jr .yFlip
+;}
 
 ;------------------------------------------------------------------------------
 ; Tsumuri/Needler/Moheek AI (crawlers)
-; - Left facing variant
-enAI_58DE:
-    jr jr_002_594b
+; - Type A (faces left when on top of a platform)
+;  - Goes clockwise in enclosed spaces
+;  - Goes counter-clockwise on floating platforms
+enAI_crawlerB: ;{ 02:58DE
+    jr .convexChecks
 
-Jump_002_58e0:
+.gotoConcaveChecks:
+    ; I don't know what this is
     ld a, $ff
     ldh [$e9], a
-    jr jr_002_58f2
+jr .concaveChecks
 
-jr_002_58e6:
-    call Call_002_587e
+.moveAndAnimate:
+    call crawler_move
     ldh a, [hEnemy_frameCounter]
     and $01
         ret nz
     call enemy_flipSpriteId.now
 ret
 
-
-jr_002_58f2:
+; Check inside corners
+.concaveChecks:
     ldh a, [$e8]
-    and a
-        jr z, jr_002_5912   ; State 0 - right?
-    dec a                   
-        jp z, Jump_002_5925 ; State 1 - down?
-    dec a                   
-        jp z, Jump_002_5938 ; State 2 - left?
+    and a ; Case 0 - Right
+        jr z, .insideCornerCheck_topRight
+    dec a ; Case 1 - Down
+        jp z, .insideCornerCheck_bottomRight
+    dec a ; Case 2 - Left
+        jp z, .insideCornerCheck_bottomLeft
+    ; Case 3 - Up
 
-; State 3 - up?
+;.insideCornerCheck_topLeft:
     call enCollision_up.crawlB
     ld a, [en_bgCollisionResult]
     bit 3, a
-        jr z, jr_002_58e6
-    call Call_002_5895
+        jr z, .moveAndAnimate
+    call crawler_turn.right
     ld hl, hEnemyAttr
     set OAMB_YFLIP, [hl]
 ret
 
-jr_002_5912:
+.insideCornerCheck_topRight: ; Right
     call enCollision_right.crawlB
     ld a, [en_bgCollisionResult]
     bit 0, a
-        jr z, jr_002_58e6
-    call Call_002_58a7
+        jr z, .moveAndAnimate
+    call crawler_turn.down
     ld hl, hEnemyAttr
     res OAMB_XFLIP, [hl]
 ret
 
-Jump_002_5925:
+.insideCornerCheck_bottomRight: ; Down
     call enCollision_down.crawlB
     ld a, [en_bgCollisionResult]
     bit 1, a
-        jr z, jr_002_58e6
-    call Call_002_58b8
+        jr z, .moveAndAnimate
+    call crawler_turn.left
     ld hl, hEnemyAttr
     res OAMB_YFLIP, [hl]
 ret
 
-Jump_002_5938:
+.insideCornerCheck_bottomLeft: ; Left
     call enCollision_left.crawlB
     ld a, [en_bgCollisionResult]
     bit 2, a
-        jr z, jr_002_58e6
-    call Call_002_58cc
+        jr z, .moveAndAnimate
+    call crawler_turn.up
     ld hl, hEnemyAttr
     set OAMB_XFLIP, [hl]
 ret
+; end concave checks
 
-jr_002_594b:
+; Check the outside corners
+.convexChecks:
     ldh a, [$e8]
-    and a
-        jr z, jr_002_596a ; State 0 - right?
-    dec a                 
-        jr z, jr_002_597e ; State 1 - down?
-    dec a                 
-        jr z, jr_002_5992 ; State 2 - left?
+    and a ; Case 0 - Right
+        jr z, .outsideCornerCheck_bottomRight
+    dec a ; Case 1 - Down
+        jr z, .outsideCornerCheck_bottomLeft
+    dec a ; Case 2 - Left
+        jr z, .outsideCornerCheck_topLeft
+    ; Case 3 - Up
 
-; State 3 - up?
+;.outsideCornerCheck_topRight:
     call enCollision_left.crawlB
     ld a, [en_bgCollisionResult]
     bit 2, a
-        jp nz, Jump_002_58e0
-    call Call_002_58b8
+        jp nz, .gotoConcaveChecks
+    call crawler_turn.left
     ld hl, hEnemyAttr
     res OAMB_YFLIP, [hl]
 ret
 
-jr_002_596a:
+.outsideCornerCheck_bottomRight: ; Right
     call enCollision_up.crawlB
     ld a, [en_bgCollisionResult]
     bit 3, a
-        jp nz, Jump_002_58e0
-    call Call_002_58cc
+        jp nz, .gotoConcaveChecks
+    call crawler_turn.up
     ld hl, hEnemyAttr
     set OAMB_XFLIP, [hl]
 ret
 
-jr_002_597e:
+.outsideCornerCheck_bottomLeft: ; Down
     call enCollision_right.crawlB
     ld a, [en_bgCollisionResult]
     bit 0, a
-        jp nz, Jump_002_58e0
-    call Call_002_5895
+        jp nz, .gotoConcaveChecks
+    call crawler_turn.right
     ld hl, hEnemyAttr
     set OAMB_YFLIP, [hl]
 ret
 
-jr_002_5992:
+.outsideCornerCheck_topLeft: ; Left
     call enCollision_down.crawlB
     ld a, [en_bgCollisionResult]
     bit 1, a
-        jp nz, Jump_002_58e0
-    call Call_002_58a7
+        jp nz, .gotoConcaveChecks
+    call crawler_turn.down
     ld hl, hEnemyAttr
     res OAMB_XFLIP, [hl]
 ret
-
+;}
 
 ;------------------------------------------------------------------------------
 ; Skreek projectile code
