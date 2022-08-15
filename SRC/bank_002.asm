@@ -140,7 +140,7 @@ jr_002_40c1:
         
         jr_002_40cc:
             call enemy_moveFromWramToHram
-            call Call_002_4239 ; Explosion/drop handler?
+            call enemy_getDamagedOrGiveDrop ; Routine for either damaging an enemy or Samus collecting a drop
             call Call_002_452e ; Check if offscreen
             call Call_002_5630 ; Enemy AI and related stuffs
         
@@ -378,8 +378,9 @@ Call_002_4217:
 ret
 
 ;------------------------------------------------------------------------------
-; Important per-enemy routine
-Call_002_4239:
+; Handles logic related to hurting enemies and collecting enemy drops
+enemy_getDamagedOrGiveDrop: ;{ 02:4239
+    ; Check if a collision was made and exit if not (?)
     ld hl, $d05d
     ld a, [hl+]
     cp $ff
@@ -394,58 +395,68 @@ Call_002_4239:
 
     ldh a, [hEnemyExplosionFlag]
     and a
-        jp nz, Jump_002_438f
+        jp nz, Jump_002_438f ; Exit
+    ; If not a drop, attempt to apply damage
     ldh a, [hEnemyDropType]
     and a
-        jr z, jr_002_42ce
+        jr z, .applyDamage
 
+; Enemy Drop collection case {
+    ; Check if touching drop
     dec hl
     dec hl
     ld a, [hl]
     cp $10
-        jp c, Jump_002_438f
+        jp c, Jump_002_438f ; Exit
 
     ldh a, [hEnemyDropType]
-    dec a
-        jr z, jr_002_426f
+    dec a ; Case 1 - Small Health
+        jr z, .giveSmallHealth
+    dec a ; Case 2 - Large Health
+        jr z, .giveLargeHealth
+    ; Case 4 (default) - Missile Drop
+        jr .giveMissileDrop
 
-    dec a
-        jr z, jr_002_4266
+    .giveLargeHealth:
+        ; Set value (BCD)
+        ld b, $20
+        ; Play sound
+        ld a, $17
+        ld [sfxRequest_square1], a
+        jr .giveHealth
+    .giveSmallHealth:
+        ; Set value (BCD)
+        ld b, $05
+        ; Play sound
+        ld a, $0e
+        ld [sfxRequest_square1], a
 
-    jr jr_002_42a2
-
-jr_002_4266:
-    ld b, $20
-    ld a, $17
-    ld [sfxRequest_square1], a
-    jr jr_002_4276
-
-jr_002_426f:
-    ld b, $05
-    ld a, $0e
-    ld [sfxRequest_square1], a
-
-jr_002_4276:
+.giveHealth:
+    ; Add health
     ld hl, samusCurHealthLow
     ld a, [hl]
     add b
     daa
     ld [hl+], a
+    ; Carry results to energy tanks
     ld a, [hl]
     adc $00
     ld [hl], a
+    ; Check if above max
     ld a, [samusEnergyTanks]
     sub [hl]
-    jr nc, jr_002_428b
-
-    dec [hl]
-    dec hl
-    ld [hl], $99
-
-jr_002_428b:
+    jr nc, .endIf_A
+        ; Clamp health to max
+        dec [hl]
+        dec hl
+        ld [hl], $99
+    .endIf_A:
+.deleteDrop:
     call enemy_deleteSelf_farCall
+    ; Kill enemy permanently if applicable
     ld a, $02
     ldh [hEnemySpawnFlag], a
+    ; Clear stuff
     call Call_002_438f
     ld hl, $c466
     ld a, $ff
@@ -453,183 +464,196 @@ jr_002_428b:
     ld [hl+], a
     ld [hl+], a
     ld [hl], a
-    pop af
-    jp Jump_002_40d8
+; Override return
+pop af
+jp Jump_002_40d8 ; Next enemy
 
-
-jr_002_42a2:
+.giveMissileDrop:
+    ; Play sound
     ld a, $0c
     ld [sfxRequest_square1], a
+    ; Give 5 missiles
     ld hl, samusCurMissilesLow
     ld a, [hl]
     add $05
     daa
     ld [hl+], a
+    ; Carry to the high byte
     ld a, [hl]
     adc $00
     ld [hl], a
+    ; Check if high byte exceeds max
     ld a, [samusMaxMissilesHigh]
     sub [hl]
-    jr c, jr_002_42c4
-
-    jr nz, jr_002_428b
-
-    dec hl
-    ld a, [samusMaxMissilesLow]
-    sub [hl]
-    jr nc, jr_002_428b
-
-    jr jr_002_42c8
-
-jr_002_42c4:
-    ld a, [samusMaxMissilesHigh]
-    ld [hl-], a
-
-jr_002_42c8:
+    jr c, .else_B
+        ; Check low byte if high byte equal max
+        jr nz, .deleteDrop
+        dec hl
+        ; Just delete the drop is the low byte does not exceed the max
+        ld a, [samusMaxMissilesLow]
+        sub [hl]
+            jr nc, .deleteDrop
+        jr .endIf_B
+    .else_B:
+        ; Clamp high byte to max
+        ld a, [samusMaxMissilesHigh]
+        ld [hl-], a
+    .endIf_B:
+    ; Clamp low byte to max
     ld a, [samusMaxMissilesLow]
     ld [hl], a
-    jr jr_002_428b
+jr .deleteDrop
+;} End drop collection logic
 
-jr_002_42ce:
+; Attempt to kill
+.applyDamage:
+    ; Exit if the sprite type is metroid-related (range $A0-$CF)
     ldh a, [hEnemySpriteType]
     cp $a0
-    jr c, jr_002_42d9
+    jr c, .endIf_C
+        cp $d0
+        jp c, Jump_002_438f ; Exit
+    .endIf_C:
 
-    cp $d0
-    jp c, Jump_002_438f
-
-jr_002_42d9:
+    ; Check if hit by Screw Attack
     dec hl
     dec hl
     ld a, [hl]
     cp $10
-    jr z, jr_002_433b
-
-    jp nc, Jump_002_438f
-
+        jr z, .screwAttack 
+        jp nc, Jump_002_438f ; Exit
+    ; Check if not ice
     cp $01
-    jr nz, jr_002_4314
+        jr nz, .applyBeamDamage
 
+; Ice Beam case {
+    ; Check health before applying damage
     ld hl, hEnemyHealth
-    ld a, [hl]
-    and a
-        jr z, jr_002_434c ; if health == $00
+    ld a, [hl] ; Frozen enemies can take an extra hit to kill
+    and a ; if health == $00
+        jr z, .smallExplosion
+    inc a ; if health == $FF
+        jr z, .plink ; Do nothing to enemy
     inc a
-        jr z, jr_002_4345 ; if health == $FF
-    inc a
-        jr z, jr_002_430d ; if health == $FE
+        jr z, .freezeInvulnerable ; if health == $FE
 
-    call Call_002_43a9
+    call enemy_checkDirectionalShields ; Check vulnerabilities (override return)
+    ; Manually subtract 2 health
     dec [hl]
-        jr z, jr_002_42fb
-
-    dec [hl]
-
-jr_002_42fb:
+    jr z, .endIf_D
+        dec [hl]
+    .endIf_D:
+    ; Play freeze sound
     ld a, $01
     ld [sfxRequest_noise], a
-
-jr_002_4300:
+.freeze:
     ld hl, hEnemyStunCounter
     ld [hl], $10
     ld hl, hEnemyIceCounter
     ld [hl], $01
-    jp Jump_002_438f
+jp Jump_002_438f ; Exit
 
-
-jr_002_430d:
+.freezeInvulnerable:
+    ; Play plink sound
     ld a, $0f
     ld [sfxRequest_square1], a
-    jr jr_002_4300
+    jr .freeze
+;} end Ice Beam case
 
-jr_002_4314:
+; For all beams except Ice
+.applyBeamDamage:
     ld e, a
     ld d, $00
     ld hl, weaponDamageTable
     add hl, de
-    call Call_002_43a9
+    call enemy_checkDirectionalShields
     ldh a, [hEnemyHealth]
     cp $fe
-    jr nc, jr_002_4345
-
+        jr nc, .plink ; Do nothing to enemy
     sub [hl]
-    jr z, jr_002_434c
-
-    jr c, jr_002_434c
-
+        jr z, .smallExplosion
+        jr c, .smallExplosion
+    ; 
     ldh [hEnemyHealth], a
     ld a, $01
     ld [sfxRequest_noise], a
-    call Call_002_438f
+    call Call_002_438f ; Clear stuff
     ld a, $11
     ldh [hEnemyStunCounter], a
-    pop af
-    jp Jump_002_40d8
+; Override return
+pop af
+jp Jump_002_40d8 ; Next enemy
 
 
-jr_002_433b:
+.screwAttack:
     ldh a, [hEnemyHealth]
     cp $ff
-    jr z, jr_002_4345
-
-    ld b, $20
-    jr jr_002_434e
-
-Jump_002_4345:
-jr_002_4345:
+    jr z, .endIf_E
+        ; Store large explosion flag in B
+        ld b, $20
+        jr .prepareDrop
+    .endIf_E:
+.plink:
     ld a, $0f
     ld [sfxRequest_square1], a
-    jr jr_002_438f ; Exit
+jr jr_002_438f ; Exit
 
-jr_002_434c: ; if enemy health == 0 (it dead)
-    ; Prep explosion flag and determine drop
+; Small explosion if killed by beam or missile
+.smallExplosion:
+    ; Store small explosion flag in B
     ld b, $10
 
-jr_002_434e:
+.prepareDrop: ;{
+    ; Certain enemy projectiles give small health (100% chance)
     ldh a, [hEnemySpawnFlag]
     cp $06
         jr z, .smallHealth
-
     and $0f
         jr z, .smallHealth
-
+    ; Check initial health to determine drops
     ldh a, [hEnemyMaxHealth]
-    cp $fd
-        jr z, .setExplosion ; If max health == $FD (only arachnus?)
-    cp $fe
-        jr z, .setExplosion ; If max health == $FE (no enemies??)
-    bit 0, a
-        jr z, .missileDrop ; If max health is even
-    cp $0a
-        jr c, .smallHealth ; If max health is less than 10
+    cp $fd ; If max health == $FD (only arachnus?)
+        jr z, .setExplosion
+    cp $fe ; If max health == $FE (no enemies??)
+        jr z, .setExplosion
+    bit 0, a ; If max health is even
+        jr z, .missileDrop
+    cp $0a ; If max health is less than 10
+        jr c, .smallHealth
+    ; If max health is greater than 10
 
-    set 1, b ; Large health
-        jr .setExplosion
-.smallHealth:
-    set 0, b ; Small health
-        jr .setExplosion
-.missileDrop:
-    set 2, b ; Missile drop
+    ;.largeHealth:
+        set 1, b ; Large health
+            jr .setExplosion
+    .smallHealth:
+        set 0, b ; Small health
+            jr .setExplosion
+    .missileDrop:
+        set 2, b ; Missile drop
+    
 .setExplosion:
+    ; Set explosion flag with explosion and drop type
     ld a, b
     ldh [hEnemyExplosionFlag], a
     ; Clear timer
     xor a
     ldh [$e9], a
+    ; Play noise
     ld a, $02
     ld [sfxRequest_noise], a
-
-jr_002_437f:
-    call Call_002_438f
-    pop af
-    jp Jump_002_40d8 ; Skip to next enemy
+.unusedJump:
+    call Call_002_438f ; Clear stuff
+pop af
+jp Jump_002_40d8 ; Skip to next enemy
 
 ; 02:4386 - Unused branch
     call enemy_deleteSelf_farCall
     ld a, $ff
     ldh [hEnemySpawnFlag], a
-    jr jr_002_437f
+    jr .unusedJump
+; }
 
+; Collision results related?
 Call_002_438f:
 Jump_002_438f:
 jr_002_438f:
@@ -647,10 +671,11 @@ jr_002_438f:
     ld [hl-], a
     ld [hl-], a
     ld [hl], a
-    ret
+ret
+;}
 
-
-Call_002_43a9:
+; Checks if an enemy is invulnerable from a certain direction
+enemy_checkDirectionalShields: ;{ 02:43A9
     ld a, [$d05d]
     cp $02
         ret z
@@ -663,19 +688,21 @@ Call_002_43a9:
     ld b, a
     ld a, [$d060]
 
-    jr_002_43bb:
+    .loop:
         rrc b
         srl a
-    jr nc, jr_002_43bb
+    jr nc, .loop
 
     bit 7, b
         ret z
-    pop af
-    jp Jump_002_4345
+; Override the return
+pop af
+jp enemy_getDamagedOrGiveDrop.plink
+;}
 
 weaponDamageTable: ; 02:43C8
     db $01 ; $00 - Power Beam
-    db $02 ; $01 - Ice Beam
+    db $02 ; $01 - Ice Beam (note: Ice Beam manually subtracts two health)
     db $04 ; $02 - Wave Beam
     db $08 ; $03 - Spazer Beam
     db $1E ; $04 - Plasma Beam (30!?)
@@ -802,7 +829,8 @@ enemy_moveFromHramToWram: ; 02:4421
 ret
 
 ; Delete enemies that are sufficiently off-screen
-Call_002_4464:
+Call_002_4464: ; 02:4464
+    ; Check Y screen
     ld hl, hEnemyYScreen
     ld a, [hl+]
     cp $fe
@@ -867,6 +895,7 @@ jr_002_4470:
     jp Jump_002_40d8
 
 jr_002_44b6:
+    ; Check X screen
     ld a, [hl]
     cp $fe
         jr z, jr_002_4470
@@ -1094,7 +1123,7 @@ jr_002_45c2:
     jp Jump_002_40d8
 
 
-updateScrollHistory:
+updateScrollHistory: ; 02:45CA
     ld de, $c40a
     ld hl, $c408
     ld a, [de]
@@ -3520,7 +3549,7 @@ Call_002_5630:
     ; Check if a drop
     ldh a, [hEnemyDropType]
     and a
-        jr nz, jr_002_5692
+        jr nz, enemy_animateDrop
     ; Check if exploding/becoming a drop
     ldh a, [hEnemyExplosionFlag]
     and a
@@ -3528,7 +3557,7 @@ Call_002_5630:
     ; Check if frozen
     ldh a, [hEnemyIceCounter]
     and a
-        jr nz, jr_002_5652
+        jr nz, enemy_animateIce
     ; Check if metroid has been killed?
     ld a, [metroid_state]
     cp $80
@@ -3548,8 +3577,8 @@ jr_002_5648:
 enAI_NULL: ; 02:5651
     ret
 
-
-jr_002_5652:
+; Handles the ice beam timer and the unfreezing animation
+enemy_animateIce: ; 02:5652
     ; Check if sprite is a standard metroid
     ; (the standard metroid will call this on its own terms)
     ldh a, [hEnemySpriteType]
@@ -3559,21 +3588,22 @@ jr_002_5652:
         jr z, jr_002_5648
     dec a
         jr z, jr_002_5648
-
-Call_002_565f: ; 02:565F
-    ; Act every two frames
+.call: ;{ 02:565F - Called directly by normal metroids
+    ; Act every other frame
     ldh a, [hEnemy_frameCounter]
     and $01
         ret nz
-    ; Do nothing if ice counter is below $C4
+    ; Do nothing except increment the ice counter if it is below $C4
     ld hl, hEnemyIceCounter
     ld a, [hl]
     cp $c4
+    ; Double increment to adjust for only doing this every other frame
     inc [hl]
     inc [hl]
         ret c
     cp $d0
     jr nc, .else_A
+        ; Blink for a few frames
         ld hl, hEnemyStatus
         ld a, [hl]
         xor $80
@@ -3600,46 +3630,52 @@ Call_002_565f: ; 02:565F
             ld a, $02
             ldh [hEnemySpawnFlag], a
             ret
-; end branch
+;} end branch
 
-; Drop handler
-jr_002_5692:
+; Drop animation handler
+;  [$E9] is used as a timer in this state
+enemy_animateDrop: ;{ 02:5692
+    ; Check and increment timer
     ld hl, $ffe9
     ld a, [hl]
     inc [hl]
     cp $b0
-    jr z, jr_002_56b3
+    jr z, .else_A
         ; Have the drop pulsate more rapidly after $80 frames
         cp $80
-        jr nc, jr_002_56a6
+        jr nc, .else_B
+            ; Animate every 4th frame
             ldh a, [hEnemy_frameCounter]
             and $03
                 ret nz
-            jr jr_002_56ab
-        jr_002_56a6:
+            jr .endIf_B
+        .else_B:
+            ; Animate every other frame
             ldh a, [hEnemy_frameCounter]
             and $01
                 ret nz
-        jr_002_56ab:
+        .endIf_B:
         ; Flip low bit of sprite type
         ld hl, hEnemySpriteType
         ld a, [hl]
         xor $01
         ld [hl], a
-            ret
-    jr_002_56b3:
+        ret
+    .else_A:
+        ; Clear timer and drop type
         xor a
         ld [hl], a
         ldh [hEnemyDropType], a
         ; Die
         call enemy_deleteSelf_farCall
+        ; Permanently kill enemy if applicable
         ld a, $02
         ldh [hEnemySpawnFlag], a
         ret
-; end proc
+;} end branch
 
 ; Explode
-Jump_002_56bf:
+Jump_002_56bf: ;{ 02:56BF
     bit 5, a
         jr nz, jr_002_56cc
     ld b, $03
@@ -3670,9 +3706,11 @@ ret
 
 
 jr_002_56e7:
+    ; Special case for enemies with initial health of $FD
+    ; (only Arachnus in vanilla, but he doesn't seem to rely on it)
     ldh a, [hEnemyMaxHealth]
     cp $fd
-        jr z, jr_002_5727
+        jr z, .doNotDie
 
     ; 50% chance of dropping nothing
     ld a, [rDIV]
@@ -3687,21 +3725,23 @@ jr_002_56e7:
     dec a
         jr z, .dropLargeHealth ; Case 2 - Large health
 
-; Missile drop
-    ld bc, $04ee ; drop type, sprite ID
+    ; Missile drop
+        ld bc, $04ee ; drop type, sprite ID
         jr .setDrop
-.dropSmallHealth:
-    ld bc, $01e0 ; drop type, sprite ID
+    .dropSmallHealth:
+        ld bc, $01e0 ; drop type, sprite ID
         jr .setDrop
-.dropLargeHealth:
-    ld bc, $02ec ; drop type, sprite ID
+    .dropLargeHealth:
+        ld bc, $02ec ; drop type, sprite ID
         jr .setDrop
 
 .setDrop:
+    ; Set drop and sprite type from 
     ld a, b
     ldh [hEnemyDropType], a
     ld a, c
     ldh [hEnemySpriteType], a
+    ; Clear counters
     xor a
     ldh [hEnemyStunCounter], a
     ldh [hEnemyIceCounter], a
@@ -3709,13 +3749,15 @@ jr_002_56e7:
     ldh [hEnemyExplosionFlag], a
 ret
 
-.dropNothing: ; Delete self
+.dropNothing:
+    ; Delete self
     call enemy_deleteSelf_farCall
+    ; Permanently kill self if applicable
     ld a, $02
     ldh [hEnemySpawnFlag], a
-    ret
+ret
 
-jr_002_5727:
+.doNotDie:
     xor a
     ldh [hEnemyStunCounter], a
     ldh [hEnemyIceCounter], a
@@ -3723,10 +3765,10 @@ jr_002_5727:
     inc a
     ldh [$e9], a
 ret
-
+;}
 
 ; Metroid death branch?
-Jump_002_5732:
+Jump_002_5732: ;{ 02:5732
     ldh a, [hEnemySpawnFlag]
     cp $06
         jr z, jr_002_57ab
@@ -3855,6 +3897,7 @@ jr_002_57d7:
 jr_002_57db:
     ld [hl], $98
     ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Tsumuri/Needler/Moheek AI (crawlers)
@@ -10428,7 +10471,7 @@ ret
         jr z, .unfrozenActions ; Not frozen
 
 ; Frozen
-    call Call_002_565f ; Generic ice stuff
+    call enemy_animateIce.call ; Generic ice stuff
     ldh a, [hEnemyIceCounter]
     and a
         jr z, .unfreeze

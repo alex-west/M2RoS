@@ -10,6 +10,20 @@ Legend
 | Code                    | Addr  | Status (comment)               |
 |-------------------------|-------|--------------------------------|
 | Core Enemy Routines     | $4000 | NW                             |
+| Main Enemy Loop         | $409E | NW                             |
+| Save Flag related proc  | $412F | NW                             |
+| Unknown Procedure       | $418C | NW                             |
+| Unknown Procedure       | $4217 | NW                             |
+| Enemy Drop/Damage proc  | $4239 | NW (weird exit)                |
+| Directional Vuln. Check | $43A9 | NW (WRAM vars, comments)       |
+| Weapon Damage Table     | $43C8 | S                              |
+| Move from WRAM to HRAM  | $43D2 | NW                             |
+| Move from HRAM to WRAM  | $4421 | NW                             |
+| Delete Offscreen Obj.?  | $4464 | NW                             |
+| Reactivate Enemy        | $44C0 | NW                             |
+| Deactivate Enemy        | $452E | NW                             |
+| Update Scroll History   | $45CA | NW (don't other functions do this too?) |
+| Unused Functions        | $45E4 | NW (WRAM vars)                 |
 | Enemy BG Collision      | $4608 | S (condense code w/macros)     |
 | Misc. Blob Thrower Code | $4DB1 | NW                             |
 | Item Orb AI             | $4DD3 | NW (WRAM vars)                 |
