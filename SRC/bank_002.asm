@@ -5,83 +5,83 @@
 
 SECTION "ROM Bank $002", ROMX[$4000], BANK[$2]
 
-Call_002_4000: ; 02:4000
+enemyHandler: ;{ 02:4000
     ld e, $00
     ld a, [currentLevelBank]
     inc a
     ld [$c418], a
-    ld a, [$d09e]
+    ; Clear some variables if a screen transition just started
+    ld a, [justStartedTransition]
     and a
-    jr z, jr_002_4029
+    jr z, .endIf_A
         ld e, a
         xor a
         ld [larva_bombState], a
         ld [larva_latchState], a
-        ld [$d09e], a
+        ld [justStartedTransition], a
         ld a, $ff
         ld hl, $c466
         ld [hl+], a
         ld [hl+], a
         ld [hl], a
+        ; Clear collision stuff
         ld hl, $d05d
         ld [hl+], a
         ld [hl+], a
         ld [hl+], a
         ld [hl], a
-    jr_002_4029:
+    .endIf_A:
 
     ld a, [metroid_fightActive]
-    and a
-        jr z, jr_002_4063 ; case 0 - no metroids
-    cp $02
-        jr z, jr_002_4039 ; case 2 - metroid exploding
-    ; case 1 (default) - metroid fight active
+    and a ; Case 0 - No Metroids
+        jr z, .handleEnemies
+    cp $02 ; Case 2 - Metroid just died
+        jr z, .metroidJustDied
 
-    ld a, e
-    and a
-    jr z, jr_002_4063
+    ; Case 1 (default) - Metroid fight active
+        ; Restore music if a transition just started
+        ld a, e
+        and a
+            jr z, .handleEnemies
+        jr .restoreMusic
+    
+    .metroidJustDied: ; Case 2 - Metroid just exploded
+        ld hl, metroid_postDeathTimer
+        ld a, [hl]
+        cp $90
+        jr z, .else_B
+            ld a, [frameCounter]
+            and $01
+                jr nz, .endIf_B
+            inc [hl]
+            jr .endIf_B
+        .else_B:
+        .restoreMusic:
+            ld a, [metroidCountReal]
+            and a
+            jr z, .endIf_C
+                ; Resume music unless all metroids are dead
+                ld a, [currentRoomSong]
+                add $11
+                ld [songRequest], a
+            .endIf_C:
+            xor a
+            ld [metroid_postDeathTimer], a
+            ld [metroid_state], a
+            ld [metroid_fightActive], a
+        .endIf_B:
 
-    jr jr_002_404b
-
-jr_002_4039:
-    ld hl, $c41b
-    ld a, [hl]
-    cp $90
-    jr z, jr_002_404b
-
-    ld a, [frameCounter]
-    and $01
-    jr nz, jr_002_4063
-
-    inc [hl]
-    jr jr_002_4063
-
-jr_002_404b:
-    ld a, [metroidCountReal]
-    and a
-    jr z, jr_002_4059
-        ; Resume music unless all metroids are dead
-        ld a, [currentRoomSong]
-        add $11
-        ld [songRequest], a
-    jr_002_4059:
-
-    xor a
-    ld [$c41b], a
-    ld [metroid_state], a
-    ld [metroid_fightActive], a
-
-jr_002_4063:
+.handleEnemies:
     ld a, [enemySolidityIndex_canon]
     ld [enemySolidityIndex], a
     ld hl, $c44b
     ld a, [hl]
     and a
-    jr z, jr_002_4077
+    jr z, .endIf_D
         call Call_002_418c ; Save and then load enemy spawn/save flags
         xor a
         ld [$c44b], a
-    jr_002_4077:
+    .endIf_D:
 
     ld a, [rLY]
     cp $70
@@ -89,14 +89,14 @@ jr_002_4063:
 
     ld a, [$c436]
     and a
-    jr nz, jr_002_408b
+    jr nz, .endIf_E
         call Call_002_412f ; Load enemy save flags without saving them
         ld a, $01
         ld [$c436], a
-    jr_002_408b:
+    .endIf_E:
 
     call scrollEnemies_farCall ; Adjust enemy positions due to scrolling
-    call Call_002_409e ; Handle each enemy
+    call processEnemies ; Handle each enemy
     call updateScrollHistory
     ld a, [rLY]
     cp $70
@@ -104,107 +104,107 @@ jr_002_4063:
 
     call drawEnemies_farCall
 ret
+;}
 
-
-Call_002_409e:
+; Iterates over every enemy
+processEnemies: ;{ 02:409E
+    ; Load sizeOf(enemy struct)
     ld de, $0020
-    ld a, [$c452]
+    ld a, [enemy_pFirstEnemyLow]
     ld l, a
-    ld a, [$c453]
+    ld a, [enemy_pFirstEnemyHigh]
     ld h, a
     ld a, [$c438]
     and a
-    jr nz, jr_002_40ba
+    jr nz, .endIf_A
         ldh a, [hEnemy_frameCounter]
         inc a
         ldh [hEnemy_frameCounter], a
         ld a, [numEnemies]
         ld [$c439], a
-    jr_002_40ba:
+    .endIf_A:
 
     ld a, [$c439]
     and a
-    jp z, Jump_002_4110
+        jp z, .allEnemiesDone
 
-jr_002_40c1:
+.processOneEnemy:
     ; Check if enemy if active
     ld a, [hl]
     and $0f
-        jr z, jr_002_40cc
-
+        jr z, .processActiveEnemy
     dec a
-    jr z, jr_002_40f6
-        jr_002_40c9:
-            add hl, de
-            jr jr_002_40c1
-        
-        jr_002_40cc:
-            call enemy_moveFromWramToHram
-            call enemy_getDamagedOrGiveDrop ; Routine for either damaging an enemy or Samus collecting a drop
-            call Call_002_452e ; Check if offscreen
-            call Call_002_5630 ; Enemy AI and related stuffs
-        
-        Jump_002_40d8:
-        jr_002_40d8:
-            call enemy_moveFromHramToWram
-            ld a, [$c439]
-            dec a
-            ld [$c439], a
-                jr z, jr_002_4110
-        
-            ld de, $0020
-            ; Reload enemy base address
-            ldh a, [$fc]
-            ld l, a
-            ldh a, [$fd]
-            ld h, a
-            ; Stop processing enemies (to avoid lag)
-            ld a, [rLY]
-            cp $58
-                jr nc, jr_002_4101
+        jr z, .processInactiveEnemy
     
-        jr jr_002_40c9
-    jr_002_40f6:
+    .moveToNextEnemy:
+        add hl, de
+    jr .processOneEnemy
     
-    call enemy_moveFromWramToHram
-    call Call_002_4464 ; Delete enemy that is sufficiently offscreen
-    call Call_002_44c0 ; Check if back onscreen
-    jr jr_002_40d8
+    .processActiveEnemy:
+        ; These functions can override their returns to jump to .doneProcessingEnemy
+        call enemy_moveFromWramToHram
+        call enemy_getDamagedOrGiveDrop ; Routine for either damaging an enemy or Samus collecting a drop
+        call Call_002_452e ; Check if offscreen
+        call Call_002_5630 ; Enemy AI and related stuffs
+    
+    .doneProcessingEnemy: ; A common target for return overrides
+        call enemy_moveFromHramToWram
+        ld a, [$c439]
+        dec a
+        ld [$c439], a
+            jr z, .allEnemiesDone
+        ; Reload sizeOf(enemy struct)
+        ld de, $0020
+        ; Reload enemy base address
+        ldh a, [$fc]
+        ld l, a
+        ldh a, [$fd]
+        ld h, a
+        ; Stop processing enemies (to avoid lag)
+        ld a, [rLY]
+        cp $58
+            jr nc, .endFrameEarly
+    jr .moveToNextEnemy
+    
+    .processInactiveEnemy:
+        ; These functions can override their returns to jump to .doneProcessingEnemy
+        call enemy_moveFromWramToHram
+        call Call_002_4464 ; Delete enemy that is sufficiently offscreen
+        call Call_002_44c0 ; Check if back onscreen
+    jr .doneProcessingEnemy
 
-jr_002_4101:
+.endFrameEarly:
     add hl, de
     ld a, l
-    ld [$c452], a
+    ld [enemy_pFirstEnemyLow], a
     ld a, h
-    ld [$c453], a
+    ld [enemy_pFirstEnemyHigh], a
     ld hl, $c438
     inc [hl]
-    jr jr_002_4125
+    jr .exit
 
-Jump_002_4110:
-jr_002_4110:
+.allEnemiesDone:
     xor a
-    ld [$c452], a
+    ld [enemy_pFirstEnemyLow], a
     ld a, $c6
-    ld [$c453], a
+    ld [enemy_pFirstEnemyHigh], a
     ld hl, $c438
     ld a, [hl]
     and a
-    jr z, jr_002_4124
+    jr z, .else_B
         xor a
         ld [hl], a
-        jr jr_002_4125
-    jr_002_4124:
+        jr .endIf_B
+    .else_B:
         inc [hl]
-    jr_002_4125:
-
+    .endIf_B:
+.exit:
     ld a, [rLY]
     cp $6c
         ret nc
-
     call Call_000_3de2 ; Load enemies?
 ret
-
+;}
 
 Call_002_412f: ; Loads enemy save flags from save buffer to WRAM without saving the previous set of flags to the save buffer
     ld d, $00
@@ -229,9 +229,9 @@ Call_002_412f: ; Loads enemy save flags from save buffer to WRAM without saving 
     jr nz, jr_002_4149
 
     ld a, $c6
-    ld [$c453], a
+    ld [enemy_pFirstEnemyHigh], a
     xor a
-    ld [$c452], a
+    ld [enemy_pFirstEnemyLow], a
     ld [metroid_state], a
     ld [metroid_fightActive], a
     ld [cutsceneActive], a
@@ -327,11 +327,11 @@ Call_002_418c:
     jr nz, jr_002_41e6
 
     xor a
-    ld [$c452], a
+    ld [enemy_pFirstEnemyLow], a
     ld [$c439], a
     ld [$c438], a
     ld a, $c6
-    ld [$c453], a
+    ld [enemy_pFirstEnemyHigh], a
     ld a, $ff
     ld [$c466], a
     ld [$c467], a
@@ -466,7 +466,7 @@ enemy_getDamagedOrGiveDrop: ;{ 02:4239
     ld [hl], a
 ; Override return
 pop af
-jp Jump_002_40d8 ; Next enemy
+jp processEnemies.doneProcessingEnemy ; Next enemy
 
 .giveMissileDrop:
     ; Play sound
@@ -582,7 +582,7 @@ jp Jump_002_438f ; Exit
     ldh [hEnemyStunCounter], a
 ; Override return
 pop af
-jp Jump_002_40d8 ; Next enemy
+jp processEnemies.doneProcessingEnemy ; Next enemy
 
 
 .screwAttack:
@@ -644,7 +644,7 @@ jr jr_002_438f ; Exit
 .unusedJump:
     call Call_002_438f ; Clear stuff
 pop af
-jp Jump_002_40d8 ; Skip to next enemy
+jp processEnemies.doneProcessingEnemy ; Skip to next enemy
 
 ; 02:4386 - Unused branch
     call enemy_deleteSelf_farCall
@@ -760,7 +760,7 @@ enemy_moveFromWramToHram: ; 02:43D2
     cp $14
     jr z, jr_002_4413
         pop af
-        jp Jump_002_40d8
+        jp processEnemies.doneProcessingEnemy
     jr_002_4413:
         ldh a, [hEnemyIceCounter]
         and a
@@ -892,7 +892,7 @@ jr_002_4470:
     jr_002_44b2:
 
     pop af
-    jp Jump_002_40d8
+    jp processEnemies.doneProcessingEnemy
 
 jr_002_44b6:
     ; Check X screen
@@ -1002,7 +1002,7 @@ jr_002_4518:
     inc l
     dec [hl]
     pop af
-    jp Jump_002_40d8
+    jp processEnemies.doneProcessingEnemy
 
 ; Check if enemy needs to be deactivated for being offscreen
 Call_002_452e:
@@ -1086,41 +1086,41 @@ jr_002_456d:
     cp $05
     jr z, jr_002_45b3
 
-    pop af
-    jp Jump_002_40d8
+pop af
+jp processEnemies.doneProcessingEnemy
 
 
 jr_002_459d:
     call enemy_deleteSelf_farCall
     ld a, $02
     ldh [hEnemySpawnFlag], a
-    pop af
-    jp Jump_002_40d8
+pop af
+jp processEnemies.doneProcessingEnemy
 
 
 jr_002_45a8:
     call enemy_deleteSelf_farCall
     ld a, $ff
     ldh [hEnemySpawnFlag], a
-    pop af
-    jp Jump_002_40d8
+pop af
+jp processEnemies.doneProcessingEnemy
 
 
 jr_002_45b3:
     ld a, $04
     ldh [hEnemySpawnFlag], a
     xor a
-    ld [$c41b], a
+    ld [metroid_postDeathTimer], a
     ld [metroid_state], a
     pop af
-    jp Jump_002_40d8
+    jp processEnemies.doneProcessingEnemy
 
 
 jr_002_45c2:
     ld a, $01
     ldh [hEnemySpawnFlag], a
     pop af
-    jp Jump_002_40d8
+    jp processEnemies.doneProcessingEnemy
 
 
 updateScrollHistory: ; 02:45CA

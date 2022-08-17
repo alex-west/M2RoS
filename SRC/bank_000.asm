@@ -718,7 +718,7 @@ gameMode_Main:
     ld a, [doorIndexLow]
     and a
     jr nz, .endIf_C
-        call Call_000_05de ; Handle enemies
+        call handleEnemiesOrQueen ; Handle enemies
     .endIf_C:
 
     call clearUnusedOamSlots_longJump ; Clear unused OAM
@@ -767,17 +767,17 @@ ret
     call drawHudMetroid_longJump
     ldh a, [hOamBufferIndex]
     ld [$d064], a
-    call Call_000_05de
+    call handleEnemiesOrQueen
     call clearUnusedOamSlots_longJump
     call tryPausing
     ret
 
 
-Call_000_05de:
+handleEnemiesOrQueen: ; 00:05DE
     ld a, [$d08b]
     cp $11
     jr z, .else
-        callFar Call_002_4000 ; Handle enemies
+        callFar enemyHandler ; Handle enemies
         ret
     .else:
         callFar queenHandler ; Handle Queen
@@ -1753,8 +1753,8 @@ loadDoorIndex: ; 00:0C37
     ld [hl], a
     ld hl, $dd50
     ld [hl], a
-
-    ld [$d09e], a
+    ; Set flag to indicate a screen transition just started
+    ld [justStartedTransition], a
     ; Get screen ID from coordinates
     ldh a, [hCameraYScreen]
     swap a
@@ -5974,7 +5974,7 @@ jr_000_27ba:
         and a
         jr z, jr_000_27d9
             call drawSamus_longJump
-            call Call_000_05de
+            call handleEnemiesOrQueen
             callFar drawHudMetroid
             call clearUnusedOamSlots_longJump
         jr_000_27d9:
@@ -6010,7 +6010,7 @@ Call_000_27e3:
         ld a, $80
         ldh [rWY], a
         call drawSamus_longJump
-        call Call_000_05de
+        call handleEnemiesOrQueen
         callFar drawHudMetroid
         call clearUnusedOamSlots_longJump
         call waitOneFrame
@@ -8582,7 +8582,7 @@ gfxInfo_springBallBottom: db BANK(gfx_springBallBottom)
 pickup_variaSuit:
     .loop:
             call drawSamus_longJump ; Draw Samus
-            call Call_000_05de ; Handle enemies
+            call handleEnemiesOrQueen ; Handle enemies
             callFar drawHudMetroid
             call clearUnusedOamSlots_longJump ; Clear unused OAM entries
             ld a, $80
@@ -8744,7 +8744,7 @@ Jump_000_3a01:
     jr_000_3a01:
             call drawSamus_longJump
             call drawHudMetroid_longJump
-            callFar Call_002_4000
+            callFar enemyHandler
             call handleAudio_longJump
             call clearUnusedOamSlots_longJump
             ld a, [$d093]
@@ -8787,7 +8787,7 @@ Jump_000_3a01:
         call drawSamus_longJump
         call drawHudMetroid_longJump
         call Call_000_32ab
-        callFar Call_002_4000
+        callFar enemyHandler
         call handleAudio_longJump
         call clearUnusedOamSlots_longJump
         call waitForNextFrame
@@ -9204,17 +9204,17 @@ samusShoot_longJump: ; 00:3DAF
 
 scrollEnemies_farCall: ; 00:3DBA
     callFar scrollEnemies
-    switchBank Call_002_4000
+    switchBank enemyHandler
 ret
 
 drawEnemies_farCall: ; 00:3DCE
     callFar drawEnemies
-    switchBank Call_002_4000
+    switchBank enemyHandler
 ret
 
 Call_000_3de2: ; 00:3DE2
     callFar Call_003_4000 ;$4000
-    switchBank Call_002_409e
+    switchBank processEnemies
 ret
 
 findFirstEmptyEnemySlot_longJump: ; 00:3DF6

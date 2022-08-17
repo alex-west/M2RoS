@@ -160,7 +160,7 @@ enemySolidityIndex = $C407 ; Copy of enemySolidityIndex_canon (actually used by 
 ;
 ;$C418: Set to [room bank+1] in $2:4000
 ;
-;$C41B: Checked and cleared in $2:4000, 90h frame timer?
+metroid_postDeathTimer = $C41B ; 90h*2 frame timer for waiting to restore the room's normal music
 def metroid_state = $C41C ; General Metroid related state. $00 = inactive, $80 = dying/dead, others depend on the metroid type
 ;$C41D : Appears unused
 def enemy_yPosMirror = $C41E ; Initial y position for the current working enemy for the current frame
@@ -210,7 +210,10 @@ def enemy_testPointXPos = $C44E ; Test point for enemy collision (in camera-spac
 ;;$C44E: Tile X relative to scroll X (see $2250)
 def omega_tempSpriteType = $C44F ; Used to preserve sprite type when stunned
 ;$C450: Enemy data address in $3:422F
-;$C452: Enemy data address in $2:409E
+
+def enemy_pFirstEnemyLow  = $C452 ; Pointer of the first enemy to process for the next frame
+def enemy_pFirstEnemyHigh = $C453 ;  - Used for making enemies lag instead of Samus
+
 ;$C454: Enemy data address in $1:5A11
 ;
 ;$C458: doorExitStatus - $2 is normal, $1 is if WARP or ENTER_QUEEN is used. Value is written to $C44B and then cleared
@@ -954,7 +957,7 @@ def metroidCountDisplayed = $D09A ; Number of Metroids remaining (displayed, not
 def fadeInTimer = $D09B ; Fade in timer. Max value of 3Fh, is set to zero when Dh reached
 def credits_runAnimFrame   = $D09C ; Tracks current animation frame of run animation
 def credits_runAnimCounter = $D09D ; Counts video frames between animation frames
-;$D09E: Flag to play room song
+def justStartedTransition = $D09E ; $00 = Normal, $FF = Just entered a screen transition
 def credits_scrollingDone  = $D09F ; Flag to indicate if credits stopped scrolling (allows timer to display)
 def debugFlag = $D0A0 ; Activates debug pause menu and other stuff
 ;$D0A1: Previous low health
