@@ -206,5 +206,5 @@ def hEnemyMaxHealth = $FFF5 ; Initial health value
 ;
 ;$FFFC: Enemy address in $2:409E
 
-def hEnemy_frameCounter = $FFFE ; Generic frame counter used by enemies
+def hEnemy_frameCounter = $FFFE ; Generic frame counter used by enemies - Incremented every other frame
 ;}

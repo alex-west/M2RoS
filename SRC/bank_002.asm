@@ -6,19 +6,23 @@
 SECTION "ROM Bank $002", ROMX[$4000], BANK[$2]
 
 enemyHandler: ;{ 02:4000
+    ; Initialize flag to not force metroid music to end
     ld e, $00
     ld a, [currentLevelBank]
     inc a
-    ld [$c418], a
+    ld [unused_romBankPlusOne], a
     ; Clear some variables if a screen transition just started
     ld a, [justStartedTransition]
     and a
     jr z, .endIf_A
+        ; Set flag to force metroid music to end
         ld e, a
+        ; Clear variables
         xor a
         ld [larva_bombState], a
         ld [larva_latchState], a
         ld [justStartedTransition], a
+        ; Clear stuff
         ld a, $ff
         ld hl, $c466
         ld [hl+], a
@@ -32,6 +36,7 @@ enemyHandler: ;{ 02:4000
         ld [hl], a
     .endIf_A:
 
+; Handle restoring music after a metroid fight
     ld a, [metroid_fightActive]
     and a ; Case 0 - No Metroids
         jr z, .handleEnemies
@@ -74,6 +79,7 @@ enemyHandler: ;{ 02:4000
 .handleEnemies:
     ld a, [enemySolidityIndex_canon]
     ld [enemySolidityIndex], a
+
     ld hl, $c44b
     ld a, [hl]
     and a
@@ -98,10 +104,10 @@ enemyHandler: ;{ 02:4000
     call scrollEnemies_farCall ; Adjust enemy positions due to scrolling
     call processEnemies ; Handle each enemy
     call updateScrollHistory
+    ; Check if it's too late to draw enemies
     ld a, [rLY]
     cp $70
         ret nc
-
     call drawEnemies_farCall
 ret
 ;}
@@ -110,21 +116,25 @@ ret
 processEnemies: ;{ 02:409E
     ; Load sizeOf(enemy struct)
     ld de, $0020
+    ; Load first enemy to process (not $C600 we went over the CPU budget for the previous frame)
     ld a, [enemy_pFirstEnemyLow]
     ld l, a
     ld a, [enemy_pFirstEnemyHigh]
     ld h, a
-    ld a, [$c438]
+    ; Check if we're okay to start processing enemies from the beginning again.
+    ld a, [enemy_sameEnemyFrameFlag]
     and a
     jr nz, .endIf_A
+        ; Increment frame counter (every other frame in practice)
         ldh a, [hEnemy_frameCounter]
         inc a
         ldh [hEnemy_frameCounter], a
+        ; Set number of enemies to process
         ld a, [numEnemies]
-        ld [$c439], a
+        ld [enemiesLeftToProcess], a
     .endIf_A:
-
-    ld a, [$c439]
+    ; Skip processing if there are no enemies to process
+    ld a, [enemiesLeftToProcess]
     and a
         jp z, .allEnemiesDone
 
@@ -149,9 +159,10 @@ processEnemies: ;{ 02:409E
     
     .doneProcessingEnemy: ; A common target for return overrides
         call enemy_moveFromHramToWram
-        ld a, [$c439]
+        ; Check if we're all done with enemies
+        ld a, [enemiesLeftToProcess]
         dec a
-        ld [$c439], a
+        ld [enemiesLeftToProcess], a
             jr z, .allEnemiesDone
         ; Reload sizeOf(enemy struct)
         ld de, $0020
@@ -174,21 +185,25 @@ processEnemies: ;{ 02:409E
     jr .doneProcessingEnemy
 
 .endFrameEarly:
+    ; Save address of next enemy to start on them for the next frame
     add hl, de
     ld a, l
     ld [enemy_pFirstEnemyLow], a
     ld a, h
     ld [enemy_pFirstEnemyHigh], a
-    ld hl, $c438
+    ; Do not start from the beginning
+    ld hl, enemy_sameEnemyFrameFlag
     inc [hl]
     jr .exit
 
 .allEnemiesDone:
+    ; Start from the first enemy next time
     xor a
     ld [enemy_pFirstEnemyLow], a
-    ld a, $c6
+    ld a, HIGH(enemyDataSlots)
     ld [enemy_pFirstEnemyHigh], a
-    ld hl, $c438
+    ; Set flag so enemies are only processed every other frame (30 FPS)
+    ld hl, enemy_sameEnemyFrameFlag
     ld a, [hl]
     and a
     jr z, .else_B
@@ -199,10 +214,11 @@ processEnemies: ;{ 02:409E
         inc [hl]
     .endIf_B:
 .exit:
+    ; Check if it's too late to load enemies
     ld a, [rLY]
     cp $6c
         ret nc
-    call Call_000_3de2 ; Load enemies?
+    call handleEnemyLoading_farCall
 ret
 ;}
 
@@ -228,7 +244,7 @@ Call_002_412f: ; Loads enemy save flags from save buffer to WRAM without saving 
         dec b
     jr nz, jr_002_4149
 
-    ld a, $c6
+    ld a, HIGH(enemyDataSlots)
     ld [enemy_pFirstEnemyHigh], a
     xor a
     ld [enemy_pFirstEnemyLow], a
@@ -238,7 +254,7 @@ Call_002_412f: ; Loads enemy save flags from save buffer to WRAM without saving 
     ld [numEnemies], a
     ld [numActiveEnemies], a
     ld [numOffscreenEnemies], a
-    ld [$c438], a
+    ld [enemy_sameEnemyFrameFlag], a
     ld a, $ff
     ld [$c466], a
     ld [$c467], a
@@ -328,9 +344,9 @@ Call_002_418c:
 
     xor a
     ld [enemy_pFirstEnemyLow], a
-    ld [$c439], a
-    ld [$c438], a
-    ld a, $c6
+    ld [enemiesLeftToProcess], a
+    ld [enemy_sameEnemyFrameFlag], a
+    ld a, HIGH(enemyDataSlots)
     ld [enemy_pFirstEnemyHigh], a
     ld a, $ff
     ld [$c466], a

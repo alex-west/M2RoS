@@ -5,7 +5,7 @@
 
 SECTION "ROM Bank $003", ROMX[$4000], BANK[$3]
 
-Call_003_4000:
+handleEnemyLoading:
     call Call_003_4014
     ld hl, $c433
     ld a, [hl-]

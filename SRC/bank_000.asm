@@ -9212,8 +9212,8 @@ drawEnemies_farCall: ; 00:3DCE
     switchBank enemyHandler
 ret
 
-Call_000_3de2: ; 00:3DE2
-    callFar Call_003_4000 ;$4000
+handleEnemyLoading_farCall: ; 00:3DE2
+    callFar handleEnemyLoading ;$4000
     switchBank processEnemies
 ret
 

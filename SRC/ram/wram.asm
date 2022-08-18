@@ -158,7 +158,7 @@ enemySolidityIndex = $C407 ; Copy of enemySolidityIndex_canon (actually used by 
 ;$C40D: Scroll X one frame ago (according to $2:45CA)
 ;$C40E: Set to 0 if [$FFE2] < [Samus' X position on screen] else 2 by $2:45E4
 ;
-;$C418: Set to [room bank+1] in $2:4000
+def unused_romBankPlusOne = $C418 ; Set to [room bank+1] in $2:4000, never read
 ;
 metroid_postDeathTimer = $C41B ; 90h*2 frame timer for waiting to restore the room's normal music
 def metroid_state = $C41C ; General Metroid related state. $00 = inactive, $80 = dying/dead, others depend on the metroid type
@@ -189,8 +189,8 @@ def numOffscreenEnemies = $C427 ; Number of offscreen enemies loaded in. Unused?
 ;$C435: Scroll X one frame ago (according to $3:4000)
 ;$C436: Executes $2:412F in $2:4000 if zero, set to 1 afterwards. Flag for updating $C540..7F. Cleared when exiting Metroid Queen's room, and when loading from save
 def zeta_xProximityFlag = $C437 ; Set to 1 in the Zeta's AI if within $20 pixels on the x axis
-;$C438: Enemy handling incomplete flag. In $2:409E, if 0: sets $C439 = [number of enemies]
-;$C439: Current enemy index
+def enemy_sameEnemyFrameFlag = $C438 ; Used to force enemies to update at 30 FPS, and handle enemy lag. Set to $00 if we'll start a new enemy frame next frame. Set to non-zero if the next enemy frame is a continuation of the current (enemy frame counter does not increment).
+def enemiesLeftToProcess = $C439 ; Number of enemies left to process
 def samus_onSolidSprite = $C43A ; Is Samus atop a solid sprite
 
 section "WRAM C43B", wram0[$C43B]
