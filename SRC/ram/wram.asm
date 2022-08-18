@@ -187,7 +187,7 @@ def numOffscreenEnemies = $C427 ; Number of offscreen enemies loaded in. Unused?
 ;$C433: Scroll Y one frame ago (according to $3:4000)
 ;$C434: Scroll X two frames ago (according to $3:4000)
 ;$C435: Scroll X one frame ago (according to $3:4000)
-;$C436: Executes $2:412F in $2:4000 if zero, set to 1 afterwards. Flag for updating $C540..7F. Cleared when exiting Metroid Queen's room, and when loading from save
+def loadSpawnFlagsRequest = $C436 ; Set to 0 to request - Executes $2:412F in $2:4000 if zero, set to 1 afterwards. Flag for updating $C540..7F. Cleared when exiting Metroid Queen's room, and when loading from save
 def zeta_xProximityFlag = $C437 ; Set to 1 in the Zeta's AI if within $20 pixels on the x axis
 def enemy_sameEnemyFrameFlag = $C438 ; Used to force enemies to update at 30 FPS, and handle enemy lag. Set to $00 if we'll start a new enemy frame next frame. Set to non-zero if the next enemy frame is a continuation of the current (enemy frame counter does not increment).
 def enemiesLeftToProcess = $C439 ; Number of enemies left to process
@@ -203,7 +203,7 @@ seekSamusTemp:
 .samusY: ds 1 ; $C43E: samus Y pos + $10
 .samusX: ds 1 ; $C43F: samus X pos + $10
 
-;$C44B: Request to execute $2:418C (save/load spawn/save flags). Set by doorExitStatus in the door script function
+def saveLoadSpawnFlagsRequest = $C44B ; Request to execute $2:418C (save/load spawn/save flags). Set by doorExitStatus in the door script function
 ;
 def enemy_testPointYPos = $C44D ; Test point for enemy collision (in camera-space)
 def enemy_testPointXPos = $C44E ; Test point for enemy collision (in camera-space)
@@ -216,7 +216,7 @@ def enemy_pFirstEnemyHigh = $C453 ;  - Used for making enemies lag instead of Sa
 
 ;$C454: Enemy data address in $1:5A11
 ;
-;$C458: doorExitStatus - $2 is normal, $1 is if WARP or ENTER_QUEEN is used. Value is written to $C44B and then cleared
+def doorExitStatus = $C458 ; doorExitStatus - $2 is normal, $1 is if WARP or ENTER_QUEEN is used. Value is written to $C44B and then cleared. Different non-zero values have no purpose
 def previousLevelBank = $C459 ; Previous level bank --- used during door transitions to make sure that the enemySaveFlags are saved to the correct location
 ;
 metroid_samusXDir = $C45A ; Relative X direction of Samus from a metroid ($FF: up, $00: equal, $01: down)
@@ -832,9 +832,9 @@ def deathAnimTimer = $D059 ; Death sequence timer
 ;$D05C: $32AB acknowledgement flag. $32AB acknowledges this when it executes, cleared every in-game frame. $32AB is called by in-game and item pickup sequence.
 ;$D05D..60: Values for $C466..69 in $2:438F. Guess: generic collision information
 ;{
-;    $D05D: Set to 9 if enemy bombed. Set to [$D08D] if shot. Set to FFh in $03B5
+;    $D05D: Projectile type - Set to 9 if enemy bombed. Set to [$D08D] if shot. Set to FFh in $03B5
 ;    $D05E: Set to enemy data pointer if enemy bombed
-;    $D060: Set to [$D012] if shot
+;    $D060: Projectile direction - Set to [$D012] if shot
 ;}
 ;
 def acidContactFlag = $D062 ; Flag set every frame if Samus is touching acid.

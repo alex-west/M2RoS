@@ -9,7 +9,7 @@ Legend
 
 | Code                    | Addr  | Status (comment)               |
 |-------------------------|-------|--------------------------------|
-| Core Enemy Routines     | $4000 | NW                             |
+| Core Enemy Routines     | $4000 | S (good except for collision vars) |
 | Main Enemy Loop         | $409E | S                              |
 | Save Flag related proc  | $412F | NW                             |
 | Unknown Procedure       | $418C | NW                             |

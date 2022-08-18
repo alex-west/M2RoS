@@ -3812,7 +3812,7 @@ loadEnemySaveFlags: ; 01:7AB9
     ld [$0000], a
     
     xor a
-    ld [$c436], a
+    ld [loadSpawnFlagsRequest], a
 ret
 
 saveFileToSRAM: ; 01:7ADF

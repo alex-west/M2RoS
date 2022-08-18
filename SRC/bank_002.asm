@@ -55,6 +55,7 @@ enemyHandler: ;{ 02:4000
         ld a, [hl]
         cp $90
         jr z, .else_B
+            ; Increment timer every other frame
             ld a, [frameCounter]
             and $01
                 jr nz, .endIf_B
@@ -62,12 +63,12 @@ enemyHandler: ;{ 02:4000
             jr .endIf_B
         .else_B:
         .restoreMusic:
+            ; Resume music unless all metroids are dead
             ld a, [metroidCountReal]
             and a
             jr z, .endIf_C
-                ; Resume music unless all metroids are dead
                 ld a, [currentRoomSong]
-                add $11
+                add $11 ; TODO: Replace this with a constant
                 ld [songRequest], a
             .endIf_C:
             xor a
@@ -77,28 +78,29 @@ enemyHandler: ;{ 02:4000
         .endIf_B:
 
 .handleEnemies:
+    ; Load enemySolidityIndex 
     ld a, [enemySolidityIndex_canon]
     ld [enemySolidityIndex], a
-
-    ld hl, $c44b
+    ; Done after a door transition script is executed
+    ld hl, saveLoadSpawnFlagsRequest
     ld a, [hl]
     and a
     jr z, .endIf_D
         call Call_002_418c ; Save and then load enemy spawn/save flags
         xor a
-        ld [$c44b], a
+        ld [saveLoadSpawnFlagsRequest], a
     .endIf_D:
-
+    ; Exit early if too much time has passed
     ld a, [rLY]
     cp $70
         ret nc
-
-    ld a, [$c436]
+    ; Load spawn flags without saving beforehand. Used when exiting the queen or loading a save.
+    ld a, [loadSpawnFlagsRequest]
     and a
     jr nz, .endIf_E
         call Call_002_412f ; Load enemy save flags without saving them
         ld a, $01
-        ld [$c436], a
+        ld [loadSpawnFlagsRequest], a
     .endIf_E:
 
     call scrollEnemies_farCall ; Adjust enemy positions due to scrolling

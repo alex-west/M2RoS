@@ -1774,7 +1774,7 @@ loadDoorIndex: ; 00:0C37
     ld [doorIndexHigh], a
 
     ld a, $02
-    ld [$c458], a
+    ld [doorExitStatus], a
     xor a
     ld [fadeInTimer], a
     ; If in debug mode, check cheat to warp to queen
@@ -5475,7 +5475,7 @@ executeDoorScript: ; 00:239C
     jr nz, .doorToken_escapeQueen
         call door_warp
         ld a, $01
-        ld [$c458], a
+        ld [doorExitStatus], a
         ld a, [$d08b]
         and $0f
         ld [$d08b], a
@@ -5516,7 +5516,7 @@ executeDoorScript: ; 00:239C
         ld [$d065], a
         call Call_000_27ba
         xor a
-        ld [$c436], a
+        ld [loadSpawnFlagsRequest], a
         jp .nextToken
 
     .doorToken_damage:
@@ -5584,7 +5584,7 @@ executeDoorScript: ; 00:239C
         call OAM_DMA
         call Call_000_2887
         ld a, $01
-        ld [$c458], a
+        ld [doorExitStatus], a
         ld a, $11
         ld [$d08b], a
         ldh a, [rIE]
@@ -5824,12 +5824,12 @@ executeDoorScript: ; 00:239C
     jp .readOneToken
 
 .endDoorScript:
-    ld a, [$c458]
-    ld [$c44b], a
+    ld a, [doorExitStatus]
+    ld [saveLoadSpawnFlagsRequest], a
     xor a
     ld [doorIndexLow], a
     ld [doorIndexHigh], a
-    ld [$c458], a
+    ld [doorExitStatus], a
     ld [$d0a8], a
 ret
 
