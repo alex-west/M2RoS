@@ -598,7 +598,7 @@ en6514: ; Enemy 1/21h (tsumari / needler facing left)
     dw enAI_crawlerB
 en651F: ; Enemy 4 (skreek)
     db $80,$00,$00,$00,$00,$00,$00,$00,$0B
-    dw enAI_59C7
+    dw enAI_skreek
 en652A: ; Enemy 9 (drivel)
     db $00,$00,$00,$00,$00,$10,$00,$00,$0A
     dw enAI_drivel

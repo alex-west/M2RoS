@@ -36,8 +36,8 @@ Legend
 | Crawler AI (type A)     | $57DE | S                              |
 | Shared Crawler Code     | $5895 | S                              |
 | Crawler AI (type B)     | $58DE | S                              |
-| Skreek Projectile       | $59A6 | NW (labels)                    |
-| Skreek AI               | $59C7 | NW                             |
+| Skreek Projectile       | $59A6 | S                              |
+| Skreek AI               | $59C7 | S                              |
 | Small Bug AI            | $5ABF | S                              |
 | Drivel AI               | $5AE2 | S                              |
 | Drivel Projectile       | $5BD4 | S                              |

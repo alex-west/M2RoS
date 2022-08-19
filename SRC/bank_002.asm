@@ -4285,183 +4285,223 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Skreek projectile code
-jr_002_59a6: ; 02:59A6
+skreek_projectileCode: ;{ 02:59A6
+    ; Decrement timer
+    ;  Note: the projectile's header sets $FFE9 with an initial value of $10
     ld hl, $ffe9
     dec [hl]
-        jr z, jr_002_59bf
-    ld hl, hEnemyXPos
-    ld b, $02
-    ldh a, [hEnemyAttr]
-    bit OAMB_XFLIP, a
-    jr nz, jr_002_59bb
-        ld a, [hl]
-        sub b
-        ld [hl], a
+    jr z, .else_A
+        ld hl, hEnemyXPos
+        ld b, $02 ; Load speed
+        ldh a, [hEnemyAttr]
+        bit OAMB_XFLIP, a
+        jr nz, .else_B
+            ; Move left
+            ld a, [hl]
+            sub b
+            ld [hl], a
+            ret
+        .else_B:
+            ; Move right
+            ld a, [hl]
+            add b
+            ld [hl], a
+            ret
+    .else_A:
+        call enemy_deleteSelf_farCall
+        ld a, $ff
+        ldh [hEnemySpawnFlag], a
         ret
-    jr_002_59bb:
-        ld a, [hl]
-        add b
-        ld [hl], a
-        ret
+;}
 
-jr_002_59bf:
-    call enemy_deleteSelf_farCall
-    ld a, $ff
-    ldh [hEnemySpawnFlag], a
-ret
-
-;------------------------------------------------------------------------------
 ; Skreek AI (bird faced things that jump out of lava and spit at samus)
-enAI_59C7: ; 02:59C7
+enAI_skreek: ;{ 02:59C7
     ldh a, [hEnemySpawnFlag]
     and $0f
-        jr z, jr_002_59a6
+        jr z, skreek_projectileCode
 
-    call Call_002_5aa8
+    call .animate
+    ; State graph is a simple 0->1->2->3->0 loop
     ldh a, [$e9]
-    dec a
-        jr z, jr_002_5a28
-    dec a
-        jr z, jr_002_5a01
-    dec a
-        jr z, jr_002_5a0f
+    dec a ; State 1 - Move up and spit
+        jr z, .case_1
+    dec a ; State 2 - Wait for projectile to disappear
+        jr z, .case_2
+    dec a ; State 3 - Move down
+        jr z, .case_3
 
+; State 0 - Wait to act
+    ; Wait until timer is equal to $10
     ld hl, hEnemyState
     inc [hl]
     ld a, [hl]
     cp $10
         ret nz
-
+    ; Reset timer
     ld [hl], $00
-    ld c, $00
+
+    ld c, $00 ; Default - Face right
+    ; Compare positions to see which side Samus is on
     ld a, [samus_onscreenXPos]
     ld b, a
     ld hl, hEnemyXPos
     ld a, [hl]
     sub b
-    jr nc, jr_002_59f6
+    jr nc, .endIf_A
+        ; Face left
         cpl
         inc a
         ld c, OAMF_XFLIP
-    jr_002_59f6:
-
+    .endIf_A:
+    ; Also, only act if Samus is in range
     cp $30
         ret nc
+    ; Set direction
     ld a, c
     ldh [hEnemyAttr], a
+    ; Set state to 1 (rising/firing)
     ld a, $01
     ldh [$e9], a
 ret
 
-jr_002_5a01:
+.case_2:
+    ; Wait for spit to disappear
     ldh a, [hEnemySpawnFlag]
     cp $03
         ret z
+    ; Close mouth
     ld a, $04
     ldh [hEnemySpriteType], a
+    ; Set state to 3
     ld a, $03
     ldh [$e9], a
 ret
 
-jr_002_5a0f:
+.case_3:
+    ; Decrement timer
     ld hl, hEnemyState
     dec [hl]
-    jr z, jr_002_5a24
+    jr z, .else_B
+        ; Get speed from table, based on timer
         ld e, [hl]
         ld d, $00
-        ld hl, table_5A7D
+        ld hl, .jumpSpeedTable
         add hl, de
         ld b, [hl]
+        ; Move down
         ld hl, hEnemyYPos
         ld a, [hl]
         add b
         ld [hl], a
         ret
-    jr_002_5a24:
+    .else_B:
+        ; Set state back to 0
         xor a
         ldh [$e9], a
         ret
 ; end proc
 
-jr_002_5a28:
+.case_1: ; Move up and spit
+    ; Check timer
     ld hl, hEnemyState
     ld a, [hl]
     cp $21
-    jr z, jr_002_5a40
+    jr z, .else_C
+        ; Get speed from table, based on timer
         ld e, a
         ld d, $00
-        inc [hl]
-        ld hl, table_5A7D
+        inc [hl] ; Increment timer
+        ld hl, .jumpSpeedTable
         add hl, de
         ld b, [hl]
+        ; Move up
         ld hl, hEnemyYPos
         ld a, [hl]
         sub b
         ld [hl], a
         ret
-    jr_002_5a40:
+    .else_C:
+        ; Set state to 2
         ld a, $02
         ldh [$e9], a
+        ; Spawn projectile
         call findFirstEmptyEnemySlot_longJump
+        ; Set status to active
         xor a
         ld [hl+], a
+        ; Set y pos
         ldh a, [hEnemyYPos]
         ld [hl+], a
+        ; Check attribute to set x pos
         ldh a, [hEnemyAttr]
         ld b, a
         bit OAMB_XFLIP, a
-        jr nz, jr_002_5a59
+        jr nz, .else_D
+            ; Left side
             ldh a, [hEnemyXPos]
             sub $04
-            jr jr_002_5a5d
-        jr_002_5a59:
+            jr .endIf_D
+        .else_D:
+            ; Right side
             ldh a, [hEnemyXPos]
             add $04
-        jr_002_5a5d:
-        
+        .endIf_D:
         ld [hl+], a
+        ; Set sprite number
         ld a, $08
         ld [hl+], a
+        ; Set base sprite attribute
         ld a, $80
         ld [hl+], a
+        ; Set sprite attribute
         ld a, b
         ld [hl+], a
-        ld de, header_5A9E
+
+        ld de, .projectileHeader
+        ; Check link so the projectile's death can be signaled to the skreek
         call enemy_createLinkForChildObject
+        ; Load header
         call enemy_spawnObject.shortHeader
+        ; Set spawn flag to wait until projectile disappears
         ld a, $03
         ldh [hEnemySpawnFlag], a
+        ; Open mouth
         ld a, $07
         ldh [hEnemySpriteType], a
+        ; *spit*
         ld a, $12
         ld [sfxRequest_noise], a
         ret
-; end proc
+; end state
 
-table_5A7D: ; 02:5A7D
+.jumpSpeedTable: ; 02:5A7D
     db $00, $05, $05, $05, $04, $05, $03, $03, $02, $03, $03, $03, $02, $03, $03, $02
     db $02, $03, $02, $02, $00, $01, $01, $01, $00, $01, $01, $00, $00, $01, $00, $00
     db $00
-header_5A9E: ; 02:5A9E
+.projectileHeader: ; 02:5A9E
     db $00, $00, $00, $10, $00, $00, $ff, $07
-    dw enAI_59C7
+    dw enAI_skreek
 
-Call_002_5aa8:
+.animate:
+    ; Don't animate when projectile is active
     ldh a, [hEnemySpawnFlag]
     cp $03
         ret z
+    ; Animate every fourth frame
     ldh a, [hEnemy_frameCounter]
     and $03
         ret nz
+    ; Animate 4-5-6, 4-5-6, etc.
     ld hl, hEnemySpriteType
     ld a, [hl]
     cp $06
-    jr z, jr_002_5abc
+    jr z, .else_E
         inc [hl]
         ret
-    jr_002_5abc:
+    .else_E:
         ld [hl], $04
         ret
+;}
 
 ;------------------------------------------------------------------------------
 ; 02:5ABF - small bug AI (enemy 12h)
@@ -4502,7 +4542,7 @@ ret
 ;}
 
 ;------------------------------------------------------------------------------
-; Drivel AI (acid-spitting bat)
+; Drivel AI (bomb-dropping bat)
 enAI_drivel: ;{ 02:5AE2
     call .animate
     ldh a, [hEnemyState]
@@ -4611,7 +4651,7 @@ ret
     ld [hl+], a
     ldh a, [hEnemyXPos]
     ld [hl+], a
-    ld de, .header_5B6C
+    ld de, .projectileHeader
     call enemy_createLinkForChildObject
     call enemy_spawnObject.longHeader
     ; Causes drivel to animate, but not act (see .animate function below)
@@ -4619,7 +4659,7 @@ ret
     ldh [hEnemySpawnFlag], a
 ret
 
-.header_5B6C: ; 02:5B6C
+.projectileHeader: ; 02:5B6C
     db $0C, $80, $00, $00, $00, $00, $00, $00, $00, $01, $00
     dw enAI_drivelSpit
 .ySpeedTable: ; 02:5B79
