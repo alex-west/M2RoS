@@ -403,7 +403,8 @@ jr_003_422a:
     call Call_003_422f
     jr jr_003_420c
 
-Call_003_422f:
+; Load one enemy
+Call_003_422f: ; 03:422F
     push bc
     ld d, h
     ld e, l

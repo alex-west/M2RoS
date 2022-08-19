@@ -11,9 +11,9 @@ Legend
 |-------------------------|-------|--------------------------------|
 | Core Enemy Routines     | $4000 | S (good except for collision vars) |
 | Main Enemy Loop         | $409E | S                              |
-| Save Flag related proc  | $412F | NW                             |
-| Unknown Procedure       | $418C | NW                             |
-| Unknown Procedure       | $4217 | NW                             |
+| Load Enemy Flags        | $412F | S                              |
+| Save/Load Enemy Flags   | $418C | S                              |
+| Deactivate All Enemies  | $4217 | S                              |
 | Enemy Drop/Damage proc  | $4239 | NW (weird exit)                |
 | Directional Vuln. Check | $43A9 | NW (WRAM vars, comments)       |
 | Weapon Damage Table     | $43C8 | S                              |
@@ -25,7 +25,7 @@ Legend
 | Update Scroll History   | $45CA | NW (don't other functions do this too?) |
 | Unused Functions        | $45E4 | NW (WRAM vars)                 |
 | Enemy BG Collision      | $4608 | S (condense code w/macros)     |
-| Misc. Blob Thrower Code | $4DB1 | NW                             |
+| Load Blob Thrower Spr.  | $4DB1 | S                              |
 | Item Orb AI             | $4DD3 | NW (WRAM vars)                 |
 | Blob Thrower AI         | $4EA1 | S                              |
 | Arachnus AI             | $5109 | S                              |

@@ -579,7 +579,7 @@ gameMode_LoadA: ; 00:03B5
         ld l, a
     jr nz, .clearLoop
 
-    callFar Call_002_418c
+    callFar inGame_saveAndLoadEnemySaveFlags
     ; Increment gameMode to gameMode_loadB
     ldh a, [gameMode]
     inc a
@@ -7288,21 +7288,19 @@ Call_000_30bb: ; 00:30BB
     ld [rMBC_BANK_REG], a
     ld hl, $c600
 
-    jr_000_30ce:
+    .loop:
         ld a, [hl]
         and $0f
-        jr nz, jr_000_30d8
+        jr nz, .endIf
             call Call_000_30ea
-                jr c, jr_000_30e1
-        jr_000_30d8:
-    
+                jr c, .break
+        .endIf:
         ld de, $0020
         add hl, de
         ld a, h
         cp $c8
-    jr nz, jr_000_30ce
-
-    jr_000_30e1:
+    jr nz, .loop
+    .break:
     
     ld a, $01
     ld [bankRegMirror], a
@@ -7312,21 +7310,25 @@ ret
 
 Call_000_30ea:
     push hl
+    ; Load enemy Y
     inc hl
     ld a, [hl+]
     cp $e0
-        jp nc, Jump_000_31b2
+        jp nc, .exit_noHit
     ldh [$b7], a
+    ; Load enemy X
     ld a, [hl+]
     cp $e0
-        jp nc, Jump_000_31b2
-
+        jp nc, .exit_noHit
     ldh [$b8], a
+    ; Load enemy sprite type
     ld a, [hl+]
     ldh [$b9], a
+    ; Load enemy attributes
     inc hl
     ld a, [hl+]
     ldh [$bf], a
+    ; Load hitbox pointer of enemy
     ldh a, [$b9]
     sla a
     ld e, a
@@ -7339,11 +7341,12 @@ Call_000_30ea:
     ld a, [hl]
     ld h, a
     ld l, e
+    ; Save en Y to B
     ldh a, [$b7]
     ld b, a
     ldh a, [$bf]
     bit 6, a
-    jr nz, jr_000_312c
+    jr nz, .else_A
         ld a, [hl+]
         add b
         sub $10
@@ -7352,8 +7355,8 @@ Call_000_30ea:
         add b
         add $10
         ldh [$bb], a
-        jr jr_000_313a
-    jr_000_312c:
+        jr .endIf_A
+    .else_A:
         ld a, [hl+]
         sub b
         cpl
@@ -7364,13 +7367,13 @@ Call_000_30ea:
         cpl
         sub $10
         ldh [$ba], a
-    jr_000_313a:
+    .endIf_A:
 
     ldh a, [$b8]
     ld b, a
     ldh a, [$bf]
     bit 5, a
-    jr nz, jr_000_3151
+    jr nz, .else_B
         ld a, [hl+]
         add b
         sub $10
@@ -7379,8 +7382,8 @@ Call_000_30ea:
         add b
         add $10
         ldh [$bd], a
-        jr jr_000_315f
-    jr_000_3151:
+        jr .endIf_B
+    .else_B:
         ld a, [hl+]
         sub b
         cpl
@@ -7391,7 +7394,7 @@ Call_000_30ea:
         cpl
         sub $10
         ldh [$bc], a
-    jr_000_315f:
+    .endIf_B:
 
     ldh a, [$ba]
     ld b, a
@@ -7401,7 +7404,7 @@ Call_000_30ea:
     ldh a, [$98]
     sub b
     cp c
-        jr nc, jr_000_31b2
+        jr nc, .exit_noHit
 
     ldh a, [$bc]
     ld b, a
@@ -7411,8 +7414,8 @@ Call_000_30ea:
     ldh a, [$99]
     sub b
     cp c
-        jr nc, jr_000_31b2
-
+        jr nc, .exit_noHit
+; A collision happened
     ld a, $09
     ld [$d05d], a
     pop hl
@@ -7420,34 +7423,34 @@ Call_000_30ea:
     ld [$d05e], a
     ld a, h
     ld [$d05f], a
+    
     ld a, [queen_eatingState]
     cp $03
-    jr nz, jr_000_3199
+    jr nz, .endIf_C
         ldh a, [$b9]
         cp $f1
-        jr nz, jr_000_3199
+        jr nz, .endIf_C
             ld a, $04
             ld [queen_eatingState], a
-    jr_000_3199:
+    .endIf_C:
 
     ld a, [queen_eatingState]
     cp $06
-    jr nz, jr_000_31b0
+    jr nz, .endIf_D
         ldh a, [$b9]
         cp $f3
-        jr nz, jr_000_31b0
+        jr nz, .endIf_D
             ld a, $07
             ld [queen_eatingState], a
             ld a, $1c
             ld [samusPose], a
-    jr_000_31b0:
+    .endIf_D:
     ; A collision happened
     scf
 ret
 
-
-Jump_000_31b2:
-jr_000_31b2:
+.exit_noHit:
+;.exit_noHit:
     pop hl
     scf
     ccf

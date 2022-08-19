@@ -86,7 +86,7 @@ enemyHandler: ;{ 02:4000
     ld a, [hl]
     and a
     jr z, .endIf_D
-        call Call_002_418c ; Save and then load enemy spawn/save flags
+        call inGame_saveAndLoadEnemySaveFlags ; Save and then load enemy spawn/save flags
         xor a
         ld [saveLoadSpawnFlagsRequest], a
     .endIf_D:
@@ -98,7 +98,8 @@ enemyHandler: ;{ 02:4000
     ld a, [loadSpawnFlagsRequest]
     and a
     jr nz, .endIf_E
-        call Call_002_412f ; Load enemy save flags without saving them
+        ; Load enemy save flags without saving them
+        call inGame_loadEnemySaveFlags
         ld a, $01
         ld [loadSpawnFlagsRequest], a
     .endIf_E:
@@ -224,10 +225,13 @@ processEnemies: ;{ 02:409E
 ret
 ;}
 
-Call_002_412f: ; Loads enemy save flags from save buffer to WRAM without saving the previous set of flags to the save buffer
+; Loads enemy save flags from save buffer to WRAM without saving the previous set of flags to the save buffer
+inGame_loadEnemySaveFlags: ;{ 02:412F
     ld d, $00
+    ; Update level bank
     ld a, [currentLevelBank]
     ld [previousLevelBank], a
+    ; HL = saveBuf_enemySaveFlags + ((currentLevelBank-9)*16)*4
     sub $09
     swap a
     add a
@@ -236,20 +240,22 @@ Call_002_412f: ; Loads enemy save flags from save buffer to WRAM without saving 
     rl d
     ld hl, saveBuf_enemySaveFlags
     add hl, de
+    ; Load enemySaveFlags from buffer
     ld de, enemySaveFlags
     ld b, $40
-
-    jr_002_4149: ; Load enemySaveFlags from buffer
+    .loop:
         ld a, [hl+]
         ld [de], a
         inc e
         dec b
-    jr nz, jr_002_4149
+    jr nz, .loop
 
+    ; Reset first enemy data slot
     ld a, HIGH(enemyDataSlots)
-    ld [enemy_pFirstEnemyHigh], a
+    ld [enemy_pFirstEnemyHigh], a    
     xor a
     ld [enemy_pFirstEnemyLow], a
+    ; Clear other variables
     ld [metroid_state], a
     ld [metroid_fightActive], a
     ld [cutsceneActive], a
@@ -257,11 +263,13 @@ Call_002_412f: ; Loads enemy save flags from save buffer to WRAM without saving 
     ld [numActiveEnemies], a
     ld [numOffscreenEnemies], a
     ld [enemy_sameEnemyFrameFlag], a
+    ; Clear sprite collision stuff
     ld a, $ff
     ld [$c466], a
     ld [$c467], a
     ld [$c468], a
     ld [$c46d], a
+    ; Clear scroll history
     ld hl, $c432
     ld a, [scrollY]
     ld [hl+], a
@@ -269,27 +277,32 @@ Call_002_412f: ; Loads enemy save flags from save buffer to WRAM without saving 
     ld a, [scrollX]
     ld [hl+], a
     ld [hl], a
+    ; Reload blob thrower sprite
     call blobThrower_loadSprite
 ret
+;}
 
-
-Call_002_418c:
+; Save enemy save flags for previous map and then load save flags for new map
+inGame_saveAndLoadEnemySaveFlags: ;{ 02:418C
     ; Clear first $40 enemy spawn flags
     ld hl, enemySpawnFlags
     ld b, $40
     ld a, $ff
-    jr_002_4193:
+    .loop_A:
         ld [hl+], a
         dec b
-    jr nz, jr_002_4193
+    jr nz, .loop_A
 
     ; Save the enemySaveFlags to the save buffer
     ld d, $00
+    ; Save variable to C for later
     ld a, [currentLevelBank]
     ld c, a
+    ; I think this is intended to compare the current and previous banks, but I'm not sure if it works as intended. Possible minor bug?
     ld a, [previousLevelBank]
     and a
-    jr z, jr_002_41ce
+    jr z, .endIf
+        ; HL = saveBuf_enemySaveFlags + ((currentLevelBank-9)*16)*4
         sub $09
         swap a
         add a
@@ -298,34 +311,36 @@ Call_002_418c:
         rl d
         ld hl, saveBuf_enemySaveFlags
         add hl, de
+        ; Save flags to save buffer
         ld de, enemySaveFlags
-        ld b, $40
-    
-        jr_002_41b5:
+        ld b, $40    
+        .loop_B:
             ld a, [de]
-            cp $02
-                jr z, jr_002_41c8        
-            cp $fe
-                jr z, jr_002_41c8
-            cp $04
-                jr z, jr_002_41c6
-            cp $05
-                jr nz, jr_002_41c9
-        
-            jr_002_41c6:
+            cp $02 ; Save $02 as $02
+                jr z, .saveAsIs        
+            cp $fe ; Save $FE as $FE
+                jr z, .saveAsIs
+            cp $04 ; Save $04 as $FE
+                jr z, .saveAsFE
+            cp $05 ; Save $05 as $FE
+                jr nz, .ignore
+            ; Ignore everything else            
+            .saveAsFE:
                 ld a, $fe
-            jr_002_41c8:
+            .saveAsIs:
                 ld [hl], a
-            jr_002_41c9:
+            .ignore:
                 inc l
                 inc e
                 dec b
-        jr nz, jr_002_41b5
-    jr_002_41ce:
+        jr nz, .loop_B
+    .endIf:
 
     ld d, $00
+    ; Update level bank
     ld a, c
-    ld [previousLevelBank], a ; Update previousLevelBank to current now that the enemySaveFlags are saved
+    ld [previousLevelBank], a
+    ; HL = saveBuf_enemySaveFlags + ((currentLevelBank-9)*16)*4
     sub $09
     swap a
     add a
@@ -334,26 +349,30 @@ Call_002_418c:
     rl d
     ld hl, saveBuf_enemySaveFlags
     add hl, de
+    ; Copy enemySaveFlags from save buffer
     ld de, enemySaveFlags
     ld b, $40
-    ; Copy enemySaveFlags from save buffer
-    jr_002_41e6:
+    .loop_C:
         ld a, [hl+]
         ld [de], a
         inc e
         dec b
-    jr nz, jr_002_41e6
+    jr nz, .loop_C
 
+    ; Clear some variables
     xor a
     ld [enemy_pFirstEnemyLow], a
     ld [enemiesLeftToProcess], a
     ld [enemy_sameEnemyFrameFlag], a
+    ; Reset first enemy to process
     ld a, HIGH(enemyDataSlots)
     ld [enemy_pFirstEnemyHigh], a
+    ; Clear collision variables
     ld a, $ff
     ld [$c466], a
     ld [$c467], a
     ld [$c468], a
+    ; Clear scroll history
     ld hl, $c432
     ld a, [scrollY]
     ld [hl+], a
@@ -361,39 +380,42 @@ Call_002_418c:
     ld a, [scrollX]
     ld [hl+], a
     ld [hl], a
-    call Call_002_4217
+
+    call deactivateAllEnemies
 ret
+;}
 
-
-Call_002_4217:
+; Deactivates all enemy slots
+deactivateAllEnemies: ;{ 02:4217
+    ; Deactivate all 10 enemy data slots
     ld a, $ff
-    ld hl, $c600
+    ld hl, enemyDataSlots
     ld c, $20
     ld d, $10
-
-    jr_002_4220:
+    .loop_A:
         ld [hl], a
         add hl, bc
         dec d
-    jr nz, jr_002_4220
+    jr nz, .loop_A
 
+    ; Clear enemy temps in HRAM
     ld b, $16
-    ld hl, hEnemyWorkingHram ;$ffe0
-
-    jr_002_422a: ; Clear enemy temps in HRAM
+    ld hl, hEnemyWorkingHram ; $ffe0
+    .loop_B:
         ld [hl+], a
         dec b
-    jr nz, jr_002_422a
+    jr nz, .loop_B
 
+    ; Clear numEnemies and related variables
     xor a
     ld hl, numEnemies
     ld b, $03
-
-    jr_002_4234:
+    .loop_C:
         ld [hl+], a
         dec b
-    jr nz, jr_002_4234
+    jr nz, .loop_C
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Handles logic related to hurting enemies and collecting enemy drops
@@ -730,7 +752,7 @@ weaponDamageTable: ; 02:43C8
     db $14 ; $08 - Missiles (20!)
     db $0A ; $09 - Bomb Explosion
 
-enemy_moveFromWramToHram: ; 02:43D2
+enemy_moveFromWramToHram: ;{ 02:43D2
     ld a, l
     ldh [$fc], a
     ld a, h
@@ -790,9 +812,9 @@ enemy_moveFromWramToHram: ; 02:43D2
             ld a, $10
             ldh [hEnemyStunCounter], a
             ret
-; end proc
+;} end proc
 
-enemy_moveFromHramToWram: ; 02:4421
+enemy_moveFromHramToWram: ;{ 02:4421
     ld b, $0f
     ld de, hEnemyWorkingHram ; $FFE0
     ldh a, [$fc]
@@ -845,9 +867,10 @@ enemy_moveFromHramToWram: ; 02:4421
     inc l
     ld [hl], $ff
 ret
+;}
 
 ; Delete enemies that are sufficiently off-screen
-Call_002_4464: ; 02:4464
+Call_002_4464: ;{ 02:4464
     ; Check Y screen
     ld hl, hEnemyYScreen
     ld a, [hl+]
@@ -920,10 +943,10 @@ jr_002_44b6:
     cp $03
         ret nz
     jr jr_002_4470
-; end proc
+;} end proc
 
 ; Check if offscreen enemy needs to be reactivated
-Call_002_44c0:
+Call_002_44c0: ;{ 02:44C0 
 ; ypos part
     ld hl, hEnemyYScreen
     ld de, hEnemyYPos
@@ -1019,11 +1042,12 @@ jr_002_4518:
     inc [hl]
     inc l
     dec [hl]
-    pop af
-    jp processEnemies.doneProcessingEnemy
+pop af
+jp processEnemies.doneProcessingEnemy
+;}
 
 ; Check if enemy needs to be deactivated for being offscreen
-Call_002_452e:
+Call_002_452e: ;{ 02:452E
     xor a
     ld [$c479], a
     ld hl, hEnemyYPos
@@ -1139,9 +1163,10 @@ jr_002_45c2:
     ldh [hEnemySpawnFlag], a
     pop af
     jp processEnemies.doneProcessingEnemy
+;}
 
-
-updateScrollHistory: ; 02:45CA
+; Isn't there another function that does this??
+updateScrollHistory: ;{ 02:45CA
     ld de, $c40a
     ld hl, $c408
     ld a, [de]
@@ -1162,8 +1187,9 @@ updateScrollHistory: ; 02:45CA
     ld a, [de]
     ld [hl], a
 ret
+;}
 
-unknown_002_45E4: ; 02:45E4 - Unreferenced
+unknown_002_45E4: ;{ 02:45E4 - Unreferenced
     ld a, [samus_onscreenXPos]
     ld b, a
     ld hl, hEnemyXPos
@@ -1177,9 +1203,9 @@ unknown_002_45E4: ; 02:45E4 - Unreferenced
         ld a, $02
         ld [$c40e], a
         ret
-; end proc
+;} end proc
 
-unknown_002_45FA: ; 02:45FA - Unreferenced
+unknown_002_45FA: ;{ 02:45FA - Unreferenced
     ld hl, hEnemyAttr
     ldh a, [$e8]
     and a
@@ -1189,7 +1215,7 @@ unknown_002_45FA: ; 02:45FA - Unreferenced
     .else:
         ld [hl], OAMF_XFLIP
         ret
-; end proc
+;} end proc
 
 ;------------------------------------------------------------------------------
 ; Beginning of enemy tilemap collision routines
@@ -2257,32 +2283,32 @@ enCollision_up: ;{ 02:4BC2
 ;------------------------------------------------------------------------------
 
 ; Loads the Blob Thrower sprite and hitbox into RAM
-blobThrower_loadSprite: ; 02:4DB1
+blobThrower_loadSprite: ;{ 02:4DB1
+    ; Load the sprite
     ld hl, enAI_blobThrower.sprite ;$4ffe
     ld de, spriteC300
     ld b, $3e
-
-    jr_002_4db9:
+    .loop_A:
         ld a, [hl+]
         ld [de], a
         inc de
         dec b
-    jr nz, jr_002_4db9
-
+    jr nz, .loop_A
+    ; Load the hitbox
     ld hl, enAI_blobThrower.hitbox
     ld de, hitboxC360
     ld b, $04
-
-    jr_002_4dc7:
+    .loop_B:
         ld a, [hl+]
         ld [de], a
         inc de
         dec b
-    jr nz, jr_002_4dc7
-
+    jr nz, .loop_B
+    ; Clear timer
     ld a, $00
     ld [blobThrower_actionTimer], a
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Item Orb and Item AI
@@ -2316,13 +2342,16 @@ enAI_itemOrb: ; 02:4DD3
     bit 0, a
         jr nz, .branchItem
 
-    ; Orb branch
+; Orb branch
     ; Check if orb got hit
     ld a, b
+    ; Ignore bombs
     cp $09
         ret z
+    ; Ignore screw attack
     cp $10
         ret z
+    ; Ignore touching
     cp $20
         ret z
     ; Request sound effect
