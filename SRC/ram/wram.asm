@@ -150,13 +150,15 @@ queen_headSrcLow  = $C3F4 ; (rare instance of a big-endian variable!!)
 en_bgCollisionResult = $C402 ; Enemy tilemap collision routine return value (initialized to $11, $22, $44, or $88)
 
 enemySolidityIndex = $C407 ; Copy of enemySolidityIndex_canon (actually used by enemy code)
+
+; Scroll history A
 ;$C408: Scroll Y three frames ago (according to $2:45CA)
 ;$C409: Scroll X three frames ago (according to $2:45CA)
 ;$C40A: Scroll Y two frames ago (according to $2:45CA)
 ;$C40B: Scroll X two frames ago (according to $2:45CA)
 ;$C40C: Scroll Y one frame ago (according to $2:45CA)
 ;$C40D: Scroll X one frame ago (according to $2:45CA)
-;$C40E: Set to 0 if [$FFE2] < [Samus' X position on screen] else 2 by $2:45E4
+unused_samusDirectionFromEnemy = $C40E ; Set to 0 if [$FFE2] < [Samus' X position on screen] else 2 by $2:45E4
 ;
 def unused_romBankPlusOne = $C418 ; Set to [room bank+1] in $2:4000, never read
 ;
@@ -183,6 +185,8 @@ def numOffscreenEnemies = $C427 ; Number of offscreen enemies loaded in. Unused?
 ;$C42F: Set to enemy X position in $1:5A9A
 ;$C430: Set to enemy sprite ID in $1:5A9A. Used as index for pointer table at $1:5AB1
 ;$C431: Set to XOR of enemy bytes 4/5/6 AND F0h in $1:5A9A
+
+; Scroll history B
 ;$C432: Scroll Y two frames ago (according to $3:4000)
 ;$C433: Scroll Y one frame ago (according to $3:4000)
 ;$C434: Scroll X two frames ago (according to $3:4000)
@@ -263,8 +267,8 @@ def larva_latchState = $C475 ; Larva Metroid variable: $02: Latched, $01: Flying
 
 ;
 def enemy_tempSpawnFlag = $C477 ; Spawn flag for child object to be spawned
-
 def omega_chaseTimerIndex = $C478 ; Selects duration of chase timer. Goes from 0,1,2,3,4,0,etc. Screw attack sets this to 3.
+def hasMovedOffscreen = $C479 ; Temp variable for $2:452E (deactivateOffscreenEnemy)
 
 ; These two arrays follow the same format, but one is saved and the other is not.
 def enemySpawnFlags = $C500 ;$C500..3F: Filled with FFh by $2:418C. Apparently off-screen enemy bytes for current map

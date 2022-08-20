@@ -15,15 +15,15 @@ Legend
 | Save/Load Enemy Flags   | $418C | S                              |
 | Deactivate All Enemies  | $4217 | S                              |
 | Enemy Drop/Damage proc  | $4239 | NW (weird exit)                |
-| Directional Vuln. Check | $43A9 | NW (WRAM vars, comments)       |
+| Directional Vuln. Check | $43A9 | S                              |
 | Weapon Damage Table     | $43C8 | S                              |
 | Move from WRAM to HRAM  | $43D2 | S                              |
 | Move from HRAM to WRAM  | $4421 | S                              |
 | Delete Offscreen Enemy  | $4464 | S                              |
-| Reactivate Enemy        | $44C0 | NW                             |
-| Deactivate Enemy        | $452E | NW                             |
+| Reactivate Enemy        | $44C0 | S                              |
+| Deactivate Enemy        | $452E | S                              |
 | Update Scroll History   | $45CA | NW (don't other functions do this too?) |
-| Unused Functions        | $45E4 | NW (WRAM vars)                 |
+| Unused Functions        | $45E4 | S                              |
 | Enemy BG Collision      | $4608 | S (condense code w/macros)     |
 | Load Blob Thrower Spr.  | $4DB1 | S                              |
 | Item Orb AI             | $4DD3 | NW (WRAM vars)                 |

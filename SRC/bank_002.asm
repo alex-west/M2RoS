@@ -157,7 +157,7 @@ processEnemies: ;{ 02:409E
         ; These functions can override their returns to jump to .doneProcessingEnemy
         call enemy_moveFromWramToHram
         call enemy_getDamagedOrGiveDrop ; Routine for either damaging an enemy or Samus collecting a drop
-        call Call_002_452e ; Check if offscreen
+        call deactivateOffscreenEnemy ; Check if offscreen
         call Call_002_5630 ; Enemy AI and related stuffs
     
     .doneProcessingEnemy: ; A common target for return overrides
@@ -184,7 +184,7 @@ processEnemies: ;{ 02:409E
         ; These functions can override their returns to jump to .doneProcessingEnemy
         call enemy_moveFromWramToHram
         call deleteOffscreenEnemy ; Check if enemy is in deletable range and kill it
-        call Call_002_44c0 ; Check if back onscreen
+        call reactivateOffscreenEnemy ; Check if back onscreen
     jr .doneProcessingEnemy
 
 .endFrameEarly:
@@ -716,26 +716,32 @@ ret
 
 ; Checks if an enemy is invulnerable from a certain direction
 enemy_checkDirectionalShields: ;{ 02:43A9
+    ; Exit if weapon is Wave Beam
     ld a, [$d05d]
     cp $02
         ret z
     ld c, a
-    ; Check for directional vulnerabilities
+    ; Exit if enemy has no directional shielding
     ldh a, [$e8]
     and $f0
         ret z
+    ; Swap directional shielding to lower nybble, store in B
     swap a
     ld b, a
+    ; Load direction of projectile into A
     ld a, [$d060]
-
+    ; Shift both variables right until we run into the direction bit of the projectile
     .loop:
-        rrc b
+        rrc b ; bit 0 loops back to bit 7
         srl a
+        ; NOTE: This loop assumes that projectiles have a direction
+        ;  You'll get a crash if you make one without one
+        ;  Maybe switching these two lines of code would fix that
     jr nc, .loop
-
+    ; Return (and damage the enemy) if the corresponding shield bit is not set
     bit 7, b
         ret z
-; Override the return
+; Override the return and make a plink sound if the the corresponding shield bit was set
 pop af
 jp enemy_getDamagedOrGiveDrop.plink
 ;}
@@ -970,172 +976,168 @@ jp processEnemies.doneProcessingEnemy
 ;} end proc
 
 ; Check if offscreen enemy needs to be reactivated
-Call_002_44c0: ;{ 02:44C0 
-; ypos part
+reactivateOffscreenEnemy: ;{ 02:44C0 
+; yScreen cases
     ld hl, hEnemyYScreen
     ld de, hEnemyYPos
     ld a, [hl]
-    cp $ff
-        jr z, jr_002_44d9
-    and a
-        jr z, jr_002_44e1
-    dec a
-        jr nz, jr_002_44ee
+    cp $ff ; If a screen above
+        jr z, .ifScreenAbove
+    and a ; If on same row of screens
+        jr z, .ifOnSameScreenY
+    dec a ; If not on the screen below
+        jr nz, .checkX
 
-    ld a, [de]
-    cp $c0
-    jr nc, jr_002_44ee
+    ;.ifScreenBelow
+        ld a, [de]
+        cp $c0
+            jr nc, .checkX
+      .moveScreenUp:
+        dec [hl]
+    jr .checkX
+    
+    .ifScreenAbove:
+        ld a, [de]
+        cp $f0
+            jr c, .checkX
+      .moveScreenDown:
+        inc [hl]
+    jr .checkX
+    
+    .ifOnSameScreenY:
+        ld a, [de]
+        cp $c0 ; $00-$BF, $F0-$FF - Do nothing
+            jr c, .checkX
+        cp $d8 ; $C0-$D7 - Move down
+            jr c, .moveScreenDown
+        cp $f0 ; $D8-$EF - Move up
+            jr c, .moveScreenUp
+; end yScreen cases
 
-jr_002_44d6:
-    dec [hl]
-    jr jr_002_44ee
-
-jr_002_44d9:
-    ld a, [de]
-    cp $f0
-    jr c, jr_002_44ee
-
-jr_002_44de:
-    inc [hl]
-    jr jr_002_44ee
-
-jr_002_44e1:
-    ld a, [de]
-    cp $c0
-    jr c, jr_002_44ee
-
-    cp $d8
-    jr c, jr_002_44de
-
-    cp $f0
-    jr c, jr_002_44d6
-
-; xpos part
-jr_002_44ee:
+.checkX: ; xScreen cases
     inc l ; enemyXScreen
     inc e ; enemyXPos
     ld a, [hl]
-    cp $ff
-    jr z, jr_002_4503
+    cp $ff ; If a screen left
+        jr z, .ifScreenLeft
+    and a ; If in same column of screens
+        jr z, .ifOnSameScreenX
+    dec a ; If not a screen to the right
+        jr nz, .exit
 
-    and a
-    jr z, jr_002_450b
+    ;.ifScreenRight
+        ld a, [de]
+        cp $c0
+            jr nc, .exit
+      .moveScreenLeft:
+        dec [hl]
+    jr .exit
+    
+    .ifScreenLeft:
+        ld a, [de]
+        cp $f0
+            jr c, .exit
+      .moveScreenRight:
+        inc [hl]
+    jr .exit
+    
+    .ifOnSameScreenX:
+        ld a, [de]
+        cp $c0 ; $00-$BF, $F0-$FF - Do nothing
+            jr c, .exit
+        cp $d8 ; $C0-$D7 - Move right
+            jr c, .moveScreenRight
+        cp $f0 ; $D8-$EF - Move left
+            jr c, .moveScreenLeft
+; end xScreen cases
 
-    dec a
-    jr nz, jr_002_4518
-
-    ld a, [de]
-    cp $c0
-    jr nc, jr_002_4518
-
-jr_002_4500:
-    dec [hl]
-    jr jr_002_4518
-
-jr_002_4503:
-    ld a, [de]
-    cp $f0
-    jr c, jr_002_4518
-
-jr_002_4508:
-    inc [hl]
-    jr jr_002_4518
-
-jr_002_450b:
-    ld a, [de]
-    cp $c0
-    jr c, jr_002_4518
-
-    cp $d8
-    jr c, jr_002_4508
-
-    cp $f0
-    jr c, jr_002_4500
-
-jr_002_4518:
-    ; Exit if enemy is offscreen
+.exit:
+    ; Exit if enemy is offscreen (relative screen coords are not (0,0))
     ldh a, [hEnemyYScreen]
     ld b, a
     ldh a, [hEnemyXScreen]
     or b
-        ret nz
+        ret nz ; Normal return to keep processing current enemy
     ; Reactivate enemy
     ld hl, hEnemyStatus
     ld [hl], $00
+    ; Increment number of active enemies
     ld hl, numActiveEnemies
     inc [hl]
     inc l
+    ; Decrement number of offscreen enemies
     dec [hl]
+; Override return to start processing next enemy
 pop af
 jp processEnemies.doneProcessingEnemy
 ;}
 
 ; Check if enemy needs to be deactivated for being offscreen
-Call_002_452e: ;{ 02:452E
+deactivateOffscreenEnemy: ;{ 02:452E
+    ; Clear flag
     xor a
-    ld [$c479], a
+    ld [hasMovedOffscreen], a
+;.checkY:
     ld hl, hEnemyYPos
     ld a, [hl+]
-    cp $c0
-    jr c, jr_002_4551
+    cp $c0 ; $00-$BF - Do nothing
+        jr c, .checkX
+    cp $d8 ; $C0-$D7 - Move Down
+        jr c, .moveDown
+    cp $f0 ; $F0-$FF - Do nothing
+        jr nc, .checkX
+    ; $D8-$EF - Move Up
+    
+    ;.moveUp:
+        ld a, $ff
+        ldh [hEnemyYScreen], a
+        jr .setFlag_A
+    .moveDown:
+        ld a, $01
+        ldh [hEnemyYScreen], a
 
-    cp $d8
-    jr c, jr_002_4548
-
-    cp $f0
-    jr nc, jr_002_4551
-
-    ld a, $ff
-    ldh [hEnemyYScreen], a
-    jr jr_002_454c
-
-jr_002_4548:
+.setFlag_A: ; First chance to set this flag
     ld a, $01
-    ldh [hEnemyYScreen], a
+    ld [hasMovedOffscreen], a
+; end yScreen case
 
-jr_002_454c:
-    ld a, $01
-    ld [$c479], a
-
-jr_002_4551:
+.checkX:
     ld a, [hl]
-    cp $c0
-    jr c, jr_002_456d
+    cp $c0 ; $00-$BF - Do nothing
+        jr c, .prepExit
+    cp $d8 ; $C0-$D7 - Move Right
+        jr c, .moveRight
+    cp $f0 ; $F0-$FF - Do nothing
+        jr nc, .prepExit
+    ; $D8-$EF - Move Left
+    
+    ;.moveLeft:
+        ld a, $ff
+        ldh [hEnemyXScreen], a
+        jr .setFlag_B
+    .moveRight:
+        ld a, $01
+        ldh [hEnemyXScreen], a
 
-    cp $d8
-    jr c, jr_002_4564
-
-    cp $f0
-    jr nc, jr_002_456d
-
-    ld a, $ff
-    ldh [hEnemyXScreen], a
-    jr jr_002_4568
-
-jr_002_4564:
+.setFlag_B: ; Second chance to set this flag
     ld a, $01
-    ldh [hEnemyXScreen], a
+    ld [hasMovedOffscreen], a
+; end xScreen case
 
-jr_002_4568:
-    ld a, $01
-    ld [$c479], a
-
-jr_002_456d:
-    ld a, [$c479]
+.prepExit:
+    ld a, [hasMovedOffscreen]
     and a
-    ret z
-
+        ret z ; Normal return to continue processing enemy
+    ; Set status to inactive
     ld hl, hEnemyStatus
     ld [hl], $01
     ldh a, [hEnemySpawnFlag]
     cp $02
-    jr z, jr_002_459d
-
+        jr z, .deleteDeadEnemy
     cp $06
-    jr z, jr_002_45a8
-
+        jr z, .deleteProjectile
     and $0f
-    jr z, jr_002_45a8
+        jr z, .deleteProjectile
 
     ; Deactivate enemy
     ld hl, numActiveEnemies
@@ -1144,49 +1146,46 @@ jr_002_456d:
     inc [hl]
     ldh a, [hEnemySpawnFlag]
     cp $03
-    jr z, jr_002_45c2
-
+        jr z, .waitingEnemy
     cp $04
-    jr z, jr_002_45b3
-
+        jr z, .seenEnemy
     cp $05
-    jr z, jr_002_45b3
-
+        jr z, .seenEnemy
+; Override return to skip to next enemy
 pop af
 jp processEnemies.doneProcessingEnemy
 
-
-jr_002_459d:
+.deleteDeadEnemy: ; Delete enemy marked as dead
     call enemy_deleteSelf_farCall
     ld a, $02
     ldh [hEnemySpawnFlag], a
 pop af
 jp processEnemies.doneProcessingEnemy
 
-
-jr_002_45a8:
+.deleteProjectile: ; Delete an enemy marked as a child object
     call enemy_deleteSelf_farCall
     ld a, $ff
     ldh [hEnemySpawnFlag], a
 pop af
 jp processEnemies.doneProcessingEnemy
 
-
-jr_002_45b3:
+; Case for enemies that keep track of if they've been seen or not (i.e. Metroids)
+.seenEnemy:
+    ; Set to 4 so the projectile-firing status is not saved
     ld a, $04
     ldh [hEnemySpawnFlag], a
     xor a
     ld [metroid_postDeathTimer], a
     ld [metroid_state], a
-    pop af
-    jp processEnemies.doneProcessingEnemy
+pop af
+jp processEnemies.doneProcessingEnemy
 
-
-jr_002_45c2:
+.waitingEnemy:
+    ; Set to 1 so the projectile-firing status is not saved
     ld a, $01
     ldh [hEnemySpawnFlag], a
-    pop af
-    jp processEnemies.doneProcessingEnemy
+pop af
+jp processEnemies.doneProcessingEnemy
 ;}
 
 ; Isn't there another function that does this??
@@ -1213,23 +1212,27 @@ updateScrollHistory: ;{ 02:45CA
 ret
 ;}
 
-unknown_002_45E4: ;{ 02:45E4 - Unreferenced
+; Gets X direction of Samus
+unused_getSamusDirection: ;{ 02:45E4 - Unreferenced
     ld a, [samus_onscreenXPos]
     ld b, a
     ld hl, hEnemyXPos
     ld a, [hl]
     cp b
     jr nc, .else
+        ; Samus to right
         xor a
-        ld [$c40e], a ; Variable appears to be unused
+        ld [unused_samusDirectionFromEnemy], a ; Variable appears to be unused
         ret
     .else:
+        ; Samus to left
         ld a, $02
-        ld [$c40e], a
+        ld [unused_samusDirectionFromEnemy], a
         ret
 ;} end proc
 
-unknown_002_45FA: ;{ 02:45FA - Unreferenced
+; Sets x-flip in sprite attributes based on the directional flags
+unused_setXFlip: ;{ 02:45FA - Unreferenced
     ld hl, hEnemyAttr
     ldh a, [$e8]
     and a
@@ -10116,7 +10119,7 @@ ret
 ret
 
 ; start fireball code
-.fireball: ; Omega fireball?
+.fireball: ; Omega fireball
     ld a, [metroid_fightActive]
     cp $02
         jp z, .fireballDelete

@@ -863,6 +863,7 @@ enemy_deleteSelf: ; 03:6AE7
         ; Check the enemy spawn flag of the parent
         ; If 3, set to 1
         ; If 5, set to 4
+        ; Do this so their projectile-firing status is not saved
         ld a, [hl]
         cp $03 ; Deactivated because of child
         jr z, .else_C
