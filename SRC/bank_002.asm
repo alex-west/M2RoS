@@ -2339,11 +2339,13 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Item Orb and Item AI
-;  Note: Orbs have even enemy IDs, items have odd enemy IDs
-enAI_itemOrb: ; 02:4DD3
+;  Note 1: Orbs have even enemy IDs, items have odd enemy IDs
+;  Note 2: handleItemPickup (00:372F) handles the other half of item collection logic
+enAI_itemOrb: ;{ 02:4DD3
     ldh a, [hEnemySpriteType]
     bit 0, a ; Jump ahead if orb, not item
     jr z, .endIf_A
+        ; Animate item
         ld a, [frameCounter]
         and $06
         jr nz, .endIf_A
@@ -2352,20 +2354,23 @@ enAI_itemOrb: ; 02:4DD3
             ldh [hEnemyStunCounter], a
     .endIf_A:
 
-    call enemy_getSamusCollisionResults ; Get sprite collision results
+    call enemy_getSamusCollisionResults
+    ; Exit if no collision
     ld a, [$c46d]
     cp $ff
         ret z
+    ld b, a ; Save collision type to B
 
-    ld b, a
-    ld [$d06f], a
+    ; Save collision results
+    ld [itemOrb_collisionType], a
     ldh a, [hEnemyWramAddrLow]
-    ld [$d070], a
+    ld [itemOrb_pEnemyWramLow], a
     ldh a, [hEnemyWramAddrHigh]
-    ld [$d071], a
+    ld [itemOrb_pEnemyWramHigh], a
+    
     ; Branch ahead if not orb
     ldh a, [hEnemySpriteType]
-    ld c, a
+    ld c, a ; Save sprite type to C
     bit 0, a
         jr nz, .branchItem
 
@@ -2393,24 +2398,26 @@ enAI_itemOrb: ; 02:4DD3
 ret
 
 .branchItem:
+    ; Continue if touching
     ld a, b
     cp $20
     jr z, .endIf_B
+        ; Exit if not Screw Attack
         cp $10
             ret nz
         ; Clear sound effect
         ld a, $ff
         ld [sfxRequest_square1], a
     .endIf_B:
-
+    ; Branch ahead if an item is being collected now
     ld a, [itemCollectionFlag]
     and a
         jr nz, .checkIfDone
 
-; Energy refill branch
     ld a, c
     cp $9b ; Jump ahead if not energy refill
         jr nz, .branchMissileRefill
+; Energy refill branch
     ; Return if at full health
     ld a, [samusCurHealthLow]
     cp $99
@@ -2425,7 +2432,7 @@ ret
 .branchMissileRefill:
     cp $9d ; Jump ahead if not missile refill
         jr nz, .getItemNum
-    ; Return if at full missiles
+    ; Return if full at full missiles
     ld a, [samusCurMissilesLow]
     ld b, a
     ld a, [samusMaxMissilesLow]
@@ -2457,9 +2464,9 @@ ret
     ld [itemCollected], a
     
     ldh a, [hEnemyYPos]
-    ld [$d094], a
+    ld [unused_itemOrb_yPos], a
     ldh a, [hEnemyXPos]
-    ld [$d095], a
+    ld [unused_itemOrb_xPos], a
     ; Let game know that an item is being collected now
     ld a, $ff
     ld [itemCollectionFlag], a
@@ -2486,10 +2493,11 @@ ret
     cp $9d ; Exit if missile refill
         ret z
     ; Delete the items
-    call enemy_deleteSelf_farCall ; Delete self
+    call enemy_deleteSelf_farCall
     ld a, $02 ; Set collected flag
     ldh [hEnemySpawnFlag], a
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Blob Thrower AI (plant that spits out spores)

@@ -891,8 +891,11 @@ def itemCollectionFlag = $D06D ; Item collection flag. Stops the status bar from
 ;}
 
 def maxOamPrevFrame = $D06E ; OAM slots used in by the previous frame
-;$D06F: Mirror of $C46D? $C466?
-;$D070: Mirror of $FFFC? $C467?
+
+def itemOrb_collisionType = $D06F  ; Used (?) to override collision results during item collection
+def itemOrb_pEnemyWramLow  = $D070 ;
+def itemOrb_pEnemyWramHigh = $D071 ;
+
 def samus_spinAnimationTimer = $D072 ; Animation timer for spinning. Incremented by general pose handler and door transitions.
 def credits_textPointerLow  = $D073 ; Pointer to the working copy of the credits in SRAM. Stops being incremented when it hits the byte $F0. Character data is subtracted by $21 to adjust to almost-ASCII
 def credits_textPointerHigh = $D074 ;
@@ -951,8 +954,8 @@ def queen_eatingState = $D090 ; Metroid Queen eating pose
 def nextEarthquakeTimer = $D091 ; Time until next Metroid earthquake. Counts down in $100h frame intervals after killing a metroid.
 def currentRoomSong = $D092 ; Song for room. Used when restoring song when loading a save and after some other events
 ;$D093: Mirror of $D06C?
-;$D094: Mirror of $FFE1?
-;$D095
+def unused_itemOrb_yPos = $D094 ; Written to by item orb AI, but never read?
+def unused_itemOrb_xPos = $D095 ; Written to by item orb AI, but never read?
 def metroidCountShuffleTimer = $D096 ; Metroids remaining shuffle timer
 def credits_samusAnimState = $D097 ; Samus' animation state during the credits
 def gameTimeMinutes = $D098 ; In-game timer, minutes

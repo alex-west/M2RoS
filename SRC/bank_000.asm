@@ -8779,11 +8779,11 @@ Jump_000_3a01:
     ld [$d093], a
     ld a, $03
     ld [itemCollectionFlag], a
-    ld a, [$d06f]
+    ld a, [itemOrb_collisionType]
     ld [$c466], a
-    ld a, [$d070]
+    ld a, [itemOrb_pEnemyWramLow]
     ld [$c467], a
-    ld a, [$d071]
+    ld a, [itemOrb_pEnemyWramHigh]
     ld [$c468], a
 
     jr_000_3a60:

@@ -26,7 +26,7 @@ Legend
 | Unused Functions        | $45E4 | S                              |
 | Enemy BG Collision      | $4608 | S (condense code w/macros)     |
 | Load Blob Thrower Spr.  | $4DB1 | S                              |
-| Item Orb AI             | $4DD3 | NW (WRAM vars)                 |
+| Item Orb AI             | $4DD3 | S                              |
 | Blob Thrower AI         | $4EA1 | S                              |
 | Arachnus AI             | $5109 | S                              |
 | Blob Projectile         | $536F | S                              |
