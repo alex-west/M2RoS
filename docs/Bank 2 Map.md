@@ -32,7 +32,7 @@ Legend
 | Blob Projectile         | $536F | S                              |
 | Glow Fly AI             | $54A1 | S                              |
 | Rock Icicle AI          | $5542 | S                              |
-| Common Enemy Handler    | $5630 | NW (structure, labels)         |
+| Common Enemy Handler    | $5630 | S                              |
 | Crawler AI (type A)     | $57DE | S                              |
 | Shared Crawler Code     | $5895 | S                              |
 | Crawler AI (type B)     | $58DE | S                              |

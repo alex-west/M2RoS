@@ -158,7 +158,7 @@ processEnemies: ;{ 02:409E
         call enemy_moveFromWramToHram
         call enemy_getDamagedOrGiveDrop ; Routine for either damaging an enemy or Samus collecting a drop
         call deactivateOffscreenEnemy ; Check if offscreen
-        call Call_002_5630 ; Enemy AI and related stuffs
+        call enemy_commonAI ; Enemy AI and related stuffs
     
     .doneProcessingEnemy: ; A common target for return overrides
         call enemy_moveFromHramToWram
@@ -3619,7 +3619,7 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Common enemy handler
-Call_002_5630:
+enemy_commonAI: ;{ 02:5630
     ; Check if a drop
     ldh a, [hEnemyDropType]
     and a
@@ -3627,7 +3627,7 @@ Call_002_5630:
     ; Check if exploding/becoming a drop
     ldh a, [hEnemyExplosionFlag]
     and a
-        jp nz, Jump_002_56bf
+        jp nz, enemy_animateExplosion
     ; Check if frozen
     ldh a, [hEnemyIceCounter]
     and a
@@ -3635,10 +3635,8 @@ Call_002_5630:
     ; Check if metroid has been killed?
     ld a, [metroid_state]
     cp $80
-        jp z, Jump_002_5732
-
-Jump_002_5648:
-jr_002_5648:
+        jp z, enemy_metroidExplosion
+.jumpToAI:
     ld bc, hEnemyAI_high ;$fff2
     ld a, [bc]
     ld h, a
@@ -3652,17 +3650,18 @@ enAI_NULL: ; 02:5651
     ret
 
 ; Handles the ice beam timer and the unfreezing animation
-enemy_animateIce: ; 02:5652
+;  Called directly by the normal metroids
+enemy_animateIce: ;{ 02:5652
     ; Check if sprite is a standard metroid
     ; (the standard metroid will call this on its own terms)
     ldh a, [hEnemySpriteType]
     cp $a0
-        jr z, jr_002_5648
+        jr z, enemy_commonAI.jumpToAI
     sub $ce
-        jr z, jr_002_5648
+        jr z, enemy_commonAI.jumpToAI
     dec a
-        jr z, jr_002_5648
-.call: ;{ 02:565F - Called directly by normal metroids
+        jr z, enemy_commonAI.jumpToAI
+.call: ; 02:565F - Called directly by normal metroids
     ; Act every other frame
     ldh a, [hEnemy_frameCounter]
     and $01
@@ -3748,38 +3747,44 @@ enemy_animateDrop: ;{ 02:5692
         ret
 ;} end branch
 
-; Explode
-Jump_002_56bf: ;{ 02:56BF
+; Explosion animation handler
+; - Note that explosion and drop type is set in enemy_getDamagedOrGiveDrop
+enemy_animateExplosion: ;{ 02:56BF
     bit 5, a
-        jr nz, jr_002_56cc
+        jr nz, .screwExplosion
+; Normal explosions
     ld b, $03
-    cp $11
-        jr z, jr_002_56da
+    cp $11 ; Small health
+        jr z, .normalExplosion
+    ; Make explosions for other drops last an extra frame
     inc b
-        jr jr_002_56da
+jr .normalExplosion
 
-jr_002_56cc:
+.screwExplosion: ; Also, doors
+    ; Increment animation counter
     ld hl, $ffe9
     ld a, [hl]
     inc [hl]
+    ; Become drop after 6 frames
     cp $06
-        jr z, jr_002_56e7
-    add $e2 ; Explosion type A
+        jr z, .becomeDrop
+    add $e2 ; Base sprite number of screw explosion
     ldh [hEnemySpriteType], a
 ret
 
-jr_002_56da:
+.normalExplosion:
+    ; Increment animation counter
     ld hl, $ffe9
     ld a, [hl]
     inc [hl]
+    ; Become drop after 3 or 4 frames
     cp b
-        jr z, jr_002_56e7
-    add $e8 ; Explosion type b
+        jr z, .becomeDrop
+    add $e8 ; Base sprite number of normal explosion
     ldh [hEnemySpriteType], a
 ret
 
-
-jr_002_56e7:
+.becomeDrop:
     ; Special case for enemies with initial health of $FD
     ; (only Arachnus in vanilla, but he doesn't seem to rely on it)
     ldh a, [hEnemyMaxHealth]
@@ -3832,145 +3837,160 @@ ret
 ret
 
 .doNotDie:
+    ; Clear variables
     xor a
     ldh [hEnemyStunCounter], a
     ldh [hEnemyIceCounter], a
     ldh [hEnemyExplosionFlag], a
+    ; Increment this counter
     inc a
     ldh [$e9], a
 ret
 ;}
 
-; Metroid death branch?
-Jump_002_5732: ;{ 02:5732
+; Metroid death branch
+enemy_metroidExplosion: ;{ 02:5732
+    ; If an projectile, delete self
     ldh a, [hEnemySpawnFlag]
     cp $06
-        jr z, jr_002_57ab
-
-    ; Explosion related stuff
+        jr z, .deleteProjectile
+    ; If not a Metroid explosion, do AI
     ldh a, [hEnemySpriteType]
     cp $e2
-        jp c, Jump_002_5648
+        jp c, enemy_commonAI.jumpToAI
     cp $e8
-        jp nc, Jump_002_5648
+        jp nc, enemy_commonAI.jumpToAI
 
+    ; Activate cutscene (freeze Samus) if not activated
     ld hl, cutsceneActive
     ld a, [hl]
     and a
-    jr nz, jr_002_5750
+    jr nz, .endIf_A
         ld [hl], $01
-        call Call_002_57b3
-    jr_002_5750:
+        call .forceOnscreen
+    .endIf_A:
 
+    ; Check counter
     ld hl, $ffe9
     ld a, [hl]
     cp $06
-    jr z, jr_002_575e
-        add $e2
+    jr z, .else_B
+        ; Set sprite type
+        add $e2 ; Base sprite number of explosion
         ldh [hEnemySpriteType], a
+        ; Increment animation counter
         inc [hl]
         ret
-    jr_002_575e:
+    .else_B:
+        ; Restart animation counter
+        ld [hl], $00
+        ; Different states to make multiple explosions
+        ld hl, hEnemyState
+        inc [hl]
+        ld a, [hl]
+        dec a ; State 1
+            jr z, .case_1
+        dec a ; State 2
+            jr z, .case_2
+        dec a ; State 3
+            jr z, .case_3
+        ; State 4
+    
+    ;.case_4:
+        ; Clear collision variables
+        ld a, $ff
+        ld hl, $c466
+        ld [hl+], a
+        ld [hl+], a
+        ld [hl], a
+        ; Delete self (permanently if possible)
+        call enemy_deleteSelf_farCall
+        ld a, $02
+        ldh [hEnemySpawnFlag], a
+        ; Clear flags
+        xor a
+        ld [metroid_state], a ; Ensure we're done with this branch
+        ld [cutsceneActive], a ; Unfreeze Samus
+        ret
+    ; end if
 
-    ld [hl], $00
-    ld hl, hEnemyState
-    inc [hl]
-    ld a, [hl]
-    dec a
-        jr z, jr_002_5785
-    dec a
-        jr z, jr_002_5790
-    dec a
-        jr z, jr_002_57a2
+    .case_1: ; Left
+        ; Move left
+        ld hl, hEnemyXPos
+        ld a, [hl]
+        sub $10
+        ld [hl], a
+        call .forceOnscreen
+    ret
+    
+    .case_2: ; Up right
+        ; Move up
+        ld hl, hEnemyYPos
+        ld a, [hl]
+        sub $10
+        ld [hl], a
+      .moveRight:
+        ; Move right
+        ld hl, hEnemyXPos
+        ld a, [hl]
+        add $10
+        ld [hl], a
+        call .forceOnscreen
+    ret
+    
+    .case_3: ; Down right
+        ; Move down
+        ld hl, hEnemyYPos
+        ld a, [hl]
+        add $10
+        ld [hl], a
+    jr .moveRight
+; end cases
 
-    ld a, $ff
-    ld hl, $c466
-    ld [hl+], a
-    ld [hl+], a
-    ld [hl], a
+.deleteProjectile:
     call enemy_deleteSelf_farCall
-    ld a, $02
-    ldh [hEnemySpawnFlag], a
-    xor a
-    ld [metroid_state], a
-    ld [cutsceneActive], a
-    ret
-
-
-jr_002_5785:
-    ld hl, hEnemyXPos
-    ld a, [hl]
-    sub $10
-    ld [hl], a
-    call Call_002_57b3
-    ret
-
-
-jr_002_5790:
-    ld hl, hEnemyYPos
-    ld a, [hl]
-    sub $10
-    ld [hl], a
-
-jr_002_5797:
-    ld hl, hEnemyXPos
-    ld a, [hl]
-    add $10
-    ld [hl], a
-    call Call_002_57b3
-    ret
-
-jr_002_57a2:
-    ld hl, hEnemyYPos
-    ld a, [hl]
-    add $10
-    ld [hl], a
-    jr jr_002_5797
-
-
-jr_002_57ab:
-    call enemy_deleteSelf_farCall
     ld a, $ff
     ldh [hEnemySpawnFlag], a
-    ret
+ret
 
-
-Call_002_57b3:
+; Forces explosion back onscreen
+.forceOnscreen: ; 02:57B3
+;.yPosCase
     ld hl, hEnemyYPos
     ld a, [hl]
     cp $f0
-        jr nc, jr_002_57d7
+        jr nc, .topEdge
     cp $a0
-        jr nc, jr_002_57d3
+        jr nc, .bottomEdge
     cp $0a
-        jr c, jr_002_57d7
+        jr c, .topEdge
 
-jr_002_57c3:
+.xPosCase:
     inc l
     ld a, [hl]
     cp $f0
-        jr nc, jr_002_57d0
+        jr nc, .leftEdge
     cp $a0
-        jr nc, jr_002_57db
+        jr nc, .rightEdge
     cp $0a
         ret nc
 
-jr_002_57d0:
-    ld [hl], $18
-    ret
-
-
-jr_002_57d3:
-    ld [hl], $98
-    jr jr_002_57c3
-
-jr_002_57d7:
-    ld [hl], $18
-    jr jr_002_57c3
-
-jr_002_57db:
-    ld [hl], $98
-    ret
+    .leftEdge:
+        ld [hl], $18
+        ret
+    
+    .bottomEdge:
+        ld [hl], $98
+        jr .xPosCase
+    
+    .topEdge:
+        ld [hl], $18
+        jr .xPosCase
+    
+    .rightEdge:
+        ld [hl], $98
+        ret
+;}
 ;}
 
 ;------------------------------------------------------------------------------
@@ -7763,7 +7783,7 @@ ret
 
 ; When used in conjunction with a child-object spawner routine,
 ;  this makes a child object point to its parent
-enemy_createLinkForChildObject: ; 02:6B21
+enemy_createLinkForChildObject: ;{ 02:6B21
     ldh a, [hEnemyWramAddrHigh]
     cp $c6
     jr nz, .else
@@ -7776,10 +7796,11 @@ enemy_createLinkForChildObject: ; 02:6B21
 
     ld [enemy_tempSpawnFlag], a
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Flip sprite ID (low bit)
-enemy_flipSpriteId: ; Procedure has 3 entry points
+enemy_flipSpriteId: ;{ Procedure has 3 entry points
     .twoFrame: ; 02:6B33 - Once every 2 frames
         ldh a, [hEnemy_frameCounter]
         and $01
@@ -7795,10 +7816,11 @@ enemy_flipSpriteId: ; Procedure has 3 entry points
     xor %00000001 ;$01
     ld [hl], a
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Flip sprite ID (lowest two bits)
-enemy_flipSpriteId_2Bits: ; Procedure has 3 entry points
+enemy_flipSpriteId_2Bits: ;{ Procedure has 3 entry points
     .fourFrame: ; 02:6B47
         ldh a, [hEnemy_frameCounter]
         and $03
@@ -7814,10 +7836,11 @@ enemy_flipSpriteId_2Bits: ; Procedure has 3 entry points
     xor %00000011 ;$03
     ld [hl], a
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Flip sprite horizontally
-enemy_flipHorizontal: ; Procedure has 3 entry points
+enemy_flipHorizontal: ;{ Procedure has 3 entry points
     .twoFrame: ; 02:6B5B
         ldh a, [hEnemy_frameCounter]
         and $01
@@ -7833,10 +7856,11 @@ enemy_flipHorizontal: ; Procedure has 3 entry points
     xor OAMF_XFLIP
     ld [hl], a
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Flip sprite vertically
-enemy_flipVertical: ; Procedure has 3 entry points
+enemy_flipVertical: ;{ Procedure has 3 entry points
     .twoFrame: ; 02:6B6F
         ldh a, [hEnemy_frameCounter]
         and $01
@@ -7851,7 +7875,8 @@ enemy_flipVertical: ; Procedure has 3 entry points
     ld a, [hl]
     xor OAMF_YFLIP
     ld [hl], a
-ret    
+ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Metroid stinger event
@@ -9021,9 +9046,8 @@ ret
 ; Note that the caller function needs to set enemy_tempSpawnFlag
 ; - $06 is a common value for spawned projectiles
 ; - If the spawned object should tell the parent it is dead, then
-;    the return value of enemy_createLinkForChildObject may be used
-;    (I've only seen this with the pipe bugs, which don't use this function for some reason)
-enemy_spawnObject:
+;    the return value of enemy_createLinkForChildObject should be used
+enemy_spawnObject: ;{ Procedure has two entry points
     .shortHeader: ; 02:7231
         ld b, $07
         jr .start
@@ -9080,10 +9104,12 @@ enemy_spawnObject:
     inc l
     inc [hl]
 ret
+;}
 
 ; Unused partner function to enemy_createLinkForChildObject
-enemy_getAddressOfParentObject: ; 02:7269 - Unused
-    ld h, $c6
+;  enemy_deleteSelf in bank 3 handles this stuff instead
+enemy_getAddressOfParentObject: ;{ 02:7269 - Unused
+    ld h, HIGH(enemyDataSlots)
     ldh a, [hEnemySpawnFlag]
     bit 4, a
     jr z, .endIf
@@ -9092,6 +9118,7 @@ enemy_getAddressOfParentObject: ; 02:7269 - Unused
     .endIf:
     ld l, a
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Zeta Metroid AI
@@ -10775,7 +10802,7 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Baby Metroid AI
-enAI_babyMetroid: ; 02:7BE5
+enAI_babyMetroid: ;{ 02:7BE5
     ld a, [metroid_state]
     and a
         jr z, .case_0 ; case 0
@@ -10960,9 +10987,11 @@ ret
         cp $a5 ; Lower threshold of wiggle
             ret nz
         jr .switchDirection
+; end proc
+;} end baby specific code
 
 ; Used by normal metroids to correct their position when moving
-metroid_correctPosition: ; 02:7CDD
+metroid_correctPosition: ;{ 02:7CDD
     ldh a, [$e9]
     cp $10
     jr c, .else_A
@@ -11006,8 +11035,9 @@ metroid_correctPosition: ; 02:7CDD
         bit 2, a
             jr nz, .revertXPos
 ret
+;}
 
-baby_checkBlocks: ; 02:7D2A - Check if blocks need to be cleared
+baby_checkBlocks: ;{ 02:7D2A - Check if blocks need to be cleared
     ; Save prospective x position to temp
     ld hl, hEnemyXPos
     ld a, [hl]
@@ -11074,14 +11104,14 @@ baby_checkBlocks: ; 02:7D2A - Check if blocks need to be cleared
         bit 2, a
             jr nz, .clearBlockX
 ret
+;}
 
-baby_clearBlock: ; 02:7D97
+baby_clearBlock: ;{ 02:7D97
     call destroyBlock_farCall
     ld a, $16
     ld [sfxRequest_noise], a
 ret
-
-; end baby specific code
+;}
 
 ; Verify that enemy was hit by Samus, and copy the results to a working variable
 ;  Return values ($C46D)
@@ -11094,7 +11124,7 @@ ret
 ; $10 - Screw
 ; $20 - Touch
 ; $FF - Nothing
-enemy_getSamusCollisionResults: ; 02:7DA0
+enemy_getSamusCollisionResults: ;{ 02:7DA0
     ; Save null result first
     ld a, $ff
     ld [$c46d], a
@@ -11126,9 +11156,10 @@ enemy_getSamusCollisionResults: ; 02:7DA0
     ld a, b
     ld [$c46e], a ; Direction hit from
 ret
+;}
 
 ; Used to keep zeta and omegas onscreen
-metroid_keepOnscreen: ; 02:7DC6
+metroid_keepOnscreen: ;{ 02:7DC6
     ld bc, $1890 ; Not a pointer. This is just loading two different values into B and C.
     ; Clamp enemy y pos to top of screen
     ld hl, hEnemyYPos
@@ -11151,9 +11182,9 @@ metroid_keepOnscreen: ; 02:7DC6
             ret c
         ld [hl], c
         ret
-; end proc
+;} end proc
 
-baby_keepOnscreen:
+baby_keepOnscreen: ;{ 02:7DDC
     ld bc, $1890 ; Not a pointer. B is a minimum and C is a maximum
     ; Clamp Y position between B and C
     ld hl, hEnemyYPos
@@ -11180,9 +11211,9 @@ baby_keepOnscreen:
             ret c
         ld [hl], c
         ret
-; end proc
+;} end proc
 
-enemy_toggleVisibility: ; 02:7DF8
+enemy_toggleVisibility: ;{ 02:7DF8
     ; Exit if the frame is odd
     ldh a, [hEnemy_frameCounter]
     and $01
@@ -11193,5 +11224,6 @@ enemy_toggleVisibility: ; 02:7DF8
     xor $80
     ld [hl], a
 ret
+;}
 
 ; 02:7E05 - Freespace 
