@@ -19,7 +19,7 @@ Legend
 | Weapon Damage Table     | $43C8 | S                              |
 | Move from WRAM to HRAM  | $43D2 | S                              |
 | Move from HRAM to WRAM  | $4421 | S                              |
-| Delete Offscreen Obj.?  | $4464 | NW                             |
+| Delete Offscreen Enemy  | $4464 | S                              |
 | Reactivate Enemy        | $44C0 | NW                             |
 | Deactivate Enemy        | $452E | NW                             |
 | Update Scroll History   | $45CA | NW (don't other functions do this too?) |

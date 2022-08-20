@@ -183,7 +183,7 @@ processEnemies: ;{ 02:409E
     .processInactiveEnemy:
         ; These functions can override their returns to jump to .doneProcessingEnemy
         call enemy_moveFromWramToHram
-        call Call_002_4464 ; Delete enemy that is sufficiently offscreen
+        call deleteOffscreenEnemy ; Check if enemy is in deletable range and kill it
         call Call_002_44c0 ; Check if back onscreen
     jr .doneProcessingEnemy
 
@@ -887,80 +887,86 @@ enemy_moveFromHramToWram: ;{ 02:4421
 ret
 ;}
 
-; Delete enemies that are sufficiently off-screen
-Call_002_4464: ;{ 02:4464
+; Checks if an enemy is sufficiently offscreen and deletes it
+deleteOffscreenEnemy: ;{ 02:4464
     ; Check Y screen
     ld hl, hEnemyYScreen
     ld a, [hl+]
     cp $fe
-        jr z, jr_002_4470
+        jr z, .deleteEnemy
     cp $03
-        jr nz, jr_002_44b6
+        jr nz, .checkX
+    ; Fallthrough to .deleteEnemy
 
-jr_002_4470:
+.deleteEnemy:
+    ; Clear enemy HRAM (first 15 bytes)
     ld hl, hEnemyWorkingHram
     ld a, $ff
     ld b, $0f
-
-    jr_002_4477:
+    .loop:
         ld [hl+], a
         dec b
-    jr nz, jr_002_4477
-
+    jr nz, .loop
+    ; Handle spawn flag
     ld a, [hl]
     cp $02
-    jr z, jr_002_448e
+    jr z, .endIf_A
         cp $04
-        jr nz, jr_002_448b
+        jr nz, .endIf_B
             ld a, $fe
             ld [hl], a
             ld a, $ff
-            jr jr_002_448e
-        jr_002_448b:
+            jr .endIf_A
+        .endIf_B:
             ld a, $ff
             ld [hl], a
-    jr_002_448e:
+    .endIf_A:
 
+    ; Skip deleting spawn number
     inc l
     inc l
+    ; Clear AI pointer
     ld [hl+], a
     ld [hl+], a
+    ; Clear screen coordinates (Y,X)
     ld [hl+], a
     ld [hl], a
+    ; Decrement numEnemies and numOffscreenEnemies
     ld hl, numEnemies
     dec [hl]
     inc l
     inc l
     dec [hl]
+    ; Clear collision variables if these addresses are equal
     ld hl, $c468
     ld de, hEnemyWramAddrHigh
     ld a, [de]
     cp [hl]
-    jr nz, jr_002_44b2
+    jr nz, .endIf_C
         dec e
         dec l
         ld a, [de]
         cp [hl]
-        jr nz, jr_002_44b2
+        jr nz, .endIf_C
             dec l
             ld a, $ff
             ld [hl+], a
             ld [hl+], a
             ld [hl+], a
             ld [hl], a
-    jr_002_44b2:
+    .endIf_C:
+; Override return to skip to next enemy
+pop af
+jp processEnemies.doneProcessingEnemy
 
-    pop af
-    jp processEnemies.doneProcessingEnemy
-
-jr_002_44b6:
+.checkX:
     ; Check X screen
     ld a, [hl]
     cp $fe
-        jr z, jr_002_4470
+        jr z, .deleteEnemy
     cp $03
-        ret nz
-    jr jr_002_4470
+        ret nz ; Standard return. Proceed with processing this enemy
+    jr .deleteEnemy
 ;} end proc
 
 ; Check if offscreen enemy needs to be reactivated
