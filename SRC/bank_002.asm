@@ -170,9 +170,9 @@ processEnemies: ;{ 02:409E
         ; Reload sizeOf(enemy struct)
         ld de, $0020
         ; Reload enemy base address
-        ldh a, [$fc]
+        ldh a, [hEnemyWramAddrLow]
         ld l, a
-        ldh a, [$fd]
+        ldh a, [hEnemyWramAddrHigh]
         ld h, a
         ; Stop processing enemies (to avoid lag)
         ld a, [rLY]
@@ -425,11 +425,11 @@ enemy_getDamagedOrGiveDrop: ;{ 02:4239
     ld a, [hl+]
     cp $ff
         ret z
-    ldh a, [$fc]
+    ldh a, [hEnemyWramAddrLow]
     cp [hl]
         ret nz
     inc hl
-    ldh a, [$fd]
+    ldh a, [hEnemyWramAddrHigh]
     cp [hl]
         ret nz
 
@@ -753,113 +753,131 @@ weaponDamageTable: ; 02:43C8
     db $0A ; $09 - Bomb Explosion
 
 enemy_moveFromWramToHram: ;{ 02:43D2
+    ; Save WRAM address of current enemy
     ld a, l
-    ldh [$fc], a
+    ldh [hEnemyWramAddrLow], a
     ld a, h
-    ldh [$fd], a
+    ldh [hEnemyWramAddrHigh], a
+    ; Copy first 15 bytes of information
     ld b, $0f
     ld de, hEnemyWorkingHram ; $FFE0
-
-    jr_002_43dd:
+    .loop_A:
         ld a, [hl+]
         ld [de], a
         inc e
         dec b
-    jr nz, jr_002_43dd
-
+    jr nz, .loop_A
+    ; Load some more things
     ld a, [hl+] ; enemyOffset + $0F
     ldh [hEnemyYScreen], a
     ld a, [hl+] ; enemyOffset + $10
     ldh [hEnemyXScreen], a
     ld a, [hl] ; enemyOffset + $11
-    ldh [hEnemyMaxHealth], a
-    
+    ldh [hEnemyMaxHealth], a    
     ; Load spawn flag, spawn number, and AI pointer to $FFEF-$FFF2
-    ldh a, [$fc]
+    ; First get the address to them
+    ldh a, [hEnemyWramAddrLow]
     add $1c
     ld l, a
+    ; Then load them
     ld b, $04
-    jr_002_43f3:
+    .loop_B:
         ld a, [hl+]
         ld [de], a
         inc e
         dec b
-    jr nz, jr_002_43f3
-
+    jr nz, .loop_B
+    ; Save backups of our coordinates
     ldh a, [hEnemyYPos]
     ld [enemy_yPosMirror], a
     ldh a, [hEnemyXPos]
     ld [enemy_xPosMirror], a
+; Handle stun counter
     ; Return if stun counter is less than $11
     ldh a, [hEnemyStunCounter]
     cp $11
         ret c
-
+    ; Increment counter
     inc a
     ldh [hEnemyStunCounter], a
+    ; Check if stun period is over or not
     cp $14
-    jr z, jr_002_4413
+    jr z, .else_A
+        ; If not, skip to next enemy
         pop af
         jp processEnemies.doneProcessingEnemy
-    jr_002_4413:
+    .else_A:
+        ; If so, check ice counter
         ldh a, [hEnemyIceCounter]
         and a
-        jr nz, jr_002_441c
+        jr nz, .else_B
+            ; Unstun and unfreeze
             xor a
             ldh [hEnemyStunCounter], a
             ret
-        jr_002_441c:
+        .else_B:
+            ; Retain frozen palette
             ld a, $10
             ldh [hEnemyStunCounter], a
             ret
 ;} end proc
 
 enemy_moveFromHramToWram: ;{ 02:4421
+    ; Copy first 15 bytes from HRAM to WRAM
     ld b, $0f
     ld de, hEnemyWorkingHram ; $FFE0
-    ldh a, [$fc]
+    ldh a, [hEnemyWramAddrLow]
     ld l, a
-    ldh a, [$fd]
+    ldh a, [hEnemyWramAddrHigh]
     ld h, a
-
-    jr_002_442c:
+    .loop:
         ld a, [de]
         ld [hl+], a
         inc e
         dec b
-    jr nz, jr_002_442c
-
+    jr nz, .loop
+    ; Copy screen coordinates
     ldh a, [hEnemyYScreen]
     ld [hl+], a
     ldh a, [hEnemyXScreen]
     ld [hl+], a
-    ldh a, [$fc]
+    
+    ; NOTE: The initial health value is not copied here
+
+    ; Get WRAM address of the last few bytes
+    ldh a, [hEnemyWramAddrLow]
     add $1c
     ld l, a
+    ; Move spawn flag
     ld a, [de]
     ld [hl+], a
-    
+    ; Move spawn number
     inc e
     ld a, [de]
     ld [hl+], a
-    ld b, a
-    ldh a, [$f1]
+    ld b, a ; Save spawn number for later
+    ; Move AI pointer
+    ldh a, [hEnemyAI_low]
     ld [hl+], a
-    ldh a, [$f2]
+    ldh a, [hEnemyAI_high]
     ld [hl], a
-    
+; Save spawn flag
+    ; Get address for spawn flag
     ld hl, enemySpawnFlags
     ld l, b
+    ; Load spawn flag in to enemySpawnFlag array
     dec e
     ld a, [de]
     ld [hl], a
-    ldh a, [$fc]
+    ; Check status of enemy
+    ldh a, [hEnemyWramAddrLow]
     ld l, a
-    ldh a, [$fd]
-    ld h, a
+    ldh a, [hEnemyWramAddrHigh]
+    ld h, a    
     ld a, [hl]
     cp $ff
         ret nz
+    ; If enemy is inactive, clear the spawn flag and spawn number
     ld a, l
     add $1c
     ld l, a
@@ -915,7 +933,7 @@ jr_002_4470:
     inc l
     dec [hl]
     ld hl, $c468
-    ld de, $fffd
+    ld de, hEnemyWramAddrHigh
     ld a, [de]
     cp [hl]
     jr nz, jr_002_44b2
@@ -2332,9 +2350,9 @@ enAI_itemOrb: ; 02:4DD3
 
     ld b, a
     ld [$d06f], a
-    ldh a, [$fc]
+    ldh a, [hEnemyWramAddrLow]
     ld [$d070], a
-    ldh a, [$fd]
+    ldh a, [hEnemyWramAddrHigh]
     ld [$d071], a
     ; Branch ahead if not orb
     ldh a, [hEnemySpriteType]
@@ -5304,13 +5322,13 @@ enAI_pipeBug: ;{ 02:5F67
     ld a, l
     add $0b
     ld l, a
-    ldh a, [$fd]
+    ldh a, [hEnemyWramAddrHigh]
     cp $c6
     jr nz, .else_C
-        ldh a, [$fc]
+        ldh a, [hEnemyWramAddrLow]
         jr .endIf_C
     .else_C:
-        ldh a, [$fc]
+        ldh a, [hEnemyWramAddrLow]
         add $10
     .endIf_C:
     ld [hl+], a
@@ -7737,13 +7755,13 @@ ret
 ; When used in conjunction with a child-object spawner routine,
 ;  this makes a child object point to its parent
 enemy_createLinkForChildObject: ; 02:6B21
-    ldh a, [$fd]
+    ldh a, [hEnemyWramAddrHigh]
     cp $c6
     jr nz, .else
-        ldh a, [$fc]
+        ldh a, [hEnemyWramAddrLow]
         jr .endIf
     .else:
-        ldh a, [$fc]
+        ldh a, [hEnemyWramAddrLow]
         add $10
     .endIf:
 
@@ -11075,7 +11093,7 @@ enemy_getSamusCollisionResults: ; 02:7DA0
     ; if the pointers at $C467 and $FFFC are different, then exit
     ; - these both appears to be the pointers to the enemy data in WRAM ($C600 region)
     ld hl, $c468
-    ld de, $fffd
+    ld de, hEnemyWramAddrHigh
     ld a, [de]
     cp [hl]
         ret nz

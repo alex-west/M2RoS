@@ -17,8 +17,8 @@ Legend
 | Enemy Drop/Damage proc  | $4239 | NW (weird exit)                |
 | Directional Vuln. Check | $43A9 | NW (WRAM vars, comments)       |
 | Weapon Damage Table     | $43C8 | S                              |
-| Move from WRAM to HRAM  | $43D2 | NW                             |
-| Move from HRAM to WRAM  | $4421 | NW                             |
+| Move from WRAM to HRAM  | $43D2 | S                              |
+| Move from HRAM to WRAM  | $4421 | S                              |
 | Delete Offscreen Obj.?  | $4464 | NW                             |
 | Reactivate Enemy        | $44C0 | NW                             |
 | Deactivate Enemy        | $452E | NW                             |

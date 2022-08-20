@@ -204,7 +204,8 @@ def hEnemyMaxHealth = $FFF5 ; Initial health value
 ; - Note: Drops have a 50% chance of happening or being nothing
 ;}
 ;
-;$FFFC: Enemy address in $2:409E
+def hEnemyWramAddrLow  = $FFFC ; WRAM address of current enemy
+def hEnemyWramAddrHigh = $FFFD ;  '' high byte
 
 def hEnemy_frameCounter = $FFFE ; Generic frame counter used by enemies - Incremented every other frame
 ;}

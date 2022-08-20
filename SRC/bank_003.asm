@@ -896,7 +896,7 @@ enemy_deleteSelf: ; 03:6AE7
     dec [hl]
     ; Check if $C468 = $FFFD
     ld hl, $c468
-    ld de, $fffd
+    ld de, hEnemyWramAddrHigh
     ld a, [de]
     cp [hl]
         ret nz
