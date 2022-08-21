@@ -123,8 +123,8 @@ Contains the current explosion status and the future-drop status (based on the i
 
 Values:
 - Non-zero - Explosion happening
-- $1x - Explosion type A
-- $2x - Explosion type B
+- $1x - Explosion type A (normal death)
+- $2x - Explosion type B (screw attack death)
 - $x0 - No drop
 - $x1 - Small health
 - $x2 - Large health
@@ -136,6 +136,13 @@ Note: $FFE9 is used as an explosion timer when exploding.
 An enemy's spawn number and flag are used to keep track of whether or not a specific enemy on the current map have been killed. Enemies with spawn numbers in the range of 0x40-0x7F have their spawn flags saved when killed (e.g. metroids, items, etc.).
 
 The are multiple possible values for spawn flags besides "dead" and "alive."
+- $01 - Alive
+- $02 - Permanently Dead (if spawn number is in savable range)
+- $03 - Inactive and waiting for child object (i.e. a projectile) to die
+- $04 - Has been seen before (used to skip Metroid intro animations)
+- $05 - Has been seen before and has a child object
+- $06 - Enemy projectile
+- $x0 - Enemy projectile that links back to its parent object
 
 #### AI Pointer
 Points to an AI routine in bank 2.
