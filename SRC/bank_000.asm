@@ -70,7 +70,7 @@ jumpToBoot: ; 00:0150
 SerialTransferInterruptStub:
     reti
 
-VBlankHandler: ; 00:0154
+VBlankHandler: ;{ 00:0154
     di
     push af
     push bc
@@ -120,7 +120,7 @@ VBlankHandler: ; 00:0154
     and a
         jp nz, Jump_000_2b8f
     ; Branch for queen fight
-    ld a, [$d08b]
+    ld a, [queen_roomFlag]
     cp $11
         jr z, .queenBranch
     ; Update a map row or the status bar
@@ -168,9 +168,9 @@ reti
     pop bc
     pop af
 reti
+;}
 
-
-bootRoutine: ; 00:01FB
+bootRoutine: ;{ 00:01FB
     ; Clear $D000-$DFFF
     xor a
     ld hl, $dfff
@@ -322,8 +322,9 @@ bootRoutine: ; 00:01FB
     ; Disable SRAM
     ld a, $00
     ld [$0000], a
+;}
 
-mainGameLoop: ; 00:02CD
+mainGameLoop: ;{ 00:02CD
     ; Clear vram update flag
     xor a
     ld [mapUpdateFlag], a
@@ -342,9 +343,9 @@ mainGameLoop: ; 00:02CD
         jp z, bootRoutine
     call waitForNextFrame
 jp mainGameLoop
+;}
 
-
-main_handleGameMode: ; 0:02F0
+main_handleGameMode: ;{ 0:02F0
     ldh a, [gameMode]
     rst $28
         dw gameMode_Boot           ; $00
@@ -367,12 +368,13 @@ main_handleGameMode: ; 0:02F0
         dw gameMode_unusedD        ; $11 from $10, displays "Game Cleared" (unused)
         dw gameMode_prepareCredits ; $12
         dw gameMode_Credits        ; $13
+;}
 
 gameMode_None: ; 00:031B
     ret
 
-
-waitForNextFrame: ; 00:031C
+; Called when frame is done
+waitForNextFrame: ;{ 00:031C
     db $76 ; HALT
 
     .vBlankNotDone:
@@ -424,25 +426,26 @@ waitForNextFrame: ; 00:031C
     xor a
     ldh [hVBlankDoneFlag], a
     ld a, $c0
-    ldh [$8c], a
+    ldh [hUnusedFlag_1], a
     xor a
     ldh [hOamBufferIndex], a
 ret
+;}
 
-
-OAM_clearTable: ; 00:0370
+OAM_clearTable: ;{ 00:0370
     xor a
     ld hl, wram_oamBuffer
-    ld b, $a0
+    ld b, OAM_MAX
 
     .loop:
         ld [hl+], a
         dec b
     jr nz, .loop
 ret
+;}
 
 ; Clears both the BG and window tilemaps
-clearTilemaps: ; 00:037B
+clearTilemaps: ;{ 00:037B
     ld hl, $9fff
     ld bc, $0800
     .loop:
@@ -453,9 +456,10 @@ clearTilemaps: ; 00:037B
         or c
     jr nz, .loop
 ret
+;}
 
 ; hl: source, de: destination, bc: length
-copyToVram: ; 00:038A
+copyToVram: ;{ 00:038A
     .loop:
         ld a, [hl+]
         ld [de], a
@@ -465,9 +469,10 @@ copyToVram: ; 00:038A
         or c
     jr nz, .loop
 ret
+;}
 
 ; de: source, hl: destination, $FF terminated
-unusedCopyRoutine: ; 00:0393
+unusedCopyRoutine: ;{ 00:0393
     .loop:
         ld a, [de]
         cp $ff
@@ -475,11 +480,12 @@ unusedCopyRoutine: ; 00:0393
         ld [hl+], a
         inc de
     jr .loop
+;}
 
 TimerOverflowInterruptStub: ; 00:039B
     reti
 
-disableLCD: ; 00:039C
+disableLCD: ;{ 00:039C
     ldh a, [rIE]
     ldh [$99], a
     res 0, a
@@ -494,37 +500,43 @@ disableLCD: ; 00:039C
     ldh a, [$99]
     ldh [rIE], a
 ret
+;}
 
-gameMode_LoadA: ; 00:03B5
+; Game Mode $02
+; Primarily loads data from saveBuf to their working copies
+gameMode_LoadA: ;{ 00:03B5
+    ; Load various variables from the saveBuf to their working copies
+    ;  and prep the start-up sequence
     call loadGame_samusData
+    ; Load metatiles
     switchBank metatilePointerTable
     ld a, [saveBuf_tiletableSrcLow]
     ld l, a
     ld a, [saveBuf_tiletableSrcHigh]
     ld h, a
     ld de, tiletableArray
-
     .tiletableLoop:
         ld a, [hl+]
         ld [de], a
         inc de
         ld a, d
-        cp $dc
+        cp HIGH(tiletableArray)+2 ;$dc
     jr nz, .tiletableLoop
 
+    ; Load collision data
     ld a, [saveBuf_collisionSrcLow]
     ld l, a
     ld a, [saveBuf_collisionSrcHigh]
     ld h, a
-
     .collisionLoop:
         ld a, [hl+]
         ld [de], a
         inc de
         ld a, d
-        cp $dd
+        cp HIGH(collisionArray)+1 ;$dd
     jr nz, .collisionLoop
 
+; Load various variables from saveBuf to their working copies
     ld a, [saveBuf_currentLevelBank]
     ld [currentLevelBank], a
     
@@ -553,24 +565,25 @@ gameMode_LoadA: ; 00:03B5
     
     ld a, [saveBuf_metroidCountDisplayed]
     ld [metroidCountDisplayed], a
-    
+
+    ; Clear variables
     xor a
     ld [doorScrollDirection], a
     ld [deathAnimTimer], a
     ld [deathFlag], a
     ld [vramTransferFlag], a
-    ld [$d06b], a
+    ld [unused_D06B], a
     ld [itemCollected], a
     ld [itemCollectionFlag], a
     ld [maxOamPrevFrame], a
 
     ld a, $01
-    ld [$d08b], a
+    ld [queen_roomFlag], a
     ld a, $ff
     ld [$d05d], a
     
     ; Clear respawning block table
-    ld hl, $d900
+    ld hl, respawningBlockArray
     .clearLoop:
         xor a
         ld [hl], a
@@ -585,12 +598,18 @@ gameMode_LoadA: ; 00:03B5
     inc a
     ldh [gameMode], a
 ret
+;}
 
-gameMode_LoadB: ; 00:0464
+; Game Mode $03
+; Loads graphics and map
+gameMode_LoadB: ;{ 00:0464
     call disableLCD
+    ; Load graphics
     call loadGame_loadGraphics
+    ; Adjust Samus graphics based on her item loadout
     call loadGame_SamusItemGraphics
-    
+
+    ; Set camera position
     ld a, [saveBuf_cameraYPixel]
     ldh [hCameraYPixel], a
     ld a, [saveBuf_cameraYScreen]
@@ -600,15 +619,18 @@ gameMode_LoadB: ; 00:0464
     ld a, [saveBuf_cameraXScreen]
     ldh [hCameraXScreen], a
     
-    switchBankVar [currentLevelBank]
     ; Render map
+    switchBankVar [currentLevelBank]
     .renderLoop:
+        ; Initialize update buffer pointer
         ld a, LOW(mapUpdateBuffer)
         ldh [hMapUpdate.buffPtrLow], a
         ld a, HIGH(mapUpdateBuffer)
         ldh [hMapUpdate.buffPtrHigh], a
+
         call Call_000_06cc ; Force row update
         call VBlank_updateMap
+        ; Move camera down to render next row
         ldh a, [hCameraYPixel]
         add $10
         ldh [hCameraYPixel], a
@@ -616,12 +638,14 @@ gameMode_LoadB: ; 00:0464
         adc $00
         and $0f
         ldh [hCameraYScreen], a
+        ; Repeat until we've scrolled down a full screen
         ldh a, [hCameraYPixel]
         ld b, a
         ld a, [saveBuf_cameraYPixel]
         cp b
     jr nz, .renderLoop
 
+    ; Reload camera position
     ld a, [saveBuf_cameraYPixel]
     ldh [hCameraYPixel], a
     ld a, [saveBuf_cameraYScreen]
@@ -631,24 +655,28 @@ gameMode_LoadB: ; 00:0464
     ld a, [saveBuf_cameraXScreen]
     ldh [hCameraXScreen], a
 
+    ; Adjust virtual camera position to real scroll position
     ldh a, [hCameraYPixel]
     sub $78
     ld [scrollY], a
     ldh a, [hCameraXPixel]
     sub $30
     ld [scrollX], a
+
     ; Enable LCD
     ld a, $e3
     ldh [rLCDC], a
     xor a
-    ld [$d011], a
+    ld [unused_D011], a
     ; Increment game mode to main
     ldh a, [gameMode]
     inc a
     ldh [gameMode], a
 ret
+;}
 
-gameMode_Main:
+; Game Mode $04
+gameMode_Main: ;{ 00:04DF
     ld a, [samusPose]
     and %01111111 ; Mask out upper bit (for turnaround animation)
     ; Jump ahead if being eaten by the Queen
@@ -725,7 +753,7 @@ gameMode_Main:
     call tryPausing ; Handle pausing ?
 ret
 
-.queenBranch:
+.queenBranch: ;{
     ; Handle window height, save text, earthquake, low heath beep, fade in, and Metroid Queen cry
     call miscIngameTasks_longJump
     ; Check if dead (when displayed health is zero)
@@ -759,10 +787,10 @@ ret
     call adjustHudValues_longJump
     ld a, [$d049]
     and a
-    jr z, jr_000_05cc
+    jr z, .endIf_D
         dec a
         ld [$d049], a
-    jr_000_05cc:
+    .endIf_D:
 
     call drawHudMetroid_longJump
     ldh a, [hOamBufferIndex]
@@ -770,11 +798,11 @@ ret
     call handleEnemiesOrQueen
     call clearUnusedOamSlots_longJump
     call tryPausing
-    ret
+    ret ;}
+;}
 
-
-handleEnemiesOrQueen: ; 00:05DE
-    ld a, [$d08b]
+handleEnemiesOrQueen: ;{ 00:05DE
+    ld a, [queen_roomFlag]
     cp $11
     jr z, .else
         callFar enemyHandler ; Handle enemies
@@ -782,20 +810,22 @@ handleEnemiesOrQueen: ; 00:05DE
     .else:
         callFar queenHandler ; Handle Queen
         ret
+;}
 
-loadGame_loadGraphics:
+loadGame_loadGraphics: ;{ 00:05FD
+    ; Missile tank, missile door, missile block, and refills
     switchBank gfx_commonItems
     ld bc, $0100
     ld hl, gfx_commonItems
     ld de, vramDest_commonItems
     call copyToVram
-    
+    ; Load default power suit and common sprite/HUD tiles
     switchBank gfx_samusPowerSuit
     ld bc, $0b00
     ld hl, gfx_samusPowerSuit
     ld de, vramDest_samus
     call copyToVram
-
+    ; Load enemy graphics page
     switchBank gfx_enemiesA ; Unforunately, save files don't save the bank they load enemy graphics from
     ld bc, $0400
     ld a, [saveBuf_enGfxSrcLow]
@@ -804,17 +834,17 @@ loadGame_loadGraphics:
     ld h, a
     ld de, vramDest_enemies
     call copyToVram
-
-    ld a, [$d079]
+    ; Load font if loading from file
+    ld a, [loadingFromFile]
     and a
-    jr z, jr_000_0658
+    jr z, .endIf
         switchBank gfx_itemFont
         ld bc, $0200
         ld hl, gfx_itemFont
         ld de, vramDest_itemFont
         call copyToVram
-    jr_000_0658:
-
+    .endIf:
+    ; Load BG graphic tiles
     switchBankVar [saveBuf_bgGfxSrcBank]
     ld bc, $0800
     ld a, [saveBuf_bgGfxSrcLow]
@@ -824,9 +854,10 @@ loadGame_loadGraphics:
     ld de, vramDest_bgTiles
     call copyToVram
 ret
+;}
 
 ; Only called when entering the queen's room
-Call_000_0673: ; 00:0673
+Call_000_0673: ;{ 00:0673
     xor a
     ldh [$cc], a
     ldh [$ce], a
@@ -848,9 +879,9 @@ Call_000_0673: ; 00:0673
         and a
     jr nz, .loop
 ret
+;}
 
-
-Call_000_0698:
+Call_000_0698: ;{ 00:0698
     switchBankVar [currentLevelBank]
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
@@ -1088,11 +1119,12 @@ prepMapColumnUpdate: ; 00:07E4
     ld [hl+], a
     ld [hl], a
 ret
+;}
 
 ; Translates X and Y map/screen coordinates into map/screen array indeces
 ;  and a VRAM address, for updating scrolling
 ; Also loads the screen pointer into BC
-Call_000_0835: ; 00:0835
+Call_000_0835: ;{ 00:0835
     ldh a, [$cd]
     swap a
     and $f0
@@ -1145,9 +1177,10 @@ Call_000_0835: ; 00:0835
     ld a, h
     ldh [hMapUpdate.destAddrHigh], a
 ret
+;}
 
 ; Load metatile from map to WRAM buffer
-loadMapTileToBuffer: ; 00:0886
+loadMapTileToBuffer: ;{ 00:0886
     ; Load tile number from map
     ;  BC is the address of the screen being loaded from
     ;  [$AD] is the tile in that screen ($YX format)
@@ -1200,9 +1233,10 @@ loadMapTileToBuffer: ; 00:0886
     ld a, h
     ldh [hMapUpdate.buffPtrHigh], a
 ret
+;}
 
 ; Only call this when rendering is disabled
-VBlank_updateMap: ; 00:08CF
+VBlank_updateMap: ;{ 00:08CF
     ld de, mapUpdateBuffer - 1 ;$ddff
 
     .loop:
@@ -1248,9 +1282,9 @@ VBlank_updateMap: ; 00:08CF
     xor a
     ld [mapUpdateFlag], a
 ret
+;}
 
-
-Call_000_08fe:
+Call_000_08fe: ;{ 00:08FE
     ld a, [doorScrollDirection]
     and a
         jp nz, Jump_000_0b44 ; Handle scrolling
@@ -1437,7 +1471,7 @@ Jump_000_0a18:
         ldh a, [$98]
         bit 3, a ; Check down
         jr z, jr_000_0a9d
-            ld a, [$d08b]
+            ld a, [queen_roomFlag]
             cp $11
             jr nz, jr_000_0a58
                 ldh a, [hCameraYPixel]
@@ -1518,7 +1552,7 @@ Jump_000_0a18:
             ldh [hSamusYPixel], a
             ldh a, [hCameraYScreen]
             ldh [hSamusYScreen], a
-            ld a, [$d08b]
+            ld a, [queen_roomFlag]
             cp $11
                 call nz, loadDoorIndex
             jp Jump_000_0b2c
@@ -1567,12 +1601,13 @@ Jump_000_0b2c:
     ldh a, [hSamusYPixel]
     ld [$d00c], a
 ret
+;}
 
 ; 00:0B39 - Unreferenced data?
     db $00, $01, $01, $00, $00, $00, $01, $02, $02, $01, $01
 
 ; Already in a door transition?
-Jump_000_0b44:
+Jump_000_0b44: ;{ 00:0B44
     ; Make sure spinning animation happens during transition
     ld a, [samus_spinAnimationTimer]
     inc a
@@ -1726,10 +1761,11 @@ jr_000_0c24:
     ld a, $2f
     ld [fadeInTimer], a
 ret
+;}
 
-loadDoorIndex: ; 00:0C37
+loadDoorIndex: ;{ 00:0C37
     ; Check related to being in the Queen fight
-    ld a, [$d08b]
+    ld a, [queen_roomFlag]
     cp $11
     jr nz, .endIf
         ; If in a spider ball pose, return to morph ball
@@ -1765,6 +1801,7 @@ loadDoorIndex: ; 00:0C37
     ld d, $00
     sla e
     rl d
+    ; Load door index
     ld hl, map_doorIndexes ; $4300 - Door transition table
     add hl, de
     ld a, [hl+]
@@ -1772,7 +1809,7 @@ loadDoorIndex: ; 00:0C37
     ld a, [hl]
     res 3, a ; Remove sprite priority bit from door index in ROM
     ld [doorIndexHigh], a
-
+    ; Set status
     ld a, $02
     ld [doorExitStatus], a
     xor a
@@ -1781,7 +1818,7 @@ loadDoorIndex: ; 00:0C37
     ld a, [debugFlag]
     and a
         ret z
-    ; Check if either A or Start is pressed
+    ; Check if either A and Start are pressed
     ldh a, [hInputPressed]
     and PADF_START | PADF_SELECT | PADF_B | PADF_A ;$0f
     cp PADF_SELECT | PADF_B ;$06
@@ -1792,9 +1829,10 @@ loadDoorIndex: ; 00:0C37
     ld a, $01
     ld [doorIndexHigh], a
 ret
+;}
 
 ; Loads Samus' information from the WRAM save buffer to working locations in RAM
-loadGame_samusData:
+loadGame_samusData: ;{ 00:0CA3
     call clearProjectileArray
     
     ld a, [saveBuf_samusXPixel]
@@ -1858,8 +1896,10 @@ loadGame_samusData:
     ld a, $12
     ld [songRequest], a
 ret
+;}
 
-samus_handlePose:
+; Main pose handler for Samus (shooting is handled elsewhere)
+samus_handlePose: ;{ 00:0D21
     ; Clear collision flags
     xor a
     ld [waterContactFlag], a
@@ -1890,18 +1930,18 @@ samus_handlePose:
         dw poseFunc_standing   ; $00 Standing
         dw poseFunc_jump       ; $01 Jumping
         dw poseFunc_spinJump   ; $02 Spin-jumping
-        dw poseFunc_run        ; $03 Running (set to 83h when turning)
+        dw poseFunc_running    ; $03 Running (set to 83h when turning)
         dw poseFunc_crouch     ; $04 Crouching
-        dw poseFunc_1701       ; $05 Morphball
+        dw poseFunc_morphBall  ; $05 Morphball
         dw poseFunc_morphJump  ; $06 Morphball jumping
         dw poseFunc_12F5       ; $07 Falling
         dw poseFunc_morphFall  ; $08 Morphball falling
         dw poseFunc_jumpStart  ; $09 Starting to jump
         dw poseFunc_jumpStart  ; $0A Starting to spin-jump
-        dw poseFunc_1083       ; $0B Spider ball rolling
-        dw poseFunc_11E4       ; $0C Spider ball falling
+        dw poseFunc_spiderRoll ; $0B Spider ball rolling
+        dw poseFunc_spiderFall ; $0C Spider ball falling
         dw poseFunc_spiderJump ; $0D Spider ball jumping
-        dw poseFunc_1029       ; $0E Spider ball
+        dw poseFunc_spiderBall ; $0E Spider ball
         dw poseFunc_0EF7       ; $0F Knockback
         dw poseFunc_0F38       ; $10 Morphball knockback
         dw poseFunc_0F6C       ; $11 Standing bombed
@@ -1918,12 +1958,15 @@ samus_handlePose:
         dw poseFunc_0D87       ; $1B In Metroid Queen's stomach
         dw poseFunc_0D8B       ; $1C Escaping Metroid Queen
         dw poseFunc_0ECB       ; $1D Escaped Metroid Queen
+;}
 
-poseFunc_0D87: ; $1B - In Queen's stomach
+; Samus' pose functions: {
+
+poseFunc_0D87: ;{ $1B - In Queen's stomach
     call applyDamage.queenStomach
-ret
+ret ;}
 
-poseFunc_0D8B: ; $1C - Escaping Queen's mouth
+poseFunc_0D8B: ;{ $1C - Escaping Queen's mouth
     call applyDamage.queenStomach
     ldh a, [hSamusXPixel]
     cp $b0
@@ -1952,9 +1995,9 @@ poseFunc_0D8B: ; $1C - Escaping Queen's mouth
     ld [$d00f], a
     ld a, $1d
     ld [samusPose], a
-ret
+ret ;}
 
-poseFunc_0DBE: ; $1A
+poseFunc_0DBE: ;{ $1A
     call applyDamage.queenStomach
     ldh a, [hSamusXPixel]
     cp $68
@@ -1986,9 +2029,9 @@ poseFunc_0DBE: ; $1A
         ld a, $1b
         ld [samusPose], a
         ret
-; end proc
+;} end proc
 
-poseFunc_0DF0: ; $19
+poseFunc_0DF0: ;{ $19
     ld a, $6c
     ldh [hSamusYPixel], a
     ld a, $a6
@@ -1996,7 +2039,7 @@ poseFunc_0DF0: ; $19
     call applyDamage.queenStomach
     ld a, [queen_eatingState]
     cp $05
-    jr nz, jr_000_0e12
+    jr nz, .else_A
         ld a, $01
         ld [$d00f], a
         ld a, $40 + $10 ;$50
@@ -2004,9 +2047,9 @@ poseFunc_0DF0: ; $19
         ld a, $1d
         ld [samusPose], a
         ret
-    jr_000_0e12:
+    .else_A:
         cp $20
-        jr nz, jr_000_0e26
+        jr nz, .else_B
             ld a, $40
             ld [samus_jumpArcCounter], a
             ld a, $01
@@ -2014,7 +2057,7 @@ poseFunc_0DF0: ; $19
             ld a, $1d
             ld [samusPose], a
             ret
-        jr_000_0e26:
+        .else_B:
             ldh a, [hInputRisingEdge]
             bit PADB_LEFT, a
                 ret z
@@ -2023,8 +2066,9 @@ poseFunc_0DF0: ; $19
             ld a, $06
             ld [queen_eatingState], a
             ret
+;}
 
-poseFunc_0E36: ; $18
+poseFunc_0E36: ;{ $18
     call applyDamage.queenStomach
     ld a, [queen_eatingState]
     cp $03
@@ -2051,16 +2095,15 @@ poseFunc_0E36: ; $18
         ldh [hSamusYPixel], a
         ld a, $01
         ld [$d037], a
-            jr jr_000_0e72
+        jr jr_000_0e72
     jr_000_0e67:
+        ldh a, [hSamusYPixel]
+        add $01
+        ldh [hSamusYPixel], a
+        ld a, $01
+        ld [$d038], a
+    jr_000_0e72:
 
-    ldh a, [hSamusYPixel]
-    add $01
-    ldh [hSamusYPixel], a
-    ld a, $01
-    ld [$d038], a
-
-jr_000_0e72:
     ld a, [queen_headX]
     add $1a
     ld b, a
@@ -2077,24 +2120,24 @@ jr_000_0e72:
         ldh [hSamusXPixel], a
         ld a, $01
         ld [$d036], a
-            jr jr_000_0e9b
+        jr jr_000_0e9b
     jr_000_0e90:
+        ldh a, [hSamusXPixel]
+        add $01
+        ldh [hSamusXPixel], a
+        ld a, $01
+        ld [$d035], a
+    jr_000_0e9b:
 
-    ldh a, [hSamusXPixel]
-    add $01
-    ldh [hSamusXPixel], a
-    ld a, $01
-    ld [$d035], a
-
-jr_000_0e9b:
     ld a, c
     cp $02
         ret nz
     ld a, $02
     ld [queen_eatingState], a
 ret
+;}
 
-poseFunc_faceScreen: ; 00:0EA5 - poses $13-$17
+poseFunc_faceScreen: ;{ 00:0EA5 - poses $13-$17
     ; Wait until timer expires
     ld a, [countdownTimerLow]
     and a
@@ -2110,8 +2153,8 @@ poseFunc_faceScreen: ; 00:0EA5 - poses $13-$17
     jr z, .endIf_A
         ld [songRequest], a
     .endIf_A:
-
-    ld a, [$d079]
+    ; Keep facing forward if starting a new game
+    ld a, [loadingFromFile]
     and a
     jr nz, .endIf_B
         ; Exit if nothing is pressed
@@ -2119,18 +2162,19 @@ poseFunc_faceScreen: ; 00:0EA5 - poses $13-$17
         and a
         ret z
     .endIf_B:
-    
+    ; Force pose to standing if loading from a file
     xor a
     ld [samusPose], a
 ret
+;}
 
-poseFunc_0ECB: ; $12 and $1D
+poseFunc_0ECB: ;{ $12 and $1D
     ldh a, [hInputRisingEdge]
     bit PADB_DOWN, a
-    jr z, jr_000_0ee7
+    jr z, .endIf
         ld a, [samusItems]
         bit itemBit_spider, a
-        jr z, jr_000_0ee7
+        jr z, .endIf
             ld a, pose_spiderFall
             ld [samusPose], a
             xor a
@@ -2138,17 +2182,18 @@ poseFunc_0ECB: ; $12 and $1D
             ld a, $0d
             ld [sfxRequest_square1], a
             ret
-    jr_000_0ee7:
+    .endIf:
 
     ldh a, [hInputRisingEdge]
     bit PADB_UP, a
-    jr z, jr_000_0f6c
+    jr z, poseFunc_0F6C
         call samus_unmorphInAir
         ld a, $10
         ld [$d049], a
-    jr jr_000_0f6c
+    jr poseFunc_0F6C
+;}
 
-poseFunc_0EF7: ; $0F - Knockback
+poseFunc_0EF7: ;{ $0F - Knockback
     ; Go to "bombed" pose handler if jump is not pressed
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
@@ -2190,22 +2235,23 @@ poseFunc_0EF7: ; $0F - Knockback
     xor a
     ld [samus_jumpStartCounter], a
 ret
+;}
 
-poseFunc_0F38: ; $10
+poseFunc_0F38: ;{ $10
     ldh a, [hInputRisingEdge]
     bit PADB_UP, a
-    jp z, Jump_000_0f47
+    jp z, .endIf_A
         call samus_unmorphInAir
         ld a, $10
         ld [$d049], a
-    Jump_000_0f47:
+    .endIf_A:
 
     ld a, [samusItems]
     bit itemBit_spring, a
-    jr z, jr_000_0f6c
+    jr z, .endIf_B
         ldh a, [hInputRisingEdge]
         bit PADB_A, a
-        jr z, jr_000_0f6c
+        jr z, .endIf_B
             xor a
             ld [samusInvulnerableTimer], a
             ld a, $2e
@@ -2217,9 +2263,11 @@ poseFunc_0F38: ; $10
             ld a, $01
             ld [sfxRequest_square1], a
             ret
+    .endIf_B:
+; Fallthrough to next pose handler
+;}
 
-poseFunc_0F6C: ; 00:0F6C - $11: Bombed (standing)
-jr_000_0f6c:
+poseFunc_0F6C: ;{ 00:0F6C - $11: Bombed (standing)
     ld a, [samus_jumpArcCounter]
     sub $40
     ld e, a
@@ -2322,9 +2370,9 @@ table_0FF6: ; 00:0FF6
     db $fe, $ff, $fe, $ff, $fe, $ff, $ff, $00, $00, $00, $00, $01, $01, $02, $01, $02
     db $01, $02, $02, $01, $02, $02, $02, $02, $02, $02, $03, $02, $03, $02, $03, $03
     db $03, $03, $80
+;}
 
-
-poseFunc_1029: ; 00:1029 - $0E: spider ball (not moving)
+poseFunc_spiderBall: ;{ 00:1029 - $0E: spider ball (not moving)
     ; Un-spider if A is pressed
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
@@ -2337,7 +2385,7 @@ poseFunc_1029: ; 00:1029 - $0E: spider ball (not moving)
     .endIf_A:
 
     ; Fall if not touching anything
-    call collision_checkSpiderSet
+    call collision_checkSpiderSet ; Get spiderContactState
     ld a, [spiderContactState]
     and a
     jr nz, .endIf_B
@@ -2352,7 +2400,7 @@ poseFunc_1029: ; 00:1029 - $0E: spider ball (not moving)
     and PADF_DOWN | PADF_UP | PADF_LEFT | PADF_RIGHT ;$f0
         ret z
 
-    call collision_checkSpiderSet
+    call collision_checkSpiderSet ; Get spiderContactState (again??)
     ldh a, [hInputRisingEdge]
     and PADF_DOWN | PADF_UP | PADF_LEFT | PADF_RIGHT ;$f0
     swap a
@@ -2372,16 +2420,18 @@ poseFunc_1029: ; 00:1029 - $0E: spider ball (not moving)
         add hl, de
         ld a, [hl]
         ld [spiderRotationState], a
-        
+        ; Set pose to roll
         ld a, pose_spiderRoll
         ld [samusPose], a
         ret
     .fall:
+        ; Set pose to fall
         ld a, pose_spiderFall
         ld [samusPose], a
         ret
+;}
 
-poseFunc_1083: ; 00:1083 - $0B: Spider Ball (rolling)
+poseFunc_spiderRoll: ;{ 00:1083 - $0B: Spider Ball (rolling)
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
     jr z, .endIf_A
@@ -2405,7 +2455,7 @@ poseFunc_1083: ; 00:1083 - $0B: Spider Ball (rolling)
     call collision_checkSpiderSet
     ld a, [spiderContactState]
     and a
-        jr z, poseFunc_1029.fall
+        jr z, poseFunc_spiderBall.fall
 
     ld e, a
     ld d, $00
@@ -2509,8 +2559,9 @@ samus_spiderDown: ; 00:1152
     xor a
     ld [spiderDisplacement], a
 ret
+;}
 
-poseFunc_spiderJump: ; 00:1170 - $0D: Spider ball jumping
+poseFunc_spiderJump: ;{ 00:1170 - $0D: Spider ball jumping
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
     jr z, .endIf_A
@@ -2587,9 +2638,9 @@ poseFunc_spiderJump: ; 00:1170 - $0D: Spider ball jumping
     xor a
     ld [spiderRotationState], a
 ret
+;}
 
-
-poseFunc_11E4: ; $0C
+poseFunc_spiderFall: ;{ 00:11E4 - $0C
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
     jr z, jr_000_11f5
@@ -2658,8 +2709,9 @@ jr_000_1241:
     xor a
     ld [samus_fallArcCounter], a
     ret
+;}
 
-poseFunc_morphFall: ; 00:123B - $08: Morphball falling
+poseFunc_morphFall: ;{ 00:123B - $08: Morphball falling
     ldh a, [hInputRisingEdge]
     bit PADB_DOWN, a
     jr z, .endIf_A
@@ -2769,9 +2821,9 @@ poseFunc_morphFall: ; 00:123B - $08: Morphball falling
         or $04
         ldh [hSamusYPixel], a
         ret
-; end proc
+;} end proc
 
-poseFunc_12F5: ; $07 - Falling
+poseFunc_12F5: ;{ 00:12F5 - $07 - Falling
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
     jr z, jr_000_1335
@@ -2854,13 +2906,14 @@ poseFunc_12F5: ; $07 - Falling
         or $04
         ldh [hSamusYPixel], a
         ret
+;}
 
-fallArcTable: ; 00:1386
+fallArcTable: ;{ 00:1386
     db $01, $01, $01, $01, $00, $01, $01, $00, $01, $01, $01, $01, $01, $01, $02, $01
     db $02, $02, $01, $02, $02, $02, $03
+;}
 
-
-handleTurnaroundTimer: ; Called if MSB of Samus' pose is set
+handleTurnaroundTimer: ;{ Called if MSB of Samus' pose is set
     call Call_000_1f0f ; Downwards BG collision
     ; Exit this state if jump is pressed
     ldh a, [hInputRisingEdge]
@@ -2876,9 +2929,9 @@ handleTurnaroundTimer: ; Called if MSB of Samus' pose is set
     res 7, a
     ld [samusPose], a
     jp samus_handlePose
-; end proc
+;} end proc
 
-poseFunc_standing: ; 00:13B7 - $00: Standing
+poseFunc_standing: ;{ 00:13B7 - $00: Standing
     ; Fall if ground is missing
     call Call_000_1f0f
     jr c, .endIf_A
@@ -3057,8 +3110,9 @@ poseFunc_standing: ; 00:13B7 - $00: Standing
         ret
     .endIf_J:
 ret
+;}
 
-poseFunc_run: ; 00:14D6 - $03: Running
+poseFunc_running: ;{ 00:14D6 - $03: Running
     ; Fall if ground is missing
     call Call_000_1f0f
     jr c, .endIf_A
@@ -3069,7 +3123,7 @@ poseFunc_run: ; 00:14D6 - $03: Running
         ret
     .endIf_A:
 
-    ; Animation timer?
+    ; Animation timer
     ld hl, samus_animationTimer
     inc [hl]
     inc [hl]
@@ -3251,8 +3305,9 @@ poseFunc_run: ; 00:14D6 - $03: Running
         .endIf_M:
     .endIf_J:
 ret
+;}
 
-poseFunc_crouch: ; 00:15F4 - $04: Crouching
+poseFunc_crouch: ;{ 00:15F4 - $04: Crouching
     ; Start falling if ground disappears
     call Call_000_1f0f
     jr c, .endIf_A
@@ -3448,8 +3503,9 @@ poseFunc_crouch: ; 00:15F4 - $04: Crouching
         ret
     .endIf_O:
 ret
+;}
 
-poseFunc_1701: ; 00:1701 $05 - Morph ball
+poseFunc_morphBall: ;{ 00:1701 - $05: Morph ball
     ; Start falling if nothing below
     call Call_000_1f0f
     jr c, .endIf_A
@@ -3464,7 +3520,7 @@ poseFunc_1701: ; 00:1701 $05 - Morph ball
     ; Activate spider ball
     ldh a, [hInputRisingEdge]
     bit PADB_DOWN, a
-        jr nz, jr_000_1785
+        jr nz, .activateSpiderBall
 
     ; Unmorph on ground
     ldh a, [hInputRisingEdge]
@@ -3499,7 +3555,7 @@ poseFunc_1701: ; 00:1701 $05 - Morph ball
         ; Handle morph bounce
         ldh a, [hInputPressed]
         bit PADB_DOWN, a
-            jp nz, Jump_000_1785
+            jp nz, .activateSpiderBall
         ld a, pose_morphJump
         ld [samusPose], a
         ld a, $01
@@ -3533,29 +3589,34 @@ poseFunc_1701: ; 00:1701 $05 - Morph ball
             ret
 ; end proc
 
-; Activate spider ball
-Jump_000_1785:
-jr_000_1785:
+.activateSpiderBall:
+    ; Check for item
     ld a, [samusItems]
     bit itemBit_spider, a
         ret z
+    ; Set pose and variables
     ld a, pose_spider
     ld [samusPose], a
     ld a, $01
     ld [samus_fallArcCounter], a
     xor a
     ld [spiderRotationState], a
+    ; Play noise
     ld a, $0d
     ld [sfxRequest_square1], a
 ret
+;}
 
-poseFunc_morphJump: ; 00:179F - Pose $06
+poseFunc_morphJump: ;{ 00:179F - $06: Morph Jump
+    ; Check down input
     ldh a, [hInputRisingEdge]
     bit PADB_DOWN, a
     jr z, .jump
+        ; Check for item
         ld a, [samusItems]
         bit itemBit_spider, a
         jr z, .jump
+            ; Enter the spider ball
             ld a, pose_spiderJump
             ld [samusPose], a
             xor a
@@ -3564,9 +3625,9 @@ poseFunc_morphJump: ; 00:179F - Pose $06
             ld [sfxRequest_square1], a
             ret
     .jump: ; Fall through to jump handler below
-; end proc
+;} end proc
 
-poseFunc_jump: ; 00:17BB - Pose $01
+poseFunc_jump: ;{ 00:17BB - Pose $01
     ld a, [samus_jumpArcCounter]
     cp $40
     jr nc, .endIf_A
@@ -3662,31 +3723,32 @@ ret
         ld a, pose_morphFall
         ld [samusPose], a
         ret
-; end proc
+;} end proc
 
 ; Jump arc table
 ; - This starts being referenced when the jump counter is $40
 ; - I have no idea why the game tries writing to this table
-jumpArcTable: ; 00:184A - Jump arc table
+jumpArcTable: ;{ 00:184A - Jump arc table
     db $fe, $fe, $fe, $fe, $ff, $fe, $ff, $fe, $ff, $ff, $ff, $ff, $ff, $ff, $00, $ff
     db $ff, $00, $ff, $00, $ff, $00, $00, $00, $00, $00, $00, $00, $00, $01, $00, $01
     db $00, $01, $01, $00, $01, $01, $01, $01, $01, $01, $02, $01, $02, $01, $02, $02
     db $02, $02, $03, $02, $02, $03, $02, $02, $03, $02, $03, $02, $03, $02, $03, $02
     db $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $80
+;}
 
 ; Space Jump Table
 ; - $00 means no space jumping on that frame
 ; - Non-zero values mean that you can space jump on that frame
 ;  - Different non-zero values appear to have no meaning in the code (uncertain)
-spaceJumpTable: ; 00:1899
+spaceJumpTable: ;{ 00:1899
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $02, $01, $02, $02
     db $02, $02, $03, $02, $02, $03, $02, $02, $03, $02, $03, $02, $03, $02, $03, $02
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $80
+;}
 
-
-poseFunc_spinJump: ; 00:18E8 - $02: Spin jumping
+poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
     ; Break out of spin if firing a shot
     ldh a, [hInputRisingEdge]
     bit PADB_B, a
@@ -3863,8 +3925,9 @@ poseFunc_spinJump: ; 00:18E8 - $02: Spin jumping
     ld a, pose_fall
     ld [samusPose], a
 ret
+;}
 
-poseFunc_jumpStart: ; 00:19E2 - $09 and $0A - Starting to jump
+poseFunc_jumpStart: ;{ 00:19E2 - $09 and $0A - Starting to jump
     ldh a, [hInputPressed]
     bit PADB_A, a
     jr z, .endIf_A
@@ -3925,6 +3988,8 @@ poseFunc_jumpStart: ; 00:19E2 - $09 and $0A - Starting to jump
 
 .directionTable:
     db $00, $01, $ff
+;}
+;}
 
 ;------------------------------------------------------------------------------
 ; Check all the collision points pertinent to the spider ball
@@ -3955,7 +4020,7 @@ spiderYTop    = $1E
 spiderYBottom = $2C
 spiderYMid    = (spiderYTop + spiderYBottom)/2 ; $25
 
-collision_checkSpiderSet: ; 00:1A42
+collision_checkSpiderSet: ;{ 00:1A42
     ; Clear spider ball results flag
     xor a
     ld [spiderContactState], a
@@ -4093,7 +4158,7 @@ collision_checkSpiderSet: ; 00:1A42
     bit PADB_A, a
         ret z
     ret
-; end proc
+;} end proc
 
 Call_000_1b2e: ; Unmorph on ground
     ldh a, [hSamusXPixel]
@@ -4102,7 +4167,7 @@ Call_000_1b2e: ; Unmorph on ground
         jr jr_000_1b6b
 
 ; Attempts to stand up. Returns carry if it fails.
-samus_tryStanding: ; 00:1B37
+samus_tryStanding: ;{ 00:1B37
     ld a, $04
     ld [sfxRequest_square1], a
     ; Check upper left pixel
@@ -4130,9 +4195,9 @@ samus_tryStanding: ; 00:1B37
     ld a, $04
     ld [sfxRequest_square1], a
 ret
+;}
 
-
-jr_000_1b6b:
+jr_000_1b6b: ;{ 00:1B6B
     ldh a, [hSamusYPixel]
     add $18
     ld [$c203], a
@@ -4160,19 +4225,22 @@ jr_000_1b6b:
     xor a
     ld [$d033], a
 ret
+;}
 
-
-samus_morphOnGround: ; 00:1BA4
+samus_morphOnGround: ;{ 00:1BA4
+    ; Set pose
     ld a, pose_morph
     ld [samusPose], a
+    ; Clear vertical speed
     xor a
     ld [$d033], a
     ; Play morphing sound
     ld a, $06
     ld [sfxRequest_square1], a
 ret
+;}
 
-samus_unmorphInAir: ; 00:1BB3
+samus_unmorphInAir: ;{ 00:1BB3
     ldh a, [hSamusYPixel]
     add $08
     ld [$c203], a
@@ -4218,10 +4286,11 @@ samus_unmorphInAir: ; 00:1BB3
 ret
     .exit:
 ret
+;}
 
-; Movement functions
+; Samus movement functions {
 ; Move right (walking)
-samus_walkRight: ; 00:1C0D
+samus_walkRight: ;{ 00:1C0D
     ld a, $01
     ld [samusFacingDirection], a
     ld b, $01
@@ -4259,9 +4328,9 @@ samus_walkRight: ; 00:1C0D
         ld a, b
         ld [$d035], a
         ret
-; end proc
+;} end proc
 
-samus_walkLeft: ; 00:1C51
+samus_walkLeft: ;{ 00:1C51
     xor a
     ld [samusFacingDirection], a
     ld b, $01
@@ -4299,9 +4368,9 @@ samus_walkLeft: ; 00:1C51
         ld a, b
         ld [$d036], a
         ret
-; end proc
+;} end proc
 
-samus_rollRight:
+samus_rollRight: ;{
     .spider: ; 00:1C94 - Entry point for spider
         ld a, $01
         jr .start
@@ -4331,9 +4400,9 @@ samus_rollRight:
         ld a, b
         ld [$d035], a
         ret
+;}
 
-
-samus_rollLeft:
+samus_rollLeft: ;{
     .spider: ; 00:1CC5 - Entry point for spider
         ld a, $01
         jr .start
@@ -4365,9 +4434,9 @@ samus_rollLeft:
         ld a, b
         ld [$d036], a
         ret
+;}
 
-
-samus_moveRightInAir: ; 00:1CF5
+samus_moveRightInAir: ;{ 00:1CF5
 .turn:
     ld a, $01
     ld [samusFacingDirection], a
@@ -4394,9 +4463,9 @@ samus_moveRightInAir: ; 00:1CF5
         ld a, b
         ld [$d035], a
         ret
+;}
 
-
-samus_moveLeftInAir: ; 00:1D22
+samus_moveLeftInAir: ;{ 00:1D22
 .turn:
     xor a
     ld [samusFacingDirection], a
@@ -4423,9 +4492,9 @@ samus_moveLeftInAir: ; 00:1D22
         ld a, b
         ld [$d036], a
         ret
+;}
 
-
-samus_moveVertical: ; 00:1D4E - move down
+samus_moveVertical: ;{ 00:1D4E - move down
     ; Move up if negative
     bit 7, a
         jr nz, .moveUp
@@ -4470,9 +4539,9 @@ samus_moveVertical: ; 00:1D4E - move down
 .moveUp:
     cpl
     inc a
-; Fall-through to move up routine
+;} Fall-through to move up routine
     
-samus_moveUp: ; 00:1D98 - Move up (only directly called by spider ball)
+samus_moveUp: ;{ 00:1D98 - Move up (only directly called by spider ball)
     ld b, a
     ldh a, [hSamusYPixel]
     sub b
@@ -4506,10 +4575,12 @@ samus_moveUp: ; 00:1D98 - Move up (only directly called by spider ball)
         ld a, b
         ld [$d037], a
         ret
+;}
+;}
 
 ;------------------------------------------------------------------------------
-; BG collision functions
-collision_samusHorizontal: ; Has two entry points (left and right)
+; BG collision functions {
+collision_samusHorizontal: ;{ Has two entry points (left and right)
     .left: ; 00:1DD6 - Entry point for left-side collision
         push hl
         push de
@@ -4614,10 +4685,10 @@ collision_samusHorizontal: ; Has two entry points (left and right)
     pop de
     pop hl
 ret
-
+;}
 
 ; Samus upwards BG collision detection
-collision_samusTop: ; 00:1E88
+collision_samusTop: ;{ 00:1E88
     push hl
     push de
     push bc
@@ -4710,9 +4781,10 @@ collision_samusTop: ; 00:1E88
     pop de
     pop hl
 ret
+;}
 
 ; Samus downwards BG collision detection
-Call_000_1f0f: ; 00:1F0F
+Call_000_1f0f: ;{ 00:1F0F
     push hl
     push de
     push bc
@@ -4831,10 +4903,11 @@ Call_000_1f0f: ; 00:1F0F
     pop de
     pop hl
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Used by Spider Ball collision function
-collision_checkSpiderPoint: ; 00:1FBF
+collision_checkSpiderPoint: ;{ 00:1FBF
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
@@ -4874,11 +4947,12 @@ ret
         ld a, [acidDamageValue]
         call applyDamage.acid
     jr .exitNoHit
+;}
+;}
 
-;------------------------------------------------------------------------------
-; end of BG collision functions?
+; end of BG collision functions
 
-samus_getTileIndex: ; 00:1FF5
+samus_getTileIndex: ;{ 00:1FF5
     call getTilemapAddress
 
     ; Adjust base address for collision depending on the tilemap being used
@@ -4891,7 +4965,6 @@ samus_getTileIndex: ; 00:1FF5
         ld [$c216], a
     .endIf_A
 
-    ; What's with this double read from VRAM? Insurance?
     .waitLoop_A: ; Wait for h-blank
         ldh a, [rSTAT]
         and $03
@@ -4935,20 +5008,22 @@ samus_getTileIndex: ; 00:1FF5
 
     ld a, b
 ret
+;}
 
-metroidLCounterTabel: ; 0:203B - Metroids remaining (L counter)
+metroidLCounterTable: ;{ 0:203B - Metroids remaining (L counter) - Value is BCD
     db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $00, $00, $00, $00, $00, $00
     db $01, $02, $03, $01, $01, $01, $02, $03, $04, $05, $00, $00, $00, $00, $00, $00
     db $06, $07, $01, $02, $01, $01, $02, $03, $04, $05, $00, $00, $00, $00, $00, $00
     db $06, $07, $08, $09, $10, $01, $02, $03, $04, $05, $00, $00, $00, $00, $00, $00
     db $06, $07, $08, $01, $02, $03, $04, $01
+;}
 
-; 0:2083 - Magic number for save
-saveFile_magicNumber:
+; Magic number for save
+saveFile_magicNumber: ; 00:2083
     db $01, $23, $45, $67, $89, $ab, $cd, $ef
 
 ; Damage pose transition table 
-table_208B: ; 00:208B
+table_208B: ;{ 00:208B
     db $0F
     db $0F
     db $0F
@@ -4979,8 +5054,9 @@ table_208B: ; 00:208B
     db $1B
     db $1C
     db $1D
+;}
 
-; 00:20A9 - Spider Ball Direction Tables
+; 00:20A9 - Spider Ball Direction Tables {
 ; Values
 ; - 0: Nothing
 ; - 1: Move Right
@@ -5009,8 +5085,9 @@ table_20A9: db 0, $4, $1, $4, $2, $2,  0, $2, $8,  0, $1, $4, $8, $8, $1,  0
 table_20B9: db 0, $2, $4, $2, $8, $8,  0, $8, $1,  0, $4, $2, $1, $1, $4,  0
 table_20C9: db 0, $1, $8, $8, $4, $1,  0, $8, $2,  0, $2, $2, $4, $1, $4,  0
 table_20D9: db 0, $8, $2, $2, $1, $8,  0, $2, $4,  0, $4, $4, $1, $8, $1,  0
+;}
 
-table_20E9: ; 00:20E9 - Samus pose related (y pixel offsets?)
+table_20E9: ;{ 00:20E9 - Samus pose related (y pixel offsets?)
     db $08
     db $14
     db $1A
@@ -5033,8 +5110,9 @@ table_20E9: ; 00:20E9 - Samus pose related (y pixel offsets?)
     db $08
     db $20
     db $20
+;}
 
-table_20FF: ; 00:20FF - Y-Offset collision lists per pose ($80 terminated)
+table_20FF: ;{ 00:20FF - Y-Offset collision lists per pose ($80 terminated)
     db $10, $18, $20, $28, $2A, $80, 0, 0 ; $00 Standing
     db $14, $18, $20, $28, $2A, $80, 0, 0 ; $01 Jumping
     db $1A, $20, $28, $2A, $80, 0, 0, 0   ; $02 Spin-jumping
@@ -5065,12 +5143,12 @@ table_20FF: ; 00:20FF - Y-Offset collision lists per pose ($80 terminated)
     db $20, $25, $2A, $80, 0, 0, 0, 0     ; $1B In Metroid Queen's stomach
     db $20, $25, $2A, $80, 0, 0, 0, 0     ; $1C Escaping Metroid Queen
     db $20, $25, $2A, $80, 0, 0, 0, 0     ; $1D Escaped Metroid Queen 
-
+;}
 
 ; Clear Projectile RAM
-clearProjectileArray: ; 00:21EF
-    ld h, $dd
-    ld l, $00
+clearProjectileArray: ;{ 00:21EF
+    ld h, HIGH(projectileArray)
+    ld l, LOW(projectileArray)
     .loop:
         ld a, $ff
         ld [hl+], a
@@ -5078,7 +5156,7 @@ clearProjectileArray: ; 00:21EF
         and a
     jr nz, .loop
 ret
-
+;}
 
 Call_000_21fb:
     ld a, [samusPose]
@@ -5096,7 +5174,7 @@ toggleMissiles: ; 00:2212
     ; Check if missiles are active
     ld a, [samusActiveWeapon]
     cp $08
-    jr nz, .endIf
+    jr nz, .else
         ; Switch to beam
         ld a, [samusBeam]
         ld [samusActiveWeapon], a
@@ -5105,20 +5183,20 @@ toggleMissiles: ; 00:2212
         ; Play sound effect
         ld a, $15
         ld [sfxRequest_square1], a
-            ret
-    .endIf:
-    ; Save current beam (unnecessary code?)
-    ld a, [samusActiveWeapon]
-    ld [samusBeam], a
-    ; Switch to missiles
-    ld a, $08
-    ld [samusActiveWeapon], a
-    ld hl, gfxInfo_cannonMissile
-    call Call_000_2753
-    ; Play sound effect
-    ld a, $15
-    ld [sfxRequest_square1], a
-ret
+        ret
+    .else:
+        ; Save current beam (unnecessary code?)
+        ld a, [samusActiveWeapon]
+        ld [samusBeam], a
+        ; Switch to missiles
+        ld a, $08
+        ld [samusActiveWeapon], a
+        ld hl, gfxInfo_cannonMissile
+        call Call_000_2753
+        ; Play sound effect
+        ld a, $15
+        ld [sfxRequest_square1], a
+        ret
 
 ; 00:2242
 gfxInfo_cannonMissile: db BANK(gfx_cannonMissile)
@@ -5476,9 +5554,9 @@ executeDoorScript: ; 00:239C
         call door_warp
         ld a, $01
         ld [doorExitStatus], a
-        ld a, [$d08b]
+        ld a, [queen_roomFlag]
         and $0f
-        ld [$d08b], a
+        ld [queen_roomFlag], a
         jp .nextToken
 
     .doorToken_escapeQueen:
@@ -5537,7 +5615,7 @@ executeDoorScript: ; 00:239C
         inc hl
         push hl
             xor a
-            ld [$d08b], a
+            ld [queen_roomFlag], a
             ld a, $88
             ldh [rWY], a
             ld a, $07
@@ -5586,7 +5664,7 @@ executeDoorScript: ; 00:239C
         ld a, $01
         ld [doorExitStatus], a
         ld a, $11
-        ld [$d08b], a
+        ld [queen_roomFlag], a
         ldh a, [rIE]
         set 1, a
         ldh [rIE], a
@@ -6620,7 +6698,7 @@ tryPausing: ; 00:2C79
     cp PADF_START
         ret nz
     ; Exit if in Queen's room
-    ld a, [$d08b]
+    ld a, [queen_roomFlag]
     cp $11
         ret z
     ; No pausing if facing the screen
@@ -6634,7 +6712,7 @@ tryPausing: ; 00:2C79
     and a
         ret nz
 
-    ld hl, metroidLCounterTabel
+    ld hl, metroidLCounterTable
     ld a, [metroidCountReal]
     ld e, a
     ld d, $00
@@ -6663,7 +6741,7 @@ tryPausing: ; 00:2C79
 
     xor a
     ld [debugItemIndex], a
-    ld [$d011], a
+    ld [unused_D011], a
     ld hl, wram_oamBuffer + $2
 
     .loop:
@@ -7017,7 +7095,7 @@ Call_000_2ee3:
     ld [samusPose], a
     ld a, [$c423]
     ld [$d00f], a
-    ld a, [$d08b]
+    ld a, [queen_roomFlag]
     cp $11
     jr nz, jr_000_2f1f
         ld a, $01
@@ -7095,7 +7173,7 @@ applyDamage: ; This procedure has multiple entry points
 ret
 
 gameMode_dying: ; 00:2F86
-    ld a, [$d08b]
+    ld a, [queen_roomFlag]
     cp $11
     jr nz, .endIf
         call drawSamus_longJump ; Draw Samus
@@ -7196,7 +7274,7 @@ VBlank_deathSequence: ; 00:2FE1
     ; Queen vblank handler if necessary
     ld a, BANK(VBlank_drawQueen)
     ld [rMBC_BANK_REG], a
-    ld a, [$d08b]
+    ld a, [queen_roomFlag]
     cp $11
     call z, VBlank_drawQueen
 
@@ -8315,7 +8393,7 @@ gameMode_dead: ; 00:36B0
     jr z, .loopWaitSilence
 
     xor a
-    ld [$d08b], a
+    ld [queen_roomFlag], a
     call disableLCD
     call clearTilemaps
     xor a
@@ -8839,7 +8917,8 @@ loadExtraSuitGraphics:
     call Call_000_2753
 ret
 
-gameMode_unusedA: ; 00:3ACE
+; Game modes $0A and $0F
+gameMode_unusedA: ;{ 00:3ACE
     call silenceAudio_longJump
     ld a, $ff
     ld [$cfe5], a
@@ -8904,8 +8983,10 @@ gameMode_unusedB: ; 00:3B2F
             ret nz
     .reboot:
 jp bootRoutine
+;}
 
-gameMode_unusedC: ; 00:3B43
+; Game modes $10 and $11
+gameMode_unusedC: ;{ 00:3B43
     call silenceAudio_longJump
     ld a, $ff
     ld [$cfe5], a
@@ -8971,7 +9052,7 @@ gameMode_unusedD: ; 00:3BA1
     ld a, $00
     ldh [gameMode], a
 ret
-
+;}
 
 ; Loads graphics depending on Samus' loadout
 loadGame_SamusItemGraphics: ; 00:3BB4
@@ -9112,8 +9193,7 @@ loadCreditsText:
     ld [rMBC_BANK_REG], a
 ret
 
-; External Calls
-
+; External Calls {
 earthquakeCheck_farCall: ; 00:3C92
     callFar earthquakeCheck
     ; Return to callee
@@ -9282,11 +9362,11 @@ drawSamus_ignoreDamageFrames_longJump: ; 00:3EBF
 clearAllOam_longJump: ; 00:3ECA
     jpLong clearAllOam
 
-; End of long calls
+;} End of long calls
 
 ; Extracts the sprite priority bit that is bit-packed with the door transition index using the bitmask (0x0800)
 ; (I don't know why they didn't store these bits with the scroll bytes)
-loadScreenSpritePriorityBit: ; 00:3ED5
+loadScreenSpritePriorityBit: ;{ 00:3ED5
     switchBankVar [currentLevelBank]
     ; Get screen index from coordinates
     ldh a, [hSamusYScreen]
@@ -9313,55 +9393,54 @@ loadScreenSpritePriorityBit: ; 00:3ED5
     ; Return to the callee
     switchBank drawSamus
 ret
+;}
 
 ; 00:3F07
 ; unused (duplicate of the routine at 00:3062)
+unusedDeathAnimation_copy: ;{ 00:3F07
     ldh a, [frameCounter]
     and $01
-    jr nz, jr_000_3f44
+    jr nz, .endIf_A
+        ld a, [$d05a]
+        ld l, a
+        ld a, [$d05b]
+        ld h, a
+        ld de, $0010
+    
+        .eraseLoop:
+            xor a
+            ld [hl], a
+            add hl, de
+            ld a, l
+            and $f0
+        jr nz, .eraseLoop
+    
+        ld a, l
+        sub $ff
+        ld l, a
+        ld a, h
+        sbc $00
+        ld h, a
+        ld a, l
+        cp $10
+        jr nz, .endIf_B
+            add $f0
+            ld l, a
+            ld a, h
+            adc $00
+            ld h, a
+        .endIf_B:
+    
+        ld a, l
+        ld [$d05a], a
+        ld a, h
+        ld [$d05b], a
+        cp $85
+        jr nz, .endIf_A
+            xor a
+            ld [deathAnimTimer], a
+    .endIf_A:
 
-    ld a, [$d05a]
-    ld l, a
-    ld a, [$d05b]
-    ld h, a
-    ld de, $0010
-
-jr_000_3f18:
-    xor a
-    ld [hl], a
-    add hl, de
-    ld a, l
-    and $f0
-    jr nz, jr_000_3f18
-
-    ld a, l
-    sub $ff
-    ld l, a
-    ld a, h
-    sbc $00
-    ld h, a
-    ld a, l
-    cp $10
-    jr nz, jr_000_3f34
-
-    add $f0
-    ld l, a
-    ld a, h
-    adc $00
-    ld h, a
-
-jr_000_3f34:
-    ld a, l
-    ld [$d05a], a
-    ld a, h
-    ld [$d05b], a
-    cp $85
-    jr nz, jr_000_3f44
-
-    xor a
-    ld [deathAnimTimer], a
-
-jr_000_3f44:
     ld a, [scrollY]
     ldh [rSCY], a
     ld a, [scrollX]
@@ -9376,5 +9455,6 @@ jr_000_3f44:
     pop bc
     pop af
 reti
+;}
 
 ; Freespace - 00:3F60 (filled with $00)

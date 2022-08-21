@@ -672,7 +672,7 @@ def doorScrollDirection = $D00E ; Door transition direction
 ;    FFh: Up-left
 ;}
 def samus_jumpStartCounter = $D010 ; Counter for the beginning of Samus's jump state (used in the jumpStart pose)
-;$D011: Nothing. Only cleared
+def unused_D011 = $D011 ; Nothing. Only cleared
 ;$D012: Value for $D060 in $31F1. Projectile direction in $1:500D
 ;
 def samusPose = $D020 ; Samus' pose
@@ -864,7 +864,7 @@ countdownTimerHigh = $D067; ;  various events
 ;
 enemySolidityIndex_canon = $D069 ; Canonicaly copy of the enemy solid block threshold (not used by enemy code, however)
 ;
-;$D06B: Unused. Cleared by loading save
+unused_D06B = $D06B ; Unused. Cleared by loading save
 def itemCollected = $D06C ; Item pickup being collected at the moment. Set to ([enemy sprite ID] - 81h) / 2 + 1 by $2:4DD3
 ;{
 ;    1: Plasma
@@ -903,7 +903,7 @@ def credits_nextLineReady = $D076 ; Flag to indicate that the next line of the c
 
 def acidDamageValue = $D077 ; Acid damage. Saved to SRAM
 def spikeDamageValue = $D078 ; Spike damage. Saved to SRAM
-;$D079: Flag to load characters. But also used in facing screen as a flag to check if buttons are pressed. Also an flag for selecting the clear save slot option
+def loadingFromFile = $D079 ; 00h: loading new game, otherwise: loading from file. Adjusts behaviors relating to loading the font and if Samus stays facing the screen.
 ;$D07A: Save slot option selected
 ;{
 ;    0: Start
@@ -930,7 +930,7 @@ def samusDispMissilesHigh = $D087 ; Samus' missiles for display (high byte)
 def saveMessageCooldownTimer = $D088 ; Cooldown timer for game save message (for displaying the "Completed" text)
 def metroidCountReal = $D089 ; Real number of metroids remaining (BCD)
 def beamSolidityIndex = $D08A ; Projectile solid block threshold
-;$D08B: Metroid Queen's room flag. 11h: In Metroid Queen's room (set by screen transition command 8)
+def queen_roomFlag = $D08B ; 11h: In Metroid Queen's room (set by screen transition command 8), other values less than 10h: not in Queen's room
 ;$D08C: Would have guessed a flag for 'can do tiles update' or 'is lag frame'
 ;$D08D: Value for $D05D in $31F1. Projectile type in $1:500D
 def doorIndexLow  = $D08E ; Index of screen transition command set. Set to [$4300 + ([screen Y position high] * 10h + [screen X position high]) * 2] & ~800h by set up door transition

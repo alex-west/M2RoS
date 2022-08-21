@@ -1,7 +1,5 @@
 # Bank 2 Status Report
 
-TODO: Verify that code in the bank is fully relocatable.
-
 Legend
 - S - Satisfactory (possibly improvable, but low priority)
 - NW - Needs Work (comments, label names, etc.)

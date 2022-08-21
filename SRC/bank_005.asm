@@ -183,14 +183,13 @@ loadTitleScreen: ; 05:408F
     xor a
     ld [$d039], a
     ld [$d07a], a
-    ld a, [$d079]
+    ld a, [loadingFromFile]
     and a
     jr z, jr_005_40e3
+        ld a, $01
+        ld [$d07a], a
+    jr_005_40e3:
 
-    ld a, $01
-    ld [$d07a], a
-
-jr_005_40e3:
     ; Set countdown timer to max
     ld a, $ff
     ld [countdownTimerHigh], a
@@ -431,7 +430,7 @@ titleScreenRoutine: ; 05: 4118
     ld a, $12
     ld [songRequest], a
     xor a
-    ld [$d079], a
+    ld [loadingFromFile], a
     ; Enable SRAM
     ld a, $0a
     ld [$0000], a
@@ -457,7 +456,7 @@ titleScreenRoutine: ; 05: 4118
     cp $08
     jr c, jr_005_428d
         ld a, $ff
-        ld [$d079], a
+        ld [loadingFromFile], a
     jr_005_428d:
     
     ld a, [activeSaveSlot]
@@ -468,7 +467,7 @@ titleScreenRoutine: ; 05: 4118
     ; New game
     ld a, $0b
     ldh [gameMode], a
-    ld a, [$d079]
+    ld a, [loadingFromFile]
     and a
         ret z
     ; Load from file

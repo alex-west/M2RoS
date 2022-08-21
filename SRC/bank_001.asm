@@ -69,7 +69,7 @@ VBlank_updateStatusBar:
     ; Adjust draw destination depending on if in the Queen fight or not
     ; (the HUD in the Queen's room is on the normal BG layer, since her head uses the window layer)
     ld hl, vramDest_queenStatusBar
-    ld a, [$d08b]
+    ld a, [queen_roomFlag]
     cp $11
     jr z, .endIf_B
         ld a, $07
@@ -376,7 +376,7 @@ drawHudMetroid::
     ld a, $98
     ldh [hSpriteYPixel], a
     ; Check if in queen fight
-    ld a, [$d08b]
+    ld a, [queen_roomFlag]
     cp $11
     jr z, .endIf_A
         ; If standing on save point
@@ -907,7 +907,7 @@ ret
 ; - Transfers initial savegame from ROM to save buffer in WRAM
 createNewSave: ; 01:4E1C
     xor a
-    ld [$d079], a
+    ld [loadingFromFile], a
     ld hl, initialSaveFile
     ld de, saveBuffer
     ld b, $26
@@ -925,7 +925,7 @@ ret
 
 ; Copies savegame from SRAM to save buffer in WRAM
 loadSaveFile: ; 01:4E33
-    ld a, [$d079]
+    ld a, [loadingFromFile]
     and a
         jr z, createNewSave
 
@@ -965,11 +965,14 @@ initialSaveFile:
 	dw $07C0     ; Screen Y position
 	dw $0640     ; Screen X position
 	
+    ; No bank for enemy graphics
 	dw gfx_surfaceSPR      ; Enemy tiles source address
 	db BANK(gfx_surfaceBG) ; Background tiles source bank
 	dw gfx_surfaceBG       ; Background tiles source address
-	dw $5280     ; Metatile definitions source address
-	dw $4580     ; Tile properties source address
+    ; No bank for metatiles
+	dw metatiles_surface   ; Metatile definitions source address
+    ; No bank for collision
+	dw collision_surface   ; Collision data source address
 	db $0F       ; Bank for current room
 	
 	db $64       ; Samus solid block threshold
@@ -2715,7 +2718,7 @@ miscIngameTasks: ; 01:57F2
     .endIf_A:
 
     ; Skip this if in the Queen fight
-    ld a, [$d08b]
+    ld a, [queen_roomFlag]
     cp $11
     jr z, .endIf_B
         ldh a, [rLCDC]
@@ -3667,7 +3670,7 @@ Call_001_79ef: ; 01:79EF: Handle earthquake (called from bank 0)
 
     xor a
     ld [$cedf], a
-    ld a, [$d08b]
+    ld a, [queen_roomFlag]
     cp $10
     jr nc, jr_001_7a2e
         ld a, [$d0a5]
