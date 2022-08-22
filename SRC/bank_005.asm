@@ -635,316 +635,356 @@ ret
 
 ;------------------------------------------------------------------------------
 ; animateSamus
-credits_animateSamus:
+credits_animateSamus: ;{ 05:5620
     ld a, [credits_samusAnimState]
     rst $28
-        dw creditsAnim_standingStart ; 00
-        dw creditsAnim_samusRun ; 01
-        dw creditsAnim_unused ; 02 - Unused stub
-        dw creditsAnim_spinRising ; 03
-        dw creditsAnim_spinFalling ; 04
-        dw creditsAnim_kneelingSuitless ; 05
+        dw .standingStart     ; 00
+        dw .running           ; 01
+        dw .unused            ; 02 - Unused stub
+        dw .spinRising        ; 03
+        dw .spinFalling       ; 04
+        dw .suitless_kneeling ; 05
         ; States $6-$12 are Samus untying her hair
-        dw func_5679 ; 06
-        dw func_5690 ; 07
-        dw func_56A7 ; 08
-        dw func_56BE ; 09
-        dw func_56D5 ; 0A
-        dw func_56EC ; 0B
-        dw func_5703 ; 0C
-        dw func_571A ; 0D
-        dw func_5731 ; 0E
-        dw func_5748 ; 0F
-        dw func_575F ; 10
-        dw func_5776 ; 11
-        dw func_578D ; 12
+        dw .untying_frameA ; $06
+        dw .untying_frameB ; $07
+        dw .untying_frameC ; $08
+        dw .untying_frameD ; $09
+        dw .untying_frameE ; $0A
+        dw .untying_frameF ; $0B
+        dw .untying_frameG ; $0C
+        dw .untying_frameH ; $0D
+        dw .untying_frameI ; $0E
+        dw .untying_frameJ ; $0F
+        dw .untying_frameK ; $10
+        dw .untying_frameL ; $11
+        dw .untying_frameM ; $12
         
-        dw creditsAnim_kneelingSuited ; 13
-        dw creditsAnim_standingEnd ; 14
-        dw creditsAnim_samusHairWaving ; 15
+        dw .suited_kneeling    ; $13
+        dw .suited_standingEnd ; $14
+        dw .hairWaving         ; $15
 
-creditsAnim_samusHairWaving: ; Animate Suitless Samus's hair flowing
+; Animation state functions {
+.hairWaving: ; $15 - Animate Suitless Samus's hair flowing
+    ; Animate every 16th frame
     ldh a, [frameCounter]
     and $10
     swap a
+    ; Add 0 or 1 to this base index of the hair waving animation
     add $13
     call credits_drawSamus
 ret
 
-creditsAnim_standingEnd: ; Draw Suited Samus standing
+.suited_standingEnd: ; $14 - Draw Suited Samus standing
+    ; Stand forever
     ld a, $0a
     call credits_drawSamus
 ret
 
-creditsAnim_kneelingSuited: ; Draw Suited? Samus kneeling
+.suited_kneeling: ; $13 - Draw Suited Samus kneeling
     ld a, $08
     call credits_drawSamus
+    ; Wait for timer to expire
     ld a, [countdownTimerLow]
     and a
-    ret nz
-
+        ret nz
+    ; Set countdown timer for next state (for no reason?)
     ld a, $30
     ld [countdownTimerLow], a
+    ; Incrment state to suited_standingEnd
     ld a, [credits_samusAnimState]
     inc a
     ld [credits_samusAnimState], a
 ret
 
-func_5679: ; Draw Suitless Samus standing (hair up, hands down)
+.untying_frameA: ; $06 - Draw Suitless Samus standing (hair up, hands down)
     ld a, $0b
     call credits_drawSamus
+    ; Wait for timer to expire
     ld a, [countdownTimerLow]
     and a
-    ret nz
-
+        ret nz
+    ; Set timer for next state
     ld a, $08
     ld [countdownTimerLow], a
+    ; Increment state
     ld a, [credits_samusAnimState]
     inc a
     ld [credits_samusAnimState], a
 ret
 
-func_5690: ; Draw suitless Samus reaching up to her hair
+.untying_frameB: ; $07 - Draw suitless Samus reaching up to her hair
     ld a, $0c
     call credits_drawSamus
+    ; Wait for timer to expire
     ld a, [countdownTimerLow]
     and a
-    ret nz
-
+        ret nz
+    ; Set timer for next state
     ld a, $10
     ld [countdownTimerLow], a
+    ; Increment state
     ld a, [credits_samusAnimState]
     inc a
     ld [credits_samusAnimState], a
 ret
 
-func_56A7: ; Draw suitless Samus untying her hair
+.untying_frameC: ; $08 - Draw suitless Samus untying her hair
     ld a, $0d
     call credits_drawSamus
+    ; Wait for timer to expire
     ld a, [countdownTimerLow]
     and a
-    ret nz
-
+        ret nz
+    ; Set timer for next state
     ld a, $08
     ld [countdownTimerLow], a
+    ; Increment state
     ld a, [credits_samusAnimState]
     inc a
     ld [credits_samusAnimState], a
 ret
 
-func_56BE: ; Draw suitless Samus reaching up to her hair (lower her hand, I guess)
+.untying_frameD: ; $09 - Draw suitless Samus reaching up to her hair (lower her hand, I guess)
     ld a, $0c
     call credits_drawSamus
+    ; Wait for timer to expire
     ld a, [countdownTimerLow]
     and a
-    ret nz
-
+        ret nz
+    ; Set timer for next state
     ld a, $08
     ld [countdownTimerLow], a
+    ; Increment state
     ld a, [credits_samusAnimState]
     inc a
     ld [credits_samusAnimState], a
 ret
 
-func_56D5: ; Draw suitless Samus standing (hair up, hands down)
+.untying_frameE: ; $0A - Draw suitless Samus standing (hair up, hands down)
     ld a, $0b
     call credits_drawSamus
+    ; Wait for timer to expire
     ld a, [countdownTimerLow]
     and a
-    ret nz
-
+        ret nz
+    ; Set timer for next state
     ld a, $08
     ld [countdownTimerLow], a
+    ; Increment state
     ld a, [credits_samusAnimState]
     inc a
     ld [credits_samusAnimState], a
 ret
 
-func_56EC: ; Draw suitless Samus turning her head left
+.untying_frameF: ; $0B - Draw suitless Samus turning her head left
     ld a, $0e
     call credits_drawSamus
+    ; Wait for timer to expire
     ld a, [countdownTimerLow]
     and a
-    ret nz
-
+        ret nz
+    ; Set timer for next state
     ld a, $08
     ld [countdownTimerLow], a
+    ; Increment state
     ld a, [credits_samusAnimState]
     inc a
     ld [credits_samusAnimState], a
 ret
 
-func_5703: ; Draw suitless Samus standing (hair up, hands down)
+.untying_frameG: ; $0C - Draw suitless Samus standing (hair up, hands down)
     ld a, $0b
     call credits_drawSamus
+    ; Wait for timer to expire
     ld a, [countdownTimerLow]
     and a
-    ret nz
-
+        ret nz
+    ; Set timer for next state
     ld a, $08
     ld [countdownTimerLow], a
+    ; Increment state
     ld a, [credits_samusAnimState]
     inc a
     ld [credits_samusAnimState], a
 ret
 
-func_571A: ; Draw suitless Samus turning her head right
+.untying_frameH: ; $0D - Draw suitless Samus turning her head right
     ld a, $0f
     call credits_drawSamus
+    ; Wait for timer to expire
     ld a, [countdownTimerLow]
     and a
-    ret nz
-
+        ret nz
+    ; Set timer for next state
     ld a, $08
     ld [countdownTimerLow], a
+    ; Increment state
     ld a, [credits_samusAnimState]
     inc a
     ld [credits_samusAnimState], a
 ret
 
-func_5731: ; Draw suitless Samus standing (hair up, hands down)
+.untying_frameI: ; $0E - Draw suitless Samus standing (hair up, hands down)
     ld a, $0b
     call credits_drawSamus
+    ; Wait for timer to expire
     ld a, [countdownTimerLow]
     and a
-    ret nz
-
+        ret nz
+    ; Set timer for next state
     ld a, $0a
     ld [countdownTimerLow], a
+    ; Increment state
     ld a, [credits_samusAnimState]
     inc a
     ld [credits_samusAnimState], a
 ret
 
-func_5748: ; Draw suitless Samus turning her head left
+.untying_frameJ: ; $0F - Draw suitless Samus turning her head left
     ld a, $0e
     call credits_drawSamus
+    ; Wait for timer to expire
     ld a, [countdownTimerLow]
     and a
-    ret nz
-
+        ret nz
+    ; Set timer for next state
     ld a, $0a
     ld [countdownTimerLow], a
+    ; Increment state
     ld a, [credits_samusAnimState]
     inc a
     ld [credits_samusAnimState], a
 ret
 
-func_575F: ; Draw suitless Samus unfurling her hair (frame 1)
+.untying_frameK: ; $10 - Draw suitless Samus unfurling her hair (frame 1)
     ld a, $10
     call credits_drawSamus
+    ; Wait for timer to expire
     ld a, [countdownTimerLow]
     and a
-    ret nz
-
+        ret nz
+    ; Set timer for next state
     ld a, $0a
     ld [countdownTimerLow], a
+    ; Increment state
     ld a, [credits_samusAnimState]
     inc a
     ld [credits_samusAnimState], a
 ret
 
-func_5776: ; Draw suitless Samus unfurling her hair (frame 2)
+.untying_frameL: ; $11 - Draw suitless Samus unfurling her hair (frame 2)
     ld a, $11
     call credits_drawSamus
+    ; Wait for timer to expire
     ld a, [countdownTimerLow]
     and a
-    ret nz
-
+        ret nz
+    ; Set timer for next state
     ld a, $20
     ld [countdownTimerLow], a
+    ; Increment state
     ld a, [credits_samusAnimState]
     inc a
     ld [credits_samusAnimState], a
 ret
 
-func_578D: ; Draw suitless Samus unfurling her hair (frame 3)
+.untying_frameM: ; $12 - Draw suitless Samus unfurling her hair (frame 3)
     ld a, $12
     call credits_drawSamus
+    ; Wait for timer to expire
     ld a, [countdownTimerLow]
     and a
-    ret nz
-
+        ret nz
     ; Set next state to hair waving
     ld a, $15
     ld [credits_samusAnimState], a
 ret
 
-creditsAnim_kneelingSuitless: ; Draw suitless Samus kneeling
+.suitless_kneeling: ; $05 - Draw suitless Samus kneeling
     ld a, $09
     call credits_drawSamus
+    ; Wait for timer to expire
     ld a, [countdownTimerLow]
     and a
-    ret nz
-
+        ret nz
+    ; Set timer for next state
     ld a, $30
     ld [countdownTimerLow], a
+    ; Increment state to untying animation
     ld a, [credits_samusAnimState]
     inc a
     ld [credits_samusAnimState], a
 ret
 
-creditsAnim_spinFalling: ; Draw Samus spin jumping (falling)
+.spinFalling: ; $04 - Draw Samus spin jumping (falling)
+    ; Move down
     ldh a, [hSamusYPixel]
     add $03
     ldh [hSamusYPixel], a
+    ; Frame to Render = 4 + (frameCounter mod 4)
     ldh a, [frameCounter]
     and $03
     add $04
     call credits_drawSamus
+    ; Detect when Samus hits the ground (what ground?)
     ldh a, [hSamusYPixel]
-    and $fc
+    and $fc ; Ignore the lower bits to give some leeway
     cp $60
-    ret nz
+        ret nz
 
+    ; Set timer for next state
     ld a, $20
     ld [countdownTimerLow], a
     ; Select ending
     ld a, [gameTimeHours]
     cp $03
-    jr nc, jr_005_57de
-        ; Best ending (suitless)
+    jr nc, .else_A
+        ; Best ending - Suitless kneeling -> hair untying
         ld a, [credits_samusAnimState]
         inc a
         ld [credits_samusAnimState], a
-            ret
-    jr_005_57de:
-    ; Second best (suited kneeling animation)
-    ld a, $13
-    ld [credits_samusAnimState], a
-ret
+        ret
+    .else_A:
+        ; Second best - Suited kneeling -> suited standing
+        ld a, $13
+        ld [credits_samusAnimState], a
+        ret
+; end state
 
-creditsAnim_spinRising: ; Draw Samus spin jumping (rising)
+.spinRising: ; $03 - Draw Samus spin jumping (rising)
+    ; Move Samus up until she reaches a certain point
     ldh a, [hSamusYPixel]
-    and $f0
+    and $f0 ; Ignore the lower bits to give some leeway
     cp $e0
-    jr z, jr_005_57f2
+    jr z, .endIf_B
+        ; Move up
         ldh a, [hSamusYPixel]
         sub $03
         ldh [hSamusYPixel], a
-    jr_005_57f2:
-
+    .endIf_B:
+    ; Frame to Render = 4 + (frameCounter mod 4)
     ldh a, [frameCounter]
     and $03
     add $04
     call credits_drawSamus
+    ; Wait for timer to expire
     ld a, [countdownTimerLow]
     and a
         ret nz
-
+    ; Increment state to falling
     ld a, [credits_samusAnimState]
     inc a
     ld [credits_samusAnimState], a
 ret
 
-creditsAnim_standingStart: ; Draw suited Samus standing
+.standingStart: ; $00 - Draw suited Samus standing
     ld a, $0a
     call credits_drawSamus
     ; Worst ending (>= 7 hours) - Samus only stands
     ld a, [gameTimeHours]
     cp $07
         ret nc
-
+    ; Wait for timer to expire ($FF frames, as set in prepareCreditsRoutine)
     ld a, [countdownTimerLow]
     and a
         ret nz
@@ -961,19 +1001,19 @@ creditsAnim_standingStart: ; Draw suited Samus standing
     ld [countdownTimerHigh], a ; Shouldn't this be countdownTimerLow?
     ld a, $12
     ld [countdownTimerHigh], a
-    ; Start running
+    ; Increment state to running
     ld a, [credits_samusAnimState]
     inc a
     ld [credits_samusAnimState], a
 ret
 
-creditsAnim_samusRun: ; Draw Samus running
+.running: ; $01 - Draw Samus running
     ; Increment counter between animation frames
     ld a, [credits_runAnimCounter]
     inc a
     ld [credits_runAnimCounter], a
     cp $06
-    jr c, .endIf
+    jr c, .endIf_C
         ; Reset counter
         xor a
         ld [credits_runAnimCounter], a
@@ -982,10 +1022,10 @@ creditsAnim_samusRun: ; Draw Samus running
         inc a
         ld [credits_runAnimFrame], a
         cp $04
-        jr nz, .endIf
+        jr nz, .endIf_C
             ld a, $00
             ld [credits_runAnimFrame], a
-    .endIf:
+    .endIf_C:
 
     ld a, [credits_runAnimFrame]
     call credits_drawSamus
@@ -1000,10 +1040,9 @@ creditsAnim_samusRun: ; Draw Samus running
     and a
         ret z
 
-    ; ...I think they meant to clear countdownTimerHigh
+    ; Set timer for next state to $0040
     xor a
-    ld [countdownTimerLow], a
-    ; Set duration for next state
+    ld [countdownTimerLow], a ; Should be countdownTimerHigh
     ld a, $40
     ld [countdownTimerLow], a
     ; Set anim state to jumping
@@ -1013,8 +1052,9 @@ creditsAnim_samusRun: ; Draw Samus running
     ld [credits_samusAnimState], a
 ret
 
-creditsAnim_unused:
-    ; Unused? Falls through to this table:
+.unused: ; $02 - Unused. Falls through to this table
+;}
+;}
 
 ;------------------------------------------------------------------------------
 paletteFade: ; 05:5877
@@ -1186,65 +1226,70 @@ credits_scrollHandler: ; 05:593E
 ret
 
 ;------------------------------------------------------------------------------
-rebootGame: ; 05:5985 - Unused?
+rebootGame: ;{ 05:5985 - Unused?
     xor a
     ldh [gameMode], a
 ret
+;}
 
 ;------------------------------------------------------------------------------
-credits_drawSamus: ; 05:5989
+credits_drawSamus: ;{ 05:5989
     call credits_drawSamusJumpTable
-ret
+ret ;}
 
-credits_drawSamusJumpTable:
+credits_drawSamusJumpTable: ;{ 05:598D
     rst $28
-        dw func_59B8 ; 00 - Samus running
-        dw func_59C7 ; 01 - Samus running 
-        dw func_59D6 ; 02 - Samus running
-        dw func_59F1 ; 03 - Samus running
-        dw func_5A07 ; 04 - Spin jump
-        dw func_5A0F ; 05 - Spin jump
-        dw func_5A17 ; 06 - Spin jump
-        dw func_5A1F ; 07 - Spin jump
-        dw func_5A2F ; 08 - Suited Samus kneeling (ready to jump)
-        dw func_5A37 ; 09 - Suitless Samus kneeling
-        dw func_5A27 ; 0A - Suited Samus standing
+        dw .run_frameA ; 00 - Samus running
+        dw .run_frameB ; 01 - Samus running 
+        dw .run_frameC ; 02 - Samus running
+        dw .run_frameD ; 03 - Samus running
         
-        dw func_5A3F ; 0B - Suitless Samus hair up, hand down
-        dw func_5A55 ; 0C - Suitless Samus reaching up to hair
-        dw func_5A6B ; 0D - Suitless Samus untying bun
-        dw func_5A7A ; 0E - Suitless Samus head turned left
-        dw func_5A90 ; 0F - Suitless Samus head turned right
-        dw func_5AA6 ; 10 - Suitless Samus hair unfurling 1
-        dw func_5ABC ; 11 - Suitless Samus hair unfurling 2
-        dw func_5AD2 ; 12 - Suitless Samus hair unfurling 3
+        dw .jump_frameA ; 04 - Spin jump
+        dw .jump_frameB ; 05 - Spin jump
+        dw .jump_frameC ; 06 - Spin jump
+        dw .jump_frameD ; 07 - Spin jump
         
-        dw func_5AE8 ; 13 - Suitless Samus hair waving 1
-        dw func_5AFE ; 14 - Suitless Samus hair waving 2
+        dw .suited_kneeling   ; 08 - Suited Samus kneeling (ready to jump)
+        dw .suitless_kneeling ; 09 - Suitless Samus kneeling
+        dw .suited_standing   ; 0A - Suited Samus standing
+        
+        dw .suitless_frameA ; 0B - Suitless Samus hair up, hand down
+        dw .suitless_frameB ; 0C - Suitless Samus reaching up to hair
+        dw .suitless_frameC ; 0D - Suitless Samus untying bun
+        dw .suitless_frameD ; 0E - Suitless Samus head turned left
+        dw .suitless_frameE ; 0F - Suitless Samus head turned right
+        dw .suitless_frameF ; 10 - Suitless Samus hair unfurling 1
+        dw .suitless_frameG ; 11 - Suitless Samus hair unfurling 2
+        dw .suitless_frameH ; 12 - Suitless Samus hair unfurling 3
+        
+        dw .hairWaving_frameA ; 13 - Suitless Samus hair waving 1
+        dw .hairWaving_frameB ; 14 - Suitless Samus hair waving 2
 
-func_59B8:
+; Functions called by table {
+.run_frameA:
     ld a, $08
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
     ld a, $0b
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_59C7:
+.run_frameB:
     ld a, $09
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
     ld a, $0c
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_59D6:
+.run_frameC:
     ld a, $0a
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $20
+    ; Flip bottom, adjust position
+    ld a, OAMF_XFLIP
     ldh [hSpriteAttr], a
     ldh a, [hSpriteXPixel]
     dec a
@@ -1252,66 +1297,69 @@ func_59D6:
     ld a, $0b
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
+    ; Clear flip
     xor a
     ldh [hSpriteAttr], a
-    ret
+ret
 
-func_59F1:
+.run_frameD:
     ld a, $09
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ld a, $20
+    ; Flip bottom
+    ld a, OAMF_XFLIP
     ldh [hSpriteAttr], a
     ld a, $0c
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
+    ; Clear flip
     xor a
     ldh [hSpriteAttr], a
-    ret
+ret
 
-func_5A07:
+.jump_frameA:
     ld a, $1f
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_5A0F:
+.jump_frameB:
     ld a, $20
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_5A17:
+.jump_frameC:
     ld a, $21
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_5A1F:
+.jump_frameD:
     ld a, $22
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_5A27:
+.suited_standing:
     ld a, $07
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_5A2F:
+.suited_kneeling:
     ld a, $12
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_5A37:
+.suitless_kneeling:
     ld a, $11
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_5A3F:
+.suitless_frameA:
     ld a, $0e
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
@@ -1321,9 +1369,9 @@ func_5A3F:
     ld a, $10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_5A55:
+.suitless_frameB:
     ld a, $0e
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
@@ -1333,18 +1381,18 @@ func_5A55:
     ld a, $10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_5A6B:
+.suitless_frameC:
     ld a, $14
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
     ld a, $10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_5A7A:
+.suitless_frameD:
     ld a, $15
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
@@ -1354,9 +1402,9 @@ func_5A7A:
     ld a, $10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_5A90:
+.suitless_frameE:
     ld a, $16
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
@@ -1366,9 +1414,9 @@ func_5A90:
     ld a, $10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_5AA6:
+.suitless_frameF:
     ld a, $17
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
@@ -1378,9 +1426,9 @@ func_5AA6:
     ld a, $10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_5ABC:
+.suitless_frameG:
     ld a, $18
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
@@ -1390,9 +1438,9 @@ func_5ABC:
     ld a, $10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_5AD2:
+.suitless_frameH:
     ld a, $19
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
@@ -1402,9 +1450,9 @@ func_5AD2:
     ld a, $10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_5AE8:
+.hairWaving_frameA:
     ld a, $18
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
@@ -1414,9 +1462,9 @@ func_5AE8:
     ld a, $10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
 
-func_5AFE:
+.hairWaving_frameB:
     ld a, $1a
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
@@ -1426,10 +1474,12 @@ func_5AFE:
     ld a, $10
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ret
+ret
+;}
+;}
 
 ; Set of initial positions
-credits_starPositions: ; 05:5B14
+credits_starPositions: ;{ 05:5B14
     ;  ( y, x )
     db $28, $90
     db $18, $70
@@ -1448,6 +1498,7 @@ credits_starPositions: ; 05:5B14
     db $58, $68
     db $78, $58
     db $38, $70
+;}
 
 ; 05:5B34 -- Title screen tilemap
 titleTilemap: include "data/title_tilemap.asm"

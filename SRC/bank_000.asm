@@ -5727,7 +5727,7 @@ executeDoorScript: ; 00:239C
     
     .fadePaletteTable: db $ff, $fb, $e7 ; 00:259B
 
-.doorToken_song:
+    .doorToken_song:
     cp $c0 ; SONG
     jr nz, .doorToken_item
         ; What the heck is this spaghetti code?
@@ -7108,7 +7108,7 @@ Call_000_2ee3:
     ld [$d049], a
 ret
 
-applyDamage: ; This procedure has multiple entry points
+applyDamage: ;{ This procedure has multiple entry points
     .queenStomach: ; 00:2F29
         ; Apply queen stomach damage
         ldh a, [frameCounter]
@@ -7155,7 +7155,7 @@ applyDamage: ; This procedure has multiple entry points
     jr z, .endIf_A
         srl b
     .endIf_A:
-
+    ; Take health
     ld a, [samusCurHealthLow]
     sub b
     daa
@@ -7164,15 +7164,17 @@ applyDamage: ; This procedure has multiple entry points
     sbc $00
     daa
     ld [samusCurHealthHigh], a
+    ; Clamp to zero health minimum
     cp $99
     jr nz, .endIf_B
         xor a
         ld [samusCurHealthLow], a
         ld [samusCurHealthHigh], a
     .endIf_B:
-ret
+ret ;}
 
 gameMode_dying: ; 00:2F86
+    ; Do some things, only during the queen fight
     ld a, [queen_roomFlag]
     cp $11
     jr nz, .endIf
@@ -7276,7 +7278,7 @@ VBlank_deathSequence: ; 00:2FE1
     ld [rMBC_BANK_REG], a
     ld a, [queen_roomFlag]
     cp $11
-    call z, VBlank_drawQueen
+        call z, VBlank_drawQueen
 
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
@@ -8450,9 +8452,11 @@ gameOverText: ; 00:3711 - "GAME OVER"
 gameMode_gameOver: ; 00:371B
     call handleAudio_longJump
     call waitForNextFrame
+    ; Reboot once timer expires
     ld a, [countdownTimerLow]
     and a
     jr z, .reboot
+        ; Or if start is pressed
         ldh a, [hInputRisingEdge]
         cp PADF_START
             ret nz
