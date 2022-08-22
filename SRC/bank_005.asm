@@ -182,12 +182,12 @@ loadTitleScreen: ; 05:408F
     
     xor a
     ld [$d039], a
-    ld [$d07a], a
+    ld [title_clearSelected], a
     ld a, [loadingFromFile]
     and a
     jr z, jr_005_40e3
         ld a, $01
-        ld [$d07a], a
+        ld [title_clearSelected], a
     jr_005_40e3:
 
     ; Set countdown timer to max
@@ -205,69 +205,75 @@ saveTextTilemap: ; 05:4104
     db $FF, $D2, $C0, $D5, $C4, $DE, $DF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
 
 ;------------------------------------------------------------------------------
-titleScreenRoutine: ; 05: 4118
+titleScreenRoutine: ;{ 05:4118
+;{ Title display logic
     call OAM_clearTable
 
-    ; Handle flashing
+; Handle flashing
     ; Set default palette
     ld a, $93
     ld [bg_palette], a
     ; Jump ahead if the lower 2 bits of the high byte aren't clear
     ld a, [countdownTimerHigh]
     and %00000011 ;$03
-    jr nz, .handleTitleStar
-    ; Jump ahead if the lower byte isn't less than $10
-    ld a, [countdownTimerLow]
-    cp $10
-    jr nc, .handleTitleStar
-    ; Only set the palette every other frame
-    bit 1, a
-    jr z, .handleTitleStar
-    ; Flash
-    ld a, $90
-    ld [bg_palette], a
+    jr nz, .endIf_A
+        ; Jump ahead if the lower byte isn't less than $10
+        ld a, [countdownTimerLow]
+        cp $10
+        jr nc, .endIf_A
+            ; Only set the palette every other frame
+            bit 1, a
+            jr z, .endIf_A
+                ; Flash
+                ld a, $90
+                ld [bg_palette], a
+    .endIf_A:
 
-    ; Handle logic and drawing of the title star
-.handleTitleStar:
-    ld a, [titleStarX]
+; Handle logic and drawing of the title star
     ; if starX < 3 then don't move it
+    ld a, [titleStarX]
     cp $03
-    jr c, .titleStarTryRespawn
-    ; Move left fast
-    sub $02
-    ld [titleStarX], a
-    ; Move down slow
-    ld a, [titleStarY]
-    add $01
-    ld [titleStarY], a
-    jr .titleStarTryRespawn ; Pointless relative jump?
+    jr c, .endIf_B
+        ; Move left
+        sub $02
+        ld [titleStarX], a
+        ; Move down
+        ld a, [titleStarY]
+        add $01
+        ld [titleStarY], a
+        ; Pointless jump (evidence of a commented out else branch?)
+        jr .endIf_B
+    .endIf_B:
 
-.titleStarTryRespawn:
+    ; Try respawning the title star
     ; if rDIV != frameCounter, skip ahead
     ldh a, [rDIV]
     ld b, a
     ldh a, [frameCounter]
     cp b
-    jr nz, .titleStarDraw
-    ; If frame is odd, skip ahead
-    and $01
-    jr nz, .titleStarDraw
-    ; Reset position of star
-    ; Y position is essentially random
-    ld a, b
-    ld [titleStarY], a
-    ; Move to right side
-    ld a, $ff
-    ld [titleStarX], a
+    jr nz, .endIf_C
+        ; If frame is odd, skip ahead
+        and $01
+        jr nz, .endIf_C
+            ; Reset position of star
+            ; Y position is essentially random
+            ld a, b
+            ld [titleStarY], a
+            ; Move to right side
+            ld a, $ff
+            ld [titleStarX], a
+    .endIf_C:
 
-.titleStarDraw:
+    ; Draw the title star
     ld a, [titleStarY]
     ldh [hSpriteYPixel], a
     ld a, [titleStarX]
     ldh [hSpriteXPixel], a
+    ; Get the base sprite number
     ld a, $06
     ldh [hSpriteId], a
-    ; Make star flicker
+    ; Toggle the lower bit of the sprite priority bit regularly -- but this does nothing??
+    ;  Perhaps the original intent was to have the sprite flicker between sprites $06 and $05
     ldh a, [frameCounter]
     and %00000010
     srl a
@@ -276,16 +282,15 @@ titleScreenRoutine: ; 05: 4118
 
 ; Draw cursor
     ; Set Y position
-    ; Aligned with START text (normal height)
-    ld a, $74
+    ld a, $74 ; Aligned with START text (normal height)
     ldh [hSpriteYPixel], a
-    ld a, [$d07a]
+    ; Check if the clear option is selected
+    ld a, [title_clearSelected]
     and a
-    jr z, .normalHeight
-        ; Aligned with CLEAR text
-        ld a, $80
+    jr z, .endIf_D
+        ld a, $80 ; Aligned with CLEAR text
         ldh [hSpriteYPixel], a
-    .normalHeight:
+    .endIf_D:
 
     ; Set x position and attributes
     ld a, $38
@@ -293,6 +298,7 @@ titleScreenRoutine: ; 05: 4118
     xor a
     ldh [hSpriteAttr], a
     ; Get animation frame for cursor
+    ;  Animate every 4 frames using two bits from the frame counter
     ldh a, [frameCounter]
     and %00001100
     srl a
@@ -305,12 +311,15 @@ titleScreenRoutine: ; 05: 4118
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
 
-    ; Draw sprite for save number
+; Draw sprite for save number
     ld a, [activeSaveSlot]
     add $23
     ldh [hSpriteId], a
+    ; Y position is same as the cursor
+    ; Also, the number sprites have a ridiculous baked-in x-offset
     call drawNonGameSprite_longCall
-    
+
+; Draw the start text    
     ld a, $44
     ldh [hSpriteXPixel], a
     ld a, $74
@@ -318,40 +327,43 @@ titleScreenRoutine: ; 05: 4118
     ld a, $00
     ldh [hSpriteId], a
     call drawNonGameSprite_longCall
-    ; If show clear save option
-    ld a, [$d0a4]
+    
+; Draw the clear text
+    ; Check if it's available
+    ld a, [title_showClearOption]
     and a
-    jr z, jr_005_41cf
+    jr z, .endIf_E
         ; Show "Clear" text
         ld a, $80
         ldh [hSpriteYPixel], a
         ld a, $01
         ldh [hSpriteId], a
         call drawNonGameSprite_longCall
-    jr_005_41cf:
-    ; End of display logic for title
+    .endIf_E:
     call title_clearUnusedOamSlots
+;} End of display logic for title
     
-    ; Title input logic
+;{ Title input logic
+    ; Toggle clear option when select is pressed
     ldh a, [hInputRisingEdge]
     cp PADF_SELECT
-    jr nz, jr_005_41e5
+    jr nz, .endIf_F
         ; Play sound effect
         ld a, $15
         ld [sfxRequest_square1], a
         ; Toggle flag
-        ld a, [$d0a4]
+        ld a, [title_showClearOption]
         xor $ff
-        ld [$d0a4], a
-    jr_005_41e5:
+        ld [title_showClearOption], a
+    .endIf_F:
     
     ; If right is pressed, increment save slot
     ldh a, [hInputRisingEdge]
     cp PADF_RIGHT
-    jr nz, .handleLeftInput
+    jr nz, .endIf_G
         ldh a, [hInputPressed]
         cp PADF_RIGHT
-        jr nz, .handleLeftInput
+        jr nz, .endIf_G
             ; Play sound effect
             ld a, $15
             ld [sfxRequest_square1], a
@@ -361,18 +373,18 @@ titleScreenRoutine: ; 05: 4118
             ld [activeSaveSlot], a
             ; Wrap back to zero
             cp $03
-            jr nz, .handleLeftInput
+            jr nz, .endIf_G
                 xor a
                 ld [activeSaveSlot], a
-    .handleLeftInput:
+    .endIf_G:
 
     ; If left is pressed, decrement save slot
     ldh a, [hInputRisingEdge]
     cp PADF_LEFT
-    jr nz, jr_005_4226
+    jr nz, .endIf_H
         ldh a, [hInputPressed]
         cp PADF_LEFT
-        jr nz, jr_005_4226
+        jr nz, .endIf_H
             ; Play sound effect
             ld a, $15
             ld [sfxRequest_square1], a
@@ -382,36 +394,39 @@ titleScreenRoutine: ; 05: 4118
             ld [activeSaveSlot], a
             ; Wrap around to slot 3
             cp $ff
-            jr nz, jr_005_4226
+            jr nz, .endIf_H
                 ld a, $02
                 ld [activeSaveSlot], a
-    jr_005_4226:
+    .endIf_H:
     
+    ; You must hold down for clear to be selected
     xor a
-    ld [$d07a], a
-
-    ld a, [$d0a4]
+    ld [title_clearSelected], a
+    ; Don't bother if the option isn't shown
+    ld a, [title_showClearOption]
     and a
-    jr z, jr_005_4246
+    jr z, .endIf_I
+        ; Check if down is pressed
         ldh a, [hInputPressed]
         bit PADB_DOWN, a
-        jr z, jr_005_4246
-            ; Set sound effect
+        jr z, .endIf_I
+            ; Set flag
             ld a, $01
-            ld [$d07a], a
+            ld [title_clearSelected], a
             ; Check edge of input
             ldh a, [hInputRisingEdge]
             bit PADB_DOWN, a
-            jr z, jr_005_4246
+            jr z, .endIf_I
                 ; Play sound effect
                 ld a, $15
                 ld [sfxRequest_square1], a
-    jr_005_4246:
+    .endIf_I:
 
     ; Exit title routine if start is not pressed
     ldh a, [hInputRisingEdge]
     cp PADF_START
         ret nz
+;} End of title input logic
 
     ; Clear debug flag
     xor a
@@ -419,23 +434,51 @@ titleScreenRoutine: ; 05: 4118
     ; Flash
     ld a, $93
     ld [bg_palette], a
-
-    ld a, [$d07a]
+    ; Check if save is being deleted
+    ld a, [title_clearSelected]
     and a
-    jr nz, jr_005_42a6
+        jr nz, .clearSaveBranch
 
+    ; Play sound
     ld a, $15
     ld [sfxRequest_square1], a
     ; Play Samus fanfare
     ld a, $12
     ld [songRequest], a
+
+    ; Initialize flag to loading a new game
     xor a
     ld [loadingFromFile], a
     ; Enable SRAM
     ld a, $0a
     ld [$0000], a
+
+; Check magic number
+    ; WARNING: THIS CODE IS COMPLETELY BUSTED AND ONLY WORKS ON ACCIDENT.
+    ; Explanation: This routine should check if the magic number in the
+    ;  save file matches the one in the ROM. In practice, only the first
+    ;  byte of the magic number needs to be correct. 
+    ; 
+    ; The `cp $08` after the comparison loop makes me think that that loop
+    ;  is supposed to count the number of matching bytes between the two
+    ;  magic numbers (since both should have a length of 8). However, no
+    ;  such counting takes place, and the comparison is merely done against
+    ;  whatever happened to be the last byte that loaded from the ROM instead.
+    ;
+    ; Thus:
+    ; - This only prevents invalid save files from being loaded because the
+    ;    first byte of the magic number ($01) happens to be less than $08.
+    ; - This only allows valid save files to be loaded because the byte
+    ;    immediately after the magic number in ROM ($0F) happens to be
+    ;    greater than $08.
+    ;
+    ; In other words, you could easily break this code on accident.
+    ;
+    ; For a fun creepypasta, take an uninitialized SRAM, and modify the 
+    ;  first byte of one of the save files ($A000, $A040, or $A080) to be $01.
     
     ld hl, saveFile_magicNumber
+    ; Get base address of save slot
     ; de = $A000 + (activeSaveSlot * $40)
     ld a, [activeSaveSlot]
     sla a
@@ -443,22 +486,23 @@ titleScreenRoutine: ; 05: 4118
     swap a
     ld e, a
     ld d, HIGH(saveData_baseAddr) ;$A0
-
-    jr_005_427c:
+    ; Loop until we find a mismatch between the magic number in ROM and the save slot
+    .checkLoop:
         ld a, [hl+]
         ld b, a
         ld a, [de]
         inc de
         cp b
-    jr z, jr_005_427c
-
+    jr z, .checkLoop
+    ; Check if the last byte read from ROM was greater than $08
     ld a, b
     cp $08
-    jr c, jr_005_428d
+    jr c, .endIf_J
         ld a, $ff
         ld [loadingFromFile], a
-    jr_005_428d:
-    
+    .endIf_J:
+
+    ; Save the last save slot used
     ld a, [activeSaveSlot]
     ld [saveLastSlot], a
     ; Disable SRAM
@@ -467,6 +511,7 @@ titleScreenRoutine: ; 05: 4118
     ; New game
     ld a, $0b
     ldh [gameMode], a
+    ; If loading from a file, ignore the game mode being set to new game
     ld a, [loadingFromFile]
     and a
         ret z
@@ -476,10 +521,11 @@ titleScreenRoutine: ; 05: 4118
 ret
 
 ; Clear file
-jr_005_42a6:
+.clearSaveBranch:
     ; Play sound effect
     ld a, $0f
     ld [sfxRequest_noise], a
+    ; Get base address of save slot
     ; de = $A000 + (activeSaveSlot * $40)
     ld a, [activeSaveSlot]
     sla a
@@ -496,9 +542,11 @@ jr_005_42a6:
     ld [hl], a
     ; Disable SRAM
     ld [$0000], a
+    ; Get rid of the clear option
     xor a
-    ld [$d0a4], a
+    ld [title_showClearOption], a
 ret
+;}
 
 ;------------------------------------------------------------------------------
 title_loadGraphics: ; 5:42C7
@@ -509,12 +557,12 @@ title_loadGraphics: ; 5:42C7
 ret
 
 ;------------------------------------------------------------------------------
-; This doesn't contain the weird bookkeeping optimization that the OAM clearing routine in bank 1 has
-title_clearUnusedOamSlots: ; 05:42D4
+; Note: This doesn't contain the weird bookkeeping optimization that the OAM clearing routine in bank 1 has
+title_clearUnusedOamSlots: ;{ 05:42D4
+    ; Zero out all OAM values
     ld h, HIGH(wram_oamBuffer)
     ldh a, [hOamBufferIndex]
     ld l, a
-
     .clearLoop:
         xor a
         ld [hl+], a
@@ -522,6 +570,7 @@ title_clearUnusedOamSlots: ; 05:42D4
         cp OAM_MAX
     jr c, .clearLoop
 ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Used by title
@@ -534,27 +583,25 @@ doorPointerTable:: ; 05:42E5
 include "maps/door macros.asm"
 include "maps/doors.asm"
 
-;    db $FF ; Test filler byte
-
 ;------------------------------------------------------------------------------
-; Credits - 05:55A3
-creditsRoutine::
+; Game Mode $13 - Credits
+creditsRoutine:: ;{ 05:55A3
+    ; Set sprite pixel to Samus' position
     ldh a, [hSamusYPixel]
     ldh [hSpriteYPixel], a
     ldh a, [hSamusXPixel]
     ldh [hSpriteXPixel], a
-    
+
     call credits_animateSamus
     call credits_scrollHandler
     call credits_drawTimer
     call credits_moveStars
     call credits_drawStars
-    
     call title_clearUnusedOamSlots
 ret
+;}
 
-;------------------------------------------------------------------------------
-credits_drawTimer:
+credits_drawTimer: ;{ 05:55BE
     ; Check if credits are done
     ld a, [credits_scrollingDone]
     and a
@@ -572,52 +619,61 @@ credits_drawTimer:
     ld a, [gameTimeMinutes]
     call credits_drawTimerDigits
 ret
+;}
 
-;------------------------------------------------------------------------------
-credits_moveStars:
+credits_moveStars: ;{ 05:55DC - Move the stars during the credits
+    ; Iterate through all 16 stars
     ld hl, credits_starArray
     ld b, $10
-
     .starLoop:
+        ; Move down every 4th frame
         ldh a, [frameCounter]
         and $03
-        jr nz, .moveLeft
-        ;moveDown
+        jr nz, .endIf_A
+            ; move down one pixel
             ld a, [hl]
             add $01
             ld [hl], a
             ; Loop stars back to the top
             cp $a0
-            jr c, .moveLeft
+            jr c, .endIf_A
                 ld a, $10
                 ld [hl], a
-        .moveLeft:
-            inc hl
-            ld a, [hl]
-            sub $01
+        .endIf_A:
+        
+        ; Get x coordinate
+        inc hl
+        ; Move left every frame
+        ld a, [hl]
+        sub $01
+        ld [hl], a
+        ; Once the stars reach the left edge
+        cp $f8
+        jr c, .endIf_B
+            ; Warp them back to the right edge
+            ld a, $a8
             ld [hl], a
-            ; Loop stars back to the right
-            cp $f8
-            jr c, .nextStar
-                ld a, $a8
-                ld [hl], a
-        .nextStar:
-            inc hl
-            dec b
+        .endIf_B:
+        
+        ; Get y coordinate of next star
+        inc hl
+        ; Check loop counter
+        dec b
     jr nz, .starLoop
 ret
+;}
 
-;------------------------------------------------------------------------------
-credits_drawStars: ; Draw stars during credits
+credits_drawStars: ;{ 05:5603 - Draw stars to the OAM buffer during credits
+    ; Iterate through all 16 stars
     ld hl, credits_starArray
     ld b, $10
-
     .starLoop:
+        ; Load y pos and x pos of star
         ld a, [hl+]
         ldh [hSpriteYPixel], a
         ld a, [hl+]
         ldh [hSpriteXPixel], a
-        ; LSB of star number determines star graphic
+        ; LSB of loop counter determines if star graphic is $1B or $1C
         ld a, b
         and $01
         add $1b
@@ -628,13 +684,14 @@ credits_drawStars: ; Draw stars during credits
             call drawNonGameSprite_longCall
         pop bc
         pop hl
-
+        ; Check loop counter
         dec b
     jr nz, .starLoop
 ret
+;}
 
 ;------------------------------------------------------------------------------
-; animateSamus
+; Animate Samus during credits
 credits_animateSamus: ;{ 05:5620
     ld a, [credits_samusAnimState]
     rst $28
@@ -1057,58 +1114,66 @@ ret
 ;}
 
 ;------------------------------------------------------------------------------
-paletteFade: ; 05:5877
+credits_paletteFade: ; 05:5877
     db $ff, $ff, $fb, $eb, $e7, $a7, $a3, $93
 
-prepareCreditsRoutine: ; 05:587F
-    ld hl, paletteFade
+; Game Mode $12 - Prepare Credits
+prepareCredits: ;{ 05:587F
+    ld hl, credits_paletteFade
+    ; countdownTimer is set to $FF by missile refill
     ld a, [countdownTimerLow]
     and a
-    jr z, jr_005_58ab
+    jr z, .endIf_A
+        ; Use upper 3 bits of countdownTimer to index into credits_paletteFade
+        ; - Iterates through the list from end to beginning
+        and $f0
+        swap a
+        srl a
+        ld e, a
+        ld d, $00
+        add hl, de
+        ; Set palette
+        ld a, [hl]
+        ld [bg_palette], a
+        ld [ob_palette0], a
+        ld [ob_palette1], a
+        ; Fadeout until countdown timer reaches $0E
+        ld a, [countdownTimerLow]
+        cp $0e
+            ret nc
+        ; Clear timer
+        xor a
+        ld [countdownTimerLow], a
+        ; Remove the low health beep sound
+        ld a, $ff
+        ld [$cfe5], a
+    .endIf_A:
 
-    and $f0
-    swap a
-    srl a
-    ld e, a
-    ld d, $00
-    add hl, de
-    ld a, [hl]
-    ld [bg_palette], a
-    ld [ob_palette0], a
-    ld [ob_palette1], a
-    ld a, [countdownTimerLow]
-    cp $0e
-        ret nc
-
-    xor a
-    ld [countdownTimerLow], a
-    ; Remove the low health beep sound
-    ld a, $ff
-    ld [$cfe5], a
-
-jr_005_58ab:
+    ; Disable LCD
     ld a, $03
     ldh [rLCDC], a
+    ; Reset palette
     ld a, $93
     ld [bg_palette], a
     ld a, $93
     ld [ob_palette0], a
     ld a, $43
     ld [ob_palette1], a
-    call clearTilemaps
-    
-    ; Clear OAM buffer ?
+
+    call clearTilemaps    
+    ; Clear OAM buffer
     ld hl, $c0ff
     ld a, $ff
     ld c, $01
     ld b, $00
-    jr_005_58ca:
+    .loop_A:
             ld [hl-], a
             dec b
-        jr nz, jr_005_58ca
+        jr nz, .loop_A
         dec c
-    jr nz, jr_005_58ca
+    jr nz, .loop_A
 
+    ; Load various graphics
     call credits_loadFont
     
     ld bc, $1000
@@ -1126,32 +1191,35 @@ jr_005_58ab:
     ld de, $8f00
     call copyToVram
     
+    ; Initialize credits text pointer
     ld a, LOW(creditsTextBuffer)
     ld [credits_textPointerLow], a
     ld a, HIGH(creditsTextBuffer)
     ld [credits_textPointerHigh], a
     
-    ; Clear unused variable?
+    ; Clear unused variable
     xor a
-    ld [$d075], a
-        
+    ld [credits_unusedVar], a
+    
+    ; Initialize star array
     ld hl, credits_starPositions
     ld de, credits_starArray
     ld b, $10 ; Should be $20, however, this causes some stars to visibly drop in and out
-    jr_005_590e:
+    .loop_B:
         ld a, [hl+]
         ld [de], a
         inc de
         dec b
-    jr nz, jr_005_590e
+    jr nz, .loop_B
 
     call loadCreditsText
 
-    ; Initialize scroll
+    ; Reset scroll
     xor a
     ld [scrollY], a
     ld [scrollX], a
 
+    ; Reactivate display
     ld a, $c3
     ldh [rLCDC], a
 
@@ -1174,10 +1242,12 @@ jr_005_58ab:
     inc a
     ldh [gameMode], a
 ret
+;}
 
 ;------------------------------------------------------------------------------
-credits_scrollHandler: ; 05:593E
-    ; Load
+; Lets VBlank_drawCreditsLine know when another line is ready to be displayed
+credits_scrollHandler: ;{ 05:593E
+    ; Load credits text pointer
     ld a, [credits_textPointerLow]
     ld l, a
     ld a, [credits_textPointerHigh]
@@ -1194,39 +1264,39 @@ credits_scrollHandler: ; 05:593E
     ; Check if we're at the end of the credits
     ld a, b
     cp $f0
-    jr nz, jr_005_595d
+    jr nz, .else
         ld a, $01
         ld [credits_scrollingDone], a
-            ret
-    jr_005_595d:
-    
-    ldh a, [frameCounter]
-    and $03
-    ret nz
-    
-    ; Scroll a pixel
-    ld a, [scrollY]
-    inc a
-    ld [scrollY], a
-
-    ld a, [scrollY]
-    and $07
-    ret nz
-
-    ; Adjust cursor position
-    ld a, [scrollY]
-    add $a0
-    ld [$c203], a
-    ld a, $08
-    ld [$c204], a
-    call getTilemapAddress
-    ; Signal that the next line is ready to be drawn
-    ld a, $ff
-    ld [credits_nextLineReady], a
-ret
+        ret
+    .else:
+        ; Only scroll every 4th frame
+        ldh a, [frameCounter]
+        and $03
+            ret nz
+        ; Scroll a pixel
+        ld a, [scrollY]
+        inc a
+        ld [scrollY], a
+        ; Exit unless we're on an 8-pixel boundary
+        ld a, [scrollY]
+        and $07
+            ret nz
+        ; Adjust cursor position
+        ld a, [scrollY]
+        add $a0 ; Set Y cursor to just below the bottom of the screen
+        ld [$c203], a
+        ld a, $08 ; Set X cursor position to near the left edge
+        ld [$c204], a
+        call getTilemapAddress
+        ; Signal that the next line is ready to be drawn
+        ld a, $ff
+        ld [credits_nextLineReady], a
+        ret
+;} end proc
 
 ;------------------------------------------------------------------------------
-rebootGame: ;{ 05:5985 - Unused?
+; Unused routine - Perhaps this was meant to allow you to return to the title screen after the ending
+credits_rebootGame: ;{ 05:5985
     xor a
     ldh [gameMode], a
 ret
@@ -1478,7 +1548,7 @@ ret
 ;}
 ;}
 
-; Set of initial positions
+; Set of initial positions for stars
 credits_starPositions: ;{ 05:5B14
     ;  ( y, x )
     db $28, $90

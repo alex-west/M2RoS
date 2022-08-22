@@ -9318,7 +9318,7 @@ VBlank_drawCreditsLine_longJump: ; 00:3E1E
     jpLong VBlank_drawCreditsLine
 
 gameMode_prepareCredits: ; 00:3E29
-    jpLong prepareCreditsRoutine
+    jpLong prepareCredits
 
 gameMode_Credits: ; 00:3E34
     jpLong creditsRoutine

@@ -899,16 +899,13 @@ def itemOrb_pEnemyWramHigh = $D071 ;
 def samus_spinAnimationTimer = $D072 ; Animation timer for spinning. Incremented by general pose handler and door transitions.
 def credits_textPointerLow  = $D073 ; Pointer to the working copy of the credits in SRAM. Stops being incremented when it hits the byte $F0. Character data is subtracted by $21 to adjust to almost-ASCII
 def credits_textPointerHigh = $D074 ;
+def credits_unusedVar = $D075 ; Cleared, but never read
 def credits_nextLineReady = $D076 ; Flag to indicate that the next line of the credits is ready to be uploaded
 
 def acidDamageValue = $D077 ; Acid damage. Saved to SRAM
 def spikeDamageValue = $D078 ; Spike damage. Saved to SRAM
 def loadingFromFile = $D079 ; 00h: loading new game, otherwise: loading from file. Adjusts behaviors relating to loading the font and if Samus stays facing the screen.
-;$D07A: Save slot option selected
-;{
-;    0: Start
-;    1: Clear
-;}
+def title_clearSelected = $D07A ; 0: Start selected, 1: Clear selected
 def titleStarY = $D07B ; Star Y position
 def titleStarX = $D07C ; Star X position
 def saveContactFlag = $D07D ; On save pillar flag
@@ -970,7 +967,7 @@ def debugFlag = $D0A0 ; Activates debug pause menu and other stuff
 ;$D0A1: Previous low health
 def gameTimeSeconds = $D0A2 ; 256-frames long (~1/14 of a minute), not 60 frames long. In-game time, but not saved
 def activeSaveSlot = $D0A3 ; Save slot
-;$D0A4: Show clear save slot option flag
+def title_showClearOption = $D0A4 ; Show clear save slot option flag
 ;$D0A5: Song to play after earthquake
 ;$D0A6: Enable Baby Metroid cry
 def metroidLCounterDisp = $D0A7 ; L Counter value to display (Metroids remaining in area)
