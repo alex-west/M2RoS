@@ -4,7 +4,8 @@ section "VRAM", vram[$8000], BANK[0]
 
 ; Sprite-only tiles - $8000 - $10 bytes/tile
 
-; $8000 - Credits sprites
+def vramDest_creditsSpriteChr = $8000 ; 256 tiles
+
 def vramDest_samus      = $8000 ; $B00 bytes
     ; Tile patch-in destinations
     def vramDest_cannon     = $8080 ; 2 tiles
@@ -15,6 +16,7 @@ def vramDest_samus      = $8000 ; $B00 bytes
     def vramDest_beam = $87E0 ; 2 tiles
 
 ; Shared Tiles - $8800
+def vramDest_titleChr = $8800
 
 def vramDest_enemies = $8B00 ; 64 tiles
     ; item orb = $8B00 ; 4 tiles
@@ -22,10 +24,10 @@ def vramDest_enemies = $8B00 ; 64 tiles
     def vramDest_itemFont = $8C00 ; ? tiles
     def vramDest_commonItems = $8F00 ; 16 tiles
     
-; $8F00 - Credits numbers
+def vramDest_creditsNumbers = $8F00 ; 16 tiles
 
-; BG Only Tiles - $8800
-; $9000 - The End graphic
+; BG Only Tiles - $9000
+def vramDest_theEnd = $9000 ; 16 tiles
 
 def vramDest_bgTiles = $9000 ; 128 tiles
     def vramDest_creditsFont = $9200 ; 32 tiles

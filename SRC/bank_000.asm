@@ -4962,7 +4962,7 @@ samus_getTileIndex: ;{ 00:1FF5
         ld a, $04
         add h
         ld h, a
-        ld [$c216], a
+        ld [pTilemapDestHigh], a
     .endIf_A
 
     .waitLoop_A: ; Wait for h-blank
@@ -5227,7 +5227,7 @@ beam_getTileIndex: ; 00:2266 - Entry point for beam routines
         ld a, $04
         add h
         ld h, a
-        ld [$c216], a
+        ld [pTilemapDestHigh], a
     .endIf
 
     .waitLoop_A:
@@ -5281,7 +5281,7 @@ main_readInput:
 ret
 
 ; Given pixels coordinates in y:[$C203], x:[$C204]
-;  returns the tilemap address in [$C215] and [$C216]
+;  returns the tilemap address in [pTilemapDestLow] and [pTilemapDestHigh]
 getTilemapAddress: ; 00:22BC
     ld a, [$c203]
     sub $10
@@ -5302,15 +5302,15 @@ getTilemapAddress: ; 00:22BC
     srl a
     add l
     ld l, a
-    ld [$c215], a
+    ld [pTilemapDestLow], a
     ld a, h
-    ld [$c216], a
+    ld [pTilemapDestHigh], a
 ret
 
 ; 00:22E1 - Unused ?
-    ld a, [$c216]
+    ld a, [pTilemapDestHigh]
     ld d, a
-    ld a, [$c215]
+    ld a, [pTilemapDestLow]
     ld e, a
     ld b, $04
 
@@ -5327,7 +5327,7 @@ ret
     rlca
     add $08
     ld [$c203], a
-    ld a, [$c215]
+    ld a, [pTilemapDestLow]
     and $1f
     rla
     rla

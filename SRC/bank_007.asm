@@ -5,99 +5,25 @@
 
 SECTION "ROM Bank $007", ROMX[$4000], BANK[$7]
 
-gfx_plantBubbles:: include "tilesets/gfx_plantBubbles.asm"
-gfx_ruinsInside::  include "tilesets/gfx_ruinsInside.asm"	
-gfx_queenBG::      include "tilesets/gfx_queenBG.asm"
-gfx_caveFirst::    include "tilesets/gfx_caveFirst.asm"
-gfx_surfaceBG::    include "tilesets/gfx_surfaceBG.asm"
-gfx_lavaCavesA::   include "tilesets/gfx_lavaCavesA.asm"
-gfx_lavaCavesB::   include "tilesets/gfx_lavaCavesB.asm"
-gfx_lavaCavesC::   include "tilesets/gfx_lavaCavesC.asm"
+gfx_plantBubbles:: incbin "tilesets/plantBubbles.chr",0,$800
+gfx_ruinsInside::  incbin "tilesets/ruinsInside.chr", 0,$800
+gfx_queenBG::      incbin "tilesets/queenBG.chr",     0,$800
+gfx_caveFirst::    incbin "tilesets/caveFirst.chr",   0,$800
+gfx_surfaceBG::    incbin "tilesets/surfaceBG.chr",   0,$800
+gfx_lavaCavesA::   incbin "tilesets/lavaCavesA.chr",  0,$530
+gfx_lavaCavesB::   incbin "tilesets/lavaCavesB.chr",  0,$530
+gfx_lavaCavesC::   incbin "tilesets/lavaCavesC.chr",  0,$530
 
 ; 7:7790 - Item graphics (0x40 each)
-gfx_items::
-; Plasma Beam
-    db $0d, $07, $1a, $0e, $05, $3c, $25, $08, $05, $18, $02, $7d, $0a, $7c, $91, $76
-    db $78, $00, $84, $00, $92, $00, $86, $00, $9e, $00, $9c, $02, $79, $84, $01, $78
-    db $c4, $c7, $00, $07, $12, $0d, $27, $14, $01, $24, $04, $04, $00, $00, $00, $00
-    db $82, $01, $6d, $83, $12, $ee, $80, $78, $9a, $7c, $00, $f6, $24, $16, $80, $72
-; Ice Beam
-    db $00, $02, $01, $06, $00, $3a, $40, $32, $88, $22, $00, $26, $40, $3e, $80, $3b
-    db $3c, $00, $7e, $00, $e7, $00, $e7, $00, $e7, $00, $66, $81, $3c, $42, $00, $3c
-    db $00, $15, $00, $79, $02, $00, $08, $47, $00, $9f, $62, $db, $01, $7d, $0a, $10
-    db $08, $00, $00, $f8, $80, $e0, $c0, $76, $01, $f4, $81, $a0, $08, $40, $04, $70
-; Wave Beam
-    db $81, $0e, $44, $08, $40, $78, $00, $4c, $90, $04, $80, $48, $82, $74, $81, $76
-    db $bc, $00, $7e, $00, $a5, $00, $a5, $00, $c3, $00, $5a, $81, $3c, $42, $00, $3c
-    db $40, $39, $50, $30, $00, $30, $40, $30, $51, $30, $04, $31, $20, $1f, $00, $1c
-    db $40, $80, $00, $00, $00, $00, $00, $02, $60, $01, $10, $e1, $00, $3e, $00, $0c
-; Spazer Beam
-    db $01, $02, $02, $04, $02, $0c, $04, $18, $04, $18, $08, $30, $28, $50, $46, $30
-    db $3c, $00, $62, $00, $cf, $00, $e7, $00, $f3, $00, $46, $81, $3c, $42, $00, $3c
-    db $41, $be, $09, $ff, $10, $f0, $1c, $47, $04, $3e, $00, $07, $1e, $07, $11, $00
-    db $c1, $00, $01, $00, $04, $e3, $20, $3a, $50, $1c, $00, $18, $0e, $f8, $22, $00
-; Bombs
-    db $00, $00, $00, $1f, $00, $20, $08, $20, $10, $43, $12, $45, $04, $4a, $05, $4b
-    db $00, $00, $00, $f8, $08, $0c, $00, $04, $04, $c6, $00, $e2, $80, $f2, $40, $f2
-    db $01, $4f, $00, $47, $00, $43, $00, $40, $20, $61, $3f, $7f, $7f, $55, $3f, $3f
-    db $40, $72, $80, $e2, $00, $c2, $80, $82, $84, $06, $fc, $fe, $fe, $54, $fc, $fc
-; Screw attack
-    db $00, $00, $00, $07, $00, $1f, $08, $37, $11, $2e, $07, $79, $2f, $57, $2f, $5b
-    db $01, $00, $26, $e0, $1c, $e0, $7c, $94, $fc, $6c, $fa, $de, $e0, $be, $c0, $be
-    db $07, $7d, $43, $7d, $47, $7b, $2f, $36, $1f, $09, $3f, $07, $66, $07, $80, $00
-    db $e0, $de, $f8, $ee, $f2, $9e, $e0, $7c, $84, $fc, $08, $f8, $60, $e0, $00, $00
-; Varia Suit
-    db $60, $00, $90, $00, $08, $80, $04, $43, $0e, $2d, $17, $1e, $09, $17, $08, $17
-    db $02, $04, $01, $08, $01, $10, $22, $e0, $14, $f0, $18, $f0, $b8, $68, $60, $98
-    db $00, $1f, $08, $17, $13, $1e, $0f, $2d, $06, $43, $08, $80, $90, $00, $60, $00
-    db $60, $98, $90, $68, $18, $f0, $14, $f0, $22, $e0, $01, $10, $01, $08, $06, $00
-; High Jump Boots
-    db $04, $00, $06, $0c, $03, $06, $01, $07, $00, $03, $00, $02, $00, $00, $00, $01
-    db $00, $00, $0c, $06, $0c, $06, $98, $0e, $d8, $8c, $60, $40, $1f, $c0, $3e, $80
-    db $00, $00, $01, $00, $00, $03, $00, $1b, $00, $5b, $00, $ed, $ff, $0a, $00, $00
-    db $3c, $80, $38, $00, $b0, $26, $40, $a6, $28, $fa, $44, $fc, $fc, $a0, $00, $00
-; Space Jump
-    db $80, $00, $40, $20, $20, $50, $10, $6c, $08, $33, $00, $37, $01, $2e, $00, $0f
-    db $01, $00, $02, $04, $04, $0a, $08, $36, $10, $cc, $c0, $2c, $e0, $14, $c0, $30
-    db $00, $0f, $00, $0f, $00, $07, $00, $03, $04, $00, $03, $00, $00, $01, $10, $0f
-    db $00, $f0, $00, $f0, $00, $e0, $00, $c0, $20, $00, $c0, $00, $00, $80, $00, $f8
-; Spider Ball
-    db $07, $00, $1f, $07, $3c, $1c, $30, $13, $60, $2f, $e2, $6d, $c4, $5b, $c4, $5b
-    db $c0, $00, $f8, $c0, $3c, $38, $0e, $cc, $06, $f4, $06, $f4, $03, $fa, $03, $fa
-    db $c0, $5f, $c0, $5f, $e0, $6f, $60, $2f, $30, $03, $1c, $0c, $1f, $0e, $0e, $00
-    db $02, $f8, $02, $f8, $07, $f6, $07, $f6, $0e, $cc, $3c, $30, $f0, $40, $40, $00
-; Spring Ball
-    db $00, $07, $02, $0d, $07, $18, $06, $19, $00, $1f, $00, $1f, $00, $1f, $00, $0f
-    db $00, $c0, $00, $e0, $00, $f0, $00, $f0, $00, $f0, $00, $f0, $00, $f0, $00, $e0
-    db $20, $07, $38, $18, $3f, $27, $1f, $18, $0f, $07, $0f, $08, $07, $07, $03, $00
-    db $08, $c0, $38, $30, $f8, $c8, $f0, $30, $e0, $c0, $c0, $00, $c0, $c0, $80, $00
+; Plasma Beam, Ice Beam, Wave Beam, Spazer Beam
+; Bombs, Screw Attack, Varia Suit, High Jump Boots
+; Space Jump, Spider Ball, Spring Ball
+gfx_items:: incbin "gfx/items.chr"
 
-; 7:7A50 
-; Item Orb
-gfx_itemOrb::
-    db $00, $07, $00, $1f, $0c, $33, $18, $67, $10, $6f, $30, $cf, $20, $df, $20, $df
-    db $00, $e0, $00, $f8, $00, $fc, $00, $fe, $08, $fe, $0c, $ff, $0c, $ff, $0e, $ff
-    db $00, $ff, $00, $ff, $00, $ff, $10, $7f, $0f, $7f, $07, $3f, $01, $1f, $00, $07
-    db $0e, $ff, $1e, $ff, $1e, $ff, $7c, $fe, $fc, $fe, $f8, $fc, $e0, $f8, $00, $e0
+; 7:7A50 - Item Orb
+gfx_itemOrb:: incbin "gfx/itemOrb.chr"
 
 ; 7:7A90 - Missile Tank, Door, Missile Block, Refills
-gfx_commonItems::
-    db $00, $00, $00, $00, $30, $00, $18, $38, $30, $3f, $17, $b8, $b8, $0f, $19, $bf
-    db $00, $00, $00, $00, $00, $00, $06, $00, $10, $f8, $fc, $16, $16, $fd, $d5, $ff
-    db $33, $3e, $1f, $3f, $30, $00, $00, $02, $02, $02, $02, $02, $00, $3f, $3f, $7f
-    db $d6, $3e, $f0, $f0, $04, $00, $00, $40, $40, $40, $40, $40, $04, $f8, $fe, $fc
-    db $00, $00, $80, $80, $40, $c0, $20, $e0, $20, $e0, $10, $f0, $10, $f0, $48, $b8
-    db $48, $b8, $68, $98, $64, $9c, $24, $dc, $34, $cc, $14, $ec, $12, $ee, $12, $ee
-    db $02, $fe, $02, $fe, $0a, $f6, $0a, $f6, $01, $ff, $01, $ff, $01, $ff, $01, $ff
-;bank7graphics2::
-    db $3f, $00, $3f, $00, $cc, $33, $cc, $33, $f0, $3f, $f0, $3f, $33, $cc, $33, $cc
-    db $0c, $f0, $0c, $f0, $f3, $ff, $f3, $ff, $cc, $3f, $cc, $3f, $cf, $cf, $cf, $cf
-    db $cc, $3f, $cc, $3f, $f3, $0f, $f3, $0f, $33, $c3, $33, $c3, $0c, $3f, $0c, $3f
-    db $33, $f3, $33, $f3, $0c, $cf, $0c, $cf, $c3, $f3, $c3, $f3, $3c, $3c, $3c, $3c
-    db $08, $18, $95, $2c, $bd, $3c, $22, $5e, $7e, $7e, $22, $5e, $2e, $5a, $2e, $5a
-    db $2e, $5a, $26, $5e, $22, $5e, $9a, $fe, $ff, $6e, $d5, $6e, $3c, $3c, $10, $2c
-    db $00, $00, $07, $07, $1f, $1f, $3c, $3f, $33, $3c, $77, $78, $6f, $70, $6f, $70
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+gfx_commonItems:: incbin "gfx/commonItems.chr"
 
-; 7:7B90 -- Freespace
+bank7_freespace: ; 7:7B90 -- Freespace

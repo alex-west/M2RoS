@@ -2473,10 +2473,10 @@ destroyBlock: ; 01:56E9
 .empty: ; Destroy block (frame 3 - empty)
     call getTilemapAddress
     ; Load return arg into HL
-    ld a, [$c215]
+    ld a, [pTilemapDestLow]
     and $de ; Bit-fiddling to ensure it's the top-left corner of the tile?
     ld l, a
-    ld a, [$c216]
+    ld a, [pTilemapDestHigh]
     ld h, a
     ld de, $001f ; Distance in memory between top-right and bottom-left tile
 
@@ -2506,10 +2506,10 @@ ret
     xor a
     ld [hl], a
     call getTilemapAddress
-    ld a, [$c215]
+    ld a, [pTilemapDestLow]
     and $de
     ld l, a
-    ld a, [$c216]
+    ld a, [pTilemapDestHigh]
     ld h, a
     ld de, $001f
 
@@ -2541,10 +2541,10 @@ ret
 
 .frame_A: ; Destroy block (frames 1, 5)
     call getTilemapAddress
-    ld a, [$c215]
+    ld a, [pTilemapDestLow]
     and $de
     ld l, a
-    ld a, [$c216]
+    ld a, [pTilemapDestHigh]
     ld h, a
     ld de, $001f
 
@@ -2571,10 +2571,10 @@ ret
 
 .frame_B: ; Destroy block (frames 2, 4)
     call getTilemapAddress
-    ld a, [$c215]
+    ld a, [pTilemapDestLow]
     and $de
     ld l, a
-    ld a, [$c216]
+    ld a, [pTilemapDestHigh]
     ld h, a
     ld de, $001f
 

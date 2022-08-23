@@ -18,45 +18,45 @@ bg_queenHeadRow4::
     db $e2, $e3, $e4, $e5, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
     db $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
 
-collision_finalLab:     include "tilesets/collision/collision_finalLab.asm"
-collision_plantBubbles: include "tilesets/collision/collision_plantBubbles.asm"
-collision_ruinsInside:  include "tilesets/collision/collision_ruinsInside.asm"
-collision_queen:        include "tilesets/collision/collision_queen.asm"
-collision_caveFirst:    include "tilesets/collision/collision_caveFirst.asm"
-collision_surface:      include "tilesets/collision/collision_surface.asm"
-collision_lavaCaves:    include "tilesets/collision/collision_lavaCaves.asm"
-collision_ruinsExt:     include "tilesets/collision/collision_ruinsExt.asm"
+collision_finalLab:     include "tilesets/finalLab_collision.asm"
+collision_plantBubbles: include "tilesets/plantBubbles_collision.asm"
+collision_ruinsInside:  include "tilesets/ruinsInside_collision.asm"
+collision_queen:        include "tilesets/queen_collision.asm"
+collision_caveFirst:    include "tilesets/caveFirst_collision.asm"
+collision_surface:      include "tilesets/surface_collision.asm"
+collision_lavaCaves:    include "tilesets/lavaCaves_collision.asm"
+collision_ruinsExt:     include "tilesets/ruinsExt_collision.asm"
 
-metatiles_plantBubbles:   include "tilesets/metatiles/metatiles_plantBubbles.asm"
-metatiles_ruinsInside:    include "tilesets/metatiles/metatiles_ruinsInside.asm"
-metatiles_finalLab:       include "tilesets/metatiles/metatiles_finalLab.asm"
-metatiles_queen:          include "tilesets/metatiles/metatiles_queen.asm"
-metatiles_caveFirst:      include "tilesets/metatiles/metatiles_caveFirst.asm"
-metatiles_surface:        include "tilesets/metatiles/metatiles_surface.asm"
-metatiles_lavaCavesMid:   include "tilesets/metatiles/metatiles_lavaCavesMid.asm"   
-metatiles_lavaCavesEmpty: include "tilesets/metatiles/metatiles_lavaCavesEmpty.asm"
-metatiles_lavaCavesFull:  include "tilesets/metatiles/metatiles_lavaCavesFull.asm"
-metatiles_ruinsExt:       include "tilesets/metatiles/metatiles_ruinsExt.asm"
+metatiles_plantBubbles:   include "tilesets/plantBubbles_metatiles.asm"
+metatiles_ruinsInside:    include "tilesets/ruinsInside_metatiles.asm"
+metatiles_finalLab:       include "tilesets/finalLab_metatiles.asm"
+metatiles_queen:          include "tilesets/queen_metatiles.asm"
+metatiles_caveFirst:      include "tilesets/caveFirst_metatiles.asm"
+metatiles_surface:        include "tilesets/surface_metatiles.asm"
+metatiles_lavaCavesMid:   include "tilesets/lavaCavesMid_metatiles.asm"
+metatiles_lavaCavesEmpty: include "tilesets/lavaCavesEmpty_metatiles.asm"
+metatiles_lavaCavesFull:  include "tilesets/lavaCavesFull_metatiles.asm"
+metatiles_ruinsExt:       include "tilesets/ruinsExt_metatiles.asm"
 
-gfx_metAlpha:: include "gfx/enemies/gfx_metAlpha.asm"
-gfx_metGamma:: include "gfx/enemies/gfx_metGamma.asm"
-gfx_metZeta::  include "gfx/enemies/gfx_metZeta.asm"
-gfx_metOmega:: include "gfx/enemies/gfx_metOmega.asm"
-gfx_ruinsExt:: include "tilesets/gfx_ruinsExt.asm"
-gfx_finalLab:: include "tilesets/gfx_finalLab.asm"
-gfx_queenSPR:: include "gfx/enemies/gfx_queenSPR.asm"
+gfx_metAlpha:: incbin "gfx/enemies/metAlpha.chr",0,$400
+gfx_metGamma:: incbin "gfx/enemies/metGamma.chr",0,$400
+gfx_metZeta::  incbin "gfx/enemies/metZeta.chr",0,$400
+gfx_metOmega:: incbin "gfx/enemies/metOmega.chr",0,$400
+gfx_ruinsExt:: incbin "tilesets/ruinsExt.chr",0,$800
+gfx_finalLab:: incbin "tilesets/finalLab.chr",0,$800
+gfx_queenSPR:: incbin "gfx/enemies/queenSPR.chr",0,$500
 
-;;; 8:7EBC: Check if killed target number of metroids ;;;
-earthquakeCheck::
-    ld hl, earthquakeThresholds
+; Check if killed target number of metroids
+earthquakeCheck:: ;{ 08:7EBC:
+    ld hl, .thresholds
 	
     .loop:
-	    ; If we have reached the end of earthquakeThresholds, then return
+	    ; If we have reached the end of .thresholds, then return
 	    ld a, [hl+]
         cp $ff
 	    jr z, .return
 
-	    ; If metroidCountReal = earthquakeThresholds[hl], then branch ahead to set the timer
+	    ; If metroidCountReal = .thresholds[hl], then branch ahead to set the timer
         ld b, a
         ld a, [metroidCountReal]
         cp b
@@ -78,9 +78,10 @@ earthquakeCheck::
     ret
 
 ; Earthquake threshholds (terminated with $FF)
-earthquakeThresholds:
+.thresholds:
     db $46, $42, $34, $24, $23, $21, $14, $13, $12, $09, $01, $ff
-	
+;}
+    
 ; 8:7EEA - Collision Table Pointers
 collisionPointerTable::
     dw collision_plantBubbles ; 0
@@ -93,15 +94,7 @@ collisionPointerTable::
     dw collision_finalLab     ; 7
 
 ; 8:7EFA Solidity threshholds
-solidityIndexTable::
-    db $69, $63, $6e, $ff ; 0 - plantBubbles
-    db $5e, $54, $5e, $ff ; 1 - ruinsInside
-    db $f0, $f0, $f0, $ff ; 2 - queen
-    db $63, $5d, $63, $ff ; 3 - caveFirst
-    db $69, $69, $69, $ff ; 4 - surface
-    db $42, $42, $42, $ff ; 5 - lavaCaves
-    db $5c, $54, $64, $ff ; 6 - ruinsExt
-    db $75, $75, $75, $ff ; 7 - finalLab
+solidityIndexTable:: include "tilesets/solidityValues.asm"
 
 ; 8:7F1A Metatile definition pointers
 metatilePointerTable::
@@ -116,4 +109,4 @@ metatilePointerTable::
     dw metatiles_lavaCavesMid   ; 8 - 6
     dw metatiles_ruinsExt       ; 9 - 9
 
-; 7:7B90 - Freespace (filled with $00)
+bank8_freespace: ; 7:7B90 - Freespace (filled with $00)

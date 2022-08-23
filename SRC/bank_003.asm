@@ -3862,4 +3862,4 @@ VBlank_drawQueen: ; 03:7CF0
     set 5, [hl]
 ret
 
-; 3:7DAD -- Freespace filled with $00 (nop)
+bank3_freespace: ; 3:7DAD -- Freespace filled with $00 (nop)

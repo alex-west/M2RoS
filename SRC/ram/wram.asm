@@ -23,7 +23,9 @@ wram_oamBuffer:: ds $A0 ; $C000
 def scrollY = $C205 ; Scroll Y
 def scrollX = $C206 ; Scroll X
 ;
-;$C215: Tilemap address of ([$C204], [$C203]) (see $22BC)
+def pTilemapDestLow  = $C215 ; Tilemap destination pointer based on the given xy coordinates in ([$C204], [$C203]) (see $22BC)
+def pTilemapDestHigh = $C216 ;  "" (high byte)
+
 ;
 ;$C219: Game over LCD control mirror. This variable is pretty much useless, set to 0 on boot and to C3h by game over, checked for bitset 8 by $2266 (get tilemap value)
 ;{
@@ -737,7 +739,7 @@ def projectileIndex = $D032 ; Index of working projectile
 ;$D036: Screen left velocity
 ;$D037: Screen up velocity
 ;$D038: Screen down velocity
-;$D039: Set to 0 by load title screen, otherwise unused
+def title_unusedD039 = $D039 ; Set to 0 by load title screen, otherwise unused
 ;
 def samus_onscreenYPos = $D03B ; Samus' Y position on screen
 def samus_onscreenXPos = $D03C ; Samus' X position on screen

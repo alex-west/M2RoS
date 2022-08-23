@@ -9,7 +9,7 @@ titleCreditsBank:
 
 ;------------------------------------------------------------------------------
 ; Draw two digits of ending timer
-credits_drawTimerDigits: ; 05:4000
+credits_drawTimerDigits: ;{ 05:4000
     ; Temp storage for timer number
     ldh [$99], a
     ; Extract the tens digit
@@ -22,11 +22,11 @@ credits_drawTimerDigits: ; 05:4000
     and $0f ; Isolate the ones digit
     add $f0 ; Adjust the value for display
     call credits_drawOneDigit
-ret
+ret ;}
 
 ;------------------------------------------------------------------------------
 ; Draw one digit of ending timer
-credits_drawOneDigit: ; 05:4015
+credits_drawOneDigit: ;{ 05:4015
     ; Temp storage for the digit to be displayed
     ldh [$98], a
     ; HL = oam buffer pointer
@@ -51,20 +51,20 @@ credits_drawOneDigit: ; 05:4015
     ; Store final value of oam index
     ld a, l
     ldh [hOamBufferIndex], a
-ret
+ret ;}
 
 ;------------------------------------------------------------------------------
 ; Load credits character tiles
-credits_loadFont: ; 05:4030
+credits_loadFont: ;{ 05:4030
     ld bc, $0200
     ld hl, gfx_creditsFont
     ld de, vramDest_creditsFont
     call copyToVram
-ret
+ret ;}
 
 ;------------------------------------------------------------------------------
 ; VBlank subroutine called during credits
-VBlank_drawCreditsLine: ; 05:403D
+VBlank_drawCreditsLine: ;{ 05:403D
     ; Redundant bank write
     ld a, $05
     ld [rMBC_BANK_REG], a
@@ -74,42 +74,40 @@ VBlank_drawCreditsLine: ; 05:403D
     ld a, [credits_textPointerHigh]
     ld h, a
     ; Load tilemap destination pointer
-    ld a, [$c215]
+    ld a, [pTilemapDestLow]
     ld e, a
-    ld a, [$c216]
+    ld a, [pTilemapDestHigh]
     ld d, a
-    ; Enable SRAM
+    ; Enable SRAM to access credits text
     ld a, $0a
     ld [$0000], a
     ; Check if newline
     ld a, [hl]
     cp $f1
-    jr z, .writeBlankLine
+    jr z, .else
+        ; Write normal line
+        ld b, $14
+        .writeLineLoop:
+            ld a, [hl+] ; Load character
+            sub $21 ; Adjust character encoding to ASCII
+            ld [de], a ; Write character
+            inc de
+            dec b
+        jr nz, .writeLineLoop
+        jr .endIf
+    .else:
+        ; Write a blank like
+        ld b, $14
+        .writeBlankLoop:
+            ld a, $ff
+            ld [de], a
+            inc de
+            dec b
+        jr nz, .writeBlankLoop
+        ; Increment credits text pointer to next byte
+        inc hl
+    .endIf:
 
-; Write normal line
-    ld b, $14
-    .writeLineLoop:
-        ld a, [hl+]
-        sub $21 ; Adjust character encoding to ASCII
-        ld [de], a
-        inc de
-        dec b
-    jr nz, .writeLineLoop
-
-    jr .finishVBlank
-
-.writeBlankLine:
-    ld b, $14
-    .writeBlankLoop:
-        ld a, $ff
-        ld [de], a
-        inc de
-        dec b
-    jr nz, .writeBlankLoop
-
-    inc hl
-
-.finishVBlank:
     ; Disable SRAM
     ld a, $00
     ld [$0000], a
@@ -131,13 +129,13 @@ VBlank_drawCreditsLine: ; 05:403D
     pop de
     pop bc
     pop af
-reti
+reti ;}
 
 ;------------------------------------------------------------------------------
 ; called by gameMode_boot
-loadTitleScreen: ; 05:408F
+loadTitleScreen: ;{ 05:408F
     call title_loadGraphics
-    
+    ; Load HUD
     ld hl, hudBaseTilemap
     ld de, vramDest_statusBar
     ld b, $14
@@ -147,7 +145,7 @@ loadTitleScreen: ; 05:408F
         inc de
         dec b
     jr nz, .hudLoop
-
+    ; Load "Save" text
     ld hl, saveTextTilemap
     ld de, vramDest_itemText
     ld b, $14
@@ -157,8 +155,8 @@ loadTitleScreen: ; 05:408F
         inc de
         dec b
     jr nz, .saveTextLoop
-
-    ld de, $9800
+    ; Load title tilemap
+    ld de, _SCRN0
     ld hl, titleTilemap
     .titleTilemapLoop:
         ld a, [hl+]
@@ -168,36 +166,41 @@ loadTitleScreen: ; 05:408F
         cp $9c
     jr nz, .titleTilemapLoop
 
+    ; Initialize window position
     ld a, $07
     ldh [rWX], a
     ld a, $88
     ldh [rWY], a
+    ; Reset scroll
     xor a
     ld [scrollY], a
+    ; Enable rendering (window disabled)
     ld a, $c3
     ldh [rLCDC], a
     ; Play title music
     ld a, $11
     ld [songRequest], a
-    
+    ; Clear variables
     xor a
-    ld [$d039], a
+    ld [title_unusedD039], a
     ld [title_clearSelected], a
+    
+    ; If loading from a file, have the Clear option be selected? Odd.
     ld a, [loadingFromFile]
     and a
-    jr z, jr_005_40e3
+    jr z, .endIf
         ld a, $01
         ld [title_clearSelected], a
-    jr_005_40e3:
+    .endIf:
 
-    ; Set countdown timer to max
+    ; Set countdown timer to max for flashing effect
     ld a, $ff
     ld [countdownTimerHigh], a
     ld [countdownTimerLow], a
     ; Set game mode to title
     ld a, $01
     ldh [gameMode], a
-ret
+ret ;}
 
 hudBaseTilemap:  ; 05:40F0
     db $AF, $AF, $AF, $AF, $AF, $9E, $AF, $AF, $AF, $9F, $9E, $AF, $AF, $AF, $AF, $FF, $FF, $9E, $A3, $A0
@@ -549,12 +552,12 @@ ret
 ;}
 
 ;------------------------------------------------------------------------------
-title_loadGraphics: ; 5:42C7
+title_loadGraphics: ;{ 5:42C7
     ld bc, $1000
     ld hl, gfx_titleScreen
-    ld de, $8800
+    ld de, vramDest_titleChr
     call copyToVram
-ret
+ret ;}
 
 ;------------------------------------------------------------------------------
 ; Note: This doesn't contain the weird bookkeeping optimization that the OAM clearing routine in bank 1 has
@@ -1178,17 +1181,17 @@ prepareCredits: ;{ 05:587F
     
     ld bc, $1000
     ld hl, gfx_creditsSprTiles
-    ld de, $8000
+    ld de, vramDest_creditsSpriteChr
     call copyToVram
     
     ld bc, $0100
     ld hl, gfx_theEnd
-    ld de, $9000
+    ld de, vramDest_theEnd
     call copyToVram
     
     ld bc, $0100
     ld hl, gfx_creditsNumbers
-    ld de, $8f00
+    ld de, vramDest_creditsNumbers
     call copyToVram
     
     ; Initialize credits text pointer
@@ -1574,13 +1577,17 @@ credits_starPositions: ;{ 05:5B14
 titleTilemap: include "data/title_tilemap.asm"
 
 ; 05:5F34 - Includes credits font, item font, and sprite numbers
-gfx_titleScreen:: include "gfx/gfx_titleScreen.asm"
+;  The title screen assumes these for files are contiguous
+gfx_titleScreen:     incbin "gfx/titleCredits/titleScreen.chr",   0,$A00
+gfx_creditsFont:     incbin "gfx/titleCredits/creditsFont.chr",   0,$300
+gfx_itemFont:        incbin "gfx/titleCredits/itemFont.chr",      0,$200
+gfx_creditsNumbers:  incbin "gfx/titleCredits/creditsNumbers.chr",0,$100
 
 ; 05:6F34
-gfx_creditsSprTiles: include "gfx/gfx_creditsSprTiles.asm"
+gfx_creditsSprTiles: incbin "gfx/titleCredits/creditsSprTiles.chr"
 
 ; 05:7E34
-gfx_theEnd: include "gfx/gfx_theEnd.asm"
+gfx_theEnd: incbin "gfx/titleCredits/theEnd.chr"
 
 bank5_freespace: ; 05:7F34 -- filled with $00 (nop)
 
