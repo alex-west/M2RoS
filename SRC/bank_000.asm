@@ -607,7 +607,7 @@ gameMode_LoadB: ;{ 00:0464
     ; Load graphics
     call loadGame_loadGraphics
     ; Adjust Samus graphics based on her item loadout
-    call loadGame_SamusItemGraphics
+    call loadGame_samusItemGraphics
 
     ; Set camera position
     ld a, [saveBuf_cameraYPixel]
@@ -6063,8 +6063,8 @@ jr_000_27ba:
     jr nz, jr_000_27bf
 ret
 
-
-Call_000_27e3:
+; Used for animating the Varia Suit collection
+Call_000_27e3: ; 00:27E3
     ld a, [hl+]
     ld [bankRegMirror], a
     ld [$d065], a
@@ -6536,7 +6536,7 @@ jr VBlank_vramDataTransfer.exit
 VBlank_vramDataTransfer: ; 00:2BA3
     ld a, [$d08c]
     and a
-    jp nz, Jump_000_2bf4
+        jp nz, Jump_000_2bf4
 
     ; Load transfer parameters
     ld a, [$d065]
@@ -6594,8 +6594,8 @@ VBlank_vramDataTransfer: ; 00:2BA3
     pop af
 reti
 
-
-Jump_000_2bf4:
+; Varia animation case
+Jump_000_2bf4: ; 00:2BF4
     ldh a, [frameCounter]
     and $01
     jr nz, jr_000_2c42
@@ -8465,20 +8465,22 @@ jp bootRoutine
 
 ;------------------------------------------------------------------------------
 ; Handle item pick-up
-handleItemPickup: ; 00:372F
+handleItemPickup: ;{ 00:372F
+    ; Exit unless an item is being collected
+    ; (a sprite actor will set this flag)
     ld a, [itemCollected]
     and a
         ret z
-
+    ; Wait a few frames
     call waitOneFrame
     call waitOneFrame
     call waitOneFrame
     call waitOneFrame
-
+    ; Set working copy of variable
     ld a, [itemCollected]
-    ld [$d093], a
+    ld [itemCollected_copy], a
     ld b, a
-    ; Unused SFX?
+    ; Unused SFX
     ld a, $12
     ld [sfxRequest_square1], a
     ; Play item get jingle
@@ -8491,20 +8493,20 @@ handleItemPickup: ; 00:372F
     ld [countdownTimerLow], a
     ld a, b
     cp $0d
-    jr c, .endIf
+    jr c, .endIf_A
         cp $0e
-        jr nc, .refillBranch
+        jr nc, .else_B
             ; Play missile get jingle
             ld a, $05
             ld [$cede], a
-            ; Set 1 second timer
+            ; Set shorter timer
             xor a
             ld [countdownTimerHigh], a
             ld a, $60
             ld [countdownTimerLow], a
-            jr .endIf
-    
-        .refillBranch:
+            jr .endIf_A
+        .else_B:
+            ; Refill branch
             ; Do not play jingle
             ld a, $00
             ld [$cede], a
@@ -8513,20 +8515,21 @@ handleItemPickup: ; 00:372F
             ld [countdownTimerLow], a
             ld a, $0e
             ld [sfxRequest_square1], a
-            jr z, .endIf
+            jr z, .endIf_A
                 ; Play sound effect
                 ld a, $0c
                 ld [sfxRequest_square1], a
-    .endIf:
+    .endIf_A:
 
+    ; Do not play jingle if earthquake sound is playing
     ld a, [$cedf]
     cp $0e
-    jr nz, .endIf_B
-        ; Do not play jingle
+    jr nz, .endIf_C
         ld a, $00
         ld [$cede], a
-    .endIf_B:
+    .endIf_C:
 
+    ; Jump to pick-up specific routine
     ld a, b
     dec a
     rst $28
@@ -8545,102 +8548,114 @@ handleItemPickup: ; 00:372F
         dw pickup_missileTank
         dw pickup_energyRefill
         dw pickup_missileRefill
+;}
 
-pickup_plasmaBeam:
+; Item Pick-up Sub-routines {
+pickup_plasmaBeam: ;{
+    ; Set beam
     ld a, $04
     ld [samusBeam], a
+    ; Load graphics
     ld hl, gfxInfo_plasma
     call Call_000_2753
+    ; Set to active weapon if missiles aren't active
     ld a, [samusActiveWeapon]
     cp $08
-    jp z, Jump_000_3a01
-
+        jp z, handleItemPickup_end
     ld a, $04
     ld [samusActiveWeapon], a
-    ld [samusBeam], a
-    jp Jump_000_3a01
-    
+    ld [samusBeam], a ; Redundant write
+jp handleItemPickup_end ;}
+
+gfxInfo_spazer: ; Free label for an enterprising modder
 gfxInfo_plasma: db BANK(gfx_beamPlasma)
     dw gfx_beamPlasma, vramDest_beam, $0020
 
-pickup_iceBeam:
+pickup_iceBeam: ;{
+    ; Set beam
     ld a, $01
     ld [samusBeam], a
+    ; Load graphics
     ld hl, gfxInfo_ice
     call Call_000_2753
+    ; Set to active weapon if missiles aren't active
     ld a, [samusActiveWeapon]
     cp $08
-    jp z, Jump_000_3a01
-
+        jp z, handleItemPickup_end
     ld a, $01
     ld [samusActiveWeapon], a
-    ld [samusBeam], a
-    jp Jump_000_3a01
+    ld [samusBeam], a ; Redundant write
+jp handleItemPickup_end ;}
 
 gfxInfo_ice: db BANK(gfx_beamIce)
     dw gfx_beamIce, vramDest_beam, $0020
 
-pickup_waveBeam:
+pickup_waveBeam: ;{
+    ; Set beam
     ld a, $02
     ld [samusBeam], a
+    ; Load graphics
     ld hl, gfxInfo_wave
     call Call_000_2753
+    ; Set to active weapon if missiles aren't active
     ld a, [samusActiveWeapon]
     cp $08
-    jp z, Jump_000_3a01
-
+        jp z, handleItemPickup_end
     ld a, $02
     ld [samusActiveWeapon], a
-    ld [samusBeam], a
-    jp Jump_000_3a01
+    ld [samusBeam], a ; Redundant write
+jp handleItemPickup_end ;}
 
 gfxInfo_wave: db BANK(gfx_beamWave)
     dw gfx_beamWave, vramDest_beam, $0020
 
-pickup_spazer:
+pickup_spazer: ;{
+    ; Set beam
     ld a, $03
     ld [samusBeam], a
-    ld hl, gfxInfo_plasma
+    ; Load graphics
+    ld hl, gfxInfo_spazer ;gfxInfo_plasma
     call Call_000_2753
+    ; Set to active weapon if missiles aren't active
     ld a, [samusActiveWeapon]
     cp $08
-    jp z, Jump_000_3a01
-
+        jp z, handleItemPickup_end
     ld a, $03
     ld [samusActiveWeapon], a
-    ld [samusBeam], a
-    jp Jump_000_3a01
+    ld [samusBeam], a ; Redundant write
+jp handleItemPickup_end ;}
 
-
-pickup_bombs:
+pickup_bombs: ;{
+    ; Set item bit
     ld a, [samusItems]
     set itemBit_bomb, a
     ld [samusItems], a
-    jp Jump_000_3a01
+jp handleItemPickup_end ;}
 
-pickup_screwAttack:
+pickup_screwAttack: ;{
+    ; Set item bit
     ld a, [samusItems]
     set itemBit_screw, a
     ld [samusItems], a
+    ; Load appropriate graphics
     bit itemBit_space, a
-    jr nz, jr_000_386b
+    jr nz, .else
+        ; No space jump
+        ld hl, gfxInfo_spinScrewTop
+        call Call_000_2753
+        ld hl, gfxInfo_spinScrewBottom
+        call Call_000_2753
+        jp handleItemPickup_end
+    .else:
+        ; With space jump
+        ld hl, gfxInfo_spinSpaceScrewTop
+        call Call_000_2753
+        ld hl, gfxInfo_spinSpaceScrewBottom
+        call Call_000_2753
+        jp handleItemPickup_end
+;} end case
 
-    ld hl, gfxInfo_spinScrewTop
-    call Call_000_2753
-    ld hl, gfxInfo_spinScrewBottom
-    call Call_000_2753
-    jp Jump_000_3a01
-
-
-jr_000_386b:
-    ld hl, gfxInfo_spinSpaceScrewTop
-    call Call_000_2753
-    ld hl, gfxInfo_spinSpaceScrewBottom
-    call Call_000_2753
-    jp Jump_000_3a01
-
-
-; VRAM Update Lists - 00:387A
+; VRAM Update Lists - 00:387A {
 gfxInfo_variaSuit: db BANK(gfx_samusVariaSuit)
     dw gfx_samusVariaSuit, vramDest_samus, $07B0
 
@@ -8663,131 +8678,157 @@ gfxInfo_springBallTop: db BANK(gfx_springBallTop)
     dw gfx_springBallTop, vramDest_ballTop, $0020
 gfxInfo_springBallBottom: db BANK(gfx_springBallBottom)
     dw gfx_springBallBottom, vramDest_ballBottom, $0020
+;}
 
-pickup_variaSuit:
+pickup_variaSuit: ;{
     .loop:
             call drawSamus_longJump ; Draw Samus
             call handleEnemiesOrQueen ; Handle enemies
             callFar drawHudMetroid
             call clearUnusedOamSlots_longJump ; Clear unused OAM entries
+            ; Higher window position
             ld a, $80
             ldh [rWY], a
             call waitOneFrame
+            ; Wait for countdown timer to expire
             ld a, [countdownTimerHigh]
             and a
         jr nz, .loop
         ld a, [countdownTimerLow]
         and a
     jr nz, .loop
-
+    ; Set item bit
     ld a, [samusItems]
     set itemBit_varia, a
     ld [samusItems], a
+    ; Make Samus face the screen
     ld a, $80
     ld [samusPose], a
     call drawSamus_longJump
+    ; Set turnaround timer (for facing the screen)
     ld a, $10
     ld [samus_turnAnimTimer], a
     call waitOneFrame
+    ; Play sound
     ld a, $1d
     ld [sfxRequest_square1], a
+    ; Set flag for updating tiles varia-collection-style
     ld a, $ff
     ld [$d08c], a
+    ; Fancy loading animation (only loads first 5 rows)
     ld hl, gfxInfo_variaSuit
     call Call_000_27e3
+    ; Clear flag
     xor a
     ld [$d08c], a
+    ; Load all the varia graphics
     ld hl, gfxInfo_variaSuit
     call Call_000_2753
+    ; Load cannon graphics if missiles are active
     ld hl, gfxInfo_cannonMissile
     ld a, [samusActiveWeapon]
     cp $08
-    call z, Call_000_2753
+        call z, Call_000_2753
+    ; Load all the other patched-in graphics
     call loadExtraSuitGraphics
-    jp Jump_000_3a01
+jp handleItemPickup_end ;}
 
-pickup_hiJump:
+pickup_hiJump: ;{
+    ; Set item bit
     ld a, [samusItems]
     set itemBit_hiJump, a
     ld [samusItems], a
-    jp Jump_000_3a01
+jp handleItemPickup_end ;}
 
-pickup_spaceJump:
+pickup_spaceJump: ;{
+    ; Set item bit
     ld a, [samusItems]
     set itemBit_space, a
     ld [samusItems], a
+    ; Load appropriate graphics
     bit itemBit_screw, a
-    jr nz, jr_000_3949
+    jr nz, .else
+        ; No screw attack
+        ld hl, gfxInfo_spinSpaceTop
+        call Call_000_2753
+        ld hl, gfxInfo_spinSpaceBottom
+        call Call_000_2753
+        jp handleItemPickup_end
+    .else:
+        ; With screw attack
+        ld hl, gfxInfo_spinSpaceScrewTop
+        call Call_000_2753
+        ld hl, gfxInfo_spinSpaceScrewBottom
+        call Call_000_2753
+        jp handleItemPickup_end
+;} end case
 
-    ld hl, gfxInfo_spinSpaceTop
-    call Call_000_2753
-    ld hl, gfxInfo_spinSpaceBottom
-    call Call_000_2753
-    jp Jump_000_3a01
-
-jr_000_3949:
-    ld hl, gfxInfo_spinSpaceScrewTop
-    call Call_000_2753
-    ld hl, gfxInfo_spinSpaceScrewBottom
-    call Call_000_2753
-    jp Jump_000_3a01
-
-pickup_spiderBall:
+pickup_spiderBall: ;{
+    ; Set item bit
     ld a, [samusItems]
     set itemBit_spider, a
     ld [samusItems], a
-    jp Jump_000_3a01
+jp handleItemPickup_end ;}
 
-pickup_springBall:
+pickup_springBall: ;{
+    ; Set item bit
     ld a, [samusItems]
     set itemBit_spring, a
     ld [samusItems], a
+    ; Load graphics
     ld hl, gfxInfo_springBallTop
     call Call_000_2753
     ld hl, gfxInfo_springBallBottom
     call Call_000_2753
-    jp Jump_000_3a01
+jp handleItemPickup_end ;}
 
-pickup_energyTank:
+pickup_energyTank: ;{
     ld a, [samusEnergyTanks]
     cp $05 ; Max Energy tanks
-    jr z, jr_000_3985
+    jr z, .endIf
+        ; Give another energy tank
         inc a
         ld [samusEnergyTanks], a
-    jr_000_3985:
+    .endIf:
+    ; Set current health to max
     ld [samusCurHealthHigh], a
     ld a, $99
     ld [samusCurHealthLow], a
-    jr jr_000_3a01
+jr handleItemPickup_end ;}
 
-pickup_energyRefill:
+pickup_energyRefill: ;{
+    ; Set current health to max
     ld a, [samusEnergyTanks]
     ld [samusCurHealthHigh], a
     ld a, $99
     ld [samusCurHealthLow], a
-    jr jr_000_3a01
+jr handleItemPickup_end ;}
 
-pickup_missileRefill:
+pickup_missileRefill: ;{
+    ; Check if all metroids are dead
     ld a, [metroidCountReal]
     and a
-    jr nz, jr_000_39b1
+    jr nz, .else
         ; Prep the credits prep
+        ; Set countdown timer for fadeout
         ld a, $ff
         ld [countdownTimerLow], a
+        ; Play sound
         ld a, $08
         ld [$cede], a
+        ; Set game mode to prep credits
         ld a, $12
         ldh [gameMode], a
         ret
-    jr_000_39b1:
+    .else:
+        ; Set current missiles to max
+        ld a, [samusMaxMissilesLow]
+        ld [samusCurMissilesLow], a
+        ld a, [samusMaxMissilesHigh]
+        ld [samusCurMissilesHigh], a
+jr handleItemPickup_end ;}
 
-    ld a, [samusMaxMissilesLow]
-    ld [samusCurMissilesLow], a
-    ld a, [samusMaxMissilesHigh]
-    ld [samusCurMissilesHigh], a
-    jr jr_000_3a01
-
-pickup_missileTank:
+pickup_missileTank: ;{
     ; Add 10 to max missiles
     ld a, [samusMaxMissilesLow]
     add $10
@@ -8799,12 +8840,12 @@ pickup_missileTank:
     ld [samusMaxMissilesHigh], a
     ; Clamp max missiles at 999
     cp $10
-    jr c, jr_000_39df
+    jr c, .endIf
         ld a, $99
         ld [samusMaxMissilesLow], a
         ld a, $09
         ld [samusMaxMissilesHigh], a
-    jr_000_39df:
+    .endIf:
     
     ; Add 10 to current missiles
     ld a, [samusCurMissilesLow]
@@ -8817,50 +8858,56 @@ pickup_missileTank:
     ld [samusCurMissilesHigh], a
     ; Clamp current missiles to 999
     cp $10
-    jr c, jr_000_3a01
+    jr c, handleItemPickup_end
         ld a, $99
         ld [samusCurMissilesLow], a
         ld a, $09
         ld [samusCurMissilesHigh], a
-    jr jr_000_3a01
+    jr handleItemPickup_end
+;} end case
+;}
 
 ; Common routine for all pickups
-Jump_000_3a01:
-    jr_000_3a01:
+handleItemPickup_end: ; 00:3A01
+    .waitLoop_A:
             call drawSamus_longJump
             call drawHudMetroid_longJump
             callFar enemyHandler
             call handleAudio_longJump
             call clearUnusedOamSlots_longJump
-            ld a, [$d093]
+            ld a, [itemCollected_copy]
             cp $0b
-            jr nc, jr_000_3a23
+            jr nc, .endIf_A
                 ld a, $80
                 ldh [rWY], a
-            jr_000_3a23:
-            
+            .endIf_A:
+            ; Wait for countdown to end
             call waitForNextFrame
             ld a, [countdownTimerHigh]
             and a
-        jr nz, jr_000_3a01
+        jr nz, .waitLoop_A
         ld a, [countdownTimerLow]
         and a
-    jr nz, jr_000_3a01
+    jr nz, .waitLoop_A
 
-    ld a, [$d093]
+    
+    ld a, [itemCollected_copy]
     cp $0e
-    jr nc, jr_000_3a45
+    jr nc, .endIf_B
+        ; End isolated sound effect (as long as it's not the earthquake)
         ld a, [$cedf]
         cp $0e
-        jr z, jr_000_3a45
+        jr z, .endIf_B
             ld a, $03
             ld [$cede], a
-    jr_000_3a45:
-
+    .endIf_B:
+    ; Clear flag
     xor a
-    ld [$d093], a
+    ld [itemCollected_copy], a
+    ; Signal to item object that this sequence is completed
     ld a, $03
     ld [itemCollectionFlag], a
+    
     ld a, [itemOrb_collisionType]
     ld [$c466], a
     ld a, [itemOrb_pEnemyWramLow]
@@ -8868,7 +8915,7 @@ Jump_000_3a01:
     ld a, [itemOrb_pEnemyWramHigh]
     ld [$c468], a
 
-    jr_000_3a60:
+    .waitLoop_B:
         call drawSamus_longJump
         call drawHudMetroid_longJump
         call Call_000_32ab
@@ -8876,13 +8923,14 @@ Jump_000_3a01:
         call handleAudio_longJump
         call clearUnusedOamSlots_longJump
         call waitForNextFrame
+        ; Wait until the item deletes itself
         ld a, [itemCollectionFlag]
         and a
-    jr nz, jr_000_3a60
+    jr nz, .waitLoop_B
 ret
 
 ; Called by the Varia Suit collection routine
-loadExtraSuitGraphics:
+loadExtraSuitGraphics: ; 00:3A84
     ld a, [samusItems]
     bit itemBit_spring, a
     jr z, .endIf_spring
@@ -8922,7 +8970,9 @@ loadExtraSuitGraphics:
 ret
 
 ; Game modes $0A and $0F
+;  Displays "GAME SAVED" screen (incorrectly)
 gameMode_unusedA: ;{ 00:3ACE
+    ; Clear sound, graphics, etc.
     call silenceAudio_longJump
     ld a, $ff
     ld [$cfe5], a
@@ -8932,11 +8982,11 @@ gameMode_unusedA: ;{ 00:3ACE
     ldh [hOamBufferIndex], a
     call clearAllOam_longJump
     
+    ; Load graphics (badly)
     switchBank gfx_titleScreen
     ld hl, gfx_titleScreen
     ld de, $8000 ; Should be $8800
     ld bc, $1800 ; Should be $1000
-
     .loadGfxLoop:
         ld a, [hl+]
         ld [de], a
@@ -8946,29 +8996,31 @@ gameMode_unusedA: ;{ 00:3ACE
         or c
     jr nz, .loadGfxLoop
 
+    ; Load $80-terminated string
     ld hl, gameSavedText
     ld de, $9800 + (8*$20) + $5 ; Tilemap address for text destination
-
     .loadTextLoop:
         ld a, [hl+]
         cp $80
-            jr z, .exitLoop
+            jr z, .break
         ld [de], a
         inc de
     jr .loadTextLoop
+    .break:
 
-    .exitLoop:
-
+    ; Reset camera
     xor a
     ld [scrollY], a
     ld [scrollX], a
+    ; Enable LCD
     ld a, $c3
     ldh [rLCDC], a
+    ; Set countdown timer
     ld a, $a0
     ld [countdownTimerLow], a
-    ; Game mode $F doesn't even read this
-    ld a, $01
+    ld a, $01 ; Game mode $F doesn't even read this
     ld [countdownTimerHigh], a
+    ; Set game mode
     ld a, $0f
     ldh [gameMode], a
 ret
@@ -8978,10 +9030,12 @@ gameSavedText: ; 00:3B24 - "GAME SAVED"
 
 gameMode_unusedB: ; 00:3B2F
     call handleAudio_longJump
+    ; Wait for timer to expire
     call waitForNextFrame
     ld a, [countdownTimerLow]
     and a
     jr z, .reboot
+        ; Reboot if start is pressed
         ldh a, [hInputRisingEdge]
         cp PADF_START
             ret nz
@@ -8990,7 +9044,9 @@ jp bootRoutine
 ;}
 
 ; Game modes $10 and $11
+;  Displays "GAME CLEARED" screen
 gameMode_unusedC: ;{ 00:3B43
+    ; Clear sound, graphics, etc.
     call silenceAudio_longJump
     ld a, $ff
     ld [$cfe5], a
@@ -9000,11 +9056,11 @@ gameMode_unusedC: ;{ 00:3B43
     ldh [hOamBufferIndex], a
     call clearAllOam_longJump
 
+    ; Load CHR data
     switchBank gfx_titleScreen
     ld hl, gfx_titleScreen
     ld de, $8800
     ld bc, $1000
-
     .loadGfxLoop:
         ld a, [hl+]
         ld [de], a
@@ -9014,25 +9070,26 @@ gameMode_unusedC: ;{ 00:3B43
         or c
     jr nz, .loadGfxLoop
 
+    ; Load $80-terminated string
     ld hl, gameClearedText
     ld de, $9800 + (8*$20) + $4 ; Tilemap address for text
-
     .loadTextLoop:
         ld a, [hl+]
         cp $80
-        jr z, .exitLoop
-    
+            jr z, .break
         ld [de], a
         inc de
     jr .loadTextLoop
+    .break:
 
-    .exitLoop:
-
+    ; Reset camera
     xor a
     ld [scrollY], a
     ld [scrollX], a
+    ; Enable LCD
     ld a, $c3
     ldh [rLCDC], a
+    ; Set timer and game mode
     ld a, $ff
     ld [countdownTimerLow], a
     ld a, $11
@@ -9048,6 +9105,7 @@ gameMode_unusedD: ; 00:3BA1
     ld a, [countdownTimerLow]
     and a
     jr z, .reboot
+        ; Reboot if start is pressed
         ldh a, [hInputRisingEdge]
         cp PADF_START
             ret nz
@@ -9059,121 +9117,133 @@ ret
 ;}
 
 ; Loads graphics depending on Samus' loadout
-loadGame_SamusItemGraphics: ; 00:3BB4
+loadGame_samusItemGraphics: ;{ 00:3BB4
+    ; Load Varia first before other graphics are patched in
     ld a, [samusItems]
     bit itemBit_varia, a
     jr z, .endIf_varia
         ld hl, gfxInfo_variaSuit
-        call Call_000_3c3f
+        call loadGame_copyItemToVram
     .endIf_varia:
     
     ld a, [samusItems]
     bit itemBit_spring, a
     jr z, .endIf_spring
         ld hl, gfxInfo_springBallTop
-        call Call_000_3c3f
+        call loadGame_copyItemToVram
         ld hl, gfxInfo_springBallBottom
-        call Call_000_3c3f
+        call loadGame_copyItemToVram
     .endIf_spring:
     
-    ld a, [samusItems] ; Load spin jump graphics
+    ; Load spin jump graphics depending on space jump and screw attack
+    ld a, [samusItems]
         and itemMask_space | itemMask_screw
         cp itemMask_space | itemMask_screw
         jr nz, .endIf_spinBoth
             ld hl, gfxInfo_spinSpaceScrewTop
-            call Call_000_3c3f
+            call loadGame_copyItemToVram
             ld hl, gfxInfo_spinSpaceScrewBottom
-            call Call_000_3c3f
+            call loadGame_copyItemToVram
             jr .endSpinBranch
         .endIf_spinBoth:
         
         cp itemMask_space
         jr nz, .endIf_space
             ld hl, gfxInfo_spinSpaceTop
-            call Call_000_3c3f
+            call loadGame_copyItemToVram
             ld hl, gfxInfo_spinSpaceBottom
-            call Call_000_3c3f
+            call loadGame_copyItemToVram
             jr .endSpinBranch
         .endIf_space:
     
         cp itemMask_screw
         jr nz, .endIf_screw
             ld hl, gfxInfo_spinScrewTop
-            call Call_000_3c3f
+            call loadGame_copyItemToVram
             ld hl, gfxInfo_spinScrewBottom
-            call Call_000_3c3f
+            call loadGame_copyItemToVram
         .endIf_screw:
     .endSpinBranch:
 
-    ld a, [samusActiveWeapon] ; Load beam graphics
+    ; Load beam graphics depending on beam
+    ld a, [samusActiveWeapon]
         cp $01
         jr nz, .endIf_ice
             ld hl, gfxInfo_ice
-            call Call_000_3c3f
+            call loadGame_copyItemToVram
             jr .endBeamBranch
         .endIf_ice:
     
         cp $03
         jr nz, .endIf_spazer
             ld hl, gfxInfo_plasma
-            call Call_000_3c3f
+            call loadGame_copyItemToVram
             jr .endBeamBranch
         .endIf_spazer:
     
         cp $02
         jr nz, .endIf_wave
             ld hl, gfxInfo_wave
-            call Call_000_3c3f
+            call loadGame_copyItemToVram
             jr .endBeamBranch
         .endIf_wave:
     
         cp $04
         jr nz, .endIf_plasma
             ld hl, gfxInfo_plasma
-            call Call_000_3c3f
+            call loadGame_copyItemToVram
         .endIf_plasma:
     .endBeamBranch:
-ret
+ret ;}
 
-
-Call_000_3c3f:
+; Given a gfxInfo entry pointed to by HL, copies graphics into VRAM
+loadGame_copyItemToVram: ;{ 00:3C3F
+    ; Read source bank of transfer
     ld a, [hl+]
     ld [bankRegMirror], a
     ld [$d065], a
     ld [rMBC_BANK_REG], a
+    ; Read source address of transfer to temp
     ld a, [hl+]
-    ldh [$98], a
+    ldh [hTemp.a], a
     ld a, [hl+]
-    ldh [$99], a
+    ldh [hTemp.b], a
+    ; Read destination address of transfer
     ld a, [hl+]
     ld e, a
     ld a, [hl+]
     ld d, a
+    ; Read length of transfer
     ld a, [hl+]
     ld c, a
     ld a, [hl+]
     ld b, a
-    ldh a, [$98]
+    ; Load source address to HL from temp
+    ldh a, [hTemp.a]
     ld l, a
-    ldh a, [$99]
+    ldh a, [hTemp.b]
     ld h, a
-
-jr_000_3c5d:
+  .unusedEntry:
     call copyToVram
-    ret
+ret ;}
 
-; 00:3C61 - Unreferenced branch to the above
+; Unreferenced procedure, branches to the function above
+; - Uploads one less byte (at start) to VRAM compared to the arguments sent to it
+unused_decreasingVramTransfer: ;{ 00:3C61
+    ; Increment start of source and destination address
     ld a, [hl+]
     ld [de], a
     inc de
+    ; Decrease length by 1
     dec bc
+    ; Exit if length is now zero
     ld a, c
     or b
-    jr nz, jr_000_3c5d
-ret
+    jr nz, loadGame_copyItemToVram.unusedEntry
+ret ;}
 
 ; 00:3C6A - Load credits to SRAM
-loadCreditsText:
+loadCreditsText: ;{
     switchBank creditsText
     ld hl, creditsText ;$7920
     ld de, creditsTextBuffer
@@ -9192,10 +9262,8 @@ loadCreditsText:
     ld a, $00
     ld [$0000], a
 
-    ld a, $05
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-ret
+    switchBank prepareCredits
+ret ;}
 
 ; External Calls {
 earthquakeCheck_farCall: ; 00:3C92

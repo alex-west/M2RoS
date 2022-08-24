@@ -930,7 +930,7 @@ def saveMessageCooldownTimer = $D088 ; Cooldown timer for game save message (for
 def metroidCountReal = $D089 ; Real number of metroids remaining (BCD)
 def beamSolidityIndex = $D08A ; Projectile solid block threshold
 def queen_roomFlag = $D08B ; 11h: In Metroid Queen's room (set by screen transition command 8), other values less than 10h: not in Queen's room
-;$D08C: Would have guessed a flag for 'can do tiles update' or 'is lag frame'
+;$D08C: Flag for doing the varia-collection-style VRAM update (pixel-row by pixel-row)
 ;$D08D: Value for $D05D in $31F1. Projectile type in $1:500D
 def doorIndexLow  = $D08E ; Index of screen transition command set. Set to [$4300 + ([screen Y position high] * 10h + [screen X position high]) * 2] & ~800h by set up door transition
 def doorIndexHigh = $D08F
@@ -952,7 +952,7 @@ def queen_eatingState = $D090 ; Metroid Queen eating pose
 ;}
 def nextEarthquakeTimer = $D091 ; Time until next Metroid earthquake. Counts down in $100h frame intervals after killing a metroid.
 def currentRoomSong = $D092 ; Song for room. Used when restoring song when loading a save and after some other events
-;$D093: Mirror of $D06C?
+def itemCollected_copy = $D093 ; Copy of $D06C, used by handleItemPickup (00:372F)
 def unused_itemOrb_yPos = $D094 ; Written to by item orb AI, but never read?
 def unused_itemOrb_xPos = $D095 ; Written to by item orb AI, but never read?
 def metroidCountShuffleTimer = $D096 ; Metroids remaining shuffle timer

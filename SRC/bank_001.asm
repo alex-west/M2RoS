@@ -384,7 +384,7 @@ drawHudMetroid::
         and a
         jr nz, .endIf_B
             ; or if a major item is being collected
-            ld a, [$d093]
+            ld a, [itemCollected_copy]
             and a
             jr z, .endIf_A
                 cp $0b
@@ -2703,10 +2703,10 @@ miscIngameTasks: ; 01:57F2
         and a
         jr nz, .else_D
             ; Check if item being collected
-            ld a, [$d093]
+            ld a, [itemCollected_copy]
             and a
             jr z, .endIf_B
-                ld a, [$d093]
+                ld a, [itemCollected_copy]
                 cp $0b ; Check if not a common item or refill
                 jr nc, .endIf_B
                     ld a, $80 ; Higher window position
