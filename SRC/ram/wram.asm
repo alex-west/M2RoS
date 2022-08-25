@@ -151,16 +151,18 @@ queen_headSrcLow  = $C3F4 ; (rare instance of a big-endian variable!!)
 
 en_bgCollisionResult = $C402 ; Enemy tilemap collision routine return value (initialized to $11, $22, $44, or $88)
 
-enemySolidityIndex = $C407 ; Copy of enemySolidityIndex_canon (actually used by enemy code)
+section "WRAM c407", wram0[$C407]
+enemySolidityIndex: ds 1 ;$C407: Copy of enemySolidityIndex_canon (actually used by enemy code)
 
-; Scroll history A
-;$C408: Scroll Y three frames ago (according to $2:45CA)
-;$C409: Scroll X three frames ago (according to $2:45CA)
-;$C40A: Scroll Y two frames ago (according to $2:45CA)
-;$C40B: Scroll X two frames ago (according to $2:45CA)
-;$C40C: Scroll Y one frame ago (according to $2:45CA)
-;$C40D: Scroll X one frame ago (according to $2:45CA)
-unused_samusDirectionFromEnemy = $C40E ; Set to 0 if [$FFE2] < [Samus' X position on screen] else 2 by $2:45E4
+; This copy of the scrolling history appears to be used in the function that adjusts enemy positions due to scrolling
+scrollHistory_A:
+.y3: ds 1 ;$C408: Scroll Y three frames ago (according to $2:45CA)
+.x3: ds 1 ;$C409: Scroll X three frames ago (according to $2:45CA)
+.y2: ds 1 ;$C40A: Scroll Y two frames ago (according to $2:45CA)
+.x2: ds 1 ;$C40B: Scroll X two frames ago (according to $2:45CA)
+.y1: ds 1 ;$C40C: Scroll Y one frame ago (according to $2:45CA)
+.x1: ds 1 ;$C40D: Scroll X one frame ago (according to $2:45CA)
+unused_samusDirectionFromEnemy: ds 1 ;$C40E: Set to 0 if [$FFE2] < [Samus' X position on screen] else 2 by $2:45E4
 ;
 def unused_romBankPlusOne = $C418 ; Set to [room bank+1] in $2:4000, never read
 ;
@@ -210,12 +212,13 @@ seekSamusTemp:
 .samusX: ds 1 ; $C43F: samus X pos + $10
 
 def saveLoadSpawnFlagsRequest = $C44B ; Request to execute $2:418C (save/load spawn/save flags). Set by doorExitStatus in the door script function
-;
+def scrollEnemies_numEnemiesLeft = $C44C ; Number of enemies left to process for scrolling the enemies
 def enemy_testPointYPos = $C44D ; Test point for enemy collision (in camera-space)
 def enemy_testPointXPos = $C44E ; Test point for enemy collision (in camera-space)
 ;;$C44E: Tile X relative to scroll X (see $2250)
 def omega_tempSpriteType = $C44F ; Used to preserve sprite type when stunned
-;$C450: Enemy data address in $3:422F
+def enemy_pWramLow  = $C450 ; Enemy WRAM address in bank 3
+def enemy_pWramHigh = $C451 ;  "" high byte
 
 def enemy_pFirstEnemyLow  = $C452 ; Pointer of the first enemy to process for the next frame
 def enemy_pFirstEnemyHigh = $C453 ;  - Used for making enemies lag instead of Samus

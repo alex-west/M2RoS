@@ -1188,29 +1188,34 @@ pop af
 jp processEnemies.doneProcessingEnemy
 ;}
 
-; Isn't there another function that does this??
+; This copy of the scrolling history appears to be used in scrollEnemies (03:6BD2)
 updateScrollHistory: ;{ 02:45CA
-    ld de, $c40a
-    ld hl, $c408
+    ; y3 <= y2
+    ld de, scrollHistory_A.y2
+    ld hl, scrollHistory_A.y3
     ld a, [de]
     ld [hl+], a
+    ; x3 <= x2
     inc e
     ld a, [de]
     ld [hl+], a
+    ; y2 <= y1
     inc e
     ld a, [de]
     ld [hl+], a
+    ; x2 <= x1
     inc e
     ld a, [de]
     ld [hl+], a
+    ; y1 <= y0
     ld de, scrollY
     ld a, [de]
     ld [hl+], a
+    ; x1 <= x0
     inc e
     ld a, [de]
     ld [hl], a
-ret
-;}
+ret ;}
 
 ; Gets X direction of Samus
 unused_getSamusDirection: ;{ 02:45E4 - Unreferenced
