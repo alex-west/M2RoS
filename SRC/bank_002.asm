@@ -2655,7 +2655,7 @@ ret
 ret
 
 .spewBlob:
-    call findFirstEmptyEnemySlot_longJump
+    call loadEnemy_getFirstEmptySlot_longJump
     ; Activate enemy
     ld [hl], $00
     inc hl
@@ -3085,7 +3085,7 @@ ret
 ret
 
 .shootFireball: ; 02:52A6
-    call findFirstEmptyEnemySlot_longJump
+    call loadEnemy_getFirstEmptySlot_longJump
     ld [hl], $00
     inc hl
     ldh a, [hEnemyYPos]
@@ -4485,7 +4485,7 @@ ret
         ld a, $02
         ldh [$e9], a
         ; Spawn projectile
-        call findFirstEmptyEnemySlot_longJump
+        call loadEnemy_getFirstEmptySlot_longJump
         ; Set status to active
         xor a
         ld [hl+], a
@@ -4703,7 +4703,7 @@ ret
     ld hl, hEnemyState
     ld [hl], $00
     ; Spawn projectile
-    call findFirstEmptyEnemySlot_longJump
+    call loadEnemy_getFirstEmptySlot_longJump
     xor a
     ld [hl+], a
     ldh a, [hEnemyYPos]
@@ -5315,7 +5315,7 @@ enAI_pipeBug: ;{ 02:5F67
 
 ; Load in new pipe bug
     ; Get first unused slot
-    call findFirstEmptyEnemySlot_longJump
+    call loadEnemy_getFirstEmptySlot_longJump
     ; Set status
     xor a
     ld [hl+], a
@@ -5755,7 +5755,7 @@ enAI_autrack: ;{ 02:6145
         ret nz
 
     ; set HL to enemy's slot
-    call findFirstEmptyEnemySlot_longJump
+    call loadEnemy_getFirstEmptySlot_longJump
     ; Set enemy to active
     xor a
     ld [hl+], a
@@ -6055,7 +6055,7 @@ ret
     ld [hl], $00
 ; Spawn projectile
     ; Get base address of new enemy
-    call findFirstEmptyEnemySlot_longJump
+    call loadEnemy_getFirstEmptySlot_longJump
     ; Set status
     xor a
     ld [hl+], a
@@ -6252,7 +6252,7 @@ ret
 
 ; Shoot from the upper cannon
 .shootHorizontalRandom:
-    call findFirstEmptyEnemySlot_longJump
+    call loadEnemy_getFirstEmptySlot_longJump
     ; Set status
     xor a
     ld [hl+], a
@@ -6289,7 +6289,7 @@ ret
     and $1f
         jr nz, .moveVertical
     
-    call findFirstEmptyEnemySlot_longJump
+    call loadEnemy_getFirstEmptySlot_longJump
     ; Set status
     xor a
     ld [hl+], a
@@ -6395,7 +6395,7 @@ ret
 ; end horizontal case logic
 
 .shootDiagonal:
-    call findFirstEmptyEnemySlot_longJump
+    call loadEnemy_getFirstEmptySlot_longJump
     ; Set initial status
     xor a
     ld [hl+], a
@@ -6577,7 +6577,7 @@ enAI_autom: ;{ 02:6540
 ; end state
 
 .useFlamethrower: ; A fan wiki says its a flamethrower
-    call findFirstEmptyEnemySlot_longJump
+    call loadEnemy_getFirstEmptySlot_longJump
     ; Set enemy slot to active
     xor a
     ld [hl+], a
@@ -8958,7 +8958,7 @@ ret
     .else_J:
         cp $14
             ret c
-        call findFirstEmptyEnemySlot_longJump
+        call loadEnemy_getFirstEmptySlot_longJump
         xor a
         ld [hl+], a
         ldh a, [hEnemyYPos]
@@ -9627,7 +9627,7 @@ ret
     xor a
     ld [hl], a
     ldh [hEnemyStunCounter], a
-    call findFirstEmptyEnemySlot_longJump
+    call loadEnemy_getFirstEmptySlot_longJump
     xor a
     ld [hl+], a
     ldh a, [hEnemyYPos]
@@ -9680,7 +9680,7 @@ ret
     dw enAI_zetaMetroid
 
 .spawnFireball: ; 02:75AC
-    call findFirstEmptyEnemySlot_longJump
+    call loadEnemy_getFirstEmptySlot_longJump
     xor a
     ld [hl+], a
     ldh a, [hEnemyYPos]
@@ -10308,7 +10308,7 @@ ret
 ret
 
 .spawnFireball:
-    call findFirstEmptyEnemySlot_longJump
+    call loadEnemy_getFirstEmptySlot_longJump
     xor a
     ld [hl+], a
     ldh a, [hEnemyYPos]

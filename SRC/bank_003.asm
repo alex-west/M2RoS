@@ -189,11 +189,11 @@ loadEnemies_vertical: ;{ 03:40BE
 
 ; Check left screen {
     .left_nextEnemy:
-        ; Load sprite type, move on to next screen if $FF
+        ; Load sprite number, move on to next screen if $FF
         ld a, [hl]
         cp $ff
             jr z, .checkRightScreen
-        ; Load sprite number
+        ; Load sprite number (again, this time incrementing HL to sprite type)
         ld a, [hl+]
         ld e, a
         ; Check if spawn flag is active or dead
@@ -257,11 +257,11 @@ jr .left_skipToNext ;}
         ret c ; Exit if there is wraparound
 
     .right_nextEnemy:
-        ; Load sprite type, exit if it is $FF
+        ; Load sprite number, move on to next screen if $FF
         ld a, [hl]
         cp $ff
             ret z
-        ; Load sprite number
+        ; Load sprite number (again, this time incrementing HL to sprite type)
         ld a, [hl+]
         ld e, a
         ; Check if spawn flag is active or dead
@@ -339,13 +339,14 @@ loadEnemies_horizontal: ;{ 03:416A
 
 ; Check top screen {
     .top_nextEnemy:
-        ; Load sprite type, move on to next screen if $FF
+        ; Load sprite number, move on to next screen if $FF
         ld a, [hl]
         cp $ff
             jr z, .checkBottomScreen
-        ; Check if spawn flag is active or dead
+        ; Load sprite number (again, this time incrementing HL to sprite type)
         ld a, [hl+]
         ld e, a
+        ; Check if spawn flag is active or dead
         ld d, HIGH(enemySpawnFlags)
         ld a, [de]
         cp $fe
@@ -415,13 +416,14 @@ jr .top_skipToNext ;}
     call loadEnemy_getPointer.screen
 
     .bottom_nextEnemy:
-        ; Load sprite type, move on to next screen if $FF
+        ; Load sprite number, move on to next screen if $FF
         ld a, [hl]
         cp $ff
             ret z
-        ; Check if spawn flag is active or dead
+        ; Load sprite number (again, this time incrementing HL to sprite type)
         ld a, [hl+]
         ld e, a
+        ; Check if spawn flag is active or dead
         ld d, HIGH(enemySpawnFlags)
         ld a, [de]
         cp $fe
@@ -467,89 +469,114 @@ jr .bottom_skipToNext ;}
 
 ; Load one enemy
 loadOneEnemy: ;{ 03:422F
-    push bc
+    push bc ; Save local vars from caller
+    ; Transfer the enemy map data pointer to DE
     ld d, h
     ld e, l
-    call findFirstEmptyEnemySlot
+    
+    ; Get base address of enemy
+    call loadEnemy_getFirstEmptySlot
     ld a, l
     ld [enemy_pWramLow], a
     ld a, h
     ld [enemy_pWramHigh], a
+    ; Set status to active
     xor a
     ld [hl+], a
-    push de
     
+    push de ; Save the enemy map data pointer from caller
+
+    ; Set enemy Y position, adjusting for camera position
     ld a, [scrollY]
     ld b, a
-    ld a, [de]
-    add $10
+    ld a, [de] ; Load enemy y
+    add $10 ; Common y adjustment?
     sub b
     ld [hl+], a
+
+    ; Set enemy X position, adjusting for camera position
     ld a, [scrollX]
     ld b, a
     dec de
-    ld a, [de]
-    add $08
+    ld a, [de] ; Load enemy x
+    add $08 ; Common x adjustment?
     sub b
     ld [hl+], a
+    
+    ; Load enemy sprite type
     dec de
     ld a, [de]
     ld [hl], a
+    
+    ; Load enemy spawn number
     ld a, l
     add $1a
     ld l, a
     dec de
     ld a, [de]
     ld [hl], a ; Write enemy spawn number to enemy entry in RAM
-    
+
+    ; Load enemy spawn flag
     ld hl, enemySpawnFlags
     ld l, a
     ld a, [hl]
-    cp $ff
+    cp $ff ; Check if it has been seen before
     jr z, .else
+        ; If flag was $FE, mark it as active and seen before
         ld a, $04
         ld [hl], a
-        ld [$c461], a
+        ld [loadEnemy_spawnFlagTemp], a
         jr .endIf
     .else:
+        ; If flag was $FF, mark it as active and new
         ld a, $01
         ld [hl], a
-        ld [$c461], a
+        ld [loadEnemy_spawnFlagTemp], a
     .endIf:
 
+    ; Reload enemy WRAM address (at the sprite type)
     ld a, [enemy_pWramLow]
     add $03
     ld l, a
     ld a, [enemy_pWramHigh]
     ld h, a
+    ; Load sprite type
     ld a, [hl+]
     push hl
+        ; Get pointer to header
         ld hl, enemyHeaderPointers
         call loadEnemy_getPointer.header
     pop hl
-    
+
+    ; Read enemy header (first 9 bytes)
     ld b, $09
-    .loadLoop: ; Read enemy header
+    .loadLoop:
         ld a, [de]
         ld [hl+], a
         inc de
         dec b
     jr nz, .loadLoop
-    ld c, a
+    ld c, a ; Save initial health to C
     
+    ; Clear next 4 bytes (drop type, explosion flag, x/y screen coordinates)
     xor a
     ld b, $04
-    .clearLoop: ; Clear next few bytes
+    .clearLoop:
         ld [hl+], a
         dec b
     jr nz, .clearLoop
 
+    ; Load initial health to WRAM
     ld [hl], c
+
+    ; Load enemy spawn flag
     ld a, [enemy_pWramLow]
     add $1c
     ld l, a
-    ld a, [$c461]
+    ld a, [loadEnemy_spawnFlagTemp]
     ld [hl], a
+    
+    ; Load enemy AI pointer
     inc l
     inc l
     ld a, [de]
@@ -557,20 +584,23 @@ loadOneEnemy: ;{ 03:422F
     inc de
     ld a, [de]
     ld [hl], a
+
+    ; Increment number of enemies (total/active)
     ld hl, numEnemies
     inc [hl]
     inc l
     inc [hl]
     
+    ; Restore the enemy map data pointer from the caller
     pop de
     ld l, e
     ld h, d
-    pop bc
+    pop bc ; Restore local variables from the caller
 ret ;}
 
 ; returns pointer to first unused enemy slot in HL
 ; WARNING: Does not perform any bounds check
-findFirstEmptyEnemySlot: ;{ 03:42B4
+loadEnemy_getFirstEmptySlot: ;{ 03:42B4
     ld hl, enemyDataSlots
     ld bc, $0020
     .findLoop:
@@ -594,6 +624,7 @@ loadEnemy_getBankOffset: ;{ 03:42C1
 ret ;}
 
 ; Multiple entry points for loading an enemy map data pointer and and an enemy header pointer
+;  Value is returned in both HL and DE
 loadEnemy_getPointer:
   .screen: ;{ 03:42CF
     ; Get index from YX coordinate
@@ -814,12 +845,13 @@ enemy_seekSamus: ;{ 03:6B44
     ld hl, hEnemyXPos
     add [hl]
     ld [hl], a
-ret ;}
+ret
 
 .speedTable: ; 03:6BB1
     db $FB, $FB, $FC, $FC, $FD, $FE, $FD, $FD, $FD, $FF, $FE, $FE, $FE, $FF, $FF, $00
     db $00, $00, $01, $01, $02, $02, $02, $01, $03, $03, $03, $02, $03, $04, $04, $05
     db $05
+;}
 
 ; Adjust enemy positions (which are in camera-space) due to scrolling
 scrollEnemies: ;{ 03:6BD2
@@ -3201,7 +3233,7 @@ jr_003_7ab5:
     ld [hl], $5e
     ret
 
-func_03_7ABF:
+func_03_7ABF: ; 03:7ABF
     ld a, [queen_neckStatus]
     cp $81
         ret nz

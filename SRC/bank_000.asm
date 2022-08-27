@@ -9372,8 +9372,8 @@ handleEnemyLoading_farCall: ; 00:3DE2
     switchBank processEnemies
 ret
 
-findFirstEmptyEnemySlot_longJump: ; 00:3DF6
-    callFar findFirstEmptyEnemySlot
+loadEnemy_getFirstEmptySlot_longJump: ; 00:3DF6
+    callFar loadEnemy_getFirstEmptySlot
     switchBankVar $02 ; Enemy AI bank
 ret
 

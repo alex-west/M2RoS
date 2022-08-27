@@ -253,7 +253,7 @@ metroid_absSamusDistX = $C45E ; abs(samusX-enemyX) (used for metroid seeking)
 ;$C45F: Metroid seeking related (low byte)
 ;$C460: Metroid seeking related (high byte)
 
-;$C461: Enemy spawn flag related
+loadEnemy_spawnFlagTemp = $C461 ; Temp storage of Enemy spawn flag during load routine
 
 def omega_stunCounter = $C462 ; Omega Metroid stun counter
 def cutsceneActive = $C463 ; Set to 1 if a cutscene is active (e.g. Metroid is appearing). Freezes time.
