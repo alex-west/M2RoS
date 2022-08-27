@@ -24,7 +24,9 @@ handleEnemyLoading: ;{ 03:4000
     ld [hl], a
 ret ;}
 
-
+; Handles loading enemies from the map
+;  Alternates between vertical and horizontal checks
+;  Has some weird optimizations that make certain assumptions of the underlying order of the data
 loadEnemies: ;{ 03:4014
     ; Load y pixel to L
     ld de, hCameraYPixel
@@ -167,9 +169,9 @@ loadEnemies_vertical: ;{ 03:40BE
         ld a, [leftEdge_screen]
         ld c, a
         ld a, [bottomEdge_pixel]
-        ld [$ff98], a
-        call getEnemyDataPointerForBank
-        call getEnemyDataPointerForScreen
+        ld [hTemp.a], a
+        call loadEnemy_getBankOffset
+        call loadEnemy_getPointer.screen
         jr .endIf_A
     .else_A:
         ; Get top-left corner
@@ -180,9 +182,9 @@ loadEnemies_vertical: ;{ 03:40BE
         ld a, [leftEdge_screen]
         ld c, a
         ld a, [topEdge_pixel]
-        ld [$ff98], a
-        call getEnemyDataPointerForBank
-        call getEnemyDataPointerForScreen
+        ld [hTemp.a], a
+        call loadEnemy_getBankOffset
+        call loadEnemy_getPointer.screen
     .endIf_A:
 
 ; Check left screen {
@@ -210,77 +212,95 @@ loadEnemies_vertical: ;{ 03:40BE
     ; Load x
     inc hl
     ld a, [hl]
-    and $f8
+    and $f8 ; Clamp to nearest tile
     ld e, a
+    ; Compare with left edge of screen
     ld a, [leftEdge_pixel]
-    cp e
+    cp e ; Skip to next enemy if it is not to the right side of the seam
         jr nc, .left_skipY
     ld d, a
+    
+    ; If the right edge pixel value has a greater value than the left edge pixel value
+    ;  (i.e. the camera does not cross a screen boundary)
+    ; AND the enemy x pixel is to the right of the right edge of the screen
+    ;  then exit
     ld a, [rightEdge_pixel]
     cp d
     jr c, .endIf_B
         cp e
         ret c
     .endIf_B:
+    
     ; Load y
     inc hl
     ld a, [hl]
-    and $f0
+    and $f0 ; Clamp to nearest block
     ld e, a
-    ld a, [$ff98]
+    ; If the clamped enemy Y equals the clamped camera Y
+    ;  then load the enemy
+    ld a, [hTemp.a]
     cp e
     jr z, .endIf_C
         jr .left_skipToNext
     .endIf_C:
+    
     call loadOneEnemy
 jr .left_skipToNext ;}
 
 .checkRightScreen: ;{
     ; Iterate to next screen lazily, by assuming its enemy data is contiguous with the previous
     inc hl
+    ; Compare left screen to right screen
     ld a, [rightEdge_screen]
     cp c
-        ret z
-        ret c
+        ret z ; Exit if they are equal
+        ret c ; Exit if there is wraparound
 
     .right_nextEnemy:
+        ; Load sprite type, exit if it is $FF
         ld a, [hl]
         cp $ff
             ret z
+        ; Load sprite number
         ld a, [hl+]
         ld e, a
+        ; Check if spawn flag is active or dead
         ld d, HIGH(enemySpawnFlags)
         ld a, [de]
         cp $fe
             jr nc, .right_loadEnemy
-        inc hl
-        inc hl
+        inc hl ; Set HL to xpos
+        inc hl ; Set HL to ypos
       .right_skipToNext:
-        inc hl
+        inc hl ; Set HL to next enemy
     jr .right_nextEnemy
 
 .right_loadEnemy:
     ; Load x pos
     inc hl
     ld a, [hl]
-    and $f8
+    and $f8 ; Clamp to nearest tile
     ld e, a
     ld a, [rightEdge_pixel]
-    cp e
-        ret c
+    cp e ; Exit if enemy is not to the left side of the right edge
+        ret c ; Why does this not go to .right_skipY like the previous case?
+    
     ; Load y pos
     inc hl
     ld a, [hl]
-    and $f0
+    and $f0 ; Clamp to nearest block
     ld e, a
-    ld a, [$ff98]
+    ; If the clamped enemy Y equals the clamped camera Y
+    ;  then load the enemy
+    ld a, [hTemp.a]
     cp e
     jr z, .endIf_D
         jr .right_skipToNext
     .endIf_D:
+    
     call loadOneEnemy
 jr .right_skipToNext ;}
-;} End (?) vertical case
+;} End vertical case
 
 ; Horizontal case to the above function
 loadEnemies_horizontal: ;{ 03:416A
@@ -297,11 +317,11 @@ loadEnemies_horizontal: ;{ 03:416A
         ld b, a
         ld a, [rightEdge_screen]
         ld c, a
-        ld [$c457], a
+        ld [loadEnemy_unusedVar_B], a
         ld a, [rightEdge_pixel]
-        ld [$ff98], a
-        call getEnemyDataPointerForBank
-        call getEnemyDataPointerForScreen
+        ld [hTemp.a], a
+        call loadEnemy_getBankOffset
+        call loadEnemy_getPointer.screen
         jr .endIf_A
     .else_A:
         ; Get top-left corner
@@ -312,9 +332,9 @@ loadEnemies_horizontal: ;{ 03:416A
         ld a, [leftEdge_screen]
         ld c, a
         ld a, [leftEdge_pixel]
-        ld [$ff98], a
-        call getEnemyDataPointerForBank
-        call getEnemyDataPointerForScreen
+        ld [hTemp.a], a
+        call loadEnemy_getBankOffset
+        call loadEnemy_getPointer.screen
     .endIf_A:
 
 ; Check top screen {
@@ -330,96 +350,120 @@ loadEnemies_horizontal: ;{ 03:416A
         ld a, [de]
         cp $fe
             jr nc, .top_loadEnemy
-        inc hl
+        inc hl ; Set HL to xpos
       .top_skipY:
-        inc hl
+        inc hl ; Set HL to ypos
       .top_skipToNext:
-        inc hl
+        inc hl ; Set HL to next enemy
     jr .top_nextEnemy
 
 .top_loadEnemy:
+    ; Load x pos
     inc hl
     ld a, [hl]
-    and $f8
+    and $f8 ; Clamp to nearest tile
     ld e, a
-    ld a, [$ff98]
+    ; Compare enemy x to seam
+    ld a, [hTemp.a]
     cp e
-    jr z, .endIf_B
-        jr nc, .top_skipY
-        jr .checkBottomScreen
+    jr z, .endIf_B ; If equal, try loading
+        jr nc, .top_skipY ; If enemy is to the left of the seam, skip to next enemy
+        jr .checkBottomScreen ; else (implicitly to the right), skip to the next screen
+        ; (...that's a weird optimization that implies a certain spatial structuring to the data)
     .endIf_B:
+
+    ; Load y pos
     inc hl
     ld a, [hl]
-    and $f0
+    and $f0 ; Clamp to nearest block
     ld e, a
+    ; If y pos does not equal top edge, skip to next enemy
     ld a, [topEdge_pixel]
     cp e
     jr z, .endIf_C
         jr nc, .top_skipToNext
     .endIf_C:
     ld d, a
+    
+    ; If the bottom edge pixel value is greater than the top edge pixel value
+    ;  (i.e a screen boundary is not being crossed)
+    ; AND the enemy is below the bottom edge of the camera
+    ;  then skip to the next enemy
     ld a, [bottomEdge_pixel]
     cp d
     jr c, .endIf_D
         cp e
         jr c, .top_skipToNext
     .endIf_D:
+
+    ; Load enemy
     call loadOneEnemy
 jr .top_skipToNext ;}
 
 .checkBottomScreen: ;{
+    ; Check if the bottom and top screen are the same, exit if so
     ld a, [topEdge_screen]
     ld b, a
     inc b
     ld a, [bottomEdge_screen]
     cp b
         ret nz
-
+    ; Iterate to the bottom screen (properly)
     ld a, c
-    ld [$c456], a
-    call getEnemyDataPointerForBank
-    call getEnemyDataPointerForScreen
+    ld [loadEnemy_unusedVar_A], a
+    call loadEnemy_getBankOffset
+    call loadEnemy_getPointer.screen
 
     .bottom_nextEnemy:
+        ; Load sprite type, move on to next screen if $FF
         ld a, [hl]
         cp $ff
             ret z
+        ; Check if spawn flag is active or dead
         ld a, [hl+]
         ld e, a
         ld d, HIGH(enemySpawnFlags)
         ld a, [de]
         cp $fe
             jr nc, .bottom_loadEnemy
-        inc hl
+        inc hl ; Set HL to xpos
       .bottom_skipY:
-        inc hl
+        inc hl ; Set HL to ypos
       .bottom_skipToNext:
-        inc hl
+        inc hl ; Set HL to next enemy
     jr .bottom_nextEnemy
 
 .bottom_loadEnemy:
+    ; Load x pos
     inc hl
     ld a, [hl]
-    and $f8
+    and $f8 ; Clamp to nearest tile
     ld e, a
-    ld a, [$ff98]
-    cp e
+    ; Compare camera x to enemy x
+    ld a, [hTemp.a]
+    cp e ; Exit if enemy is to the right of the seam
         ret c
+    ; Skip to next enemy if positions aren't equal
     jr z, .endIf_E
         jr .bottom_skipY
     .endIf_E:
+    
+    ; Load y pos
     inc hl
     ld a, [hl]
-    and $f0
+    and $f0 ; Clamp to nearest block
     ld e, a
+    ; Compare enemy y to camera y
     ld a, [bottomEdge_pixel]
     cp e
+    ; Skip to next enemy if it is below the camera edge
     jr nc, .endIf_F
         jr .bottom_skipToNext
     .endIf_F:
+
     call loadOneEnemy
 jr .bottom_skipToNext ;}
-;} End (?) horizontal case
+;} End horizontal case
 
 ; Load one enemy
 loadOneEnemy: ;{ 03:422F
@@ -434,6 +478,7 @@ loadOneEnemy: ;{ 03:422F
     xor a
     ld [hl+], a
     push de
+    
     ld a, [scrollY]
     ld b, a
     ld a, [de]
@@ -456,20 +501,21 @@ loadOneEnemy: ;{ 03:422F
     dec de
     ld a, [de]
     ld [hl], a ; Write enemy spawn number to enemy entry in RAM
+    
     ld hl, enemySpawnFlags
     ld l, a
     ld a, [hl]
     cp $ff
-    jr z, jr_003_426e
+    jr z, .else
         ld a, $04
         ld [hl], a
         ld [$c461], a
-        jr jr_003_4274
-    jr_003_426e:
+        jr .endIf
+    .else:
         ld a, $01
         ld [hl], a
         ld [$c461], a
-    jr_003_4274:
+    .endIf:
 
     ld a, [enemy_pWramLow]
     add $03
@@ -478,26 +524,25 @@ loadOneEnemy: ;{ 03:422F
     ld h, a
     ld a, [hl+]
     push hl
-    ld hl, enemyHeaderPointers
-    call readPointerFromIndex
+        ld hl, enemyHeaderPointers
+        call loadEnemy_getPointer.header
     pop hl
+    
     ld b, $09
-
-    jr_003_4289: ; Read enemy header
+    .loadLoop: ; Read enemy header
         ld a, [de]
         ld [hl+], a
         inc de
         dec b
-    jr nz, jr_003_4289
-
+    jr nz, .loadLoop
     ld c, a
+    
     xor a
     ld b, $04
-
-    jr_003_4293: ; Clear next few bytes
+    .clearLoop: ; Clear next few bytes
         ld [hl+], a
         dec b
-    jr nz, jr_003_4293
+    jr nz, .clearLoop
 
     ld [hl], c
     ld a, [enemy_pWramLow]
@@ -516,6 +561,7 @@ loadOneEnemy: ;{ 03:422F
     inc [hl]
     inc l
     inc [hl]
+    
     pop de
     ld l, e
     ld h, d
@@ -523,19 +569,20 @@ loadOneEnemy: ;{ 03:422F
 ret ;}
 
 ; returns pointer to first unused enemy slot in HL
-findFirstEmptyEnemySlot: ; 03:42B4
-    ld hl, $c600
+; WARNING: Does not perform any bounds check
+findFirstEmptyEnemySlot: ;{ 03:42B4
+    ld hl, enemyDataSlots
     ld bc, $0020
-
     .findLoop:
         ld a, [hl]
-        cp $ff
+        cp $ff ; Exit with address if enemy is inactive
             ret z
         add hl, bc
     jr .findLoop
+;}
 
 ; Returns the base offset for a bank's enemy data pointer in HL
-getEnemyDataPointerForBank: ;{ 03:42C1
+loadEnemy_getBankOffset: ;{ 03:42C1
     ; HL = (levelBank-9)*$200
     ld hl, enemyDataPointers
     ld a, [currentLevelBank]
@@ -546,19 +593,22 @@ getEnemyDataPointerForBank: ;{ 03:42C1
     add hl, de
 ret ;}
 
-
-getEnemyDataPointerForScreen: ;{ 03:42CF
+; Multiple entry points for loading an enemy map data pointer and and an enemy header pointer
+loadEnemy_getPointer:
+  .screen: ;{ 03:42CF
+    ; Get index from YX coordinate
     ld a, b
     swap a
     add c
 ; Given a base offset in hl and a pointer index in a, returns a pointer in hl
-readPointerFromIndex: ; 03:42D3
-    ; de = a*2
+  .header: ; 03:42D3
+    ; HL =+ A*2
     ld d, $00
     add a
     rl d
     ld e, a
     add hl, de
+    ; HL = [HL]
     ld e, [hl]
     inc hl
     ld d, [hl]

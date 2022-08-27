@@ -240,6 +240,8 @@ def enemy_pFirstEnemyHigh = $C453 ;  - Used for making enemies lag instead of Sa
 
 ;$C454: Enemy data address in $1:5A11
 ;
+def loadEnemy_unusedVar_A = $C456 ; Set to the lower screen in the horizontal branch
+def loadEnemy_unusedVar_B = $C457 ; Set to the right edge of the screen
 def doorExitStatus = $C458 ; doorExitStatus - $2 is normal, $1 is if WARP or ENTER_QUEEN is used. Value is written to $C44B and then cleared. Different non-zero values have no purpose
 def previousLevelBank = $C459 ; Previous level bank --- used during door transitions to make sure that the enemySaveFlags are saved to the correct location
 ;
