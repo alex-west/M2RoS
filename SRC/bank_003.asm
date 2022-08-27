@@ -5,405 +5,424 @@
 
 SECTION "ROM Bank $003", ROMX[$4000], BANK[$3]
 
-handleEnemyLoading:
-    call Call_003_4014
-    ld hl, $c433
+handleEnemyLoading: ;{ 03:4000
+    call loadEnemies
+    ; Update scroll history
+    ; y2 <= y1
+    ld hl, scrollHistory_B.y1
     ld a, [hl-]
     ld [hl+], a
+    ; y1 <= y0
     ld a, [scrollY]
     ld [hl+], a
+    ; x2 <= x1
     inc l
     ld a, [hl-]
     ld [hl+], a
+    ; x1 <= x0
     ld a, [scrollX]
     ld [hl], a
-    ret
+ret ;}
 
 
-Call_003_4014:
-    ld de, $ffc8
+loadEnemies: ;{ 03:4014
+    ; Load y pixel to L
+    ld de, hCameraYPixel
     ld a, [de]
     ld l, a
+    ; Load y screen to H
     inc e
     ld a, [de]
     ld h, a
     push hl
-        ld bc, $0068
+        ; Get bottom edge of the visible screen, rounded to the nearest block
+        ld bc, $68 ;$0068
         add hl, bc
         ld a, l
         and $f0
-        ld [$c410], a
+        ld [bottomEdge_pixel], a
         ld a, h
-        ld [$c40f], a
+        ld [bottomEdge_screen], a
     pop hl
-    ld bc, $ffa8
+    ; Get top edge of visible screen, rounded to the nearest block
+    ld bc, -$58 ;$ffa8
     add hl, bc
     ld a, l
     and $f0
-    ld [$c412], a
+    ld [topEdge_pixel], a
     ld a, h
-    ld [$c411], a
+    ld [topEdge_screen], a
+    
+    ; Load x pixel to L
     inc e
     ld a, [de]
     ld l, a
+    ; Load x screen to H
     inc e
     ld a, [de]
     ld h, a
     push hl
-        ld bc, $0068
+        ; Get right edge of the visible screen, rounded to the nearest tile
+        ld bc, $68 ;$0068
         add hl, bc
         ld a, l
         and $f8
-        ld [$c414], a
+        ld [rightEdge_pixel], a
         ld a, h
-        ld [$c413], a
+        ld [rightEdge_screen], a
     pop hl
-    ld bc, $ffa0 ; Not sprite DMA related?
+    ; Get left edge of the visible screen, rounded to the nearest tile
+    ld bc, -$60 ;$ffa0 - Just a negative number, not sprite DMA related
     add hl, bc
     ld a, l
     and $f8
-    ld [$c416], a
+    ld [leftEdge_pixel], a
     ld a, h
-    ld [$c415], a
+    ld [leftEdge_screen], a
+    
     ld d, $ff
-    ld a, [$c40f]
+    ; Prevent enemies from loading via vertical wraparound of the map
+    ld a, [bottomEdge_screen]
     ld b, a
     and $0f
-    jr nz, jr_003_408a
-        ld a, [$c411]
+    jr nz, .endIf_A
+        ld a, [topEdge_screen]
         ld c, a
         and $0f
         cp $0f
-        jr nz, jr_003_408a
+        jr nz, .endIf_A
+            ; We get to this point if the bottom edge of the screen is on the top screen
+            ;  and the top edge of the screen on the bottom screen
+            
+            ; Check if the center of the screen is above or below the seam
             ld a, [hCameraYScreen]
             cp b
-            jr z, jr_003_4082
-                ld a, c
-                ld [$c40f], a
-                ld a, d
-                ld [$c410], a
-                jr jr_003_408a
-            jr_003_4082:
-                ld a, b
-                ld [$c411], a
+            jr z, .else_B
+                ; Clamp bottom edge of screen to the bottom edge of the map
+                ld a, c ; C = topEdge_screen
+                ld [bottomEdge_screen], a
+                ld a, d ; D is $FF
+                ld [bottomEdge_pixel], a
+                jr .endIf_A
+            .else_B:
+                ; Clamp top edge of screen to the top edge of the map
+                ld a, b ; B = bottomEdge_screen
+                ld [topEdge_screen], a
                 xor a
-                ld [$c412], a
-    jr_003_408a:
+                ld [topEdge_pixel], a
+    .endIf_A:
 
-    ld a, [$c413]
+    ; Prevent enemies from loading via horizontal wraparound of the map
+    ld a, [rightEdge_screen]
     ld b, a
     and $0f
-    jr nz, jr_003_40b4
-        ld a, [$c415]
+    jr nz, .endIf_C
+        ld a, [leftEdge_screen]
         ld c, a
         and $0f
         cp $0f
-        jr nz, jr_003_40b4
+        jr nz, .endIf_C
+            ; We get to this point if the right edge of the screen is on the leftmost screen
+            ;  and the left edge of the screen on the rightmost screen.
+        
+            ; Check if the center of the screen is to the left or right of the seam
             ld a, [hCameraXScreen]
             cp b
-            jr z, jr_003_40ac
-                ld a, c
-                ld [$c413], a
-                ld a, d
-                ld [$c414], a
-                jr jr_003_40b4
-            jr_003_40ac:
-                ld a, b
-                ld [$c415], a
+            jr z, .else_D
+                ; Clamp right edge of screen to the right edge of the map
+                ld a, c ; C = leftEdge_screen
+                ld [rightEdge_screen], a
+                ld a, d ; D is $FF
+                ld [rightEdge_pixel], a
+                jr .endIf_C
+            .else_D:
+                ; Clamp left edge of the screen to the left edge of the map
+                ld a, b ; B = rightEdge_screen
+                ld [leftEdge_screen], a
                 xor a
-                ld [$c416], a
-    jr_003_40b4:
+                ld [leftEdge_pixel], a
+    .endIf_C:
 
-    ld hl, $c401
+    ; Switch between loading enemies horizontally and vertically every frame
+    ld hl, loadEnemies_oscillator
     ld a, [hl]
     xor $01
     ld [hl], a
-    jp z, Jump_003_416a
+jp z, loadEnemies_horizontal ;}
 
-    ld hl, $c432
+; Vertical case to the above function
+loadEnemies_vertical: ;{ 03:40BE
+    ; Compare scroll value between now and two frames ago, exit if equal
+    ld hl, scrollHistory_B.y2
     ld a, [scrollY]
     sub [hl]
-    ret z
+        ret z
 
-    jr c, jr_003_40e3
+    jr c, .else_A
+        ; Get bottom left corner
         ld a, $01
-        ld [$c400], a
-        ld a, [$c40f]
+        ld [loadEnemies_unusedVar], a
+        ld a, [bottomEdge_screen]
         ld b, a
-        ld a, [$c415]
+        ld a, [leftEdge_screen]
         ld c, a
-        ld a, [$c410]
+        ld a, [bottomEdge_pixel]
         ld [$ff98], a
         call getEnemyDataPointerForBank
         call getEnemyDataPointerForScreen
-        jr jr_003_40fc
-    jr_003_40e3:
+        jr .endIf_A
+    .else_A:
+        ; Get top-left corner
         ld a, $03
-        ld [$c400], a
-        ld a, [$c411]
+        ld [loadEnemies_unusedVar], a
+        ld a, [topEdge_screen]
         ld b, a
-        ld a, [$c415]
+        ld a, [leftEdge_screen]
         ld c, a
-        ld a, [$c412]
+        ld a, [topEdge_pixel]
         ld [$ff98], a
         call getEnemyDataPointerForBank
         call getEnemyDataPointerForScreen
-    jr_003_40fc:
+    .endIf_A:
 
-    ld a, [hl]
-    cp $ff
-    jr z, jr_003_4135
+; Check left screen {
+    .left_nextEnemy:
+        ; Load sprite type, move on to next screen if $FF
+        ld a, [hl]
+        cp $ff
+            jr z, .checkRightScreen
+        ; Load sprite number
+        ld a, [hl+]
+        ld e, a
+        ; Check if spawn flag is active or dead
+        ld d, HIGH(enemySpawnFlags)
+        ld a, [de]
+        cp $fe
+            jr nc, .left_loadEnemy
+        inc hl ; Set HL to xpos
+      .left_skipY:
+        inc hl ; Set HL to ypos
+      .left_skipToNext:
+        inc hl ; Set HL to next enemy
+    jr .left_nextEnemy
 
-    ld a, [hl+]
-    ld e, a
-    ld d, $c5
-    ld a, [de]
-    cp $fe
-    jr nc, jr_003_410f
-
-    inc hl
-
-jr_003_410b:
-    inc hl
-
-jr_003_410c:
-    inc hl
-    jr jr_003_40fc
-
-jr_003_410f:
+.left_loadEnemy:
+    ; Load x
     inc hl
     ld a, [hl]
     and $f8
     ld e, a
-    ld a, [$c416]
+    ld a, [leftEdge_pixel]
     cp e
-    jr nc, jr_003_410b
-
+        jr nc, .left_skipY
     ld d, a
-    ld a, [$c414]
+    ld a, [rightEdge_pixel]
     cp d
-    jr c, jr_003_4123
-
-    cp e
-    ret c
-
-jr_003_4123:
+    jr c, .endIf_B
+        cp e
+        ret c
+    .endIf_B:
+    ; Load y
     inc hl
     ld a, [hl]
     and $f0
     ld e, a
     ld a, [$ff98]
     cp e
-    jr z, jr_003_4130
+    jr z, .endIf_C
+        jr .left_skipToNext
+    .endIf_C:
+    call loadOneEnemy
+jr .left_skipToNext ;}
 
-    jr jr_003_410c
-
-jr_003_4130:
-    call Call_003_422f
-    jr jr_003_410c
-
-jr_003_4135:
+.checkRightScreen: ;{
+    ; Iterate to next screen lazily, by assuming its enemy data is contiguous with the previous
     inc hl
-    ld a, [$c413]
+    ld a, [rightEdge_screen]
     cp c
         ret z
         ret c
 
-jr_003_413c:
-    ld a, [hl]
-    cp $ff
-    ret z
+    .right_nextEnemy:
+        ld a, [hl]
+        cp $ff
+            ret z
+        ld a, [hl+]
+        ld e, a
+        ld d, HIGH(enemySpawnFlags)
+        ld a, [de]
+        cp $fe
+            jr nc, .right_loadEnemy
+        inc hl
+        inc hl
+      .right_skipToNext:
+        inc hl
+    jr .right_nextEnemy
 
-    ld a, [hl+]
-    ld e, a
-    ld d, $c5
-    ld a, [de]
-    cp $fe
-    jr nc, jr_003_414e
-
-    inc hl
-    inc hl
-
-jr_003_414b:
-    inc hl
-    jr jr_003_413c
-
-jr_003_414e:
+.right_loadEnemy:
+    ; Load x pos
     inc hl
     ld a, [hl]
     and $f8
     ld e, a
-    ld a, [$c414]
+    ld a, [rightEdge_pixel]
     cp e
-    ret c
-
+        ret c
+    ; Load y pos
     inc hl
     ld a, [hl]
     and $f0
     ld e, a
     ld a, [$ff98]
     cp e
-    jr z, jr_003_4165
+    jr z, .endIf_D
+        jr .right_skipToNext
+    .endIf_D:
+    call loadOneEnemy
+jr .right_skipToNext ;}
+;} End (?) vertical case
 
-    jr jr_003_414b
-
-jr_003_4165:
-    call Call_003_422f
-    jr jr_003_414b
-
-Jump_003_416a:
-    ld hl, $c434
+; Horizontal case to the above function
+loadEnemies_horizontal: ;{ 03:416A
+    ld hl, scrollHistory_B.x2
     ld a, [scrollX]
     sub [hl]
-    ret z
+        ret z
 
-    jr c, jr_003_4192
+    jr c, .else_A
+        ; Get top-right corner
         ld a, $00
-        ld [$c400], a
-        ld a, [$c411]
+        ld [loadEnemies_unusedVar], a
+        ld a, [topEdge_screen]
         ld b, a
-        ld a, [$c413]
+        ld a, [rightEdge_screen]
         ld c, a
         ld [$c457], a
-        ld a, [$c414]
+        ld a, [rightEdge_pixel]
         ld [$ff98], a
         call getEnemyDataPointerForBank
         call getEnemyDataPointerForScreen
-        jr jr_003_41ab
-    jr_003_4192:
+        jr .endIf_A
+    .else_A:
+        ; Get top-left corner
         ld a, $01
-        ld [$c400], a
-        ld a, [$c411]
+        ld [loadEnemies_unusedVar], a
+        ld a, [topEdge_screen]
         ld b, a
-        ld a, [$c415]
+        ld a, [leftEdge_screen]
         ld c, a
-        ld a, [$c416]
+        ld a, [leftEdge_pixel]
         ld [$ff98], a
         call getEnemyDataPointerForBank
         call getEnemyDataPointerForScreen
+    .endIf_A:
 
-jr_003_41ab:
-    ld a, [hl]
-    cp $ff
-    jr z, jr_003_41e9
+; Check top screen {
+    .top_nextEnemy:
+        ; Load sprite type, move on to next screen if $FF
+        ld a, [hl]
+        cp $ff
+            jr z, .checkBottomScreen
+        ; Check if spawn flag is active or dead
+        ld a, [hl+]
+        ld e, a
+        ld d, HIGH(enemySpawnFlags)
+        ld a, [de]
+        cp $fe
+            jr nc, .top_loadEnemy
+        inc hl
+      .top_skipY:
+        inc hl
+      .top_skipToNext:
+        inc hl
+    jr .top_nextEnemy
 
-    ld a, [hl+]
-    ld e, a
-    ld d, $c5
-    ld a, [de]
-    cp $fe
-    jr nc, jr_003_41be
-
-    inc hl
-
-jr_003_41ba:
-    inc hl
-
-jr_003_41bb:
-    inc hl
-    jr jr_003_41ab
-
-jr_003_41be:
+.top_loadEnemy:
     inc hl
     ld a, [hl]
     and $f8
     ld e, a
     ld a, [$ff98]
     cp e
-    jr z, jr_003_41cd
-
-    jr nc, jr_003_41ba
-
-    jr jr_003_41e9
-
-jr_003_41cd:
+    jr z, .endIf_B
+        jr nc, .top_skipY
+        jr .checkBottomScreen
+    .endIf_B:
     inc hl
     ld a, [hl]
     and $f0
     ld e, a
-    ld a, [$c412]
+    ld a, [topEdge_pixel]
     cp e
-    jr z, jr_003_41da
-
-    jr nc, jr_003_41bb
-
-jr_003_41da:
+    jr z, .endIf_C
+        jr nc, .top_skipToNext
+    .endIf_C:
     ld d, a
-    ld a, [$c410]
+    ld a, [bottomEdge_pixel]
     cp d
-    jr c, jr_003_41e4
+    jr c, .endIf_D
+        cp e
+        jr c, .top_skipToNext
+    .endIf_D:
+    call loadOneEnemy
+jr .top_skipToNext ;}
 
-    cp e
-    jr c, jr_003_41bb
-
-jr_003_41e4:
-    call Call_003_422f
-    jr jr_003_41bb
-
-jr_003_41e9:
-    ld a, [$c411]
+.checkBottomScreen: ;{
+    ld a, [topEdge_screen]
     ld b, a
     inc b
-    ld a, [$c40f]
+    ld a, [bottomEdge_screen]
     cp b
-    ret nz
+        ret nz
 
     ld a, c
     ld [$c456], a
     call getEnemyDataPointerForBank
     call getEnemyDataPointerForScreen
 
-jr_003_41fd:
-    ld a, [hl]
-    cp $ff
-    ret z
+    .bottom_nextEnemy:
+        ld a, [hl]
+        cp $ff
+            ret z
+        ld a, [hl+]
+        ld e, a
+        ld d, HIGH(enemySpawnFlags)
+        ld a, [de]
+        cp $fe
+            jr nc, .bottom_loadEnemy
+        inc hl
+      .bottom_skipY:
+        inc hl
+      .bottom_skipToNext:
+        inc hl
+    jr .bottom_nextEnemy
 
-    ld a, [hl+]
-    ld e, a
-    ld d, $c5
-    ld a, [de]
-    cp $fe
-    jr nc, jr_003_420f
-
-    inc hl
-
-jr_003_420b:
-    inc hl
-
-jr_003_420c:
-    inc hl
-    jr jr_003_41fd
-
-jr_003_420f:
+.bottom_loadEnemy:
     inc hl
     ld a, [hl]
     and $f8
     ld e, a
     ld a, [$ff98]
     cp e
-    ret c
-
-    jr z, jr_003_421d
-
-    jr jr_003_420b
-
-jr_003_421d:
+        ret c
+    jr z, .endIf_E
+        jr .bottom_skipY
+    .endIf_E:
     inc hl
     ld a, [hl]
     and $f0
     ld e, a
-    ld a, [$c410]
+    ld a, [bottomEdge_pixel]
     cp e
-    jr nc, jr_003_422a
-
-    jr jr_003_420c
-
-jr_003_422a:
-    call Call_003_422f
-    jr jr_003_420c
+    jr nc, .endIf_F
+        jr .bottom_skipToNext
+    .endIf_F:
+    call loadOneEnemy
+jr .bottom_skipToNext ;}
+;} End (?) horizontal case
 
 ; Load one enemy
-Call_003_422f: ;{ 03:422F
+loadOneEnemy: ;{ 03:422F
     push bc
     ld d, h
     ld e, l

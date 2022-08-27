@@ -270,7 +270,7 @@ inGame_loadEnemySaveFlags: ;{ 02:412F
     ld [$c468], a
     ld [$c46d], a
     ; Clear scroll history
-    ld hl, $c432
+    ld hl, scrollHistory_B.y2
     ld a, [scrollY]
     ld [hl+], a
     ld [hl+], a
@@ -373,7 +373,7 @@ inGame_saveAndLoadEnemySaveFlags: ;{ 02:418C
     ld [$c467], a
     ld [$c468], a
     ; Clear scroll history
-    ld hl, $c432
+    ld hl, scrollHistory_B.y2
     ld a, [scrollY]
     ld [hl+], a
     ld [hl+], a

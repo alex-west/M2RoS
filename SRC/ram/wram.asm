@@ -149,6 +149,8 @@ queen_headDest = $C3F2 ; Metroid Queen's head lower half tilemap VRAM address lo
 queen_headSrcHigh = $C3F3 ; Metroid Queen's head lower half tilemap source address (bank 3)
 queen_headSrcLow  = $C3F4 ; (rare instance of a big-endian variable!!)
 
+loadEnemies_unusedVar = $C400 ; Written, but never read. Possibly meant to be a direction, but the assigned values don't make sense
+loadEnemies_oscillator = $C401 ; Oscillates between 0 and 1 every frame. $00: Load enemies horizontally, else: Load enemies vertically
 en_bgCollisionResult = $C402 ; Enemy tilemap collision routine return value (initialized to $11, $22, $44, or $88)
 
 section "WRAM c407", wram0[$C407]
@@ -163,7 +165,18 @@ scrollHistory_A:
 .y1: ds 1 ;$C40C: Scroll Y one frame ago (according to $2:45CA)
 .x1: ds 1 ;$C40D: Scroll X one frame ago (according to $2:45CA)
 unused_samusDirectionFromEnemy: ds 1 ;$C40E: Set to 0 if [$FFE2] < [Samus' X position on screen] else 2 by $2:45E4
-;
+; Screen edges used when loading enemies
+bottomEdge_screen: ds 1 ; $C40F
+bottomEdge_pixel: ds 1 ; $C410
+topEdge_screen: ds 1 ; $C411
+topEdge_pixel: ds 1 ; $C412
+rightEdge_screen: ds 1 ; $C413
+rightEdge_pixel: ds 1 ; $C414
+leftEdge_screen: ds 1 ; $C415
+leftEdge_pixel: ds 1 ; $C416
+
+
+
 def unused_romBankPlusOne = $C418 ; Set to [room bank+1] in $2:4000, never read
 ;
 metroid_postDeathTimer = $C41B ; 90h*2 frame timer for waiting to restore the room's normal music
@@ -190,11 +203,13 @@ def numOffscreenEnemies = $C427 ; Number of offscreen enemies loaded in. Unused?
 ;$C430: Set to enemy sprite ID in $1:5A9A. Used as index for pointer table at $1:5AB1
 ;$C431: Set to XOR of enemy bytes 4/5/6 AND F0h in $1:5A9A
 
-; Scroll history B
-;$C432: Scroll Y two frames ago (according to $3:4000)
-;$C433: Scroll Y one frame ago (according to $3:4000)
-;$C434: Scroll X two frames ago (according to $3:4000)
-;$C435: Scroll X one frame ago (according to $3:4000)
+section "WRAM c432", wram0[$C432]
+; This scroll history is used by the enemy loading code to determine if we've moved.
+scrollHistory_B:
+.y2: ds 1 ;$C432: Scroll Y two frames ago (according to $3:4000)
+.y1: ds 1 ;$C433: Scroll Y one frame ago (according to $3:4000)
+.x2: ds 1 ;$C434: Scroll X two frames ago (according to $3:4000)
+.x1: ds 1 ;$C435: Scroll X one frame ago (according to $3:4000)
 def loadSpawnFlagsRequest = $C436 ; Set to 0 to request - Executes $2:412F in $2:4000 if zero, set to 1 afterwards. Flag for updating $C540..7F. Cleared when exiting Metroid Queen's room, and when loading from save
 def zeta_xProximityFlag = $C437 ; Set to 1 in the Zeta's AI if within $20 pixels on the x axis
 def enemy_sameEnemyFrameFlag = $C438 ; Used to force enemies to update at 30 FPS, and handle enemy lag. Set to $00 if we'll start a new enemy frame next frame. Set to non-zero if the next enemy frame is a continuation of the current (enemy frame counter does not increment).
