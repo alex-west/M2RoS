@@ -1015,7 +1015,7 @@ ret ;}
 ; Start of queen code
 
 ; Neck swoop patterns
-queen_neckPatternPointers: ; 03:6C8E - Indexed by queen_neckPattern
+queen_neckPatternPointers: ;{ 03:6C8E - Indexed by queen_neckPattern
     dw table_6C9C ; 0 - Down 1 (curving up)
     dw table_6CB2 ; 1 - Up 1
     dw table_6D00 ; 2 - Down 2 (curving down)
@@ -1045,9 +1045,10 @@ table_6D27: ; 03:6D27 - 5
     db $81, $10, $20, $20, $20, $20, $20, $21, $21, $20, $20, $20, $20, $20, $20, $21
     db $21, $20, $20, $20, $20, $20, $21, $21, $21, $20, $20, $20, $20, $20, $21, $21
     db $21, $00, $80
+;}
 
 ; Initialize Queen AI
-queen_initialize: ; 03:6D4A
+queen_initialize: ;{ 03:6D4A
     ld hl, spriteC300
     xor a
     ld b, a
@@ -1153,24 +1154,24 @@ queen_initialize: ; 03:6D4A
     ; Set initial delay
     ld a, $8c
     ld [queen_delayTimer], a
-ret
+ret ;}
 
-
-Call_003_6e12:
+; Deactivate actors (two entrances)
+Call_003_6e12: ;{
     ld hl, $c680
     ld b, $06
 Call_003_6e17:
     ld de, $0020
     ld a, $ff
-    jr_003_6e1c:
+    .clearLoop:
         ld [hl], a
         add hl, de
         dec b
-    jr nz, jr_003_6e1c
-ret
+    jr nz, .clearLoop
+ret ;}
 
 ; Adjust the wall sprites pertaining to the head to match y position
-queen_adjustWallSpriteToHead: ; 03:6E22
+queen_adjustWallSpriteToHead: ;{ 03:6E22
     ld hl, $c354
     ld b, $05
     ld a, [queen_headY]
@@ -1184,9 +1185,9 @@ queen_adjustWallSpriteToHead: ; 03:6E22
         add $08
         dec b
     jr nz, .loop
-ret
+ret ;}
 
-queenHandler: ; 03:6E36
+queenHandler: ;{ 03:6E36
     ; Limit actions if Samus is dying
     ld a, [deathFlag]
     and a
@@ -1194,7 +1195,7 @@ queenHandler: ; 03:6E36
         xor a
         ld [queen_footFrame], a
         ld [queen_headFrameNext], a
-        ld [$c3e0], a
+        ld [queen_deathBitmask], a
         call Call_003_7140
         ret
     .endIf_A:
@@ -1249,10 +1250,9 @@ queenHandler: ; 03:6E36
     call queen_adjustWallSpriteToHead
     call Call_003_7140 ; Copy sprites from C600 area to OAM buffer
     call Call_003_6ea7
-ret
+ret ;}
 
-
-Call_003_6ea7:
+Call_003_6ea7: ;{ 03:6EA7
     ld a, [$c3f0]
     and a
     jr z, jr_003_6eba
@@ -1311,9 +1311,10 @@ jr_003_6efe:
     cp $60
         jr z, jr_003_6ede
     ret
+;}
 
 ; Set actor positions
-Call_003_6f07:
+Call_003_6f07: ;{
     ; Queen body 
     ld hl, $c601
     ld a, [queen_bodyY]
@@ -1415,6 +1416,7 @@ Call_003_6f07:
         ld [hl+], a
         ld [hl], $82
         ret
+;}
 
 ; Queen head tilemaps
 queen_headFrameA: ; 03:6FA2
@@ -1439,7 +1441,7 @@ queen_headFrameC: ; 03:6FEA
     db $FA, $FB, $FC, $FD, $EE, $D9
     db $FF, $FF, $FF, $FF, $FF, $FF
 
-queen_drawHead:
+queen_drawHead: ;{
     .resume_A: ; 03:700E
         ld a, [queen_headDest]
         ld l, a
@@ -1502,10 +1504,10 @@ queen_drawHead:
         ld a, $ff
         ld [queen_headFrameNext], a
         ret
-; end proc
+;} end proc
 
 ; 03:706A - Rendering the Queen's feet
-queen_drawFeet:
+queen_drawFeet: ;{
     ; Try drawing the head if the next frame is zero
     ld a, [queen_footFrame]
     and a
@@ -1579,7 +1581,7 @@ queen_drawFeet:
         inc a
     .endIf_D:
     ld [queen_footFrame], a
-ret
+ret ;}
 
 ; Pointers, tile numbers, and tilemap offsets for the rear and front feet.
 queen_rearFootPointers:
@@ -1636,7 +1638,7 @@ queen_frontFootOffsets:
 ; No more code about the Queen's feet, please.
 
 ; Copy sprites to OAM buffer
-Call_003_7140:
+Call_003_7140: ;{ 03:7140
     ; Copy the 6 segments of the neck (or the spit projectiles)
     ld hl, $c308
     ld a, [hOamBufferIndex]
@@ -1673,10 +1675,10 @@ Call_003_7140:
 
     ld a, e
     ld [hOamBufferIndex], a
-ret
+ret ;}
 
-
-Call_003_716e:
+; Get camera delta?
+Call_003_716e: ;{ 03:716E
     ld a, [queen_cameraY]
     ld b, a
     ld a, [scrollY]
@@ -1694,10 +1696,9 @@ Call_003_716e:
     ld [queen_cameraX], a
     sub b
     ld [queen_cameraDeltaX], a
-ret
+ret ;}
 
-
-Call_003_7190:
+Call_003_7190: ;{ 03:7190
     ld a, [queen_cameraDeltaX]
     ld b, a
     ld a, [queen_bodyXScroll]
@@ -1732,9 +1733,10 @@ Call_003_7190:
         xor a
         ld [queen_bodyY], a
         ret
+;}
 
-
-Call_003_71cf:
+; Camera adjustment?
+Call_003_71cf: ;{ 03:71CF
     ld a, [$c3d1]
     ld d, $05
     and a
@@ -1802,20 +1804,19 @@ Call_003_71cf:
     jr nz, jr_003_721a
 
     call queen_adjustWallSpriteToHead
-ret
+ret ;}
 
-
-Call_003_7229:
+; Camera adjustment?
+Call_003_7229: ;{
     ld a, [hl]
     sub c
     ld [hl+], a
     ld a, [hl]
     sub b
     ld [hl+], a
-ret
+ret ;}
 
-
-Call_003_7230:
+Call_003_7230: ;{ 03:7230
     ld a, [$c3b8]
     ld l, a
     ld a, [$c3b9]
@@ -1874,7 +1875,7 @@ jr_003_724e:
     ld [hl], $80
     pop hl
 
-Jump_003_7288:
+Jump_003_7288: ; Projectile related?
 jr_003_7288:
     ld a, l
     ld [$c3b8], a
@@ -1887,12 +1888,10 @@ jr_003_7291:
     ld a, [$c3b6]
     cp $08
     jr nc, jr_003_729e
-
-    ld a, [$c3b7]
-    cp $0c
-    ret c
-
-jr_003_729e:
+        ld a, [$c3b7]
+        cp $0c
+        ret c
+    jr_003_729e:
     ld a, $07
     ld [$c3b6], a
     ld [$c3b7], a
@@ -1907,8 +1906,10 @@ jr_003_729e:
     ret z
 
     jr jr_003_7288
+;}
 
-Call_003_72b8:
+; Neck-related?
+Call_003_72b8: ;{ 03:72B8
     ld a, [queen_neckControl]
     and a ; Case 0 - Do nothing
         ret z
@@ -2131,7 +2132,7 @@ Jump_003_73b1:
         ld a, $09
         ld [$c3b6], a
         ld [$c3b7], a
-        call Call_003_7466
+        call queen_loadNeckBasePointer
         jp Jump_003_7399
 
 
@@ -2141,10 +2142,9 @@ Jump_003_742a:
     ld a, [queen_headX]
     add b
     ld [queen_headX], a
-ret
+ret ;}
 
-
-Call_003_7436:
+Call_003_7436: ;{ 03:7436
     ld a, [queen_health]
     and a
         ret z
@@ -2165,30 +2165,32 @@ Call_003_7436:
     ld b, $04
     ld hl, $c600
     call Call_003_6e17
-    call Call_003_7aa8
-ret
+    call queen_closeFloor
+ret ;}
 
-
-Call_003_7466:
+; Load pointer to HL
+queen_loadNeckBasePointer: ;{ 03:7466
     ld a, [queen_pNeckPatternBaseLow]
     ld l, a
     ld a, [queen_pNeckPatternBaseHigh]
     ld h, a
-ret
+ret ;}
 
-
-Call_003_746f:
+; Sets base pointer given the current index
+queen_setNeckBasePointer: ;{ 03:746F
+    ; HL = base offset + 2*index
     ld a, [queen_neckPattern]
     sla a
     ld e, a
     ld d, $00
     ld hl, queen_neckPatternPointers
     add hl, de
+    ; Load pointer
     ld a, [hl+]
     ld [queen_pNeckPatternBaseLow], a
     ld a, [hl]
     ld [queen_pNeckPatternBaseHigh], a
-ret
+ret ;}
 
 ; Queen state table
 table_7484: ; 03:7484
@@ -2199,72 +2201,77 @@ queen_handleState: ; 03:748C
     ld a, [queen_state] ; Queen's state!
     rst $28
         dw func_03_7821 ; $00 - 03:7821 - Prep forward walk
-        dw func_03_783C ; $01 - 03:783C - Walking forward
+        dw queenStateFunc_forwardWalk ; $01 - 03:783C - Walking forward
         dw func_03_7864 ; $02 - 03:7864 - Prep neck extension
-        dw func_03_78EE ; $03 - 03:78EE - Extending neck
+        dw queenStateFunc_extendingNeck ; $03 - 03:78EE - Extending neck
         dw func_03_78F7 ; $04 - 03:78F7 - Prep retraction
-        dw func_03_7932 ; $05 - 03:7932 - Retracting neck
+        dw queenStateFunc_retractingNeck ; $05 - 03:7932 - Retracting neck
         dw func_03_793B ; $06 - 03:793B - Prep backwards walking
-        dw func_03_7954 ; $07 - 03:7954 - Walking backward
+        dw queenStateFunc_backwardWalk ; $07 - 03:7954 - Walking backward
         dw func_03_7970 ; $08 - 03:7970 - Stomach just bombed
         dw func_03_79D0 ; $09 - 03:79D0 - Prep spitting Samus out of stomach
         dw func_03_79E1 ; $0A - 03:79E1 - Spitting Samus out of stomach
         dw func_03_7A1D ; $0B - 03:7A1D - Done spitting Samus out of stomach
-        dw func_03_7846 ; $0C - 03:7846 - Init fight pt 3 (choose next state)
+        dw queenStateFunc_pickNextState ; $0C - 03:7846 - Init fight pt 3 (choose next state)
         dw func_03_772B ; $0D - 03:772B - Prep Samus in mouth
         dw func_03_776F ; $0E - 03:776F - Samus in mouth (head retracting)
         dw func_03_7785 ; $0F - 03:7785 - Samus in mouth/stomach (head retracted)
         dw func_03_77DD ; $10 - 03:77DD - Spitting Samus out of mouth
-        dw func_03_7ABF ; $11 - 03:7ABF - Prep death
-        dw func_03_7B05 ; $12 - 03:7B05 - Dying pt 1 (disintegrating)
-        dw func_03_7B9D ; $13 - 03:7B9D - Dying pt 2
+        dw queenStateFunc_prepDeath ; $11 - 03:7ABF - Prep death
+        dw queenStateFunc_disintegrate ; $12 - 03:7B05 - Dying pt 1 (disintegrating)
+        dw queenStateFunc_deleteBody ; $13 - 03:7B9D - Dying pt 2
         dw func_03_7519 ; $14 - 03:7519 - Prepping blob spit
         dw func_03_757B ; $15 - 03:757B - Blobs out
-        dw func_03_7BE7 ; $16 - 03:7BE7 - Dying pt 3
-        dw func_03_74C4 ; $17 - 03:74C4 - Init fight pt 1 (wait to scream)
-        dw func_03_74EA ; $18 - 03:74EA - Init fight pt 2 (wait to start)
+        dw queenStateFunc_allDone ; $16 - 03:7BE7 - Dying pt 3
+        dw queenStateFunc_startA ; $17 - 03:74C4 - Start Fight A (wait to scream)
+        dw queenStateFunc_startB ; $18 - 03:74EA - Start Fight B (wait to move)
         dw enAI_NULL ; $19 - Wrong bank, you silly programmer.
 
-func_03_74C4:
+queenStateFunc_startA: ;{ 03:74C4 - Queen State $17: Start Fight A (wait to scream)
+    ; Wait until timer expires
     ld a, [queen_delayTimer]
     and a
-    jr z, jr_003_74cf
+    jr z, .else_A
+      .decTimer:
+        dec a
+      .setTimer:
+        ld [queen_delayTimer], a
+        ret
+    .else_A:
+        ; Open mouth
+        ld a, $02
+        ld [queen_headFrameNext], a
+        ; Set state to Start B
+        ld a, $18
+        ld [queen_state], a
+        ; Make different noises based on aggression flag?
+        ld a, [$c3ef]
+        and a
+        ld a, $09
+        jr z, .endIf_B
+            ld a, $0a
+        .endIf_B:
+        ld [sfxRequest_noise], a
+        ; Set timer for next state
+        ld a, $32
+        jr .setTimer
+;}
 
-jr_003_74ca:
-    dec a
-
-jr_003_74cb:
-    ld [queen_delayTimer], a
-    ret
-
-
-jr_003_74cf:
-    ld a, $02
-    ld [queen_headFrameNext], a
-    ld a, $18 ; Init fight part 2 (wait to start)
-    ld [queen_state], a
-    ld a, [$c3ef]
-    and a
-    ld a, $09
-    jr z, jr_003_74e3
-        ld a, $0a
-    jr_003_74e3:
-    ld [sfxRequest_noise], a
-    ld a, $32
-    jr jr_003_74cb
-
-func_03_74EA:
+queenStateFunc_startB: ;{ 03:74EA - Queen State $18: Start Fight B (wait to move)
+    ; Wait for timer to expire
     ld a, [queen_delayTimer]
     and a
-        jr nz, jr_003_74ca
+        jr nz, queenStateFunc_startA.decTimer
+    ; Close mouth
     ld a, $01
     ld [queen_headFrameNext], a
-    ld a, $0c ; Init fight part 3
+    ; Set state to Pick Next State
+    ld a, $0c
     ld [queen_state], a
-ret
+ret ;}
 
 
-Call_003_74fb:
+Call_003_74fb: ;{ 03:74FB
     ld de, samus_onscreenYPos
     ld hl, $c3e6
     ld a, [de]
@@ -2286,9 +2293,9 @@ Call_003_74fb:
     ld a, $10
     add c
     ld [hl], a
-    ret
+ret ;}
 
-func_03_7519:
+func_03_7519: ;{ 03:7519 - Queen State $14: Prep spitting projectiles
     call Call_003_74fb
     ld a, [queen_headY]
     add $20
@@ -2322,10 +2329,10 @@ func_03_7519:
     ld [$c3e3], a
     ld de, $fff8
     add hl, de
-    jp Jump_003_7288
+jp Jump_003_7288 ;}
 
-; Spawn Queen's spit
-Call_003_756c: ; 03:756C
+; Spawn Queen's spit?
+Call_003_756c: ;{ 03:756C
     ; Set status
     ld [hl], $00
     ; Set Y
@@ -2342,10 +2349,9 @@ Call_003_756c: ; 03:756C
     add $05
     ld l, a
     ld [hl], d
-ret
+ret ;}
 
-; Queen state - blobs out
-func_03_757B: ; 03:757B
+func_03_757B: ;{ 03:757B - Queen State $15: Projectiles out
     ld a, [queen_delayTimer]
     and a
     jr z, jr_003_758c
@@ -2428,14 +2434,15 @@ jr_003_75d0:
         dec b
     jr nz, jr_003_75e8
 
-    call Call_003_7846
+    call queenStateFunc_pickNextState
     xor a
     ld [$c3e3], a
     ld hl, spriteC300
     jp Jump_003_7288
+;}
 
 
-Call_003_75fa:
+Call_003_75fa: ;{ 03:75FA
     ld hl, $c308
     ld de, $c740
     ld b, $03
@@ -2472,17 +2479,16 @@ jr_003_761a:
     ld e, a
     dec b
     jr nz, jr_003_7602
-
     ret
-
 
 jr_003_7627:
     pop de
     ld a, $ff
     ld [de], a
     jr jr_003_7603
+;}
 
-Call_003_762d:
+Call_003_762d: ;{ 03:762D
     ld d, $f1
     ld e, $c0
     call Call_003_764f
@@ -2501,10 +2507,9 @@ Call_003_762d:
     ld b, a
     ld e, $c0
     call Call_003_764f
-ret
+ret ;}
 
-
-Call_003_764f:
+Call_003_764f: ;{ 03:764F
     ld [hl], b
     inc l
     ld [hl], c
@@ -2513,10 +2518,10 @@ Call_003_764f:
     inc l
     ld [hl], e
     inc l
-    ret
+ret ;}
 
 ; Handle queen's spit
-Call_003_7658:
+Call_003_7658: ;{ 03:7658
     ld b, $03
     ld hl, $c740
 
@@ -2570,10 +2575,9 @@ Call_003_7658:
         inc de
         dec b
     jr nz, jr_003_7693
-ret
+ret ;}
 
-
-Call_003_76a6:
+Call_003_76a6: ;{ 03:76A6
     ld a, [hl]
     ld [$c3e4], a
     ld a, l
@@ -2602,10 +2606,9 @@ Call_003_76a6:
     add $06
     ld l, a
     ld [hl], b
-    ret
+ret ;}
 
-
-Call_003_76d5:
+Call_003_76d5: ;{ 03:76D5
     ld a, [de]
     sub [hl]
     ret z
@@ -2654,9 +2657,9 @@ jr_003_76fb:
 
     pop af
     ret
+;}
 
-
-Call_003_7701:
+Call_003_7701: ;{ 03:7701
     ld b, $02
     inc hl
     push hl
@@ -2687,17 +2690,16 @@ Call_003_7701:
             dec b
         jr nz, jr_003_7712
     pop hl
-    ret
+ret ;}
 
-; Prep Samus in mouth
-func_03_772B: ; 03:772B
+func_03_772B: ;{ 03:772B - Queen State $0D: Prep Samus in mouth
     ld a, [queen_pNeckPatternLow]
     ld l, a
     ld a, [queen_pNeckPatternHigh]
     ld h, a
     ld a, [hl]
     cp $81
-    jp z, Jump_003_7846
+    jp z, queenStateFunc_pickNextState
 
     ld a, $02
     ld [$c3ba], a
@@ -2722,9 +2724,9 @@ func_03_772B: ; 03:772B
     ld a, $0e ; Samus in mouth (head retracting)
     ld [queen_state], a
     dec hl
-    jp Jump_003_7399
+jp Jump_003_7399 ;}
 
-func_03_776F:
+func_03_776F: ;{ 03:776F - Queen State $0E: Samus in mouth (neck retracting)
     ld a, [queen_neckStatus]
     cp $82
         ret nz
@@ -2734,18 +2736,17 @@ func_03_776F:
     ld [queen_state], a
     ld a, $01
     ld [queen_footFrame], a
-ret
+ret ;}
 
-func_03_7785: ; 03:7785 - State $0F
+func_03_7785: ;{ 03:7785 - Queen State $0F: Samus in mouth/stomach
     ld a, [queen_eatingState]
     cp $04
     jr nz, jr_003_77b8
-
+    
     ld a, [queen_health]
     sub $0a ; Hurt for 10 damage?
     ld [queen_health], a
-    jr c, jr_003_77d5
-
+        jr c, jr_003_77d5
     ld a, $05
     ld [queen_eatingState], a
     ld a, $02
@@ -2760,7 +2761,6 @@ func_03_7785: ; 03:7785 - State $0F
     ld a, $0a
     ld [sfxRequest_noise], a
     ret
-
 
 jr_003_77b8:
     cp $06
@@ -2785,14 +2785,14 @@ jr_003_77c2:
     ld [sfxRequest_noise], a
     ret
 
-
 jr_003_77d5:
     xor a
     ld [queen_health], a
     ld a, $20
     jr jr_003_77c2
+;}
 
-func_03_77DD:
+func_03_77DD: ;{ 03:77DD -  Queen State $10: Spitting Samus out
     ld a, [queen_stunTimer]
     and a
     jr z, jr_003_77fd
@@ -2814,7 +2814,6 @@ jr_003_77f2:
     ld [queen_footFrame], a
     ret
 
-
 jr_003_77fd:
     ld [queen_eatingState], a
     ld a, $01
@@ -2824,10 +2823,11 @@ jr_003_77fd:
     ld a, $06 ; Prep walking backwards
     ld [queen_state], a
     ld hl, table_7484 + 6 ;$748a
-    jr jr_003_7856 ; Set state to queen_stateTable[6]
+    jr queenStateFunc_pickNextState.direct ; Set state to queen_stateTable[6]
+;}
 
 ; Set sprite attributes for neck
-Call_003_7812:
+Call_003_7812: ;{ 03:7812
     ld b, $0c
     ld hl, spriteC300 + 8 ;$c308
     .loop:
@@ -2838,9 +2838,9 @@ Call_003_7812:
         ld [hl+], a
         dec b
     jr nz, .loop
-ret
+ret ;}
 
-func_03_7821:
+func_03_7821: ;{ 03:7821 - Queen State $00: Prep forward walk
     xor a
     ld [queen_walkCounter], a
     ld [$c3ba], a
@@ -2852,40 +2852,46 @@ func_03_7821:
     ld [queen_footFrame], a
     ld a, $01 ; Walking forward
     ld [queen_state], a
-ret
+ret ;}
 
-func_03_783C:
+queenStateFunc_forwardWalk: ;{ 03:783C - Queen State $01 - Walking forwards
+    ; Wait until we're done walking forwards
     ld a, [queen_walkStatus]
     cp $81
         ret nz
+    ; End foot animation
     xor a
     ld [queen_footFrame], a
+    ; fallthrough to queenStateFunc_pickNextState
+;}
 
-func_03_7846:
-Call_003_7846:
-Jump_003_7846:
+; This is commonly jumped to directly
+;  also has an entry point for selecting the next state immediately
+queenStateFunc_pickNextState: ;{ 03:7846 - Queen State $0C: Pick next state from list
+    ; Load pointer
     ld a, [queen_pNextStateLow]
     ld l, a
     ld a, [queen_pNextStateHigh]
     ld h, a
-
-jr_003_784e:
+.tryAgain:
+    ; Return to start of table if the end is reached
     ld a, [hl+]
     cp $ff
-    jr z, jr_003_785f
+    jr z, .else
         ld [queen_state], a
-      jr_003_7856: ; Jump to set next state pointer directly
+      .direct: ; Alternate entry for directly setting the state pointer
+        ; Save the state pointer
         ld a, l
         ld [queen_pNextStateLow], a
         ld a, h
         ld [queen_pNextStateHigh], a
         ret
-    jr_003_785f:
+    .else:
         ld hl, table_7484
-        jr jr_003_784e
-; end proc?
+        jr .tryAgain
+;}
 
-func_03_7864:
+func_03_7864: ;{ 03:7864 - Queen State $02 - Prep neck extension
     ld hl, $c620
     ld [hl], $00
     ld a, $01
@@ -2954,30 +2960,28 @@ func_03_7864:
     jr_003_78e4:
 
     ; Load neck pattern pointer
-    call Call_003_746f
+    call queen_setNeckBasePointer
     ; Skip first entry in the neck pattern table
-    call Call_003_7466 ; Load
+    call queen_loadNeckBasePointer ; Load
     inc hl 
     jp Jump_003_7399 ; Store
-; end proc
+;} end proc
 
-; Extending neck
-func_03_78EE: ; 03:78EE
+queenStateFunc_extendingNeck: ;{ 03:78EE - Queen State $03: Extending neck
     ; Wait until status is $81
     ld a, [queen_neckStatus]
     cp $81
         ret nz
-    jp Jump_003_7846
+jp queenStateFunc_pickNextState ;}
 
-; Prep neck retraction
-func_03_78F7: ; 03:78F7
+func_03_78F7: ;{ 03:78F7 - Queen State $04: Prep neck retraction
     ld a, [queen_pNeckPatternLow]
     ld l, a
     ld a, [queen_pNeckPatternHigh]
     ld h, a
     ld a, [hl]
     cp $81
-    jp z, Jump_003_7846
+    jp z, queenStateFunc_pickNextState
 
     ld a, $02
     ld [$c3ba], a
@@ -2998,17 +3002,16 @@ func_03_78F7: ; 03:78F7
     ld a, $05 ; Retracting neck
     ld [queen_state], a
     dec hl
-    jp Jump_003_7399
+jp Jump_003_7399 ;}
 
-; Retracting neck
-func_03_7932: ; 03:7932
+queenStateFunc_retractingNeck: ;{ 03:7932 - Queen State $05: Retracting Neck
     ; Wait until status is $82
     ld a, [queen_neckStatus]
     cp $82
         ret nz
-    jp Jump_003_7846
+jp queenStateFunc_pickNextState ;}
 
-func_03_793B:
+func_03_793B: ;{ 03:793B Queen State $06: Prep walking backwards
     ld a, $02
     ld [queen_walkControl], a
     ld a, $03
@@ -3019,15 +3022,17 @@ func_03_793B:
     ld [queen_footFrame], a
     ld a, $07 ; Walking backward
     ld [queen_state], a
-ret
+ret ;}
 
-func_03_7954:
+queenStateFunc_backwardWalk: ;{ 03:7954 - Queen State $07: Walking Backwards
+    ; Wait until we are finished walking backwards
     ld a, [queen_walkStatus]
     cp $82
         ret nz
+    ; Disable walking animation
     xor a
     ld [queen_footFrame], a
-    jp Jump_003_7846
+jp queenStateFunc_pickNextState ;}
 
 ; Queen's neck sprite while she is vomiting Samus
 table_7961: ; 03:7961
@@ -3037,7 +3042,7 @@ table_7961: ; 03:7961
     db $00, $10, $b7
     db $08, $0c, $c6
 
-func_03_7970:
+func_03_7970: ;{ 03:7970 - Queen State $08: Stomach Just Bombed
     ld a, [queen_headY]
     cp $2c
     cp $71
@@ -3091,12 +3096,12 @@ func_03_7970:
     ld a, $04 ; Steep neck pattern (barfing samus)
     ld [queen_neckPattern], a
     ld [$c3d1], a
-    call Call_003_746f
-    call Call_003_7466
+    call queen_setNeckBasePointer ; Load neck pattern pointer
+    call queen_loadNeckBasePointer
     inc hl
-    jp Jump_003_7399
+jp Jump_003_7399 ;}
 
-func_03_79D0:
+func_03_79D0: ;{ 03:79D0 - Queen State $09: Prep spitting Samus out of stomach
     ld a, [queen_neckStatus]
     cp $81
         ret nz
@@ -3104,9 +3109,9 @@ func_03_79D0:
     ld [queen_delayTimer], a
     ld a, $0a ; Spitting Samus out
     ld [queen_state], a
-ret
+ret ;}
 
-func_03_79E1: ; 03:79E1 - Queen spitting Samus out of stomach
+func_03_79E1: ;{ 03:79E1 - Queen State $0A: Spitting Samus out of stomach
     ld a, [queen_delayTimer]
     and a
     jr z, jr_003_79f6
@@ -3138,13 +3143,12 @@ func_03_79E1: ; 03:79E1 - Queen spitting Samus out of stomach
         ld h, a
         dec hl
         jp Jump_003_7399
+;}
 
-
-func_03_7A1D:
+func_03_7A1D: ;{ 03:7A1D - Queen State $0B: Done spitting Samus out of stomach
     ld a, [queen_neckStatus]
     cp $82
-    ret nz
-
+        ret nz
     ld a, $01
     ld [queen_headFrameNext], a
     ld [queen_headFrame], a
@@ -3168,10 +3172,9 @@ func_03_7A1D:
     ld [$c3b8], a
     ld a, h
     ld [$c3b9], a
-    jp Jump_003_7846
+jp queenStateFunc_pickNextState ;}
 
-
-jr_003_7a4d: ; Kill Queen?
+jr_003_7a4d: ;{ Kill Queen from stomach
     ld b, $0d
     ld hl, $c600
     call Call_003_6e17
@@ -3203,50 +3206,59 @@ jr_003_7a4d: ; Kill Queen?
     inc l
     inc l
     ld [hl], $80
-    call Call_003_7aa8
+    call queen_closeFloor
     ld a, $0f
     ld [sfxRequest_noise], a
     ld a, $05 ; Dying neck pattern
     ld [queen_neckPattern], a
-    call Call_003_746f
-    call Call_003_7466
+    call queen_setNeckBasePointer
+    call queen_loadNeckBasePointer
     inc hl
-    jp Jump_003_7399
+jp Jump_003_7399 ;}
 
-
-Call_003_7aa8:
+; Seals the bottom exit upon death
+queen_closeFloor: ;{ 03:7AA8
+    ; Get address to write
     ld hl, $9b0e
-
-jr_003_7aab:
-    ld a, [rSTAT]
-    and $03
-    jr nz, jr_003_7aab
-
+    
+    ; Wait for HBlank
+    .waitLoop_A:
+        ld a, [rSTAT]
+        and $03
+    jr nz, .waitLoop_A
+    ; Write tile
     ld [hl], $5d
-    inc l
-
-jr_003_7ab5:
-    ld a, [rSTAT]
-    and $03
-    jr nz, jr_003_7ab5
-
+    
+    inc l ; Iterate to next tile
+    ; Wait for HBlank
+    .waitLoop_B:
+        ld a, [rSTAT]
+        and $03
+    jr nz, .waitLoop_B
+    ; Write tile
     ld [hl], $5e
-    ret
+ret ;}
 
-func_03_7ABF: ; 03:7ABF
+queenStateFunc_prepDeath: ;{ 03:7ABF - State $11: Prep Death
+    ; Wait for head to finish falling
     ld a, [queen_neckStatus]
     cp $81
         ret nz
+    ; Set delay timer for next state
     ld a, $50
     ld [queen_delayTimer], a
-    ld a, $12 ; Dying part 1 (disintegrating)
+    ; Set state to disintegrating (dying part 1)
+    ld a, $12
     ld [queen_state], a
+    ; Set animation counter
     ld a, $05
-    ld [$c3d5], a
+    ld [queen_deathAnimCounter], a
+    ; Zero health for good measure
     xor a
     ld [queen_health], a
-    ld [$c3d4], a
-    ld hl, $c3d6
+    ld [queen_deathArrayIndex], a
+    ; Set table for disintegration animation
+    ld hl, queen_deathArray
     ld [hl], $ee
     inc hl
     ld [hl], $bb
@@ -3262,21 +3274,26 @@ func_03_7ABF: ; 03:7ABF
     ld [hl], $dd
     inc hl
     ld [hl], $77
+
+    ; Set earthquake timer
     ld a, $d0
     ld [earthquakeTimer], a
     ; Play earthquake sound
     ld a, $0e
     ld [songRequest], a
+    ; Set eating state to "dying"
     ld a, $22
     ld [queen_eatingState], a
-    ret
+ret ;}
 
-func_03_7B05: ; State $12
+queenStateFunc_disintegrate: ;{ 03:7B05 - Queen State $12:  - Dying pt 1 (disintegrating)
     ld a, [queen_delayTimer]
     and a
-    jr z, jr_003_7b1e
+    jr z, .endIf_A
+        ; Decrement timer
         dec a
         ld [queen_delayTimer], a
+        ; Wait a few frames before refilling health
         cp $4c
             ret nz
         ; Refill Samus health
@@ -3285,145 +3302,186 @@ func_03_7B05: ; State $12
         ld a, $99
         ld [samusCurHealthLow], a
         ret
-    jr_003_7b1e:
+    .endIf_A:
 
-    ld a, [$c3e0]
+    ; Exit if bitmask is non-zero
+    ld a, [queen_deathBitmask]
     and a
         ret nz
-    ld de, $c3d6
+; Find next value for bitmask
+    ; Use a loop to access queen_deathArray[queen_deathArrayIndex] (why?)
+    ld de, queen_deathArray
     ld b, $00
-    ld a, [$c3d4]
-
-    jr_003_7b2b:
+    ld a, [queen_deathArrayIndex]
+    .loop:
+        ; Exit when B == queen_deathArrayIndex
         cp b
-            jr z, jr_003_7b32
+            jr z, .break
         inc de
         inc b
-    jr jr_003_7b2b
-    jr_003_7b32:
-
-    ld b, a
-    or $10
-    ld [$c3de], a
+    jr .loop
+    .break:
+    ld b, a ; Double check B == A (seems unnecessary)    
+    ; Note: DE now points to queen_deathArray[queen_deathArrayIndex]
+    
+    ; Get starting address for next disintegration
+    or LOW(queenDeath_firstTile) ;$10
+    ld [queen_pDeathChrLow], a
+    ; Get next value of index
+    ; NOTE: This code relies on the relative primality of 3 and 8
+    ;  to ensure every value from 0-7 is iterated through
     ld a, b
     add $03
     and $07
-    ld [$c3d4], a
-    jr nz, jr_003_7b4b
-        ld a, [$c3d5]
+    ld [queen_deathArrayIndex], a
+
+    ; Check if counter is zero
+    jr nz, .endIf_B
+        ; Decrement counter
+        ld a, [queen_deathAnimCounter]
         dec a
-        ld [$c3d5], a
-        jr z, jr_003_7b59
-        jr_003_7b4b:
-            ld a, [de]
-            rlca
-            rlca
-            rlca
-            ld [de], a
-            ld [$c3e0], a
-            ld a, $8b
-            ld [$c3df], a
-            ret
-        jr_003_7b59:
-            ld a, $a0
-            ld [$c3ec], a
-            ld a, $99
-            ld [$c3ed], a
-            ld a, $13 ; Dying part 2
-            ld [queen_state], a
-            ret
+        ld [queen_deathAnimCounter], a
+            jr z, .nextState
+    .endIf_B:
+
+    ; Rotate bitmask value three times to the left
+    ;  (again relying on the relative primality of 3 and 8)
+    ld a, [de]
+    rlca
+    rlca
+    rlca
+    ld [de], a
+    ; Load bitmask
+    ld [queen_deathBitmask], a
+    ; Load high byte of starting address
+    ld a, HIGH(queenDeath_firstTile) ; $8B
+    ld [queen_pDeathChrHigh], a
+ret
+
+.nextState:
+    ld a, LOW(queenDeath_bodyStart)
+    ld [queen_pDeleteBodyLow], a
+    ld a, HIGH(queenDeath_bodyStart)
+    ld [queen_pDeleteBodyHigh], a
+    ; Set state to "Dying part 2"
+    ld a, $13
+    ld [queen_state], a
+ret
+;}
 
 ; VBlank Routine
-Call_003_7b69:
-    ld a, [$c3e0]
+queen_disintegrate: ;{ 03:7B69
+    ; Exit if disintegration bitmask is zero
+    ld a, [queen_deathBitmask]
     and a
         ret z
     ld b, a
-    ld a, [$c3de]
+    ; Load starting address
+    ld a, [queen_pDeathChrLow]
     ld l, a
-    ld a, [$c3df]
+    ld a, [queen_pDeathChrHigh]
     ld h, a
-    ld de, $0008
-    ld c, $1a
+    ld de, $0008 ; Increment value
+    ld c, $1a ; Max updates per frame
 
-    jr_003_7b7c:
+    ; Loop to clear pixels
+    .clearLoop:
+        ; AND chr value with bitmask
         ld a, [hl]
         and b
         ld [hl], a
+        ; Increment to next pixel row
         add hl, de
+        ; Break if on the last row of tiles (though we may re-enter the loop at .nextClear)
         ld a, h
-        cp $95
-            jr z, jr_003_7b91
-      jr_003_7b85:
+        cp HIGH(queenDeath_lastTile) ;$95
+            jr z, .break
+      .nextClear:
         dec c
-    jr nz, jr_003_7b7c
-
+    jr nz, .clearLoop
+        
+        ; Premature exit
+        ; Save pointer to keep clearing pixels next frame
         ld a, h
-        ld [$c3df], a
+        ld [queen_pDeathChrHigh], a
         ld a, l
-        ld [$c3de], a
+        ld [queen_pDeathChrLow], a
         ret
-    jr_003_7b91:
+        
+    .break:
+        ; Keep clearing things unless we're on the last tile
         ld a, l
         and $f0
-        cp $70
-            jr nz, jr_003_7b85
+        cp LOW(queenDeath_lastTile) ;$70
+            jr nz, .nextClear
+        ; Clear bitmask to indicate we're done with it
         xor a
-        ld [$c3e0], a
+        ld [queen_deathBitmask], a
         ret
+;}
 
-func_03_7B9D:
-    ld a, [$c3ec]
+queenStateFunc_deleteBody: ;{ 03:7B9D - Queen State $13: Dying Part 2 (delete body)
+    ; Get pointer
+    ld a, [queen_pDeleteBodyLow]
     ld l, a
-    ld a, [$c3ed]
+    ld a, [queen_pDeleteBodyHigh]
     ld h, a
+
+    ; Delete row (routine runs during active display!!)
     ld b, $0b
+    .clearLoop:
+        ; Wait for HBlank twice and write, to ensure the write goes through
+        .waitLoop_A:
+            ld a, [rSTAT]
+            and $03
+        jr nz, .waitLoop_A    
+        ld [hl], $ff
+    
+        .waitLoop_B:
+            ld a, [rSTAT]
+            and $03
+        jr nz, .waitLoop_B
+        ld [hl], $ff
 
-jr_003_7ba7:
-    ld a, [rSTAT]
-    and $03
-    jr nz, jr_003_7ba7
+        ; Iterate to next tile
+        inc hl
+        dec b
+    jr nz, .clearLoop
 
-    ld [hl], $ff
-
-jr_003_7bb0:
-    ld a, [rSTAT]
-    and $03
-    jr nz, jr_003_7bb0
-
-    ld [hl], $ff
-    inc hl
-    dec b
-    jr nz, jr_003_7ba7
-
+    ; Iterate to next row
     ld de, $0015
     add hl, de
+
+    ; Check if we're at the end
+    ;  Note: this check relies on the fact that the queen's body is less than 128 pixels tall
     ld a, l
-    cp $80
-    jr z, jr_003_7bce
+    cp LOW(queenDeath_bodyEnd)
+    jr z, .else
+        ; Save pointer for next frame
+        ld [queen_pDeleteBodyLow], a
+        ld a, h
+        ld [queen_pDeleteBodyHigh], a
+        ret
+    .else:
+        ; Clear variables
+        xor a
+        ld [queen_eatingState], a
+        ; Zero out metroid counters
+        ld [metroidCountDisplayed], a
+        ld [metroidCountReal], a
+        ; Set state to that stub right down there
+        ld a, $16
+        ld [queen_state], a
+        ; Shuffle counter and play noise
+        ld a, $80
+        ld [metroidCountShuffleTimer], a
+        ld a, $17
+        ld [sfxRequest_noise], a
+    queenStateFunc_allDone: ; 03:7BE7 - Queen State $16: All Done
+        ret
+;}
 
-    ld [$c3ec], a
-    ld a, h
-    ld [$c3ed], a
-    ret
-
-
-jr_003_7bce:
-    xor a
-    ld [queen_eatingState], a
-    ld [metroidCountDisplayed], a
-    ld [metroidCountReal], a
-    ld a, $16 ; Dying part 3
-    ld [queen_state], a
-    ld a, $80
-    ld [metroidCountShuffleTimer], a
-    ld a, $17
-    ld [sfxRequest_noise], a
-func_03_7BE7: ; State $16
-    ret
-
-
-queen_walk: ; 03:7BE8
+queen_walk: ;{ 03:7BE8
     xor a
     ld [queen_walkSpeed], a
     ld a, [queen_walkControl]
@@ -3485,9 +3543,10 @@ queen_walk: ; 03:7BE8
     db $ff, $ff, $81, $01, $01, $01, $01, $02, $02, $02, $02, $02, $02, $02, $02, $02
     db $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02
     db $01, $01, $01, $01, $01, $82
+;}
 
-; LCDCInterruptHandler
-LCDCInterruptHandler: ; 03:7C7F
+; Interrupt handler only used by queen
+LCDCInterruptHandler: ;{ 03:7C7F
     push af ; Caller function already pushed af, so this may be unnecessary
     push bc
     push de
@@ -3530,7 +3589,7 @@ LCDCInterruptHandler: ; 03:7C7F
             pop hl
         jr .nextToken
         
-        .case_1:
+        .case_1: ; Set scroll X and palette to queen's
             ld a, [queen_bodyXScroll]
             ld [rSCX], a
             ld a, [queen_bodyPalette]
@@ -3539,7 +3598,7 @@ LCDCInterruptHandler: ; 03:7C7F
             ld [rBGP], a
         jr .nextToken
         
-        .case_2:
+        .case_2: ; Set scroll X and palette to room's
             ld a, [scrollX]
             ld [rSCX], a
             ld a, $93 ; FIXME: Causes palette issues if pausing is enabled
@@ -3568,12 +3627,12 @@ LCDCInterruptHandler: ; 03:7C7F
     pop de
     pop bc
     pop af
-ret
+ret ;}
 
 
-VBlank_drawQueen: ; 03:7CF0
+VBlank_drawQueen: ;{ 03:7CF0
     call queen_drawFeet ; Also draws head if no foot animation is ready
-    call Call_003_7b69 ; Disintegration effect?
+    call queen_disintegrate ; Disintegration effect?
     ; Set scroll position
     ld a, [scrollX]
     ld [rSCX], a
@@ -3597,6 +3656,7 @@ VBlank_drawQueen: ; 03:7CF0
     .endIf_B:
     ld [queen_headBottomY], a
     
+    ; Calculate the lowest point of the queen's body  (clamp to $8F)
     ld a, [queen_bodyY]
     ld b, a
     ld a, [queen_bodyHeight]
@@ -3716,6 +3776,6 @@ VBlank_drawQueen: ; 03:7CF0
     ; Enable window display
     ld hl, rLCDC
     set 5, [hl]
-ret
+ret ;}
 
 bank3_freespace: ; 3:7DAD -- Freespace filled with $00 (nop)

@@ -67,3 +67,10 @@ pose_faceScreen  = $13 ;Facing screen
 ;pose_          = $1C ;Escaping Metroid Queen
 ;pose_          = $1D ;Escaped Metroid Queen
 
+; Queen related constants
+
+; First and last tiles to be clear by disintegration animation
+queenDeath_firstTile = $8B10
+queenDeath_lastTile = $9570
+queenDeath_bodyStart = $99A0
+queenDeath_bodyEnd = $9A80

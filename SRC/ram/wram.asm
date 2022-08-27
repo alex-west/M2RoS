@@ -135,12 +135,24 @@ queen_stunTimer: ds 1 ; $C3D0 - Stun timer when hit with mouth open
 ; $C3D1 - Neck related state?
 queen_bodyPalette = $C3D2 ; LCD interrupt handler background palette
 queen_health = $C3D3 ; Metroid Queen health
-;$C3D4: Queen death related
-;$C3D5: Queen death related
-;$C3D6-$C3DD: Queen death related table (disintegration animation?)
-;$C3DE/C3DF: Queen death VRAM pointer?
-;$C3E0: Queen death related (disintegration bitmask?) Cleared in $3:6E36
-;
+
+queen_deathArrayIndex = $C3D4 ; Queen death related (disintegration index?)
+queen_deathAnimCounter = $C3D5 ; Counts down each time the 
+queen_deathArray = $C3D6 ;..$C3DD: Queen table of disintegration bitmasks for death animation
+queen_pDeathChrLow  = $C3DE ; VRAM pointer for Queen's disintegration animation
+queen_pDeathChrHigh = $C3DF ;  "" high byte
+queen_deathBitmask = $C3E0 ; Queen disintegration bitmask - Bitmask is applied if non-zero
+;$C3E1 - Unused?
+;$C3E2 - Unused?
+;$C3E3 - Queen Blob related?
+;$C3E4 - ??
+;$C3E5 - blob related??
+;$C3E6-$C3EB - array of 6 values related to Samus' position
+
+queen_pDeleteBodyLow  = $C3EC ; Pointer for deleting queen's body after dying
+queen_pDeleteBodyHigh = $C3ED ;  "" high byte
+
+
 ;$C3EF: Set to 1 in $3:6E36 if 0 < [Metroid Queen's health] < 32h, probably an aggression flag
 ;
 ;$C3F1: Set to 1 in $3:6E36 if 0 < [Metroid Queen's health] < 64h, probably an aggression flag
