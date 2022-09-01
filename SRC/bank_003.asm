@@ -628,6 +628,8 @@ ret ;}
 loadEnemy_getPointer:
   .screen: ;{ 03:42CF
     ; Get index from YX coordinate
+    ;  B - y coordinate
+    ;  C - x coordinate
     ld a, b
     swap a
     add c

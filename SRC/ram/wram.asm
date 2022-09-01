@@ -27,7 +27,7 @@ def pTilemapDestLow  = $C215 ; Tilemap destination pointer based on the given xy
 def pTilemapDestHigh = $C216 ;  "" (high byte)
 
 ;
-;$C219: Game over LCD control mirror. This variable is pretty much useless, set to 0 on boot and to C3h by game over, checked for bitset 8 by $2266 (get tilemap value)
+def gameOver_LCDC_copy = $C219 ; LCD control mirror. Only set by death routine. This variable is pretty much useless, set to 0 on boot and to C3h by game over, checked for bitset 8 by $2266 (get tilemap value)
 ;{
 ;    v = emwdMsob
 ;

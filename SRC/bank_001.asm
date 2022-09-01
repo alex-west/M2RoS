@@ -2675,8 +2675,8 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Handle window height, save text, earthquake, low heath beep, fade in, and Metroid Queen cry
-miscIngameTasks: ; 01:57F2
-; Handle window display stuff
+miscIngameTasks: ;{ 01:57F2
+;{ Handle window display stuff
     ; Decrement cooldown
     ld a, [saveMessageCooldownTimer]
     and a
@@ -2760,9 +2760,9 @@ miscIngameTasks: ; 01:57F2
                     ld a, $42
                     ldh [hSpriteId], a
                     call drawSamusSprite
-    .endIf_B:
+    .endIf_B: ;}
 
-; Earthquake stuff
+;{ Earthquake stuff
     ; Only do this stuff once every 256 frames
     ldh a, [frameCounter]
     and a
@@ -2786,9 +2786,9 @@ miscIngameTasks: ; 01:57F2
                 jr nz, .endIf_G
                     ld a, $60
                     ld [earthquakeTimer], a
-    .endIf_G:
+    .endIf_G: ;}
 
-; Handle low health beep
+;{ Handle low health beep
     ; Only play the low-health beep after the intro has finished
     ld a, [samusPose]
     cp pose_faceScreen
@@ -2827,7 +2827,7 @@ miscIngameTasks: ; 01:57F2
                     ; Clear the low health beep
                     ld a, $ff
                     ld [$cfe5], a
-    .endIf_H:
+    .endIf_H: ;}
 
 ; Handle fade-in
     ld a, [fadeInTimer]
@@ -2845,7 +2845,7 @@ miscIngameTasks: ; 01:57F2
             ld a, $17
             ld [sfxRequest_noise], a
     .else_J:
-ret
+ret ;}
 
 ; Item message pointers and strings:
 itemTextPointerTable: ; 01:58F1
@@ -3528,7 +3528,7 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Draws sprites for title and credits
-drawNonGameSprite: ; 01:73F7
+drawNonGameSprite: ;{ 01:73F7
     ; Index into sprite pointer table
     ldh a, [hSpriteId]
     ld d, $00
@@ -3606,14 +3606,15 @@ drawNonGameSprite: ; 01:73F7
     jr .spriteLoop
 
     .exit:
-ret
+ret ;}
 
 ; 01:744A
 include "data/sprites_credits.asm" ; Also title
 
 ;------------------------------------------------------------------------------
 
-Call_001_79ef: ; 01:79EF: Handle earthquake (called from bank 0)
+earthquake_adjustScroll: ;{ 01:79EF: Handle earthquake (called from bank 0)
+    ; Exit if earthquake not active
     ld a, [earthquakeTimer]
     and a
         ret z
@@ -3627,39 +3628,44 @@ Call_001_79ef: ; 01:79EF: Handle earthquake (called from bank 0)
     add b
     ld [scrollY], a
 
+    ; Decrement earthquake timer every two frames
     ldh a, [frameCounter]
     and $01
         ret nz
-
     ld a, [earthquakeTimer]
     dec a
     ld [earthquakeTimer], a
         ret nz
-
+; Actions once earthquake is finished
+    ; Clear earthquake sound
     xor a
     ld [$cedf], a
+    
     ld a, [queen_roomFlag]
     cp $10
-    jr nc, jr_001_7a2e
+    jr nc, .else_A
         ld a, [$d0a5]
         and a
-        jr z, jr_001_7a28
+        jr z, .else_B
+            ; Restore music
             ld [songRequest], a
             ld [currentRoomSong], a
             xor a
             ld [$d0a5], a
             ret
-        jr_001_7a28:
+        .else_B:
+            ; End isolated sound effect
             ld a, $03
             ld [$cede], a
             ret
-    jr_001_7a2e:
+    .else_A:
+        ; If in Queen's room, start playing the baby metroid music
         ld a, $01
         ld [songRequest], a
         ret
+;}
 
-
-drawSamus_earthquakeAdjustment: ; 01:7A34
+drawSamus_earthquakeAdjustment: ;{ 01:7A34
     ld a, [earthquakeTimer]
     and a
         ret z
@@ -3672,23 +3678,26 @@ drawSamus_earthquakeAdjustment: ; 01:7A34
     ldh a, [hSpriteYPixel]
     add b
     ldh [hSpriteYPixel], a
-ret
+ret ;}
 
-
-fadeIn: ; 01:7A45
+fadeIn: ;{ 01:7A45
     ld hl, .fadeTable
+    ; Use upper nybble as index into .fadeTable
     ld a, [fadeInTimer]
     and $f0
     swap a
     ld e, a
     ld d, $00
     add hl, de
+    ; Load palette
     ld a, [hl]
     ld [bg_palette], a
     ld [ob_palette0], a
+    ; Decrement timer
     ld a, [fadeInTimer]
     dec a
     ld [fadeInTimer], a
+    ; Set timer to zero once we reach $0E
     cp $0e
         ret nc
     xor a
@@ -3697,7 +3706,7 @@ ret
 
 .fadeTable: ; 01:7A69
     db $93, $e7, $fb
-
+;}
 
 saveEnemyFlagsToSRAM: ; 01:7A6C
     ld d, $00

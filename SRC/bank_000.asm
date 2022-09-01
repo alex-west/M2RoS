@@ -726,7 +726,7 @@ gameMode_Main: ;{ 00:04DF
 
     call Call_000_0698 ; Handle loading blocks from scrolling
     call Call_000_08fe ; Handle scrolling/triggering door transitions
-    call Call_000_2366 ; Calculate scroll offsets
+    call convertCameraToScroll ; Calculate scroll offsets
     call handleItemPickup
     call drawSamus_longJump ; Draw Samus
     call drawProjectiles_longJump ; Draw projectiles
@@ -780,7 +780,7 @@ ret
     call Call_000_3d99
     call Call_000_0698
     call Call_000_08fe
-    call Call_000_2366
+    call convertCameraToScroll
     call drawSamus_longJump
     call drawProjectiles_longJump
     call handleRespawningBlocks_longJump
@@ -3526,7 +3526,7 @@ poseFunc_morphBall: ;{ 00:1701 - $05: Morph ball
     ldh a, [hInputRisingEdge]
     bit PADB_UP, a
     jr z, .endIf_B
-        call Call_000_1b2e
+        call samus_groundUnmorph
         ret
     .endIf_B:
 
@@ -4160,11 +4160,12 @@ collision_checkSpiderSet: ;{ 00:1A42
     ret
 ;} end proc
 
-Call_000_1b2e: ; Unmorph on ground
+samus_groundUnmorph: ;{ 00:1B2E - Unmorph on ground
+    ; Check upper left pixel
     ldh a, [hSamusXPixel]
     add $0b
     ld [$c204], a
-        jr jr_000_1b6b
+jr samus_groundUnmorph_cont ;} This is structured like it used to be a conditional jump...
 
 ; Attempts to stand up. Returns carry if it fails.
 samus_tryStanding: ;{ 00:1B37
@@ -4197,31 +4198,39 @@ samus_tryStanding: ;{ 00:1B37
 ret
 ;}
 
-jr_000_1b6b: ;{ 00:1B6B
+samus_groundUnmorph_cont: ;{ 00:1B6B - Unmorph on ground, continued
+    ; Check upper left pixel (cont.)
     ldh a, [hSamusYPixel]
     add $18
     ld [$c203], a
     call samus_getTileIndex
+    ; Check if solid
     ld hl, samusSolidityIndex
     cp [hl]
-    jr c, jr_000_1b9a
+    jr c, .endIf
+        ; Was not solid, check upper right pixel
         ldh a, [hSamusXPixel]
         add $14
         ld [$c204], a
         call samus_getTileIndex
+        ; Check if solid
         ld hl, samusSolidityIndex
         cp [hl]
-        jr c, jr_000_1b9a
+        jr c, .endIf
+            ; Was not solid, so crouch
             ld a, pose_crouch
             ld [samusPose], a
+            ; Clear timer, play sound
             xor a
             ld [samus_animationTimer], a
             ld a, $05
             ld [sfxRequest_square1], a
-                ret
-    jr_000_1b9a:
+            ret
+    .endIf:
+    ; Remain in morph
     ld a, pose_morph
     ld [samusPose], a
+    ; Clear vertical speed
     xor a
     ld [$d033], a
 ret
@@ -4956,7 +4965,7 @@ samus_getTileIndex: ;{ 00:1FF5
     call getTilemapAddress
 
     ; Adjust base address for collision depending on the tilemap being used
-    ld a, [$c219]
+    ld a, [gameOver_LCDC_copy]
     and $08
     jr z, .endIf_A
         ld a, $04
@@ -5221,7 +5230,7 @@ enemy_getTileIndex: ; 00:2250 - Called by enemy routines
     
 beam_getTileIndex: ; 00:2266 - Entry point for beam routines
     call getTilemapAddress
-    ld a, [$c219]
+    ld a, [gameOver_LCDC_copy]
     and $08
     jr z, .endIf
         ld a, $04
@@ -5246,18 +5255,22 @@ beam_getTileIndex: ; 00:2266 - Entry point for beam routines
     and b
 ret
 
-; 0:2287 - Read Input
-main_readInput:
+main_readInput: ;{ 00:2287
+    ; Select d-pad to read
     ld a, $20
     ldh [rP1], a
+    ; Read d-pad
     ldh a, [rP1]
     ldh a, [rP1]
+    ; Invert, swap to other nybble, store in B
     cpl
     and $0f
     swap a
     ld b, a
+    ; Select buttons to read
     ld a, $10
     ldh [rP1], a
+    ; Read buttons
     ldh a, [rP1]
     ldh a, [rP1]
     ldh a, [rP1]
@@ -5266,19 +5279,25 @@ main_readInput:
     ldh a, [rP1]
     ldh a, [rP1]
     ldh a, [rP1]
+    ; Invert, mask out upper bits, and OR with B
     cpl
     and $0f
     or b
+    ; Store in C as temp
     ld c, a
+
+    ; rising edge = (prev XOR current) AND current
     ldh a, [hInputPressed]
     xor c
     and c
     ldh [hInputRisingEdge], a
+    ; Save current input
     ld a, c
     ldh [hInputPressed], a
+    ; Deselect reading both input types
     ld a, $30
     ldh [rP1], a
-ret
+ret ;}
 
 ; Given pixels coordinates in y:[$C203], x:[$C204]
 ;  returns the tilemap address in [pTilemapDestLow] and [pTilemapDestHigh]
@@ -5307,18 +5326,18 @@ getTilemapAddress: ; 00:22BC
     ld [pTilemapDestHigh], a
 ret
 
-; 00:22E1 - Unused ?
+unknown_22E1: ; 00:22E1 - Unused ?
     ld a, [pTilemapDestHigh]
     ld d, a
     ld a, [pTilemapDestLow]
     ld e, a
     ld b, $04
 
-    jr_000_22eb:
+    .loop:
         rr d
         rr e
         dec b
-    jr nz, jr_000_22eb
+    jr nz, .loop
 
     ld a, e
     sub $84
@@ -5336,7 +5355,7 @@ ret
     ld [$c204], a
 ret
 
-; 00:230C - Unused?
+unknown_230C: ; 00:230C - Unused?
     ld a, [$c227]
     and a
     ret z
@@ -5399,25 +5418,26 @@ jr_000_2353:
         jr jr_000_2340
 
 ;------------------------------------------------------------------------------
-oamDMA_routine: ; Copied to $FFA0 in HRAM
+oamDMA_routine: ;{ 00:235C Copied to $FFA0 in HRAM
     ld a, HIGH(wram_oamBuffer)
     ldh [rDMA], a
     ld a, $28
     .loop:
         dec a
     jr nz, .loop
-ret
+ret ;}
 
-;------------------------------------------------------------------------------
-Call_000_2366:
+; Converts camera values to hardware scroll values
+convertCameraToScroll: ;{ 00:2366
     ldh a, [hCameraYPixel]
     sub $48
     ld [scrollY], a
     ldh a, [hCameraXPixel]
     sub $50
     ld [scrollX], a
-    call Call_000_3ced
-ret
+    ; Handle earthquake
+    call earthquake_adjustScroll_longJump
+ret ;}
 
 ;------------------------------------------------------------------------------
 ; Audio calls
@@ -5730,63 +5750,61 @@ executeDoorScript: ; 00:239C
     .doorToken_song:
     cp $c0 ; SONG
     jr nz, .doorToken_item
-        ; What the heck is this spaghetti code?
+        ; Check if earthquake noise is playing
         ld a, [$cedf]
         cp $0e
-        jr z, .song_branchC
+        jr z, .song_else_A
+            ; If the earthquake noise is not playing
             ld a, [hl+]
             and $0f
             cp $0a
-            jr z, .song_branchB    
+            jr z, .song_else_B    
                 ld [songRequest], a
                 ld [currentRoomSong], a
                 cp $0b
-                jr nz, .song_branchA
+                jr nz, .song_else_C
                     ld a, $ff
                     ld [$d0a6], a
                     xor a
                     ld [$d0a5], a
                     jp .nextToken
-            
-                .song_branchA:
+                .song_else_C:
+                    xor a
+                    ld [$d0a5], a
+                    ld [$d0a6], a
+                    jp .nextToken
+            .song_else_B:
+                ld a, $ff
+                ld [songRequest], a
+                ld [currentRoomSong], a
                 xor a
                 ld [$d0a5], a
-                ld [$d0a6], a
-                jp .nextToken
-        
-            .song_branchB:
-            ld a, $ff
-            ld [songRequest], a
-            ld [currentRoomSong], a
-            xor a
-            ld [$d0a5], a
-            ld a, $ff
-            ld [$d0a6], a
-            jp .nextToken
-    
-        .song_branchC:
-        ld a, [hl+]
-        and $0f
-        cp $0a
-        jr z, .song_branchE
-            ld [$d0a5], a
-            cp $0b
-            jr nz, .song_branchD
                 ld a, $ff
                 ld [$d0a6], a
                 jp .nextToken
-        
-            .song_branchD:
-            xor a
-            ld [$d0a6], a
-            jp .nextToken
     
-        .song_branchE:
-        ld a, $ff
-        ld [$d0a5], a
-        ld [$d0a6], a
-        jp .nextToken
-        
+        .song_else_A:
+            ; If the earthquake noise is playing
+            ld a, [hl+]
+            and $0f
+            cp $0a
+            jr z, .song_else_D
+                ld [$d0a5], a
+                cp $0b
+                jr nz, .song_else_E
+                    ld a, $ff
+                    ld [$d0a6], a
+                    jp .nextToken
+                .song_else_E:
+                    xor a
+                    ld [$d0a6], a
+                    jp .nextToken
+            .song_else_D:
+                ld a, $ff
+                ld [$d0a5], a
+                ld [$d0a6], a
+                jp .nextToken
+
     .unreferencedTable: db $04, $05, $06, $07, $08, $09, $10, $12 ; 00:260C
 
     .doorToken_item:
@@ -8385,7 +8403,7 @@ table_369B: ; 00:369B - Collision/pose related table
     db $ec, $f4, $fc, $ec, $f6, $04, $04, $ec, $04, $ec, $ec, $04, $04, $04, $04, $ec
     db $04, $ec, $04, $ec, $04
 
-gameMode_dead: ; 00:36B0
+gameMode_dead: ;{ 00:36B0
     ; Wait until the death sound ends
     .loopWaitSilence:
         call handleAudio_longJump
@@ -8393,9 +8411,10 @@ gameMode_dead: ; 00:36B0
         ld a, [$ced6]
         cp $0b
     jr z, .loopWaitSilence
-
+    ; Clear flag
     xor a
     ld [queen_roomFlag], a
+    ; Disable LCD to clear BGs, sprites, etc.
     call disableLCD
     call clearTilemaps
     xor a
@@ -8407,7 +8426,6 @@ gameMode_dead: ; 00:36B0
     ld hl, gfx_titleScreen
     ld de, $8800
     ld bc, $1000
-
     .loadGfxLoop:
         ld a, [hl+]
         ld [de], a
@@ -8417,26 +8435,26 @@ gameMode_dead: ; 00:36B0
         or c
     jr nz, .loadGfxLoop
 
+    ; Load game over text ($80-terminated)
     ld hl, gameOverText
     ld de, $9800 + (8*$20) + $6 ; Tilemap address for text
-
     .loadTextLoop:
         ld a, [hl+]
         cp $80
             jr z, .exitLoop
         ld [de], a
         inc de
-    jr .loadTextLoop
-    
+    jr .loadTextLoop    
     .exitLoop:
-
+    ; Reset scroll
     xor a
     ld [scrollY], a
     ld [scrollX], a
     ldh [rSCY], a
     ldh [rSCX], a
+    ; Re-enable LCD
     ld a, $c3
-    ld [$c219], a
+    ld [gameOver_LCDC_copy], a
     ldh [rLCDC], a
     ; Set timer for Game Over screen
     ld a, $ff
@@ -8447,9 +8465,10 @@ ret
 
 gameOverText: ; 00:3711 - "GAME OVER"
     db $56, $50, $5c, $54, $ff, $5e, $65, $54, $61, $80
+;}
 
 ; Reboot game if a certain amount of time has elapsed, or if start is pressed
-gameMode_gameOver: ; 00:371B
+gameMode_gameOver: ;{ 00:371B
     call handleAudio_longJump
     call waitForNextFrame
     ; Reboot once timer expires
@@ -8461,7 +8480,7 @@ gameMode_gameOver: ; 00:371B
         cp PADF_START
             ret nz
     .reboot:
-jp bootRoutine
+jp bootRoutine ;}
 
 ;------------------------------------------------------------------------------
 ; Handle item pick-up
@@ -8730,7 +8749,7 @@ pickup_variaSuit: ;{
     cp $08
         call z, Call_000_2753
     ; Load all the other patched-in graphics
-    call loadExtraSuitGraphics
+    call varia_loadExtraGraphics
 jp handleItemPickup_end ;}
 
 pickup_hiJump: ;{
@@ -8868,13 +8887,15 @@ pickup_missileTank: ;{
 ;}
 
 ; Common routine for all pickups
-handleItemPickup_end: ; 00:3A01
+handleItemPickup_end: ;{ 00:3A01
     .waitLoop_A:
+            ; Perform some common routines during this wait loop
             call drawSamus_longJump
             call drawHudMetroid_longJump
             callFar enemyHandler
             call handleAudio_longJump
             call clearUnusedOamSlots_longJump
+            ; Show window if a major item
             ld a, [itemCollected_copy]
             cp $0b
             jr nc, .endIf_A
@@ -8890,7 +8911,7 @@ handleItemPickup_end: ; 00:3A01
         and a
     jr nz, .waitLoop_A
 
-    
+    ; Check if this is not a refill
     ld a, [itemCollected_copy]
     cp $0e
     jr nc, .endIf_B
@@ -8908,6 +8929,7 @@ handleItemPickup_end: ; 00:3A01
     ld a, $03
     ld [itemCollectionFlag], a
     
+    ; Set collision variables
     ld a, [itemOrb_collisionType]
     ld [$c466], a
     ld a, [itemOrb_pEnemyWramLow]
@@ -8916,6 +8938,7 @@ handleItemPickup_end: ; 00:3A01
     ld [$c468], a
 
     .waitLoop_B:
+        ; Perform common functions during this wait loop
         call drawSamus_longJump
         call drawHudMetroid_longJump
         call Call_000_32ab
@@ -8927,10 +8950,11 @@ handleItemPickup_end: ; 00:3A01
         ld a, [itemCollectionFlag]
         and a
     jr nz, .waitLoop_B
-ret
+ret ;}
 
 ; Called by the Varia Suit collection routine
-loadExtraSuitGraphics: ; 00:3A84
+varia_loadExtraGraphics: ;{ 00:3A84
+    ; Load spring ball graphics if applicable
     ld a, [samusItems]
     bit itemBit_spring, a
     jr z, .endIf_spring
@@ -8940,34 +8964,38 @@ loadExtraSuitGraphics: ; 00:3A84
         call Call_000_2753
     .endIf_spring:
 
+    ; Load appropriate spin-jump graphics
+    ; (3 options, mutually exclusive)
     ld a, [samusItems]
     and itemMask_space | itemMask_screw
     cp itemMask_space | itemMask_screw
     jr nz, .endIf_spinBoth
+        ; Both space jump and screw attack
         ld hl, gfxInfo_spinSpaceScrewTop
         call Call_000_2753
         ld hl, gfxInfo_spinSpaceScrewBottom
         call Call_000_2753
-            ret
+        ret
     .endIf_spinBoth:
 
     cp itemMask_space
     jr nz, .endIf_space
+        ; Only space jump
         ld hl, gfxInfo_spinSpaceTop
         call Call_000_2753
         ld hl, gfxInfo_spinSpaceBottom
         call Call_000_2753
-            ret
+        ret
     .endIf_space:
-
+    
     cp itemMask_screw
         ret nz
-
+    ; Only screw attack
     ld hl, gfxInfo_spinScrewTop
     call Call_000_2753
     ld hl, gfxInfo_spinScrewBottom
     call Call_000_2753
-ret
+ret ;}
 
 ; Game modes $0A and $0F
 ;  Displays "GAME SAVED" screen (incorrectly)
@@ -9296,8 +9324,8 @@ ret
 gameMode_saveGame: ; 00:3CE2
     jpLong saveFileToSRAM
 
-Call_000_3ced: ; 00:3CED
-    jpLong Call_001_79ef
+earthquake_adjustScroll_longJump: ; 00:3CED
+    jpLong earthquake_adjustScroll
 
 drawNonGameSprite_longCall: ; 00:3CF8
     callFar drawNonGameSprite
