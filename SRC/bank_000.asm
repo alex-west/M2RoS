@@ -5442,15 +5442,15 @@ ret ;}
 ;------------------------------------------------------------------------------
 ; Audio calls
 initializeAudio_longJump: ; 00:2378
-    callFar initializeAudio
+    callFar externalInitializeAudio
 ret
 
 handleAudio_longJump: ;00:2384
-    callFar handleAudio
+    callFar externalHandleAudio
 ret
 
 silenceAudio_longJump: ; 00:2390
-    callFar silenceAudio
+    callFar externalSilenceAudio
 ret
 
 ;------------------------------------------------------------------------------

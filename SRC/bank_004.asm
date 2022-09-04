@@ -5,936 +5,865 @@
 
 SECTION "ROM Bank $004", ROMX[$4000], BANK[$4]
 
-handleAudio:
-    jp Jump_004_42b3
+externalHandleAudio:
+    jp handleAudio
 
-silenceAudio:
-    jp Jump_004_477b
+externalSilenceAudio:
+    jp silenceAudio
 
-initializeAudio:
-    jp Jump_004_4752
+externalInitializeAudio:
+    jp initializeAudio
 
+; Song processing state size constants
+;{
+    channelSongProcessingStateSize:
+    db $09 ; Size of channel song processing state ($CF38 - $CF2F)
 
-    db $09, $2d, $61
+    channelAllSongProcessingStateSizes:
+    db $2d ; Size of all channel song processing states ($CF5C - $CF2F)
 
-    nop
-    add b
+    songProcessingStateSize:
+    db $61 ; Size of song processing state ($CF61 - songTranspose)
+;}
 
-    db $2c, $80, $9c, $80, $06, $81, $6b, $81, $c9, $81, $23, $82, $77, $82, $c6, $82
-    db $12, $83, $56, $83, $9b, $83, $da, $83, $16, $84, $4e, $84, $83, $84, $b5, $84
-    db $e5, $84, $11, $85, $3b, $85, $63, $85, $89, $85, $ac, $85, $ce, $85, $ed, $85
-    db $0a, $86, $27, $86, $42, $86, $5b, $86, $72, $86, $89, $86, $9e, $86, $b2, $86
-    db $c4, $86, $d6, $86, $e7, $86, $f7, $86, $06, $87, $14, $87, $21, $87, $2d, $87
-    db $39, $87, $44, $87, $4f, $87, $59, $87, $62, $87, $6b, $87, $73, $87, $7b, $87
-    db $83, $87, $8a, $87, $90, $87, $97, $87, $9d, $87, $a2, $87, $a7, $87, $ac, $87
-    db $b1, $87, $b6, $87, $ba, $87, $be, $87, $c1, $87, $c4, $87, $c8, $87, $cb, $87
-    db $ce, $87, $d1, $87, $d4, $87, $d6, $87, $d9, $87, $db, $87, $dd, $87, $df, $87
+musicNotes:
+;{
+    dw $8000 ; Off-key 64Hz "tone"
 
-    ld bc, $0201
+;      C      Db     D      Eb     E      F      Gb     G      Ab     A      Bb     B
+    dw $802c, $809c, $8106, $816b, $81c9, $8223, $8277, $82c6, $8312, $8356, $839b, $83da ; Octave 2
+    dw $8416, $844e, $8483, $84b5, $84e5, $8511, $853b, $8563, $8589, $85ac, $85ce, $85ed ; Octave 3
+    dw $860a, $8627, $8642, $865b, $8672, $8689, $869e, $86b2, $86c4, $86d6, $86e7, $86f7 ; Octave 4
+    dw $8706, $8714, $8721, $872d, $8739, $8744, $874f, $8759, $8762, $876b, $8773, $877b ; Octave 5
+    dw $8783, $878a, $8790, $8797, $879d, $87a2, $87a7, $87ac, $87b1, $87b6, $87ba, $87be ; Octave 6
+    dw $87c1, $87c4, $87c8, $87cb, $87ce, $87d1, $87d4, $87d6, $87d9, $87db, $87dd, $87df ; Octave 7
+;}
 
-    db $04, $08
+instructionTimerArrays:
+;{
+    db $01, $01, $02, $04, $08, $10, $03, $06, $0c, $01, $03, $01, $20
+    db $01, $02, $04, $08, $10, $20, $06, $0c, $18, $02, $05, $01, $40
+    db $02, $03, $06, $0c, $18, $30, $09, $12, $24, $04, $08, $01, $60
+    db $02, $04, $08, $10, $20, $40, $0c, $18, $30, $05, $0a, $01, $80
+    db $03, $05, $0a, $14, $28, $50, $0f, $1e, $3c, $07, $0e, $01, $a0
+    db $03, $06, $0c, $18, $30, $60, $12, $24, $48, $08, $10, $02, $c0
+    db $03, $07, $0e, $1c, $38, $70, $15, $2a, $54, $09, $12, $02, $e0
+    db $04, $08, $10, $20, $40, $80, $18, $30, $60, $0a, $14, $02, $ff
+    db $04, $09, $12, $24, $48, $90, $1b, $36, $6c, $0c, $1a, $02, $ff
+;}
 
-    db $10
-    inc bc
-
-    db $06
-
-    inc c
-    ld bc, $0103
-    jr nz, jr_004_40ad
-
-    ld [bc], a
-
-jr_004_40ad:
-    inc b
-
-    db $08, $10
-
-    jr nz, @+$08
-
-    db $0c
-
-    jr @+$04
-
-    dec b
-    ld bc, $0240
-
-    db $03, $06, $0c, $18, $30, $09, $12, $24
-
-    inc b
-    db $08
-    db $01
-
-    db $60
-
-    ld [bc], a
-
-    db $04, $08, $10, $20, $40, $0c, $18, $30
-
-    dec b
-    ld a, [bc]
-
-    db $01, $80, $03, $05, $0a, $14, $28, $50, $0f, $1e, $3c
-
-    rlca
-    db $0e
-
-    db $01, $a0, $03, $06, $0c, $18, $30, $60, $12, $24, $48, $08
-
-    db $10
-
-    db $02, $c0
-
-    inc bc
-
-    db $07, $0e, $1c, $38
-
-    ld [hl], b
-
-    db $15, $2a
-
-    ld d, h
-    add hl, bc
-    ld [de], a
-    ld [bc], a
-    db $e0
-
-    db $04, $08, $10, $20, $40, $80, $18, $30, $60, $0a, $14
-
-    ld [bc], a
-    rst $38
-
-    db $04, $09, $12, $24, $48, $90, $1b, $36, $6c
-
-    inc c
-    ld a, [de]
-
-    db $02
-
-    rst $38
-
+wavePatterns:
+;{
+.wave0 ; $4113
     db $ee, $ee, $a5, $e5, $e0, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    db $cc, $cc, $82, $c3, $c0, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 
-    ld [hl], a
-    ld [hl], a
-    ld d, c
-    and d
-    add b
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    cp $dc
-    cp d
-    sbc b
-    adc d
-    xor b
-    ld [hl-], a
-    db $10
-    cp $ed
-    db $db
-    xor c
-    add a
-    ld h, l
-    ld sp, $9900
-    xor d
-    cp e
-    call z, $aabb
-    ld [hl], a
-    inc sp
-    ld de, $6734
-    adc c
-    xor d
-    and a
-    add a
-    ld a, b
-    xor e
-    rst $28
-    cp $da
-    sub a
-    ld b, e
-    db $11
-    db $31
+.wave1 ; $4123
+    db $cc, $cc, $82, $c3, $c0, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+; Unused data
+    db $77, $77, $51, $a2, $80, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    db $fe, $dc, $ba, $98, $8a, $a8, $32, $10, $fe, $ed, $db, $a9, $87, $65, $31, $00
+    db $99, $aa, $bb, $cc, $bb, $aa, $77, $33, $11, $34, $67, $89, $aa, $a7, $87, $78
+    db $ab, $ef, $fe, $da, $97, $43, $11, $31
+.wave2 ; $416B
+    db $EE, $EE, $EE, $00, $00, $00, $EE, $EE, $EE, $00, $00, $00, $EE, $00, $EE, $00
 
-    db $ee, $ee, $ee, $00, $00, $00, $ee, $ee, $ee, $00, $00, $00, $ee, $00, $ee, $00
-    db $aa, $aa, $aa, $00, $00, $00, $aa, $aa, $aa, $00, $00, $00, $aa, $00, $aa, $00
+.wave3 ; $417B
+    db $AA, $AA, $AA, $00, $00, $00, $AA, $AA, $AA, $00, $00, $00, $AA, $00, $AA, $00
+
+.wave4 ; $418B
     db $77, $77, $77, $00, $00, $00, $77, $77, $77, $00, $00, $00, $77, $00, $77, $00
+
+.wave5 ; $419B
     db $44, $00, $22, $00, $00, $00, $22, $44, $44, $00, $00, $00, $33, $00, $44, $00
 
-    rst $38
-    rst $38
-    nop
-    nop
-    rst $38
-    rst $38
-    nop
-    nop
-    rst $38
-    rst $38
-    nop
-    nop
-    rst $38
-    rst $38
-    nop
-    nop
-    nop
-    ld [$8000], sp
+.wave6 ; $41AB
+    db $FF, $FF, $00, $00, $FF, $FF, $00, $00, $FF, $FF, $00, $00, $FF, $FF, $00, $00
+;}
 
-    db $00, $21, $3d, $80, $30, $40, $31, $c0, $00, $31, $3e, $80, $35, $f7, $6e, $c0
-    db $30, $61, $4b, $c0, $30, $c1, $6d, $c0, $00, $81, $4b, $80, $00, $f6, $6d, $80
-    db $00, $b6, $6d, $80, $00, $77, $6d, $80, $00, $47, $6d, $80, $00, $97, $6b, $80
-    db $00, $77, $6b, $80, $00, $57, $6b, $80, $00, $37, $6b, $80
+songNoiseChannelOptionSets:
+;{
+; Used by songs
 
-    nop
-    add b
-    ld l, l
-    add b
-    nop
-    ld b, b
-    ld c, l
-    add b
+; Sound length
+;     00tttttt
+;     Sound length = 0.25 * (1 - t/40h) seconds
+;
+; Envelope
+;     vvvvdttt
+;     Envelope step length = t/8 * 0.125 seconds
+;     d: Envelope direction. 0: Decrease, 1: Increase
+;     v: Initial volume
+;
+; Polynomial counter
+;     nnnnwaaa
+;     If a = 0:
+;         Frequency = 80000h / 2^n hertz
+;     Else:
+;         Frequency = 40000h / (a * 2^n) hertz
+;     w: Counter width. 0: 7 bits, 1: 15 bits
+;
+; Counter control
+;     rs000000
+;     r: Restart sound
+;     s: Stop output after sound has finished (according to sound length)
 
-    db $00, $1f, $47, $80, $00, $40, $47, $80, $00, $40, $46, $80, $00, $40, $45, $80
-    db $00, $40, $44, $80, $00, $40, $43, $80, $00, $40, $42, $80, $00, $40, $41, $80
-    db $00, $1b, $37, $80, $00, $a5, $27, $80
+;       _____________ Sound length
+;      |    _________ Envelope
+;      |   |    _____ Polynomial counter
+;      |   |   |    _ Counter control
+;      |   |   |   |
+    db $00,$08,$00,$80
+    db $00,$21,$3D,$80 ; Can never be used (in song handler, '1' disables sound channel)
+    db $30,$40,$31,$C0
+    db $00,$31,$3E,$80
+    db $35,$F7,$6E,$C0
+    db $30,$61,$4B,$C0
+    db $30,$C1,$6D,$C0
+    db $00,$81,$4B,$80
+    db $00,$F6,$6D,$80
+    db $00,$B6,$6D,$80
+    db $00,$77,$6D,$80
+    db $00,$47,$6D,$80
+    db $00,$97,$6B,$80
+    db $00,$77,$6B,$80
+    db $00,$57,$6B,$80
+    db $00,$37,$6B,$80
+    db $00,$80,$6D,$80
+    db $00,$40,$4D,$80
+    db $00,$1F,$47,$80
+    db $00,$40,$47,$80
+    db $00,$40,$46,$80
+    db $00,$40,$45,$80
+    db $00,$40,$44,$80
+    db $00,$40,$43,$80
+    db $00,$40,$42,$80
+    db $00,$40,$41,$80
+    db $00,$1B,$37,$80
+    db $00,$A5,$27,$80
+    db $00,$1F,$37,$80
+    db $00,$27,$46,$80
+    db $00,$27,$45,$80
+    db $00,$1B,$6B,$80
+    db $00,$1A,$6B,$80
+    db $00,$19,$6B,$80
+    db $00,$1F,$37,$80
+    db $00,$1C,$6C,$80
+    db $00,$51,$4D,$80
+    db $30,$F1,$6F,$C0
+    db $38,$A1,$3B,$C0
+    db $38,$A1,$3A,$C0
+    db $00,$F4,$7A,$80
+    db $00,$F4,$7B,$80
+;}
 
-    nop
-    rra
-    scf
-    add b
-
-    db $00, $27, $46, $80, $00, $27, $45, $80
-
-    nop
-    dec de
-    ld l, e
-    add b
-    nop
-    ld a, [de]
-    ld l, e
-    add b
-    nop
-    add hl, de
-    ld l, e
-    add b
-    nop
-    rra
-    scf
-    add b
-    nop
-    inc e
-    ld l, h
-    add b
-
-    db $00, $51, $4d, $80, $30, $f1, $6f, $c0
-
-    jr c, @-$5d
-
-    dec sp
-    ret nz
-
-    jr c, @-$5d
-
-    ld a, [hl-]
-    ret nz
-
-    db $00, $f4, $7a, $80
-
-    nop
-    db $f4
-    ld a, e
-    add b
-
+; Data for $CF0E, indexed by [toneSweepChannelFrequency]/[toneChannelFrequency]/[waveChannelFrequency] (sound channel frequencies)
+;{
+data4263:
+; workingSoundLength = 2
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $01
+
+data4273:
+; workingSoundLength = 3
     db $08, $10, $18, $20, $28, $30, $38, $40, $38, $30, $28, $20, $18, $10, $08, $00
+
+data4283:
+; workingSoundLength = 4
     db $00, $05, $00, $05, $00, $05, $00, $05, $05, $00, $05, $00, $05, $00, $05, $00
+
+data4293:
+; workingSoundLength = 9
     db $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01
+
+data42A3:
+; workingSoundLength = Ah
     db $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03
+;}
 
-Jump_004_42b3:
-    ld a, [$cfc7]
-    cp $01
-    jp z, Jump_004_4801
+handleAudio:
+;{
+    ld a, [audioPauseControl]
+    cp audioPauseControl_pause
+        jp z, audioPause
 
-    cp $02
-    jp z, Jump_004_4846
+    cp audioPauseControl_unpause
+        jp z, audioUnpause
 
-    ld a, [$cfc8]
+    ld a, [audioPauseSoundEffectTimer]
     and a
-    jp nz, Jump_004_4852
+        jp nz, handleAudio_paused
+;}
 
-Jump_004_42c7:
-    ld a, [$cede]
+handleAudio_handleIsolatedSoundEffectToPlay:
+;{
+    ld a, [isolatedSoundEffectToPlay]
     and a
-    jr z, jr_004_42ea
+        jr z, handleAudio_handleIsolatedSoundEffectPlaying
 
-    cp $01
-    jr z, jr_004_432b
+    cp isolatedSoundEffect_itemGet
+        jr z, playIsolatedSoundEffect_itemGet
 
-    cp $03
-    jp z, Jump_004_4390
+    cp isolatedSoundEffect_end_toPlay
+        jp z, startEndingIsolatedSoundEffect
 
-    cp $05
-    jr z, jr_004_4335
+    cp isolatedSoundEffect_missilePickup
+        jr z, playIsolatedSoundEffect_missilePickup
 
-    cp $08
-    jp z, Jump_004_43fb
+    cp isolatedSoundEffect_fadeOutMusic
+        jp z, handleAudio_initiateFadingOutMusic
 
-    cp $0e
-    jr z, jr_004_433f
+    cp isolatedSoundEffect_earthquake
+        jr z, playIsolatedSoundEffect_earthquake
 
-    cp $ff
-    call z, Call_004_4323
-    jr jr_004_42fa
+    cp isolatedSoundEffect_clear
+        call z, clearIsolatedSoundEffect
 
-jr_004_42ea:
-    ld a, [$cedf]
+    jr handleSongAndSoundEffects
+;}
+
+handleAudio_handleIsolatedSoundEffectPlaying:
+;{
+    ld a, [isolatedSoundEffectPlaying]
     and a
-    jr z, jr_004_42fa
+        jr z, handleSongAndSoundEffects
 
-    cp $02
-    jp z, Jump_004_43c4
+    cp isolatedSoundEffect_end_playing
+        jp z, finishEndingIsolatedSoundEffect
 
-    cp $08
-    jp z, Jump_004_4418
+    cp isolatedSoundEffect_fadeOutMusic
+        jp z, handleAudio_handleFadingOutMusic
+;}
 
-Jump_004_42fa:
-jr_004_42fa:
-    call Call_004_457c
-    call Call_004_44cf
-    call Call_004_446b
-    call Call_004_44a4
-    call Call_004_4512
+handleSongAndSoundEffects:
+;{
+    call handleSong
+    call handleNoiseChannelSoundEffect
+    call handleToneSweepChannelSoundEffect
+    call handleToneChannelSoundEffect
+    call handleWaveChannelSoundEffect
     xor a
     ld [songRequest], a
     ld [sfxRequest_noise], a
     ld [sfxRequest_square1], a
     ld [sfxRequest_square2], a
-    ld [$cece], a
-    ld [$cede], a
-    ld [$cfe5], a
-    ld [$cfc7], a
-    ret
+    ld [sfxRequest_fakeWave], a
+    ld [isolatedSoundEffectToPlay], a
+    ld [lowHealthBeepSoundEffectToPlay], a
+    ld [audioPauseControl], a
+ret
+;}
 
-
-Call_004_4323:
+clearIsolatedSoundEffect:
+;{
     xor a
-    ld [$cede], a
-    ld [$cedf], a
-    ret
+    ld [isolatedSoundEffectToPlay], a
+    ld [isolatedSoundEffectPlaying], a
+ret
+;}
 
-
-jr_004_432b:
-    ld [$cedf], a
-    ld a, $0a
+playIsolatedSoundEffect_itemGet:
+;{
+    ld [isolatedSoundEffectPlaying], a
+    ld a, song_itemGet
     ld [songRequest], a
-    jr jr_004_4345
+    jr playIsolatedSoundEffect
+;}
 
-jr_004_4335:
-    ld [$cedf], a
-    ld a, $20
+playIsolatedSoundEffect_missilePickup:
+;{
+    ld [isolatedSoundEffectPlaying], a
+    ld a, song_missilePickup
     ld [songRequest], a
-    jr jr_004_4345
+    jr playIsolatedSoundEffect
+;}
 
-jr_004_433f:
-    ld [$cedf], a
+playIsolatedSoundEffect_earthquake:
+;{
+    ld [isolatedSoundEffectPlaying], a
     ld [songRequest], a
+;}
 
-jr_004_4345:
+playIsolatedSoundEffect:
+;{
     ld a, [songPlaying]
-    ld [$cfc5], a
-    ld a, [$cede]
-    cp $0e
-    jr z, jr_004_435c
+    ld [songPlayingBackup], a
+    ld a, [isolatedSoundEffectToPlay]
+    cp isolatedSoundEffect_earthquake
+    jr z, .endIf_notEarthquake
+        ld a, [lowHealthBeepSoundEffectPlaying]
+        ld [lowHealthBeepSoundEffectPlayingBackup], a
+        xor a
+        ld [lowHealthBeepSoundEffectPlaying], a
+        .endIf_notEarthquake
 
-    ld a, [$cfe6]
-    ld [$cfe7], a
-    xor a
-    ld [$cfe6], a
+    ld a, [audioChannelOutputStereoFlags]
+    ld [audioChannelOutputStereoFlagsBackup], a
+    ld a, [toneSweepChannelSweep]
+    ld [toneSweepChannelSweepBackup], a
 
-jr_004_435c:
-    ld a, [$cfec]
-    ld [$cfed], a
-    ld a, [$cf10]
-    ld [$cfc9], a
-    ld hl, $cf61
-    ld de, $cf00
-    ld a, [$400b]
+    ld hl, songProcessingStateBackup
+    ld de, songProcessingState
+    ld a, [songProcessingStateSize]
     ld b, a
 
-jr_004_4372:
-    ld a, [de]
-    ld [hl+], a
-    inc de
-    dec b
-    ld a, b
-    and a
-    jr nz, jr_004_4372
+    .copyLoop
+        ld a, [de]
+        ld [hl+], a
+        inc de
+        dec b
+        ld a, b
+        and a
+    jr nz, .copyLoop
 
-    call Call_004_47b3
-    ld [$cede], a
+    call muteSoundChannels
+    ld [isolatedSoundEffectToPlay], a
     ld [sfxRequest_square1], a
-    ld [$cec1], a
+    ld [toneSweepChannelSoundEffectPlaying], a
     ld [sfxRequest_noise], a
-    ld [$ced6], a
-    ld [$cee7], a
-    ret
+    ld [noiseChannelSoundEffectPlaying], a
+    ld [noiseChannelSoundEffectIsPlayingFlag], a
+ret
+;}
 
-
-Jump_004_4390:
+startEndingIsolatedSoundEffect:
+;{
     dec a
-    ld [$cedf], a
-    ld hl, $cf00
-    ld de, $cf61
-    ld a, [$400b]
+    ld [isolatedSoundEffectPlaying], a
+    ld hl, songProcessingState
+    ld de, songProcessingStateBackup
+    ld a, [songProcessingStateSize]
     ld b, a
 
-jr_004_439e:
-    ld a, [de]
-    ld [hl+], a
-    inc de
-    dec b
-    ld a, b
-    and a
-    jr nz, jr_004_439e
+    .copyStateLoop
+        ld a, [de]
+        ld [hl+], a
+        inc de
+        dec b
+        ld a, b
+        and a
+    jr nz, .copyStateLoop
 
-    ld hl, $cf10
-    ld de, $ff10
+    ld hl, audioChannelOptions
+    ld de, rAUD1SWEEP
 
-jr_004_43ac:
-    ld a, [hl+]
-    ld [de], a
-    inc e
-    ld a, e
-    cp $24
-    jr nz, jr_004_43ac
+    .copyOptionsLoop
+        ld a, [hl+]
+        ld [de], a
+        inc e
+        ld a, e
+        cp $24 ; Low byte of end of audio channel options ($FF24 & $FF)
+    jr nz, .copyOptionsLoop
 
     xor a
-    ld [$cede], a
+    ld [isolatedSoundEffectToPlay], a
     ld a, $ff
     ld [sfxRequest_square1], a
     ld [sfxRequest_square2], a
     ld [sfxRequest_noise], a
-    ret
+ret
+;}
 
-
-Jump_004_43c4:
-    ld a, [$cf09]
+finishEndingIsolatedSoundEffect:
+;{
+    ld a, [wavePatternDataPointer]
     ld e, a
-    ld a, [$cf0a]
+    ld a, [wavePatternDataPointer+1]
     ld d, a
     xor a
-    ldh [rNR30], a
-    call Call_004_47c9
+    ldh [rAUD3ENA], a
+    call writeToWavePatternRam
+
     ld a, [songPlaying]
-    cp $0e
-    jr z, jr_004_43df
+    cp song_earthquake
+    jr z, .endIf
+        ld a, [lowHealthBeepSoundEffectPlayingBackup]
+        ld [lowHealthBeepSoundEffectPlaying], a
+        .endIf
 
-    ld a, [$cfe7]
-    ld [$cfe6], a
-
-jr_004_43df:
-    ld a, [$cfed]
-    ld [$cfec], a
-    ldh [rNR51], a
-    ld a, [$cfc9]
-    ld [$cf10], a
+    ld a, [audioChannelOutputStereoFlagsBackup]
+    ld [audioChannelOutputStereoFlags], a
+    ldh [rAUDTERM], a
+    ld a, [toneSweepChannelSweepBackup]
+    ld [toneSweepChannelSweep], a
     xor a
-    ld [$cedf], a
-    ld [$cfeb], a
-    ld a, [$cfc5]
+    ld [isolatedSoundEffectPlaying], a
+    ld [ramCFEB], a
+    ld a, [songPlayingBackup]
     ld [songPlaying], a
-    ret
+ret
+;}
 
-
-Jump_004_43fb:
-    ld [$cedf], a
+handleAudio_initiateFadingOutMusic:
+;{
+    ld [isolatedSoundEffectPlaying], a
     ld a, $d0
-    ld [$cf5c], a
-    ld a, [$cf3e]
-    ld [$cf5d], a
-    ld a, [$cf47]
-    ld [$cf5e], a
-    ld a, [$cf50]
-    ld [$cf5f], a
-    jp Jump_004_42fa
+    ld [songFadeoutTimer], a
+    ld a, [toneSweepSoundEnvelope]
+    ld [ramCF5D], a
+    ld a, [toneSoundEnvelope]
+    ld [ramCF5E], a
+    ld a, [waveVolume]
+    ld [ramCF5F], a
+    jp handleSongAndSoundEffects
 
+;}
 
-Jump_004_4418:
-    ld a, [$cf5c]
+handleAudio_handleFadingOutMusic:
+;{
+    ld a, [songFadeoutTimer]
     dec a
-    ld [$cf5c], a
+    ld [songFadeoutTimer], a
     cp $a0
-    jr z, jr_004_4435
+        jr z, .timerA0
 
     cp $70
-    jr z, jr_004_4439
+        jr z, .timer70
 
     cp $30
-    jr z, jr_004_4449
+        jr z, .timer30
 
     cp $10
-    jr z, jr_004_444d
+        jr z, .timer10
 
     and a
-    jr z, jr_004_4461
+        jr z, .timer0
 
-    jp Jump_004_42fa
+    jp handleSongAndSoundEffects
 
-
-jr_004_4435:
+.timerA0
     ld a, $65
-    jr jr_004_444f
+    jr .merge
 
-jr_004_4439:
+.timer70
     xor a
-    ld [$cf07], a
+    ld [songNoiseChannelEnable], a
     ld a, $60
-    ld [$cf50], a
-    ld [$cf5f], a
+    ld [waveVolume], a
+    ld [ramCF5F], a
     ld a, $45
-    jr jr_004_444f
+    jr .merge
 
-jr_004_4449:
+.timer30
     ld a, $25
-    jr jr_004_444f
+    jr .merge
 
-jr_004_444d:
+.timer10
     ld a, $13
 
-jr_004_444f:
-    ld [$cf3e], a
-    ld [$cf47], a
-    ld [$cf59], a
-    ld [$cf5d], a
-    ld [$cf5e], a
-    jp Jump_004_42fa
+.merge
+    ld [toneSweepSoundEnvelope], a
+    ld [toneSoundEnvelope], a
+    ld [noiseSoundEnvelope], a
+    ld [ramCF5D], a
+    ld [ramCF5E], a
+    jp handleSongAndSoundEffects
 
-
-jr_004_4461:
+.timer0
     xor a
     ld [songPlaying], a
-    ld [$cedf], a
-    jp Jump_004_45b4
+    ld [isolatedSoundEffectPlaying], a
+    jp disableSoundChannels
+;}
 
-
-Call_004_446b:
+handleToneSweepChannelSoundEffect:
+;{
     ld a, [sfxRequest_square1]
     and a
-    jr z, jr_004_448f
+        jr z, .endif_sfxRequested
 
     cp $ff
-    jp z, Jump_004_46f5
+        jp z, gotoClearToneSweepChannelSoundEffect
 
     cp $1f
-    jr nc, jr_004_448f
+        jr nc, .endif_sfxRequested
 
-    ld a, [$cec1]
-    cp $0c
-    jr z, jr_004_448f
+    ld a, [toneSweepChannelSoundEffectPlaying]
+    cp toneSweepSoundEffect_pickedUpMissileDrop
+        jr z, .endif_sfxRequested
 
-    cp $18
-    jr z, jr_004_448f
+    cp toneSweepSoundEffect_samusHealthChange
+        jr z, .endif_sfxRequested
 
-    ld a, [sfxRequest_square1]
-    ld hl, $4ec4
-    call Call_004_46de
-    jp hl
+        ld a, [sfxRequest_square1]
+        ld hl, toneSweepSfx_initPointers
+        call loadPointerFromTable
+        jp hl
+    .endif_sfxRequested
 
-
-Jump_004_448f:
-jr_004_448f:
-    ld a, [$cec1]
+.playing
+    ld a, [toneSweepChannelSoundEffectPlaying]
     and a
     ret z
 
     cp $1f
-    jr nc, jr_004_449f
+    jr nc, .endif_sfxPlaying
+        ld hl, toneSweepSfx_playbackPointers
+        call loadPointerFromTable
+        jp hl
+    .endif_sfxPlaying
 
-    ld hl, $4f00
-    call Call_004_46de
-    jp hl
-
-
-jr_004_449f:
     xor a
-    ld [$cec1], a
-    ret
+    ld [toneSweepChannelSoundEffectPlaying], a
+ret
+;}
 
-
-Call_004_44a4:
+handleToneChannelSoundEffect:
+;{
     ld a, [sfxRequest_square2]
     and a
-    jr z, jr_004_44ba
+        jr z, .endif_sfxRequested
 
     cp $ff
-    jp z, Jump_004_4702
+        jp z, gotoClearToneChannelSoundEffect
 
     cp $08
-    jr nc, jr_004_44ba
+        jr nc, .endif_sfxRequested
 
-    ld hl, $55f2
-    call Call_004_46de
+    ld hl, toneChannelSoundEffectInitialisationFunctionPointers
+    call loadPointerFromTable
     jp hl
+    .endif_sfxRequested
 
-
-jr_004_44ba:
-    ld a, [$cec8]
+    ld a, [toneChannelSoundEffectPlaying]
     and a
     ret z
 
     cp $08
-    jr nc, jr_004_44ca
+    jr nc, .endif_sfxPlaying
+        ld hl, toneChannelSoundEffectPlaybackFunctionPointers
+        call loadPointerFromTable
+        jp hl
+    .endif_sfxPlaying
 
-    ld hl, $5600
-    call Call_004_46de
-    jp hl
-
-
-jr_004_44ca:
     xor a
-    ld [$cec8], a
-    ret
+    ld [toneChannelSoundEffectPlaying], a
+ret
+;}
 
-
-Call_004_44cf:
+handleNoiseChannelSoundEffect:
+;{
     ld a, [sfxRequest_noise]
     and a
-    jr z, jr_004_44fd
+        jr z, .endif_sfxRequested
 
     cp $ff
-    jp z, Jump_004_470f
+        jp z, gotoClearNoiseChannelSoundEffect
 
     cp $1b
-    jr nc, jr_004_44fd
+        jr nc, .endif_sfxRequested
 
     ld a, [songPlaying]
-    cp $0e
+    cp song_earthquake
     ret z
 
-    ld a, [$ced6]
+    ld a, [noiseChannelSoundEffectPlaying]
     cp $0d
-    jr z, jr_004_44fd
+        jr z, .endif_sfxRequested
 
     cp $0e
-    jr z, jr_004_44fd
+        jr z, .endif_sfxRequested
 
     cp $0f
-    jr z, jr_004_44fd
+        jr z, .endif_sfxRequested
 
-    ld a, [sfxRequest_noise]
-    ld hl, $56cc
-    call Call_004_46de
-    jp hl
+        ld a, [sfxRequest_noise]
+        ld hl, noiseChannelSoundEffectInitialisationFunctionPointers
+        call loadPointerFromTable
+        jp hl
+    .endif_sfxRequested
 
-
-Jump_004_44fd:
-jr_004_44fd:
-    ld a, [$ced6]
+.playing
+    ld a, [noiseChannelSoundEffectPlaying]
     and a
     ret z
 
     cp $1b
-    jr nc, jr_004_450d
+    jr nc, .endif_sfxPlaying
+        ld hl, noiseChannelSoundEffectPlaybackFunctionPointers
+        call loadPointerFromTable
+        jp hl
+    .endif_sfxPlaying
 
-    ld hl, $5700
-    call Call_004_46de
-    jp hl
-
-
-jr_004_450d:
     xor a
-    ld [$44fd], a
+    ld [.playing], a ; Bug, should be noiseChannelSoundEffectPlaying. This branch is never taken anyway though
     ret
+;}
 
-
-Call_004_4512:
-    ld a, [$cfe5]
+handleWaveChannelSoundEffect:
+;{
+    ld a, [waveChannelSoundEffectToPlay]
     and a
-    jr z, jr_004_452f
+        jr z, .soundEffect0
 
     cp $ff
-    jr z, jr_004_4544
+        jr z, .soundEffectFF
 
     cp $06
     ret nc
 
-    ld a, [$cfe5]
-    ld [$cee6], a
-    ld [$cfe6], a
-    ld hl, $5d3f
-    call Call_004_46de
+    ld a, [waveChannelSoundEffectToPlay]
+    ld [waveChannelSoundEffectIsPlayingFlag], a
+    ld [waveChannelSoundEffectPlaying], a
+    ld hl, waveChannelSoundEffectInitialisationFunctionPointers
+    call loadPointerFromTable
     jp hl
 
-
-jr_004_452f:
-    ld a, [$cfe6]
+.soundEffect0
+    ld a, [waveChannelSoundEffectPlaying]
     and a
     ret z
 
     cp $06
-    jr nc, jr_004_453f
+    jr nc, .endif_sfxPlaying
+        ld hl, waveChannelSoundEffectPlaybackFunctionPointers
+        call loadPointerFromTable
+        jp hl
+    .endif_sfxPlaying
 
-    ld hl, $5d49
-    call Call_004_46de
-    jp hl
-
-
-jr_004_453f:
     xor a
-    ld [$cfe6], a
+    ld [waveChannelSoundEffectPlaying], a
     ret
 
-
-jr_004_4544:
+.soundEffectFF
     xor a
-    ldh [rNR30], a
-    ld a, [$cf09]
+    ldh [rAUD3ENA], a
+    ld a, [wavePatternDataPointer]
     ld e, a
-    ld a, [$cf0a]
+    ld a, [wavePatternDataPointer+1]
     ld d, a
-    call Call_004_47c9
+    call writeToWavePatternRam
     xor a
-    ld [$cee6], a
-    ld [$cfe5], a
-    ld [$cfe6], a
+    ld [waveChannelSoundEffectIsPlayingFlag], a
+    ld [waveChannelSoundEffectToPlay], a
+    ld [waveChannelSoundEffectPlaying], a
     ld a, [songPlaying]
-    cp $0e
+    cp song_earthquake
     ret z
 
-    ld a, [$cf1a]
-    ldh [rNR30], a
-    ld a, [$cf1b]
-    ldh [rNR31], a
-    ld a, [$cf1c]
-    ldh [rNR32], a
-    ld a, [$cf1d]
-    ldh [rNR33], a
-    ld a, [$cf1e]
-    ldh [rNR34], a
+    ld a, [waveChannelEnableOption]
+    ldh [rAUD3ENA], a
+    ld a, [waveChannelSoundLength]
+    ldh [rAUD3LEN], a
+    ld a, [waveChannelVolume]
+    ldh [rAUD3LEVEL], a
+    ld a, [waveChannelFrequency]
+    ldh [rAUD3LOW], a
+    ld a, [waveChannelFrequency+1]
+    ldh [rAUD3HIGH], a
     ret
+;}
 
-
-Call_004_457c:
+handleSong:
+;{
     ld a, [songRequest]
     and a
-    jr z, jr_004_45d2
+        jr z, handleSongPlaying
 
     cp $ff
-    jr z, jr_004_45b4
+        jr z, disableSoundChannels
 
-    cp $0f
-    jr nz, jr_004_4593
+    cp song_killedMetroid
+    jr nz, .endIf
+        call clearToneSweepChannelSoundEffect
+        call clearNoiseChannelSoundEffect
+        ld a, [songRequest]
+    .endIf
 
-    call Call_004_4716
-    call Call_004_4741
-    ld a, [songRequest]
-
-jr_004_4593:
     cp $21
-    jr nc, jr_004_45d2
+        jr nc, handleSongPlaying
 
     ld [songPlaying], a
     dec a
     ld e, a
     ld d, $00
-    ld hl, $5f70
+    ld hl, songStereoFlags
     add hl, de
     ld a, [hl]
-    ld [$cfec], a
+    ld [audioChannelOutputStereoFlags], a
     ldh [rNR51], a
     ld a, [songRequest]
-    ld hl, $5f30
-    call Call_004_46de
-    jp Jump_004_48a0
+    ld hl, songDataTable
+    call loadPointerFromTable
+    jp loadSongHeader
+;}
 
-
-Jump_004_45b4:
-jr_004_45b4:
+disableSoundChannels:
+;{
     xor a
-    ld [$cf04], a
-    ld [$cf05], a
-    ld [$cf06], a
-    ld [$cf07], a
-    call Call_004_471d
-    call Call_004_472e
-    call Call_004_473c
-    jp Jump_004_4748
+    ld [songToneSweepChannelEnable], a
+    ld [songToneChannelEnable], a
+    ld [songWaveChannelEnable], a
+    ld [songNoiseChannelEnable], a
+    call disableToneSweepChannel
+    call disableToneChannel
+    call disableWaveChannel
+    jp disableNoiseChannel
+;}
 
-
-jr_004_45cd:
+clearSongPlaying:
+;{
     xor a
     ld [songPlaying], a
     ret
+;}
 
-
-jr_004_45d2:
+handleSongPlaying:
+;{
     ld a, [songPlaying]
     and a
     ret z
 
     cp $21
-    jr nc, jr_004_45cd
+        jr nc, clearSongPlaying
 
     xor a
-    ld [$cf08], a
-    ld a, [$cf04]
+    ld [ramCF08], a
+    ld a, [songToneSweepChannelEnable]
     and a
-    jr z, jr_004_461d
+        jr z, .endToneSweep
 
     ld a, $01
-    ld [$cf03], a
-    ld a, [$cf3f]
-    ld [$cf36], a
+    ld [workingSoundChannel], a
+    ld a, [toneSweepInstructionTimer]
+    ld [workingInstructionTimer], a
     cp $01
-    jp z, Jump_004_497a
+        jp z, handleSong_loadNextToneSweepChannelSound
 
     dec a
-    ld [$cf3f], a
-    ld a, [$cee4]
+    ld [toneSweepInstructionTimer], a
+    ld a, [toneSweepChannelSoundEffectIsPlayingFlag]
     and a
-    jr nz, jr_004_461d
+        jr nz, .endToneSweep
 
-    ld a, [$cf40]
-    ld [$cf37], a
+    ld a, [toneSweepSoundLength]
+    ld [workingSoundLength], a
     and a
-    jr z, jr_004_461d
+        jr z, .endToneSweep
 
-    ld a, [$cf13]
+    ld a, [toneSweepChannelFrequency]
     ld c, a
-    ld a, [$cf14]
+    ld a, [toneSweepChannelFrequency+1]
     ld b, a
     call Call_004_4d75
-    ld a, [$cf0e]
-    ldh [rNR13], a
-    ld a, [$cf0f]
-    ldh [rNR14], a
+    ld a, [workingSoundChannelFrequency]
+    ldh [rAUD1LOW], a
+    ld a, [workingSoundChannelFrequency+1]
+    ldh [rAUD1HIGH], a
+    .endToneSweep
 
-Jump_004_461d:
-jr_004_461d:
     xor a
-    ld [$cf08], a
-    ld a, [$cf05]
+    ld [ramCF08], a
+    ld a, [songToneChannelEnable]
     and a
-    jr z, jr_004_465f
+        jr z, .endTone
 
     ld a, $02
-    ld [$cf03], a
-    ld a, [$cf48]
-    ld [$cf36], a
+    ld [workingSoundChannel], a
+    ld a, [toneInstructionTimer]
+    ld [workingInstructionTimer], a
     cp $01
-    jp z, Jump_004_49f3
+        jp z, handleSong_loadNextToneChannelSound
 
     dec a
-    ld [$cf48], a
-    ld a, [$cee5]
+    ld [toneInstructionTimer], a
+    ld a, [toneChannelSoundEffectIsPlayingFlag]
     and a
-    jr nz, jr_004_465f
+        jr nz, .endTone
 
-    ld a, [$cf49]
-    ld [$cf37], a
+    ld a, [toneSoundLength]
+    ld [workingSoundLength], a
     and a
-    jr z, jr_004_465f
+        jr z, .endTone
 
-    ld a, [$cf18]
+    ld a, [toneChannelFrequency]
     ld c, a
-    ld a, [$cf19]
+    ld a, [toneChannelFrequency+1]
     ld b, a
     call Call_004_4d75
-    ld a, [$cf0e]
-    ldh [rNR23], a
-    ld a, [$cf0f]
-    ldh [rNR24], a
+    ld a, [workingSoundChannelFrequency]
+    ldh [rAUD2LOW], a
+    ld a, [workingSoundChannelFrequency+1]
+    ldh [rAUD2HIGH], a
+    .endTone
 
-Jump_004_465f:
-jr_004_465f:
     xor a
-    ld [$cf08], a
-    ld a, [$cf06]
+    ld [ramCF08], a
+    ld a, [songWaveChannelEnable]
     and a
-    jr z, jr_004_46a3
+        jr z, .endWave
 
     ld a, $03
-    ld [$cf03], a
-    ld a, [$cf51]
-    ld [$cf36], a
+    ld [workingSoundChannel], a
+    ld a, [waveInstructionTimer]
+    ld [workingInstructionTimer], a
     cp $01
-    jp z, Jump_004_4a81
+        jp z, handleSong_loadNextWaveChannelSound
 
     dec a
-    ld [$cf51], a
-    ld a, [$cee6]
+    ld [waveInstructionTimer], a
+    ld a, [waveChannelSoundEffectIsPlayingFlag]
     and a
-    jr nz, jr_004_46a3
+        jr nz, .endWave
 
-    ld a, [$cf52]
-    ld [$cf37], a
+    ld a, [waveSoundLength]
+    ld [workingSoundLength], a
     and a
-    jr z, jr_004_46a3
+        jr z, .endWave
 
-    ld a, [$cf1d]
+    ld a, [waveChannelFrequency]
     ld c, a
-    ld a, [$cf1e]
+    ld a, [waveChannelFrequency+1]
     ld b, a
     call Call_004_4d75
-    ld a, [$cf0e]
+    ld a, [workingSoundChannelFrequency]
     ldh [rNR33], a
-    ld a, [$cf0f]
+    ld a, [workingSoundChannelFrequency+1]
     res 7, a
     ldh [rNR34], a
+    .endWave
 
-Jump_004_46a3:
-jr_004_46a3:
     xor a
-    ld [$cf08], a
-    ld a, [$cf07]
+    ld [ramCF08], a
+    ld a, [songNoiseChannelEnable]
     and a
-    jr z, jr_004_46c2
+        jr z, .endNoise
 
     ld a, $04
-    ld [$cf03], a
-    ld a, [$cf5a]
-    ld [$cf36], a
+    ld [workingSoundChannel], a
+    ld a, [noiseInstructionTimer]
+    ld [workingInstructionTimer], a
     cp $01
-    jp z, Jump_004_4af6
+        jp z, handleSong_loadNextNoiseChannelSound
 
     dec a
-    ld [$cf5a], a
+    ld [noiseInstructionTimer], a
     ret
+    .endNoise
 
-
-jr_004_46c2:
-    ld a, [$cf04]
+    ld a, [songToneSweepChannelEnable]
     and a
     ret nz
 
-    ld a, [$cf05]
+    ld a, [songToneChannelEnable]
     and a
     ret nz
 
-    ld a, [$cf06]
+    ld a, [songWaveChannelEnable]
     and a
     ret nz
 
-    ld a, [$cf07]
+    ld a, [songNoiseChannelEnable]
     and a
     ret nz
 
     xor a
     ld [songPlaying], a
-    ld [$cedf], a
+    ld [isolatedSoundEffectPlaying], a
     ret
+;}
 
-
-Call_004_46de:
+loadPointerFromTable:
+;{
+; hl = [[hl] + ([a] - 1) * 2]
     dec a
     add a
     ld b, $00
@@ -946,112 +875,132 @@ Call_004_46de:
     ld l, c
     ld h, b
     ret
+;}
 
-
-Call_004_46ea:
-    ld a, [$cec3]
+decrementToneSweepChannelSoundEffectTimer:
+;{
+    ld a, [toneSweepChannelSoundEffectTimer]
     and a
-    jr z, jr_004_46f5
+        jr z, gotoClearToneSweepChannelSoundEffect
 
     dec a
-    ld [$cec3], a
+    ld [toneSweepChannelSoundEffectTimer], a
     ret
+;}
 
+gotoClearToneSweepChannelSoundEffect:
+;{
+    jr clearToneSweepChannelSoundEffect
+;}
 
-Jump_004_46f5:
-jr_004_46f5:
-    jr jr_004_4716
-
-Call_004_46f7:
-    ld a, [$ceca]
+decrementToneChannelSoundEffectTimer:
+;{
+    ld a, [toneChannelSoundEffectTimer]
     and a
-    jr z, jr_004_4702
+        jr z, gotoClearToneChannelSoundEffect
 
     dec a
-    ld [$ceca], a
+    ld [toneChannelSoundEffectTimer], a
     ret
+;}
 
+gotoClearToneChannelSoundEffect:
+;{
+    jr clearToneChannelSoundEffect
+;}
 
-Jump_004_4702:
-jr_004_4702:
-    jr jr_004_4727
-
-Call_004_4704:
-    ld a, [$ced8]
+decrementNoiseChannelSoundEffectTimer:
+;{
+    ld a, [noiseChannelSoundEffectTimer]
     and a
-    jr z, jr_004_470f
+        jr z, gotoClearNoiseChannelSoundEffect
 
     dec a
-    ld [$ced8], a
+    ld [noiseChannelSoundEffectTimer], a
     ret
+;}
 
+gotoClearNoiseChannelSoundEffect:
+;{
+    jr clearNoiseChannelSoundEffect
+;}
 
-Jump_004_470f:
-jr_004_470f:
-    jr jr_004_4741
-
+; Dead code
+;{
     and a
-    jr z, jr_004_477b
+        jr z, silenceAudio
 
     dec a
     ret
+;}
 
-
-Call_004_4716:
-jr_004_4716:
+clearToneSweepChannelSoundEffect:
+;{
     xor a
-    ld [$cec1], a
-    ld [$cee4], a
+    ld [toneSweepChannelSoundEffectPlaying], a
+    ld [toneSweepChannelSoundEffectIsPlayingFlag], a
+;}
 
-Call_004_471d:
+disableToneSweepChannel:
+;{
     ld a, $08
-    ldh [rNR12], a
+    ldh [rAUD1ENV], a
     ld a, $80
-    ldh [rNR14], a
+    ldh [rAUD1HIGH], a
     xor a
     ret
+;}
 
-
-jr_004_4727:
+clearToneChannelSoundEffect:
+;{
     xor a
-    ld [$cec8], a
-    ld [$cee5], a
+    ld [toneChannelSoundEffectPlaying], a
+    ld [toneChannelSoundEffectIsPlayingFlag], a
+;}
 
-Call_004_472e:
+disableToneChannel:
+;{
     ld a, $08
-    ldh [rNR22], a
+    ldh [rAUD2ENV], a
     ld a, $80
-    ldh [rNR24], a
+    ldh [rAUD2HIGH], a
     xor a
     ret
+;}
 
-
+clearWaveChannelSoundEffect:
+;{
     xor a
-    ld [$cee6], a
+    ld [waveChannelSoundEffectIsPlayingFlag], a
+;}
 
-Call_004_473c:
+disableWaveChannel:
+;{
     xor a
-    ldh [rNR30], a
+    ldh [rAUD3ENA], a
     xor a
     ret
+;}
 
-
-Call_004_4741:
-jr_004_4741:
+clearNoiseChannelSoundEffect:
+;{
     xor a
-    ld [$ced6], a
-    ld [$cee7], a
+    ld [noiseChannelSoundEffectPlaying], a
+    ld [noiseChannelSoundEffectIsPlayingFlag], a
+;}
 
-Jump_004_4748:
+disableNoiseChannel:
+;{
     ld a, $08
     ldh [rNR42], a
     ld a, $80
     ldh [rNR44], a
     xor a
     ret
+;}
 
-
-Jump_004_4752:
+initializeAudio:
+;{
     ld a, $80
     ldh [rNR52], a
     ld a, $77
@@ -1060,1007 +1009,1052 @@ Jump_004_4752:
     ldh [rNR51], a
     ld hl, sfxRequest_square1
 
-    jr_004_4761:
+    .loop
         ld [hl], $00
         inc hl
         ld a, h
-        cp $d0
-    jr nz, jr_004_4761
+        cp $d0 ; $D000 / 10h
+    jr nz, .loop
+
+.ret
 ret
+;}
 
-
-Jump_004_476a:
+clearNonWaveSoundEffectRequests:
+;{
     xor a
     ld [sfxRequest_square1], a
     ld [sfxRequest_square2], a
-    ld [$cece], a
+    ld [sfxRequest_fakeWave], a
     ld [sfxRequest_noise], a
-    ld [$cfc7], a
+    ld [audioPauseControl], a
     ret
+;}
 
-
-Jump_004_477b:
-jr_004_477b:
+silenceAudio:
+;{
     ld a, $ff
     ldh [rNR51], a
     xor a
     ld [sfxRequest_square1], a
     ld [sfxRequest_square2], a
-    ld [$cece], a
+    ld [sfxRequest_fakeWave], a
     ld [sfxRequest_noise], a
-    ld [$cec1], a
-    ld [$cec8], a
-    ld [$cecf], a
-    ld [$ced6], a
+    ld [toneSweepChannelSoundEffectPlaying], a
+    ld [toneChannelSoundEffectPlaying], a
+    ld [ramCECF], a
+    ld [noiseChannelSoundEffectPlaying], a
     ld a, $ff
     ld [songRequest], a
     ld [songPlaying], a
     xor a
-    ld [$cede], a
-    ld [$cedf], a
-    ld [$cfe5], a
-    ld [$cfe6], a
-    ld [$cfc8], a
-    ld [$cfc7], a
+    ld [isolatedSoundEffectToPlay], a
+    ld [isolatedSoundEffectPlaying], a
+    ld [waveChannelSoundEffectToPlay], a
+    ld [waveChannelSoundEffectPlaying], a
+    ld [audioPauseSoundEffectTimer], a
+    ld [audioPauseControl], a
+;}
 
-Call_004_47b3:
+muteSoundChannels:
+;{
     ld a, $08
-    ldh [rNR12], a
-    ldh [rNR22], a
+    ldh [rAUD1ENV], a
+    ldh [rAUD2ENV], a
     ldh [rNR42], a
     ld a, $80
-    ldh [rNR14], a
-    ldh [rNR24], a
+    ldh [rAUD1HIGH], a
+    ldh [rAUD2HIGH], a
     ldh [rNR44], a
     xor a
     ldh [rNR10], a
-    ldh [rNR30], a
+    ldh [rAUD3ENA], a
 ret
+;}
 
-
-Call_004_47c9:
+writeToWavePatternRam:
+;{
     push bc
     push de
-    ld c, $30
+    ld c, _AUD3WAVERAM & $FF
 
-jr_004_47cd:
-    ld a, [de]
-    ld [c], a
-    inc de
-    inc c
-    ld a, c
-    cp $40
-    jr nz, jr_004_47cd
+    .loop
+        ld a, [de]
+        ld [c], a
+        inc de
+        inc c
+        ld a, c
+        cp (_AUD3WAVERAM + $10) & $FF
+    jr nz, .loop
 
     pop de
     pop bc
     ret
+;}
 
-
-Call_004_47d9:
-Jump_004_47d9:
+setChannelOptionSet:
+;{
+.toneSweep
     push hl
     ld hl, $ff10
     ld b, $05
-    jr jr_004_47f9
+    jr .merge
 
-Jump_004_47e1:
+.tone
     push hl
     ld hl, $ff16
     ld b, $04
-    jr jr_004_47f9
+    jr .merge
 
-Jump_004_47e9:
+.wave
     push hl
     ld hl, $ff1a
     ld b, $05
-    jr jr_004_47f9
+    jr .merge
 
-Call_004_47f1:
-Jump_004_47f1:
+.noise
     push hl
     ld hl, $ff20
     ld b, $04
-    jr jr_004_47f9
+    jr .merge
 
-jr_004_47f9:
-    ld a, [de]
-    ld [hl+], a
-    inc de
-    dec b
-    jr nz, jr_004_47f9
+.merge
+    .copyLoop
+        ld a, [de]
+        ld [hl+], a
+        inc de
+        dec b
+    jr nz, .copyLoop
 
     pop hl
     ret
+;}
 
-
-Jump_004_4801:
-    call Call_004_47b3
+audioPause:
+;{
+    call muteSoundChannels
     xor a
-    ld [$cec1], a
-    ld [$cec8], a
-    ld [$cecf], a
-    ld [$ced6], a
+    ld [toneSweepChannelSoundEffectPlaying], a
+    ld [toneChannelSoundEffectPlaying], a
+    ld [ramCECF], a
+    ld [noiseChannelSoundEffectPlaying], a
     ld a, $40
-    ld [$cfc8], a
+    ld [audioPauseSoundEffectTimer], a
     ld de, $487c
+;}
 
+; Set noise channel option set [de] and clear sound channel 1/2/4 sound effects to play
 jr_004_4819:
-    call Call_004_47f1
-    jp Jump_004_476a
+;{
+    call setChannelOptionSet.noise
+    jp clearNonWaveSoundEffectRequests
+;}
 
-
-jr_004_481f:
+handleAudio_paused_frame3D:
+;{
     ld de, $4880
     jr jr_004_4819
+;}
 
-jr_004_4824:
+handleAudio_paused_frame32:
+;{
     ld de, $488e
     jr jr_004_4819
+;}
 
-jr_004_4829:
+handleAudio_paused_frame27:
+;{
     ld de, $4897
     jr jr_004_4819
+;}
 
-jr_004_482e:
+handleAudio_paused_frame3F:
+;{
     ld de, $4884
+;}
 
+; Set tone/sweep channel option set [de] and clear sound channel 1/2/4 sound effects to play
 jr_004_4831:
-    call Call_004_47d9
-    jp Jump_004_476a
+;{
+    call setChannelOptionSet.toneSweep
+    jp clearNonWaveSoundEffectRequests
+;}
 
-
-jr_004_4837:
+handleAudio_paused_frame3A:
+;{
     ld de, $4889
     jr jr_004_4831
+;}
 
-jr_004_483c:
+handleAudio_paused_frame2F:
+;{
     ld de, $4892
     jr jr_004_4831
+;}
 
-jr_004_4841:
+handleAudio_paused_frame24:
+;{
     ld de, $489b
     jr jr_004_4831
+;}
 
-Jump_004_4846:
+audioUnpause:
+;{
     xor a
-    ld [$cfc8], a
-    ld a, $1e
+    ld [audioPauseSoundEffectTimer], a
+    ld a, toneSweepSoundEffect_unpaused
     ld [sfxRequest_square1], a
-    jp Jump_004_42c7
+    jp handleAudio_handleIsolatedSoundEffectToPlay
+;}
 
-
-Jump_004_4852:
-    ld hl, $cfc8
+handleAudio_paused:
+;{
+    ld hl, audioPauseSoundEffectTimer
     dec [hl]
     ld a, [hl]
     cp $3f
-    jr z, jr_004_482e
-
+        jr z, handleAudio_paused_frame3F
     cp $3d
-    jr z, jr_004_481f
-
+        jr z, handleAudio_paused_frame3D
     cp $3a
-    jr z, jr_004_4837
-
+        jr z, handleAudio_paused_frame3A
     cp $32
-    jr z, jr_004_4824
-
+        jr z, handleAudio_paused_frame32
     cp $2f
-    jr z, jr_004_483c
-
+        jr z, handleAudio_paused_frame2F
     cp $27
-    jr z, jr_004_4829
-
+        jr z, handleAudio_paused_frame27
     cp $24
-    jr z, jr_004_4841
-
+        jr z, handleAudio_paused_frame24
     cp $10
-    jp nz, Jump_004_476a
+        jp nz, clearNonWaveSoundEffectRequests
 
     inc [hl]
-    jp Jump_004_476a
+    jp clearNonWaveSoundEffectRequests
+;}
 
+pausedOptionSets:
+;{
+.frame40 ; $487C
+    LengthOptions $0
+    DescendingEnvelopeOptions 7, $8
+    PolynomialCounterOptions 1, 0, $3
+    CounterControlOptions 0
 
-    db $00, $87, $31, $80, $00, $83, $5d, $80, $1d, $80, $f7, $c0, $87, $1d, $80, $c7
-    db $d0, $87, $00, $53, $5c, $80, $1d, $80, $77, $d5, $87, $00, $36, $5b, $80, $1d
-    db $80, $47, $d9, $87
+.frame3D ; $4880
+    LengthOptions $0
+    DescendingEnvelopeOptions 3, $8
+    PolynomialCounterOptions 5, 1, $5
+    CounterControlOptions 0
 
-Jump_004_48a0:
-    call Call_004_4e8e
+.frame3F ; $4884
+    DescendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $F
+    FrequencyOptions $7C0, 0
+
+.frame3A ; $4889
+    DescendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $C
+    FrequencyOptions $7D0, 0
+
+.frame32 ; $488E
+    LengthOptions $0
+    DescendingEnvelopeOptions 3, $5
+    PolynomialCounterOptions 4, 1, $5
+    CounterControlOptions 0
+
+.frame2F ; $4892
+    DescendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $7
+    FrequencyOptions $7D5, 0
+
+.frame27 ; $4897
+    LengthOptions $0
+    DescendingEnvelopeOptions 6, $3
+    PolynomialCounterOptions 3, 1, $5
+    CounterControlOptions 0
+
+.frame24 ; $489B
+    DescendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $4
+    FrequencyOptions $7D9, 0
+;}
+
+loadSongHeader:
+;{
+    call resetSongSoundChannelOptions
     ld a, [hl+]
     bit 0, a
-    jr z, jr_004_48af
+    jr z, .endIf_frequencyTweak
+        push af
+        ld a, $01
+        ld [toneChannelFrequencyTweak], a
+        pop af
+    .endIf_frequencyTweak
 
-    push af
-    ld a, $01
-    ld [$cf60], a
-    pop af
-
-jr_004_48af:
     res 0, a
-    ld [$cf00], a
+    ld [songTranspose], a
     ld a, [hl+]
-    ld [$cf02], a
+    ld [songInstructionTimerArrayPointer+1], a
     ld a, [hl+]
-    ld [$cf01], a
+    ld [songInstructionTimerArrayPointer], a
     ld a, [hl+]
-    ld [$cf39], a
+    ld [toneSweepInstructionPointer+1], a
     ld a, [hl+]
-    ld [$cf38], a
+    ld [toneSweepInstructionPointer], a
     ld a, [hl+]
-    ld [$cf42], a
+    ld [toneInstructionPointer+1], a
     ld a, [hl+]
-    ld [$cf41], a
+    ld [toneInstructionPointer], a
     ld a, [hl+]
-    ld [$cf4b], a
+    ld [waveInstructionPointer+1], a
     ld a, [hl+]
-    ld [$cf4a], a
+    ld [waveInstructionPointer], a
     ld a, [hl+]
-    ld [$cf54], a
+    ld [noiseInstructionPointer+1], a
     ld a, [hl]
-    ld [$cf53], a
-    ld a, [$cf38]
+    ld [noiseInstructionPointer], a
+    ld a, [toneSweepInstructionPointer]
     ld h, a
-    ld a, [$cf39]
+    ld a, [toneSweepInstructionPointer+1]
     ld l, a
     ld a, l
     or h
-    jr nz, jr_004_48f6
+    jr nz, .else_toneSweep
+        xor a
+        ld [songToneSweepChannelEnable], a
+        ld a, $08
+        ldh [rAUD1ENV], a
+        ld a, $80
+        ldh [rAUD1HIGH], a
+        jr .endIf_toneSweep
+    .else_toneSweep
+        ld a, $01
+        ld [songToneSweepChannelEnable], a
+        ld a, [hl+]
+        ld [songToneSweepChannelInstructionPointer+1], a
+        ld a, [hl]
+        ld [songToneSweepChannelInstructionPointer], a
+    .endIf_toneSweep
 
-    xor a
-    ld [$cf04], a
-    ld a, $08
-    ldh [rNR12], a
-    ld a, $80
-    ldh [rNR14], a
-    jr jr_004_4903
+    ld a, [toneInstructionPointer]
+    ld h, a
+    ld a, [toneInstructionPointer+1]
+    ld l, a
+    ld a, l
+    or h
+    jr nz, .else_tone
+        xor a
+        ld [songToneChannelEnable], a
+        ld a, $08
+        ldh [rAUD2ENV], a
+        ld a, $80
+        ldh [rAUD2HIGH], a
+        jr .endIf_tone
+    .else_tone
+        ld a, $02
+        ld [songToneChannelEnable], a
+        ld a, [hl+]
+        ld [songToneChannelInstructionPointer+1], a
+        ld a, [hl]
+        ld [songToneChannelInstructionPointer], a
+    .endIf_tone
 
-jr_004_48f6:
+    ld a, [waveInstructionPointer]
+    ld h, a
+    ld a, [waveInstructionPointer+1]
+    ld l, a
+    ld a, l
+    or h
+    jr nz, .else_wave
+        xor a
+        ld [songWaveChannelEnable], a
+        xor a
+        ldh [rAUD3ENA], a
+        jr .endIf_wave
+    .else_wave
+        ld a, $03
+        ld [songWaveChannelEnable], a
+        ld a, [hl+]
+        ld [songWaveChannelInstructionPointer+1], a
+        ld a, [hl]
+        ld [songWaveChannelInstructionPointer], a
+    .endIf_wave
+
+    ld a, [noiseInstructionPointer]
+    ld h, a
+    ld a, [noiseInstructionPointer+1]
+    ld l, a
+    ld a, l
+    or h
+    jr nz, .else_noise
+        xor a
+        ld [songNoiseChannelEnable], a
+        jr .endIf_noise
+    .else_noise
+        ld a, $04
+        ld [songNoiseChannelEnable], a
+        ld a, [hl+]
+        ld [songNoiseChannelInstructionPointer+1], a
+        ld a, [hl]
+        ld [songNoiseChannelInstructionPointer], a
+    .endIf_noise
+
     ld a, $01
-    ld [$cf04], a
-    ld a, [hl+]
-    ld [$cf27], a
-    ld a, [hl]
-    ld [$cf26], a
-
-jr_004_4903:
-    ld a, [$cf41]
-    ld h, a
-    ld a, [$cf42]
-    ld l, a
-    ld a, l
-    or h
-    jr nz, jr_004_491d
-
-    xor a
-    ld [$cf05], a
-    ld a, $08
-    ldh [rNR22], a
-    ld a, $80
-    ldh [rNR24], a
-    jr jr_004_492a
-
-jr_004_491d:
-    ld a, $02
-    ld [$cf05], a
-    ld a, [hl+]
-    ld [$cf29], a
-    ld a, [hl]
-    ld [$cf28], a
-
-jr_004_492a:
-    ld a, [$cf4a]
-    ld h, a
-    ld a, [$cf4b]
-    ld l, a
-    ld a, l
-    or h
-    jr nz, jr_004_493f
-
-    xor a
-    ld [$cf06], a
-    xor a
-    ldh [rNR30], a
-    jr jr_004_494c
-
-jr_004_493f:
-    ld a, $03
-    ld [$cf06], a
-    ld a, [hl+]
-    ld [$cf2b], a
-    ld a, [hl]
-    ld [$cf2a], a
-
-jr_004_494c:
-    ld a, [$cf53]
-    ld h, a
-    ld a, [$cf54]
-    ld l, a
-    ld a, l
-    or h
-    jr nz, jr_004_495e
-
-    xor a
-    ld [$cf07], a
-    jr jr_004_496b
-
-jr_004_495e:
-    ld a, $04
-    ld [$cf07], a
-    ld a, [hl+]
-    ld [$cf2d], a
-    ld a, [hl]
-    ld [$cf2c], a
-
-jr_004_496b:
-    ld a, $01
-    ld [$cf3f], a
-    ld [$cf48], a
-    ld [$cf51], a
-    ld [$cf5a], a
+    ld [toneSweepInstructionTimer], a
+    ld [toneInstructionTimer], a
+    ld [waveInstructionTimer], a
+    ld [noiseInstructionTimer], a
     ret
+;}
 
-
-Jump_004_497a:
-    ld de, $cf38
-    ld hl, $cf2f
-    call Call_004_4d68
-    ld a, [$cf26]
+handleSong_loadNextToneSweepChannelSound:
+;{
+    ld de, toneSweepChannelSongProcessingState
+    ld hl, workingChannelSongProcessingState
+    call copyChannelSongProcessingState
+    ld a, [songToneSweepChannelInstructionPointer]
     ld h, a
-    ld a, [$cf27]
+    ld a, [songToneSweepChannelInstructionPointer+1]
     ld l, a
     ld a, $01
-    call Call_004_4b47
-    ld a, [$cf03]
-    ld [$cf04], a
+    call loadNextSound
+    ld a, [workingSoundChannel]
+    ld [songToneSweepChannelEnable], a
     and a
-    jp z, Jump_004_4e44
+        jp z, resetToneSweepChannelOptions
 
     ld a, h
-    ld [$cf26], a
+    ld [songToneSweepChannelInstructionPointer], a
     ld a, l
-    ld [$cf27], a
-    ld hl, $cf38
-    ld de, $cf2f
-    call Call_004_4d68
-    ld a, [$cf08]
+    ld [songToneSweepChannelInstructionPointer+1], a
+    ld hl, toneSweepChannelSongProcessingState
+    ld de, workingChannelSongProcessingState
+    call copyChannelSongProcessingState
+    ld a, [ramCF08]
     cp $01
-    jr nz, jr_004_49be
+    jr nz, .endIf
+        ld a, [workingSoundChannelSweep]
+        ld [toneSweepChannelSweep], a
+        ld a, [workingSoundChannelSoundLength]
+        ld [toneSweepChannelSoundLength], a
+    .endIf
 
-    ld a, [$cf0b]
-    ld [$cf10], a
-    ld a, [$cf0c]
-    ld [$cf11], a
-
-jr_004_49be:
-    ld a, [$cf0d]
-    ld [$cf12], a
-    ld a, [$cf0e]
-    ld [$cf13], a
-    ld a, [$cf0f]
-    ld [$cf14], a
-    ld a, [$cee4]
+    ld a, [workingSoundChannelEnvelope]
+    ld [toneSweepChannelEnvelope], a
+    ld a, [workingSoundChannelFrequency]
+    ld [toneSweepChannelFrequency], a
+    ld a, [workingSoundChannelFrequency+1]
+    ld [toneSweepChannelFrequency+1], a
+    ld a, [toneSweepChannelSoundEffectIsPlayingFlag]
     and a
-    jp nz, Jump_004_461d
+        jp nz, handleSongPlaying.endToneSweep
 
-    ld a, [$cf10]
+    ld a, [toneSweepChannelSweep]
     ldh [rNR10], a
-    ld a, [$cf11]
+    ld a, [toneSweepChannelSoundLength]
     ldh [rNR11], a
-    ld a, [$cf12]
-    ldh [rNR12], a
-    ld a, [$cf13]
-    ldh [rNR13], a
-    ld a, [$cf14]
-    ldh [rNR14], a
-    jp Jump_004_461d
+    ld a, [toneSweepChannelEnvelope]
+    ldh [rAUD1ENV], a
+    ld a, [toneSweepChannelFrequency]
+    ldh [rAUD1LOW], a
+    ld a, [toneSweepChannelFrequency+1]
+    ldh [rAUD1HIGH], a
+    jp handleSongPlaying.endToneSweep
+;}
 
-
-Jump_004_49f3:
-    ld de, $cf41
-    ld hl, $cf2f
-    call Call_004_4d68
-    ld a, [$cf28]
+handleSong_loadNextToneChannelSound:
+;{
+    ld de, toneChannelSongProcessingState
+    ld hl, workingChannelSongProcessingState
+    call copyChannelSongProcessingState
+    ld a, [songToneChannelInstructionPointer]
     ld h, a
-    ld a, [$cf29]
+    ld a, [songToneChannelInstructionPointer+1]
     ld l, a
     ld a, $02
-    call Call_004_4b47
-    ld a, [$cf03]
-    ld [$cf05], a
+    call loadNextSound
+    ld a, [workingSoundChannel]
+    ld [songToneChannelEnable], a
     and a
-    jp z, Jump_004_4e59
+        jp z, resetToneChannelOptions
 
     ld a, h
-    ld [$cf28], a
+    ld [songToneChannelInstructionPointer], a
     ld a, l
-    ld [$cf29], a
-    ld hl, $cf41
-    ld de, $cf2f
-    call Call_004_4d68
-    ld a, [$cf08]
+    ld [songToneChannelInstructionPointer+1], a
+    ld hl, toneChannelSongProcessingState
+    ld de, workingChannelSongProcessingState
+    call copyChannelSongProcessingState
+    ld a, [ramCF08]
     cp $02
-    jr nz, jr_004_4a31
+    jr nz, .endIf_setSoundLength
+        ld a, [workingSoundChannelSoundLength]
+        ld [toneChannelSoundLength], a
+    .endIf_setSoundLength
 
-    ld a, [$cf0c]
-    ld [$cf16], a
-
-jr_004_4a31:
-    ld a, [$cf0d]
-    ld [$cf17], a
-    ld a, [$cf0e]
-    ld [$cf18], a
-    ld a, [$cf0f]
-    ld [$cf19], a
-    ld a, [$cee5]
+    ld a, [workingSoundChannelEnvelope]
+    ld [toneChannelEnvelope], a
+    ld a, [workingSoundChannelFrequency]
+    ld [toneChannelFrequency], a
+    ld a, [workingSoundChannelFrequency+1]
+    ld [toneChannelFrequency+1], a
+    ld a, [toneChannelSoundEffectIsPlayingFlag]
     and a
-    jp nz, Jump_004_465f
+        jp nz, handleSongPlaying.endTone
 
-    ld a, [$cf16]
+    ld a, [toneChannelSoundLength]
     ldh [rNR21], a
-    ld a, [$cf60]
+    ld a, [toneChannelFrequencyTweak]
     cp $01
-    jr nz, jr_004_4a6f
+    jr nz, .endIf_tweakFrequency
+        ld a, [toneChannelFrequency]
+        ld l, a
+        ld a, [toneChannelFrequency+1]
+        ld h, a
+        cp $87
+        jr nc, .else
+            inc hl
+            inc hl
+            jr .endIf
+        .else
+            inc hl
+        .endIf
 
-    ld a, [$cf18]
-    ld l, a
-    ld a, [$cf19]
+        ld a, l
+        ld [toneChannelFrequency], a
+        ld a, h
+        ld [toneChannelFrequency+1], a
+    .endIf_tweakFrequency
+
+    ld a, [toneChannelEnvelope]
+    ldh [rAUD2ENV], a
+    ld a, [toneChannelFrequency]
+    ldh [rAUD2LOW], a
+    ld a, [toneChannelFrequency+1]
+    ldh [rAUD2HIGH], a
+    jp handleSongPlaying.endTone
+;}
+
+handleSong_loadNextWaveChannelSound:
+;{
+    ld de, waveChannelSongProcessingState
+    ld hl, workingChannelSongProcessingState
+    call copyChannelSongProcessingState
+    ld a, [songWaveChannelInstructionPointer]
     ld h, a
-    cp $87
-    jr nc, jr_004_4a66
-
-    inc hl
-    inc hl
-    jr jr_004_4a67
-
-jr_004_4a66:
-    inc hl
-
-jr_004_4a67:
-    ld a, l
-    ld [$cf18], a
-    ld a, h
-    ld [$cf19], a
-
-jr_004_4a6f:
-    ld a, [$cf17]
-    ldh [rNR22], a
-    ld a, [$cf18]
-    ldh [rNR23], a
-    ld a, [$cf19]
-    ldh [rNR24], a
-    jp Jump_004_465f
-
-
-Jump_004_4a81:
-    ld de, $cf4a
-    ld hl, $cf2f
-    call Call_004_4d68
-    ld a, [$cf2a]
-    ld h, a
-    ld a, [$cf2b]
+    ld a, [songWaveChannelInstructionPointer+1]
     ld l, a
     ld a, $03
-    call Call_004_4b47
-    ld a, [$cf03]
-    ld [$cf06], a
+    call loadNextSound
+    ld a, [workingSoundChannel]
+    ld [songWaveChannelEnable], a
     and a
-    jp z, Jump_004_4e6e
+        jp z, resetWaveChannelOptions
 
     ld a, h
-    ld [$cf2a], a
+    ld [songWaveChannelInstructionPointer], a
     ld a, l
-    ld [$cf2b], a
-    ld hl, $cf4a
-    ld de, $cf2f
-    call Call_004_4d68
-    ld a, [$cf0b]
-    ld [$cf1a], a
-    ld a, [$cf0c]
-    ld [$cf1b], a
-    ld a, [$cf0d]
-    ld [$cf1c], a
-    ld a, [$cf0e]
-    ld [$cf1d], a
-    ld a, [$cf0f]
-    ld [$cf1e], a
-    ld a, [$cee6]
+    ld [songWaveChannelInstructionPointer+1], a
+    ld hl, waveChannelSongProcessingState
+    ld de, workingChannelSongProcessingState
+    call copyChannelSongProcessingState
+    ld a, [workingSoundChannelEnable]
+    ld [waveChannelEnableOption], a
+    ld a, [workingSoundChannelSoundLength]
+    ld [waveChannelSoundLength], a
+    ld a, [workingSoundChannelVolume]
+    ld [waveChannelVolume], a
+    ld a, [workingSoundChannelFrequency]
+    ld [waveChannelFrequency], a
+    ld a, [workingSoundChannelFrequency+1]
+    ld [waveChannelFrequency+1], a
+    ld a, [waveChannelSoundEffectIsPlayingFlag]
     and a
-    jp nz, Jump_004_46a3
+        jp nz, handleSongPlaying.endWave
 
     xor a
-    ldh [rNR30], a
-    ld a, [$cf1a]
-    ldh [rNR30], a
-    ld a, [$cf1b]
+    ldh [rAUD3ENA], a
+    ld a, [waveChannelEnableOption]
+    ldh [rAUD3ENA], a
+    ld a, [waveChannelSoundLength]
     ldh [rNR31], a
-    ld a, [$cf1c]
+    ld a, [waveChannelVolume]
     ldh [rNR32], a
-    ld a, [$cf1d]
+    ld a, [waveChannelFrequency]
     ldh [rNR33], a
-    ld a, [$cf1e]
+    ld a, [waveChannelFrequency+1]
     ldh [rNR34], a
-    jp Jump_004_46a3
+    jp handleSongPlaying.endWave
+;}
 
-
-Jump_004_4af6:
-    ld de, $cf53
-    ld hl, $cf2f
-    call Call_004_4d68
-    ld a, [$cf2c]
+handleSong_loadNextNoiseChannelSound:
+;{
+    ld de, noiseChannelSongProcessingState
+    ld hl, workingChannelSongProcessingState
+    call copyChannelSongProcessingState
+    ld a, [songNoiseChannelInstructionPointer]
     ld h, a
-    ld a, [$cf2d]
+    ld a, [songNoiseChannelInstructionPointer+1]
     ld l, a
     ld a, $04
-    call Call_004_4b47
-    ld a, [$cf03]
-    ld [$cf07], a
+    call loadNextSound
+    ld a, [workingSoundChannel]
+    ld [songNoiseChannelEnable], a
     and a
-    jp z, Jump_004_4e7b
+        jp z, resetNoiseChannelOptions
 
     ld a, h
-    ld [$cf2c], a
+    ld [songNoiseChannelInstructionPointer], a
     ld a, l
-    ld [$cf2d], a
-    ld hl, $cf53
-    ld de, $cf2f
-    call Call_004_4d68
-    ld a, [$cee7]
+    ld [songNoiseChannelInstructionPointer+1], a
+    ld hl, noiseChannelSongProcessingState
+    ld de, workingChannelSongProcessingState
+    call copyChannelSongProcessingState
+    ld a, [noiseChannelSoundEffectIsPlayingFlag]
     and a
-    ret nz
+        ret nz
 
-    ld a, [$cf0c]
+    ld a, [workingSoundChannelSoundLength]
     ldh [rNR41], a
-    ld a, [$cf0d]
+    ld a, [workingSoundChannelEnvelope]
     ldh [rNR42], a
-    ld a, [$cf0e]
-    ldh [rNR43], a
-    ld [$cf22], a
-    ld a, [$cf0f]
+    ld a, [workingSoundChannelPolynomialCounter]
+    ldh [rAUD4POLY], a
+    ld [noiseChannelPolynomialCounter], a
+    ld a, [workingSoundChannelCounterControl]
     ldh [rNR44], a
-    ld [$cf23], a
+    ld [noiseChannelCounterControl], a
     ret
+;}
 
+loadNextSound:
+;{
+;; Parameters:
+;;     a:  Working sound channel
+;;     hl: Song instruction pointer list
+;; Returns:
+;;     a:  Working sound channel frequency / polynomial counter
 
-Call_004_4b47:
-    ld [$cf03], a
+    ld [workingSoundChannel], a
     ld a, [hl]
     and a
-    jp nz, Jump_004_4b7f
+        jp nz, .loop
 
-Jump_004_4b4f:
-    ld a, [$cf2f]
+.nextInstructionList
+    ld a, [workingInstructionPointer]
     ld h, a
-    ld a, [$cf30]
+    ld a, [workingInstructionPointer+1]
     ld l, a
     inc hl
     inc hl
     ld a, h
-    ld [$cf2f], a
+    ld [workingInstructionPointer], a
     ld a, l
-    ld [$cf30], a
+    ld [workingInstructionPointer+1], a
     ld a, [hl]
     and a
-    jr nz, jr_004_4b6f
+    jr nz, .endif_endOfInstructionLists
+        inc hl
+        ld a, [hl-]
+        and a
+            jr nz, .endif_endOfInstructionLists
 
-    inc hl
-    ld a, [hl-]
-    and a
-    jr nz, jr_004_4b6f
+        xor a
+        ld [workingSoundChannel], a
+        ret
+    .endif_endOfInstructionLists
 
-    xor a
-    ld [$cf03], a
-    ret
-
-
-jr_004_4b6f:
     ld a, [hl]
     cp $f0
-    jr nz, jr_004_4b7a
+    jr nz, .endIf_instructionPointerListGoto
+        inc hl
+        ld a, [hl-]
+        and a
+            call z, songInstruction_goto
+    .endIf_instructionPointerListGoto:
 
-    inc hl
-    ld a, [hl-]
-    and a
-    call z, Call_004_4d37
-
-jr_004_4b7a:
     ld a, [hl+]
     ld b, a
     ld a, [hl]
     ld h, a
     ld l, b
 
-Jump_004_4b7f:
-jr_004_4b7f:
+.loop:
     ld a, [hl]
     cp $f1
-    call z, Call_004_4cb7
+        call z, songInstruction_setWorkingSoundChannelOptions
     cp $f2
-    call z, Call_004_4d25
+        call z, songInstruction_setInstructionTimerArrayPointer
     cp $f3
-    call z, Call_004_4d30
+        call z, songInstruction_setMusicNoteOffset
     cp $f4
-    call z, Call_004_4d45
+        call z, songInstruction_markRepeatPoint
     cp $f5
-    call z, Call_004_4d54
+        call z, songInstruction_repeat
     and a
-    jp z, Jump_004_4b4f
-
+        jp z, .nextInstructionList
     cp $f6
-    jp nc, Jump_004_477b
-
+        jp nc, silenceAudio
     cp $f1
-    jr nc, jr_004_4b7f
-
+        jr nc, .loop
+        
     cp $9f
-    jp c, Jump_004_4bc7
+    jp c, .endIf_instructionLength
+        res 7, a
+        res 5, a
+        push af
+        ld a, [songInstructionTimerArrayPointer]
+        ld b, a
+        ld a, [songInstructionTimerArrayPointer+1]
+        ld c, a
+        pop af
+        push hl
+        ld l, a
+        ld h, $00
+        add hl, bc
+        ld a, [hl]
+        pop hl
+        ld [workingInstructionTimer], a
+        ld [workingInstructionLength], a
+        inc hl
+    .endIf_instructionLength
 
-    res 7, a
-    res 5, a
-    push af
-    ld a, [$cf01]
-    ld b, a
-    ld a, [$cf02]
-    ld c, a
-    pop af
-    push hl
-    ld l, a
-    ld h, $00
-    add hl, bc
-    ld a, [hl]
-    pop hl
-    ld [$cf36], a
-    ld [$cf34], a
-    inc hl
-
-Jump_004_4bc7:
-    ld a, [$cf34]
-    ld [$cf36], a
-    ld a, [$cf03]
+    ld a, [workingInstructionLength]
+    ld [workingInstructionTimer], a
+    ld a, [workingSoundChannel]
     cp $04
-    jp z, Jump_004_4c3d
-
+        jp z, .noise
     ld a, [hl+]
     cp $01
-    jr z, jr_004_4c23
-
+        jr z, .mute
     cp $03
-    jp z, Jump_004_4c5c
-
+        jp z, .songInstruction3
     cp $05
-    jp z, Jump_004_4c63
-
+        jp z, .songInstruction5
+        
     push hl
     push af
-    ld a, [$cf03]
+    ld a, [workingSoundChannel]
     cp $03
-    jr nz, jr_004_4bff
+    jr nz, .endIf_wave
+        ld a, [waveChannelSoundEffectIsPlayingFlag]
+        and a
+            jr nz, .endIf_wave
 
-    ld a, [$cee6]
-    and a
-    jr nz, jr_004_4bff
+        ld hl, rAUDTERM
+        set 6, [hl]
+        set 2, [hl]
+        ld a, $80
+        ld [workingSoundChannelEnable], a
+    .endIf_wave
 
-    ld hl, $ff25
-    set 6, [hl]
-    set 2, [hl]
-    ld a, $80
-    ld [$cf0b], a
-
-jr_004_4bff:
     pop af
     ld b, a
-    ld a, [$cf03]
+    ld a, [workingSoundChannel]
     cp $04
-    jr z, jr_004_4c0c
+    jr z, .endIf_noise
+        ld a, [songTranspose]
+        add b
+    .endIf_noise
 
-    ld a, [$cf00]
-    add b
-
-jr_004_4c0c:
     ld c, a
     ld b, $00
-    ld hl, $400c
+    ld hl, musicNotes
     add hl, bc
-    ld a, [$cf35]
-    ld [$cf0d], a
+    ld a, [workingSoundEnvelope]
+    ld [workingSoundChannelEnvelope], a
     ld a, [hl+]
-    ld [$cf0e], a
+    ld [workingSoundChannelFrequency], a
     ld a, [hl]
-    ld [$cf0f], a
+    ld [workingSoundChannelFrequency+1], a
     pop hl
     ret
 
-
-jr_004_4c23:
-    ld a, [$cf03]
+.mute:
+    ld a, [workingSoundChannel]
     cp $03
-    jr z, jr_004_4c35
+    jr z, .endIf_restartChannel
+        ld a, $08
+        ld [workingSoundChannelEnvelope], a
+        ld a, $80
+        ld [workingSoundChannelCounterControl], a
+        ret
+    .endIf_restartChannel
 
-    ld a, $08
-    ld [$cf0d], a
-    ld a, $80
-    ld [$cf0f], a
-    ret
-
-
-jr_004_4c35:
     xor a
-    ld [$cf0b], a
-    ld [$cf0d], a
+    ld [workingSoundChannelEnable], a
+    ld [workingSoundChannelVolume], a
     ret
 
-
-Jump_004_4c3d:
+.noise:
     ld a, [hl+]
     cp $01
-    jr z, jr_004_4c23
+        jr z, .mute
 
     push hl
     ld c, a
     ld b, $00
-    ld hl, $41bb
+    ld hl, songNoiseChannelOptionSets
     add hl, bc
     ld a, [hl+]
-    ld [$cf0c], a
+    ld [workingSoundChannelSoundLength], a
     ld a, [hl+]
-    ld [$cf0d], a
+    ld [workingSoundChannelEnvelope], a
     ld a, [hl+]
-    ld [$cf0e], a
+    ld [workingSoundChannelPolynomialCounter], a
     ld a, [hl]
-    ld [$cf0f], a
+    ld [workingSoundChannelCounterControl], a
     pop hl
     ret
 
-
-Jump_004_4c5c:
+.songInstruction3:
     ld a, $66
-    ld [$cf0d], a
-    jr jr_004_4c6a
+    ld [workingSoundChannelEnvelope], a
+    jr .merge
 
-Jump_004_4c63:
+.songInstruction5:
     ld a, $46
-    ld [$cf0d], a
-    jr jr_004_4c6a
+    ld [workingSoundChannelEnvelope], a
+    jr .merge
 
-jr_004_4c6a:
-    ld a, [$cedf]
-    cp $08
-    jr nz, jr_004_4c76
+.merge
+    ld a, [isolatedSoundEffectPlaying]
+    cp isolatedSoundEffect_fadeOutMusic
+    jr nz, .endIf_fadeOut
+        ld a, isolatedSoundEffect_fadeOutMusic
+        ld [workingSoundChannelEnvelope], a
+    .endIf_fadeOut
 
-    ld a, $08
-    ld [$cf0d], a
-
-jr_004_4c76:
-    ld a, [$cf03]
+    ld a, [workingSoundChannel]
     cp $01
-    jr z, jr_004_4c86
-
+        jr z, .setFrequency_toneSweep
     cp $02
-    jr z, jr_004_4c93
-
+        jr z, .setFrequency_tone
     cp $03
-    jr z, jr_004_4ca0
-
+        jr z, .setFrequency_wave
     ret
 
-
-jr_004_4c86:
-    ld a, [$cf13]
-    ld [$cf0e], a
-    ld a, [$cf14]
-    ld [$cf0f], a
+.setFrequency_toneSweep
+    ld a, [toneSweepChannelFrequency]
+    ld [workingSoundChannelFrequency], a
+    ld a, [toneSweepChannelFrequency+1]
+    ld [workingSoundChannelFrequency+1], a
     ret
 
-
-jr_004_4c93:
-    ld a, [$cf18]
-    ld [$cf0e], a
-    ld a, [$cf19]
-    ld [$cf0f], a
+.setFrequency_tone
+    ld a, [toneChannelFrequency]
+    ld [workingSoundChannelFrequency], a
+    ld a, [toneChannelFrequency+1]
+    ld [workingSoundChannelFrequency+1], a
     ret
 
-
-jr_004_4ca0:
-    ld a, [$cee6]
+.setFrequency_wave
+    ld a, [waveChannelSoundEffectIsPlayingFlag]
     and a
-    ret nz
+        ret nz
 
     ld a, $80
-    ld [$cf0b], a
-    ld a, [$cf1d]
-    ld [$cf0e], a
-    ld a, [$cf1e]
-    ld [$cf0f], a
+    ld [workingSoundChannelEnable], a
+    ld a, [waveChannelFrequency]
+    ld [workingSoundChannelFrequency], a
+    ld a, [waveChannelFrequency+1]
+    ld [workingSoundChannelFrequency+1], a
     ret
+;}
 
-
-Call_004_4cb7:
+songInstruction_setWorkingSoundChannelOptions:
+;{
     inc hl
-    ld a, [$cf03]
-    ld [$cf08], a
+    ld a, [workingSoundChannel]
+    ld [ramCF08], a
     cp $03
-    jr z, jr_004_4cec
+        jr z, songInstruction_setWorkingSoundChannelOptions_wave
 
-    ld a, [$cedf]
-    cp $08
-    jr nz, jr_004_4ccf
-
+    ld a, [isolatedSoundEffectPlaying]
+    cp isolatedSoundEffect_fadeOutMusic
+    jr nz, .else_fadeOut
+        ld a, [hl+]
+        ld [workingSoundChannelEnvelope], a
+        jr .endIf_fadeOut
+    .else_fadeOut
+        ld a, [hl+]
+        ld [workingSoundChannelEnvelope], a
+        ld [workingSoundEnvelope], a
+    .endIf_fadeOut
+    
     ld a, [hl+]
-    ld [$cf0d], a
-    jr jr_004_4cd6
-
-jr_004_4ccf:
-    ld a, [hl+]
-    ld [$cf0d], a
-    ld [$cf35], a
-
-jr_004_4cd6:
-    ld a, [hl+]
-    ld [$cf0b], a
+    ld [workingSoundChannelSweep], a
     ld a, [hl]
-    ld [$cf0c], a
+    ld [workingSoundChannelSoundLength], a
     res 6, a
     res 7, a
 
-jr_004_4ce2:
+.soundLength
     and a
-    jr nz, jr_004_4ce6
+    jr nz, .endIf_badCode
+        xor a
+    .endIf_badCode
 
-    xor a
+    ld [workingSoundLength], a
+;}
 
-jr_004_4ce6:
-    ld [$cf37], a
-
-jr_004_4ce9:
+endSongInstructionWithParameter:
+;{
     inc hl
+;}
 
-jr_004_4cea:
+endSongInstruction:
+;{
     ld a, [hl]
     ret
+;}
 
-
-jr_004_4cec:
+songInstruction_setWorkingSoundChannelOptions_wave:
+;{
     ld a, [hl+]
-    ld [$cf09], a
-    ld [$cfe3], a
+    ld [wavePatternDataPointer], a
+    ld [ramCFE3], a
     ld e, a
     ld a, [hl+]
-    ld [$cf0a], a
-    ld [$cfe4], a
+    ld [wavePatternDataPointer+1], a
+    ld [ramCFE3+1], a
     ld d, a
-    ld a, [$cedf]
-    cp $08
-    jr nz, jr_004_4d09
+    ld a, [isolatedSoundEffectPlaying]
+    cp isolatedSoundEffect_fadeOutMusic
+    jr nz, .else_fadeOut
+        ld a, [hl]
+        ld [workingSoundChannelVolume], a
+        jr .endIf_fadeOut
+    .else_fadeOut
+        ld a, [hl]
+        ld [workingSoundChannelVolume], a
+        ld [workingVolume], a
+    .endIf_fadeOut
 
-    ld a, [hl]
-    ld [$cf0d], a
-    jr jr_004_4d10
-
-jr_004_4d09:
-    ld a, [hl]
-    ld [$cf0d], a
-    ld [$cf35], a
-
-jr_004_4d10:
-    ld a, [$cee6]
+    ld a, [waveChannelSoundEffectIsPlayingFlag]
     and a
-    jr nz, jr_004_4d1c
+    jr nz, .endIf_disableWave
+        xor a
+        ldh [rAUD3ENA], a
+        call writeToWavePatternRam
+    .endIf_disableWave
 
-    xor a
-    ldh [rNR30], a
-    call Call_004_47c9
-
-jr_004_4d1c:
-    ld a, [$cf0d]
+    ld a, [workingSoundChannelVolume]
     res 5, a
     res 6, a
-    jr jr_004_4ce2
+    jr songInstruction_setWorkingSoundChannelOptions.soundLength
+;}
 
-Call_004_4d25:
+songInstruction_setInstructionTimerArrayPointer:
+;{
     inc hl
     ld a, [hl+]
-    ld [$cf02], a
+    ld [songInstructionTimerArrayPointer+1], a
     ld a, [hl+]
-    ld [$cf01], a
-    jr jr_004_4cea
+    ld [songInstructionTimerArrayPointer], a
+    jr endSongInstruction
+;}
 
-Call_004_4d30:
+songInstruction_setMusicNoteOffset:
+;{
     inc hl
     ld a, [hl+]
-    ld [$cf00], a
-    jr jr_004_4cea
+    ld [songTranspose], a
+    jr endSongInstruction
+;}
 
-Call_004_4d37:
+songInstruction_goto:
+;{
     inc hl
     inc hl
     ld a, [hl+]
-    ld [$cf30], a
+    ld [workingInstructionPointer+1], a
     ld b, a
     ld a, [hl]
-    ld [$cf2f], a
+    ld [workingInstructionPointer], a
     ld h, a
     ld l, b
     ret
+;}
 
-
-Call_004_4d45:
+songInstruction_markRepeatPoint:
+;{
     inc hl
     ld a, [hl+]
-    ld [$cf33], a
+    ld [workingRepeatPoint], a
     ld a, h
-    ld [$cf31], a
+    ld [workingRepeatCount], a
     ld a, l
-    ld [$cf32], a
-    jr jr_004_4cea
+    ld [workingRepeatCount+1], a
+    jr endSongInstruction
+;}
 
-Call_004_4d54:
-    ld a, [$cf33]
+songInstruction_repeat:
+;{
+    ld a, [workingRepeatPoint]
     dec a
-    ld [$cf33], a
+    ld [workingRepeatPoint], a
     and a
-    jr z, jr_004_4ce9
+        jr z, endSongInstructionWithParameter
 
-    ld a, [$cf31]
+    ld a, [workingRepeatCount]
     ld h, a
-    ld a, [$cf32]
+    ld a, [workingRepeatCount+1]
     ld l, a
-    jr jr_004_4cea
+    jr endSongInstruction
+;}
 
-Call_004_4d68:
-    ld a, [$4009]
+copyChannelSongProcessingState:
+;{
+    ld a, [channelSongProcessingStateSize]
     ld b, a
 
-jr_004_4d6c:
-    ld a, [de]
-    ld [hl+], a
-    inc de
-    dec b
-    ld a, b
-    and a
-    jr nz, jr_004_4d6c
+    .loopCopy
+        ld a, [de]
+        ld [hl+], a
+        inc de
+        dec b
+        ld a, b
+        and a
+    jr nz, .loopCopy
 
     ret
-
+;}
 
 Call_004_4d75:
-    ld a, [$cf37]
+;{
+    ld a, [workingSoundLength]
     cp $02
-    jr z, jr_004_4dc4
-
+        jr z, .soundLength2
     cp $03
-    jr z, jr_004_4dc9
-
+        jr z, .soundLength3
     cp $04
-    jr z, jr_004_4dce
-
+        jr z, .soundLength4
     cp $06
-    jr z, jr_004_4ddd
-
+        jr z, .soundLength6
     cp $07
-    jp z, Jump_004_4e21
-
+        jp z, .soundLength7
     cp $08
-    jp z, Jump_004_4e33
-
+        jp z, .soundLength8
     cp $09
-    jp z, Jump_004_4dd3
-
+        jp z, .soundLength9
     cp $0a
-    jp z, Jump_004_4dd8
-
+        jp z, .soundLengthA
     ret
 
-
-jr_004_4d9d:
+.merge
     ld a, [$cf2e]
     and a
-    jr nz, jr_004_4da8
+    jr nz, .endIf_resetTimer
+        ld a, $11
+        ld [$cf2e], a
+    .endIf_resetTimer
 
-    ld a, $11
-    ld [$cf2e], a
-
-jr_004_4da8:
     dec a
     ld [$cf2e], a
     ld e, a
@@ -2075,4414 +2069,12177 @@ jr_004_4da8:
     ld h, a
     add hl, de
     ld a, l
-    ld [$cf0e], a
+    ld [workingSoundChannelFrequency], a
     ld a, h
     res 7, a
     res 6, a
-    ld [$cf0f], a
+    ld [workingSoundChannelFrequency+1], a
     ret
 
-
-jr_004_4dc4:
+.soundLength2:
     ld hl, $4263
-    jr jr_004_4d9d
+    jr .merge
 
-jr_004_4dc9:
+.soundLength3:
     ld hl, $4273
-    jr jr_004_4d9d
+    jr .merge
 
-jr_004_4dce:
+.soundLength4:
     ld hl, $4283
-    jr jr_004_4d9d
+    jr .merge
 
-Jump_004_4dd3:
+.soundLength9:
     ld hl, $4293
-    jr jr_004_4d9d
+    jr .merge
 
-Jump_004_4dd8:
+.soundLengthA:
     ld hl, $42a3
-    jr jr_004_4d9d
+    jr .merge
 
-jr_004_4ddd:
+.soundLength6:
     inc bc
     ld a, c
-    ld [$cf0e], a
+    ld [workingSoundChannelFrequency], a
     ld a, b
     res 7, a
     res 6, a
-    ld [$cf0f], a
+    ld [workingSoundChannelFrequency+1], a
 
-jr_004_4dea:
-    ld a, [$cf03]
+.setFrequency
+    ld a, [workingSoundChannel]
     cp $01
-    jr nz, jr_004_4dfe
+    jr nz, .endIf_toneSweep
+        ld a, [workingSoundChannelFrequency]
+        ld [toneSweepChannelFrequency], a
+        ld a, [workingSoundChannelFrequency+1]
+        ld [toneSweepChannelFrequency+1], a
+        ret
+    .endIf_toneSweep
 
-    ld a, [$cf0e]
-    ld [$cf13], a
-    ld a, [$cf0f]
-    ld [$cf14], a
-    ret
-
-
-jr_004_4dfe:
     cp $02
-    jr nz, jr_004_4e0f
+    jr nz, .endIf_tone
+        ld a, [workingSoundChannelFrequency]
+        ld [toneChannelFrequency], a
+        ld a, [workingSoundChannelFrequency+1]
+        ld [toneChannelFrequency+1], a
+        ret
+    .endIf_tone
 
-    ld a, [$cf0e]
-    ld [$cf18], a
-    ld a, [$cf0f]
-    ld [$cf19], a
-    ret
-
-
-jr_004_4e0f:
     cp $03
-    ret nz
+        ret nz
 
-    ld a, [$cf0e]
-    ld [$cf1d], a
-    ld a, [$cf0f]
+    ld a, [workingSoundChannelFrequency]
+    ld [waveChannelFrequency], a
+    ld a, [workingSoundChannelFrequency+1]
     res 7, a
-    ld [$cf1e], a
+    ld [waveChannelFrequency+1], a
     ret
 
-
-Jump_004_4e21:
+.soundLength7:
     inc bc
     inc bc
     inc bc
     inc bc
     ld a, c
-    ld [$cf0e], a
+    ld [workingSoundChannelFrequency], a
     ld a, b
     res 7, a
     res 6, a
-    ld [$cf0f], a
-    jr jr_004_4dea
+    ld [workingSoundChannelFrequency+1], a
+    jr .setFrequency
 
-Jump_004_4e33:
+.soundLength8:
     dec bc
     dec bc
     dec bc
     ld a, c
-    ld [$cf0e], a
+    ld [workingSoundChannelFrequency], a
     ld a, b
     res 7, a
     res 6, a
-    ld [$cf0f], a
-    jr jr_004_4dea
+    ld [workingSoundChannelFrequency+1], a
+    jr .setFrequency
+;}
 
-Jump_004_4e44:
+resetToneSweepChannelOptions:
+;{
     xor a
-    ld [$cf04], a
+    ld [songToneSweepChannelEnable], a
     ld a, $08
-    ldh [rNR12], a
-    ld [$cf12], a
+    ldh [rAUD1ENV], a
+    ld [toneSweepChannelEnvelope], a
     ld a, $80
-    ldh [rNR14], a
-    ld [$cf14], a
-    jp Jump_004_461d
+    ldh [rAUD1HIGH], a
+    ld [toneSweepChannelFrequency+1], a
+    jp handleSongPlaying.endToneSweep
+;}
 
-
-Jump_004_4e59:
+resetToneChannelOptions:
+;{
     xor a
-    ld [$cf05], a
+    ld [songToneChannelEnable], a
     ld a, $08
-    ldh [rNR22], a
-    ld [$cf17], a
+    ldh [rAUD2ENV], a
+    ld [toneChannelEnvelope], a
     ld a, $80
-    ldh [rNR24], a
-    ld [$cf19], a
-    jp Jump_004_465f
+    ldh [rAUD2HIGH], a
+    ld [toneChannelFrequency+1], a
+    jp handleSongPlaying.endTone
+;}
 
-
-Jump_004_4e6e:
+resetWaveChannelOptions:
+;{
     xor a
-    ld [$cf06], a
+    ld [songWaveChannelEnable], a
     xor a
-    ldh [rNR30], a
-    ld [$cf1a], a
-    jp Jump_004_46a3
+    ldh [rAUD3ENA], a
+    ld [waveChannelEnableOption], a
+    jp handleSongPlaying.endWave
+;}
 
-
-Jump_004_4e7b:
+resetNoiseChannelOptions:
+;{
     xor a
-    ld [$cf07], a
+    ld [songNoiseChannelEnable], a
     ld a, $08
     ldh [rNR42], a
-    ld [$cf21], a
+    ld [noiseChannelEnvelope], a
     ld a, $80
     ldh [rNR44], a
-    ld [$cf23], a
+    ld [noiseChannelCounterControl], a
     ret
+;}
 
-
-Call_004_4e8e:
+resetSongSoundChannelOptions:
+;{
     push hl
-    ld hl, $cf2f
-    ld a, [$400a]
+    ld hl, songProcessingStates
+    ld a, [channelAllSongProcessingStateSizes]
     ld b, a
 
-jr_004_4e96:
-    ld [hl], $00
-    inc hl
-    dec b
-    ld a, b
-    and a
-    jr nz, jr_004_4e96
+    .loop
+        ld [hl], $00
+        inc hl
+        dec b
+        ld a, b
+        and a
+    jr nz, .loop
 
     pop hl
     xor a
-    ld [$cee4], a
-    ld [$cee5], a
-    ld [$cee6], a
-    ld [$cee7], a
-    ld [$cf60], a
+    ld [toneSweepChannelSoundEffectIsPlayingFlag], a
+    ld [toneChannelSoundEffectIsPlayingFlag], a
+    ld [waveChannelSoundEffectIsPlayingFlag], a
+    ld [noiseChannelSoundEffectIsPlayingFlag], a
+    ld [toneChannelFrequencyTweak], a
     ldh [rNR10], a
-    ldh [rNR30], a
+    ldh [rAUD3ENA], a
     ld a, $08
-    ldh [rNR12], a
-    ldh [rNR22], a
+    ldh [rAUD1ENV], a
+    ldh [rAUD2ENV], a
     ldh [rNR42], a
     ld a, $80
-    ldh [rNR14], a
-    ldh [rNR24], a
+    ldh [rAUD1HIGH], a
+    ldh [rAUD2HIGH], a
     ldh [rNR44], a
     ret
+;}
 
+; Tone/sweep channel sound effects
+;{
+toneSweepSfx_initPointers:
+;{
+    dw toneSweepSfx_init_1 ; 1: Jumping
+    dw toneSweepSfx_init_2 ; 2: Hi-jumping
+    dw toneSweepSfx_init_3 ; 3: Screw attacking
+    dw toneSweepSfx_init_4 ; 4: Uncrouching / turning around / landing
+    dw toneSweepSfx_init_5 ; 5: Crouching / unmorphing
+    dw toneSweepSfx_init_6 ; 6: Morphing
+    dw toneSweepSfx_init_7 ; 7: Shooting beam
+    dw toneSweepSfx_init_8 ; 8: Shooting missile
+    dw toneSweepSfx_init_9 ; 9: Shooting ice beam
+    dw toneSweepSfx_init_A ; Ah: Shooting plasma beam
+    dw toneSweepSfx_init_B ; Bh: Shooting spazer beam
+    dw toneSweepSfx_init_C ; Ch: Picked up missile drop
+    dw toneSweepSfx_init_D ; Dh: Spider ball
+    dw toneSweepSfx_init_E ; Eh: Picked up energy drop
+    dw toneSweepSfx_init_F ; Fh: Shot missile door with beam
+    dw toneSweepSfx_init_10 ; 10h
+    dw initializeAudio.ret ; 11h: ret
+    dw toneSweepSfx_init_12 ; 12h
+    dw toneSweepSfx_init_13 ; 13h: Bomb laid
+    dw toneSweepSfx_init_14 ; 14h
+    dw toneSweepSfx_init_15 ; 15h: Option select / missile select
+    dw toneSweepSfx_init_16 ; 16h: Shooting wave beam
+    dw toneSweepSfx_init_17 ; 17h
+    dw toneSweepSfx_init_18 ; 18h: Samus' health changed
+    dw toneSweepSfx_init_19 ; 19h: No missile dud shot
+    dw toneSweepSfx_init_1A ; 1Ah
+    dw toneSweepSfx_init_1B ; 1Bh: Metroid cry
+    dw toneSweepSfx_init_1C ; 1Ch: Saved
+    dw toneSweepSfx_init_1D ; 1Dh
+    dw toneSweepSfx_init_1E ; 1Eh: Unpaused
+;}
 
-    db $4c, $4f, $b9, $4f, $30, $50, $d5, $50, $fd, $50, $1d, $51, $47, $51, $87, $51
-    db $ed, $51, $06, $52, $1f, $52, $38, $52, $70, $52, $84, $52, $b6, $52, $cc, $52
+toneSweepSfx_playbackPointers:
+;{
+    dw toneSweepSfx_playback_1 ; 1: Jumping
+    dw toneSweepSfx_playback_2 ; 2: Hi-jumping
+    dw toneSweepSfx_playback_3 ; 3: Screw attacking
+    dw toneSweepSfx_playback_4 ; 4: Uncrouching / turning around / landing
+    dw toneSweepSfx_playback_5 ; 5: Crouching / unmorphing
+    dw toneSweepSfx_playback_6 ; 6: Morphing
+    dw toneSweepSfx_playback_7 ; 7: Shooting beam
+    dw toneSweepSfx_playback_8 ; 8: Shooting missile
+    dw toneSweepSfx_playback_9 ; 9: Shooting ice beam
+    dw toneSweepSfx_playback_A ; Ah: Shooting plasma beam
+    dw toneSweepSfx_playback_B ; Bh: Shooting spazer beam
+    dw toneSweepSfx_playback_C ; Ch: Picked up missile drop
+    dw toneSweepSfx_playback_D ; Dh: Spider ball
+    dw toneSweepSfx_playback_E ; Eh: Picked up energy drop
+    dw toneSweepSfx_playback_F ; Fh: Shot missile door with beam
+    dw toneSweepSfx_playback_10 ; 10h
+    dw initializeAudio.ret ; 11h: ret
+    dw decrementToneSweepChannelSoundEffectTimer ; 12h
+    dw decrementToneSweepChannelSoundEffectTimer ; 13h: Bomb laid
+    dw toneSweepSfx_playback_14 ; 14h
+    dw toneSweepSfx_playback_15 ; 15h: Option select / missile select
+    dw toneSweepSfx_playback_16 ; 16h: Shooting wave beam
+    dw toneSweepSfx_playback_17 ; 17h
+    dw decrementToneSweepChannelSoundEffectTimer ; 18h: Samus' health changed
+    dw toneSweepSfx_playback_19 ; 19h: No missile dud shot
+    dw toneSweepSfx_playback_1A ; 1Ah
+    dw toneSweepSfx_playback_1B ; 1Bh: Metroid cry
+    dw toneSweepSfx_playback_1C ; 1Ch: Saved
+    dw toneSweepSfx_playback_1D ; 1Dh
+    dw toneSweepSfx_playback_1E ; 1Eh: Unpaused
+;}
 
-    ld l, c
-    ld b, a
-    inc a
-    ld d, e
-
-    db $43, $53
-
-    ld c, e
-    ld d, e
-
-    db $61, $53, $77, $53, $b7, $53, $f7, $53
-
-    add hl, hl
-    ld d, h
-
-    db $3f, $54, $97, $54, $ce, $54, $ee, $54, $1c, $55, $6c, $4f, $d9, $4f, $38, $50
-    db $e5, $50, $05, $51, $25, $51, $4f, $51, $8f, $51, $fa, $51, $13, $52, $2c, $52
-    db $40, $52, $78, $52, $8f, $52, $be, $52, $d4, $52
-
-    ld l, c
-    ld b, a
-    db $ea
-    ld b, [hl]
-
-    db $ea, $46
-
-    ld d, e
-    ld d, e
-
-    db $69, $53, $7f, $53, $c2, $53, $ea, $46
-
-    db $31
-    ld d, h
-
-    db $47, $54, $ae, $54, $d6, $54, $f6, $54, $24, $55
-
-jr_004_4f3c:
+playShortJumpSound:
+;{
     ld a, $0b
-    ld de, $5a28
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.jumping_0
+    jp playToneSweepSfx
+;}
 
-
-jr_004_4f44:
-    call Call_004_46ea
+playingShortJumpSound:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $09
-    jr z, jr_004_4f8b
-
+        jr z, toneSweepSfx_playback_1.set1
     ret
+;}
 
+toneSweepSfx_init_1:
+;{
+    ld a, [toneSweepChannelSoundEffectPlaying]
+    cp toneSweepSoundEffect_shootingWaveBeam
+        jp z, handleToneSweepChannelSoundEffect.playing
 
-    ld a, [$cec1]
-    cp $16
-    jp z, Jump_004_448f
+    cp toneSweepSoundEffect_shootingBeam
+    jr c, .endIf
+        cp toneSweepSoundEffect_shootingSpazerBeam
+            jp c, handleToneSweepChannelSoundEffect.playing
+    .endIf
 
-    cp $07
-    jr c, jr_004_4f5d
-
-    cp $0b
-    jp c, Jump_004_448f
-
-jr_004_4f5d:
     ld a, [songPlaying]
-    cp $03
-    jr z, jr_004_4f3c
+    cp song_chozoRuins
+        jr z, playShortJumpSound
 
     ld a, $32
-    ld de, $5a28
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.jumping_0
+    jp playToneSweepSfx
+;}
 
-
+toneSweepSfx_playback_1:
+;{
     ld a, [songPlaying]
-    cp $03
-    jr z, jr_004_4f44
+    cp song_chozoRuins
+        jr z, playingShortJumpSound
 
-    call Call_004_46ea
+    call decrementToneSweepChannelSoundEffectTimer
     cp $2d
-    jr z, jr_004_4f8b
-
+        jr z, .set1
     cp $1e
-    jr z, jr_004_4f91
-
+        jr z, .set2
     cp $18
-    jr z, jr_004_4f97
-
+        jr z, .set3
     cp $06
-    jr z, jr_004_4f9d
-
+        jr z, .set4
     cp $01
-    jr z, jr_004_4fa3
-
+        jr z, .set5
     ret
 
+.set1
+    ld de, toneSweepOptionSets.jumping_1
+    jp setChannelOptionSet.toneSweep
 
-jr_004_4f8b:
-    ld de, $5a2d
-    jp Jump_004_47d9
+.set2
+    ld de, toneSweepOptionSets.jumping_2
+    jp setChannelOptionSet.toneSweep
 
+.set3
+    ld de, toneSweepOptionSets.jumping_3
+    jp setChannelOptionSet.toneSweep
 
-jr_004_4f91:
-    ld de, $5a32
-    jp Jump_004_47d9
+.set4
+    ld de, toneSweepOptionSets.jumping_4
+    jp setChannelOptionSet.toneSweep
 
+.set5
+    ld de, toneSweepOptionSets.jumping_5
+    jp setChannelOptionSet.toneSweep
+;}
 
-jr_004_4f97:
-    ld de, $5a37
-    jp Jump_004_47d9
-
-
-jr_004_4f9d:
-    ld de, $5a3c
-    jp Jump_004_47d9
-
-
-jr_004_4fa3:
-    ld de, $5a41
-    jp Jump_004_47d9
-
-
-jr_004_4fa9:
+playShortHiJumpSound:
+;{
     ld a, $09
-    ld de, $5a46
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.hijumping_0
+    jp playToneSweepSfx
+;}
 
-
-jr_004_4fb1:
-    call Call_004_46ea
+playingShortHiJumpSound:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $08
-    jr z, jr_004_5006
+        jr z, toneSweepSfx_playback_2.set1
 
     ret
+;}
 
+toneSweepSfx_init_2:
+;{
+    ld a, [toneSweepChannelSoundEffectPlaying]
+    cp toneSweepSoundEffect_shootingWaveBeam
+        jp z, handleToneSweepChannelSoundEffect.playing
 
-    ld a, [$cec1]
-    cp $16
-    jp z, Jump_004_448f
+    cp toneSweepSoundEffect_shootingBeam
+    jr c, .endIf
+        cp toneSweepSoundEffect_shootingSpazerBeam
+            jp c, handleToneSweepChannelSoundEffect.playing
+    .endIf
 
-    cp $07
-    jr c, jr_004_4fca
-
-    cp $0b
-    jp c, Jump_004_448f
-
-jr_004_4fca:
     ld a, [songPlaying]
-    cp $03
-    jr z, jr_004_4fa9
+    cp song_chozoRuins
+        jr z, playShortHiJumpSound
 
     ld a, $43
-    ld de, $5a46
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.hijumping_0
+    jp playToneSweepSfx
+;}
 
-
+toneSweepSfx_playback_2:
+;{
     ld a, [songPlaying]
-    cp $03
-    jr z, jr_004_4fb1
+    cp song_chozoRuins
+        jr z, playingShortHiJumpSound
 
-    call Call_004_46ea
+    call decrementToneSweepChannelSoundEffectTimer
     cp $41
-    jr z, jr_004_5006
-
+        jr z, .set1
     cp $2d
-    jr z, jr_004_500c
-
+        jr z, .set2
     cp $2b
-    jr z, jr_004_5012
-
+        jr z, .set3
     cp $18
-    jr z, jr_004_5018
-
+        jr z, .set4
     cp $15
-    jr z, jr_004_501e
-
+        jr z, .set5
     cp $04
-    jr z, jr_004_5024
-
+        jr z, .set6
     cp $01
-    jr z, jr_004_502a
-
+        jr z, .set7
     ret
 
+.set0
+    ld de, toneSweepOptionSets.hijumping_0
+    jp setChannelOptionSet.toneSweep
 
-    ld de, $5a46
-    jp Jump_004_47d9
+.set1
+    ld de, toneSweepOptionSets.hijumping_1
+    jp setChannelOptionSet.toneSweep
 
+.set2
+    ld de, toneSweepOptionSets.hijumping_2
+    jp setChannelOptionSet.toneSweep
 
-jr_004_5006:
-    ld de, $5a4b
-    jp Jump_004_47d9
+.set3
+    ld de, toneSweepOptionSets.hijumping_3
+    jp setChannelOptionSet.toneSweep
 
+.set4
+    ld de, toneSweepOptionSets.hijumping_4
+    jp setChannelOptionSet.toneSweep
 
-jr_004_500c:
-    ld de, $5a50
-    jp Jump_004_47d9
+.set5
+    ld de, toneSweepOptionSets.hijumping_5
+    jp setChannelOptionSet.toneSweep
 
+.set6
+    ld de, toneSweepOptionSets.hijumping_6
+    jp setChannelOptionSet.toneSweep
 
-jr_004_5012:
-    ld de, $5a55
-    jp Jump_004_47d9
+.set7
+    ld de, toneSweepOptionSets.hijumping_7
+    jp setChannelOptionSet.toneSweep
+;}
 
-
-jr_004_5018:
-    ld de, $5a5a
-    jp Jump_004_47d9
-
-
-jr_004_501e:
-    ld de, $5a5f
-    jp Jump_004_47d9
-
-
-jr_004_5024:
-    ld de, $5a64
-    jp Jump_004_47d9
-
-
-jr_004_502a:
-    ld de, $5a69
-    jp Jump_004_47d9
-
-
+toneSweepSfx_init_3:
+;{
     ld a, $3f
-    ld de, $5a6e
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.screwAttacking_0
+    jp playToneSweepSfx
+;}
 
-
-    ld a, [$cec3]
+toneSweepSfx_playback_3:
+;{
+    ld a, [toneSweepChannelSoundEffectTimer]
     and a
-    call z, Call_004_50d2
+        call z, .getTimerResetValue
+        
     dec a
-    ld [$cec3], a
+    ld [toneSweepChannelSoundEffectTimer], a
     cp $3b
-    jr z, jr_004_5084
-
+        jr z, .set1
     cp $37
-    jr z, jr_004_508a
-
+        jr z, .set2
     cp $33
-    jr z, jr_004_5090
-
+        jr z, .set3
     cp $2f
-    jr z, jr_004_5096
-
+        jr z, .set4
     cp $2b
-    jr z, jr_004_509c
-
+        jr z, .set5
     cp $27
-    jr z, jr_004_50a2
-
+        jr z, .set6
     cp $23
-    jr z, jr_004_50a8
-
+        jr z, .set7
     cp $1f
-    jr z, jr_004_50ae
-
+        jr z, .set8
     cp $1b
-    jr z, jr_004_50b4
-
+        jr z, .set9
     cp $17
-    jr z, jr_004_50ba
-
+        jr z, .setA
     cp $13
-    jr z, jr_004_50c0
-
+        jr z, .setB
     cp $0f
-    jr z, jr_004_50ba
-
+        jr z, .setA
     cp $0c
-    jr z, jr_004_50c0
-
+        jr z, .setB
     cp $09
-    jr z, jr_004_50c6
-
+        jr z, .setC
     cp $06
-    jr z, jr_004_50cc
-
+        jr z, .setD
     cp $03
-    jr z, jr_004_50c6
-
+        jr z, .setC
     ret
 
+.set1
+    ld de, toneSweepOptionSets.screwAttacking_1
+    jp setChannelOptionSet.toneSweep
 
-jr_004_5084:
-    ld de, $5a73
-    jp Jump_004_47d9
+.set2
+    ld de, toneSweepOptionSets.screwAttacking_2
+    jp setChannelOptionSet.toneSweep
 
+.set3
+    ld de, toneSweepOptionSets.screwAttacking_3
+    jp setChannelOptionSet.toneSweep
 
-jr_004_508a:
-    ld de, $5a78
-    jp Jump_004_47d9
+.set4
+    ld de, toneSweepOptionSets.screwAttacking_4
+    jp setChannelOptionSet.toneSweep
 
+.set5
+    ld de, toneSweepOptionSets.screwAttacking_5
+    jp setChannelOptionSet.toneSweep
 
-jr_004_5090:
-    ld de, $5a7d
-    jp Jump_004_47d9
+.set6
+    ld de, toneSweepOptionSets.screwAttacking_6
+    jp setChannelOptionSet.toneSweep
 
+.set7
+    ld de, toneSweepOptionSets.screwAttacking_7
+    jp setChannelOptionSet.toneSweep
 
-jr_004_5096:
-    ld de, $5a82
-    jp Jump_004_47d9
+.set8
+    ld de, toneSweepOptionSets.screwAttacking_8
+    jp setChannelOptionSet.toneSweep
 
+.set9
+    ld de, toneSweepOptionSets.screwAttacking_9
+    jp setChannelOptionSet.toneSweep
 
-jr_004_509c:
-    ld de, $5a87
-    jp Jump_004_47d9
+.setA
+    ld de, toneSweepOptionSets.screwAttacking_A
+    jp setChannelOptionSet.toneSweep
 
+.setB
+    ld de, toneSweepOptionSets.screwAttacking_B
+    jp setChannelOptionSet.toneSweep
 
-jr_004_50a2:
-    ld de, $5a8c
-    jp Jump_004_47d9
+.setC
+    ld de, toneSweepOptionSets.screwAttacking_C
+    jp setChannelOptionSet.toneSweep
 
+.setD
+    ld de, toneSweepOptionSets.screwAttacking_D
+    jp setChannelOptionSet.toneSweep
 
-jr_004_50a8:
-    ld de, $5a91
-    jp Jump_004_47d9
-
-
-jr_004_50ae:
-    ld de, $5a96
-    jp Jump_004_47d9
-
-
-jr_004_50b4:
-    ld de, $5a9b
-    jp Jump_004_47d9
-
-
-jr_004_50ba:
-    ld de, $5aa0
-    jp Jump_004_47d9
-
-
-jr_004_50c0:
-    ld de, $5aa5
-    jp Jump_004_47d9
-
-
-jr_004_50c6:
-    ld de, $5aaa
-    jp Jump_004_47d9
-
-
-jr_004_50cc:
-    ld de, $5aaf
-    jp Jump_004_47d9
-
-
-Call_004_50d2:
+.getTimerResetValue
     ld a, $10
     ret
+;}
 
-
-    ld a, [$cec1]
+toneSweepSfx_init_4:
+;{
+    ld a, [toneSweepChannelSoundEffectPlaying]
     cp $04
-    jp nc, Jump_004_448f
+        jp nc, handleToneSweepChannelSoundEffect.playing
 
     ld a, $0a
-    ld de, $5ab4
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.standingTransition_0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_4:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $06
-    jr z, jr_004_50f1
-
+        jr z, .set1
     cp $02
-    jr z, jr_004_50f7
-
+        jr z, .set2
     ret
 
+.set1
+    ld de, toneSweepOptionSets.standingTransition_1
+    jp setChannelOptionSet.toneSweep
 
-jr_004_50f1:
-    ld de, $5ab9
-    jp Jump_004_47d9
+.set2
+    ld de, toneSweepOptionSets.standingTransition_2
+    jp setChannelOptionSet.toneSweep
+;}
 
-
-jr_004_50f7:
-    ld de, $5abe
-    jp Jump_004_47d9
-
-
+toneSweepSfx_init_5:
+;{
     ld a, $0a
-    ld de, $5ac3
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.crouchingTransition_0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_5:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $06
-    jr z, jr_004_5111
-
+        jr z, .set1
     cp $02
-    jr z, jr_004_5117
-
+        jr z, .set2
     ret
 
+.set1
+    ld de, toneSweepOptionSets.crouchingTransition_1
+    jp setChannelOptionSet.toneSweep
 
-jr_004_5111:
-    ld de, $5ac8
-    jp Jump_004_47d9
+.set2
+    ld de, toneSweepOptionSets.crouchingTransition_2
+    jp setChannelOptionSet.toneSweep
+;}
 
-
-jr_004_5117:
-    ld de, $5acd
-    jp Jump_004_47d9
-
-
+toneSweepSfx_init_6:
+;{
     ld a, $0e
-    ld de, $5ad2
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.morphing_0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_6:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $0b
-    jr z, jr_004_5135
-
+        jr z, .set0
     cp $08
-    jr z, jr_004_513b
-
+        jr z, .set1
     cp $03
-    jr z, jr_004_5141
-
+        jr z, .set2
     ret
 
+.set0
+    ld de, toneSweepOptionSets.morphing_0
+    jp setChannelOptionSet.toneSweep
 
-jr_004_5135:
-    ld de, $5ad2
-    jp Jump_004_47d9
+.set1
+    ld de, toneSweepOptionSets.morphing_1
+    jp setChannelOptionSet.toneSweep
 
+.set2
+    ld de, toneSweepOptionSets.morphing_2
+    jp setChannelOptionSet.toneSweep
+;}
 
-jr_004_513b:
-    ld de, $5ad7
-    jp Jump_004_47d9
-
-
-jr_004_5141:
-    ld de, $5adc
-    jp Jump_004_47d9
-
-
+toneSweepSfx_init_7:
+;{
     ld a, $0f
-    ld de, $5ae1
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.shootingBeam_0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_7:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $0d
-    jr z, jr_004_516f
-
+        jr z, .set1
     cp $0b
-    jr z, jr_004_516f
-
+        jr z, .set1
     cp $09
-    jr z, jr_004_5175
-
+        jr z, .set2
     cp $07
-    jr z, jr_004_5175
-
+        jr z, .set2
     cp $05
-    jr z, jr_004_517b
-
+        jr z, .set3
     cp $03
-    jr z, jr_004_517b
-
+        jr z, .set3
     cp $01
-    jr z, jr_004_5181
-
+        jr z, .set4
     ret
 
+.set1
+    ld de, toneSweepOptionSets.shootingBeam_1
+    jp setChannelOptionSet.toneSweep
 
-jr_004_516f:
-    ld de, $5ae6
-    jp Jump_004_47d9
+.set2
+    ld de, toneSweepOptionSets.shootingBeam_2
+    jp setChannelOptionSet.toneSweep
 
+.set3
+    ld de, toneSweepOptionSets.shootingBeam_3
+    jp setChannelOptionSet.toneSweep
 
-jr_004_5175:
-    ld de, $5aeb
-    jp Jump_004_47d9
+.set4
+    ld de, toneSweepOptionSets.shootingBeam_4
+    jp setChannelOptionSet.toneSweep
+;}
 
-
-jr_004_517b:
-    ld de, $5af0
-    jp Jump_004_47d9
-
-
-jr_004_5181:
-    ld de, $5af5
-    jp Jump_004_47d9
-
-
+toneSweepSfx_init_8:
+;{
     ld a, $31
-    ld de, $5afa
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.shootingMissile_0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_8:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $2d
-    jr z, jr_004_51b7
-
+        jr z, .set1
     cp $25
-    jr z, jr_004_51bd
-
+        jr z, .set2
     cp $1a
-    jr z, jr_004_51c3
-
+        jr z, .set3
     cp $18
-    jr z, jr_004_51c9
-
+        jr z, .set4
     cp $15
-    jr z, jr_004_51cf
-
+        jr z, .set5
     cp $12
-    jr z, jr_004_51d5
-
+        jr z, .set6
     cp $0f
-    jr z, jr_004_51db
-
+        jr z, .set7
     cp $0c
-    jr z, jr_004_51e1
-
+        jr z, .set8
     cp $09
-    jr z, jr_004_51e7
-
+        jr z, .set9
     ret
 
+.set1
+    ld de, toneSweepOptionSets.shootingMissile_1
+    jp setChannelOptionSet.toneSweep
 
-jr_004_51b7:
-    ld de, $5aff
-    jp Jump_004_47d9
+.set2
+    ld de, toneSweepOptionSets.shootingMissile_2
+    jp setChannelOptionSet.toneSweep
 
+.set3
+    ld de, toneSweepOptionSets.shootingMissile_3
+    jp setChannelOptionSet.toneSweep
 
-jr_004_51bd:
-    ld de, $5b04
-    jp Jump_004_47d9
+.set4
+    ld de, toneSweepOptionSets.shootingMissile_4
+    jp setChannelOptionSet.toneSweep
 
+.set5
+    ld de, toneSweepOptionSets.shootingMissile_5
+    jp setChannelOptionSet.toneSweep
 
-jr_004_51c3:
-    ld de, $5b09
-    jp Jump_004_47d9
+.set6
+    ld de, toneSweepOptionSets.shootingMissile_6
+    jp setChannelOptionSet.toneSweep
 
+.set7
+    ld de, toneSweepOptionSets.shootingMissile_7
+    jp setChannelOptionSet.toneSweep
 
-jr_004_51c9:
-    ld de, $5b0e
-    jp Jump_004_47d9
+.set8
+    ld de, toneSweepOptionSets.shootingMissile_8
+    jp setChannelOptionSet.toneSweep
 
+.set9
+    ld de, toneSweepOptionSets.shootingMissile_9
+    jp setChannelOptionSet.toneSweep
+;}
 
-jr_004_51cf:
-    ld de, $5b13
-    jp Jump_004_47d9
-
-
-jr_004_51d5:
-    ld de, $5b18
-    jp Jump_004_47d9
-
-
-jr_004_51db:
-    ld de, $5b1d
-    jp Jump_004_47d9
-
-
-jr_004_51e1:
-    ld de, $5b22
-    jp Jump_004_47d9
-
-
-jr_004_51e7:
-    ld de, $5b27
-    jp Jump_004_47d9
-
-
+toneSweepSfx_init_9:
+;{
     ld a, $d0
-    ld [$cfd1], a
+    ld [variableToneSweepChannelFrequency], a
     ld a, $14
-    ld de, $5b2c
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.shootingIceBeam
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
-    ld a, [$cfd1]
-    ldh [rNR13], a
-    ld [$cfd1], a
+toneSweepSfx_playback_9:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
+    ld a, [variableToneSweepChannelFrequency]
+    ldh [rAUD1LOW], a
+    ld [variableToneSweepChannelFrequency], a
     ret
+;}
 
-
+toneSweepSfx_init_A:
+;{
     ld a, $d0
-    ld [$cfd1], a
+    ld [variableToneSweepChannelFrequency], a
     ld a, $14
-    ld de, $5b31
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.shootingPlasmaBeam
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
-    ld a, [$cfd1]
-    ldh [rNR13], a
-    ld [$cfd1], a
+toneSweepSfx_playback_A:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
+    ld a, [variableToneSweepChannelFrequency]
+    ldh [rAUD1LOW], a
+    ld [variableToneSweepChannelFrequency], a
     ret
+;}
 
-
+toneSweepSfx_init_B:
+;{
     ld a, $d0
-    ld [$cfd1], a
+    ld [variableToneSweepChannelFrequency], a
     ld a, $14
-    ld de, $5b36
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.shootingSpazerBeam
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
-    ld a, [$cfd1]
-    ldh [rNR13], a
-    ld [$cfd1], a
+toneSweepSfx_playback_B:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
+    ld a, [variableToneSweepChannelFrequency]
+    ldh [rAUD1LOW], a
+    ld [variableToneSweepChannelFrequency], a
     ret
+;}
 
-
+toneSweepSfx_init_C:
+;{
     ld a, $14
-    ld de, $5b3b
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.pickingUpMissileDrop_0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_C:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $0d
-    jr z, jr_004_5258
-
+        jr z, .set1
     cp $0b
-    jr z, jr_004_525e
-
+        jr z, .set2
     cp $08
-    jr z, jr_004_5264
-
+        jr z, .set3
     cp $05
-    jr z, jr_004_526a
-
+        jr z, .set4
     cp $03
-    jr z, jr_004_52b0
-
+        jr z, setPickedUpDropEndOptionSet
     ret
 
+.set1
+    ld de, toneSweepOptionSets.pickingUpMissileDrop_1
+    jp setChannelOptionSet.toneSweep
 
-jr_004_5258:
-    ld de, $5b40
-    jp Jump_004_47d9
+.set2
+    ld de, toneSweepOptionSets.pickingUpMissileDrop_2
+    jp setChannelOptionSet.toneSweep
 
+.set3
+    ld de, toneSweepOptionSets.pickingUpMissileDrop_3
+    jp setChannelOptionSet.toneSweep
 
-jr_004_525e:
-    ld de, $5b45
-    jp Jump_004_47d9
+.set4
+    ld de, toneSweepOptionSets.pickingUpMissileDrop_4
+    jp setChannelOptionSet.toneSweep
+;}
 
-
-jr_004_5264:
-    ld de, $5b4a
-    jp Jump_004_47d9
-
-
-jr_004_526a:
-    ld de, $5b4f
-    jp Jump_004_47d9
-
-
+toneSweepSfx_init_D:
+;{
     ld a, $0d
-    ld de, $5b54
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.spiderBall_0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_D:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $03
-    ret nz
+        ret nz
 
-    ld de, $5b59
-    jp Jump_004_47d9
+    ld de, toneSweepOptionSets.spiderBall_1
+    jp setChannelOptionSet.toneSweep
+;}
 
-
-    call Call_004_55be
+toneSweepSfx_init_E:
+;{
+    call rememberIfScrewAttackingSfxIsPlaying
     ld a, $0a
-    ld de, $5b5e
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.pickedUpEnergyDrop_0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_E:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $01
-    jp z, Jump_004_55c8
-
+        jp z, maybeResumeScrewAttackingSfx
     cp $08
-    jr z, jr_004_52a4
-
+        jr z, .set1
     cp $05
-    jr z, jr_004_52aa
-
+        jr z, .set2
     cp $03
-    jr z, jr_004_52b0
-
+        jr z, setPickedUpDropEndOptionSet
     ret
 
+.set1
+    ld de, toneSweepOptionSets.pickedUpEnergyDrop_1
+    jp setChannelOptionSet.toneSweep
 
-jr_004_52a4:
-    ld de, $5b63
-    jp Jump_004_47d9
+.set2
+    ld de, toneSweepOptionSets.pickedUpEnergyDrop_2
+    jp setChannelOptionSet.toneSweep
+;}
 
+setPickedUpDropEndOptionSet:
+;{
+    ld de, toneSweepOptionSets.pickedUpDropEnd
+    jp setChannelOptionSet.toneSweep
+;}
 
-jr_004_52aa:
-    ld de, $5b68
-    jp Jump_004_47d9
-
-
-jr_004_52b0:
-    ld de, $5b6d
-    jp Jump_004_47d9
-
-
+toneSweepSfx_init_F:
+;{
     ld a, $05
-    ld de, $5b72
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.shotMissileDoorWithBeam_0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_F:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $02
-    jr z, jr_004_52c6
-
+        jr z, .set1
     ret
 
+.set1
+    ld de, toneSweepOptionSets.shotMissileDoorWithBeam_1
+    jp setChannelOptionSet.toneSweep
+;}
 
-jr_004_52c6:
-    ld de, $5b77
-    jp Jump_004_47d9
-
-
+toneSweepSfx_init_10:
+;{
     ld a, $16
-    ld de, $5b7c
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.unknown10_0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_10:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $14
-    jr z, jr_004_5300
-
+        jr z, .set1
     cp $12
-    jr z, jr_004_5306
-
+        jr z, .set2
     cp $10
-    jr z, jr_004_530c
-
+        jr z, .set3
     cp $0e
-    jr z, jr_004_5312
-
+        jr z, .set4
     cp $0c
-    jr z, jr_004_5318
-
+        jr z, .set5
     cp $0a
-    jr z, jr_004_531e
-
+        jr z, .set6
     cp $08
-    jr z, jr_004_5324
-
+        jr z, .set7
     cp $06
-    jr z, jr_004_532a
-
+        jr z, .set8
     cp $04
-    jr z, jr_004_5330
-
+        jr z, .set9
     cp $02
-    jr z, jr_004_5336
-
+        jr z, .setA
     ret
 
+.set1
+    ld de, toneSweepOptionSets.unknown10_1
+    jp setChannelOptionSet.toneSweep
 
-jr_004_5300:
-    ld de, $5b81
-    jp Jump_004_47d9
+.set2
+    ld de, toneSweepOptionSets.unknown10_2
+    jp setChannelOptionSet.toneSweep
 
+.set3
+    ld de, toneSweepOptionSets.unknown10_3
+    jp setChannelOptionSet.toneSweep
 
-jr_004_5306:
-    ld de, $5b86
-    jp Jump_004_47d9
+.set4
+    ld de, toneSweepOptionSets.unknown10_4
+    jp setChannelOptionSet.toneSweep
 
+.set5
+    ld de, toneSweepOptionSets.unknown10_5
+    jp setChannelOptionSet.toneSweep
 
-jr_004_530c:
-    ld de, $5b8b
-    jp Jump_004_47d9
+.set6
+    ld de, toneSweepOptionSets.unknown10_6
+    jp setChannelOptionSet.toneSweep
 
+.set7
+    ld de, toneSweepOptionSets.unknown10_7
+    jp setChannelOptionSet.toneSweep
 
-jr_004_5312:
-    ld de, $5b90
-    jp Jump_004_47d9
+.set8
+    ld de, toneSweepOptionSets.unknown10_8
+    jp setChannelOptionSet.toneSweep
 
+.set9
+    ld de, toneSweepOptionSets.unknown10_9
+    jp setChannelOptionSet.toneSweep
 
-jr_004_5318:
-    ld de, $5b95
-    jp Jump_004_47d9
+.setA
+    ld de, toneSweepOptionSets.unknown10_A
+    jp setChannelOptionSet.toneSweep
+;}
 
-
-jr_004_531e:
-    ld de, $5b9a
-    jp Jump_004_47d9
-
-
-jr_004_5324:
-    ld de, $5b9f
-    jp Jump_004_47d9
-
-
-jr_004_532a:
-    ld de, $5ba4
-    jp Jump_004_47d9
-
-
-jr_004_5330:
-    ld de, $5ba9
-    jp Jump_004_47d9
-
-
-jr_004_5336:
-    ld de, $5bae
-    jp Jump_004_47d9
-
-
+toneSweepSfx_init_12:
+;{
     xor a
-    ld de, $5bb3
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.unused12
+    jp playToneSweepSfx
+;}
 
-
+toneSweepSfx_init_13:
+;{
     ld a, $02
-    ld de, $5bb8
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.bombLaid
+    jp playToneSweepSfx
+;}
 
-
+toneSweepSfx_init_14:
+;{
     ld a, $0e
-    ld de, $5bbd
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.unused14_0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_14:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $06
-    jr z, jr_004_535b
-
+        jr z, .set1
     ret
 
+.set1
+    ld de, toneSweepOptionSets.unused14_1
+    jp setChannelOptionSet.toneSweep
+;}
 
-jr_004_535b:
-    ld de, $5bc2
-    jp Jump_004_47d9
-
-
+toneSweepSfx_init_15:
+;{
     ld a, $04
-    ld de, $5bc7
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.optionMissileSelect_0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_15:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $02
-    jr z, jr_004_5371
-
+        jr z, .set1
     ret
 
+.set1
+    ld de, toneSweepOptionSets.optionMissileSelect_1
+    jp setChannelOptionSet.toneSweep
+;}
 
-jr_004_5371:
-    ld de, $5bcc
-    jp Jump_004_47d9
-
-
+toneSweepSfx_init_16:
+;{
     ld a, $1d
-    ld de, $5bd1
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.shootingWaveBeam_0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_16:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $1a
-    jr z, jr_004_539f
-
+        jr z, .set1
     cp $15
-    jr z, jr_004_539f
-
+        jr z, .set1
     cp $11
-    jr z, jr_004_53a5
-
+        jr z, .set2
     cp $0d
-    jr z, jr_004_53a5
-
+        jr z, .set2
     cp $09
-    jr z, jr_004_53ab
-
+        jr z, .set3
     cp $05
-    jr z, jr_004_53ab
-
+        jr z, .set3
     cp $01
-    jr z, jr_004_53b1
-
+        jr z, .set4
     ret
 
+.set1
+    ld de, toneSweepOptionSets.shootingWaveBeam_1
+    jp setChannelOptionSet.toneSweep
 
-jr_004_539f:
-    ld de, $5bd6
-    jp Jump_004_47d9
+.set2
+    ld de, toneSweepOptionSets.shootingWaveBeam_2
+    jp setChannelOptionSet.toneSweep
 
+.set3
+    ld de, toneSweepOptionSets.shootingWaveBeam_3
+    jp setChannelOptionSet.toneSweep
 
-jr_004_53a5:
-    ld de, $5bdb
-    jp Jump_004_47d9
+.set4
+    ld de, toneSweepOptionSets.shootingWaveBeam_4
+    jp setChannelOptionSet.toneSweep
+;}
 
-
-jr_004_53ab:
-    ld de, $5be0
-    jp Jump_004_47d9
-
-
-jr_004_53b1:
-    ld de, $5be5
-    jp Jump_004_47d9
-
-
-    call Call_004_55be
+toneSweepSfx_init_17:
+;{
+    call rememberIfScrewAttackingSfxIsPlaying
     ld a, $10
-    ld de, $5bea
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.largeEnergyDrop_0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_17:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $01
-    jp z, Jump_004_55c8
-
+        jp z, maybeResumeScrewAttackingSfx
     cp $0d
-    jr z, jr_004_53df
-
+        jr z, .set1
     cp $0a
-    jr z, jr_004_53e5
-
+        jr z, .set2
     cp $08
-    jr z, jr_004_53eb
-
+        jr z, .set3
     cp $05
-    jr z, jr_004_53f1
-
+        jr z, .set4
     cp $02
-    jr z, jr_004_53f1
-
+        jr z, .set4
     ret
 
+.set1
+    ld de, toneSweepOptionSets.largeEnergyDrop_1
+    jp setChannelOptionSet.toneSweep
 
-jr_004_53df:
-    ld de, $5bef
-    jp Jump_004_47d9
+.set2
+    ld de, toneSweepOptionSets.largeEnergyDrop_2
+    jp setChannelOptionSet.toneSweep
 
+.set3
+    ld de, toneSweepOptionSets.largeEnergyDrop_3
+    jp setChannelOptionSet.toneSweep
 
-jr_004_53e5:
-    ld de, $5bf4
-    jp Jump_004_47d9
+.set4
+    ld de, toneSweepOptionSets.largeEnergyDrop_4
+    jp setChannelOptionSet.toneSweep
+;}
 
-
-jr_004_53eb:
-    ld de, $5bf9
-    jp Jump_004_47d9
-
-
-jr_004_53f1:
-    ld de, $5bfe
-    jp Jump_004_47d9
-
-
-    ld a, [$cec4]
+toneSweepSfx_init_18:
+;{
+    ld a, [samusHealthChangedOptionSetIndex]
     and a
-    call nz, Call_004_5403
-    ld a, $02
-    ld [$cec4], a
+        call nz, .endIf ; Vanilla bug: call instead of jr
+        ld a, $02
+        ld [samusHealthChangedOptionSetIndex], a
+    .endIf
 
-Call_004_5403:
     cp $01
-    jr z, jr_004_541d
-
+        jr z, .set1
     cp $02
-    jr z, jr_004_5411
+        jr z, .set0
 
     ld a, $02
-    ld [$cec4], a
+    ld [samusHealthChangedOptionSetIndex], a
     ret
 
-
-jr_004_5411:
+.set0
     dec a
-    ld [$cec4], a
+    ld [samusHealthChangedOptionSetIndex], a
     ld a, $02
-    ld de, $5c03
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.samusHealthChanged_0
+    jp playToneSweepSfx
 
-
-jr_004_541d:
+.set1
     dec a
-    ld [$cec4], a
+    ld [samusHealthChangedOptionSetIndex], a
     ld a, $02
-    ld de, $5c08
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.samusHealthChanged_1
+    jp playToneSweepSfx
+;}
 
-
+toneSweepSfx_init_19:
+;{
     ld a, $04
-    ld de, $5c0d
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.noMissileDudShot_0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_19:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $02
-    jr z, jr_004_5439
-
+        jr z, .set1
     ret
 
+.set1
+    ld de, toneSweepOptionSets.noMissileDudShot_1
+    jp setChannelOptionSet.toneSweep
+;}
 
-jr_004_5439:
-    ld de, $5c12
-    jp Jump_004_47d9
-
-
+toneSweepSfx_init_1A:
+;{
     ld a, $16
-    ld de, $5c17
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.unknown1A_0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_1A:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $14
-    jr z, jr_004_5473
-
+        jr z, .set1
     cp $12
-    jr z, jr_004_5479
-
+        jr z, .set2
     cp $10
-    jr z, jr_004_5473
-
+        jr z, .set1
     cp $0e
-    jr z, jr_004_547f
-
+        jr z, .set3
     cp $0c
-    jr z, jr_004_5473
-
+        jr z, .set1
     cp $0a
-    jr z, jr_004_5485
-
+        jr z, .set4
     cp $08
-    jr z, jr_004_5473
-
+        jr z, .set1
     cp $06
-    jr z, jr_004_548b
-
+        jr z, .set5
     cp $04
-    jr z, jr_004_5473
-
+        jr z, .set1
     cp $02
-    jr z, jr_004_5491
-
+        jr z, .set6
     ret
 
+.set1
+    ld de, toneSweepOptionSets.unknown1A_1
+    jp setChannelOptionSet.toneSweep
 
-jr_004_5473:
-    ld de, $5c1c
-    jp Jump_004_47d9
+.set2
+    ld de, toneSweepOptionSets.unknown1A_2
+    jp setChannelOptionSet.toneSweep
 
+.set3
+    ld de, toneSweepOptionSets.unknown1A_3
+    jp setChannelOptionSet.toneSweep
 
-jr_004_5479:
-    ld de, $5c21
-    jp Jump_004_47d9
+.set4
+    ld de, toneSweepOptionSets.unknown1A_4
+    jp setChannelOptionSet.toneSweep
 
+.set5
+    ld de, toneSweepOptionSets.unknown1A_5
+    jp setChannelOptionSet.toneSweep
 
-jr_004_547f:
-    ld de, $5c26
-    jp Jump_004_47d9
+.set6
+    ld de, toneSweepOptionSets.unknown1A_6
+    jp setChannelOptionSet.toneSweep
+;}
 
-
-jr_004_5485:
-    ld de, $5c2b
-    jp Jump_004_47d9
-
-
-jr_004_548b:
-    ld de, $5c30
-    jp Jump_004_47d9
-
-
-jr_004_5491:
-    ld de, $5c35
-    jp Jump_004_47d9
-
-
+toneSweepSfx_init_1B:
+;{
     ldh a, [rDIV]
     swap a
     set 7, a
     set 6, a
     set 5, a
     res 1, a
-    ld [$cfd1], a
+    ld [variableToneSweepChannelFrequency], a
     ld a, $30
-    ld de, $5c3a
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.metroidCry
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_1B:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $20
-    jr c, jr_004_54c4
+        jr c, .endIf
+        ld a, [variableToneSweepChannelFrequency]
+        inc a
+        inc a
+        inc a
+        inc a
+        inc a
+        inc a
+        ldh [rAUD1LOW], a
+        ld [variableToneSweepChannelFrequency], a
+        ret
+    .endIf
 
-    ld a, [$cfd1]
-    inc a
-    inc a
-    inc a
-    inc a
-    inc a
-    inc a
-    ldh [rNR13], a
-    ld [$cfd1], a
-    ret
-
-
-jr_004_54c4:
-    ld a, [$cfd1]
+    ld a, [variableToneSweepChannelFrequency]
     dec a
-    ldh [rNR13], a
-    ld [$cfd1], a
+    ldh [rAUD1LOW], a
+    ld [variableToneSweepChannelFrequency], a
     ret
+;}
 
-
+toneSweepSfx_init_1C:
+;{
     ld a, $0f
-    ld de, $5c3f
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.saved0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_1C:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $0a
-    jr z, jr_004_54e2
-
+        jr z, .set1
     cp $03
-    jr z, jr_004_54e8
-
+        jr z, .set2
     ret
 
+.set1
+    ld de, toneSweepOptionSets.saved1
+    jp setChannelOptionSet.toneSweep
 
-jr_004_54e2:
-    ld de, $5c44
-    jp Jump_004_47d9
+.set2
+    ld de, toneSweepOptionSets.saved2
+    jp setChannelOptionSet.toneSweep
+;}
 
-
-jr_004_54e8:
-    ld de, $5c49
-    jp Jump_004_47d9
-
-
+toneSweepSfx_init_1D:
+;{
     ld a, $90
-    ld de, $5c4e
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.variaSuitTransformation
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_1D:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $7e
-    jr z, jr_004_5516
-
+        jr z, .set
     cp $6e
-    jr z, jr_004_5516
-
+        jr z, .set
     cp $5e
-    jr z, jr_004_5516
-
+        jr z, .set
     cp $4e
-    jr z, jr_004_5516
-
+        jr z, .set
     cp $3e
-    jr z, jr_004_5516
-
+        jr z, .set
     cp $2e
-    jr z, jr_004_5516
-
+        jr z, .set
     cp $1e
-    jr z, jr_004_5516
-
+        jr z, .set
     ret
 
+.set
+    ld de, toneSweepOptionSets.variaSuitTransformation
+    jp setChannelOptionSet.toneSweep
+;}
 
-jr_004_5516:
-    ld de, $5c4e
-    jp Jump_004_47d9
-
-
+toneSweepSfx_init_1E:
+;{
     ld a, $0e
-    ld de, $5c53
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.unpaused_0
+    jp playToneSweepSfx
+;}
 
-
-    call Call_004_46ea
+toneSweepSfx_playback_1E:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $0a
-    jr z, jr_004_5530
-
+        jr z, .set1
     cp $03
-    jr z, jr_004_5536
-
+        jr z, .set2
     ret
 
+.set1
+    ld de, toneSweepOptionSets.unpaused_1
+    jp setChannelOptionSet.toneSweep
 
-jr_004_5530:
-    ld de, $5c58
-    jp Jump_004_47d9
+.set2
+    ld de, toneSweepOptionSets.unpaused_2
+    jp setChannelOptionSet.toneSweep
+;}
 
 
-jr_004_5536:
-    ld de, $5c5d
-    jp Jump_004_47d9
-
-
+; All these following "examples" are completely unused
+toneSweepSfx_init_exampleA:
+;{
     ld a, $50
-    ld de, $5c62
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.exampleA
+    jp playToneSweepSfx
+;}
 
+toneSweepSfx_playback_exampleA:
+;{
+    ld de, toneSweepOptionSets.exampleA
+    jp setChannelOptionSet.toneSweep
+;}
 
-    ld de, $5c62
-    jp Jump_004_47d9
-
-
+toneSweepSfx_init_exampleB:
+;{
     ld a, $50
-    ld de, $5c67
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.exampleB
+    jp playToneSweepSfx
+;}
 
+setOptionSet_exampleB:
+;{
+    ld de, toneSweepOptionSets.exampleB
+    jp setChannelOptionSet.toneSweep
+;}
 
-    ld de, $5c67
-    jp Jump_004_47d9
-
-
-    call Call_004_46ea
+toneSweepSfx_playback_exampleB:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $40
-    ret nz
+        ret nz
 
-    ld de, $5c67
-    jp Jump_004_47d9
+    ld de, toneSweepOptionSets.exampleB
+    jp setChannelOptionSet.toneSweep
+;}
 
-
+toneSweepSfx_init_exampleC:
+;{
     ld a, $50
-    ld de, $5c6c
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.exampleC
+    jp playToneSweepSfx
+;}
 
+setOptionSet_exampleC:
+;{
+    ld de, toneSweepOptionSets.exampleC
+    jp setChannelOptionSet.toneSweep
+;}
 
-jr_004_556c:
-    ld de, $5c6c
-    jp Jump_004_47d9
-
-
-    call Call_004_46ea
+toneSweepSfx_playback_exampleC:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $40
-    jr z, jr_004_556c
-
+        jr z, setOptionSet_exampleC
     cp $30
-    jr z, jr_004_556c
-
+        jr z, setOptionSet_exampleC
     ret
+;}
 
-
+toneSweepSfx_init_exampleD:
+;{
     ld a, $50
-    ld de, $5c71
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.exampleD
+    jp playToneSweepSfx
+;}
 
+setOptionSet_exampleD:
+;{
+    ld de, toneSweepOptionSets.exampleD
+    jp setChannelOptionSet.toneSweep
+;}
 
-jr_004_5586:
-    ld de, $5c71
-    jp Jump_004_47d9
-
-
-    call Call_004_46ea
+toneSweepSfx_playback_exampleD:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $40
-    jr z, jr_004_5586
-
+        jr z, setOptionSet_exampleD
     cp $30
-    jr z, jr_004_5586
-
+        jr z, setOptionSet_exampleD
     cp $20
-    jr z, jr_004_5586
-
+        jr z, setOptionSet_exampleD
     ret
+;}
 
-
+toneSweepSfx_init_exampleE:
+;{
     ld a, $50
-    ld de, $5c76
-    jp Jump_004_55e3
+    ld de, toneSweepOptionSets.exampleE
+    jp playToneSweepSfx
+;}
 
+setOptionSet_exampleE:
+;{
+    ld de, toneSweepOptionSets.exampleE
+    jp setChannelOptionSet.toneSweep
+;}
 
-jr_004_55a4:
-    ld de, $5c76
-    jp Jump_004_47d9
-
-
-    call Call_004_46ea
+toneSweepSfx_playback_exampleE:
+;{
+    call decrementToneSweepChannelSoundEffectTimer
     cp $40
-    jr z, jr_004_55a4
-
+        jr z, setOptionSet_exampleE
     cp $30
-    jr z, jr_004_55a4
-
+        jr z, setOptionSet_exampleE
     cp $20
-    jr z, jr_004_55a4
-
+        jr z, setOptionSet_exampleE
     cp $10
-    jr z, jr_004_55a4
-
+        jr z, setOptionSet_exampleE
     ret
+;}
 
 
-Call_004_55be:
-    ld a, [$cec1]
-    cp $03
-    ret nz
+rememberIfScrewAttackingSfxIsPlaying:
+;{
+    ld a, [toneSweepChannelSoundEffectPlaying]
+    cp toneSweepSoundEffect_screwAttacking
+        ret nz
 
-    ld [$cee8], a
+    ld [resumeScrewAttackSoundEffectFlag], a
     ret
+;}
 
-
-Jump_004_55c8:
-    ld a, [$cee8]
+maybeResumeScrewAttackingSfx:
+;{
+    ld a, [resumeScrewAttackSoundEffectFlag]
     and a
-    ret z
+        ret z
 
     ld a, [samusPose]
     cp pose_spinJump
         ret nz
+        
     ld a, [samusItems]
     bit itemBit_screw, a
         ret z
 
-    ld a, $03
-    ld [$cec1], a
+    ld a, toneSweepSoundEffect_screwAttacking
+    ld [toneSweepChannelSoundEffectPlaying], a
     xor a
-    ld [$cee8], a
+    ld [resumeScrewAttackSoundEffectFlag], a
     ret
+;}
 
-
-Jump_004_55e3:
-    ld [$cec3], a
+playToneSweepSfx:
+;{
+    ld [toneSweepChannelSoundEffectTimer], a
     ld a, [sfxRequest_square1]
-    ld [$cec1], a
-    ld [$cee4], a
-    jp Jump_004_47d9
+    ld [toneSweepChannelSoundEffectPlaying], a
+    ld [toneSweepChannelSoundEffectIsPlayingFlag], a
+    jp setChannelOptionSet.toneSweep
+;}
+;}
 
+; Tone channel sound effects
+;{
+toneChannelSoundEffectInitialisationFunctionPointers:
+;{
+    dw initializeAudio.ret ; 1: ret
+    dw initializeAudio.ret ; 2: ret
+    dw toneSfx_init_3 ; 3: Metroid Queen cry
+    dw toneSfx_init_4 ; 4: Baby Metroid hatched / clearing blocks
+    dw toneSfx_init_5 ; 5: Baby Metroid cry
+    dw toneSfx_init_6 ; 6: Metroid Queen hurt cry
+    dw toneSfx_init_7 ; 7: unknown
+;}
 
-    ld l, c
-    ld b, a
-    ld l, c
-    ld b, a
+toneChannelSoundEffectPlaybackFunctionPointers:
+;{
+    dw initializeAudio.ret ; 1: ret
+    dw initializeAudio.ret ; 2: ret
+    dw toneSfx_playback_3 ; 3: Metroid Queen cry
+    dw toneSfx_playback_4 ; 4: Baby Metroid hatched / clearing blocks
+    dw toneSfx_playback_5 ; 5: Baby Metroid cry
+    dw toneSfx_playback_6 ; 6: Metroid Queen hurt cry
+    dw decrementToneChannelSoundEffectTimer ; 7: unknown
+;}
 
-    db $0e, $56, $58, $56, $8b, $56, $a2, $56, $b5, $56
-
-    ld l, c
-    ld b, a
-    ld l, c
-    ld b, a
-
-    db $23, $56, $69, $56, $23, $56, $23, $56, $f7, $46
-
+toneSfx_init_3:
+;{
     ldh a, [rDIV]
     swap a
     res 7, a
     res 6, a
     res 5, a
-    ld [$cecc], a
+    ld [variableToneChannelFrequency], a
     ld a, $30
-    ld de, $5d2b
-    jp Jump_004_56bd
+    ld de, toneOptionSets.metroidQueenCry
+    jp playToneSfx
+;}
 
-
-    call Call_004_46f7
+toneSfx_playback_3:
+toneSfx_playback_5:
+toneSfx_playback_6:
+;{
+    call decrementToneChannelSoundEffectTimer
     bit 0, a
-    jr z, jr_004_5644
+        jr z, .even
 
-    ld a, [$cecc]
+    ld a, [variableToneChannelFrequency]
     set 4, a
-    ld [$cecc], a
+    ld [variableToneChannelFrequency], a
 
-jr_004_5632:
-    ld a, [$ceca]
+.merge
+    ld a, [toneChannelSoundEffectTimer]
     cp $20
-    jr c, jr_004_564e
+        jr c, .part2
 
-    ld a, [$cecc]
+    ld a, [variableToneChannelFrequency]
     add $03
-    ldh [rNR23], a
-    ld [$cecc], a
+    ldh [rAUD2LOW], a
+    ld [variableToneChannelFrequency], a
     ret
 
-
-jr_004_5644:
-    ld a, [$cecc]
+.even
+    ld a, [variableToneChannelFrequency]
     res 4, a
-    ld [$cecc], a
-    jr jr_004_5632
+    ld [variableToneChannelFrequency], a
+    jr .merge
 
-jr_004_564e:
-    ld a, [$cecc]
+.part2
+    ld a, [variableToneChannelFrequency]
     dec a
-    ldh [rNR23], a
-    ld [$cecc], a
+    ldh [rAUD2LOW], a
+    ld [variableToneChannelFrequency], a
     ret
+;}
 
-
+toneSfx_init_4:
+;{
     ldh a, [rDIV]
     set 7, a
     res 6, a
-    ld [$cecc], a
+    ld [variableToneChannelFrequency], a
     ld a, $1c
-    ld de, $5d2f
-    jp Jump_004_56bd
+    ld de, toneOptionSets.babyMetroidClearingBlock
+    jp playToneSfx
+;}
 
-
-    call Call_004_46f7
+toneSfx_playback_4:
+;{
+    call decrementToneChannelSoundEffectTimer
     cp $13
-    jr z, jr_004_567f
-
+        jr z, .part2
     cp $0c
-    jr z, jr_004_5685
+        jr z, .part3
 
-    ld a, [$cecc]
+    ld a, [variableToneChannelFrequency]
     inc a
     inc a
-    ld [$cecc], a
-    ldh [rNR23], a
+    ld [variableToneChannelFrequency], a
+    ldh [rAUD2LOW], a
     ret
 
-
-jr_004_567f:
+.part2
     ld a, $a0
-    ld [$cecc], a
+    ld [variableToneChannelFrequency], a
     ret
 
-
-jr_004_5685:
+.part3
     ld a, $90
-    ld [$cecc], a
+    ld [variableToneChannelFrequency], a
     ret
+;}
 
-
+toneSfx_init_5:
+;{
     ldh a, [rDIV]
     swap a
     res 7, a
     set 6, a
     res 4, a
     res 2, a
-    ld [$cecc], a
+    ld [variableToneChannelFrequency], a
     ld a, $30
-    ld de, $5d33
-    jp Jump_004_56bd
+    ld de, toneOptionSets.babyMetroidCry
+    jp playToneSfx
+;}
 
-
+toneSfx_init_6:
+;{
     ldh a, [rDIV]
     swap a
     res 7, a
     set 6, a
-    ld [$cecc], a
+    ld [variableToneChannelFrequency], a
     ld a, $30
-    ld de, $5d37
-    jp Jump_004_56bd
+    ld de, toneOptionSets.metroidQueenHurtCry
+    jp playToneSfx
+;}
 
-
+toneSfx_init_7:
+;{
     ld a, $01
-    ld de, $5d3b
-    jp Jump_004_56bd
+    ld de, toneOptionSets.unknown7
+    jp playToneSfx
+;}
 
-
-Jump_004_56bd:
-    ld [$ceca], a
+playToneSfx:
+;{
+    ld [toneChannelSoundEffectTimer], a
     ld a, [sfxRequest_square2]
-    ld [$cec8], a
-    ld [$cee5], a
-    jp Jump_004_47e1
+    ld [toneChannelSoundEffectPlaying], a
+    ld [toneChannelSoundEffectIsPlayingFlag], a
+    jp setChannelOptionSet.tone
+;}
+;}
 
+; Noise channel sound effects
+;{
+noiseChannelSoundEffectInitialisationFunctionPointers:
+;{
+    dw noiseSfx_init_1 ; 1: Enemy shot
+    dw noiseSfx_init_2 ; 2: Enemy killed
+    dw noiseSfx_init_3 ; 3:
+    dw noiseSfx_init_4 ; 4: Shot block destroyed
+    dw noiseSfx_init_5 ; 5: Metroid hurt
+    dw noiseSfx_init_6 ; 6: Samus hurt
+    dw noiseSfx_init_7 ; 7: Acid damage
+    dw noiseSfx_init_8 ; 8: Shot missile door with missile
+    dw noiseSfx_init_9 ; 9: Metroid Queen cry
+    dw noiseSfx_init_A ; Ah: Metroid Queen hurt cry
+    dw noiseSfx_init_B ; Bh: Samus killed
+    dw noiseSfx_init_C ; Ch: Bomb detonated
+    dw noiseSfx_init_D ; Dh: Metroid killed
+    dw noiseSfx_init_E ; Eh:
+    dw noiseSfx_init_F ; Fh:
+    dw noiseSfx_init_10 ; 10h Footsteps
+    dw noiseSfx_init_11 ; 11h:
+    dw noiseSfx_init_12 ; 12h:
+    dw noiseSfx_init_13 ; 13h: Unused
+    dw noiseSfx_init_14 ; 14h:
+    dw noiseSfx_init_15 ; 15h:
+    dw noiseSfx_init_16 ; 16h: Baby Metroid hatched / clearing blocks
+    dw noiseSfx_init_17 ; 17h: Baby Metroid cry
+    dw noiseSfx_init_18 ; 18h:
+    dw noiseSfx_init_19 ; 19h: Unused
+    dw noiseSfx_init_1A ; 1Ah:
+;}
 
-    db $34, $57, $3c, $57, $52, $57, $5a, $57, $62, $57, $7d, $57, $a1, $57, $b1, $57
-    db $c7, $57, $e2, $57, $fd, $57, $81, $58, $97, $58, $c5, $58, $0c, $59, $54, $59
-    db $79, $59, $8f, $59, $97, $59, $9f, $59, $c3, $59, $d9, $59, $e6, $59, $f3, $59
+noiseChannelSoundEffectPlaybackFunctionPointers:
+;{
+    dw decrementNoiseChannelSoundEffectTimer ; 1: Enemy shot
+    dw noiseSfx_playback_2 ; 2: Enemy killed
+    dw decrementNoiseChannelSoundEffectTimer ; 3:
+    dw decrementNoiseChannelSoundEffectTimer ; 4: Shot block destroyed
+    dw noiseSfx_playback_5 ; 5: Metroid hurt
+    dw noiseSfx_playback_6 ; 6: Samus hurt
+    dw noiseSfx_playback_7 ; 7: Acid damage
+    dw noiseSfx_playback_8 ; 8: Shot missile door with missile
+    dw noiseSfx_playback_9 ; 9: Metroid Queen cry
+    dw noiseSfx_playback_A ; Ah: Metroid Queen hurt cry
+    dw noiseSfx_playback_B ; Bh: Samus killed
+    dw noiseSfx_playback_C ; Ch: Bomb detonated
+    dw noiseSfx_playback_D ; Dh: Metroid killed
+    dw noiseSfx_playback_E ; Eh:
+    dw noiseSfx_playback_F ; Fh:
+    dw noiseSfx_playback_10 ; 10h Footsteps
+    dw noiseSfx_playback_11 ; 11h:
+    dw noiseSfx_playback_12 ; 12h:
+    dw noiseSfx_playback_13 ; 13h: Unused
+    dw noiseSfx_playback_14 ; 14h:
+    dw noiseSfx_playback_15 ; 15h:
+    dw decrementNoiseChannelSoundEffectTimer ; 16h: Baby Metroid hatched / clearing blocks
+    dw decrementNoiseChannelSoundEffectTimer ; 17h: Baby Metroid cry
+    dw noiseSfx_playback_18 ; 18h:
+    dw decrementNoiseChannelSoundEffectTimer ; 19h: Unused
+    dw decrementNoiseChannelSoundEffectTimer ; 1Ah:
+;}
 
-    add hl, bc
-    ld e, d
-
-    db $11, $5a, $04, $47, $44, $57, $04, $47, $04, $47, $6f, $57, $85, $57, $a9, $57
-    db $b9, $57, $d4, $57, $ef, $57, $05, $58, $89, $58, $9f, $58, $cd, $58, $14, $59
-    db $6a, $59, $81, $59, $81, $59, $81, $59, $a7, $59, $cb, $59, $04, $47, $04, $47
-    db $fb, $59
-
-    inc b
-    ld b, a
-
-    db $04, $47
-
+noiseSfx_init_1:
+;{
     ld a, $0d
-    ld de, $5c7b
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.enemyShot
+    jp playNoiseSweepSfx
+;}
 
-
+noiseSfx_init_2:
+;{
     ld a, $19
-    ld de, $5c7f
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.enemyKilled_0
+    jp playNoiseSweepSfx
+;}
 
-
-    call Call_004_4704
+noiseSfx_playback_2:
+;{
+    call decrementNoiseChannelSoundEffectTimer
     cp $0d
-    jr z, jr_004_574c
-
+        jr z, .set1
     ret
 
+.set1
+    ld de, noiseOptionSets.enemyKilled_1
+    jp setChannelOptionSet.noise
+;}
 
-jr_004_574c:
-    ld de, $5c83
-    jp Jump_004_47f1
-
-
+noiseSfx_init_3:
+;{
     ld a, $1d
-    ld de, $5c87
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.unknown3
+    jp playNoiseSweepSfx
+;}
 
-
+noiseSfx_init_4:
+;{
     ld a, $08
-    ld de, $5c8b
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.shotBlockDestroyed
+    jp playNoiseSweepSfx
+;}
 
-
-    ld a, $1b
+noiseSfx_init_5:
+;{
+    ld a, toneSweepSoundEffect_metroidCry
     ld [sfxRequest_square1], a
     ld a, $40
-    ld de, $5c8f
-    call Call_004_5a19
-    call Call_004_4704
-    cp $38
-    jr z, jr_004_5777
+    ld de, noiseOptionSets.metroidHurt_0
+    call playNoiseSweepSfx ; call instead of jp...?
+;}
 
+noiseSfx_playback_5:
+;{
+    call decrementNoiseChannelSoundEffectTimer
+    cp $38
+        jr z, .set1
     ret
 
+.set1
+    ld de, noiseOptionSets.metroidHurt_1
+    jp setChannelOptionSet.noise
+;}
 
-jr_004_5777:
-    ld de, $5c93
-    jp Jump_004_47f1
-
-
+noiseSfx_init_6:
+;{
     ld a, $14
-    ld de, $5c97
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.SamusHurt_0
+    jp playNoiseSweepSfx
+;}
 
-
-    call Call_004_4704
+noiseSfx_playback_6:
+;{
+    call decrementNoiseChannelSoundEffectTimer
     cp $10
-    jr z, jr_004_579b
-
+        jr z, .set1
     cp $0c
-    jr z, jr_004_5795
-
+        jr z, .set0
     cp $08
-    jr z, jr_004_579b
-
+        jr z, .set1
     ret
 
+.set0
+    ld de, noiseOptionSets.SamusHurt_0
+    jp setChannelOptionSet.noise
 
-jr_004_5795:
-    ld de, $5c97
-    jp Jump_004_47f1
+.set1
+    ld de, noiseOptionSets.SamusHurt_1
+    jp setChannelOptionSet.noise
+;}
 
-
-jr_004_579b:
-    ld de, $5c9b
-    jp Jump_004_47f1
-
-
+noiseSfx_init_7:
+;{
     ld a, $08
-    ld de, $5c9f
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.acidDamage_0
+    jp playNoiseSweepSfx
+;}
 
-
-    call Call_004_4704
+noiseSfx_playback_7:
+;{
+    call decrementNoiseChannelSoundEffectTimer
     cp $05
-    jr z, jr_004_579b
-
+        jr z, noiseSfx_playback_6.set1
     ret
+;}
 
-
+noiseSfx_init_8:
+;{
     ld a, $08
-    ld de, $5ca3
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.shotMissileDoor_0
+    jp playNoiseSweepSfx
+;}
 
-
-    call Call_004_4704
+noiseSfx_playback_8:
+;{
+    call decrementNoiseChannelSoundEffectTimer
     cp $05
-    jr z, jr_004_57c1
-
+        jr z, .set1
     ret
 
+.set1
+    ld de, noiseOptionSets.shotMissileDoor_1
+    jp setChannelOptionSet.noise
+;}
 
-jr_004_57c1:
-    ld de, $5ca7
-    jp Jump_004_47f1
-
-
-    ld a, $03
+noiseSfx_init_9:
+;{
+    ld a, toneSoundEffect_metroidQueenCry
     ld [sfxRequest_square2], a
     ld a, $40
-    ld de, $5cab
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.metroidQueenCry_0
+    jp playNoiseSweepSfx
+;}
 
-
-    call Call_004_4704
+noiseSfx_playback_9:
+;{
+    call decrementNoiseChannelSoundEffectTimer
     cp $38
-    jr z, jr_004_57dc
-
+        jr z, .set1
     ret
 
+.set1
+    ld de, noiseOptionSets.metroidQueenCry_1
+    jp setChannelOptionSet.noise
+;}
 
-jr_004_57dc:
-    ld de, $5caf
-    jp Jump_004_47f1
-
-
-    ld a, $06
+noiseSfx_init_A:
+;{
+    ld a, toneSoundEffect_metroidQueenHurtCry
     ld [sfxRequest_square2], a
     ld a, $40
-    ld de, $5cb3
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.metroidQueenHurtCry_0
+    jp playNoiseSweepSfx
+;}
 
-
-    call Call_004_4704
+noiseSfx_playback_A:
+;{
+    call decrementNoiseChannelSoundEffectTimer
     cp $38
-    jr z, jr_004_57f7
-
+        jr z, .set1
     ret
 
+.set1
+    ld de, noiseOptionSets.metroidQueenHurtCry_1
+    jp setChannelOptionSet.noise
+;}
 
-jr_004_57f7:
-    ld de, $5cb7
-    jp Jump_004_47f1
-
-
+noiseSfx_init_B:
+;{
     ld a, $b0
-    ld de, $5d27
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.samusKilled_0
+    jp playNoiseSweepSfx
+;}
 
-
-    call Call_004_4704
+noiseSfx_playback_B:
+;{
+    call decrementNoiseChannelSoundEffectTimer
     cp $9f
-    jr z, jr_004_583d
-
+        jr z, .set1
     cp $70
-    jr z, jr_004_5843
-
+        jr z, .set2
     cp $6c
-    jr z, jr_004_5849
-
+        jr z, setPolynomialCounter27
     cp $68
-    jr z, jr_004_584e
-
-    cp $64
-    jr z, jr_004_5853
-
-    cp $60
-    jr z, jr_004_5858
-
-    cp $5c
-    jr z, jr_004_585d
-
-    cp $58
-    jr z, jr_004_5862
-
-    cp $54
-    jr z, jr_004_5867
-
-    cp $50
-    jr z, jr_004_586c
-
-    cp $4c
-    jr z, jr_004_5871
-
-    cp $48
-    jr z, jr_004_5876
-
+        jr z, setPolynomialCounter35
+    cp $64                        
+        jr z, setPolynomialCounter37
+    cp $60                        
+        jr z, setPolynomialCounter45
+    cp $5c                        
+        jr z, setPolynomialCounter47
+    cp $58                        
+        jr z, setPolynomialCounter55
+    cp $54                        
+        jr z, setPolynomialCounter57
+    cp $50                        
+        jr z, setPolynomialCounter65
+    cp $4c                        
+        jr z, setPolynomialCounter66
+    cp $48                        
+        jr z, setPolynomialCounter67
     cp $40
-    jr z, jr_004_587b
-
+        jr z, setOptionSetSamusKilled_3
     ret
 
+.set1
+    ld de, noiseOptionSets.samusKilled_1
+    jp setChannelOptionSet.noise
 
-jr_004_583d:
-    ld de, $5cbb
-    jp Jump_004_47f1
+.set2
+    ld de, noiseOptionSets.samusKilled_2
+    jp setChannelOptionSet.noise
+;}
 
-
-jr_004_5843:
-    ld de, $5cbf
-    jp Jump_004_47f1
-
-
-Jump_004_5849:
-jr_004_5849:
+setPolynomialCounter27:
+;{
     ld a, $27
-    ldh [rNR43], a
+    ldh [rAUD4POLY], a
     ret
+;}
 
-
-Jump_004_584e:
-jr_004_584e:
+setPolynomialCounter35:
+;{
     ld a, $35
-    ldh [rNR43], a
+    ldh [rAUD4POLY], a
     ret
+;}
 
-
-Jump_004_5853:
-jr_004_5853:
+setPolynomialCounter37:
+;{
     ld a, $37
-    ldh [rNR43], a
+    ldh [rAUD4POLY], a
     ret
+;}
 
-
-Jump_004_5858:
-jr_004_5858:
+setPolynomialCounter45:
+;{
     ld a, $45
-    ldh [rNR43], a
+    ldh [rAUD4POLY], a
     ret
+;}
 
-
-Jump_004_585d:
-jr_004_585d:
+setPolynomialCounter47:
+;{
     ld a, $47
-    ldh [rNR43], a
+    ldh [rAUD4POLY], a
     ret
+;}
 
-
-Jump_004_5862:
-jr_004_5862:
+setPolynomialCounter55:
+;{
     ld a, $55
-    ldh [rNR43], a
+    ldh [rAUD4POLY], a
     ret
+;}
 
-
-Jump_004_5867:
-jr_004_5867:
+setPolynomialCounter57:
+;{
     ld a, $57
-    ldh [rNR43], a
+    ldh [rAUD4POLY], a
     ret
+;}
 
-
-Jump_004_586c:
-jr_004_586c:
+setPolynomialCounter65:
+;{
     ld a, $65
-    ldh [rNR43], a
+    ldh [rAUD4POLY], a
     ret
+;}
 
-
-Jump_004_5871:
-jr_004_5871:
+setPolynomialCounter66:
+;{
     ld a, $66
-    ldh [rNR43], a
+    ldh [rAUD4POLY], a
     ret
+;}
 
-
-Jump_004_5876:
-jr_004_5876:
+setPolynomialCounter67:
+;{
     ld a, $67
-    ldh [rNR43], a
+    ldh [rAUD4POLY], a
     ret
+;}
 
+setOptionSetSamusKilled_3:
+;{
+    ld de, noiseOptionSets.samusKilled_3
+    jp setChannelOptionSet.noise
+;}
 
-jr_004_587b:
-    ld de, $5cc3
-    jp Jump_004_47f1
-
-
+noiseSfx_init_C:
+;{
     ld a, $14
-    ld de, $5cc7
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.bombDetonated_0
+    jp playNoiseSweepSfx
+;}
 
-
-    call Call_004_4704
+noiseSfx_playback_C:
+;{
+    call decrementNoiseChannelSoundEffectTimer
     cp $0c
-    jr z, jr_004_5891
-
+        jr z, .set1
     ret
 
+.set1
+    ld de, noiseOptionSets.bombDetonated_1
+    jp setChannelOptionSet.noise
+;}
 
-jr_004_5891:
-    ld de, $5ccb
-    jp Jump_004_47f1
-
-
+noiseSfx_init_D:
+;{
     ld a, $35
-    ld de, $5ccf
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.metroidKilled_0
+    jp playNoiseSweepSfx
+;}
 
-
-    call Call_004_4704
+noiseSfx_playback_D:
+;{
+    call decrementNoiseChannelSoundEffectTimer
     cp $30
-    jr z, jr_004_5867
-
-    cp $2c
-    jr z, jr_004_584e
-
-    cp $27
-    jr z, jr_004_5853
-
-    cp $23
-    jr z, jr_004_5862
-
-    cp $20
-    jr z, jr_004_585d
-
-    cp $1d
-    jr z, jr_004_5858
-
+        jr z, setPolynomialCounter57
+    cp $2c                        
+        jr z, setPolynomialCounter35
+    cp $27                        
+        jr z, setPolynomialCounter37
+    cp $23                        
+        jr z, setPolynomialCounter55
+    cp $20                        
+        jr z, setPolynomialCounter47
+    cp $1d                        
+        jr z, setPolynomialCounter45
     cp $1a
-    jr z, jr_004_58bf
-
+        jr z, .set1
     ret
 
+.set1
+    ld de, noiseOptionSets.metroidKilled_1
+    jp setChannelOptionSet.noise
+;}
 
-jr_004_58bf:
-    ld de, $5cd3
-    jp Jump_004_47f1
-
-
+noiseSfx_init_E:
+;{
     ld a, $4f
-    ld de, $5cd7
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.unknownE_0
+    jp playNoiseSweepSfx
+;}
 
-
-    call Call_004_4704
+noiseSfx_playback_E:
+;{
+    call decrementNoiseChannelSoundEffectTimer
     cp $4d
-    jr z, jr_004_586c
-
-    cp $4a
-    jp z, Jump_004_5867
-
-    cp $47
-    jp z, Jump_004_5862
-
-    cp $44
-    jp z, Jump_004_585d
-
-    cp $41
-    jp z, Jump_004_586c
-
-    cp $3e
-    jp z, Jump_004_5867
-
-    cp $3b
-    jp z, Jump_004_5862
-
-    cp $39
-    jp z, Jump_004_585d
-
-    cp $36
-    jp z, Jump_004_5858
-
-    cp $33
-    jp z, Jump_004_5853
-
+        jr z, setPolynomialCounter65
+    cp $4a                        
+        jp z, setPolynomialCounter57
+    cp $47                        
+        jp z, setPolynomialCounter55
+    cp $44                        
+        jp z, setPolynomialCounter47
+    cp $41                        
+        jp z, setPolynomialCounter65
+    cp $3e                        
+        jp z, setPolynomialCounter57
+    cp $3b                        
+        jp z, setPolynomialCounter55
+    cp $39                        
+        jp z, setPolynomialCounter47
+    cp $36                        
+        jp z, setPolynomialCounter45
+    cp $33                        
+        jp z, setPolynomialCounter37
     cp $30
-    jr z, jr_004_5906
-
+        jr z, .set1
     ret
 
+.set1
+    ld de, noiseOptionSets.unknownE_1
+    jp setChannelOptionSet.noise
+;}
 
-jr_004_5906:
-    ld de, $5cdb
-    jp Jump_004_47f1
-
-
+noiseSfx_init_F:
+;{
     ld a, $70
-    ld de, $5cdf
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.clearedSaveFile_0
+    jp playNoiseSweepSfx
+;}
 
-
-    call Call_004_4704
+noiseSfx_playback_F:
+;{
+    call decrementNoiseChannelSoundEffectTimer
     cp $6d
-    jp z, Jump_004_5876
-
-    cp $6a
-    jp z, Jump_004_5871
-
-    cp $67
-    jp z, Jump_004_586c
-
-    cp $64
-    jp z, Jump_004_5867
-
-    cp $61
-    jp z, Jump_004_5862
-
-    cp $5e
-    jp z, Jump_004_585d
-
-    cp $5b
-    jp z, Jump_004_5858
-
-    cp $59
-    jp z, Jump_004_5853
-
-    cp $56
-    jp z, Jump_004_584e
-
-    cp $53
-    jp z, Jump_004_5849
-
+        jp z, setPolynomialCounter67
+    cp $6a                        
+        jp z, setPolynomialCounter66
+    cp $67                        
+        jp z, setPolynomialCounter65
+    cp $64                        
+        jp z, setPolynomialCounter57
+    cp $61                        
+        jp z, setPolynomialCounter55
+    cp $5e                        
+        jp z, setPolynomialCounter47
+    cp $5b                        
+        jp z, setPolynomialCounter45
+    cp $59                        
+        jp z, setPolynomialCounter37
+    cp $56                        
+        jp z, setPolynomialCounter35
+    cp $53                        
+        jp z, setPolynomialCounter27
     cp $50
-    jr z, jr_004_594e
-
+        jr z, .set1
     ret
 
+.set1
+    ld de, noiseOptionSets.clearedSaveFile_1
+    jp setChannelOptionSet.noise
+;}
 
-jr_004_594e:
-    ld de, $5ce3
-    jp Jump_004_47f1
-
-
-    ld a, [$ced6]
+noiseSfx_init_10:
+;{
+    ld a, [noiseChannelSoundEffectPlaying]
     and a
-    jp nz, Jump_004_44fd
+        jp nz, handleNoiseChannelSoundEffect.playing
 
-    ld a, [$cf07]
+    ld a, [songNoiseChannelEnable]
     and a
-    jp nz, Jump_004_44fd
+        jp nz, handleNoiseChannelSoundEffect.playing
 
     ld a, $02
-    ld de, $5ce7
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.footsteps_0
+    jp playNoiseSweepSfx
+;}
 
-
-    call Call_004_4704
+noiseSfx_playback_10:
+;{
+    call decrementNoiseChannelSoundEffectTimer
     cp $01
-    jp z, Jump_004_5973
-
+        jp z, .set1
     ret
 
+.set1
+    ld de, noiseOptionSets.footsteps_1
+    jp setChannelOptionSet.noise
+;}
 
-Jump_004_5973:
-    ld de, $5ceb
-    jp Jump_004_47f1
-
-
+noiseSfx_init_11:
+;{
     ld a, $10
-    ld de, $5cef
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.unknown11_0
+    jp playNoiseSweepSfx
+;}
 
-
-    call Call_004_4704
+noiseSfx_playback_11:
+noiseSfx_playback_12:
+noiseSfx_playback_13:
+;{
+    call decrementNoiseChannelSoundEffectTimer
     cp $0c
-    jr z, jr_004_5989
-
+        jr z, .set1
     ret
 
+.set1
+    ld de, noiseOptionSets.unknown_1
+    jp setChannelOptionSet.noise
+;}
 
-jr_004_5989:
-    ld de, $5cf3
-    jp Jump_004_47f1
-
-
+noiseSfx_init_12:
+;{
     ld a, $10
-    ld de, $5cf7
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.unknown12_0
+    jp playNoiseSweepSfx
+;}
 
-
+noiseSfx_init_13:
+;{
     ld a, $10
-    ld de, $5cfb
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.unused13_0
+    jp playNoiseSweepSfx
+;}
 
-
+noiseSfx_init_14:
+;{
     ld a, $18
-    ld de, $5cff
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.unknown14_0
+    jp playNoiseSweepSfx
+;}
 
-
-    call Call_004_4704
+noiseSfx_playback_14:
+;{
+    call decrementNoiseChannelSoundEffectTimer
     cp $10
-    jr z, jr_004_59b7
-
+        jr z, .set1
     cp $0c
-    jr z, jr_004_59bd
-
+        jr z, .set0
     cp $08
-    jr z, jr_004_59b7
-
+        jr z, .set1
     ret
 
+.set1
+    ld de, noiseOptionSets.unknown14_1
+    jp setChannelOptionSet.noise
 
-jr_004_59b7:
-    ld de, $5d03
-    jp Jump_004_47f1
+.set0
+    ld de, noiseOptionSets.unknown14_0
+    jp setChannelOptionSet.noise
+;}
 
-
-jr_004_59bd:
-    ld de, $5cff
-    jp Jump_004_47f1
-
-
+noiseSfx_init_15:
+;{
     ld a, $30
-    ld de, $5d07
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.unknown15_0
+    jp playNoiseSweepSfx
+;}
 
-
-    call Call_004_4704
+noiseSfx_playback_15:
+;{
+    call decrementNoiseChannelSoundEffectTimer
     cp $20
-    jr z, jr_004_59d3
-
+        jr z, .set1
     ret
 
+.set1
+    ld de, noiseOptionSets.unknown15_1
+    jp setChannelOptionSet.noise
+;}
 
-jr_004_59d3:
-    ld de, $5d0b
-    jp Jump_004_47f1
-
-
-    ld a, $04
+noiseSfx_init_16:
+;{
+    ld a, toneSoundEffect_babyMetroidClearingBlock
     ld [sfxRequest_square2], a
     ld a, $08
-    ld de, $5d0f
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.babyMetroidClearingBlock
+    jp playNoiseSweepSfx
+;}
 
-
-    ld a, $05
+noiseSfx_init_17:
+;{
+    ld a, toneSoundEffect_babyMetroidCry
     ld [sfxRequest_square2], a
     ld a, $40
-    ld de, $5d13
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.babyMetroidCry
+    jp playNoiseSweepSfx
+;}
 
-
+noiseSfx_init_18:
+;{
     ld a, $0f
-    ld de, $5d17
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.unknown18_0
+    jp playNoiseSweepSfx
+;}
 
-
-    call Call_004_4704
+noiseSfx_playback_18:
+;{
+    call decrementNoiseChannelSoundEffectTimer
     cp $0c
-    jr z, jr_004_5a03
-
+        jr z, .set1
     ret
 
+.set1
+    ld de, noiseOptionSets.unknown18_1
+    jp setChannelOptionSet.noise
+;}
 
-jr_004_5a03:
-    ld de, $5d1b
-    jp Jump_004_47f1
-
-
+noiseSfx_init_19:
+;{
     ld a, $10
-    ld de, $5d1f
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.unused19
+    jp playNoiseSweepSfx
+;}
 
-
+noiseSfx_init_1A:
+;{
     ld a, $10
-    ld de, $5d23
-    jp Jump_004_5a19
+    ld de, noiseOptionSets.unknown1A
+    jp playNoiseSweepSfx
+;}
 
-
-Call_004_5a19:
-Jump_004_5a19:
-    ld [$ced8], a
+playNoiseSweepSfx:
+;{
+    ld [noiseChannelSoundEffectTimer], a
     ld a, [sfxRequest_noise]
-    ld [$ced6], a
-    ld [$cee7], a
-    jp Jump_004_47f1
+    ld [noiseChannelSoundEffectPlaying], a
+    ld [noiseChannelSoundEffectIsPlayingFlag], a
+    jp setChannelOptionSet.noise
+;}
+;}
+
+; Option sets
+;{
+toneSweepOptionSets:
+;{
+.jumping_0 ; $5A28
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $690, 0
+
+.jumping_1 ; $5A2D
+    AscendingSweepOptions 6, 2
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 3, $8
+    FrequencyOptions $5C0, 0
+
+.jumping_2 ; $5A32
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $4
+    FrequencyOptions $690, 0
+
+.jumping_3 ; $5A37
+    AscendingSweepOptions 6, 2
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $3
+    FrequencyOptions $5C0, 0
+
+.jumping_4 ; $5A3C
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $2
+    FrequencyOptions $690, 0
+
+.jumping_5 ; $5A41
+    AscendingSweepOptions 6, 2
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $2
+    FrequencyOptions $5C0, 0
 
 
-    db $15, $00, $a7, $90, $86, $26, $80, $83, $c0, $85, $15, $00, $47, $90, $86, $26
-    db $80, $37, $c0, $85, $15, $00, $27, $90, $86, $26, $80, $27, $c0, $85, $15, $00
-    db $a7, $90, $86, $26, $80, $73, $c0, $86, $15, $00, $37, $90, $86, $26, $80, $37
-    db $c0, $86, $15, $00, $27, $90, $86, $26, $80, $27, $c0, $86, $15, $00, $17, $90
-    db $86, $26, $80, $17, $c0, $86, $15, $00, $77, $00, $87, $15, $00, $b7, $60, $85
-    db $15, $00, $f7, $c0, $85, $15, $00, $f7, $00, $86, $15, $40, $f7, $40, $86, $15
-    db $40, $e7, $70, $86, $15, $80, $d7, $90, $86, $15, $80, $c7, $b0, $86, $15, $80
-    db $a7, $c0, $86, $15, $40, $87, $c0, $86, $15, $40, $87, $d0, $86, $15, $40, $47
-    db $e0, $86, $15, $40, $57, $f0, $86, $15, $40, $57, $00, $87, $14, $b6, $91, $a0
-    db $c4, $14, $b6, $71, $a0, $c4, $14, $b6, $51, $a0, $c4, $14, $66, $91, $a0, $c4
-    db $14, $66, $61, $a0, $c4, $14, $66, $41, $a0, $c4, $14, $80, $a7, $00, $87, $3d
-    db $80, $c1, $50, $87, $3d, $80, $61, $50, $87, $15, $00, $f7, $d0, $86, $15, $80
-    db $95, $80, $86, $15, $80, $95, $c0, $86, $15, $80, $85, $00, $87, $15, $80, $75
-    db $80, $87, $15, $40, $f7, $90, $86, $15, $00, $f7, $a0, $85, $1d, $00, $55, $a0
-    db $87, $15, $00, $67, $00, $86, $15, $00, $a7, $20, $86, $15, $00, $97, $40, $86
-    db $15, $00, $87, $60, $86, $15, $00, $67, $80, $86, $15, $00, $47, $a0, $86, $15
-    db $00, $37, $c0, $86, $1f, $80, $77, $d0, $87, $17, $00, $a7, $00, $86, $1f, $00
-    db $c7, $d0, $87, $35, $80, $87, $a0, $86, $34, $80, $c7, $10, $87, $34, $80, $b7
-    db $40, $87, $34, $80, $97, $60, $87, $34, $80, $67, $80, $87, $2a, $00, $f7, $00
-    db $86, $15, $80, $57, $00, $86, $39, $80, $e7, $40, $87, $44, $80, $d7, $f0, $86
-    db $44, $80, $97, $f0, $86, $44, $80, $37, $f0, $86, $44, $80, $c1, $00, $87, $00
-    db $80, $41, $d0, $87, $15, $80, $a7, $a0, $85, $15, $80, $a7, $c0, $85, $15, $80
-    db $a7, $f0, $85, $15, $80, $a7, $10, $86, $15, $80, $a7, $40, $86, $15, $80, $a7
-    db $70, $86, $15, $80, $a7, $90, $86, $15, $80, $a7, $a0, $86, $15, $80, $a7, $c0
-    db $86, $15, $80, $a7, $e0, $86, $15, $80, $a7, $00, $87
+.hijumping_0 ; $5A46
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $690, 0
 
-    nop
-    nop
-    ld [$8000], sp
+.hijumping_1 ; $5A4B
+    AscendingSweepOptions 6, 2
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 3, $7
+    FrequencyOptions $6C0, 0
 
-    db $1e, $40, $57, $c0, $87
+.hijumping_2 ; $5A50
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $3
+    FrequencyOptions $690, 0
 
-    dec d
-    nop
-    rst $00
-    nop
-    add h
-    dec e
-    nop
-    rst $00
-    ret nc
+.hijumping_3 ; $5A55
+    AscendingSweepOptions 6, 2
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $3
+    FrequencyOptions $6C0, 0
 
-    add a
+.hijumping_4 ; $5A5A
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $2
+    FrequencyOptions $690, 0
 
-    db $14, $00, $c7, $00, $87, $14, $80, $c7, $40, $86, $16, $40, $f7, $d0, $86, $16
-    db $40, $c7, $80, $86, $16, $40, $a7, $c0, $86, $16, $40, $87, $00, $87, $17, $40
-    db $c7, $a0, $87, $39, $80, $f7, $40, $87, $44, $80, $e7, $10, $87, $44, $80, $c7
-    db $10, $87, $44, $80, $a7, $10, $87, $44, $80, $37, $10, $87, $16, $bd, $55, $50
-    db $87, $00, $bd, $55, $a0, $87
+.hijumping_5 ; $5A5F
+    AscendingSweepOptions 6, 2
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $2
+    FrequencyOptions $6C0, 0
 
-    inc d
-    nop
-    rst $00
-    and b
-    add [hl]
-    dec d
-    nop
-    rst $00
-    and b
-    add [hl]
+.hijumping_6 ; $5A64
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $1
+    FrequencyOptions $690, 0
 
-    db $1d, $00, $f1, $c0, $87, $39, $00, $f1, $d0, $87, $1d, $00, $e1, $c4, $87, $1d
-    db $00, $d1, $cc, $87, $1d, $00, $e1, $d0, $87, $1d, $00, $d1, $d8, $87, $1d, $38
-    db $e1, $dc, $c7, $4f, $00, $f6, $f0, $87, $5c, $80, $c7, $80, $87, $45, $80, $87
-    db $82, $87, $45, $80, $57, $82, $87, $34, $80, $a5, $00, $82, $43, $80, $f7, $00
-    db $87, $45, $80, $f7, $a2, $87, $45, $80, $57, $a2, $87
-
-    ld [hl], a
-    add b
-    pop af
-    nop
-    add [hl]
-    ld [hl], a
-    add b
-    pop af
-    and b
-    add [hl]
-    ld [hl], a
-    add b
-    pop af
-    nop
-    add a
-    ld [hl], a
-    add b
-    pop af
-    ld b, b
-    add a
-    ld [hl], a
-    add b
-    pop af
-    sub b
-    add a
-
-    db $00, $09, $62, $80, $00, $19, $33, $80, $00, $f1, $4e, $80, $00, $f2, $6c, $80
-    db $00, $19, $4d, $80, $00, $09, $3d, $80, $00, $f4, $45, $80, $00, $f7, $4a, $80
-    db $00, $45, $4a, $80, $00, $f7, $4a, $80, $00, $f7, $33, $80, $00, $f1, $5c, $80
-    db $00, $e2, $4e, $80, $00, $c6, $45, $80, $00, $f2, $5a, $80, $00, $f4, $44, $80
-    db $00, $0d, $24, $80, $00, $f0, $15, $80, $00, $87, $74, $80, $00, $a7, $43, $80
-    db $00, $f1, $64, $80, $00, $f7, $64, $80, $00, $a3, $22, $80, $00, $f7, $22, $80
-    db $00, $a5, $33, $80, $00, $f0, $43, $80, $00, $f6, $65, $80, $3d, $37, $2a, $c0
-    db $3c, $15, $2a, $c0, $00, $73, $27, $80, $00, $97, $77, $80, $00, $87, $44, $80
-    db $00, $87, $33, $80, $00, $91, $3c, $80, $00, $91, $4b, $80, $00, $a7, $55, $80
-    db $00, $c3, $53, $80, $00, $1b, $31, $80, $00, $a7, $7d, $80, $00, $61, $2f, $80
-    db $00, $60, $21, $80
-
-    nop
-    jp $8011
+.hijumping_7 ; $5A69
+    AscendingSweepOptions 6, 2
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $1
+    FrequencyOptions $6C0, 0
 
 
-    db $00, $44, $4a, $80, $00, $08, $00, $80, $00, $f4, $00, $87, $00, $97, $90, $87
-    db $40, $57, $00, $87, $40, $f7, $00, $87, $00, $87, $00, $82, $53, $5d, $53, $5d
-    db $be, $5d, $29, $5e, $94, $5e, $69, $5d, $69, $5d, $d4, $5d, $3f, $5e, $aa, $5e
+.screwAttacking_0 ; $5A6E
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $7
+    FrequencyOptions $700, 0
 
+.screwAttacking_1 ; $5A73
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $B
+    FrequencyOptions $560, 0
+
+.screwAttacking_2 ; $5A78
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $F
+    FrequencyOptions $5C0, 0
+
+.screwAttacking_3 ; $5A7D
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $F
+    FrequencyOptions $600, 0
+
+.screwAttacking_4 ; $5A82
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 1
+    DescendingEnvelopeOptions 7, $F
+    FrequencyOptions $640, 0
+
+.screwAttacking_5 ; $5A87
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 1
+    DescendingEnvelopeOptions 7, $E
+    FrequencyOptions $670, 0
+
+.screwAttacking_6 ; $5A8C
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $D
+    FrequencyOptions $690, 0
+
+.screwAttacking_7 ; $5A91
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $C
+    FrequencyOptions $6B0, 0
+
+.screwAttacking_8 ; $5A96
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $6C0, 0
+
+.screwAttacking_9 ; $5A9B
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 1
+    DescendingEnvelopeOptions 7, $8
+    FrequencyOptions $6C0, 0
+
+.screwAttacking_A ; $5AA0
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 1
+    DescendingEnvelopeOptions 7, $8
+    FrequencyOptions $6D0, 0
+
+.screwAttacking_B ; $5AA5
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 1
+    DescendingEnvelopeOptions 7, $4
+    FrequencyOptions $6E0, 0
+
+.screwAttacking_C ; $5AAA
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 1
+    DescendingEnvelopeOptions 7, $5
+    FrequencyOptions $6F0, 0
+
+.screwAttacking_D ; $5AAF
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 1
+    DescendingEnvelopeOptions 7, $5
+    FrequencyOptions $700, 0
+
+
+.standingTransition_0 ; $5AB4
+    AscendingSweepOptions 4, 1
+    LengthDutyOptions $36, 2
+    DescendingEnvelopeOptions 1, $9
+    FrequencyOptions $4A0, 1
+
+.standingTransition_1 ; $5AB9
+    AscendingSweepOptions 4, 1
+    LengthDutyOptions $36, 2
+    DescendingEnvelopeOptions 1, $7
+    FrequencyOptions $4A0, 1
+
+.standingTransition_2 ; $5ABE
+    AscendingSweepOptions 4, 1
+    LengthDutyOptions $36, 2
+    DescendingEnvelopeOptions 1, $5
+    FrequencyOptions $4A0, 1
+
+
+.crouchingTransition_0 ; $5AC3
+    AscendingSweepOptions 4, 1
+    LengthDutyOptions $26, 1
+    DescendingEnvelopeOptions 1, $9
+    FrequencyOptions $4A0, 1
+
+.crouchingTransition_1 ; $5AC8
+    AscendingSweepOptions 4, 1
+    LengthDutyOptions $26, 1
+    DescendingEnvelopeOptions 1, $6
+    FrequencyOptions $4A0, 1
+
+.crouchingTransition_2 ; $5ACD
+    AscendingSweepOptions 4, 1
+    LengthDutyOptions $26, 1
+    DescendingEnvelopeOptions 1, $4
+    FrequencyOptions $4A0, 1
+
+
+.morphing_0 ; $5AD2
+    AscendingSweepOptions 4, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $700, 0
+
+.morphing_1 ; $5AD7
+    DescendingSweepOptions 5, 3
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 1, $C
+    FrequencyOptions $750, 0
+
+.morphing_2 ; $5ADC
+    DescendingSweepOptions 5, 3
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 1, $6
+    FrequencyOptions $750, 0
+
+
+.shootingBeam_0 ; $5AE1
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $F
+    FrequencyOptions $6D0, 0
+
+.shootingBeam_1 ; $5AE6
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 5, $9
+    FrequencyOptions $680, 0
+
+.shootingBeam_2 ; $5AEB
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 5, $9
+    FrequencyOptions $6C0, 0
+
+.shootingBeam_3 ; $5AF0
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 5, $8
+    FrequencyOptions $700, 0
+
+.shootingBeam_4 ; $5AF5
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 5, $7
+    FrequencyOptions $780, 0
+
+
+.shootingMissile_0 ; $5AFA
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 1
+    DescendingEnvelopeOptions 7, $F
+    FrequencyOptions $690, 0
+
+.shootingMissile_1 ; $5AFF
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $F
+    FrequencyOptions $5A0, 0
+
+.shootingMissile_2 ; $5B04
+    DescendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 5, $5
+    FrequencyOptions $7A0, 0
+
+.shootingMissile_3 ; $5B09
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $6
+    FrequencyOptions $600, 0
+
+.shootingMissile_4 ; $5B0E
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $620, 0
+
+.shootingMissile_5 ; $5B13
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $9
+    FrequencyOptions $640, 0
+
+.shootingMissile_6 ; $5B18
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $8
+    FrequencyOptions $660, 0
+
+.shootingMissile_7 ; $5B1D
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $6
+    FrequencyOptions $680, 0
+
+.shootingMissile_8 ; $5B22
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $4
+    FrequencyOptions $6A0, 0
+
+.shootingMissile_9 ; $5B27
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $3
+    FrequencyOptions $6C0, 0
+
+
+.shootingIceBeam ; $5B2C
+    DescendingSweepOptions 7, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $7
+    FrequencyOptions $7D0, 0
+
+
+.shootingPlasmaBeam ; $5B31
+    AscendingSweepOptions 7, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $600, 0
+
+
+.shootingSpazerBeam ; $5B36
+    DescendingSweepOptions 7, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $C
+    FrequencyOptions $7D0, 0
+
+
+.pickingUpMissileDrop_0 ; $5B3B
+    AscendingSweepOptions 5, 3
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $8
+    FrequencyOptions $6A0, 0
+
+.pickingUpMissileDrop_1 ; $5B40
+    AscendingSweepOptions 4, 3
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $C
+    FrequencyOptions $710, 0
+
+.pickingUpMissileDrop_2 ; $5B45
+    AscendingSweepOptions 4, 3
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $B
+    FrequencyOptions $740, 0
+
+.pickingUpMissileDrop_3 ; $5B4A
+    AscendingSweepOptions 4, 3
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $9
+    FrequencyOptions $760, 0
+
+.pickingUpMissileDrop_4 ; $5B4F
+    AscendingSweepOptions 4, 3
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $6
+    FrequencyOptions $780, 0
+
+
+.spiderBall_0 ; $5B54
+    DescendingSweepOptions 2, 2
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $F
+    FrequencyOptions $600, 0
+
+.spiderBall_1 ; $5B59
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $5
+    FrequencyOptions $600, 0
+
+
+.pickedUpEnergyDrop_0 ; $5B5E
+    DescendingSweepOptions 1, 3
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $E
+    FrequencyOptions $740, 0
+
+.pickedUpEnergyDrop_1 ; $5B63
+    AscendingSweepOptions 4, 4
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $D
+    FrequencyOptions $6F0, 0
+
+.pickedUpEnergyDrop_2 ; $5B68
+    AscendingSweepOptions 4, 4
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $9
+    FrequencyOptions $6F0, 0
+
+
+.pickedUpDropEnd ; $5B6D
+    AscendingSweepOptions 4, 4
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $3
+    FrequencyOptions $6F0, 0
+
+
+.shotMissileDoorWithBeam_0 ; $5B72
+    AscendingSweepOptions 4, 4
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 1, $C
+    FrequencyOptions $700, 0
+
+.shotMissileDoorWithBeam_1 ; $5B77
+    AscendingSweepOptions 0, 0
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 1, $4
+    FrequencyOptions $7D0, 0
+
+
+.unknown10_0 ; $5B7C
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $5A0, 0
+
+.unknown10_1 ; $5B81
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $5C0, 0
+
+.unknown10_2 ; $5B86
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $5F0, 0
+
+.unknown10_3 ; $5B8B
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $610, 0
+
+.unknown10_4 ; $5B90
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $640, 0
+
+.unknown10_5 ; $5B95
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $670, 0
+
+.unknown10_6 ; $5B9A
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $690, 0
+
+.unknown10_7 ; $5B9F
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $6A0, 0
+
+.unknown10_8 ; $5BA4
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $6C0, 0
+
+.unknown10_9 ; $5BA9
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $6E0, 0
+
+.unknown10_A ; $5BAE
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $700, 0
+
+
+.unused12 ; $5BB3
+    AscendingSweepOptions 0, 0
+    LengthDutyOptions $0, 0
+    AscendingEnvelopeOptions 0, $0
+    FrequencyOptions $0, 0
+
+
+.bombLaid ; $5BB8
+    DescendingSweepOptions 6, 1
+    LengthDutyOptions $0, 1
+    DescendingEnvelopeOptions 7, $5
+    FrequencyOptions $7C0, 0
+
+
+.unused14_0 ; $5BBD
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $C
+    FrequencyOptions $400, 0
+
+.unused14_1 ; $5BC2
+    DescendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $C
+    FrequencyOptions $7D0, 0
+
+
+.optionMissileSelect_0 ; $5BC7
+    AscendingSweepOptions 4, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $C
+    FrequencyOptions $700, 0
+
+.optionMissileSelect_1 ; $5BCC
+    AscendingSweepOptions 4, 1
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $C
+    FrequencyOptions $640, 0
+
+
+.shootingWaveBeam_0 ; $5BD1
+    AscendingSweepOptions 6, 1
+    LengthDutyOptions $0, 1
+    DescendingEnvelopeOptions 7, $F
+    FrequencyOptions $6D0, 0
+
+.shootingWaveBeam_1 ; $5BD6
+    AscendingSweepOptions 6, 1
+    LengthDutyOptions $0, 1
+    DescendingEnvelopeOptions 7, $C
+    FrequencyOptions $680, 0
+
+.shootingWaveBeam_2 ; $5BDB
+    AscendingSweepOptions 6, 1
+    LengthDutyOptions $0, 1
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $6C0, 0
+
+.shootingWaveBeam_3 ; $5BE0
+    AscendingSweepOptions 6, 1
+    LengthDutyOptions $0, 1
+    DescendingEnvelopeOptions 7, $8
+    FrequencyOptions $700, 0
+
+.shootingWaveBeam_4 ; $5BE5
+    AscendingSweepOptions 7, 1
+    LengthDutyOptions $0, 1
+    DescendingEnvelopeOptions 7, $C
+    FrequencyOptions $7A0, 0
+
+
+.largeEnergyDrop_0 ; $5BEA
+    DescendingSweepOptions 1, 3
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $F
+    FrequencyOptions $740, 0
+
+.largeEnergyDrop_1 ; $5BEF
+    AscendingSweepOptions 4, 4
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $E
+    FrequencyOptions $710, 0
+
+.largeEnergyDrop_2 ; $5BF4
+    AscendingSweepOptions 4, 4
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $C
+    FrequencyOptions $710, 0
+
+.largeEnergyDrop_3 ; $5BF9
+    AscendingSweepOptions 4, 4
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $A
+    FrequencyOptions $710, 0
+
+.largeEnergyDrop_4 ; $5BFE
+    AscendingSweepOptions 4, 4
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $3
+    FrequencyOptions $710, 0
+
+
+.samusHealthChanged_0 ; $5C03
+    AscendingSweepOptions 6, 1
+    LengthDutyOptions $3D, 2
+    DescendingEnvelopeOptions 5, $5
+    FrequencyOptions $750, 0
+
+.samusHealthChanged_1 ; $5C08
+    AscendingSweepOptions 0, 0
+    LengthDutyOptions $3D, 2
+    DescendingEnvelopeOptions 5, $5
+    FrequencyOptions $7A0, 0
+
+
+.noMissileDudShot_0 ; $5C0D
+    AscendingSweepOptions 4, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $C
+    FrequencyOptions $6A0, 0
+
+.noMissileDudShot_1 ; $5C12
+    AscendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $C
+    FrequencyOptions $6A0, 0
+
+
+.unknown1A_0 ; $5C17
+    DescendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 1, $F
+    FrequencyOptions $7C0, 0
+
+.unknown1A_1 ; $5C1C
+    DescendingSweepOptions 1, 3
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 1, $F
+    FrequencyOptions $7D0, 0
+
+.unknown1A_2 ; $5C21
+    DescendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 1, $E
+    FrequencyOptions $7C4, 0
+
+.unknown1A_3 ; $5C26
+    DescendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 1, $D
+    FrequencyOptions $7CC, 0
+
+.unknown1A_4 ; $5C2B
+    DescendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 1, $E
+    FrequencyOptions $7D0, 0
+
+.unknown1A_5 ; $5C30
+    DescendingSweepOptions 5, 1
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 1, $D
+    FrequencyOptions $7D8, 0
+
+.unknown1A_6 ; $5C35
+    DescendingSweepOptions 5, 1
+    LengthDutyOptions $38, 0
+    DescendingEnvelopeOptions 1, $E
+    FrequencyOptions $7DC, 1
+
+
+.metroidCry ; $5C3A
+    DescendingSweepOptions 7, 4
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 6, $F
+    FrequencyOptions $7F0, 0
+
+
+.saved0 ; $5C3F
+    DescendingSweepOptions 4, 5
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $C
+    FrequencyOptions $780, 0
+
+.saved1 ; $5C44
+    AscendingSweepOptions 5, 4
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $8
+    FrequencyOptions $782, 0
+
+.saved2 ; $5C49
+    AscendingSweepOptions 5, 4
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $5
+    FrequencyOptions $782, 0
+
+
+.variaSuitTransformation ; $5C4E
+    AscendingSweepOptions 4, 3
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 5, $A
+    FrequencyOptions $200, 0
+
+
+.unpaused_0 ; $5C53
+    AscendingSweepOptions 3, 4
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $F
+    FrequencyOptions $700, 0
+
+.unpaused_1 ; $5C58
+    AscendingSweepOptions 5, 4
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $F
+    FrequencyOptions $7A2, 0
+
+.unpaused_2 ; $5C5D
+    AscendingSweepOptions 5, 4
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 7, $5
+    FrequencyOptions $7A2, 0
+
+
+.exampleA ; $5C62
+    AscendingSweepOptions 7, 7
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 1, $F
+    FrequencyOptions $600, 0
+
+
+.exampleB ; $5C67
+    AscendingSweepOptions 7, 7
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 1, $F
+    FrequencyOptions $6A0, 0
+
+
+.exampleC ; $5C6C
+    AscendingSweepOptions 7, 7
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 1, $F
+    FrequencyOptions $700, 0
+
+
+.exampleD ; $5C71
+    AscendingSweepOptions 7, 7
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 1, $F
+    FrequencyOptions $740, 0
+
+
+.exampleE ; $5C76
+    AscendingSweepOptions 7, 7
+    LengthDutyOptions $0, 2
+    DescendingEnvelopeOptions 1, $F
+    FrequencyOptions $790, 0
+;}
+
+noiseOptionSets:
+;{
+.enemyShot ; $5C7B
+    LengthOptions $0
+    AscendingEnvelopeOptions 1, $0
+    PolynomialCounterOptions 2, 0, $6
+    CounterControlOptions 0
+
+.enemyKilled_0 ; $5C7F
+    LengthOptions $0
+    AscendingEnvelopeOptions 1, $1
+    PolynomialCounterOptions 3, 0, $3
+    CounterControlOptions 0
+
+.enemyKilled_1 ; $5C83
+    LengthOptions $0
+    DescendingEnvelopeOptions 1, $F
+    PolynomialCounterOptions 6, 1, $4
+    CounterControlOptions 0
+
+.unknown3 ; $5C87
+    LengthOptions $0
+    DescendingEnvelopeOptions 2, $F
+    PolynomialCounterOptions 4, 1, $6
+    CounterControlOptions 0
+
+.shotBlockDestroyed ; $5C8B
+    LengthOptions $0
+    AscendingEnvelopeOptions 1, $1
+    PolynomialCounterOptions 5, 1, $4
+    CounterControlOptions 0
+
+.metroidHurt_0 ; $5C8F
+    LengthOptions $0
+    AscendingEnvelopeOptions 1, $0
+    PolynomialCounterOptions 5, 1, $3
+    CounterControlOptions 0
+
+.metroidHurt_1 ; $5C93
+    LengthOptions $0
+    DescendingEnvelopeOptions 4, $F
+    PolynomialCounterOptions 5, 0, $4
+    CounterControlOptions 0
+
+.SamusHurt_0 ; $5C97
+    LengthOptions $0
+    DescendingEnvelopeOptions 7, $F
+    PolynomialCounterOptions 2, 1, $4
+    CounterControlOptions 0
+
+.SamusHurt_1 ; $5C9B
+.acidDamage_1 ; $5C9B
+    LengthOptions $0
+    DescendingEnvelopeOptions 5, $4
+    PolynomialCounterOptions 2, 1, $4
+    CounterControlOptions 0
+
+.acidDamage_0 ; $5C9F
+    LengthOptions $0
+    DescendingEnvelopeOptions 7, $F
+    PolynomialCounterOptions 2, 1, $4
+    CounterControlOptions 0
+
+.shotMissileDoor_0 ; $5CA3
+    LengthOptions $0
+    DescendingEnvelopeOptions 7, $F
+    PolynomialCounterOptions 3, 0, $3
+    CounterControlOptions 0
+
+.shotMissileDoor_1 ; $5CA7
+    LengthOptions $0
+    DescendingEnvelopeOptions 1, $F
+    PolynomialCounterOptions 4, 1, $5
+    CounterControlOptions 0
+
+.metroidQueenCry_0 ; $5CAB
+    LengthOptions $0
+    DescendingEnvelopeOptions 2, $E
+    PolynomialCounterOptions 6, 1, $4
+    CounterControlOptions 0
+
+.metroidQueenCry_1 ; $5CAF
+    LengthOptions $0
+    DescendingEnvelopeOptions 6, $C
+    PolynomialCounterOptions 5, 0, $4
+    CounterControlOptions 0
+
+.metroidQueenHurtCry_0 ; $5CB3
+    LengthOptions $0
+    DescendingEnvelopeOptions 2, $F
+    PolynomialCounterOptions 2, 1, $5
+    CounterControlOptions 0
+
+.metroidQueenHurtCry_1 ; $5CB7
+    LengthOptions $0
+    DescendingEnvelopeOptions 4, $F
+    PolynomialCounterOptions 4, 0, $4
+    CounterControlOptions 0
+
+.samusKilled_1 ; $5CBB
+    LengthOptions $0
+    AscendingEnvelopeOptions 5, $0
+    PolynomialCounterOptions 4, 0, $2
+    CounterControlOptions 0
+
+.samusKilled_2 ; $5CBF
+    LengthOptions $0
+    DescendingEnvelopeOptions 0, $F
+    PolynomialCounterOptions 5, 0, $1
+    CounterControlOptions 0
+
+.samusKilled_3 ; $5CC3
+    LengthOptions $0
+    DescendingEnvelopeOptions 7, $8
+    PolynomialCounterOptions 4, 0, $7
+    CounterControlOptions 0
+
+.bombDetonated_0 ; $5CC7
+    LengthOptions $0
+    DescendingEnvelopeOptions 7, $A
+    PolynomialCounterOptions 3, 0, $4
+    CounterControlOptions 0
+
+.bombDetonated_1 ; $5CCB
+    LengthOptions $0
+    DescendingEnvelopeOptions 1, $F
+    PolynomialCounterOptions 4, 0, $6
+    CounterControlOptions 0
+
+.metroidKilled_0 ; $5CCF
+    LengthOptions $0
+    DescendingEnvelopeOptions 7, $F
+    PolynomialCounterOptions 4, 0, $6
+    CounterControlOptions 0
+
+.metroidKilled_1 ; $5CD3
+    LengthOptions $0
+    DescendingEnvelopeOptions 3, $A
+    PolynomialCounterOptions 2, 0, $2
+    CounterControlOptions 0
+
+.unknownE_0 ; $5CD7
+    LengthOptions $0
+    DescendingEnvelopeOptions 7, $F
+    PolynomialCounterOptions 2, 0, $2
+    CounterControlOptions 0
+
+.unknownE_1 ; $5CDB
+    LengthOptions $0
+    DescendingEnvelopeOptions 5, $A
+    PolynomialCounterOptions 3, 0, $3
+    CounterControlOptions 0
+
+.clearedSaveFile_0 ; $5CDF
+    LengthOptions $0
+    DescendingEnvelopeOptions 0, $F
+    PolynomialCounterOptions 3, 0, $4
+    CounterControlOptions 0
+
+.clearedSaveFile_1 ; $5CE3
+    LengthOptions $0
+    DescendingEnvelopeOptions 6, $F
+    PolynomialCounterOptions 5, 0, $6
+    CounterControlOptions 0
+
+.footsteps_0 ; $5CE7
+    LengthOptions $3D
+    DescendingEnvelopeOptions 7, $3
+    PolynomialCounterOptions 2, 1, $2
+    CounterControlOptions 1
+
+.footsteps_1 ; $5CEB
+    LengthOptions $3C
+    DescendingEnvelopeOptions 5, $1
+    PolynomialCounterOptions 2, 1, $2
+    CounterControlOptions 1
+
+.unknown11_0 ; $5CEF
+    LengthOptions $0
+    DescendingEnvelopeOptions 3, $7
+    PolynomialCounterOptions 7, 0, $2
+    CounterControlOptions 0
+
+.unknown_1 ; $5CF3
+    LengthOptions $0
+    DescendingEnvelopeOptions 7, $9
+    PolynomialCounterOptions 7, 0, $7
+    CounterControlOptions 0
+
+.unknown12_0 ; $5CF7
+    LengthOptions $0
+    DescendingEnvelopeOptions 7, $8
+    PolynomialCounterOptions 4, 0, $4
+    CounterControlOptions 0
+
+.unused13_0 ; $5CFB
+    LengthOptions $0
+    DescendingEnvelopeOptions 7, $8
+    PolynomialCounterOptions 3, 0, $3
+    CounterControlOptions 0
+
+.unknown14_0 ; $5CFF
+    LengthOptions $0
+    DescendingEnvelopeOptions 1, $9
+    PolynomialCounterOptions 4, 1, $3
+    CounterControlOptions 0
+
+.unknown14_1 ; $5D03
+    LengthOptions $0
+    DescendingEnvelopeOptions 1, $9
+    PolynomialCounterOptions 3, 1, $4
+    CounterControlOptions 0
+
+.unknown15_0 ; $5D07
+    LengthOptions $0
+    DescendingEnvelopeOptions 7, $A
+    PolynomialCounterOptions 5, 0, $5
+    CounterControlOptions 0
+
+.unknown15_1 ; $5D0B
+    LengthOptions $0
+    DescendingEnvelopeOptions 3, $C
+    PolynomialCounterOptions 3, 0, $5
+    CounterControlOptions 0
+
+.babyMetroidClearingBlock ; $5D0F
+    LengthOptions $0
+    AscendingEnvelopeOptions 3, $1
+    PolynomialCounterOptions 1, 0, $3
+    CounterControlOptions 0
+
+.babyMetroidCry ; $5D13
+    LengthOptions $0
+    DescendingEnvelopeOptions 7, $A
+    PolynomialCounterOptions 5, 1, $7
+    CounterControlOptions 0
+
+.unknown18_0 ; $5D17
+    LengthOptions $0
+    DescendingEnvelopeOptions 1, $6
+    PolynomialCounterOptions 7, 1, $2
+    CounterControlOptions 0
+
+.unknown18_1 ; $5D1B
+    LengthOptions $0
+    DescendingEnvelopeOptions 0, $6
+    PolynomialCounterOptions 1, 0, $2
+    CounterControlOptions 0
+
+.unused19 ; $5D1F
+    LengthOptions $0
+    DescendingEnvelopeOptions 3, $C
+    PolynomialCounterOptions 1, 0, $1
+    CounterControlOptions 0
+
+.unknown1A ; $5D23
+    LengthOptions $0
+    DescendingEnvelopeOptions 4, $4
+    PolynomialCounterOptions 2, 1, $4
+    CounterControlOptions 0
+
+.samusKilled_0 ; $5D27
+    LengthOptions $0
+    AscendingEnvelopeOptions 0, $0
+    PolynomialCounterOptions 0, 0, $0
+    CounterControlOptions 0
+;}
+
+toneOptionSets:
+;{
+.metroidQueenCry ; $5D2B
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 4, $F
+    FrequencyOptions $700, 0
+
+.babyMetroidClearingBlock ; $5D2F
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $9
+    FrequencyOptions $790, 0
+
+.babyMetroidCry ; $5D33
+    LengthDutyOptions $0, 1
+    DescendingEnvelopeOptions 7, $5
+    FrequencyOptions $700, 0
+
+.metroidQueenHurtCry ; $5D37
+    LengthDutyOptions $0, 1
+    DescendingEnvelopeOptions 7, $F
+    FrequencyOptions $700, 0
+
+.unknown7 ; $5D3B
+    LengthDutyOptions $0, 0
+    DescendingEnvelopeOptions 7, $8
+    FrequencyOptions $200, 0
+;}
+;}
+
+; Wave channel sound effects
+;{
+waveChannelSoundEffectInitialisationFunctionPointers:
+;{
+    dw waveSfx_init_1 ; 1: Samus' health < 10
+    dw waveSfx_init_2 ; 2: Samus' health < 20
+    dw waveSfx_init_3 ; 3: Samus' health < 30
+    dw waveSfx_init_4 ; 4: Samus' health < 40
+    dw waveSfx_init_5 ; 5: Samus' health < 50
+;}
+
+waveChannelSoundEffectPlaybackFunctionPointers:
+;{
+    dw waveSfx_playback_1 ; 1: Samus' health < 10
+    dw waveSfx_playback_2 ; 2: Samus' health < 20
+    dw waveSfx_playback_3 ; 3: Samus' health < 30
+    dw waveSfx_playback_4 ; 4: Samus' health < 40
+    dw waveSfx_playback_5 ; 5: Samus' health < 50
+;}
+
+waveSfx_init_1:
+waveSfx_init_2:
+;{
     xor a
-    ldh [rNR30], a
-    ld de, $418b
-    call Call_004_47c9
+    ldh [rAUD3ENA], a
+    ld de, wavePatterns.wave4
+    call writeToWavePatternRam
     ld a, $0c
-    ld [$cfee], a
+    ld [loudLowHealthBeepTimer], a
     ld a, $0e
-    ld de, $5eff
+    ld de, waveOptionSets.healthUnder20_0
     jp Jump_004_5f27
+;}
 
-
+waveSfx_playback_1:
+waveSfx_playback_2:
+;{
     ld a, $01
-    ld [$cee6], a
-    ld a, [$cfe8]
+    ld [waveChannelSoundEffectIsPlayingFlag], a
+    ld a, [waveChannelSoundEffectTimer]
     dec a
-    ld [$cfe8], a
+    ld [waveChannelSoundEffectTimer], a
     cp $0a
-    jr z, jr_004_5d7d
-
+        jr z, .set1
     and a
-    jr z, jr_004_5d9e
-
+        jr z, .set0
     ret
 
-
-jr_004_5d7d:
-    ld a, [$cfee]
+.set1
+    ld a, [loudLowHealthBeepTimer]
     and a
-    jr z, jr_004_5d8f
+    jr z, .else1
+        dec a
+        ld [loudLowHealthBeepTimer], a
+        ld de, wavePatterns.wave4
+        call writeToWavePatternRam
+        jr .endIf1
+    .else1
+        xor a
+        ldh [rAUD3ENA], a
+        ld de, wavePatterns.wave5
+        call writeToWavePatternRam
+    .endIf1
 
-    dec a
-    ld [$cfee], a
-    ld de, $418b
-    call Call_004_47c9
-    jr jr_004_5d98
+    ld de, waveOptionSets.healthUnder20_1
+    jp setChannelOptionSet.wave
 
-jr_004_5d8f:
-    xor a
-    ldh [rNR30], a
-    ld de, $419b
-    call Call_004_47c9
-
-jr_004_5d98:
-    ld de, $5f04
-    jp Jump_004_47e9
-
-
-jr_004_5d9e:
-    ld a, [$cfee]
+.set0
+    ld a, [loudLowHealthBeepTimer]
     and a
-    jr z, jr_004_5dac
+    jr z, .else0
+        ld de, wavePatterns.wave4
+        call writeToWavePatternRam
+        jr .endIf0
+    .else0
+        ld de, wavePatterns.wave5
+        call writeToWavePatternRam
+    .endIf0
 
-    ld de, $418b
-    call Call_004_47c9
-    jr jr_004_5db2
+    ld a, [waveChannelSoundEffectLength]
+    ld [waveChannelSoundEffectTimer], a
+    ld de, waveOptionSets.healthUnder20_0
+    jp setChannelOptionSet.wave
+;}
 
-jr_004_5dac:
-    ld de, $419b
-    call Call_004_47c9
-
-jr_004_5db2:
-    ld a, [$cfe9]
-    ld [$cfe8], a
-    ld de, $5eff
-    jp Jump_004_47e9
-
-
+waveSfx_init_3:
+;{
     xor a
-    ldh [rNR30], a
-    ld de, $418b
-    call Call_004_47c9
+    ldh [rAUD3ENA], a
+    ld de, wavePatterns.wave4
+    call writeToWavePatternRam
     ld a, $06
-    ld [$cfee], a
+    ld [loudLowHealthBeepTimer], a
     ld a, $13
-    ld de, $5f09
+    ld de, waveOptionSets.healthUnder30_0
     jp Jump_004_5f27
+;}
 
-
+waveSfx_playback_3:
+;{
     ld a, $02
-    ld [$cee6], a
-    ld a, [$cfe8]
+    ld [waveChannelSoundEffectIsPlayingFlag], a
+    ld a, [waveChannelSoundEffectTimer]
     dec a
-    ld [$cfe8], a
+    ld [waveChannelSoundEffectTimer], a
     cp $09
-    jr z, jr_004_5de8
-
+        jr z, .set1
     and a
-    jr z, jr_004_5e09
-
+        jr z, .set0
     ret
 
-
-jr_004_5de8:
-    ld a, [$cfee]
+.set1
+    ld a, [loudLowHealthBeepTimer]
     and a
-    jr z, jr_004_5dfa
+    jr z, .else1
+        dec a
+        ld [loudLowHealthBeepTimer], a
+        ld de, wavePatterns.wave4
+        call writeToWavePatternRam
+        jr .endIf1
+    .else1
+        xor a
+        ldh [rAUD3ENA], a
+        ld de, wavePatterns.wave5
+        call writeToWavePatternRam
+    .endIf1
 
-    dec a
-    ld [$cfee], a
-    ld de, $418b
-    call Call_004_47c9
-    jr jr_004_5e03
+    ld de, waveOptionSets.healthUnder30_1
+    jp setChannelOptionSet.wave
 
-jr_004_5dfa:
-    xor a
-    ldh [rNR30], a
-    ld de, $419b
-    call Call_004_47c9
-
-jr_004_5e03:
-    ld de, $5f0e
-    jp Jump_004_47e9
-
-
-jr_004_5e09:
-    ld a, [$cfee]
+.set0
+    ld a, [loudLowHealthBeepTimer]
     and a
-    jr z, jr_004_5e17
+    jr z, .else0
+        ld de, wavePatterns.wave4
+        call writeToWavePatternRam
+        jr .endIf0
+    .else0
+        ld de, wavePatterns.wave5
+        call writeToWavePatternRam
+    .endIf0
 
-    ld de, $418b
-    call Call_004_47c9
-    jr jr_004_5e1d
+    ld a, [waveChannelSoundEffectLength]
+    ld [waveChannelSoundEffectTimer], a
+    ld de, waveOptionSets.healthUnder30_0
+    jp setChannelOptionSet.wave
+;}
 
-jr_004_5e17:
-    ld de, $419b
-    call Call_004_47c9
-
-jr_004_5e1d:
-    ld a, [$cfe9]
-    ld [$cfe8], a
-    ld de, $5f09
-    jp Jump_004_47e9
-
-
+waveSfx_init_4:
+;{
     xor a
-    ldh [rNR30], a
-    ld de, $418b
-    call Call_004_47c9
+    ldh [rAUD3ENA], a
+    ld de, wavePatterns.wave4
+    call writeToWavePatternRam
     ld a, $06
-    ld [$cfee], a
+    ld [loudLowHealthBeepTimer], a
     ld a, $16
-    ld de, $5f13
+    ld de, waveOptionSets.healthUnder40_0
     jp Jump_004_5f27
+;}
 
-
+waveSfx_playback_4:
+;{
     ld a, $03
-    ld [$cee6], a
-    ld a, [$cfe8]
+    ld [waveChannelSoundEffectIsPlayingFlag], a
+    ld a, [waveChannelSoundEffectTimer]
     dec a
-    ld [$cfe8], a
+    ld [waveChannelSoundEffectTimer], a
     cp $09
-    jr z, jr_004_5e53
-
+        jr z, .set1
     and a
-    jr z, jr_004_5e74
-
+        jr z, .set0
     ret
 
-
-jr_004_5e53:
-    ld a, [$cfee]
+.set1
+    ld a, [loudLowHealthBeepTimer]
     and a
-    jr z, jr_004_5e65
+    jr z, .else1
+        dec a
+        ld [loudLowHealthBeepTimer], a
+        ld de, wavePatterns.wave4
+        call writeToWavePatternRam
+        jr .endIf1
+    .else1
+        xor a
+        ldh [rAUD3ENA], a
+        ld de, wavePatterns.wave5
+        call writeToWavePatternRam
+    .endIf1
 
-    dec a
-    ld [$cfee], a
-    ld de, $418b
-    call Call_004_47c9
-    jr jr_004_5e6e
+    ld de, waveOptionSets.healthUnder40_1
+    jp setChannelOptionSet.wave
 
-jr_004_5e65:
-    xor a
-    ldh [rNR30], a
-    ld de, $419b
-    call Call_004_47c9
-
-jr_004_5e6e:
-    ld de, $5f18
-    jp Jump_004_47e9
-
-
-jr_004_5e74:
-    ld a, [$cfee]
+.set0
+    ld a, [loudLowHealthBeepTimer]
     and a
-    jr z, jr_004_5e82
+    jr z, .else0
+        ld de, wavePatterns.wave4
+        call writeToWavePatternRam
+        jr .endIf0
+    .else0
+        ld de, wavePatterns.wave5
+        call writeToWavePatternRam
+    .endIf0
 
-    ld de, $418b
-    call Call_004_47c9
-    jr jr_004_5e88
+    ld a, [waveChannelSoundEffectLength]
+    ld [waveChannelSoundEffectTimer], a
+    ld de, waveOptionSets.healthUnder40_0
+    jp setChannelOptionSet.wave
+;}
 
-jr_004_5e82:
-    ld de, $419b
-    call Call_004_47c9
-
-jr_004_5e88:
-    ld a, [$cfe9]
-    ld [$cfe8], a
-    ld de, $5f13
-    jp Jump_004_47e9
-
-
+waveSfx_init_5:
+;{
     xor a
-    ldh [rNR30], a
-    ld de, $418b
-    call Call_004_47c9
+    ldh [rAUD3ENA], a
+    ld de, wavePatterns.wave4
+    call writeToWavePatternRam
     ld a, $06
-    ld [$cfee], a
+    ld [loudLowHealthBeepTimer], a
     ld a, $18
-    ld de, $5f1d
+    ld de, waveOptionSets.healthUnder50_0
     jp Jump_004_5f27
+;}
 
-
+waveSfx_playback_5:
+;{
     ld a, $04
-    ld [$cee6], a
-    ld a, [$cfe8]
+    ld [waveChannelSoundEffectIsPlayingFlag], a
+    ld a, [waveChannelSoundEffectTimer]
     dec a
-    ld [$cfe8], a
+    ld [waveChannelSoundEffectTimer], a
     cp $0b
-    jr z, jr_004_5ebe
-
+        jr z, .set1
     and a
-    jr z, jr_004_5edf
-
+        jr z, .set0
     ret
 
-
-jr_004_5ebe:
-    ld a, [$cfee]
+.set1
+    ld a, [loudLowHealthBeepTimer]
     and a
-    jr z, jr_004_5ed0
+    jr z, .else1
+        dec a
+        ld [loudLowHealthBeepTimer], a
+        ld de, wavePatterns.wave4
+        call writeToWavePatternRam
+        jr .endIf1
+    .else1
+        xor a
+        ldh [rAUD3ENA], a
+        ld de, wavePatterns.wave5
+        call writeToWavePatternRam
+    .endIf1
 
-    dec a
-    ld [$cfee], a
-    ld de, $418b
-    call Call_004_47c9
-    jr jr_004_5ed9
+    ld de, waveOptionSets.healthUnder50_1
+    jp setChannelOptionSet.wave
 
-jr_004_5ed0:
-    xor a
-    ldh [rNR30], a
-    ld de, $419b
-    call Call_004_47c9
-
-jr_004_5ed9:
-    ld de, $5f22
-    jp Jump_004_47e9
-
-
-jr_004_5edf:
-    ld a, [$cfee]
+.set0
+    ld a, [loudLowHealthBeepTimer]
     and a
-    jr z, jr_004_5eed
+    jr z, .else0
+        ld de, wavePatterns.wave4
+        call writeToWavePatternRam
+        jr .endIf0
+    .else0
+        ld de, wavePatterns.wave5
+        call writeToWavePatternRam
+    .endIf0
 
-    ld de, $418b
-    call Call_004_47c9
-    jr jr_004_5ef3
+    ld a, [waveChannelSoundEffectLength]
+    ld [waveChannelSoundEffectTimer], a
+    ld de, waveOptionSets.healthUnder50_0
+    jp setChannelOptionSet.wave
+;}
 
-jr_004_5eed:
-    ld de, $419b
-    call Call_004_47c9
+waveOptionSets:
+;{
+macro WaveOptionSet ; [volume], [frequency]
+    static_assert \1 < 4, "Invalid volume"
+    static_assert \2 < $800, "Invalid frequency"
+    
+    db $80, $00, \1 << 5
+    dw \2 | $8000
+endm
 
-jr_004_5ef3:
-    ld a, [$cfe9]
-    ld [$cfe8], a
-    ld de, $5f1d
-    jp Jump_004_47e9
+.healthUnder20_0 ; $5EFF
+    WaveOptionSet 1, $4F0
 
+.healthUnder20_1 ; $5F04
+    WaveOptionSet 2, $4D0
 
-    db $80, $00, $20, $f0, $84, $80, $00, $40, $d0, $84, $80, $00, $20, $c4, $84
+.healthUnder30_0 ; $5F09
+    WaveOptionSet 1, $4C4
 
-    add b
-    nop
-    ld b, b
-    db $c4
-    add h
+.healthUnder30_1 ; $5F0E
+    WaveOptionSet 2, $4C4
 
-    db $80, $00, $20, $b6, $84
+.healthUnder40_0 ; $5F13
+    WaveOptionSet 1, $4B6
 
-    add b
-    nop
-    ld b, b
-    or [hl]
-    add h
+.healthUnder40_1 ; $5F18
+    WaveOptionSet 2, $4B6
 
-    db $80, $00, $20, $a3, $84, $80, $00, $40, $a3, $84
+.healthUnder50_0 ; $5F1D
+    WaveOptionSet 1, $4A3
+
+.healthUnder50_1 ; $5F22
+    WaveOptionSet 2, $4A3
+;}
 
 Jump_004_5f27:
-    ld [$cfe8], a
-    ld [$cfe9], a
-    jp Jump_004_47e9
-
-
-    db $90, $5f, $8a, $60, $d4, $61, $ed, $64, $5f, $68, $ee, $68, $88, $69, $e2, $6a
-    db $c3, $6b, $8e, $6c, $51, $6d, $8b, $6d, $d5, $6e, $50, $6f, $a4, $6f
-
-    ld l, c
-    ld b, a
-
-    db $3c, $70, $27, $74, $8a, $74, $d4, $61, $3a, $7c, $45, $7c, $50, $7c, $5b, $7c
-    db $e2, $6a
-
-    jp $8e6b
-
-
-    ld l, h
-    ld d, c
-    ld l, l
-    adc e
-    ld l, l
-
-    db $66, $7c, $71, $7c, $09, $7d, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $db
-    db $ff, $ff, $ff, $de, $de
-
-    rst $38
-
-    db $ff, $de, $ff, $ff, $ff, $ff, $ff, $ff, $ff
-
-    rst $38
-    db $db
-    rst $38
-    rst $38
-
-    db $ff, $ff, $de, $01, $06, $41, $9b, $5f, $b3, $5f, $cb, $5f, $db, $5f, $1a, $7e
-    db $1a, $7e, $09, $7e, $42, $7d, $e7, $5f, $47, $7d, $f2, $5f, $4c, $7d, $02, $60
-    db $0a, $60, $f0, $00, $ad, $5f, $1a, $7e, $1a, $7e, $09, $7e, $42, $7d, $25, $60
-    db $47, $7d, $30, $60, $4c, $7d, $3e, $60, $46, $60, $f0, $00, $c5, $5f, $21, $7e
-    db $21, $7e, $10, $7e, $5b, $7d, $60, $60, $5c, $60, $f0, $00, $d5, $5f, $28, $7e
-    db $28, $7e, $17, $7e, $84, $60, $f0, $00, $db, $5f, $f4, $02, $a2, $32, $3c, $40
-    db $46, $a3, $38, $f5, $00, $f4, $02, $a2, $32, $3c, $40, $46, $a3, $38, $f5, $a2
-    db $32, $3c, $40, $46, $00, $f4, $03, $32, $3c, $40, $46, $f5, $00, $f1, $77, $00
-    db $80, $f4, $04, $a2, $32, $3c, $40, $46, $a3, $38, $f5, $a2, $32, $3c, $40, $46
-    db $f4, $03, $32, $3c, $40, $46, $f5, $00, $f4, $03, $a6, $32, $3c, $40, $46, $38
-    db $3c, $f5, $00, $32, $3c, $40, $46, $38, $3c, $f4, $02, $32, $3c, $40, $46, $f5
-    db $00, $f4, $02, $32, $3c, $40, $46, $f5, $00, $f1, $77, $00, $80, $f4, $04, $a6
-    db $32, $3c, $40, $46, $38, $3c, $f5, $f4, $04, $32, $3c, $40, $46, $f5, $00, $f1
-    db $13, $41, $60, $f4, $04, $a1, $4a, $03, $54, $03, $58, $03, $5e, $03, $a2, $50
-    db $03, $f5, $a1, $4a, $03, $54, $03, $58, $03, $5e, $03, $f4, $03, $4a, $03, $54
-    db $03, $58, $03, $5e, $03, $f5, $00, $a3, $74, $78, $a0, $01, $00, $01, $06, $41
-    db $95, $60, $e9, $60, $f3, $60, $fd, $60, $07, $61, $12, $61, $86, $7d, $12, $61
-    db $82, $7d, $12, $61, $7e, $7d, $12, $61, $7a, $7d, $12, $61, $76, $7d, $91, $7d
-    db $12, $61, $72, $7d, $94, $7d, $12, $61, $6e, $7d, $97, $7d, $12, $61, $6a, $7d
-    db $9a, $7d, $12, $61, $6a, $7d, $9d, $7d, $12, $61, $6a, $7d, $9a, $7d, $0c, $61
-    db $6e, $7d, $97, $7d, $0c, $61, $72, $7d, $94, $7d, $0c, $61, $76, $7d, $91, $7d
-    db $0c, $61, $7e, $7d, $8e, $7d, $18, $61, $f0, $00, $e3, $60, $22, $61, $2f, $61
-    db $3c, $61, $f0, $00, $ed, $60, $46, $61, $53, $61, $60, $61, $f0, $00, $f7, $60
-    db $ba, $61, $c3, $61, $cc, $61, $f0, $00, $01, $61, $f1, $c7, $00, $00, $00, $a3
-    db $22, $2e, $1a, $28, $00, $a7, $22, $2e, $1a, $28, $00, $f1, $87, $00, $00, $a4
-    db $22, $2e, $1a, $28, $00, $f1, $c7, $00, $00, $f4, $0a, $a7, $2c, $38, $24, $32
-    db $f5, $00, $f1, $a7, $00, $00, $f4, $04, $a3, $2c, $38, $24, $32, $f5, $00, $f1
-    db $87, $00, $00, $a4, $2c, $38, $24, $32, $00, $f1, $6b, $41, $40, $f4, $0a, $a7
-    db $14, $20, $0c, $1a, $f5, $00, $f1, $6b, $41, $40, $f4, $04, $a3, $2c, $38, $24
-    db $32, $f5, $00, $a3, $4a, $03, $50, $03, $4a, $03, $48, $03, $3e, $03, $40, $a1
-    db $52, $03, $50, $03, $4c, $03, $4a, $03, $4c, $03, $50, $03, $52, $03, $50, $03
-    db $4c, $03, $4a, $03, $4c, $03, $50, $03, $a2, $52, $03, $42, $03, $4a, $03, $a6
-    db $48, $03, $3c, $03, $a2, $3e, $03, $4a, $03, $48, $03, $a7, $54, $a3, $03, $a0
-    db $02, $04, $08, $0a, $10, $12, $16, $18, $1a, $1c, $20, $22, $28, $2a, $2e, $30
-    db $30, $2e, $2a, $28, $22, $20, $1c, $1a, $10, $0a, $18, $16, $00, $f4, $0a, $a7
-    db $a0, $01, $a4, $01, $f5, $00, $f4, $04, $a3, $24, $01, $34, $01, $f5, $00, $a2
-    db $1c, $a4, $a0, $a6, $01, $68, $00, $01, $df, $40, $df, $61, $f5, $61, $07, $62
-    db $00, $00, $19, $62, $4c, $62, $64, $62, $97, $62, $19, $62, $9d, $62, $4c, $62
-    db $64, $62, $a3, $62, $f0, $00, $df, $61, $f6, $62, $28, $63, $49, $63, $f6, $62
-    db $28, $63, $49, $63, $7a, $63, $f0, $00, $f5, $61, $df, $63, $12, $64, $35, $64
-    db $df, $63, $12, $64, $35, $64, $67, $64, $f0, $00, $07, $62, $f1, $50, $00, $80
-    db $a3, $01, $a2, $32, $05, $30, $05, $2e, $05, $a3, $26, $05, $28, $05, $a2, $28
-    db $05, $26, $05, $20, $05, $a1, $30, $05, $32, $05, $48, $05, $4a, $05, $18, $05
-    db $1a, $05, $a3, $30, $05, $a1, $32, $05, $38, $05, $3a, $05, $01, $01, $00, $a2
-    db $20, $05, $26, $05, $a7, $2c, $26, $a3, $1a, $a2, $1c, $01, $f4, $02, $a1, $18
-    db $1a, $18, $1a, $f5, $a4, $01, $00, $a3, $3a, $03, $a1, $32, $03, $34, $03, $a2
-    db $2c, $03, $3a, $03, $a1, $32, $03, $48, $03, $a2, $24, $03, $30, $03, $a1, $28
-    db $03, $2e, $03, $30, $03, $26, $03, $a2, $24, $03, $2c, $03, $28, $03, $a6, $26
-    db $03, $a3, $22, $03, $a7, $1e, $05, $a5, $01, $00, $f3, $fe, $f2, $ec, $40, $00
-    db $f3, $00, $f2, $df, $40, $00, $f1, $62, $00, $40, $f4, $02, $a1, $0c, $16, $0c
-    db $16, $10, $18, $10, $18, $0c, $14, $0c, $14, $10, $08, $10, $08, $10, $08, $0c
-    db $04, $0c, $04, $0c, $04, $f5, $f1, $62, $00, $00, $a1, $3c, $46, $3c, $46, $40
-    db $48, $40, $48, $3c, $44, $3c, $44, $40, $38, $40, $38, $40, $38, $3c, $34, $3c
-    db $34, $3c, $34, $3a, $2e, $36, $2a, $30, $24, $2c, $20, $1a, $18, $12, $02, $f1
-    db $87, $00, $40, $a5, $62, $01, $a3, $01, $00, $f1, $50, $00, $80, $a2, $30, $32
-    db $40, $05, $38, $05, $3a, $05, $a3, $30, $05, $32, $05, $a2, $28, $05, $26, $05
-    db $20, $05, $a1, $30, $05, $32, $05, $48, $05, $4a, $05, $18, $05, $1a, $05, $a3
-    db $30, $05, $a1, $32, $05, $38, $05, $3a, $a6, $05, $00, $a2, $32, $05, $36, $05
-    db $a1, $3c, $05, $3a, $05, $32, $05, $a2, $36, $05, $01, $26, $05, $28, $05, $01
-    db $a1, $26, $05, $20, $05, $22, $03, $a2, $1a, $a7, $05, $00, $a2, $40, $a7, $05
-    db $a1, $38, $05, $3a, $05, $a2, $32, $05, $a2, $40, $05, $a1, $38, $05, $3a, $05
-    db $a2, $32, $05, $28, $05, $a2, $2e, $05, $a4, $01, $a2, $2c, $05, $28, $05, $a2
-    db $2e, $a3, $05, $a2, $2a, $a7, $05, $a7, $2c, $05, $a5, $01, $00, $f1, $62, $00
-    db $80, $a1, $0c, $16, $0c, $16, $10, $18, $10, $18, $0c, $14, $0c, $14, $10, $08
-    db $10, $08, $10, $08, $0c, $04, $0c, $04, $0c, $04, $a1, $2c, $32, $2c, $32, $30
-    db $38, $30, $38, $2c, $34, $2c, $34, $30, $2c, $30, $2c, $1a, $3c, $40, $46, $4a
-    db $4e, $54, $58, $a1, $2c, $32, $2c, $32, $30, $38, $30, $38, $2c, $34, $2c, $34
-    db $30, $2c, $30, $2c, $34, $32, $3c, $46, $40, $32, $2a, $1e, $1c, $1a, $18, $16
-    db $14, $12, $10, $0e, $0c, $0a, $08, $0a, $f1, $87, $00, $40, $a5, $62, $01, $a3
-    db $01, $00, $f1, $7b, $41, $40, $a3, $01, $a2, $32, $03, $30, $03, $2e, $03, $a3
-    db $26, $03, $28, $03, $a2, $28, $03, $26, $03, $20, $03, $a1, $30, $03, $32, $03
-    db $48, $03, $4a, $03, $18, $03, $1a, $03, $a3, $30, $03, $a1, $32, $03, $38, $03
-    db $3a, $03, $01, $01, $00, $a2, $32, $03, $36, $03, $a1, $3c, $03, $3a, $03, $32
-    db $03, $a3, $36, $a2, $03, $26, $03, $a3, $28, $a2, $03, $a1, $26, $03, $20, $03
-    db $22, $03, $a2, $1a, $03, $a3, $01, $00, $a3, $40, $a2, $03, $01, $a1, $38, $03
-    db $3a, $03, $a2, $32, $a1, $03, $01, $a2, $40, $03, $a1, $38, $03, $3a, $03, $a2
-    db $32, $03, $28, $03, $a7, $2e, $03, $a2, $2c, $03, $28, $03, $a6, $2e, $03, $a3
-    db $2a, $03, $a3, $2c, $03, $a5, $01, $a3, $01, $00, $a8, $01, $01, $a0, $2c, $03
-    db $32, $03, $2c, $03, $32, $03, $30, $03, $38, $03, $30, $03, $38, $03, $2c, $03
-    db $34, $03, $2c, $03, $34, $03, $30, $03, $2c, $03, $30, $03, $2c, $03, $1a, $03
-    db $3c, $03, $40, $03, $46, $03, $4a, $03, $4e, $03, $54, $03, $58, $03, $a0, $2c
-    db $03, $32, $03, $2c, $03, $32, $03, $30, $03, $38, $03, $30, $03, $38, $03, $2c
-    db $03, $34, $03, $2c, $03, $34, $03, $30, $03, $2c, $03, $30, $03, $2c, $03, $34
-    db $03, $32, $03, $3c, $03, $46, $03, $40, $03, $32, $03, $2a, $03, $1e, $03, $1c
-    db $03, $1a, $03, $18, $03, $16, $03, $14, $03, $12, $03, $10, $03, $0e, $03, $0c
-    db $03, $0a, $03, $08, $03, $0a, $03, $a6, $62, $03, $a7, $01, $a8, $01, $01, $00
-    db $00, $c5, $40, $f8, $64, $1c, $65, $28, $65, $34, $65, $42, $65, $72, $66, $9c
-    db $65, $9c, $65, $eb, $65, $eb, $65, $eb, $65, $eb, $65, $50, $65, $9c, $65, $9c
-    db $65, $00, $66, $00, $66, $00, $66, $00, $66, $50, $65, $f0, $00, $fc, $64, $15
-    db $66, $23, $66, $31, $66, $72, $66, $f0, $00, $20, $65, $9e, $66, $ac, $66, $db
-    db $66, $6a, $67, $f0, $00, $2a, $65, $c3, $67, $c9, $67, $ed, $67, $03, $68, $28
-    db $68, $f0, $00, $36, $65, $f1, $55, $00, $40, $a1, $1a, $24, $44, $46, $4a, $50
-    db $6c, $74, $00, $f1, $26, $00, $40, $a2, $4a, $54, $4a, $4a, $a3, $54, $a2, $4a
-    db $54, $4a, $54, $4a, $4a, $a3, $54, $a2, $4a, $4a, $46, $50, $46, $46, $a3, $50
-    db $a2, $46, $50, $46, $50, $46, $46, $a2, $50, $46, $50, $50, $4a, $54, $4a, $4a
-    db $a3, $54, $a2, $4a, $54, $4a, $54, $4a, $4a, $a3, $54, $a2, $4a, $4a, $46, $50
-    db $46, $46, $a3, $46, $16, $a2, $24, $2e, $32, $38, $24, $2e, $32, $38, $00, $f1
-    db $71, $00, $40, $f4, $03, $a2, $1a, $24, $1a, $1a, $a3, $24, $a2, $1a, $24, $1a
-    db $24, $1a, $1a, $a3, $24, $a2, $1a, $1a, $16, $20, $16, $16, $a3, $20, $a2, $16
-    db $20, $16, $20, $16, $16, $20, $16, $20, $20, $f5, $a2, $1a, $24, $1a, $1a, $a3
-    db $24, $a2, $1a, $24, $1a, $24, $1a, $1a, $a3, $24, $a2, $24, $1a, $16, $20, $16
-    db $16, $a3, $16, $16, $a2, $24, $2e, $32, $38, $24, $2e, $32, $38, $00, $f1, $63
-    db $00, $40, $f4, $04, $a2, $1a, $24, $2c, $2e, $f5, $f4, $04, $a2, $16, $20, $24
-    db $2e, $f5, $00, $f1, $0a, $00, $00, $f4, $04, $a2, $4a, $54, $5c, $5e, $f5, $f4
-    db $04, $a2, $46, $50, $5c, $5e, $f5, $00, $f1, $75, $00, $40, $a1, $1a, $24, $2c
-    db $2e, $32, $38, $3c, $44, $00, $f1, $0f, $00, $00, $a5, $24, $03, $20, $03, $3c
-    db $03, $38, $03, $00, $f1, $73, $00, $40, $f4, $08, $a3, $0c, $03, $0c, $03, $0c
-    db $03, $0c, $03, $08, $03, $08, $03, $08, $03, $08, $03, $f5, $f1, $22, $6c, $80
-    db $f4, $08, $a1, $62, $60, $4e, $58, $52, $5c, $60, $54, $5c, $5c, $60, $60, $4a
-    db $4a, $5c, $5c, $52, $52, $5c, $5c, $54, $54, $5c, $5c, $52, $52, $4a, $4a, $5c
-    db $5c, $52, $52, $f5, $00, $f1, $47, $00, $40, $a4, $24, $a7, $1a, $1a, $a3, $1a
-    db $24, $1a, $a4, $20, $a7, $16, $16, $a3, $16, $20, $16, $a4, $24, $a7, $1a, $1a
-    db $a3, $1a, $24, $1a, $a4, $20, $a7, $16, $a2, $16, $0c, $16, $1a, $20, $a4, $0c
-    db $00, $f1, $7b, $41, $40, $a1, $02, $0c, $14, $16, $1a, $20, $24, $2c, $00, $f1
-    db $7b, $41, $40, $a3, $32, $a2, $03, $32, $a3, $03, $a5, $01, $a3, $01, $2e, $a2
-    db $03, $2e, $a3, $03, $a5, $01, $a3, $01, $32, $a2, $03, $32, $a3, $03, $a5, $01
-    db $a3, $01, $2e, $a2, $03, $2e, $a3, $03, $a8, $01, $a3, $1a, $03, $00, $f1, $7b
-    db $41, $40, $a6, $32, $03, $3c, $03, $a3, $40, $03, $46, $03, $01, $a6, $44, $03
-    db $3c, $03, $a3, $40, $03, $38, $03, $01, $a6, $32, $03, $3c, $03, $a3, $40, $03
-    db $46, $03, $01, $a6, $44, $03, $46, $03, $a7, $4a, $03, $a3, $40, $03, $a6, $32
-    db $03, $3c, $03, $a3, $40, $03, $46, $03, $01, $a6, $44, $03, $3c, $03, $a3, $40
-    db $03, $01, $01, $01, $a6, $32, $03, $3c, $03, $a3, $40, $03, $46, $03, $01, $a6
-    db $44, $03, $46, $03, $a3, $4a, $03, $50, $03, $a2, $4e, $03, $f4, $02, $a6, $4a
-    db $03, $46, $03, $a3, $44, $03, $a7, $3c, $03, $a6, $38, $03, $40, $03, $a7, $46
-    db $03, $a3, $44, $03, $a6, $4a, $03, $46, $03, $a3, $44, $03, $54, $03, $a2, $50
-    db $03, $a6, $4e, $03, $46, $03, $a7, $4a, $03, $a4, $01, $f5, $00, $f1, $7b, $41
-    db $40, $a7, $24, $03, $2e, $03, $a3, $32, $03, $a7, $38, $03, $36, $03, $a3, $2e
-    db $03, $a7, $24, $03, $32, $03, $a3, $36, $03, $a7, $38, $03, $3c, $03, $a3, $40
-    db $03, $a7, $24, $03, $2c, $03, $a3, $2e, $03, $a7, $32, $03, $36, $03, $a3, $38
-    db $03, $3c, $03, $44, $03, $a2, $46, $03, $a3, $4a, $03, $50, $03, $a2, $54, $03
-    db $5c, $03, $5e, $03, $a1, $62, $03, $68, $03, $6c, $03, $76, $03, $62, $03, $68
-    db $03, $6c, $03, $74, $03, $00, $f4, $08, $a1, $10, $f5, $00, $f4, $03, $a2, $90
-    db $0c, $04, $94, $04, $04, $0c, $04, $04, $04, $0c, $04, $90, $0c, $04, $0c, $f5
-    db $a2, $90, $04, $0c, $90, $04, $04, $0c, $04, $14, $10, $14, $10, $a4, $1c, $00
-    db $f4, $0f, $a2, $90, $04, $0c, $04, $90, $04, $0c, $04, $f5, $a2, $14, $10, $10
-    db $10, $14, $10, $14, $10, $00, $f4, $07, $a2, $90, $0c, $04, $94, $14, $04, $0c
-    db $04, $90, $0c, $04, $0c, $94, $0c, $04, $04, $f5, $90, $0c, $08, $94, $90, $0c
-    db $08, $04, $14, $10, $10, $10, $14, $10, $14, $10, $00, $f4, $04, $a2, $14, $0c
-    db $14, $04, $08, $0c, $08, $04, $04, $0c, $08, $04, $08, $a3, $68, $a2, $0c, $f5
-    db $f4, $03, $a2, $10, $10, $04, $10, $14, $0c, $08, $04, $90, $0c, $08, $04, $90
-    db $a3, $68, $a2, $0c, $f5, $90, $0c, $90, $04, $08, $0c, $08, $04, $f4, $08, $14
-    db $f5, $00, $00, $c5, $40, $6a, $68, $74, $68, $78, $68, $7c, $68, $a0, $7d, $86
-    db $7d, $80, $68, $f0, $00, $6e, $68, $ca, $7d, $00, $00, $f4, $7d, $00, $00, $04
-    db $7e, $00, $00, $f1, $37, $35, $80, $a1, $58, $a1, $5a, $5c, $5e, $60, $62, $64
-    db $66, $68, $6a, $a9, $6c, $6e, $70, $72, $74, $76, $78, $a5, $7a, $a0, $58, $5a
-    db $5c, $5e, $60, $62, $64, $66, $68, $6a, $a1, $6c, $6e, $70, $a4, $72, $a4, $01
-    db $a0, $01, $a0, $72, $74, $76, $78, $7a, $7c, $a4, $7e, $a9, $64, $6a, $6e, $74
-    db $a8, $62, $a6, $01, $a9, $7a, $7c, $7e, $80, $82, $a5, $84, $aa, $01, $a1, $01
-    db $a0, $72, $74, $76, $78, $7a, $7c, $a8, $7e, $a6, $5a, $5c, $a2, $5e, $60, $62
-    db $a1, $64, $66, $a9, $68, $6a, $6c, $72, $a1, $74, $76, $78, $a5, $7a, $aa, $01
-    db $00, $00, $c5, $40, $f9, $68, $ff, $68, $09, $69, $0d, $69, $a0, $7d, $8a, $7d
-    db $00, $00, $ca, $7d, $11, $69, $f0, $00, $01, $69
-
-    nop
-    nop
-
-    db $f4, $7d, $00, $00, $04, $7e, $00, $00, $f1, $47, $00, $07, $a8, $01, $01, $a0
-    db $70, $6a, $74, $78, $6c, $6a, $74, $66, $a1, $7a, $78, $74, $78, $6c, $a5, $01
-    db $a1, $7a, $78, $66, $70, $6a, $74, $78, $6c, $a5, $01, $a8, $01, $a0, $7a, $78
-    db $66, $70, $6a, $74, $78, $6c, $a5, $01, $a7, $01, $a1, $7a, $78, $66, $70, $6a
-    db $74, $78, $6c, $a5, $01, $01, $a3, $01, $a1, $78, $66, $7a, $01, $01, $78, $66
-    db $70, $6a, $74, $70, $a6, $01, $a1, $6a, $6c, $6e, $70, $74, $a3, $01, $a1, $7a
-    db $6a, $62, $58, $6c, $a8, $01, $01, $01, $01, $a1, $78, $66, $7a, $78, $66, $70
-    db $6a, $74, $70, $6a, $a8, $01, $01, $a1, $62, $7a, $78, $66, $a5, $01, $00, $00
-    db $c5, $40, $93, $69, $9d, $69, $a5, $69, $ad, $69, $a0, $7d, $7e, $7d, $b1, $69
-    db $f0, $00, $97, $69, $ca, $7d, $e2, $69, $f0, $00, $9f, $69, $f4, $7d, $92, $6a
-    db $f0, $00, $a7, $69, $04, $7e, $00, $00, $f1, $57, $15, $80, $f4, $0a, $a1, $7a
-    db $78, $66, $70, $6a, $74, $78, $6c, $f5, $a5, $01, $01, $f4, $02, $a1, $7a, $78
-    db $66, $70, $6a, $74, $78, $6c, $f5, $a5, $01, $f4, $16, $a1, $7e, $78, $6c, $72
-    db $6a, $76, $78, $62, $f5, $ac, $01, $01, $00, $f1, $37, $00, $07, $a5, $01, $01
-    db $a1, $04, $18, $1c, $30, $34, $48, $4c, $60, $64, $78, $7c, $90, $f4, $04, $62
-    db $64, $62, $64, $62, $64, $62, $64, $ac, $01, $01, $a1, $04, $0c, $10, $18, $1c
-    db $24, $28, $30, $34, $3c, $40, $48, $4c, $54, $58, $60, $64, $6c, $70, $78, $7c
-    db $84, $88, $90, $7a, $7c, $62, $64, $4a, $4c, $32, $34, $1a, $1c, $02, $04, $ac
-    db $01, $01, $01, $a1, $84, $84, $0c, $0e, $6c, $6e, $24, $26, $54, $56, $3c, $3e
-    db $3c, $88, $90, $10, $18, $70, $78, $28, $30, $58, $60, $40, $48, $40, $48, $40
-    db $7e, $7c, $06, $04, $66, $62, $1e, $1c, $4e, $4c, $36, $34, $36, $34, $34, $36
-    db $34, $7a, $7c, $70, $62, $64, $58, $4a, $4c, $40, $32, $34, $28, $1a, $1c, $10
-    db $02, $04, $ac, $01, $f1, $47, $00, $82, $a0, $88, $84, $7a, $78, $70, $6c, $62
-    db $60, $58, $54, $4a, $48, $40, $3c, $32, $30, $28, $24, $1a, $18, $10, $0c, $02
-    db $a5, $78, $01, $01, $78, $ac, $01, $01, $00, $f1, $8b, $41, $63, $a8, $f4, $06
-    db $30, $f5
-
-    db $f4
-    ld b, $32
-    push af
-    db $f4
-    ld b, $34
-    push af
-    db $f4
-    ld b, $36
-    push af
-    db $f4
-    ld b, $38
-    push af
-    db $f4
-    ld b, $3a
-    push af
-    db $f4
-    ld b, $3c
-    push af
-    db $f4
-    ld b, $3e
-    push af
-    db $f4
-    ld b, $40
-    push af
-    db $f4
-    ld b, $3e
-    push af
-    db $f4
-    ld b, $3c
-    push af
-    db $f4
-    ld b, $3a
-    push af
-    db $f4
-    ld b, $38
-    push af
-    db $f4
-    ld b, $36
-    push af
-    db $f4
-    ld b, $34
-    push af
-    db $f4
-    ld b, $32
-    push af
-    db $f4
-    ld b, $30
-    push af
-    db $f4
-    ld b, $2e
-    push af
-    and l
-    db $01
-    nop
-
-    db $01, $b8, $40, $ed, $6a, $f3, $6a, $f9, $6a, $ff, $6a, $05, $6b, $f0, $00, $ed
-    db $6a, $15, $6b, $f0, $00, $f3, $6a, $25, $6b, $f0, $00, $f9, $6a, $ba, $6b, $f0
-    db $00, $ff, $6a, $f1, $c3, $00, $00, $a3, $1a, $03, $a7, $1a, $03, $03, $ac, $05
-    db $01, $01, $00, $f1, $c4, $00, $0a, $a3, $02, $03, $a7, $02, $03, $03, $ac, $05
-    db $01, $01, $00, $f1, $7b, $41, $44, $f4, $05, $ac, $01, $01, $a1, $01, $a5, $01
-    db $a1, $22, $03, $24, $03, $30, $03, $2e, $03, $a4, $2c, $03, $01, $40, $a3, $03
-    db $01, $a1, $20, $03, $2c, $03, $a4, $34, $a3, $03, $01, $a1, $32, $03, $30, $03
-    db $a5, $24, $03, $01, $ac, $01, $a1, $20, $03, $22, $03, $1a, $03, $2e, $03, $2c
-    db $03, $a4, $26, $03, $01, $01, $a2, $1e, $03, $20, $03, $28, $03, $a7, $18, $03
-    db $a1, $1c, $03, $a8, $10, $03, $14, $03, $0c, $03, $a1, $02, $03, $0e, $03, $18
-    db $03, $1a, $03, $24, $03, $a7, $30, $03, $2e, $03, $a8, $32, $03, $a7, $40, $03
-    db $42, $03, $3a, $03, $3c, $03, $38, $03, $40, $03, $30, $03, $a4, $28, $03, $a8
-    db $2a, $03, $01, $a1, $28, $03, $26, $03, $1a, $03, $14, $03, $0e, $03, $a4, $1a
-    db $03, $f5, $f4, $08, $ac, $01, $f5, $00, $a4, $74, $a2, $01, $a7, $78, $a2, $01
-    db $00, $fe, $df, $40, $00, $00, $e0, $6b, $f4, $6b, $fa, $6b, $00, $6c, $00, $6c
-    db $5f, $6c, $00, $6c, $5f, $6c, $5f, $6c, $00, $6c, $f0, $00, $ce, $6b, $5a, $6c
-    db $04, $6c, $04, $6c, $5f, $6c, $04, $6c, $5f, $6c, $5f, $6c, $04, $6c, $f0, $00
-    db $e0, $6b, $65, $6c
-
-    ldh a, [rP1]
-    db $f4
-    ld l, e
-
-    db $85, $6c, $f0, $00, $fa, $6b, $f1, $61, $00, $49, $f4, $02, $a9, $78, $05, $03
-    db $68, $05, $03, $6c, $05, $03, $64, $05, $03, $68, $05, $03, $70, $05, $03, $f5
-    db $f4, $02, $74, $05, $03, $68, $05, $03, $6c, $05, $03, $64, $05, $03, $68, $05
-    db $03, $60, $05, $03, $f5, $f4, $02, $70, $05, $03, $60, $05, $03, $64, $05, $03
-    db $6c, $05, $03, $70, $05, $03, $78, $05, $03, $f5, $f4, $02, $6c, $05, $03, $60
-    db $05, $03, $64, $05, $03, $5c, $05, $03, $60, $05, $03, $68, $05, $03, $f5, $00
-    db $f1, $61, $00, $40, $00, $f4, $06, $a5, $01, $f5, $00, $f1, $7b, $41, $40, $f4
-    db $0a, $a5, $18, $a7, $24, $a5, $20, $14, $0c, $a7, $1c, $a5, $14, $0c, $1a, $f5
-
-    xor b
-    jr @-$59
-
-    ld d, $a4
-    inc d
-    and l
-    ld [de], a
-    inc h
-    inc d
-    nop
-
-    db $a6, $74, $a0, $01, $a6, $78, $a1, $01, $00, $0b, $c5, $40, $99, $6c, $9d, $6c
-    db $a1, $6c, $a5, $6c, $a9, $6c, $00, $00, $ee, $6c, $00, $00, $1d, $6d, $00, $00
-    db $46, $6d, $00, $00, $f1, $a1, $00, $00, $a1, $74, $76, $74, $76, $f1, $80, $00
-    db $80, $a2, $32, $a7, $03, $a2, $2c, $a7, $03, $a2, $28, $03, $22, $03, $1a, $03
-    db $22, $03, $36, $03, $2e, $03, $28, $a6, $03, $a6, $20, $03, $f1, $0d, $00, $80
-    db $a7, $22, $a3, $03, $f1, $81, $00, $00, $f4, $04, $a1, $7a, $82, $f5, $f1, $41
-    db $00, $00, $f4, $06, $a1, $7a, $82, $f5, $00, $f1, $f0, $00, $80, $ab, $01, $a3
-    db $01, $a2, $3c, $03, $46, $03, $4a, $03, $4e, $03, $52, $03, $4a, $03, $40, $03
-    db $4a, $03, $54, $03, $4e, $03, $46, $a6, $03, $40, $03, $f1, $0b, $00, $80, $a7
-    db $44, $f1, $b6, $00, $80, $a5, $44, $00, $f1, $23, $41, $20, $a3, $01, $a2, $54
-    db $05, $5e, $05, $62, $05, $66, $05, $6a, $05, $62, $05, $58, $05, $62, $05, $6c
-    db $05, $66, $05, $5e, $a6, $05, $a2, $58, $a6, $05, $03, $a4, $5c, $a3, $05, $03
-    db $00, $a7, $68, $a5, $6c, $01, $01, $a7, $68, $ac, $6c, $00, $01, $d2, $40, $5c
-    db $6d, $5c, $6d, $64, $6d, $6a, $6d, $70, $6d, $7b, $6d, $f0, $00, $5e, $6d, $77
-    db $6d, $f0, $00, $64, $6d, $82, $6d, $f0, $00, $6a, $6d, $f1, $90, $00, $40, $a0
-    db $01, $00, $f1, $6b, $41, $40, $f4, $03, $a3, $14, $03, $f5, $00, $a6, $74, $a0
-    db $01, $a6, $78, $a1, $01, $00, $00, $c5, $40, $96, $6d, $a0, $6d, $a8, $6d, $b0
-    db $6d, $b8, $6d, $7e, $7d, $c6, $6d, $f0, $00, $9a, $6d, $0d, $6e, $29, $6e, $f0
-    db $00, $a2, $6d, $68, $6e, $77, $6e, $f0, $00, $aa, $6d, $a3, $6e, $b2, $6e, $f0
-    db $00, $b2, $6d, $f1, $a0, $17, $06, $a5, $0e, $a2, $34, $38, $42, $4a, $56, $5e
-    db $00, $f1, $87, $7f, $00, $a2, $1a, $01, $1c, $01, $1e, $01, $20, $01, $22, $01
-    db $24, $f1, $67, $34, $00, $a1, $28, $f4, $03, $a2, $32, $01, $36, $01, $30, $01
-    db $2e, $01, $f5, $f1, $83, $00, $00, $a1, $4a, $60, $4a, $60, $a3, $4a, $a1, $4a
-    db $60, $4a, $f1, $d1, $00, $08, $a3, $58, $a1, $01, $f1, $67, $77, $00, $a2, $22
-    db $01, $20, $01, $1e, $01, $1c, $01, $00, $f1, $a5, $00, $00, $a1, $36, $1e, $42
-    db $2a, $a4, $4e, $a1, $7e, $7c, $7e, $7c, $f1, $85, $00, $08, $a2, $62, $60, $5e
-    db $5c, $56, $4c, $00, $f1, $83, $00, $00, $a2, $30, $24, $2c, $24, $26, $24, $28
-    db $24, $30, $24, $2c, $a1, $26, $f4, $03, $a2, $30, $24, $2c, $24, $26, $24, $28
-    db $24, $f5, $a1, $5a, $56, $5a, $56, $a3, $5a, $a1, $5a, $56, $5a, $f1, $d1, $00
-    db $08, $a3, $5a, $a1, $01, $f1, $a1, $00, $00, $a2, $30, $24, $2c, $24, $26, $24
-    db $28, $24, $00, $f1, $6b, $41, $40, $a1, $4e, $1e, $5a, $2a, $a7, $66, $03, $a8
-    db $01, $00, $f1, $8b, $41, $47, $a3, $2c, $2c, $2c, $2c, $2a, $a2, $28, $a1, $01
-    db $f4, $03, $a3, $2e, $2c, $2e, $2c, $f5, $f1, $7b, $41, $47, $a1, $7c, $86, $8a
-    db $8e, $a3, $56, $a1, $8a, $82, $7c, $82, $a3, $4e, $a4, $2a, $2a, $00, $a1, $1c
-    db $18, $1c, $18, $a8, $1c, $a2, $10, $14, $18, $18, $1c, $1c, $00, $a3, $14, $14
-    db $14, $14, $14, $a2, $01, $a1, $10, $f4, $06, $a3, $14, $14, $f5, $a1, $14, $14
-    db $14, $14, $a3, $1c, $a1, $14, $a7, $48, $a1, $14, $a3, $14, $14, $14, $14, $00
-    db $00, $c5, $40, $e0, $6e, $e6, $6e, $ee, $6e, $f2, $6e, $a0, $7d, $7e, $7d, $00
-    db $00, $ca, $7d, $f6, $6e, $f0, $00, $e8, $6e, $f4, $7d, $00, $00, $04, $7e, $00
-    db $00, $f1, $17, $00, $87, $a1, $62, $52, $5c, $60, $60, $4e, $58, $54, $a4, $01
-    db $a2, $62, $58, $52, $60, $4e, $ac, $01, $a1, $4e, $58, $52, $a8, $01, $01, $a1
-    db $58, $52, $5c, $4e, $70, $52, $a5, $01, $a2, $58, $52, $ac, $01, $a1, $54, $60
-    db $5c, $58, $52, $60, $62, $a8, $52, $58, $4e, $01, $01, $a1, $62, $60, $01, $56
-    db $54, $58, $52, $01, $01, $58, $4e, $60, $a7, $01, $ac, $01, $a6, $4e, $58, $52
-    db $ac, $01, $a1, $5c, $60, $54, $56, $58, $ac, $01, $00, $00, $df, $40, $00, $00
-    db $00, $00, $00, $00, $5b, $6f, $5f, $6f
-
-    nop
-    nop
-
-    db $a3, $48, $f4, $03, $a1, $2c, $2c, $f5, $f4, $03, $2c, $28, $f5, $f4, $02, $28
-    db $24, $f5, $f4, $03, $20, $24, $f5, $f4, $02, $34, $38, $f5, $a1, $20, $34, $2c
-    db $38, $20, $38, $2c, $34, $2c, $34, $28, $34, $20, $3c, $20, $2c, $20, $3c, $28
-    db $34, $28, $30, $28, $2c, $a1, $24, $5c, $f4, $03, $28, $60, $f5, $f4, $5a, $28
-    db $2c, $f5
-
-    and l
-    jr z, @+$02
-
-    db $0d, $f9, $40, $af, $6f, $af, $6f, $c1, $6f, $00, $00, $c5, $6f, $7a, $7d, $d2
-    db $6f, $f6, $6f, $00, $00
-
-    push bc
-    ld l, a
-    jp nc, $f66f
-
-    ld l, a
-    nop
-    nop
-
-    db $00, $70, $00, $00, $f1, $09, $00, $00, $a7, $62, $f1, $f5, $00, $00, $a8, $62
-    db $00, $f1, $a7, $35, $80, $ab, $32, $40, $36, $44, $3a, $48, $3c, $4a, $40, $4e
-    db $44, $52, $48, $54, $4a, $58, $4e, $5c, $52, $60, $54, $62, $58, $66, $5c, $6a
-    db $60, $6c, $62, $70, $00, $f1, $c7, $00, $80, $a0, $52, $01, $a5, $54, $00, $f1
-    db $6b, $41, $20, $a3, $01, $a1, $01, $f4, $04, $a0, $02, $03, $f5, $a1, $01, $a4
-    db $01, $f1, $6b, $41, $60, $ab, $32, $40, $36, $44, $3a, $48, $3c, $4a, $40, $4e
-    db $44, $52, $48, $54, $4a, $58, $4e, $5c, $52, $60, $54, $62, $58, $66, $5c, $6a
-    db $60, $6c, $62, $70, $a0, $52, $03, $a3, $54, $03, $00, $01, $d2, $40, $47, $70
-    db $47, $70, $61, $70, $75, $70, $09, $7e, $8b, $70, $8b, $70
-
-    adc e
-    ld [hl], b
-    adc e
-    ld [hl], b
-    adc e
-    ld [hl], b
-    ld a, [hl]
-    ld a, l
-    ld d, d
-    ld [hl], c
-    add a
-    ld [hl], c
-    call z, $7a71
-    ld a, l
-    ldh a, [rP1]
-    ld b, a
-    ld [hl], b
-
-    db $10, $7e, $95, $70, $9f, $70
-
-    ld [de], a
-    ld [hl], c
-    sub l
-    ld [hl], b
-    ld de, $4e72
-    ld [hl], d
-    or b
-    ld [hl], e
-    ldh a, [rP1]
-    ld h, c
-    ld [hl], b
-
-    db $17, $7e, $3e, $71, $3e, $71
-
-    ld b, h
-    ld [hl], c
-    ld b, h
-    ld [hl], c
-    ld a, $71
-    jp hl
-
-
-    ld [hl], e
-    rst $28
-    ld [hl], e
-    rrca
-    ld [hl], h
-    ldh a, [rP1]
-    ld [hl], l
-    ld [hl], b
-
-    db $f1, $d7, $00, $44, $f4, $04, $ac, $76, $f5, $00, $f1, $23, $41, $63, $ac, $01
-    db $01, $01, $01, $00, $a8, $01, $a2, $72, $5c, $62
-
-    inc bc
-    ld [hl], d
-    ld d, d
-    ld bc, $015c
-    ld h, d
-    xor b
-    ld bc, $01a2
-    ld h, h
-    ld [hl], d
-    ld h, h
-    ld [hl], h
-    ld a, b
-    ld h, b
-    ld l, [hl]
-    ld [hl], d
-    ld bc, $01a8
-    and d
-    ld [hl], d
-    ld l, d
-    ld d, h
-    ld h, [hl]
-    ld h, h
-    ld c, d
-    ld a, b
-    inc bc
-    ld e, d
-    ld l, b
-    xor b
-    ld bc, $6ea2
-    ld bc, $6a5a
-    ld c, h
-    ld [hl], d
-    ld a, b
-    ld d, d
-    db $76
-    inc bc
-    pop af
-    inc hl
-    ld b, c
-    ld b, e
-    and h
-    ld bc, $76a2
-    inc bc
-    ld [hl], d
-    inc bc
-    ld h, d
-    ld a, h
-    ld [hl], d
-    inc bc
-    ld [hl], d
-    ld h, d
-    db $76
-    inc bc
-    xor b
-    ld bc, $01a2
-    ld h, h
-    ld a, b
-    ld h, [hl]
-    inc bc
-    ld h, h
-
-jr_004_70ef:
-    ld l, d
-    ld l, h
-    ld l, [hl]
-    inc bc
-    and h
-    ld bc, $62a2
-    ld l, d
-    ld [hl], d
-    inc bc
-    ld l, h
-    ld h, [hl]
-    inc bc
-    ld h, d
-    ld l, d
-    inc bc
-    ld [hl], h
-    inc bc
-    and h
-    ld bc, $66a2
-    inc bc
-    ld [hl], d
-    inc bc
-    ld l, d
-    ld a, b
-    ld [hl], h
-    ld h, h
-    inc bc
-    ld a, b
-    db $76
-    inc bc
-    nop
-    pop af
-    inc de
-    ld b, c
-    ld b, b
-    and e
-    add h
-    inc bc
-    ld a, d
-    inc bc
-    add d
-    inc bc
-    db $76
-    inc bc
-    ld a, [hl]
-    inc bc
-    ld [hl], b
-    inc bc
-    ld a, h
-    inc bc
-    ld [hl], h
-    inc bc
-    ld a, b
-    inc bc
-    ld a, [hl]
-    inc bc
-    and c
-    ld bc, $7ca3
-    inc bc
-    and d
-    ld bc, $74a3
-    inc bc
-    and [hl]
-    ld bc, $70a8
-    and d
-    inc bc
-    xor b
-    db $01
-    nop
-
-    db $ac, $01, $01, $01, $01, $00
-
-    db $f4
-    ld [bc], a
-
-jr_004_7146:
-    and d
-    inc d
-    and l
-    jr nz, jr_004_70ef
-
-    ld bc, $01a7
-    xor h
-    jr nc, jr_004_7146
-
-    nop
-    pop af
-    inc c
-    nop
-
-jr_004_7155:
-    ld b, b
-    and a
-    ld b, b
-    and h
-    inc bc
-    and d
-    ld bc, $3ca7
-    and h
-    inc bc
-    and d
-
-jr_004_7161:
-    ld bc, $3aa7
-    and h
-    inc bc
-    and d
-    ld bc, $38a7
-    and h
-    inc bc
-    and d
-    ld bc, $36a7
-    and h
-    inc bc
-    and d
-    ld bc, $46a7
-    and h
-    inc bc
-    and d
-    ld bc, $38a7
-    and h
-    inc bc
-    and d
-    ld bc, $48a7
-    and h
-    inc bc
-    and d
-    ld bc, $f100
-    rrca
-    nop
-    nop
-    xor b
-    ld c, d
-    and e
-    inc bc
-    xor b
-    ld c, b
-    and e
-    inc bc
-    xor b
-    ld b, [hl]
-    and e
-    inc bc
-    xor b
-    ld b, h
-    and e
-    inc bc
-    xor b
-    ld b, d
-    and e
-    inc bc
-    xor b
-    ld b, b
-    and e
-    inc bc
-    xor b
-    ld a, $a3
-    inc bc
-    xor b
-    ld c, b
-    and e
-    inc bc
-    xor b
-    ld [hl-], a
-    and e
-    inc bc
-    xor b
-    jr nc, jr_004_7155
-
-    inc bc
-    xor b
-    ld l, $a3
-    inc bc
-
-jr_004_71b7:
-    xor b
-    inc l
-    and e
-    inc bc
-    xor b
-    jr z, jr_004_7161
-
-    inc bc
-    xor b
-    inc h
-    and e
-    inc bc
-    xor b
-    jr nz, @-$5b
-
-    inc bc
-    xor b
-    ld a, [de]
-    and a
-    inc bc
-    nop
-    pop af
-    di
-    nop
-    nop
-    db $f4
-    ld [bc], a
-    and d
-    ld h, d
-    inc bc
-    db $76
-    inc bc
-    ld [hl], h
-    inc bc
-    ld l, h
-    inc bc
-    and e
-    ld [hl], b
-    inc bc
-    xor b
-    ld bc, $f1f5
-    jp RST_00
-
-
-    and d
-    ld h, d
-    inc bc
-    db $76
-    inc bc
-    ld [hl], h
-    inc bc
-    ld l, h
-    inc bc
-    and e
-    ld [hl], b
-    inc bc
-    xor b
-    ld bc, $84f1
-
-jr_004_71f5:
-    nop
-    nop
-    and e
-    ld h, d
-    db $76
-    ld [hl], h
-    ld l, h
-    ld [hl], b
-    ld bc, $01a8
-    pop af
-    ld b, a
-    nop
-    nop
-    and e
-    ld h, d
-    db $76
-    ld [hl], h
-    ld l, h
-    ld [hl], b
-    ld bc, $0ef4
-    and l
-    ld bc, $00f5
-    pop af
-    xor e
-    ld b, c
-    jr nz, jr_004_71b7
-
-    ld bc, $52a3
-    inc bc
-    ld bc, $54a2
-    inc bc
-    and e
-    ld e, b
-    inc bc
-    and [hl]
-    ld c, d
-    and e
-    inc bc
-    and c
-    ld bc, $5ea6
-    and [hl]
-    inc bc
-    ld bc, $a101
-    ld e, h
-    inc bc
-    ld d, h
-    inc bc
-    and [hl]
-    ld e, b
-    and c
-    inc bc
-    and e
-    ld bc, $0101
-    and l
-    ld bc, $a601
-    ld e, [hl]
-    inc bc
-    and a
-    ld bc, $5ca1
-    inc bc
-    ld d, h
-    inc bc
-    and [hl]
-    ld e, b
-    and e
-    inc bc
-    ld bc, $0001
-    pop af
-    adc e
-    ld b, c
-    jr nz, jr_004_71f5
-
-    ld bc, $52a6
-    and d
-    dec b
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $54a2
-    and c
-    ld bc, $a205
-    ld e, b
-    and c
-    ld bc, $05a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $54a1
-    inc bc
-    ld d, d
-    inc bc
-    and d
-    ld d, h
-    and c
-    ld bc, $05a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $52a1
-    inc bc
-    ld c, [hl]
-    inc bc
-    and d
-    ld c, d
-    and c
-    ld bc, $05a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $03a2
-
-jr_004_729f:
-    and c
-    ld bc, $4aa1
-    inc bc
-    ld c, [hl]
-    inc bc
-    and d
-    ld c, d
-    and c
-    ld bc, $05a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $4ea2
-    and c
-    ld bc, $a205
-    ld c, d
-    and c
-    ld bc, $05a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $4aa2
-    and c
-    ld bc, $a205
-    ld c, d
-    and c
-    ld bc, $05a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $48a1
-    inc bc
-    ld b, h
-    inc bc
-    and d
-    ld c, b
-    and c
-    ld bc, $05a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $4aa1
-    inc bc
-    ld c, [hl]
-    pop af
-    adc e
-    ld b, c
-    jr nz, jr_004_729f
-
-    inc bc
-    and [hl]
-    ld d, d
-    and d
-    dec b
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $54a2
-    and c
-    ld bc, $a205
-    ld e, b
-    and c
-    ld bc, $05a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $54a1
-    inc bc
-    ld d, d
-    inc bc
-    and d
-    ld d, h
-    and c
-    ld bc, $05a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $52a1
-    inc bc
-    ld c, [hl]
-    inc bc
-    and d
-    ld c, d
-    and c
-    ld bc, $05a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $48a1
-    inc bc
-    ld b, h
-    inc bc
-    and d
-    ld c, b
-    and c
-    ld bc, $05a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $44a2
-    and c
-    ld bc, $a205
-    ld c, b
-    and c
-    ld bc, $05a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $46a1
-    inc bc
-    ld b, h
-    inc bc
-    and d
-    ld b, b
-    and c
-    ld bc, $05a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $03a2
-    and c
-    ld bc, $3ca2
-    and c
-    ld bc, $a205
-    ld b, b
-    and c
-    ld bc, $05a0
-    and d
-    ld b, b
-    and c
-    ld bc, $0140
-    ld b, b
-    ld bc, $a042
-    ld bc, $0142
-    ld b, d
-    ld bc, HeaderNewLicenseeCode
-    ld b, h
-    ld bc, HeaderSGBFlag
-    ld c, b
-    ld bc, HeaderDestinationCode
-    nop
-    pop af
-    ld l, e
-    ld b, c
-    jr nz, @-$5d
-
-    inc bc
-    and d
-    ld a, [de]
-    inc bc
-    ld a, [de]
-    inc bc
-    db $f4
-    ld [$1aa2], sp
-    inc bc
-    ld a, [de]
-    inc bc
-    ld a, [de]
-    inc bc
-    push af
-    pop af
-    ld l, e
-    ld b, c
-    ld b, b
-    db $f4
-    inc bc
-    and d
-    ld a, [de]
-    inc bc
-    ld a, [de]
-    inc bc
-    ld a, [de]
-    inc bc
-    push af
-    pop af
-    ld l, e
-    ld b, c
-    ld h, b
-    db $f4
-    dec b
-    and d
-    ld a, [de]
-    inc bc
-    ld a, [de]
-    inc bc
-    ld a, [de]
-    inc bc
-    push af
-    db $f4
-    dec bc
-    and l
-    ld bc, $a8f5
-    ld bc, $f400
-    ld [$01a5], sp
-    push af
-    nop
-    db $f4
-    ld [$01a5], sp
-    push af
-    and d
-    ld bc, $01a4
-    and l
-    jr nz, @+$03
-
-    ld bc, $0120
-    ld bc, $20a7
-    and c
-    ld bc, $7ca2
-    ld bc, $0180
-    add h
-    ld bc, $84a6
-    and d
-    ld bc, $f400
-    dec b
-    xor b
-    jr nz, @+$32
-
-    jr nz, @-$09
-
-    jr nz, @+$32
-
-    jr nz, @+$32
-
-    inc h
-    inc h
-    jr c, @+$2a
-
-    jr z, @+$3e
-
-    inc a
-    db $f4
-    dec b
-    and l
-    ld bc, $00f5
-
-    db $01, $df, $40, $32, $74, $32, $74, $36, $74, $3a, $74, $3e, $74
-
-    nop
-    nop
-
-    db $62, $74, $00, $00, $7a, $74
-
-    nop
-    nop
-
-    db $f1, $0b, $00, $40, $a7, $10, $03, $a1, $01, $f1, $09, $00, $40, $a6, $28, $a1
-    db $03, $a6, $40, $a1, $03, $a6, $3e, $a1, $03, $a0, $01, $a6, $36, $a2, $03, $a4
-    db $3a, $a5, $03
-
-    nop
-
-    db $f1, $7b, $41, $40, $a8, $01, $a2, $01, $a7, $62, $a2, $03, $a7, $66, $a2, $03
-    db $a1, $01, $01, $a4, $5c, $a2, $03, $00, $a7, $48, $74, $48, $a6, $5c, $54, $4c
-    db $50, $a2, $58, $a3, $68, $ac, $6c
-
-    nop
-
-    db $00, $f9, $40, $95, $74, $b3, $74, $c9, $74, $dd, $74, $f1, $74, $cb, $79, $f9
-    db $74, $ba, $76, $fe, $74, $23, $75, $8c, $75, $c5, $75, $c5, $75, $c5, $75, $c5
-    db $75, $ea, $75, $13, $76, $2c, $76, $00, $00, $ae, $76, $cb, $79, $b6, $76, $45
-    db $77, $59, $77, $be, $77, $19, $78, $5b, $78, $91, $78, $e6, $78, $00, $00, $a3
-    db $79, $0d, $7a, $56, $7a, $6b, $7a, $81, $7a, $8c, $7a, $95, $7a, $9e, $7a, $ab
-    db $7a, $00, $00, $1e, $7b, $4b, $7b, $75, $7b, $8d, $7b, $ae, $7b, $c4, $7b, $da
-    db $7b, $ec, $7b, $fe, $7b, $00, $00, $f1, $60, $00, $09, $a5, $01, $01, $00, $f1
-    db $b0, $00, $49, $00, $f1, $52, $00, $40, $f4, $02, $a1, $4a, $54, $58, $62, $f5
-    db $f4, $02, $a1, $3c, $4a, $4e, $54, $f5, $f4, $02, $a1, $4a, $54, $58, $62, $f5
-    db $f4, $02, $a1, $3c, $4a, $4e, $54, $f5, $00, $f1, $51, $00, $40, $f4, $02, $a1
-    db $4a, $54, $58, $62, $f5, $f4, $02, $a1, $3c, $4a, $4e, $54, $f5, $f4, $02, $a1
-    db $4a, $52, $54, $62, $f5, $f4, $02, $a1, $4e, $52, $54, $66, $f5, $f4, $02, $a1
-    db $4a, $54, $58, $62, $f5, $f4, $02, $a1, $3c, $4a, $4e, $54, $f5, $f4, $02, $a1
-    db $40, $4a, $4e, $58, $f5, $f4, $02, $a1, $3c, $4a, $4e, $54, $f5, $f4, $02, $a1
-    db $4a, $52, $54, $62, $4a, $52, $54, $62, $3c, $4a, $4e, $54, $3c, $4a, $4e, $54
-    db $4a, $52, $54, $62, $4a, $52, $54, $62, $4e, $52, $54, $66, $4e, $52, $54, $66
-    db $f5, $00, $f1, $81, $00, $00, $f4, $03, $a1, $4a, $52, $54, $62, $4a, $52, $54
-    db $62, $46, $52, $54, $5e, $46, $52, $54, $5e, $f5, $f4, $02, $a1, $3c, $4a, $4e
-    db $54, $f5, $f4, $02, $a1, $46, $52, $54, $5e, $f5, $f4, $02, $a1, $44, $52, $54
-    db $5c, $f5, $f4, $02, $a1, $40, $4a, $4e, $52, $f5, $00, $f1, $61, $00, $40, $f4
-    db $02, $a1, $3c, $4a, $4e, $54, $f5, $f4, $02, $a1, $46, $52, $54, $5e, $f5, $f4
-    db $02, $a1, $44, $52, $54, $5c, $f5, $f4, $02, $a1, $40, $4a, $4e, $52, $f5, $00
-    db $f1, $43, $00, $80, $f4, $04, $a1, $3c, $44, $4e, $54, $3c, $44, $4e, $54, $46
-    db $52, $54, $5e, $46, $52, $54, $5e, $44, $52, $54, $5c, $44, $52, $54, $5c, $40
-    db $4a, $4e, $52, $40, $4a, $4e, $52, $f5, $00, $f1, $72, $00, $00, $f4, $04, $a1
-    db $4a, $52, $54, $62, $4a, $52, $54, $62, $46, $52, $54, $5e, $46, $52, $54, $5e
-    db $f5, $00, $f1, $82, $00, $00, $a1, $4a, $52, $54, $62, $4a, $52, $54, $62, $3c
-    db $4a, $4e, $54, $3c, $4a, $4e, $54, $4a, $52, $54, $62, $4a, $52, $54, $62, $4e
-    db $52, $54, $66, $4e, $52, $54, $66, $f1, $a2, $00, $00, $f4, $05, $a1, $4a, $52
-    db $54, $4a, $4a, $52, $54, $4a, $3c, $4a, $4e, $54, $3c, $4a, $4e, $54, $f5, $f1
-    db $c3, $00, $00, $a1, $4a, $52, $54, $62, $4a, $52, $54, $62, $3c, $4a, $4e, $54
-    db $3c, $4a, $4e, $54, $f1, $d4, $00, $00, $a2, $4a, $a1, $03, $a2, $48, $a1, $03
-    db $4a, $03, $f2, $06, $41, $a4, $54, $f1, $09, $00, $00, $a2, $52, $03, $f1, $d5
-    db $00, $40, $a1, $4a, $03, $a0, $4a, $03, $4a, $03, $ab, $32, $40, $f1, $c7, $00
-    db $00, $a5, $62, $00, $f1, $60, $00, $00, $a5, $01, $01, $00, $f1, $b0, $00, $00
-    db $a3, $52, $a2, $03, $a0, $54, $03, $52, $03, $a1, $4e, $a2, $03, $a1, $4a, $a2
-    db $03, $a1, $46, $03, $a2, $4a, $03, $3c, $03, $a3, $54, $a2, $03, $a0, $52, $03
-    db $4e, $03, $a3, $52, $a2, $03, $a1, $4e, $03, $a2, $4e, $03, $44, $03, $a3, $4a
-    db $a2, $03, $a0, $48, $03, $44, $03, $a3, $48, $03, $a3, $52, $a2, $03, $a0, $54
-    db $03, $52, $03, $a1, $4e, $a2, $03, $a1, $4a, $a2, $03, $a1, $46, $03, $a3, $4a
-    db $a2, $03, $a0, $4e, $03, $52, $03, $a3, $54, $a2, $03, $a0, $58, $03, $54, $03
-    db $a3, $52, $a2, $03, $a1, $4e, $03, $a2, $4e, $03, $44, $03, $a3, $4a, $a2, $03
-    db $a0, $48, $03, $4a, $03, $a2, $4e, $03, $44, $03, $a3, $4a, $a2, $03, $a0, $48
-    db $03, $44, $03, $a3, $48, $a2, $03, $a1, $58, $03, $00, $f1, $a0, $00, $00, $a7
-    db $62, $a4, $03, $a1, $40, $03, $a7, $62, $03, $a1, $1a, $03, $01, $01, $00, $f1
-    db $c0, $00, $40, $a3, $4a, $a2, $03, $a1, $4a, $03, $a2, $46, $a1, $03, $a2, $44
-    db $a1, $03, $a0, $40, $03, $3c, $03, $a3, $40, $a8, $03, $a3, $3a, $a2, $03, $a1
-    db $40, $03, $a2, $3c, $a1, $03, $a2, $3a, $a1, $03, $a0, $36, $03, $32, $03, $a3
-    db $36, $a8, $03, $a3, $40, $a2, $03, $a1, $4a, $03, $a2, $46, $a1, $03, $a2, $44
-    db $a1, $03, $a0, $40, $03, $3c, $03, $a3, $40, $a8, $03, $a3, $40, $a2, $03, $a1
-    db $4a, $03, $a2, $3c, $a1, $03, $a2, $40, $a1, $03, $a0, $44, $03, $3c, $03, $a3
-    db $40, $a8, $03, $00, $f1, $b0, $00, $40, $a3, $52, $a2, $03, $a0, $4e, $03, $52
-    db $03, $a3, $54, $a2, $03, $a0, $52, $03, $4e, $03, $a3, $52, $a2, $03, $a0, $4e
-    db $03, $52, $03, $a3, $54, $a2, $03, $a0, $52, $03, $54, $03, $a3, $58, $a2, $03
-    db $a0, $54, $03, $52, $03, $a3, $54, $a2, $03, $a0, $52, $03, $4e, $03, $a6, $4a
-    db $03, $a0, $4e, $03, $52, $03, $a6, $4e, $03, $a0, $4a, $03, $46, $03, $a6, $4a
-    db $03, $a0, $46, $03, $44, $03, $a6, $46, $03, $a0, $44, $03, $40, $03, $00, $f1
-    db $d0, $00, $00, $f4, $02, $a2, $4a, $03, $58, $03, $a3, $54, $a2, $03, $a1, $4a
-    db $03, $a3, $4a, $a2, $03, $a0, $46, $03, $44, $03, $a3, $46, $a2, $03, $a1, $4e
-    db $03, $a2, $4a, $03, $58, $03, $a3, $54, $a2, $03, $a1, $4a, $03, $a3, $4a, $a2
-    db $03, $a0, $46, $03, $44, $03, $a3, $46, $a2, $03, $a0, $44, $03, $40, $03, $f5
-    db $00, $f1, $a0, $00, $80, $f4, $02, $a3, $62, $a4, $03, $a2, $01, $a1, $66, $03
-    db $a6, $62, $03, $a0, $5e, $03, $5c, $03, $a6, $5e, $03, $a1, $5c, $03, $a6, $5c
-    db $a4, $03, $a6, $01, $a1, $5e, $03, $a2, $54, $a3, $03, $a1, $58, $03, $a2, $5c
-    db $a3, $03, $a1, $5e, $03, $f5, $00, $f1, $d0, $00, $00, $a3, $3a, $a2, $03, $a0
-    db $3c, $03, $3a, $03, $a2, $36, $a1, $03, $a2, $32, $a1, $03, $a1, $2e, $03, $a3
-    db $40, $a2, $03, $a0, $44, $03, $40, $03, $a2, $3c, $a1, $03, $a2, $3a, $a1, $03
-    db $a1, $36, $03, $a3, $3a, $a2, $03, $a0, $3c, $03, $3a, $03, $a2, $36, $a1, $03
-    db $a2, $3a, $a1, $03, $a1, $3c, $03, $a3, $40, $a2, $03, $a0, $44, $03, $40, $03
-    db $a2, $3c, $a1, $03, $a2, $40, $a1, $03, $a1, $44, $03, $00, $f1, $b0, $00, $40
-    db $a3, $40, $a2, $03, $a1, $4a, $03, $a2, $44, $a1, $03, $a2, $40, $a1, $03, $a1
-    db $3c, $03, $a3, $40, $a2, $03, $a1, $4a, $03, $a2, $44, $a1, $03, $a2, $4a, $a1
-    db $03, $a1, $54, $03, $a3, $40, $a2, $03, $a1, $4a, $03, $a2, $44, $a1, $03, $a2
-    db $40, $a1, $03, $a1, $3c, $03, $a3, $40, $a2, $03, $a1, $4a, $03, $a2, $44, $a1
-    db $03, $a2, $4a, $a1, $03, $a1, $54, $03, $a3, $52, $a2, $03, $a1, $58, $03, $a2
-    db $54, $a1, $03, $a2, $52, $a1, $03, $4a, $03, $a3, $52, $a2, $03, $a1, $58, $03
-    db $a2, $54, $a1, $03, $a2, $5c, $a1, $03, $62, $03, $a3, $52, $a2, $03, $a1, $58
-    db $03, $a2, $54, $a1, $03, $a2, $52, $a1, $03, $4a, $03, $f1, $d0, $00, $00, $a2
-    db $3c, $a1, $03, $a2, $3a, $a1, $03, $32, $03, $a2, $54, $a1, $03, $a2, $52, $a1
-    db $03, $4a, $03, $a1, $54, $a2, $03, $a1, $52, $a2, $03, $a1, $54, $03, $f1, $d0
-    db $00, $00, $a7, $32, $a2, $03, $a2, $32, $03, $a1, $1a, $03, $a0, $1a, $03, $1a
-    db $03, $ab, $02, $10, $a2, $1a, $a5, $05, $00, $f1, $6b, $41, $40, $f4, $02, $a0
-    db $1a, $03, $20, $03, $24, $03, $2e, $03, $1a, $03, $20, $03, $2c, $03, $20, $03
-    db $1a, $03, $20, $03, $24, $03, $2e, $03, $1a, $03, $20, $03, $24, $03, $32, $03
-    db $f5, $a0, $1a, $03, $20, $03, $24, $03, $2e, $03, $1a, $03, $20, $03, $24, $03
-    db $32, $03, $1a, $03, $20, $03, $24, $03, $38, $03, $1a, $03, $20, $03, $24, $03
-    db $2e, $03, $1a, $03, $20, $03, $24, $03, $28, $03, $1a, $03, $20, $03, $24, $03
-    db $2c, $03, $1a, $03, $20, $03, $24, $03, $32, $03, $32, $03, $38, $03, $3c, $03
-    db $58, $03, $00, $f1, $7b, $41, $40, $a4, $62, $a7, $5e, $a2, $03, $a7, $5c, $a2
-    db $03, $a7, $5a, $a2, $03, $a7, $58, $a2, $03, $a7, $56, $a2, $03, $a7, $54, $a2
-    db $03, $a7, $58, $a2, $03, $a7, $4a, $a2, $03, $a7, $46, $a2, $03, $a7, $44, $a2
-    db $03, $a7, $42, $a2, $03, $a4, $40, $a7, $3e, $a2, $03, $a7, $3c, $a2, $03, $a7
-    db $3e, $a2, $03, $a7, $40, $a2, $03, $a7, $28, $a2, $03, $00, $f1, $6b, $41, $40
-    db $f4, $07, $a1, $1a, $03, $a0, $1a, $03, $1a, $03, $f5, $a1, $28, $03, $01, $01
-    db $00, $f1, $7b, $41, $40, $a4, $32, $24, $22, $1e, $1a, $24, $28, $24, $f4, $02
-    db $a4, $1a, $24, $22, $1e, $f5, $00, $f4, $03, $a4, $32, $2e, $f5, $24, $2e, $2c
-    db $28, $00, $f4, $04, $a4, $24, $2e, $2c, $28, $f5, $00, $f4, $04, $a4, $24, $2e
-    db $2c, $28, $f5, $00, $f4, $02, $a4, $32, $2e, $f5, $f4, $02, $a4, $1a, $16, $f5
-    db $00, $a4, $1a, $24, $22, $1e, $1a, $24, $32, $3c, $f1, $6b, $41, $40, $f4, $02
-    db $a2, $32, $a1, $03, $a2, $30, $a1, $03, $28, $03, $a2, $3c, $a1, $03, $a2, $3a
-    db $a1, $03, $32, $03, $f5, $a2, $4a, $a1, $03, $a2, $48, $a1, $03, $40, $03, $a2
-    db $54, $a1, $03, $a2, $52, $a1, $03, $4a, $03, $a2, $4a, $a1, $03, $a2, $48, $a1
-    db $03, $40, $03, $a2, $54, $a1, $03, $a2, $52, $a1, $03, $4a, $03, $a2, $62, $a1
-    db $03, $a2, $60, $a1, $03, $62, $a0, $03, $01, $a7, $58, $a2, $03, $a2, $40, $03
-    db $f1, $6b, $41, $20, $a1, $28, $03, $a0, $28, $03, $28, $03, $ab, $02, $10, $a2
-    db $28, $a3, $03, $00, $f4, $02, $a2, $10, $0c, $10, $0c, $10, $0c, $0c, $a1, $1c
-    db $14, $f5, $f4, $03, $a1, $10, $14, $0c, $04, $f5, $14, $0c, $1c, $1c, $f4, $02
-    db $10, $1c, $0c, $04, $f5, $1c, $1c, $1c, $1c, $a2, $68, $a0, $1c, $1c, $1c, $1c
-    db $00, $a5, $6c, $01, $01, $a8, $01, $a3, $68, $a3, $6c, $50, $54, $58, $a3, $54
-    db $a4, $5c, $a3, $64, $60, $58, $a4, $54, $a3, $50, $4c, $54, $50, $f4, $04, $a1
-    db $4c, $64, $f5, $a1, $14, $14, $14, $14, $a3, $6c, $00, $f4, $03, $a1, $1c, $0c
-    db $14, $14, $f5, $a2, $68, $a1, $1c, $0c, $f4, $03, $a1, $1c, $08, $14, $14, $f5
-    db $a3, $6c, $00, $f4, $07, $a1, $14, $0c, $10, $10, $14, $08, $10, $10, $14, $04
-    db $10, $10, $14, $0c, $14, $04, $f5, $f4, $03, $a1, $14, $08, $10, $10, $f5, $1c
-    db $14, $1c, $14, $00, $f4, $11, $a1, $1c, $0c, $08, $0c, $f5, $f4, $02, $a1, $1c
-    db $0c, $1c, $0c, $f5, $a1, $1c, $14, $1c, $0c, $00, $f4, $0f, $a1, $1c, $10, $08
-    db $10, $1c, $0c, $10, $08, $f5, $a1, $1c, $14, $08, $14, $1c, $14, $1c, $14, $00
-    db $f4, $1e, $a1, $14, $0c, $08, $0c, $f5, $a1, $1c, $14, $08, $14, $1c, $14, $1c
-    db $14, $00, $f4, $0e, $a1, $14, $10, $0c, $10, $f5, $a1, $1c, $14, $08, $14, $1c
-    db $14, $1c, $14, $00, $f4, $08, $a1, $14, $10, $08, $10, $f5, $f4, $04, $a1, $14
-    db $0c, $14, $10, $f5, $f4, $08, $a1, $14, $14, $08, $14, $f5, $f4, $04, $a1, $14
-    db $14, $14, $14, $f5, $f4, $08, $a1, $1c, $1c, $1c, $1c, $f5, $a6, $1c, $1c, $a2
-    db $1c, $a4, $1c, $a3, $1c, $a2, $1c, $a1, $1c, $1c, $ab, $1c, $1c, $a5, $1c, $00
-    db $00, $c5, $40, $fa, $64, $1e, $65, $2a, $65, $36, $65, $00, $f9, $40, $6e, $68
-    db $00, $00, $00, $00, $00, $00, $00, $f9, $40, $00, $00, $01, $69, $00, $00, $00
-    db $00, $00, $df, $40, $97, $69, $9f, $69, $a7, $69, $00, $00, $00, $c5, $40, $00
-    db $00, $e8, $6e, $00, $00, $00, $00, $01, $b8, $40, $7c, $7c, $8a, $7c, $96, $7c
-    db $9e, $7c, $a6, $7c, $7e, $7d, $ad, $7c, $d6, $6f, $b8, $7c, $f0, $00, $ce, $6b
-    db $bf, $7c, $cb, $7c, $d6, $6f, $d6, $7c, $f0, $00, $e0, $6b, $dd, $7c, $eb, $7c
-    db $f0, $00, $f4, $6b, $f9, $7c, $01, $7d, $f0, $00, $fa, $6b, $f1, $87, $17, $06
-    db $a5, $0e, $00, $f1, $0d, $00, $00, $a5, $62, $f1, $c7, $35, $00, $00, $f1, $f5
-    db $00, $40, $a5, $6c, $00, $f1, $87, $00, $00, $a1, $36, $1e, $42, $2a, $a8, $4e
-    db $00, $f1, $0d, $00, $00, $a5, $60, $f1, $c7, $00, $08, $00, $f1, $f5, $00, $40
-    db $a5, $6a, $00, $f1, $7b, $41, $40, $a1, $4e, $1e, $5a, $2a, $a3, $66, $03, $01
-    db $00, $f1, $6b, $41, $40, $a1, $02, $03, $f4, $0a, $a2, $02, $03, $f5, $00, $a1
-    db $1c, $18, $1c, $18, $a8, $1c, $00, $a5, $01, $01, $a4, $01, $a2, $01, $00, $01
-    db $df, $40, $14, $7d, $14, $7d, $18, $7d, $1c, $7d, $20, $7d, $00, $00, $2f, $7d
-    db $00, $00, $3c, $7d, $00, $00, $f1, $f2, $00, $80, $a1, $28, $2c, $2e, $f1, $f5
-    db $00, $80, $a8, $3c, $00, $f1, $7b, $41, $40, $a1, $46, $03, $4a, $a2, $32, $05
-    db $03, $00, $a1, $14, $14, $14, $1c, $00, $f1, $15, $00, $40, $00, $f1, $35, $00
-    db $40, $00, $f1, $65, $00, $40, $00
-
-    pop af
-    add l
-    nop
-    ld b, b
-    nop
-    pop af
-    and l
-    nop
-    ld b, b
-    nop
-
-    db $f1, $7b, $41, $60, $00
-
-    pop af
-    ld a, e
-    ld b, c
-    ld b, b
-    nop
-    pop af
-    ld a, e
-    ld b, c
-    jr nz, @+$02
-
-    db $f2, $9e, $40, $00, $f2, $ab, $40, $00, $f2, $b8, $40, $00, $f2, $c5, $40, $00
-    db $f2, $d2, $40, $00, $f2, $df, $40, $00, $f2, $ec, $40, $00, $f2, $f9, $40, $00
-    db $f2, $06, $41, $00, $f3, $00, $00, $f3, $02, $00, $f3, $04, $00, $f3, $08, $00
-    db $f3, $0c, $00, $f3, $10, $00, $f1, $a4, $00, $40, $a2, $32, $03, $32, $03, $f1
-    db $84, $00, $40, $a3, $32, $f1, $64, $00, $40, $a3, $32, $f1, $44, $00, $40, $a3
-    db $32, $f1, $24, $00, $40, $a3, $32, $f1, $14, $00, $40, $a8, $32, $a5, $01, $00
-    db $f1, $b3, $00, $40, $a2, $0c, $03, $0c, $03, $f1, $93, $00, $40, $a3, $0c, $f1
-    db $73, $00, $40, $a3, $0c, $f1, $53, $00, $40, $a3, $0c, $f1, $33, $00, $40, $a3
-    db $0c, $f1, $23, $00, $40, $a8, $0c, $a5, $01, $00, $f1, $7b, $41, $40, $f4, $02
-    db $a2, $32, $03, $f5, $a8, $01, $01, $a5, $01, $00, $a5, $01, $01, $01, $00, $f1
-    db $11, $00, $00, $a4, $01, $00, $f1, $6b, $41, $60, $a4, $01, $00, $a4, $01, $00
-    db $f1, $11, $00, $00, $a5, $01, $00, $f1, $6b, $41, $60, $a5, $01, $00, $a5, $01
-    db $00
-
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
+;{
+    ld [waveChannelSoundEffectTimer], a
+    ld [waveChannelSoundEffectLength], a
+    jp setChannelOptionSet.wave
+;}
+;}
+
+; Song data:
+;{
+songDataTable:
+;{
+    dw $5F90 ; 1: Baby Metroid
+    dw $608A ; 2: Metroid Queen battle
+    dw $61D4 ; 3: Chozo ruins
+    dw $64ED ; 4: Main caves
+    dw $685F ; 5: Sub caves 1
+    dw $68EE ; 6: Sub caves 2
+    dw $6988 ; 7: Sub caves 3
+    dw $6AE2 ; 8: Final caves
+    dw $6BC3 ; 9: Metroid hive
+    dw $6C8E ; Ah: Item-get
+    dw $6D51 ; Bh: Metroid Queen hallway
+    dw $6D8B ; Ch: Metroid battle
+    dw $6ED5 ; Dh: Sub caves 4
+    dw $6F50 ; Eh: Earthquake
+    dw $6FA4 ; Fh: Killed Metroid
+    dw initializeAudio.ret ; 10h: Nothing
+    dw $703C ; 11h: Title
+    dw $7427 ; 12h: Samus fanfare
+    dw $748A ; 13h: Reach the gunship
+    dw $61D4 ; 14h: Chozo ruins, same as 3
+    dw $7C3A ; 15h: Main caves, no intro
+    dw $7C45 ; 16h: Sub caves 1, no intro
+    dw $7C50 ; 17h: Sub caves 2, no intro
+    dw $7C5B ; 18h: Sub caves 3, no intro
+    dw $6AE2 ; 19h: Final caves, same as 8
+    dw $6BC3 ; 1Ah: Metroid hive, same as 9
+    dw $6C8E ; 1Bh: Item-get, same as Ah
+    dw $6D51 ; 1Ch: Metroid Queen hallway, same as Bh
+    dw $6D8B ; 1Dh: Metroid battle, same as Ch
+    dw $7C66 ; 1Eh: Sub caves 4, no intro
+    dw $7C71 ; 1Fh: Metroid hive with intro
+    dw $7D09 ; 20h: Missile pickup
+;}
+
+songStereoFlags:
+;{
+    db $FF ; 1: Baby Metroid
+    db $FF ; 2: Metroid Queen battle
+    db $FF ; 3: Chozo ruins
+    db $FF ; 4: Main caves
+    db $FF ; 5: Sub caves 1
+    db $FF ; 6: Sub caves 2
+    db $FF ; 7: Sub caves 3
+    db $FF ; 8: Final caves
+    db $FF ; 9: Metroid hive
+    db $DB ; Ah: Item-get
+    db $FF ; Bh: Metroid Queen hallway
+    db $FF ; Ch: Metroid battle
+    db $FF ; Dh: Sub caves 4
+    db $DE ; Eh: Earthquake
+    db $DE ; Fh: Killed Metroid
+    db $FF ; 10h: Nothing
+    db $FF ; 11h: Title
+    db $DE ; 12h: Samus fanfare
+    db $FF ; 13h: Reach the gunship
+    db $FF ; 14h: Chozo ruins, same as 3
+    db $FF ; 15h: Main caves, no intro
+    db $FF ; 16h: Sub caves 1, no intro
+    db $FF ; 17h: Sub caves 2, no intro
+    db $FF ; 18h: Sub caves 3, no intro
+    db $FF ; 19h: Final caves, same as 8
+    db $FF ; 1Ah: Metroid hive, same as 9
+    db $DB ; 1Bh: Item-get, same as Ah
+    db $FF ; 1Ch: Metroid Queen hallway, same as Bh
+    db $FF ; 1Dh: Metroid battle, same as Ch
+    db $FF ; 1Eh: Sub caves 4, no intro
+    db $FF ; 1Fh: Metroid hive with intro
+    db $DE ; 20h: Missile pickup
+;}
+
+; Song data
+;{
+; $5F90
+song_babyMetroid_header:
+    SongHeader $1, $4106, song_babyMetroid_toneSweep, song_babyMetroid_tone, song_babyMetroid_wave, song_babyMetroid_noise
+
+; $5F9B
+song_babyMetroid_toneSweep:
+;{
+    dw song_babyMetroid_toneSweep_section0 ; $7E1A
+    dw song_babyMetroid_toneSweep_section1 ; $7E1A
+    dw song_babyMetroid_toneSweep_section2 ; $7E09
+    dw song_babyMetroid_toneSweep_section3 ; $7D42
+    dw song_babyMetroid_toneSweep_section4 ; $5FE7
+    dw song_babyMetroid_toneSweep_section5 ; $7D47
+    dw song_babyMetroid_toneSweep_section6 ; $5FF2
+    dw song_babyMetroid_toneSweep_section7 ; $7D4C
+    dw song_babyMetroid_toneSweep_section8 ; $6002
+    .loop
+    dw song_babyMetroid_toneSweep_section9 ; $600A
+    dw $00F0, .loop
+;}
+
+; $5FB3
+song_babyMetroid_tone:
+;{
+    dw song_babyMetroid_tone_section0 ; $7E1A
+    dw song_babyMetroid_tone_section1 ; $7E1A
+    dw song_babyMetroid_tone_section2 ; $7E09
+    dw song_babyMetroid_tone_section3 ; $7D42
+    dw song_babyMetroid_tone_section4 ; $6025
+    dw song_babyMetroid_tone_section5 ; $7D47
+    dw song_babyMetroid_tone_section6 ; $6030
+    dw song_babyMetroid_tone_section7 ; $7D4C
+    dw song_babyMetroid_tone_section8 ; $603E
+    .loop
+    dw song_babyMetroid_tone_section9 ; $6046
+    dw $00F0, .loop
+;}
+
+; $5FCB
+song_babyMetroid_wave:
+;{
+    dw song_babyMetroid_wave_section0 ; $7E21
+    dw song_babyMetroid_wave_section1 ; $7E21
+    dw song_babyMetroid_wave_section2 ; $7E10
+    dw song_babyMetroid_wave_section3 ; $7D5B
+    dw song_babyMetroid_wave_section4 ; $6060
+    .loop
+    dw song_babyMetroid_wave_section5 ; $605C
+    dw $00F0, .loop
+;}
+
+; $5FDB
+song_babyMetroid_noise:
+;{
+    .loop
+    dw song_babyMetroid_noise_section0 ; $7E28
+    dw song_babyMetroid_noise_section1 ; $7E28
+    dw song_babyMetroid_noise_section2 ; $7E17
+    dw song_babyMetroid_noise_section3 ; $6084
+    dw $00F0, .loop
+;}
+
+; $5FE7
+song_babyMetroid_toneSweep_section4:
+;{
+    SongRepeatSetup $2
+    SongNoteLength $2
+    SongNote $32
+    SongNote $3C
+    SongNote $40
+    SongNote $46
+    SongNoteLength $3
+    SongNote $38
+    SongRepeat
+    SongEnd
+;}
+
+; $5FF2
+song_babyMetroid_toneSweep_section6:
+;{
+    SongRepeatSetup $2
+    SongNoteLength $2
+    SongNote $32
+    SongNote $3C
+    SongNote $40
+    SongNote $46
+    SongNoteLength $3
+    SongNote $38
+    SongRepeat
+    SongNoteLength $2
+    SongNote $32
+    SongNote $3C
+    SongNote $40
+    SongNote $46
+    SongEnd
+;}
+
+; $6002
+song_babyMetroid_toneSweep_section8:
+;{
+    SongRepeatSetup $3
+    SongNote $32
+    SongNote $3C
+    SongNote $40
+    SongNote $46
+    SongRepeat
+    SongEnd
+;}
+
+; $600A
+song_babyMetroid_toneSweep_section9:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $7
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 2
+    SongRepeatSetup $4
+    SongNoteLength $2
+    SongNote $32
+    SongNote $3C
+    SongNote $40
+    SongNote $46
+    SongNoteLength $3
+    SongNote $38
+    SongRepeat
+    SongNoteLength $2
+    SongNote $32
+    SongNote $3C
+    SongNote $40
+    SongNote $46
+    SongRepeatSetup $3
+    SongNote $32
+    SongNote $3C
+    SongNote $40
+    SongNote $46
+    SongRepeat
+    SongEnd
+;}
+
+; $6025
+song_babyMetroid_tone_section4:
+;{
+    SongRepeatSetup $3
+    SongNoteLength $6
+    SongNote $32
+    SongNote $3C
+    SongNote $40
+    SongNote $46
+    SongNote $38
+    SongNote $3C
+    SongRepeat
+    SongEnd
+;}
+
+; $6030
+song_babyMetroid_tone_section6:
+;{
+    SongNote $32
+    SongNote $3C
+    SongNote $40
+    SongNote $46
+    SongNote $38
+    SongNote $3C
+    SongRepeatSetup $2
+    SongNote $32
+    SongNote $3C
+    SongNote $40
+    SongNote $46
+    SongRepeat
+    SongEnd
+;}
+
+; $603E
+song_babyMetroid_tone_section8:
+;{
+    SongRepeatSetup $2
+    SongNote $32
+    SongNote $3C
+    SongNote $40
+    SongNote $46
+    SongRepeat
+    SongEnd
+;}
+
+; $6046
+song_babyMetroid_tone_section9:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $7
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 2
+    SongRepeatSetup $4
+    SongNoteLength $6
+    SongNote $32
+    SongNote $3C
+    SongNote $40
+    SongNote $46
+    SongNote $38
+    SongNote $3C
+    SongRepeat
+    SongRepeatSetup $4
+    SongNote $32
+    SongNote $3C
+    SongNote $40
+    SongNote $46
+    SongRepeat
+    SongEnd
+;}
+
+; $605C
+song_babyMetroid_wave_section5:
+;{
+    SongOptions
+        WaveOptions $4113, 3, $0
+;}
+
+; $6060
+song_babyMetroid_wave_section4:
+;{
+    SongRepeatSetup $4
+    SongNoteLength $1
+    SongNote $4A
+    SongSpecial3
+    SongNote $54
+    SongSpecial3
+    SongNote $58
+    SongSpecial3
+    SongNote $5E
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $50
+    SongSpecial3
+    SongRepeat
+    SongNoteLength $1
+    SongNote $4A
+    SongSpecial3
+    SongNote $54
+    SongSpecial3
+    SongNote $58
+    SongSpecial3
+    SongNote $5E
+    SongSpecial3
+    SongRepeatSetup $3
+    SongNote $4A
+    SongSpecial3
+    SongNote $54
+    SongSpecial3
+    SongNote $58
+    SongSpecial3
+    SongNote $5E
+    SongSpecial3
+    SongRepeat
+    SongEnd
+;}
+
+; $6084
+song_babyMetroid_noise_section3:
+;{
+    SongNoteLength $3
+    SongNote $74
+    SongNote $78
+    SongNoteLength $0
+    SongMute
+    SongEnd
+;}
+
+; $608A
+song_metroidQueenBattle_header:
+    SongHeader $1, $4106, song_metroidQueenBattle_toneSweep, song_metroidQueenBattle_tone, song_metroidQueenBattle_wave, song_metroidQueenBattle_noise
+
+; $6095
+song_metroidQueenBattle_toneSweep:
+;{
+    dw song_metroidQueenBattle_toneSweep_section0 ; $6107
+    dw song_metroidQueenBattle_toneSweep_section1 ; $6112
+    dw song_metroidQueenBattle_toneSweep_section2 ; $7D86
+    dw song_metroidQueenBattle_toneSweep_section3 ; $6112
+    dw song_metroidQueenBattle_toneSweep_section4 ; $7D82
+    dw song_metroidQueenBattle_toneSweep_section5 ; $6112
+    dw song_metroidQueenBattle_toneSweep_section6 ; $7D7E
+    dw song_metroidQueenBattle_toneSweep_section7 ; $6112
+    dw song_metroidQueenBattle_toneSweep_section8 ; $7D7A
+    dw song_metroidQueenBattle_toneSweep_section9 ; $6112
+    dw song_metroidQueenBattle_toneSweep_sectionA ; $7D76
+    dw song_metroidQueenBattle_toneSweep_sectionB ; $7D91
+    dw song_metroidQueenBattle_toneSweep_sectionC ; $6112
+    dw song_metroidQueenBattle_toneSweep_sectionD ; $7D72
+    dw song_metroidQueenBattle_toneSweep_sectionE ; $7D94
+    dw song_metroidQueenBattle_toneSweep_sectionF ; $6112
+    dw song_metroidQueenBattle_toneSweep_section10 ; $7D6E
+    dw song_metroidQueenBattle_toneSweep_section11 ; $7D97
+    dw song_metroidQueenBattle_toneSweep_section12 ; $6112
+    dw song_metroidQueenBattle_toneSweep_section13 ; $7D6A
+    dw song_metroidQueenBattle_toneSweep_section14 ; $7D9A
+    dw song_metroidQueenBattle_toneSweep_section15 ; $6112
+    dw song_metroidQueenBattle_toneSweep_section16 ; $7D6A
+    dw song_metroidQueenBattle_toneSweep_section17 ; $7D9D
+    dw song_metroidQueenBattle_toneSweep_section18 ; $6112
+    dw song_metroidQueenBattle_toneSweep_section19 ; $7D6A
+    dw song_metroidQueenBattle_toneSweep_section1A ; $7D9A
+    dw song_metroidQueenBattle_toneSweep_section1B ; $610C
+    dw song_metroidQueenBattle_toneSweep_section1C ; $7D6E
+    dw song_metroidQueenBattle_toneSweep_section1D ; $7D97
+    dw song_metroidQueenBattle_toneSweep_section1E ; $610C
+    dw song_metroidQueenBattle_toneSweep_section1F ; $7D72
+    dw song_metroidQueenBattle_toneSweep_section20 ; $7D94
+    dw song_metroidQueenBattle_toneSweep_section21 ; $610C
+    dw song_metroidQueenBattle_toneSweep_section22 ; $7D76
+    dw song_metroidQueenBattle_toneSweep_section23 ; $7D91
+    dw song_metroidQueenBattle_toneSweep_section24 ; $610C
+    dw song_metroidQueenBattle_toneSweep_section25 ; $7D7E
+    dw song_metroidQueenBattle_toneSweep_section26 ; $7D8E
+    .loop
+    dw song_metroidQueenBattle_toneSweep_section27 ; $6118
+    dw $00F0, .loop
+;}
+
+; $60E9
+song_metroidQueenBattle_tone:
+;{
+    dw song_metroidQueenBattle_tone_section0 ; $6122
+    dw song_metroidQueenBattle_tone_section1 ; $612F
+    .loop
+    dw song_metroidQueenBattle_tone_section2 ; $613C
+    dw $00F0, .loop
+;}
+
+; $60F3
+song_metroidQueenBattle_wave:
+;{
+    dw song_metroidQueenBattle_wave_section0 ; $6146
+    dw song_metroidQueenBattle_wave_section1 ; $6153
+    .loop
+    dw song_metroidQueenBattle_wave_section2 ; $6160
+    dw $00F0, .loop
+;}
+
+; $60FD
+song_metroidQueenBattle_noise:
+;{
+    dw song_metroidQueenBattle_noise_section0 ; $61BA
+    dw song_metroidQueenBattle_noise_section1 ; $61C3
+    .loop
+    dw song_metroidQueenBattle_noise_section2 ; $61CC
+    dw $00F0, .loop
+;}
+
+; $6107
+song_metroidQueenBattle_toneSweep_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $C
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongEnd
+;}
+
+; $610C
+song_metroidQueenBattle_toneSweep_section1E:
+song_metroidQueenBattle_toneSweep_section24:
+song_metroidQueenBattle_toneSweep_section1B:
+song_metroidQueenBattle_toneSweep_section21:
+;{
+    SongNoteLength $3
+    SongNote $22
+    SongNote $2E
+    SongNote $1A
+    SongNote $28
+    SongEnd
+;}
+
+; $6112
+song_metroidQueenBattle_toneSweep_section1:
+song_metroidQueenBattle_toneSweep_section7:
+song_metroidQueenBattle_toneSweep_section3:
+song_metroidQueenBattle_toneSweep_section9:
+song_metroidQueenBattle_toneSweep_sectionC:
+song_metroidQueenBattle_toneSweep_section12:
+song_metroidQueenBattle_toneSweep_sectionF:
+song_metroidQueenBattle_toneSweep_section15:
+song_metroidQueenBattle_toneSweep_section5:
+song_metroidQueenBattle_toneSweep_section18:
+;{
+    SongNoteLength $7
+    SongNote $22
+    SongNote $2E
+    SongNote $1A
+    SongNote $28
+    SongEnd
+;}
+
+; $6118
+song_metroidQueenBattle_toneSweep_section27:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $8
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $4
+    SongNote $22
+    SongNote $2E
+    SongNote $1A
+    SongNote $28
+    SongEnd
+;}
+
+; $6122
+song_metroidQueenBattle_tone_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $C
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongRepeatSetup $A
+    SongNoteLength $7
+    SongNote $2C
+    SongNote $38
+    SongNote $24
+    SongNote $32
+    SongRepeat
+    SongEnd
+;}
+
+; $612F
+song_metroidQueenBattle_tone_section1:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $A
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongRepeatSetup $4
+    SongNoteLength $3
+    SongNote $2C
+    SongNote $38
+    SongNote $24
+    SongNote $32
+    SongRepeat
+    SongEnd
+;}
+
+; $613C
+song_metroidQueenBattle_tone_section2:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $8
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $4
+    SongNote $2C
+    SongNote $38
+    SongNote $24
+    SongNote $32
+    SongEnd
+;}
+
+; $6146
+song_metroidQueenBattle_wave_section0:
+;{
+    SongOptions
+        WaveOptions $416B, 2, $0
+    SongRepeatSetup $A
+    SongNoteLength $7
+    SongNote $14
+    SongNote $20
+    SongNote $C
+    SongNote $1A
+    SongRepeat
+    SongEnd
+;}
+
+; $6153
+song_metroidQueenBattle_wave_section1:
+;{
+    SongOptions
+        WaveOptions $416B, 2, $0
+    SongRepeatSetup $4
+    SongNoteLength $3
+    SongNote $2C
+    SongNote $38
+    SongNote $24
+    SongNote $32
+    SongRepeat
+    SongEnd
+;}
+
+; $6160
+song_metroidQueenBattle_wave_section2:
+;{
+    SongNoteLength $3
+    SongNote $4A
+    SongSpecial3
+    SongNote $50
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongNote $48
+    SongSpecial3
+    SongNote $3E
+    SongSpecial3
+    SongNote $40
+    SongNoteLength $1
+    SongNote $52
+    SongSpecial3
+    SongNote $50
+    SongSpecial3
+    SongNote $4C
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongNote $4C
+    SongSpecial3
+    SongNote $50
+    SongSpecial3
+    SongNote $52
+    SongSpecial3
+    SongNote $50
+    SongSpecial3
+    SongNote $4C
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongNote $4C
+    SongSpecial3
+    SongNote $50
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $52
+    SongSpecial3
+    SongNote $42
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $48
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $3E
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongNote $48
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $54
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $2
+    SongNote $4
+    SongNote $8
+    SongNote $A
+    SongNote $10
+    SongNote $12
+    SongNote $16
+    SongNote $18
+    SongNote $1A
+    SongNote $1C
+    SongNote $20
+    SongNote $22
+    SongNote $28
+    SongNote $2A
+    SongNote $2E
+    SongNote $30
+    SongNote $30
+    SongNote $2E
+    SongNote $2A
+    SongNote $28
+    SongNote $22
+    SongNote $20
+    SongNote $1C
+    SongNote $1A
+    SongNote $10
+    SongNote $A
+    SongNote $18
+    SongNote $16
+    SongEnd
+;}
+
+; $61BA
+song_metroidQueenBattle_noise_section0:
+;{
+    SongRepeatSetup $A
+    SongNoteLength $7
+    SongNoteLength $0
+    SongMute
+    SongNoteLength $4
+    SongMute
+    SongRepeat
+    SongEnd
+;}
+
+; $61C3
+song_metroidQueenBattle_noise_section1:
+;{
+    SongRepeatSetup $4
+    SongNoteLength $3
+    SongNote $24
+    SongMute
+    SongNote $34
+    SongMute
+    SongRepeat
+    SongEnd
+;}
+
+; $61CC
+song_metroidQueenBattle_noise_section2:
+;{
+    SongNoteLength $2
+    SongNote $1C
+    SongNoteLength $4
+    SongNoteLength $0
+    SongNoteLength $6
+    SongMute
+    SongNote $68
+    SongEnd
+;}
+
+; $61D4
+song_chozoRuins_clone_header:
+    SongHeader $1, $40DF, song_chozoRuins_clone_toneSweep, song_chozoRuins_clone_tone, song_chozoRuins_clone_wave, $0000
+
+; $61DF
+song_chozoRuins_clone_toneSweep:
+song_chozoRuins_toneSweep:
+;{
+    .loop
+    dw song_chozoRuins_toneSweep_section0 ; $6219
+    dw song_chozoRuins_toneSweep_section1 ; $624C
+    dw song_chozoRuins_toneSweep_section2 ; $6264
+    dw song_chozoRuins_toneSweep_section3 ; $6297
+    dw song_chozoRuins_toneSweep_section4 ; $6219
+    dw song_chozoRuins_toneSweep_section5 ; $629D
+    dw song_chozoRuins_toneSweep_section6 ; $624C
+    dw song_chozoRuins_toneSweep_section7 ; $6264
+    dw song_chozoRuins_toneSweep_section8 ; $62A3
+    dw $00F0, .loop
+;}
+
+; $61F5
+song_chozoRuins_clone_tone:
+song_chozoRuins_tone:
+;{
+    .loop
+    dw song_chozoRuins_tone_section0 ; $62F6
+    dw song_chozoRuins_tone_section1 ; $6328
+    dw song_chozoRuins_tone_section2 ; $6349
+    dw song_chozoRuins_tone_section3 ; $62F6
+    dw song_chozoRuins_tone_section4 ; $6328
+    dw song_chozoRuins_tone_section5 ; $6349
+    dw song_chozoRuins_tone_section6 ; $637A
+    dw $00F0, .loop
+;}
+
+; $6207
+song_chozoRuins_clone_wave:
+song_chozoRuins_wave:
+;{
+    .loop
+    dw song_chozoRuins_wave_section0 ; $63DF
+    dw song_chozoRuins_wave_section1 ; $6412
+    dw song_chozoRuins_wave_section2 ; $6435
+    dw song_chozoRuins_wave_section3 ; $63DF
+    dw song_chozoRuins_wave_section4 ; $6412
+    dw song_chozoRuins_wave_section5 ; $6435
+    dw song_chozoRuins_wave_section6 ; $6467
+    dw $00F0, .loop
+;}
+
+; $6219
+song_chozoRuins_toneSweep_section4:
+song_chozoRuins_toneSweep_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 0, $5
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 2
+    SongNoteLength $3
+    SongMute
+    SongNoteLength $2
+    SongNote $32
+    SongSpecial5
+    SongNote $30
+    SongSpecial5
+    SongNote $2E
+    SongSpecial5
+    SongNoteLength $3
+    SongNote $26
+    SongSpecial5
+    SongNote $28
+    SongSpecial5
+    SongNoteLength $2
+    SongNote $28
+    SongSpecial5
+    SongNote $26
+    SongSpecial5
+    SongNote $20
+    SongSpecial5
+    SongNoteLength $1
+    SongNote $30
+    SongSpecial5
+    SongNote $32
+    SongSpecial5
+    SongNote $48
+    SongSpecial5
+    SongNote $4A
+    SongSpecial5
+    SongNote $18
+    SongSpecial5
+    SongNote $1A
+    SongSpecial5
+    SongNoteLength $3
+    SongNote $30
+    SongSpecial5
+    SongNoteLength $1
+    SongNote $32
+    SongSpecial5
+    SongNote $38
+    SongSpecial5
+    SongNote $3A
+    SongSpecial5
+    SongMute
+    SongMute
+    SongEnd
+;}
+
+; $624C
+song_chozoRuins_toneSweep_section1:
+song_chozoRuins_toneSweep_section6:
+;{
+    SongNoteLength $2
+    SongNote $20
+    SongSpecial5
+    SongNote $26
+    SongSpecial5
+    SongNoteLength $7
+    SongNote $2C
+    SongNote $26
+    SongNoteLength $3
+    SongNote $1A
+    SongNoteLength $2
+    SongNote $1C
+    SongMute
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $18
+    SongNote $1A
+    SongNote $18
+    SongNote $1A
+    SongRepeat
+    SongNoteLength $4
+    SongMute
+    SongEnd
+;}
+
+; $6264
+song_chozoRuins_toneSweep_section7:
+song_chozoRuins_toneSweep_section2:
+;{
+    SongNoteLength $3
+    SongNote $3A
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $32
+    SongSpecial3
+    SongNote $34
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $2C
+    SongSpecial3
+    SongNote $3A
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $32
+    SongSpecial3
+    SongNote $48
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $24
+    SongSpecial3
+    SongNote $30
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $28
+    SongSpecial3
+    SongNote $2E
+    SongSpecial3
+    SongNote $30
+    SongSpecial3
+    SongNote $26
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $24
+    SongSpecial3
+    SongNote $2C
+    SongSpecial3
+    SongNote $28
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $26
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $22
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $1E
+    SongSpecial5
+    SongNoteLength $5
+    SongMute
+    SongEnd
+;}
+
+; $6297
+song_chozoRuins_toneSweep_section3:
+;{
+    SongTranspose $FE
+    SongTempo $40EC
+    SongEnd
+;}
+
+; $629D
+song_chozoRuins_toneSweep_section5:
+;{
+    SongTranspose $0
+    SongTempo $40DF
+    SongEnd
+;}
+
+; $62A3
+song_chozoRuins_toneSweep_section8:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 2, $6
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $C
+    SongNote $16
+    SongNote $C
+    SongNote $16
+    SongNote $10
+    SongNote $18
+    SongNote $10
+    SongNote $18
+    SongNote $C
+    SongNote $14
+    SongNote $C
+    SongNote $14
+    SongNote $10
+    SongNote $8
+    SongNote $10
+    SongNote $8
+    SongNote $10
+    SongNote $8
+    SongNote $C
+    SongNote $4
+    SongNote $C
+    SongNote $4
+    SongNote $C
+    SongNote $4
+    SongRepeat
+    SongOptions
+        DescendingEnvelopeOptions 2, $6
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $1
+    SongNote $3C
+    SongNote $46
+    SongNote $3C
+    SongNote $46
+    SongNote $40
+    SongNote $48
+    SongNote $40
+    SongNote $48
+    SongNote $3C
+    SongNote $44
+    SongNote $3C
+    SongNote $44
+    SongNote $40
+    SongNote $38
+    SongNote $40
+    SongNote $38
+    SongNote $40
+    SongNote $38
+    SongNote $3C
+    SongNote $34
+    SongNote $3C
+    SongNote $34
+    SongNote $3C
+    SongNote $34
+    SongNote $3A
+    SongNote $2E
+    SongNote $36
+    SongNote $2A
+    SongNote $30
+    SongNote $24
+    SongNote $2C
+    SongNote $20
+    SongNote $1A
+    SongNote $18
+    SongNote $12
+    SongNote $2
+    SongOptions
+        DescendingEnvelopeOptions 7, $8
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $5
+    SongNote $62
+    SongMute
+    SongNoteLength $3
+    SongMute
+    SongEnd
+;}
+
+; $62F6
+song_chozoRuins_tone_section0:
+song_chozoRuins_tone_section3:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 0, $5
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 2
+    SongNoteLength $2
+    SongNote $30
+    SongNote $32
+    SongNote $40
+    SongSpecial5
+    SongNote $38
+    SongSpecial5
+    SongNote $3A
+    SongSpecial5
+    SongNoteLength $3
+    SongNote $30
+    SongSpecial5
+    SongNote $32
+    SongSpecial5
+    SongNoteLength $2
+    SongNote $28
+    SongSpecial5
+    SongNote $26
+    SongSpecial5
+    SongNote $20
+    SongSpecial5
+    SongNoteLength $1
+    SongNote $30
+    SongSpecial5
+    SongNote $32
+    SongSpecial5
+    SongNote $48
+    SongSpecial5
+    SongNote $4A
+    SongSpecial5
+    SongNote $18
+    SongSpecial5
+    SongNote $1A
+    SongSpecial5
+    SongNoteLength $3
+    SongNote $30
+    SongSpecial5
+    SongNoteLength $1
+    SongNote $32
+    SongSpecial5
+    SongNote $38
+    SongSpecial5
+    SongNote $3A
+    SongNoteLength $6
+    SongSpecial5
+    SongEnd
+;}
+
+; $6328
+song_chozoRuins_tone_section4:
+song_chozoRuins_tone_section1:
+;{
+    SongNoteLength $2
+    SongNote $32
+    SongSpecial5
+    SongNote $36
+    SongSpecial5
+    SongNoteLength $1
+    SongNote $3C
+    SongSpecial5
+    SongNote $3A
+    SongSpecial5
+    SongNote $32
+    SongSpecial5
+    SongNoteLength $2
+    SongNote $36
+    SongSpecial5
+    SongMute
+    SongNote $26
+    SongSpecial5
+    SongNote $28
+    SongSpecial5
+    SongMute
+    SongNoteLength $1
+    SongNote $26
+    SongSpecial5
+    SongNote $20
+    SongSpecial5
+    SongNote $22
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $1A
+    SongNoteLength $7
+    SongSpecial5
+    SongEnd
+;}
+
+; $6349
+song_chozoRuins_tone_section5:
+song_chozoRuins_tone_section2:
+;{
+    SongNoteLength $2
+    SongNote $40
+    SongNoteLength $7
+    SongSpecial5
+    SongNoteLength $1
+    SongNote $38
+    SongSpecial5
+    SongNote $3A
+    SongSpecial5
+    SongNoteLength $2
+    SongNote $32
+    SongSpecial5
+    SongNoteLength $2
+    SongNote $40
+    SongSpecial5
+    SongNoteLength $1
+    SongNote $38
+    SongSpecial5
+    SongNote $3A
+    SongSpecial5
+    SongNoteLength $2
+    SongNote $32
+    SongSpecial5
+    SongNote $28
+    SongSpecial5
+    SongNoteLength $2
+    SongNote $2E
+    SongSpecial5
+    SongNoteLength $4
+    SongMute
+    SongNoteLength $2
+    SongNote $2C
+    SongSpecial5
+    SongNote $28
+    SongSpecial5
+    SongNoteLength $2
+    SongNote $2E
+    SongNoteLength $3
+    SongSpecial5
+    SongNoteLength $2
+    SongNote $2A
+    SongNoteLength $7
+    SongSpecial5
+    SongNoteLength $7
+    SongNote $2C
+    SongSpecial5
+    SongNoteLength $5
+    SongMute
+    SongEnd
+;}
+
+; $637A
+song_chozoRuins_tone_section6:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 2, $6
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 2
+    SongNoteLength $1
+    SongNote $C
+    SongNote $16
+    SongNote $C
+    SongNote $16
+    SongNote $10
+    SongNote $18
+    SongNote $10
+    SongNote $18
+    SongNote $C
+    SongNote $14
+    SongNote $C
+    SongNote $14
+    SongNote $10
+    SongNote $8
+    SongNote $10
+    SongNote $8
+    SongNote $10
+    SongNote $8
+    SongNote $C
+    SongNote $4
+    SongNote $C
+    SongNote $4
+    SongNote $C
+    SongNote $4
+    SongNoteLength $1
+    SongNote $2C
+    SongNote $32
+    SongNote $2C
+    SongNote $32
+    SongNote $30
+    SongNote $38
+    SongNote $30
+    SongNote $38
+    SongNote $2C
+    SongNote $34
+    SongNote $2C
+    SongNote $34
+    SongNote $30
+    SongNote $2C
+    SongNote $30
+    SongNote $2C
+    SongNote $1A
+    SongNote $3C
+    SongNote $40
+    SongNote $46
+    SongNote $4A
+    SongNote $4E
+    SongNote $54
+    SongNote $58
+    SongNoteLength $1
+    SongNote $2C
+    SongNote $32
+    SongNote $2C
+    SongNote $32
+    SongNote $30
+    SongNote $38
+    SongNote $30
+    SongNote $38
+    SongNote $2C
+    SongNote $34
+    SongNote $2C
+    SongNote $34
+    SongNote $30
+    SongNote $2C
+    SongNote $30
+    SongNote $2C
+    SongNote $34
+    SongNote $32
+    SongNote $3C
+    SongNote $46
+    SongNote $40
+    SongNote $32
+    SongNote $2A
+    SongNote $1E
+    SongNote $1C
+    SongNote $1A
+    SongNote $18
+    SongNote $16
+    SongNote $14
+    SongNote $12
+    SongNote $10
+    SongNote $E
+    SongNote $C
+    SongNote $A
+    SongNote $8
+    SongNote $A
+    SongOptions
+        DescendingEnvelopeOptions 7, $8
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $5
+    SongNote $62
+    SongMute
+    SongNoteLength $3
+    SongMute
+    SongEnd
+;}
+
+; $63DF
+song_chozoRuins_wave_section3:
+song_chozoRuins_wave_section0:
+;{
+    SongOptions
+        WaveOptions $417B, 2, $0
+    SongNoteLength $3
+    SongMute
+    SongNoteLength $2
+    SongNote $32
+    SongSpecial3
+    SongNote $30
+    SongSpecial3
+    SongNote $2E
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $26
+    SongSpecial3
+    SongNote $28
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $28
+    SongSpecial3
+    SongNote $26
+    SongSpecial3
+    SongNote $20
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $30
+    SongSpecial3
+    SongNote $32
+    SongSpecial3
+    SongNote $48
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongNote $18
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $30
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $32
+    SongSpecial3
+    SongNote $38
+    SongSpecial3
+    SongNote $3A
+    SongSpecial3
+    SongMute
+    SongMute
+    SongEnd
+;}
+
+; $6412
+song_chozoRuins_wave_section1:
+song_chozoRuins_wave_section4:
+;{
+    SongNoteLength $2
+    SongNote $32
+    SongSpecial3
+    SongNote $36
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $3C
+    SongSpecial3
+    SongNote $3A
+    SongSpecial3
+    SongNote $32
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $36
+    SongNoteLength $2
+    SongSpecial3
+    SongNote $26
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $28
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $26
+    SongSpecial3
+    SongNote $20
+    SongSpecial3
+    SongNote $22
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $1A
+    SongSpecial3
+    SongNoteLength $3
+    SongMute
+    SongEnd
+;}
+
+; $6435
+song_chozoRuins_wave_section2:
+song_chozoRuins_wave_section5:
+;{
+    SongNoteLength $3
+    SongNote $40
+    SongNoteLength $2
+    SongSpecial3
+    SongMute
+    SongNoteLength $1
+    SongNote $38
+    SongSpecial3
+    SongNote $3A
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $32
+    SongNoteLength $1
+    SongSpecial3
+    SongMute
+    SongNoteLength $2
+    SongNote $40
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $38
+    SongSpecial3
+    SongNote $3A
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $32
+    SongSpecial3
+    SongNote $28
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $2E
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $2C
+    SongSpecial3
+    SongNote $28
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $2E
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $2A
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $2C
+    SongSpecial3
+    SongNoteLength $5
+    SongMute
+    SongNoteLength $3
+    SongMute
+    SongEnd
+;}
+
+; $6467
+song_chozoRuins_wave_section6:
+;{
+    SongNoteLength $8
+    SongMute
+    SongMute
+    SongNoteLength $0
+    SongNote $2C
+    SongSpecial3
+    SongNote $32
+    SongSpecial3
+    SongNote $2C
+    SongSpecial3
+    SongNote $32
+    SongSpecial3
+    SongNote $30
+    SongSpecial3
+    SongNote $38
+    SongSpecial3
+    SongNote $30
+    SongSpecial3
+    SongNote $38
+    SongSpecial3
+    SongNote $2C
+    SongSpecial3
+    SongNote $34
+    SongSpecial3
+    SongNote $2C
+    SongSpecial3
+    SongNote $34
+    SongSpecial3
+    SongNote $30
+    SongSpecial3
+    SongNote $2C
+    SongSpecial3
+    SongNote $30
+    SongSpecial3
+    SongNote $2C
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNote $40
+    SongSpecial3
+    SongNote $46
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongNote $4E
+    SongSpecial3
+    SongNote $54
+    SongSpecial3
+    SongNote $58
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $2C
+    SongSpecial3
+    SongNote $32
+    SongSpecial3
+    SongNote $2C
+    SongSpecial3
+    SongNote $32
+    SongSpecial3
+    SongNote $30
+    SongSpecial3
+    SongNote $38
+    SongSpecial3
+    SongNote $30
+    SongSpecial3
+    SongNote $38
+    SongSpecial3
+    SongNote $2C
+    SongSpecial3
+    SongNote $34
+    SongSpecial3
+    SongNote $2C
+    SongSpecial3
+    SongNote $34
+    SongSpecial3
+    SongNote $30
+    SongSpecial3
+    SongNote $2C
+    SongSpecial3
+    SongNote $30
+    SongSpecial3
+    SongNote $2C
+    SongSpecial3
+    SongNote $34
+    SongSpecial3
+    SongNote $32
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNote $46
+    SongSpecial3
+    SongNote $40
+    SongSpecial3
+    SongNote $32
+    SongSpecial3
+    SongNote $2A
+    SongSpecial3
+    SongNote $1E
+    SongSpecial3
+    SongNote $1C
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $18
+    SongSpecial3
+    SongNote $16
+    SongSpecial3
+    SongNote $14
+    SongSpecial3
+    SongNote $12
+    SongSpecial3
+    SongNote $10
+    SongSpecial3
+    SongNote $E
+    SongSpecial3
+    SongNote $C
+    SongSpecial3
+    SongNote $A
+    SongSpecial3
+    SongNote $8
+    SongSpecial3
+    SongNote $A
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $62
+    SongSpecial3
+    SongNoteLength $7
+    SongMute
+    SongNoteLength $8
+    SongMute
+    SongMute
+    SongEnd
+;}
+
+; $64ED
+song_mainCaves_header:
+    SongHeader $0, $40C5, song_mainCaves_toneSweep, song_mainCaves_tone, song_mainCaves_wave, song_mainCaves_noise
+
+; $64F8
+song_mainCaves_toneSweep:
+;{
+    dw song_mainCaves_toneSweep_section0 ; $6542
+    .alternateEntry
+    dw song_mainCaves_toneSweep_section1 ; $6672
+    .loop
+    dw song_mainCaves_toneSweep_section2 ; $659C
+    dw song_mainCaves_toneSweep_section3 ; $659C
+    dw song_mainCaves_toneSweep_section4 ; $65EB
+    dw song_mainCaves_toneSweep_section5 ; $65EB
+    dw song_mainCaves_toneSweep_section6 ; $65EB
+    dw song_mainCaves_toneSweep_section7 ; $65EB
+    dw song_mainCaves_toneSweep_section8 ; $6550
+    dw song_mainCaves_toneSweep_section9 ; $659C
+    dw song_mainCaves_toneSweep_sectionA ; $659C
+    dw song_mainCaves_toneSweep_sectionB ; $6600
+    dw song_mainCaves_toneSweep_sectionC ; $6600
+    dw song_mainCaves_toneSweep_sectionD ; $6600
+    dw song_mainCaves_toneSweep_sectionE ; $6600
+    dw song_mainCaves_toneSweep_sectionF ; $6550
+    dw $00F0, .loop
+;}
+
+; $651C
+song_mainCaves_tone:
+;{
+    dw song_mainCaves_tone_section0 ; $6615
+    .alternateEntry
+    dw song_mainCaves_tone_section1 ; $6623
+    .loop
+    dw song_mainCaves_tone_section2 ; $6631
+    dw song_mainCaves_tone_section3 ; $6672
+    dw $00F0, .loop
+;}
+
+; $6528
+song_mainCaves_wave:
+;{
+    dw song_mainCaves_wave_section0 ; $669E
+    .loop
+    .alternateEntry
+    dw song_mainCaves_wave_section1 ; $66AC
+    dw song_mainCaves_wave_section2 ; $66DB
+    dw song_mainCaves_wave_section3 ; $676A
+    dw $00F0, .loop
+;}
+
+; $6534
+song_mainCaves_noise:
+;{
+    dw song_mainCaves_noise_section0 ; $67C3
+    .loop
+    .alternateEntry
+    dw song_mainCaves_noise_section1 ; $67C9
+    dw song_mainCaves_noise_section2 ; $67ED
+    dw song_mainCaves_noise_section3 ; $6803
+    dw song_mainCaves_noise_section4 ; $6828
+    dw $00F0, .loop
+;}
+
+; $6542
+song_mainCaves_toneSweep_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 5, $5
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $1
+    SongNote $1A
+    SongNote $24
+    SongNote $44
+    SongNote $46
+    SongNote $4A
+    SongNote $50
+    SongNote $6C
+    SongNote $74
+    SongEnd
+;}
+
+; $6550
+song_mainCaves_toneSweep_section8:
+song_mainCaves_toneSweep_sectionF:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 6, $2
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $2
+    SongNote $4A
+    SongNote $54
+    SongNote $4A
+    SongNote $4A
+    SongNoteLength $3
+    SongNote $54
+    SongNoteLength $2
+    SongNote $4A
+    SongNote $54
+    SongNote $4A
+    SongNote $54
+    SongNote $4A
+    SongNote $4A
+    SongNoteLength $3
+    SongNote $54
+    SongNoteLength $2
+    SongNote $4A
+    SongNote $4A
+    SongNote $46
+    SongNote $50
+    SongNote $46
+    SongNote $46
+    SongNoteLength $3
+    SongNote $50
+    SongNoteLength $2
+    SongNote $46
+    SongNote $50
+    SongNote $46
+    SongNote $50
+    SongNote $46
+    SongNote $46
+    SongNoteLength $2
+    SongNote $50
+    SongNote $46
+    SongNote $50
+    SongNote $50
+    SongNote $4A
+    SongNote $54
+    SongNote $4A
+    SongNote $4A
+    SongNoteLength $3
+    SongNote $54
+    SongNoteLength $2
+    SongNote $4A
+    SongNote $54
+    SongNote $4A
+    SongNote $54
+    SongNote $4A
+    SongNote $4A
+    SongNoteLength $3
+    SongNote $54
+    SongNoteLength $2
+    SongNote $4A
+    SongNote $4A
+    SongNote $46
+    SongNote $50
+    SongNote $46
+    SongNote $46
+    SongNoteLength $3
+    SongNote $46
+    SongNote $16
+    SongNoteLength $2
+    SongNote $24
+    SongNote $2E
+    SongNote $32
+    SongNote $38
+    SongNote $24
+    SongNote $2E
+    SongNote $32
+    SongNote $38
+    SongEnd
+;}
+
+; $659C
+song_mainCaves_toneSweep_section2:
+song_mainCaves_toneSweep_section3:
+song_mainCaves_toneSweep_section9:
+song_mainCaves_toneSweep_sectionA:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 1, $7
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongRepeatSetup $3
+    SongNoteLength $2
+    SongNote $1A
+    SongNote $24
+    SongNote $1A
+    SongNote $1A
+    SongNoteLength $3
+    SongNote $24
+    SongNoteLength $2
+    SongNote $1A
+    SongNote $24
+    SongNote $1A
+    SongNote $24
+    SongNote $1A
+    SongNote $1A
+    SongNoteLength $3
+    SongNote $24
+    SongNoteLength $2
+    SongNote $1A
+    SongNote $1A
+    SongNote $16
+    SongNote $20
+    SongNote $16
+    SongNote $16
+    SongNoteLength $3
+    SongNote $20
+    SongNoteLength $2
+    SongNote $16
+    SongNote $20
+    SongNote $16
+    SongNote $20
+    SongNote $16
+    SongNote $16
+    SongNote $20
+    SongNote $16
+    SongNote $20
+    SongNote $20
+    SongRepeat
+    SongNoteLength $2
+    SongNote $1A
+    SongNote $24
+    SongNote $1A
+    SongNote $1A
+    SongNoteLength $3
+    SongNote $24
+    SongNoteLength $2
+    SongNote $1A
+    SongNote $24
+    SongNote $1A
+    SongNote $24
+    SongNote $1A
+    SongNote $1A
+    SongNoteLength $3
+    SongNote $24
+    SongNoteLength $2
+    SongNote $24
+    SongNote $1A
+    SongNote $16
+    SongNote $20
+    SongNote $16
+    SongNote $16
+    SongNoteLength $3
+    SongNote $16
+    SongNote $16
+    SongNoteLength $2
+    SongNote $24
+    SongNote $2E
+    SongNote $32
+    SongNote $38
+    SongNote $24
+    SongNote $2E
+    SongNote $32
+    SongNote $38
+    SongEnd
+;}
+
+; $65EB
+song_mainCaves_toneSweep_section5:
+song_mainCaves_toneSweep_section6:
+song_mainCaves_toneSweep_section7:
+song_mainCaves_toneSweep_section4:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 3, $6
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongRepeatSetup $4
+    SongNoteLength $2
+    SongNote $1A
+    SongNote $24
+    SongNote $2C
+    SongNote $2E
+    SongRepeat
+    SongRepeatSetup $4
+    SongNoteLength $2
+    SongNote $16
+    SongNote $20
+    SongNote $24
+    SongNote $2E
+    SongRepeat
+    SongEnd
+;}
+
+; $6600
+song_mainCaves_toneSweep_sectionB:
+song_mainCaves_toneSweep_sectionC:
+song_mainCaves_toneSweep_sectionD:
+song_mainCaves_toneSweep_sectionE:
+;{
+    SongOptions
+        AscendingEnvelopeOptions 2, $0
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongRepeatSetup $4
+    SongNoteLength $2
+    SongNote $4A
+    SongNote $54
+    SongNote $5C
+    SongNote $5E
+    SongRepeat
+    SongRepeatSetup $4
+    SongNoteLength $2
+    SongNote $46
+    SongNote $50
+    SongNote $5C
+    SongNote $5E
+    SongRepeat
+    SongEnd
+;}
+
+; $6615
+song_mainCaves_tone_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 5, $7
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $1
+    SongNote $1A
+    SongNote $24
+    SongNote $2C
+    SongNote $2E
+    SongNote $32
+    SongNote $38
+    SongNote $3C
+    SongNote $44
+    SongEnd
+;}
+
+; $6623
+song_mainCaves_tone_section1:
+;{
+    SongOptions
+        AscendingEnvelopeOptions 7, $0
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $5
+    SongNote $24
+    SongSpecial3
+    SongNote $20
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNote $38
+    SongSpecial3
+    SongEnd
+;}
+
+; $6631
+song_mainCaves_tone_section2:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 3, $7
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongRepeatSetup $8
+    SongNoteLength $3
+    SongNote $C
+    SongSpecial3
+    SongNote $C
+    SongSpecial3
+    SongNote $C
+    SongSpecial3
+    SongNote $C
+    SongSpecial3
+    SongNote $8
+    SongSpecial3
+    SongNote $8
+    SongSpecial3
+    SongNote $8
+    SongSpecial3
+    SongNote $8
+    SongSpecial3
+    SongRepeat
+    SongOptions
+        DescendingEnvelopeOptions 2, $2
+        DescendingSweepOptions 4, 6
+        LengthDutyOptions $0, 2
+    SongRepeatSetup $8
+    SongNoteLength $1
+    SongNote $62
+    SongNote $60
+    SongNote $4E
+    SongNote $58
+    SongNote $52
+    SongNote $5C
+    SongNote $60
+    SongNote $54
+    SongNote $5C
+    SongNote $5C
+    SongNote $60
+    SongNote $60
+    SongNote $4A
+    SongNote $4A
+    SongNote $5C
+    SongNote $5C
+    SongNote $52
+    SongNote $52
+    SongNote $5C
+    SongNote $5C
+    SongNote $54
+    SongNote $54
+    SongNote $5C
+    SongNote $5C
+    SongNote $52
+    SongNote $52
+    SongNote $4A
+    SongNote $4A
+    SongNote $5C
+    SongNote $5C
+    SongNote $52
+    SongNote $52
+    SongRepeat
+    SongEnd
+;}
+
+; $6672
+song_mainCaves_toneSweep_section1:
+song_mainCaves_tone_section3:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $4
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $4
+    SongNote $24
+    SongNoteLength $7
+    SongNote $1A
+    SongNote $1A
+    SongNoteLength $3
+    SongNote $1A
+    SongNote $24
+    SongNote $1A
+    SongNoteLength $4
+    SongNote $20
+    SongNoteLength $7
+    SongNote $16
+    SongNote $16
+    SongNoteLength $3
+    SongNote $16
+    SongNote $20
+    SongNote $16
+    SongNoteLength $4
+    SongNote $24
+    SongNoteLength $7
+    SongNote $1A
+    SongNote $1A
+    SongNoteLength $3
+    SongNote $1A
+    SongNote $24
+    SongNote $1A
+    SongNoteLength $4
+    SongNote $20
+    SongNoteLength $7
+    SongNote $16
+    SongNoteLength $2
+    SongNote $16
+    SongNote $C
+    SongNote $16
+    SongNote $1A
+    SongNote $20
+    SongNoteLength $4
+    SongNote $C
+    SongEnd
+;}
+
+; $669E
+song_mainCaves_wave_section0:
+;{
+    SongOptions
+        WaveOptions $417B, 2, $0
+    SongNoteLength $1
+    SongNote $2
+    SongNote $C
+    SongNote $14
+    SongNote $16
+    SongNote $1A
+    SongNote $20
+    SongNote $24
+    SongNote $2C
+    SongEnd
+;}
+
+; $66AC
+song_mainCaves_wave_section1:
+;{
+    SongOptions
+        WaveOptions $417B, 2, $0
+    SongNoteLength $3
+    SongNote $32
+    SongNoteLength $2
+    SongSpecial3
+    SongNote $32
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $5
+    SongMute
+    SongNoteLength $3
+    SongMute
+    SongNote $2E
+    SongNoteLength $2
+    SongSpecial3
+    SongNote $2E
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $5
+    SongMute
+    SongNoteLength $3
+    SongMute
+    SongNote $32
+    SongNoteLength $2
+    SongSpecial3
+    SongNote $32
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $5
+    SongMute
+    SongNoteLength $3
+    SongMute
+    SongNote $2E
+    SongNoteLength $2
+    SongSpecial3
+    SongNote $2E
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $8
+    SongMute
+    SongNoteLength $3
+    SongNote $1A
+    SongSpecial3
+    SongEnd
+;}
+
+; $66DB
+song_mainCaves_wave_section2:
+;{
+    SongOptions
+        WaveOptions $417B, 2, $0
+    SongNoteLength $6
+    SongNote $32
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongSpecial3
+    SongNote $46
+    SongSpecial3
+    SongMute
+    SongNoteLength $6
+    SongNote $44
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongSpecial3
+    SongNote $38
+    SongSpecial3
+    SongMute
+    SongNoteLength $6
+    SongNote $32
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongSpecial3
+    SongNote $46
+    SongSpecial3
+    SongMute
+    SongNoteLength $6
+    SongNote $44
+    SongSpecial3
+    SongNote $46
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $32
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongSpecial3
+    SongNote $46
+    SongSpecial3
+    SongMute
+    SongNoteLength $6
+    SongNote $44
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongSpecial3
+    SongMute
+    SongMute
+    SongMute
+    SongNoteLength $6
+    SongNote $32
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongSpecial3
+    SongNote $46
+    SongSpecial3
+    SongMute
+    SongNoteLength $6
+    SongNote $44
+    SongSpecial3
+    SongNote $46
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $4A
+    SongSpecial3
+    SongNote $50
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $4E
+    SongSpecial3
+    SongRepeatSetup $2
+    SongNoteLength $6
+    SongNote $4A
+    SongSpecial3
+    SongNote $46
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $44
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $3C
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $38
+    SongSpecial3
+    SongNote $40
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $46
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $44
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $4A
+    SongSpecial3
+    SongNote $46
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $44
+    SongSpecial3
+    SongNote $54
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $50
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $4E
+    SongSpecial3
+    SongNote $46
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $4
+    SongMute
+    SongRepeat
+    SongEnd
+;}
+
+; $676A
+song_mainCaves_wave_section3:
+;{
+    SongOptions
+        WaveOptions $417B, 2, $0
+    SongNoteLength $7
+    SongNote $24
+    SongSpecial3
+    SongNote $2E
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $32
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $38
+    SongSpecial3
+    SongNote $36
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $2E
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $24
+    SongSpecial3
+    SongNote $32
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $36
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $38
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $24
+    SongSpecial3
+    SongNote $2C
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $2E
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $32
+    SongSpecial3
+    SongNote $36
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $38
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNote $44
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $46
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $4A
+    SongSpecial3
+    SongNote $50
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $54
+    SongSpecial3
+    SongNote $5C
+    SongSpecial3
+    SongNote $5E
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $62
+    SongSpecial3
+    SongNote $68
+    SongSpecial3
+    SongNote $6C
+    SongSpecial3
+    SongNote $76
+    SongSpecial3
+    SongNote $62
+    SongSpecial3
+    SongNote $68
+    SongSpecial3
+    SongNote $6C
+    SongSpecial3
+    SongNote $74
+    SongSpecial3
+    SongEnd
+;}
+
+; $67C3
+song_mainCaves_noise_section0:
+;{
+    SongRepeatSetup $8
+    SongNoteLength $1
+    SongNote $10
+    SongRepeat
+    SongEnd
+;}
+
+; $67C9
+song_mainCaves_noise_section1:
+;{
+    SongRepeatSetup $3
+    SongNoteLength $2
+    SongNote $90
+    SongNote $C
+    SongNote $4
+    SongNote $94
+    SongNote $4
+    SongNote $4
+    SongNote $C
+    SongNote $4
+    SongNote $4
+    SongNote $4
+    SongNote $C
+    SongNote $4
+    SongNote $90
+    SongNote $C
+    SongNote $4
+    SongNote $C
+    SongRepeat
+    SongNoteLength $2
+    SongNote $90
+    SongNote $4
+    SongNote $C
+    SongNote $90
+    SongNote $4
+    SongNote $4
+    SongNote $C
+    SongNote $4
+    SongNote $14
+    SongNote $10
+    SongNote $14
+    SongNote $10
+    SongNoteLength $4
+    SongNote $1C
+    SongEnd
+;}
+
+; $67ED
+song_mainCaves_noise_section2:
+;{
+    SongRepeatSetup $F
+    SongNoteLength $2
+    SongNote $90
+    SongNote $4
+    SongNote $C
+    SongNote $4
+    SongNote $90
+    SongNote $4
+    SongNote $C
+    SongNote $4
+    SongRepeat
+    SongNoteLength $2
+    SongNote $14
+    SongNote $10
+    SongNote $10
+    SongNote $10
+    SongNote $14
+    SongNote $10
+    SongNote $14
+    SongNote $10
+    SongEnd
+;}
+
+; $6803
+song_mainCaves_noise_section3:
+;{
+    SongRepeatSetup $7
+    SongNoteLength $2
+    SongNote $90
+    SongNote $C
+    SongNote $4
+    SongNote $94
+    SongNote $14
+    SongNote $4
+    SongNote $C
+    SongNote $4
+    SongNote $90
+    SongNote $C
+    SongNote $4
+    SongNote $C
+    SongNote $94
+    SongNote $C
+    SongNote $4
+    SongNote $4
+    SongRepeat
+    SongNote $90
+    SongNote $C
+    SongNote $8
+    SongNote $94
+    SongNote $90
+    SongNote $C
+    SongNote $8
+    SongNote $4
+    SongNote $14
+    SongNote $10
+    SongNote $10
+    SongNote $10
+    SongNote $14
+    SongNote $10
+    SongNote $14
+    SongNote $10
+    SongEnd
+;}
+
+; $6828
+song_mainCaves_noise_section4:
+;{
+    SongRepeatSetup $4
+    SongNoteLength $2
+    SongNote $14
+    SongNote $C
+    SongNote $14
+    SongNote $4
+    SongNote $8
+    SongNote $C
+    SongNote $8
+    SongNote $4
+    SongNote $4
+    SongNote $C
+    SongNote $8
+    SongNote $4
+    SongNote $8
+    SongNoteLength $3
+    SongNote $68
+    SongNoteLength $2
+    SongNote $C
+    SongRepeat
+    SongRepeatSetup $3
+    SongNoteLength $2
+    SongNote $10
+    SongNote $10
+    SongNote $4
+    SongNote $10
+    SongNote $14
+    SongNote $C
+    SongNote $8
+    SongNote $4
+    SongNote $90
+    SongNote $C
+    SongNote $8
+    SongNote $4
+    SongNote $90
+    SongNoteLength $3
+    SongNote $68
+    SongNoteLength $2
+    SongNote $C
+    SongRepeat
+    SongNote $90
+    SongNote $C
+    SongNote $90
+    SongNote $4
+    SongNote $8
+    SongNote $C
+    SongNote $8
+    SongNote $4
+    SongRepeatSetup $8
+    SongNote $14
+    SongRepeat
+    SongEnd
+;}
+
+; $685F
+song_subCaves1_header:
+    SongHeader $0, $40C5, song_subCaves1_toneSweep, song_subCaves1_tone, song_subCaves1_wave, song_subCaves1_noise
+
+; $686A
+song_subCaves1_toneSweep:
+;{
+    dw song_subCaves1_toneSweep_section0 ; $7DA0
+    dw song_subCaves1_toneSweep_section1 ; $7D86
+    .loop
+    .alternateEntry
+    dw song_subCaves1_toneSweep_section2 ; $6880
+    dw $00F0, .loop
+;}
+
+; $6874
+song_subCaves1_tone:
+;{
+    dw song_subCaves1_tone_section0 ; $7DCA
+    dw $0000
+;}
+
+; $6878
+song_subCaves1_wave:
+;{
+    dw song_subCaves1_wave_section0 ; $7DF4
+    dw $0000
+;}
+
+; $687C
+song_subCaves1_noise:
+;{
+    dw song_subCaves1_noise_section0 ; $7E04
+    dw $0000
+;}
+
+; $6880
+song_subCaves1_toneSweep_section2:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $3
+        AscendingSweepOptions 5, 3
+        LengthDutyOptions $0, 2
+    SongNoteLength $1
+    SongNote $58
+    SongNoteLength $1
+    SongNote $5A
+    SongNote $5C
+    SongNote $5E
+    SongNote $60
+    SongNote $62
+    SongNote $64
+    SongNote $66
+    SongNote $68
+    SongNote $6A
+    SongNoteLength $9
+    SongNote $6C
+    SongNote $6E
+    SongNote $70
+    SongNote $72
+    SongNote $74
+    SongNote $76
+    SongNote $78
+    SongNoteLength $5
+    SongNote $7A
+    SongNoteLength $0
+    SongNote $58
+    SongNote $5A
+    SongNote $5C
+    SongNote $5E
+    SongNote $60
+    SongNote $62
+    SongNote $64
+    SongNote $66
+    SongNote $68
+    SongNote $6A
+    SongNoteLength $1
+    SongNote $6C
+    SongNote $6E
+    SongNote $70
+    SongNoteLength $4
+    SongNote $72
+    SongNoteLength $4
+    SongMute
+    SongNoteLength $0
+    SongMute
+    SongNoteLength $0
+    SongNote $72
+    SongNote $74
+    SongNote $76
+    SongNote $78
+    SongNote $7A
+    SongNote $7C
+    SongNoteLength $4
+    SongNote $7E
+    SongNoteLength $9
+    SongNote $64
+    SongNote $6A
+    SongNote $6E
+    SongNote $74
+    SongNoteLength $8
+    SongNote $62
+    SongNoteLength $6
+    SongMute
+    SongNoteLength $9
+    SongNote $7A
+    SongNote $7C
+    SongNote $7E
+    SongNote $80
+    SongNote $82
+    SongNoteLength $5
+    SongNote $84
+    SongNoteLength $A
+    SongMute
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $0
+    SongNote $72
+    SongNote $74
+    SongNote $76
+    SongNote $78
+    SongNote $7A
+    SongNote $7C
+    SongNoteLength $8
+    SongNote $7E
+    SongNoteLength $6
+    SongNote $5A
+    SongNote $5C
+    SongNoteLength $2
+    SongNote $5E
+    SongNote $60
+    SongNote $62
+    SongNoteLength $1
+    SongNote $64
+    SongNote $66
+    SongNoteLength $9
+    SongNote $68
+    SongNote $6A
+    SongNote $6C
+    SongNote $72
+    SongNoteLength $1
+    SongNote $74
+    SongNote $76
+    SongNote $78
+    SongNoteLength $5
+    SongNote $7A
+    SongNoteLength $A
+    SongMute
+    SongEnd
+;}
+
+; $68EE
+song_subCaves2_header:
+    SongHeader $0, $40C5, song_subCaves2_toneSweep, song_subCaves2_tone, song_subCaves2_wave, song_subCaves2_noise
+
+; $68F9
+song_subCaves2_toneSweep:
+;{
+    dw song_subCaves2_toneSweep_section0 ; $7DA0
+    dw song_subCaves2_toneSweep_section1 ; $7D8A
+    dw $0000
+;}
+
+; $68FF
+song_subCaves2_tone:
+;{
+    dw song_subCaves2_tone_section0 ; $7DCA
+    .loop
+    .alternateEntry
+    dw song_subCaves2_tone_section1 ; $6911
+    dw $00F0, .loop
+;}
+
+ds $2, $00
+; $6909
+song_subCaves2_wave:
+;{
+    dw song_subCaves2_wave_section0 ; $7DF4
+    dw $0000
+;}
+
+; $690D
+song_subCaves2_noise:
+;{
+    dw song_subCaves2_noise_section0 ; $7E04
+    dw $0000
+;}
+
+; $6911
+song_subCaves2_tone_section1:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $4
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $7, 0
+    SongNoteLength $8
+    SongMute
+    SongMute
+    SongNoteLength $0
+    SongNote $70
+    SongNote $6A
+    SongNote $74
+    SongNote $78
+    SongNote $6C
+    SongNote $6A
+    SongNote $74
+    SongNote $66
+    SongNoteLength $1
+    SongNote $7A
+    SongNote $78
+    SongNote $74
+    SongNote $78
+    SongNote $6C
+    SongNoteLength $5
+    SongMute
+    SongNoteLength $1
+    SongNote $7A
+    SongNote $78
+    SongNote $66
+    SongNote $70
+    SongNote $6A
+    SongNote $74
+    SongNote $78
+    SongNote $6C
+    SongNoteLength $5
+    SongMute
+    SongNoteLength $8
+    SongMute
+    SongNoteLength $0
+    SongNote $7A
+    SongNote $78
+    SongNote $66
+    SongNote $70
+    SongNote $6A
+    SongNote $74
+    SongNote $78
+    SongNote $6C
+    SongNoteLength $5
+    SongMute
+    SongNoteLength $7
+    SongMute
+    SongNoteLength $1
+    SongNote $7A
+    SongNote $78
+    SongNote $66
+    SongNote $70
+    SongNote $6A
+    SongNote $74
+    SongNote $78
+    SongNote $6C
+    SongNoteLength $5
+    SongMute
+    SongMute
+    SongNoteLength $3
+    SongMute
+    SongNoteLength $1
+    SongNote $78
+    SongNote $66
+    SongNote $7A
+    SongMute
+    SongMute
+    SongNote $78
+    SongNote $66
+    SongNote $70
+    SongNote $6A
+    SongNote $74
+    SongNote $70
+    SongNoteLength $6
+    SongMute
+    SongNoteLength $1
+    SongNote $6A
+    SongNote $6C
+    SongNote $6E
+    SongNote $70
+    SongNote $74
+    SongNoteLength $3
+    SongMute
+    SongNoteLength $1
+    SongNote $7A
+    SongNote $6A
+    SongNote $62
+    SongNote $58
+    SongNote $6C
+    SongNoteLength $8
+    SongMute
+    SongMute
+    SongMute
+    SongMute
+    SongNoteLength $1
+    SongNote $78
+    SongNote $66
+    SongNote $7A
+    SongNote $78
+    SongNote $66
+    SongNote $70
+    SongNote $6A
+    SongNote $74
+    SongNote $70
+    SongNote $6A
+    SongNoteLength $8
+    SongMute
+    SongMute
+    SongNoteLength $1
+    SongNote $62
+    SongNote $7A
+    SongNote $78
+    SongNote $66
+    SongNoteLength $5
+    SongMute
+    SongEnd
+;}
+
+; $6988
+song_subCaves3_header:
+    SongHeader $0, $40C5, song_subCaves3_toneSweep, song_subCaves3_tone, song_subCaves3_wave, song_subCaves3_noise
+
+; $6993
+song_subCaves3_toneSweep:
+;{
+    dw song_subCaves3_toneSweep_section0 ; $7DA0
+    dw song_subCaves3_toneSweep_section1 ; $7D7E
+    .loop
+    .alternateEntry
+    dw song_subCaves3_toneSweep_section2 ; $69B1
+    dw $00F0, .loop
+;}
+
+; $699D
+song_subCaves3_tone:
+;{
+    dw song_subCaves3_tone_section0 ; $7DCA
+    .loop
+    .alternateEntry
+    dw song_subCaves3_tone_section1 ; $69E2
+    dw $00F0, .loop
+;}
+
+; $69A5
+song_subCaves3_wave:
+;{
+    dw song_subCaves3_wave_section0 ; $7DF4
+    .loop
+    .alternateEntry
+    dw song_subCaves3_wave_section1 ; $6A92
+    dw $00F0, .loop
+;}
+
+; $69AD
+song_subCaves3_noise:
+;{
+    dw song_subCaves3_noise_section0 ; $7E04
+    dw $0000
+;}
+
+; $69B1
+song_subCaves3_toneSweep_section2:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $5
+        AscendingSweepOptions 5, 1
+        LengthDutyOptions $0, 2
+    SongRepeatSetup $A
+    SongNoteLength $1
+    SongNote $7A
+    SongNote $78
+    SongNote $66
+    SongNote $70
+    SongNote $6A
+    SongNote $74
+    SongNote $78
+    SongNote $6C
+    SongRepeat
+    SongNoteLength $5
+    SongMute
+    SongMute
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $7A
+    SongNote $78
+    SongNote $66
+    SongNote $70
+    SongNote $6A
+    SongNote $74
+    SongNote $78
+    SongNote $6C
+    SongRepeat
+    SongNoteLength $5
+    SongMute
+    SongRepeatSetup $16
+    SongNoteLength $1
+    SongNote $7E
+    SongNote $78
+    SongNote $6C
+    SongNote $72
+    SongNote $6A
+    SongNote $76
+    SongNote $78
+    SongNote $62
+    SongRepeat
+    SongNoteLength $C
+    SongMute
+    SongMute
+    SongEnd
+;}
+
+; $69E2
+song_subCaves3_tone_section1:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $3
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $7, 0
+    SongNoteLength $5
+    SongMute
+    SongMute
+    SongNoteLength $1
+    SongNote $4
+    SongNote $18
+    SongNote $1C
+    SongNote $30
+    SongNote $34
+    SongNote $48
+    SongNote $4C
+    SongNote $60
+    SongNote $64
+    SongNote $78
+    SongNote $7C
+    SongNote $90
+    SongRepeatSetup $4
+    SongNote $62
+    SongNote $64
+    SongNote $62
+    SongNote $64
+    SongNote $62
+    SongNote $64
+    SongNote $62
+    SongNote $64
+    SongNoteLength $C
+    SongMute
+    SongMute
+    SongNoteLength $1
+    SongNote $4
+    SongNote $C
+    SongNote $10
+    SongNote $18
+    SongNote $1C
+    SongNote $24
+    SongNote $28
+    SongNote $30
+    SongNote $34
+    SongNote $3C
+    SongNote $40
+    SongNote $48
+    SongNote $4C
+    SongNote $54
+    SongNote $58
+    SongNote $60
+    SongNote $64
+    SongNote $6C
+    SongNote $70
+    SongNote $78
+    SongNote $7C
+    SongNote $84
+    SongNote $88
+    SongNote $90
+    SongNote $7A
+    SongNote $7C
+    SongNote $62
+    SongNote $64
+    SongNote $4A
+    SongNote $4C
+    SongNote $32
+    SongNote $34
+    SongNote $1A
+    SongNote $1C
+    SongNote $2
+    SongNote $4
+    SongNoteLength $C
+    SongMute
+    SongMute
+    SongMute
+    SongNoteLength $1
+    SongNote $84
+    SongNote $84
+    SongNote $C
+    SongNote $E
+    SongNote $6C
+    SongNote $6E
+    SongNote $24
+    SongNote $26
+    SongNote $54
+    SongNote $56
+    SongNote $3C
+    SongNote $3E
+    SongNote $3C
+    SongNote $88
+    SongNote $90
+    SongNote $10
+    SongNote $18
+    SongNote $70
+    SongNote $78
+    SongNote $28
+    SongNote $30
+    SongNote $58
+    SongNote $60
+    SongNote $40
+    SongNote $48
+    SongNote $40
+    SongNote $48
+    SongNote $40
+    SongNote $7E
+    SongNote $7C
+    SongNote $6
+    SongNote $4
+    SongNote $66
+    SongNote $62
+    SongNote $1E
+    SongNote $1C
+    SongNote $4E
+    SongNote $4C
+    SongNote $36
+    SongNote $34
+    SongNote $36
+    SongNote $34
+    SongNote $34
+    SongNote $36
+    SongNote $34
+    SongNote $7A
+    SongNote $7C
+    SongNote $70
+    SongNote $62
+    SongNote $64
+    SongNote $58
+    SongNote $4A
+    SongNote $4C
+    SongNote $40
+    SongNote $32
+    SongNote $34
+    SongNote $28
+    SongNote $1A
+    SongNote $1C
+    SongNote $10
+    SongNote $2
+    SongNote $4
+    SongNoteLength $C
+    SongMute
+    SongOptions
+        DescendingEnvelopeOptions 7, $4
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $2, 2
+    SongNoteLength $0
+    SongNote $88
+    SongNote $84
+    SongNote $7A
+    SongNote $78
+    SongNote $70
+    SongNote $6C
+    SongNote $62
+    SongNote $60
+    SongNote $58
+    SongNote $54
+    SongNote $4A
+    SongNote $48
+    SongNote $40
+    SongNote $3C
+    SongNote $32
+    SongNote $30
+    SongNote $28
+    SongNote $24
+    SongNote $1A
+    SongNote $18
+    SongNote $10
+    SongNote $C
+    SongNote $2
+    SongNoteLength $5
+    SongNote $78
+    SongMute
+    SongMute
+    SongNote $78
+    SongNoteLength $C
+    SongMute
+    SongMute
+    SongEnd
+;}
+
+; $6A92
+song_subCaves3_wave_section1:
+;{
+    SongOptions
+        WaveOptions $418B, 3, $3
+    SongNoteLength $8
+    SongRepeatSetup $6
+    SongNote $30
+    SongRepeat
+    SongRepeatSetup $6
+    SongNote $32
+    SongRepeat
+    SongRepeatSetup $6
+    SongNote $34
+    SongRepeat
+    SongRepeatSetup $6
+    SongNote $36
+    SongRepeat
+    SongRepeatSetup $6
+    SongNote $38
+    SongRepeat
+    SongRepeatSetup $6
+    SongNote $3A
+    SongRepeat
+    SongRepeatSetup $6
+    SongNote $3C
+    SongRepeat
+    SongRepeatSetup $6
+    SongNote $3E
+    SongRepeat
+    SongRepeatSetup $6
+    SongNote $40
+    SongRepeat
+    SongRepeatSetup $6
+    SongNote $3E
+    SongRepeat
+    SongRepeatSetup $6
+    SongNote $3C
+    SongRepeat
+    SongRepeatSetup $6
+    SongNote $3A
+    SongRepeat
+    SongRepeatSetup $6
+    SongNote $38
+    SongRepeat
+    SongRepeatSetup $6
+    SongNote $36
+    SongRepeat
+    SongRepeatSetup $6
+    SongNote $34
+    SongRepeat
+    SongRepeatSetup $6
+    SongNote $32
+    SongRepeat
+    SongRepeatSetup $6
+    SongNote $30
+    SongRepeat
+    SongRepeatSetup $6
+    SongNote $2E
+    SongRepeat
+    SongNoteLength $5
+    SongMute
+    SongEnd
+;}
+
+; $6AE2
+song_finalCaves_clone_header:
+    SongHeader $1, $40B8, song_finalCaves_clone_toneSweep, song_finalCaves_clone_tone, song_finalCaves_clone_wave, song_finalCaves_clone_noise
+
+; $6AED
+song_finalCaves_clone_toneSweep:
+song_finalCaves_toneSweep:
+;{
+    .loop
+    dw song_finalCaves_toneSweep_section0 ; $6B05
+    dw $00F0, .loop
+;}
+
+; $6AF3
+song_finalCaves_clone_tone:
+song_finalCaves_tone:
+;{
+    .loop
+    dw song_finalCaves_tone_section0 ; $6B15
+    dw $00F0, .loop
+;}
+
+; $6AF9
+song_finalCaves_clone_wave:
+song_finalCaves_wave:
+;{
+    .loop
+    dw song_finalCaves_wave_section0 ; $6B25
+    dw $00F0, .loop
+;}
+
+; $6AFF
+song_finalCaves_clone_noise:
+song_finalCaves_noise:
+;{
+    .loop
+    dw song_finalCaves_noise_section0 ; $6BBA
+    dw $00F0, .loop
+;}
+
+; $6B05
+song_finalCaves_toneSweep_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 3, $C
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $3
+    SongNote $1A
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $1A
+    SongSpecial3
+    SongSpecial3
+    SongNoteLength $C
+    SongSpecial5
+    SongMute
+    SongMute
+    SongEnd
+;}
+
+; $6B15
+song_finalCaves_tone_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 4, $C
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $A, 0
+    SongNoteLength $3
+    SongNote $2
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $2
+    SongSpecial3
+    SongSpecial3
+    SongNoteLength $C
+    SongSpecial5
+    SongMute
+    SongMute
+    SongEnd
+;}
+
+; $6B25
+song_finalCaves_wave_section0:
+;{
+    SongOptions
+        WaveOptions $417B, 2, $4
+    SongRepeatSetup $5
+    SongNoteLength $C
+    SongMute
+    SongMute
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $5
+    SongMute
+    SongNoteLength $1
+    SongNote $22
+    SongSpecial3
+    SongNote $24
+    SongSpecial3
+    SongNote $30
+    SongSpecial3
+    SongNote $2E
+    SongSpecial3
+    SongNoteLength $4
+    SongNote $2C
+    SongSpecial3
+    SongMute
+    SongNote $40
+    SongNoteLength $3
+    SongSpecial3
+    SongMute
+    SongNoteLength $1
+    SongNote $20
+    SongSpecial3
+    SongNote $2C
+    SongSpecial3
+    SongNoteLength $4
+    SongNote $34
+    SongNoteLength $3
+    SongSpecial3
+    SongMute
+    SongNoteLength $1
+    SongNote $32
+    SongSpecial3
+    SongNote $30
+    SongSpecial3
+    SongNoteLength $5
+    SongNote $24
+    SongSpecial3
+    SongMute
+    SongNoteLength $C
+    SongMute
+    SongNoteLength $1
+    SongNote $20
+    SongSpecial3
+    SongNote $22
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $2E
+    SongSpecial3
+    SongNote $2C
+    SongSpecial3
+    SongNoteLength $4
+    SongNote $26
+    SongSpecial3
+    SongMute
+    SongMute
+    SongNoteLength $2
+    SongNote $1E
+    SongSpecial3
+    SongNote $20
+    SongSpecial3
+    SongNote $28
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $18
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $1C
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $10
+    SongSpecial3
+    SongNote $14
+    SongSpecial3
+    SongNote $C
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $2
+    SongSpecial3
+    SongNote $E
+    SongSpecial3
+    SongNote $18
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $24
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $30
+    SongSpecial3
+    SongNote $2E
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $32
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $40
+    SongSpecial3
+    SongNote $42
+    SongSpecial3
+    SongNote $3A
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNote $38
+    SongSpecial3
+    SongNote $40
+    SongSpecial3
+    SongNote $30
+    SongSpecial3
+    SongNoteLength $4
+    SongNote $28
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $2A
+    SongSpecial3
+    SongMute
+    SongNoteLength $1
+    SongNote $28
+    SongSpecial3
+    SongNote $26
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $14
+    SongSpecial3
+    SongNote $E
+    SongSpecial3
+    SongNoteLength $4
+    SongNote $1A
+    SongSpecial3
+    SongRepeat
+    SongRepeatSetup $8
+    SongNoteLength $C
+    SongMute
+    SongRepeat
+    SongEnd
+;}
+
+; $6BBA
+song_finalCaves_noise_section0:
+;{
+    SongNoteLength $4
+    SongNote $74
+    SongNoteLength $2
+    SongMute
+    SongNoteLength $7
+    SongNote $78
+    SongNoteLength $2
+    SongMute
+    SongEnd
+;}
+
+; $6BC3
+song_metroidHive_clone_header:
+    SongHeader $FE, $40DF, $0000, song_metroidHive_clone_tone, song_metroidHive_clone_wave, song_metroidHive_clone_noise
+
+; $6BCE
+song_metroidHive_withIntro_toneSweep_loop:
+;{
+    .loop
+    dw song_metroidHive_withIntro_toneSweep_loop_section0 ; $6C00
+    dw song_metroidHive_withIntro_toneSweep_loop_section1 ; $6C00
+    dw song_metroidHive_withIntro_toneSweep_loop_section2 ; $6C5F
+    dw song_metroidHive_withIntro_toneSweep_loop_section3 ; $6C00
+    dw song_metroidHive_withIntro_toneSweep_loop_section4 ; $6C5F
+    dw song_metroidHive_withIntro_toneSweep_loop_section5 ; $6C5F
+    dw song_metroidHive_withIntro_toneSweep_loop_section6 ; $6C00
+    dw $00F0, .loop
+;}
+
+; $6BE0
+song_metroidHive_clone_tone:
+song_metroidHive_tone:
+;{
+    .loop
+    dw song_metroidHive_tone_section0 ; $6C5A
+    dw song_metroidHive_tone_section1 ; $6C04
+    dw song_metroidHive_tone_section2 ; $6C04
+    dw song_metroidHive_tone_section3 ; $6C5F
+    dw song_metroidHive_tone_section4 ; $6C04
+    dw song_metroidHive_tone_section5 ; $6C5F
+    dw song_metroidHive_tone_section6 ; $6C5F
+    dw song_metroidHive_tone_section7 ; $6C04
+    dw $00F0, .loop
+;}
+
+; $6BF4
+song_metroidHive_clone_wave:
+song_metroidHive_wave:
+;{
+    .loop
+    dw song_metroidHive_wave_section0 ; $6C65
+    dw $00F0, .loop
+;}
+
+; $6BFA
+song_metroidHive_clone_noise:
+song_metroidHive_noise:
+;{
+    .loop
+    dw song_metroidHive_noise_section0 ; $6C85
+    dw $00F0, .loop
+;}
+
+; $6C00
+song_metroidHive_withIntro_toneSweep_loop_section0:
+song_metroidHive_withIntro_toneSweep_loop_section6:
+song_metroidHive_withIntro_toneSweep_loop_section1:
+song_metroidHive_withIntro_toneSweep_loop_section3:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 1, $6
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $9, 1
+;}
+
+; $6C04
+song_metroidHive_tone_section4:
+song_metroidHive_tone_section1:
+song_metroidHive_tone_section7:
+song_metroidHive_tone_section2:
+;{
+    SongRepeatSetup $2
+    SongNoteLength $9
+    SongNote $78
+    SongSpecial5
+    SongSpecial3
+    SongNote $68
+    SongSpecial5
+    SongSpecial3
+    SongNote $6C
+    SongSpecial5
+    SongSpecial3
+    SongNote $64
+    SongSpecial5
+    SongSpecial3
+    SongNote $68
+    SongSpecial5
+    SongSpecial3
+    SongNote $70
+    SongSpecial5
+    SongSpecial3
+    SongRepeat
+    SongRepeatSetup $2
+    SongNote $74
+    SongSpecial5
+    SongSpecial3
+    SongNote $68
+    SongSpecial5
+    SongSpecial3
+    SongNote $6C
+    SongSpecial5
+    SongSpecial3
+    SongNote $64
+    SongSpecial5
+    SongSpecial3
+    SongNote $68
+    SongSpecial5
+    SongSpecial3
+    SongNote $60
+    SongSpecial5
+    SongSpecial3
+    SongRepeat
+    SongRepeatSetup $2
+    SongNote $70
+    SongSpecial5
+    SongSpecial3
+    SongNote $60
+    SongSpecial5
+    SongSpecial3
+    SongNote $64
+    SongSpecial5
+    SongSpecial3
+    SongNote $6C
+    SongSpecial5
+    SongSpecial3
+    SongNote $70
+    SongSpecial5
+    SongSpecial3
+    SongNote $78
+    SongSpecial5
+    SongSpecial3
+    SongRepeat
+    SongRepeatSetup $2
+    SongNote $6C
+    SongSpecial5
+    SongSpecial3
+    SongNote $60
+    SongSpecial5
+    SongSpecial3
+    SongNote $64
+    SongSpecial5
+    SongSpecial3
+    SongNote $5C
+    SongSpecial5
+    SongSpecial3
+    SongNote $60
+    SongSpecial5
+    SongSpecial3
+    SongNote $68
+    SongSpecial5
+    SongSpecial3
+    SongRepeat
+    SongEnd
+;}
+
+; $6C5A
+song_metroidHive_tone_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 1, $6
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongEnd
+;}
+
+; $6C5F
+song_metroidHive_withIntro_toneSweep_loop_section4:
+song_metroidHive_tone_section5:
+song_metroidHive_withIntro_toneSweep_loop_section2:
+song_metroidHive_tone_section3:
+song_metroidHive_withIntro_toneSweep_loop_section5:
+song_metroidHive_tone_section6:
+;{
+    SongRepeatSetup $6
+    SongNoteLength $5
+    SongMute
+    SongRepeat
+    SongEnd
+;}
+
+; $6C65
+song_metroidHive_wave_section0:
+;{
+    SongOptions
+        WaveOptions $417B, 2, $0
+    SongRepeatSetup $A
+    SongNoteLength $5
+    SongNote $18
+    SongNoteLength $7
+    SongNote $24
+    SongNoteLength $5
+    SongNote $20
+    SongNote $14
+    SongNote $C
+    SongNoteLength $7
+    SongNote $1C
+    SongNoteLength $5
+    SongNote $14
+    SongNote $C
+    SongNote $1A
+    SongRepeat
+    SongNoteLength $8
+    SongNote $18
+    SongNoteLength $5
+    SongNote $16
+    SongNoteLength $4
+    SongNote $14
+    SongNoteLength $5
+    SongNote $12
+    SongNote $24
+    SongNote $14
+    SongEnd
+;}
+
+; $6C85
+song_metroidHive_noise_section0:
+;{
+    SongNoteLength $6
+    SongNote $74
+    SongNoteLength $0
+    SongMute
+    SongNoteLength $6
+    SongNote $78
+    SongNoteLength $1
+    SongMute
+    SongEnd
+;}
+
+; $6C8E
+song_itemGet_clone_header:
+    SongHeader $B, $40C5, song_itemGet_clone_toneSweep, song_itemGet_clone_tone, song_itemGet_clone_wave, song_itemGet_clone_noise
+
+; $6C99
+song_itemGet_clone_toneSweep:
+song_itemGet_toneSweep:
+;{
+    dw song_itemGet_toneSweep_section0 ; $6CA9
+    dw $0000
+;}
+
+; $6C9D
+song_itemGet_clone_tone:
+song_itemGet_tone:
+;{
+    dw song_itemGet_tone_section0 ; $6CEE
+    dw $0000
+;}
+
+; $6CA1
+song_itemGet_clone_wave:
+song_itemGet_wave:
+;{
+    dw song_itemGet_wave_section0 ; $6D1D
+    dw $0000
+;}
+
+; $6CA5
+song_itemGet_clone_noise:
+song_itemGet_noise:
+;{
+    dw song_itemGet_noise_section0 ; $6D46
+    dw $0000
+;}
+
+; $6CA9
+song_itemGet_toneSweep_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 1, $A
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $1
+    SongNote $74
+    SongNote $76
+    SongNote $74
+    SongNote $76
+    SongOptions
+        DescendingEnvelopeOptions 0, $8
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 2
+    SongNoteLength $2
+    SongNote $32
+    SongNoteLength $7
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $2C
+    SongNoteLength $7
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $28
+    SongSpecial3
+    SongNote $22
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $22
+    SongSpecial3
+    SongNote $36
+    SongSpecial3
+    SongNote $2E
+    SongSpecial3
+    SongNote $28
+    SongNoteLength $6
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $20
+    SongSpecial3
+    SongOptions
+        AscendingEnvelopeOptions 5, $0
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 2
+    SongNoteLength $7
+    SongNote $22
+    SongNoteLength $3
+    SongSpecial3
+    SongOptions
+        DescendingEnvelopeOptions 1, $8
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongRepeatSetup $4
+    SongNoteLength $1
+    SongNote $7A
+    SongNote $82
+    SongRepeat
+    SongOptions
+        DescendingEnvelopeOptions 1, $4
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongRepeatSetup $6
+    SongNoteLength $1
+    SongNote $7A
+    SongNote $82
+    SongRepeat
+    SongEnd
+;}
+
+; $6CEE
+song_itemGet_tone_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 0, $F
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 2
+    SongNoteLength $B
+    SongMute
+    SongNoteLength $3
+    SongMute
+    SongNoteLength $2
+    SongNote $3C
+    SongSpecial3
+    SongNote $46
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongNote $4E
+    SongSpecial3
+    SongNote $52
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongNote $40
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongNote $54
+    SongSpecial3
+    SongNote $4E
+    SongSpecial3
+    SongNote $46
+    SongNoteLength $6
+    SongSpecial3
+    SongNote $40
+    SongSpecial3
+    SongOptions
+        AscendingEnvelopeOptions 3, $0
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 2
+    SongNoteLength $7
+    SongNote $44
+    SongOptions
+        DescendingEnvelopeOptions 6, $B
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 2
+    SongNoteLength $5
+    SongNote $44
+    SongEnd
+;}
+
+; $6D1D
+song_itemGet_wave_section0:
+;{
+    SongOptions
+        WaveOptions $4123, 1, $0
+    SongNoteLength $3
+    SongMute
+    SongNoteLength $2
+    SongNote $54
+    SongSpecial5
+    SongNote $5E
+    SongSpecial5
+    SongNote $62
+    SongSpecial5
+    SongNote $66
+    SongSpecial5
+    SongNote $6A
+    SongSpecial5
+    SongNote $62
+    SongSpecial5
+    SongNote $58
+    SongSpecial5
+    SongNote $62
+    SongSpecial5
+    SongNote $6C
+    SongSpecial5
+    SongNote $66
+    SongSpecial5
+    SongNote $5E
+    SongNoteLength $6
+    SongSpecial5
+    SongNoteLength $2
+    SongNote $58
+    SongNoteLength $6
+    SongSpecial5
+    SongSpecial3
+    SongNoteLength $4
+    SongNote $5C
+    SongNoteLength $3
+    SongSpecial5
+    SongSpecial3
+    SongEnd
+;}
+
+; $6D46
+song_itemGet_noise_section0:
+;{
+    SongNoteLength $7
+    SongNote $68
+    SongNoteLength $5
+    SongNote $6C
+    SongMute
+    SongMute
+    SongNoteLength $7
+    SongNote $68
+    SongNoteLength $C
+    SongNote $6C
+    SongEnd
+;}
+
+; $6D51
+song_metroidQueenHallway_clone_header:
+    SongHeader $1, $40D2, song_metroidQueenHallway_clone_toneSweep, song_metroidQueenHallway_clone_tone, song_metroidQueenHallway_clone_wave, song_metroidQueenHallway_clone_noise
+
+; $6D5C
+song_metroidQueenHallway_clone_tone:
+song_metroidQueenHallway_clone_toneSweep:
+song_metroidQueenHallway_tone:
+song_metroidQueenHallway_toneSweep:
+;{
+    dw song_metroidQueenHallway_toneSweep_section0 ; $6D70
+    .loop
+    dw song_metroidQueenHallway_toneSweep_section1 ; $6D7B
+    dw $00F0, .loop
+;}
+
+; $6D64
+song_metroidQueenHallway_clone_wave:
+song_metroidQueenHallway_wave:
+;{
+    .loop
+    dw song_metroidQueenHallway_wave_section0 ; $6D77
+    dw $00F0, .loop
+;}
+
+; $6D6A
+song_metroidQueenHallway_clone_noise:
+song_metroidQueenHallway_noise:
+;{
+    .loop
+    dw song_metroidQueenHallway_noise_section0 ; $6D82
+    dw $00F0, .loop
+;}
+
+; $6D70
+song_metroidQueenHallway_toneSweep_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 0, $9
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $0
+    SongMute
+    SongEnd
+;}
+
+; $6D77
+song_metroidQueenHallway_wave_section0:
+;{
+    SongOptions
+        WaveOptions $416B, 2, $0
+;}
+
+; $6D7B
+song_metroidQueenHallway_toneSweep_section1:
+;{
+    SongRepeatSetup $3
+    SongNoteLength $3
+    SongNote $14
+    SongSpecial3
+    SongRepeat
+    SongEnd
+;}
+
+; $6D82
+song_metroidQueenHallway_noise_section0:
+;{
+    SongNoteLength $6
+    SongNote $74
+    SongNoteLength $0
+    SongMute
+    SongNoteLength $6
+    SongNote $78
+    SongNoteLength $1
+    SongMute
+    SongEnd
+;}
+
+; $6D8B
+song_metroidBattle_clone_header:
+    SongHeader $0, $40C5, song_metroidBattle_clone_toneSweep, song_metroidBattle_clone_tone, song_metroidBattle_clone_wave, song_metroidBattle_clone_noise
+
+; $6D96
+song_metroidBattle_clone_toneSweep:
+song_metroidBattle_toneSweep:
+;{
+    dw song_metroidBattle_toneSweep_section0 ; $6DB8
+    dw song_metroidBattle_toneSweep_section1 ; $7D7E
+    .loop
+    dw song_metroidBattle_toneSweep_section2 ; $6DC6
+    dw $00F0, .loop
+;}
+
+; $6DA0
+song_metroidBattle_clone_tone:
+song_metroidBattle_tone:
+;{
+    dw song_metroidBattle_tone_section0 ; $6E0D
+    .loop
+    dw song_metroidBattle_tone_section1 ; $6E29
+    dw $00F0, .loop
+;}
+
+; $6DA8
+song_metroidBattle_clone_wave:
+song_metroidBattle_wave:
+;{
+    dw song_metroidBattle_wave_section0 ; $6E68
+    .loop
+    dw song_metroidBattle_wave_section1 ; $6E77
+    dw $00F0, .loop
+;}
+
+; $6DB0
+song_metroidBattle_clone_noise:
+song_metroidBattle_noise:
+;{
+    dw song_metroidBattle_noise_section0 ; $6EA3
+    .loop
+    dw song_metroidBattle_noise_section1 ; $6EB2
+    dw $00F0, .loop
+;}
+
+; $6DB8
+song_metroidBattle_toneSweep_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 0, $A
+        AscendingSweepOptions 7, 1
+        LengthDutyOptions $6, 0
+    SongNoteLength $5
+    SongNote $E
+    SongNoteLength $2
+    SongNote $34
+    SongNote $38
+    SongNote $42
+    SongNote $4A
+    SongNote $56
+    SongNote $5E
+    SongEnd
+;}
+
+; $6DC6
+song_metroidBattle_toneSweep_section2:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $8
+        DescendingSweepOptions 7, 7
+        LengthDutyOptions $0, 0
+    SongNoteLength $2
+    SongNote $1A
+    SongMute
+    SongNote $1C
+    SongMute
+    SongNote $1E
+    SongMute
+    SongNote $20
+    SongMute
+    SongNote $22
+    SongMute
+    SongNote $24
+    SongOptions
+        DescendingEnvelopeOptions 7, $6
+        AscendingSweepOptions 4, 3
+        LengthDutyOptions $0, 0
+    SongNoteLength $1
+    SongNote $28
+    SongRepeatSetup $3
+    SongNoteLength $2
+    SongNote $32
+    SongMute
+    SongNote $36
+    SongMute
+    SongNote $30
+    SongMute
+    SongNote $2E
+    SongMute
+    SongRepeat
+    SongOptions
+        DescendingEnvelopeOptions 3, $8
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $1
+    SongNote $4A
+    SongNote $60
+    SongNote $4A
+    SongNote $60
+    SongNoteLength $3
+    SongNote $4A
+    SongNoteLength $1
+    SongNote $4A
+    SongNote $60
+    SongNote $4A
+    SongOptions
+        DescendingEnvelopeOptions 1, $D
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $8, 0
+    SongNoteLength $3
+    SongNote $58
+    SongNoteLength $1
+    SongMute
+    SongOptions
+        DescendingEnvelopeOptions 7, $6
+        AscendingSweepOptions 7, 7
+        LengthDutyOptions $0, 0
+    SongNoteLength $2
+    SongNote $22
+    SongMute
+    SongNote $20
+    SongMute
+    SongNote $1E
+    SongMute
+    SongNote $1C
+    SongMute
+    SongEnd
+;}
+
+; $6E0D
+song_metroidBattle_tone_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 5, $A
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $1
+    SongNote $36
+    SongNote $1E
+    SongNote $42
+    SongNote $2A
+    SongNoteLength $4
+    SongNote $4E
+    SongNoteLength $1
+    SongNote $7E
+    SongNote $7C
+    SongNote $7E
+    SongNote $7C
+    SongOptions
+        DescendingEnvelopeOptions 5, $8
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $8, 0
+    SongNoteLength $2
+    SongNote $62
+    SongNote $60
+    SongNote $5E
+    SongNote $5C
+    SongNote $56
+    SongNote $4C
+    SongEnd
+;}
+
+; $6E29
+song_metroidBattle_tone_section1:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 3, $8
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $2
+    SongNote $30
+    SongNote $24
+    SongNote $2C
+    SongNote $24
+    SongNote $26
+    SongNote $24
+    SongNote $28
+    SongNote $24
+    SongNote $30
+    SongNote $24
+    SongNote $2C
+    SongNoteLength $1
+    SongNote $26
+    SongRepeatSetup $3
+    SongNoteLength $2
+    SongNote $30
+    SongNote $24
+    SongNote $2C
+    SongNote $24
+    SongNote $26
+    SongNote $24
+    SongNote $28
+    SongNote $24
+    SongRepeat
+    SongNoteLength $1
+    SongNote $5A
+    SongNote $56
+    SongNote $5A
+    SongNote $56
+    SongNoteLength $3
+    SongNote $5A
+    SongNoteLength $1
+    SongNote $5A
+    SongNote $56
+    SongNote $5A
+    SongOptions
+        DescendingEnvelopeOptions 1, $D
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $8, 0
+    SongNoteLength $3
+    SongNote $5A
+    SongNoteLength $1
+    SongMute
+    SongOptions
+        DescendingEnvelopeOptions 1, $A
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $2
+    SongNote $30
+    SongNote $24
+    SongNote $2C
+    SongNote $24
+    SongNote $26
+    SongNote $24
+    SongNote $28
+    SongNote $24
+    SongEnd
+;}
+
+; $6E68
+song_metroidBattle_wave_section0:
+;{
+    SongOptions
+        WaveOptions $416B, 2, $0
+    SongNoteLength $1
+    SongNote $4E
+    SongNote $1E
+    SongNote $5A
+    SongNote $2A
+    SongNoteLength $7
+    SongNote $66
+    SongSpecial3
+    SongNoteLength $8
+    SongMute
+    SongEnd
+;}
+
+; $6E77
+song_metroidBattle_wave_section1:
+;{
+    SongOptions
+        WaveOptions $418B, 2, $7
+    SongNoteLength $3
+    SongNote $2C
+    SongNote $2C
+    SongNote $2C
+    SongNote $2C
+    SongNote $2A
+    SongNoteLength $2
+    SongNote $28
+    SongNoteLength $1
+    SongMute
+    SongRepeatSetup $3
+    SongNoteLength $3
+    SongNote $2E
+    SongNote $2C
+    SongNote $2E
+    SongNote $2C
+    SongRepeat
+    SongOptions
+        WaveOptions $417B, 2, $7
+    SongNoteLength $1
+    SongNote $7C
+    SongNote $86
+    SongNote $8A
+    SongNote $8E
+    SongNoteLength $3
+    SongNote $56
+    SongNoteLength $1
+    SongNote $8A
+    SongNote $82
+    SongNote $7C
+    SongNote $82
+    SongNoteLength $3
+    SongNote $4E
+    SongNoteLength $4
+    SongNote $2A
+    SongNote $2A
+    SongEnd
+;}
+
+; $6EA3
+song_metroidBattle_noise_section0:
+;{
+    SongNoteLength $1
+    SongNote $1C
+    SongNote $18
+    SongNote $1C
+    SongNote $18
+    SongNoteLength $8
+    SongNote $1C
+    SongNoteLength $2
+    SongNote $10
+    SongNote $14
+    SongNote $18
+    SongNote $18
+    SongNote $1C
+    SongNote $1C
+    SongEnd
+;}
+
+; $6EB2
+song_metroidBattle_noise_section1:
+;{
+    SongNoteLength $3
+    SongNote $14
+    SongNote $14
+    SongNote $14
+    SongNote $14
+    SongNote $14
+    SongNoteLength $2
+    SongMute
+    SongNoteLength $1
+    SongNote $10
+    SongRepeatSetup $6
+    SongNoteLength $3
+    SongNote $14
+    SongNote $14
+    SongRepeat
+    SongNoteLength $1
+    SongNote $14
+    SongNote $14
+    SongNote $14
+    SongNote $14
+    SongNoteLength $3
+    SongNote $1C
+    SongNoteLength $1
+    SongNote $14
+    SongNoteLength $7
+    SongNote $48
+    SongNoteLength $1
+    SongNote $14
+    SongNoteLength $3
+    SongNote $14
+    SongNote $14
+    SongNote $14
+    SongNote $14
+    SongEnd
+;}
+
+; $6ED5
+song_subCaves4_header:
+    SongHeader $0, $40C5, song_subCaves4_toneSweep, song_subCaves4_tone, song_subCaves4_wave, song_subCaves4_noise
+
+; $6EE0
+song_subCaves4_toneSweep:
+;{
+    dw song_subCaves4_toneSweep_section0 ; $7DA0
+    dw song_subCaves4_toneSweep_section1 ; $7D7E
+    dw $0000
+;}
+
+; $6EE6
+song_subCaves4_tone:
+;{
+    dw song_subCaves4_tone_section0 ; $7DCA
+    .loop
+    .alternateEntry
+    dw song_subCaves4_tone_section1 ; $6EF6
+    dw $00F0, .loop
+;}
+
+; $6EEE
+song_subCaves4_wave:
+;{
+    dw song_subCaves4_wave_section0 ; $7DF4
+    dw $0000
+;}
+
+; $6EF2
+song_subCaves4_noise:
+;{
+    dw song_subCaves4_noise_section0 ; $7E04
+    dw $0000
+;}
+
+; $6EF6
+song_subCaves4_tone_section1:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $1
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $7, 2
+    SongNoteLength $1
+    SongNote $62
+    SongNote $52
+    SongNote $5C
+    SongNote $60
+    SongNote $60
+    SongNote $4E
+    SongNote $58
+    SongNote $54
+    SongNoteLength $4
+    SongMute
+    SongNoteLength $2
+    SongNote $62
+    SongNote $58
+    SongNote $52
+    SongNote $60
+    SongNote $4E
+    SongNoteLength $C
+    SongMute
+    SongNoteLength $1
+    SongNote $4E
+    SongNote $58
+    SongNote $52
+    SongNoteLength $8
+    SongMute
+    SongMute
+    SongNoteLength $1
+    SongNote $58
+    SongNote $52
+    SongNote $5C
+    SongNote $4E
+    SongNote $70
+    SongNote $52
+    SongNoteLength $5
+    SongMute
+    SongNoteLength $2
+    SongNote $58
+    SongNote $52
+    SongNoteLength $C
+    SongMute
+    SongNoteLength $1
+    SongNote $54
+    SongNote $60
+    SongNote $5C
+    SongNote $58
+    SongNote $52
+    SongNote $60
+    SongNote $62
+    SongNoteLength $8
+    SongNote $52
+    SongNote $58
+    SongNote $4E
+    SongMute
+    SongMute
+    SongNoteLength $1
+    SongNote $62
+    SongNote $60
+    SongMute
+    SongNote $56
+    SongNote $54
+    SongNote $58
+    SongNote $52
+    SongMute
+    SongMute
+    SongNote $58
+    SongNote $4E
+    SongNote $60
+    SongNoteLength $7
+    SongMute
+    SongNoteLength $C
+    SongMute
+    SongNoteLength $6
+    SongNote $4E
+    SongNote $58
+    SongNote $52
+    SongNoteLength $C
+    SongMute
+    SongNoteLength $1
+    SongNote $5C
+    SongNote $60
+    SongNote $54
+    SongNote $56
+    SongNote $58
+    SongNoteLength $C
+    SongMute
+    SongEnd
+;}
+
+; $6F50
+song_earthquake_header:
+    SongHeader $0, $40DF, $0000, $0000, $0000, song_earthquake_noise
+
+; $6F5B
+song_earthquake_noise:
+;{
+    dw song_earthquake_noise_section0 ; $6F5F
+    dw $0000
+;}
+
+; $6F5F
+song_earthquake_noise_section0:
+;{
+    SongNoteLength $3
+    SongNote $48
+    SongRepeatSetup $3
+    SongNoteLength $1
+    SongNote $2C
+    SongNote $2C
+    SongRepeat
+    SongRepeatSetup $3
+    SongNote $2C
+    SongNote $28
+    SongRepeat
+    SongRepeatSetup $2
+    SongNote $28
+    SongNote $24
+    SongRepeat
+    SongRepeatSetup $3
+    SongNote $20
+    SongNote $24
+    SongRepeat
+    SongRepeatSetup $2
+    SongNote $34
+    SongNote $38
+    SongRepeat
+    SongNoteLength $1
+    SongNote $20
+    SongNote $34
+    SongNote $2C
+    SongNote $38
+    SongNote $20
+    SongNote $38
+    SongNote $2C
+    SongNote $34
+    SongNote $2C
+    SongNote $34
+    SongNote $28
+    SongNote $34
+    SongNote $20
+    SongNote $3C
+    SongNote $20
+    SongNote $2C
+    SongNote $20
+    SongNote $3C
+    SongNote $28
+    SongNote $34
+    SongNote $28
+    SongNote $30
+    SongNote $28
+    SongNote $2C
+    SongNoteLength $1
+    SongNote $24
+    SongNote $5C
+    SongRepeatSetup $3
+    SongNote $28
+    SongNote $60
+    SongRepeat
+    SongRepeatSetup $5A
+    SongNote $28
+    SongNote $2C
+    SongRepeat
+    SongNoteLength $5
+    SongNote $28
+    SongEnd
+;}
+
+; $6FA4
+song_killedMetroid_header:
+    SongHeader $D, $40F9, song_killedMetroid_toneSweep, song_killedMetroid_tone, song_killedMetroid_wave, $0000
+
+; $6FAF
+song_killedMetroid_tone:
+song_killedMetroid_toneSweep:
+;{
+    dw song_killedMetroid_toneSweep_section0 ; $6FC5
+    dw song_killedMetroid_toneSweep_section1 ; $7D7A
+    dw song_killedMetroid_toneSweep_section2 ; $6FD2
+    dw song_killedMetroid_toneSweep_section3 ; $6FF6
+    dw $0000
+;}
+
+; $6FB9
+unused6FB9:
+;{
+    dw unused6FB9_section0 ; $6FC5
+    dw unused6FB9_section1 ; $6FD2
+    dw unused6FB9_section2 ; $6FF6
+    dw $0000
+;}
+
+; $6FC1
+song_killedMetroid_wave:
+;{
+    dw song_killedMetroid_wave_section0 ; $7000
+    dw $0000
+;}
+
+; $6FC5
+unused6FB9_section0:
+song_killedMetroid_toneSweep_section0:
+;{
+    SongOptions
+        AscendingEnvelopeOptions 1, $0
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $7
+    SongNote $62
+    SongOptions
+        DescendingEnvelopeOptions 5, $F
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $8
+    SongNote $62
+    SongEnd
+;}
+
+; $6FD2
+unused6FB9_section1:
+song_killedMetroid_toneSweep_section2:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $A
+        AscendingSweepOptions 5, 3
+        LengthDutyOptions $0, 2
+;}
+
+; $6FD6
+song_metroidHive_withIntro_toneSweep_section3:
+song_metroidHive_withIntro_tone_section2:
+;{
+    SongNoteLength $B
+    SongNote $32
+    SongNote $40
+    SongNote $36
+    SongNote $44
+    SongNote $3A
+    SongNote $48
+    SongNote $3C
+    SongNote $4A
+    SongNote $40
+    SongNote $4E
+    SongNote $44
+    SongNote $52
+    SongNote $48
+    SongNote $54
+    SongNote $4A
+    SongNote $58
+    SongNote $4E
+    SongNote $5C
+    SongNote $52
+    SongNote $60
+    SongNote $54
+    SongNote $62
+    SongNote $58
+    SongNote $66
+    SongNote $5C
+    SongNote $6A
+    SongNote $60
+    SongNote $6C
+    SongNote $62
+    SongNote $70
+    SongEnd
+;}
+
+; $6FF6
+song_killedMetroid_toneSweep_section3:
+unused6FB9_section2:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $C
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 2
+    SongNoteLength $0
+    SongNote $52
+    SongMute
+    SongNoteLength $5
+    SongNote $54
+    SongEnd
+;}
+
+; $7000
+song_killedMetroid_wave_section0:
+;{
+    SongOptions
+        WaveOptions $416B, 1, $0
+    SongNoteLength $3
+    SongMute
+    SongNoteLength $1
+    SongMute
+    SongRepeatSetup $4
+    SongNoteLength $0
+    SongNote $2
+    SongSpecial3
+    SongRepeat
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $4
+    SongMute
+    SongOptions
+        WaveOptions $416B, 3, $0
+    SongNoteLength $B
+    SongNote $32
+    SongNote $40
+    SongNote $36
+    SongNote $44
+    SongNote $3A
+    SongNote $48
+    SongNote $3C
+    SongNote $4A
+    SongNote $40
+    SongNote $4E
+    SongNote $44
+    SongNote $52
+    SongNote $48
+    SongNote $54
+    SongNote $4A
+    SongNote $58
+    SongNote $4E
+    SongNote $5C
+    SongNote $52
+    SongNote $60
+    SongNote $54
+    SongNote $62
+    SongNote $58
+    SongNote $66
+    SongNote $5C
+    SongNote $6A
+    SongNote $60
+    SongNote $6C
+    SongNote $62
+    SongNote $70
+    SongNoteLength $0
+    SongNote $52
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $54
+    SongSpecial3
+    SongEnd
+;}
+
+; $703C
+song_title_header:
+    SongHeader $1, $40D2, song_title_toneSweep, song_title_tone, song_title_wave, song_title_noise
+
+; $7047
+song_title_tone:
+song_title_toneSweep:
+;{
+    .loop
+    dw song_title_toneSweep_section0 ; $7E09
+    dw song_title_toneSweep_section1 ; $708B
+    dw song_title_toneSweep_section2 ; $708B
+    dw song_title_toneSweep_section3 ; $708B
+    dw song_title_toneSweep_section4 ; $708B
+    dw song_title_toneSweep_section5 ; $708B
+    dw song_title_toneSweep_section6 ; $7D7E
+    dw song_title_toneSweep_section7 ; $7152
+    dw song_title_toneSweep_section8 ; $7187
+    dw song_title_toneSweep_section9 ; $71CC
+    dw song_title_toneSweep_sectionA ; $7D7A
+    dw $00F0, .loop
+;}
+
+; $7061
+song_title_wave:
+;{
+    .loop
+    dw song_title_wave_section0 ; $7E10
+    dw song_title_wave_section1 ; $7095
+    dw song_title_wave_section2 ; $709F
+    dw song_title_wave_section3 ; $7112
+    dw song_title_wave_section4 ; $7095
+    dw song_title_wave_section5 ; $7211
+    dw song_title_wave_section6 ; $724E
+    dw song_title_wave_section7 ; $73B0
+    dw $00F0, .loop
+;}
+
+; $7075
+song_title_noise:
+;{
+    .loop
+    dw song_title_noise_section0 ; $7E17
+    dw song_title_noise_section1 ; $713E
+    dw song_title_noise_section2 ; $713E
+    dw song_title_noise_section3 ; $7144
+    dw song_title_noise_section4 ; $7144
+    dw song_title_noise_section5 ; $713E
+    dw song_title_noise_section6 ; $73E9
+    dw song_title_noise_section7 ; $73EF
+    dw song_title_noise_section8 ; $740F
+    dw $00F0, .loop
+;}
+
+; $708B
+song_title_toneSweep_section4:
+song_title_toneSweep_section1:
+song_title_toneSweep_section2:
+song_title_toneSweep_section5:
+song_title_toneSweep_section3:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $D
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $4, 1
+    SongRepeatSetup $4
+    SongNoteLength $C
+    SongNote $76
+    SongRepeat
+    SongEnd
+;}
+
+; $7095
+song_title_wave_section1:
+song_title_wave_section4:
+;{
+    SongOptions
+        WaveOptions $4123, 3, $3
+    SongNoteLength $C
+    SongMute
+    SongMute
+    SongMute
+    SongMute
+    SongEnd
+;}
+
+; $709F
+song_title_wave_section2:
+;{
+    SongNoteLength $8
+    SongMute
+    SongNoteLength $2
+    SongNote $72
+    SongNote $5C
+    SongNote $62
+    SongSpecial3
+    SongNote $72
+    SongNote $52
+    SongMute
+    SongNote $5C
+    SongMute
+    SongNote $62
+    SongNoteLength $8
+    SongMute
+    SongNoteLength $2
+    SongMute
+    SongNote $64
+    SongNote $72
+    SongNote $64
+    SongNote $74
+    SongNote $78
+    SongNote $60
+    SongNote $6E
+    SongNote $72
+    SongMute
+    SongNoteLength $8
+    SongMute
+    SongNoteLength $2
+    SongNote $72
+    SongNote $6A
+    SongNote $54
+    SongNote $66
+    SongNote $64
+    SongNote $4A
+    SongNote $78
+    SongSpecial3
+    SongNote $5A
+    SongNote $68
+    SongNoteLength $8
+    SongMute
+    SongNoteLength $2
+    SongNote $6E
+    SongMute
+    SongNote $5A
+    SongNote $6A
+    SongNote $4C
+    SongNote $72
+    SongNote $78
+    SongNote $52
+    SongNote $76
+    SongSpecial3
+    SongOptions
+        WaveOptions $4123, 2, $3
+    SongNoteLength $4
+    SongMute
+    SongNoteLength $2
+    SongNote $76
+    SongSpecial3
+    SongNote $72
+    SongSpecial3
+    SongNote $62
+    SongNote $7C
+    SongNote $72
+    SongSpecial3
+    SongNote $72
+    SongNote $62
+    SongNote $76
+    SongSpecial3
+    SongNoteLength $8
+    SongMute
+    SongNoteLength $2
+    SongMute
+    SongNote $64
+    SongNote $78
+    SongNote $66
+    SongSpecial3
+    SongNote $64
+    SongNote $6A
+    SongNote $6C
+    SongNote $6E
+    SongSpecial3
+    SongNoteLength $4
+    SongMute
+    SongNoteLength $2
+    SongNote $62
+    SongNote $6A
+    SongNote $72
+    SongSpecial3
+    SongNote $6C
+    SongNote $66
+    SongSpecial3
+    SongNote $62
+    SongNote $6A
+    SongSpecial3
+    SongNote $74
+    SongSpecial3
+    SongNoteLength $4
+    SongMute
+    SongNoteLength $2
+    SongNote $66
+    SongSpecial3
+    SongNote $72
+    SongSpecial3
+    SongNote $6A
+    SongNote $78
+    SongNote $74
+    SongNote $64
+    SongSpecial3
+    SongNote $78
+    SongNote $76
+    SongSpecial3
+    SongEnd
+;}
+
+; $7112
+song_title_wave_section3:
+;{
+    SongOptions
+        WaveOptions $4113, 2, $0
+    SongNoteLength $3
+    SongNote $84
+    SongSpecial3
+    SongNote $7A
+    SongSpecial3
+    SongNote $82
+    SongSpecial3
+    SongNote $76
+    SongSpecial3
+    SongNote $7E
+    SongSpecial3
+    SongNote $70
+    SongSpecial3
+    SongNote $7C
+    SongSpecial3
+    SongNote $74
+    SongSpecial3
+    SongNote $78
+    SongSpecial3
+    SongNote $7E
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $3
+    SongNote $7C
+    SongSpecial3
+    SongNoteLength $2
+    SongMute
+    SongNoteLength $3
+    SongNote $74
+    SongSpecial3
+    SongNoteLength $6
+    SongMute
+    SongNoteLength $8
+    SongNote $70
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $8
+    SongMute
+    SongEnd
+;}
+
+; $713E
+song_title_noise_section5:
+song_title_noise_section1:
+song_title_noise_section2:
+;{
+    SongNoteLength $C
+    SongMute
+    SongMute
+    SongMute
+    SongMute
+    SongEnd
+;}
+
+; $7144
+song_title_noise_section3:
+song_title_noise_section4:
+;{
+    SongRepeatSetup $2
+    SongNoteLength $2
+    SongNote $14
+    SongNoteLength $5
+    SongNote $20
+    SongNoteLength $4
+    SongMute
+    SongNoteLength $7
+    SongMute
+    SongNoteLength $C
+    SongNote $30
+    SongRepeat
+    SongEnd
+;}
+
+; $7152
+song_title_toneSweep_section7:
+;{
+    SongOptions
+        AscendingEnvelopeOptions 4, $0
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $7
+    SongNote $40
+    SongNoteLength $4
+    SongSpecial3
+    SongNoteLength $2
+    SongMute
+    SongNoteLength $7
+    SongNote $3C
+    SongNoteLength $4
+    SongSpecial3
+    SongNoteLength $2
+    SongMute
+    SongNoteLength $7
+    SongNote $3A
+    SongNoteLength $4
+    SongSpecial3
+    SongNoteLength $2
+    SongMute
+    SongNoteLength $7
+    SongNote $38
+    SongNoteLength $4
+    SongSpecial3
+    SongNoteLength $2
+    SongMute
+    SongNoteLength $7
+    SongNote $36
+    SongNoteLength $4
+    SongSpecial3
+    SongNoteLength $2
+    SongMute
+    SongNoteLength $7
+    SongNote $46
+    SongNoteLength $4
+    SongSpecial3
+    SongNoteLength $2
+    SongMute
+    SongNoteLength $7
+    SongNote $38
+    SongNoteLength $4
+    SongSpecial3
+    SongNoteLength $2
+    SongMute
+    SongNoteLength $7
+    SongNote $48
+    SongNoteLength $4
+    SongSpecial3
+    SongNoteLength $2
+    SongMute
+    SongEnd
+;}
+
+; $7187
+song_title_toneSweep_section8:
+;{
+    SongOptions
+        AscendingEnvelopeOptions 7, $0
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $8
+    SongNote $4A
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $48
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $46
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $44
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $42
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $40
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $3E
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $48
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $32
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $30
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $2E
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $2C
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $28
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $24
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $20
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $8
+    SongNote $1A
+    SongNoteLength $7
+    SongSpecial3
+    SongEnd
+;}
+
+; $71CC
+song_title_toneSweep_section9:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 3, $F
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongRepeatSetup $2
+    SongNoteLength $2
+    SongNote $62
+    SongSpecial3
+    SongNote $76
+    SongSpecial3
+    SongNote $74
+    SongSpecial3
+    SongNote $6C
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $70
+    SongSpecial3
+    SongNoteLength $8
+    SongMute
+    SongRepeat
+    SongOptions
+        DescendingEnvelopeOptions 3, $C
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $2
+    SongNote $62
+    SongSpecial3
+    SongNote $76
+    SongSpecial3
+    SongNote $74
+    SongSpecial3
+    SongNote $6C
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $70
+    SongSpecial3
+    SongNoteLength $8
+    SongMute
+    SongOptions
+        DescendingEnvelopeOptions 4, $8
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $3
+    SongNote $62
+    SongNote $76
+    SongNote $74
+    SongNote $6C
+    SongNote $70
+    SongMute
+    SongNoteLength $8
+    SongMute
+    SongOptions
+        DescendingEnvelopeOptions 7, $4
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $3
+    SongNote $62
+    SongNote $76
+    SongNote $74
+    SongNote $6C
+    SongNote $70
+    SongMute
+    SongRepeatSetup $E
+    SongNoteLength $5
+    SongMute
+    SongRepeat
+    SongEnd
+;}
+
+; $7211
+song_title_wave_section5:
+;{
+    SongOptions
+        WaveOptions $41AB, 1, $0
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $3
+    SongNote $52
+    SongSpecial3
+    SongMute
+    SongNoteLength $2
+    SongNote $54
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $58
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $4A
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $6
+    SongNote $5E
+    SongNoteLength $6
+    SongSpecial3
+    SongMute
+    SongMute
+    SongNoteLength $1
+    SongNote $5C
+    SongSpecial3
+    SongNote $54
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $58
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $3
+    SongMute
+    SongMute
+    SongMute
+    SongNoteLength $5
+    SongMute
+    SongMute
+    SongNoteLength $6
+    SongNote $5E
+    SongSpecial3
+    SongNoteLength $7
+    SongMute
+    SongNoteLength $1
+    SongNote $5C
+    SongSpecial3
+    SongNote $54
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $58
+    SongNoteLength $3
+    SongSpecial3
+    SongMute
+    SongMute
+    SongEnd
+;}
+
+; $724E
+song_title_wave_section6:
+;{
+    SongOptions
+        WaveOptions $418B, 1, $0
+    SongNoteLength $2
+    SongMute
+    SongNoteLength $6
+    SongNote $52
+    SongNoteLength $2
+    SongSpecial5
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongNote $54
+    SongNoteLength $1
+    SongMute
+    SongSpecial5
+    SongNoteLength $2
+    SongNote $58
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial5
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $1
+    SongNote $54
+    SongSpecial3
+    SongNote $52
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $54
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial5
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $1
+    SongNote $52
+    SongSpecial3
+    SongNote $4E
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $4A
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial5
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $1
+    SongNote $4A
+    SongSpecial3
+    SongNote $4E
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $4A
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial5
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongNote $4E
+    SongNoteLength $1
+    SongMute
+    SongSpecial5
+    SongNoteLength $2
+    SongNote $4A
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial5
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongNote $4A
+    SongNoteLength $1
+    SongMute
+    SongSpecial5
+    SongNoteLength $2
+    SongNote $4A
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial5
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $1
+    SongNote $48
+    SongSpecial3
+    SongNote $44
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $48
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial5
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $1
+    SongNote $4A
+    SongSpecial3
+    SongNote $4E
+    SongOptions
+        WaveOptions $418B, 1, $0
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $52
+    SongNoteLength $2
+    SongSpecial5
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongNote $54
+    SongNoteLength $1
+    SongMute
+    SongSpecial5
+    SongNoteLength $2
+    SongNote $58
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial5
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $1
+    SongNote $54
+    SongSpecial3
+    SongNote $52
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $54
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial5
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $1
+    SongNote $52
+    SongSpecial3
+    SongNote $4E
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $4A
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial5
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $1
+    SongNote $48
+    SongSpecial3
+    SongNote $44
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $48
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial5
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongNote $44
+    SongNoteLength $1
+    SongMute
+    SongSpecial5
+    SongNoteLength $2
+    SongNote $48
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial5
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $1
+    SongNote $46
+    SongSpecial3
+    SongNote $44
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $40
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial5
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongNote $3C
+    SongNoteLength $1
+    SongMute
+    SongSpecial5
+    SongNoteLength $2
+    SongNote $40
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $0
+    SongSpecial5
+    SongNoteLength $2
+    SongNote $40
+    SongNoteLength $1
+    SongMute
+    SongNote $40
+    SongMute
+    SongNote $40
+    SongMute
+    SongNote $42
+    SongNoteLength $0
+    SongMute
+    SongNote $42
+    SongMute
+    SongNote $42
+    SongMute
+    SongNote $44
+    SongMute
+    SongNote $44
+    SongMute
+    SongNote $46
+    SongMute
+    SongNote $48
+    SongMute
+    SongNote $4A
+    SongMute
+    SongEnd
+;}
+
+; $73B0
+song_title_wave_section7:
+;{
+    SongOptions
+        WaveOptions $416B, 1, $0
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $1A
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongRepeatSetup $8
+    SongNoteLength $2
+    SongNote $1A
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongRepeat
+    SongOptions
+        WaveOptions $416B, 2, $0
+    SongRepeatSetup $3
+    SongNoteLength $2
+    SongNote $1A
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongRepeat
+    SongOptions
+        WaveOptions $416B, 3, $0
+    SongRepeatSetup $5
+    SongNoteLength $2
+    SongNote $1A
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongRepeat
+    SongRepeatSetup $B
+    SongNoteLength $5
+    SongMute
+    SongRepeat
+    SongNoteLength $8
+    SongMute
+    SongEnd
+;}
+
+; $73E9
+song_title_noise_section6:
+;{
+    SongRepeatSetup $8
+    SongNoteLength $5
+    SongMute
+    SongRepeat
+    SongEnd
+;}
+
+; $73EF
+song_title_noise_section7:
+;{
+    SongRepeatSetup $8
+    SongNoteLength $5
+    SongMute
+    SongRepeat
+    SongNoteLength $2
+    SongMute
+    SongNoteLength $4
+    SongMute
+    SongNoteLength $5
+    SongNote $20
+    SongMute
+    SongMute
+    SongNote $20
+    SongMute
+    SongMute
+    SongNoteLength $7
+    SongNote $20
+    SongNoteLength $1
+    SongMute
+    SongNoteLength $2
+    SongNote $7C
+    SongMute
+    SongNote $80
+    SongMute
+    SongNote $84
+    SongMute
+    SongNoteLength $6
+    SongNote $84
+    SongNoteLength $2
+    SongMute
+    SongEnd
+;}
+
+; $740F
+song_title_noise_section8:
+;{
+    SongRepeatSetup $5
+    SongNoteLength $8
+    SongNote $20
+    SongNote $30
+    SongNote $20
+    SongRepeat
+    SongNote $20
+    SongNote $30
+    SongNote $20
+    SongNote $30
+    SongNote $24
+    SongNote $24
+    SongNote $38
+    SongNote $28
+    SongNote $28
+    SongNote $3C
+    SongNote $3C
+    SongRepeatSetup $5
+    SongNoteLength $5
+    SongMute
+    SongRepeat
+    SongEnd
+;}
+
+; $7427
+song_samusFanfare_header:
+    SongHeader $1, $40DF, song_samusFanfare_toneSweep, song_samusFanfare_tone, song_samusFanfare_wave, song_samusFanfare_noise
+
+; $7432
+song_samusFanfare_tone:
+song_samusFanfare_toneSweep:
+;{
+    dw song_samusFanfare_toneSweep_section0 ; $743E
+    dw $0000
+;}
+
+; $7436
+song_samusFanfare_wave:
+;{
+    dw song_samusFanfare_wave_section0 ; $7462
+    dw $0000
+;}
+
+; $743A
+song_samusFanfare_noise:
+;{
+    dw song_samusFanfare_noise_section0 ; $747A
+    dw $0000
+;}
+
+; $743E
+song_samusFanfare_toneSweep_section0:
+;{
+    SongOptions
+        AscendingEnvelopeOptions 3, $0
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $7
+    SongNote $10
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongOptions
+        AscendingEnvelopeOptions 1, $0
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $6
+    SongNote $28
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $40
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $3E
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $0
+    SongMute
+    SongNoteLength $6
+    SongNote $36
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $4
+    SongNote $3A
+    SongNoteLength $5
+    SongSpecial3
+    SongEnd
+;}
+
+; $7462
+song_samusFanfare_wave_section0:
+;{
+    SongOptions
+        WaveOptions $417B, 2, $0
+    SongNoteLength $8
+    SongMute
+    SongNoteLength $2
+    SongMute
+    SongNoteLength $7
+    SongNote $62
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $66
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongMute
+    SongMute
+    SongNoteLength $4
+    SongNote $5C
+    SongNoteLength $2
+    SongSpecial3
+    SongEnd
+;}
+
+; $747A
+song_samusFanfare_noise_section0:
+;{
+    SongNoteLength $7
+    SongNote $48
+    SongNote $74
+    SongNote $48
+    SongNoteLength $6
+    SongNote $5C
+    SongNote $54
+    SongNote $4C
+    SongNote $50
+    SongNoteLength $2
+    SongNote $58
+    SongNoteLength $3
+    SongNote $68
+    SongNoteLength $C
+    SongNote $6C
+    SongEnd
+;}
+
+; $748A
+song_reachedTheGunship_header:
+    SongHeader $0, $40F9, song_reachedTheGunship_toneSweep, song_reachedTheGunship_tone, song_reachedTheGunship_wave, song_reachedTheGunship_noise
+
+; $7495
+song_reachedTheGunship_toneSweep:
+;{
+    dw song_reachedTheGunship_toneSweep_section0 ; $74F1
+    dw song_reachedTheGunship_toneSweep_section1 ; $79CB
+    dw song_reachedTheGunship_toneSweep_section2 ; $74F9
+    dw song_reachedTheGunship_toneSweep_section3 ; $76BA
+    dw song_reachedTheGunship_toneSweep_section4 ; $74FE
+    dw song_reachedTheGunship_toneSweep_section5 ; $7523
+    dw song_reachedTheGunship_toneSweep_section6 ; $758C
+    dw song_reachedTheGunship_toneSweep_section7 ; $75C5
+    dw song_reachedTheGunship_toneSweep_section8 ; $75C5
+    dw song_reachedTheGunship_toneSweep_section9 ; $75C5
+    dw song_reachedTheGunship_toneSweep_sectionA ; $75C5
+    dw song_reachedTheGunship_toneSweep_sectionB ; $75EA
+    dw song_reachedTheGunship_toneSweep_sectionC ; $7613
+    dw song_reachedTheGunship_toneSweep_sectionD ; $762C
+    dw $0000
+;}
+
+; $74B3
+song_reachedTheGunship_tone:
+;{
+    dw song_reachedTheGunship_tone_section0 ; $76AE
+    dw song_reachedTheGunship_tone_section1 ; $79CB
+    dw song_reachedTheGunship_tone_section2 ; $76B6
+    dw song_reachedTheGunship_tone_section3 ; $7745
+    dw song_reachedTheGunship_tone_section4 ; $7759
+    dw song_reachedTheGunship_tone_section5 ; $77BE
+    dw song_reachedTheGunship_tone_section6 ; $7819
+    dw song_reachedTheGunship_tone_section7 ; $785B
+    dw song_reachedTheGunship_tone_section8 ; $7891
+    dw song_reachedTheGunship_tone_section9 ; $78E6
+    dw $0000
+;}
+
+; $74C9
+song_reachedTheGunship_wave:
+;{
+    dw song_reachedTheGunship_wave_section0 ; $79A3
+    dw song_reachedTheGunship_wave_section1 ; $7A0D
+    dw song_reachedTheGunship_wave_section2 ; $7A56
+    dw song_reachedTheGunship_wave_section3 ; $7A6B
+    dw song_reachedTheGunship_wave_section4 ; $7A81
+    dw song_reachedTheGunship_wave_section5 ; $7A8C
+    dw song_reachedTheGunship_wave_section6 ; $7A95
+    dw song_reachedTheGunship_wave_section7 ; $7A9E
+    dw song_reachedTheGunship_wave_section8 ; $7AAB
+    dw $0000
+;}
+
+; $74DD
+song_reachedTheGunship_noise:
+;{
+    dw song_reachedTheGunship_noise_section0 ; $7B1E
+    dw song_reachedTheGunship_noise_section1 ; $7B4B
+    dw song_reachedTheGunship_noise_section2 ; $7B75
+    dw song_reachedTheGunship_noise_section3 ; $7B8D
+    dw song_reachedTheGunship_noise_section4 ; $7BAE
+    dw song_reachedTheGunship_noise_section5 ; $7BC4
+    dw song_reachedTheGunship_noise_section6 ; $7BDA
+    dw song_reachedTheGunship_noise_section7 ; $7BEC
+    dw song_reachedTheGunship_noise_section8 ; $7BFE
+    dw $0000
+;}
+
+; $74F1
+song_reachedTheGunship_toneSweep_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 0, $6
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $9, 0
+    SongNoteLength $5
+    SongMute
+    SongMute
+    SongEnd
+;}
+
+; $74F9
+song_reachedTheGunship_toneSweep_section2:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 0, $B
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $9, 1
+    SongEnd
+;}
+
+; $74FE
+song_reachedTheGunship_toneSweep_section4:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 2, $5
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $4A
+    SongNote $54
+    SongNote $58
+    SongNote $62
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $3C
+    SongNote $4A
+    SongNote $4E
+    SongNote $54
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $4A
+    SongNote $54
+    SongNote $58
+    SongNote $62
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $3C
+    SongNote $4A
+    SongNote $4E
+    SongNote $54
+    SongRepeat
+    SongEnd
+;}
+
+; $7523
+song_reachedTheGunship_toneSweep_section5:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 1, $5
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $4A
+    SongNote $54
+    SongNote $58
+    SongNote $62
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $3C
+    SongNote $4A
+    SongNote $4E
+    SongNote $54
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $4A
+    SongNote $52
+    SongNote $54
+    SongNote $62
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $4E
+    SongNote $52
+    SongNote $54
+    SongNote $66
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $4A
+    SongNote $54
+    SongNote $58
+    SongNote $62
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $3C
+    SongNote $4A
+    SongNote $4E
+    SongNote $54
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $40
+    SongNote $4A
+    SongNote $4E
+    SongNote $58
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $3C
+    SongNote $4A
+    SongNote $4E
+    SongNote $54
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $4A
+    SongNote $52
+    SongNote $54
+    SongNote $62
+    SongNote $4A
+    SongNote $52
+    SongNote $54
+    SongNote $62
+    SongNote $3C
+    SongNote $4A
+    SongNote $4E
+    SongNote $54
+    SongNote $3C
+    SongNote $4A
+    SongNote $4E
+    SongNote $54
+    SongNote $4A
+    SongNote $52
+    SongNote $54
+    SongNote $62
+    SongNote $4A
+    SongNote $52
+    SongNote $54
+    SongNote $62
+    SongNote $4E
+    SongNote $52
+    SongNote $54
+    SongNote $66
+    SongNote $4E
+    SongNote $52
+    SongNote $54
+    SongNote $66
+    SongRepeat
+    SongEnd
+;}
+
+; $758C
+song_reachedTheGunship_toneSweep_section6:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 1, $8
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongRepeatSetup $3
+    SongNoteLength $1
+    SongNote $4A
+    SongNote $52
+    SongNote $54
+    SongNote $62
+    SongNote $4A
+    SongNote $52
+    SongNote $54
+    SongNote $62
+    SongNote $46
+    SongNote $52
+    SongNote $54
+    SongNote $5E
+    SongNote $46
+    SongNote $52
+    SongNote $54
+    SongNote $5E
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $3C
+    SongNote $4A
+    SongNote $4E
+    SongNote $54
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $46
+    SongNote $52
+    SongNote $54
+    SongNote $5E
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $44
+    SongNote $52
+    SongNote $54
+    SongNote $5C
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $40
+    SongNote $4A
+    SongNote $4E
+    SongNote $52
+    SongRepeat
+    SongEnd
+;}
+
+; $75C5
+song_reachedTheGunship_toneSweep_sectionA:
+song_reachedTheGunship_toneSweep_section7:
+song_reachedTheGunship_toneSweep_section8:
+song_reachedTheGunship_toneSweep_section9:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 1, $6
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $3C
+    SongNote $4A
+    SongNote $4E
+    SongNote $54
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $46
+    SongNote $52
+    SongNote $54
+    SongNote $5E
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $44
+    SongNote $52
+    SongNote $54
+    SongNote $5C
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $40
+    SongNote $4A
+    SongNote $4E
+    SongNote $52
+    SongRepeat
+    SongEnd
+;}
+
+; $75EA
+song_reachedTheGunship_toneSweep_sectionB:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 3, $4
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 2
+    SongRepeatSetup $4
+    SongNoteLength $1
+    SongNote $3C
+    SongNote $44
+    SongNote $4E
+    SongNote $54
+    SongNote $3C
+    SongNote $44
+    SongNote $4E
+    SongNote $54
+    SongNote $46
+    SongNote $52
+    SongNote $54
+    SongNote $5E
+    SongNote $46
+    SongNote $52
+    SongNote $54
+    SongNote $5E
+    SongNote $44
+    SongNote $52
+    SongNote $54
+    SongNote $5C
+    SongNote $44
+    SongNote $52
+    SongNote $54
+    SongNote $5C
+    SongNote $40
+    SongNote $4A
+    SongNote $4E
+    SongNote $52
+    SongNote $40
+    SongNote $4A
+    SongNote $4E
+    SongNote $52
+    SongRepeat
+    SongEnd
+;}
+
+; $7613
+song_reachedTheGunship_toneSweep_sectionC:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 2, $7
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongRepeatSetup $4
+    SongNoteLength $1
+    SongNote $4A
+    SongNote $52
+    SongNote $54
+    SongNote $62
+    SongNote $4A
+    SongNote $52
+    SongNote $54
+    SongNote $62
+    SongNote $46
+    SongNote $52
+    SongNote $54
+    SongNote $5E
+    SongNote $46
+    SongNote $52
+    SongNote $54
+    SongNote $5E
+    SongRepeat
+    SongEnd
+;}
+
+; $762C
+song_reachedTheGunship_toneSweep_sectionD:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 2, $8
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $1
+    SongNote $4A
+    SongNote $52
+    SongNote $54
+    SongNote $62
+    SongNote $4A
+    SongNote $52
+    SongNote $54
+    SongNote $62
+    SongNote $3C
+    SongNote $4A
+    SongNote $4E
+    SongNote $54
+    SongNote $3C
+    SongNote $4A
+    SongNote $4E
+    SongNote $54
+    SongNote $4A
+    SongNote $52
+    SongNote $54
+    SongNote $62
+    SongNote $4A
+    SongNote $52
+    SongNote $54
+    SongNote $62
+    SongNote $4E
+    SongNote $52
+    SongNote $54
+    SongNote $66
+    SongNote $4E
+    SongNote $52
+    SongNote $54
+    SongNote $66
+    SongOptions
+        DescendingEnvelopeOptions 2, $A
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongRepeatSetup $5
+    SongNoteLength $1
+    SongNote $4A
+    SongNote $52
+    SongNote $54
+    SongNote $4A
+    SongNote $4A
+    SongNote $52
+    SongNote $54
+    SongNote $4A
+    SongNote $3C
+    SongNote $4A
+    SongNote $4E
+    SongNote $54
+    SongNote $3C
+    SongNote $4A
+    SongNote $4E
+    SongNote $54
+    SongRepeat
+    SongOptions
+        DescendingEnvelopeOptions 3, $C
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $1
+    SongNote $4A
+    SongNote $52
+    SongNote $54
+    SongNote $62
+    SongNote $4A
+    SongNote $52
+    SongNote $54
+    SongNote $62
+    SongNote $3C
+    SongNote $4A
+    SongNote $4E
+    SongNote $54
+    SongNote $3C
+    SongNote $4A
+    SongNote $4E
+    SongNote $54
+    SongOptions
+        DescendingEnvelopeOptions 4, $D
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $2
+    SongNote $4A
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $48
+    SongNoteLength $1
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongTempo $4106
+    SongNoteLength $4
+    SongNote $54
+    SongOptions
+        AscendingEnvelopeOptions 1, $0
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $2
+    SongNote $52
+    SongSpecial3
+    SongOptions
+        DescendingEnvelopeOptions 5, $D
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $1
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $4A
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $B
+    SongNote $32
+    SongNote $40
+    SongOptions
+        DescendingEnvelopeOptions 7, $C
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $5
+    SongNote $62
+    SongEnd
+;}
+
+; $76AE
+song_reachedTheGunship_tone_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 0, $6
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $5
+    SongMute
+    SongMute
+    SongEnd
+;}
+
+; $76B6
+song_reachedTheGunship_tone_section2:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 0, $B
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+;}
+
+; $76BA
+song_reachedTheGunship_toneSweep_section3:
+;{
+    SongNoteLength $3
+    SongNote $52
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $54
+    SongSpecial3
+    SongNote $52
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $4E
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $4A
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $46
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $4A
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $54
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $52
+    SongSpecial3
+    SongNote $4E
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $52
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $4E
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $4E
+    SongSpecial3
+    SongNote $44
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $4A
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $48
+    SongSpecial3
+    SongNote $44
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $48
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $52
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $54
+    SongSpecial3
+    SongNote $52
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $4E
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $4A
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $46
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $4A
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $4E
+    SongSpecial3
+    SongNote $52
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $54
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $58
+    SongSpecial3
+    SongNote $54
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $52
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $4E
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $4E
+    SongSpecial3
+    SongNote $44
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $4A
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $48
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $4E
+    SongSpecial3
+    SongNote $44
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $4A
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $48
+    SongSpecial3
+    SongNote $44
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $48
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $58
+    SongSpecial3
+    SongEnd
+;}
+
+; $7745
+song_reachedTheGunship_tone_section3:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 0, $A
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $7
+    SongNote $62
+    SongNoteLength $4
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $40
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $62
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $1A
+    SongSpecial3
+    SongMute
+    SongMute
+    SongEnd
+;}
+
+; $7759
+song_reachedTheGunship_tone_section4:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 0, $C
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $3
+    SongNote $4A
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $46
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $44
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $40
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongNoteLength $8
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $3A
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $40
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $3C
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $3A
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $36
+    SongSpecial3
+    SongNote $32
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $36
+    SongNoteLength $8
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $46
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $44
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $40
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongNoteLength $8
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $3C
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $40
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $44
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongNoteLength $8
+    SongSpecial3
+    SongEnd
+;}
+
+; $77BE
+song_reachedTheGunship_tone_section5:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 0, $B
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $3
+    SongNote $52
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $4E
+    SongSpecial3
+    SongNote $52
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $54
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $52
+    SongSpecial3
+    SongNote $4E
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $52
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $4E
+    SongSpecial3
+    SongNote $52
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $54
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $52
+    SongSpecial3
+    SongNote $54
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $58
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $54
+    SongSpecial3
+    SongNote $52
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $54
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $52
+    SongSpecial3
+    SongNote $4E
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $4E
+    SongSpecial3
+    SongNote $52
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $4E
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $4A
+    SongSpecial3
+    SongNote $46
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $46
+    SongSpecial3
+    SongNote $44
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $46
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $44
+    SongSpecial3
+    SongNote $40
+    SongSpecial3
+    SongEnd
+;}
+
+; $7819
+song_reachedTheGunship_tone_section6:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 0, $D
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongRepeatSetup $2
+    SongNoteLength $2
+    SongNote $4A
+    SongSpecial3
+    SongNote $58
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $54
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $4A
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $46
+    SongSpecial3
+    SongNote $44
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $46
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $4E
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $4A
+    SongSpecial3
+    SongNote $58
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $54
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $4A
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $46
+    SongSpecial3
+    SongNote $44
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $46
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $44
+    SongSpecial3
+    SongNote $40
+    SongSpecial3
+    SongRepeat
+    SongEnd
+;}
+
+; $785B
+song_reachedTheGunship_tone_section7:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 0, $A
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 2
+    SongRepeatSetup $2
+    SongNoteLength $3
+    SongNote $62
+    SongNoteLength $4
+    SongSpecial3
+    SongNoteLength $2
+    SongMute
+    SongNoteLength $1
+    SongNote $66
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $62
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $5E
+    SongSpecial3
+    SongNote $5C
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $5E
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $5C
+    SongSpecial3
+    SongNoteLength $6
+    SongNote $5C
+    SongNoteLength $4
+    SongSpecial3
+    SongNoteLength $6
+    SongMute
+    SongNoteLength $1
+    SongNote $5E
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $54
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $58
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $5C
+    SongNoteLength $3
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $5E
+    SongSpecial3
+    SongRepeat
+    SongEnd
+;}
+
+; $7891
+song_reachedTheGunship_tone_section8:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 0, $D
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $3
+    SongNote $3A
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $3C
+    SongSpecial3
+    SongNote $3A
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $36
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $32
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $2E
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $44
+    SongSpecial3
+    SongNote $40
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $3C
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $3A
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $36
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $3A
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $3C
+    SongSpecial3
+    SongNote $3A
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $36
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $3A
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $3C
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $44
+    SongSpecial3
+    SongNote $40
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $3C
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $40
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $44
+    SongSpecial3
+    SongEnd
+;}
+
+; $78E6
+song_reachedTheGunship_tone_section9:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 0, $B
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $3
+    SongNote $40
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $44
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $40
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $3C
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $44
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $4A
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $54
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $44
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $40
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $3C
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $40
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $44
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $4A
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $54
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $52
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $58
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $54
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $52
+    SongNoteLength $1
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $52
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $58
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $54
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $5C
+    SongNoteLength $1
+    SongSpecial3
+    SongNote $62
+    SongSpecial3
+    SongNoteLength $3
+    SongNote $52
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $58
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $54
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $52
+    SongNoteLength $1
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongOptions
+        DescendingEnvelopeOptions 0, $D
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $2
+    SongNote $3C
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $3A
+    SongNoteLength $1
+    SongSpecial3
+    SongNote $32
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $54
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $52
+    SongNoteLength $1
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $54
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $52
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $54
+    SongSpecial3
+    SongOptions
+        DescendingEnvelopeOptions 0, $D
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $7
+    SongNote $32
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $32
+    SongSpecial3
+    SongNoteLength $1
+    SongNote $1A
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $1A
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNoteLength $B
+    SongNote $2
+    SongNote $10
+    SongNoteLength $2
+    SongNote $1A
+    SongNoteLength $5
+    SongSpecial5
+    SongEnd
+;}
+
+; $79A3
+song_reachedTheGunship_wave_section0:
+;{
+    SongOptions
+        WaveOptions $416B, 2, $0
+    SongRepeatSetup $2
+    SongNoteLength $0
+    SongNote $1A
+    SongSpecial3
+    SongNote $20
+    SongSpecial3
+    SongNote $24
+    SongSpecial3
+    SongNote $2E
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $20
+    SongSpecial3
+    SongNote $2C
+    SongSpecial3
+    SongNote $20
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $20
+    SongSpecial3
+    SongNote $24
+    SongSpecial3
+    SongNote $2E
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $20
+    SongSpecial3
+    SongNote $24
+    SongSpecial3
+    SongNote $32
+    SongSpecial3
+    SongRepeat
+;}
+
+; $79CB
+song_reachedTheGunship_tone_section1:
+song_reachedTheGunship_toneSweep_section1:
+;{
+    SongNoteLength $0
+    SongNote $1A
+    SongSpecial3
+    SongNote $20
+    SongSpecial3
+    SongNote $24
+    SongSpecial3
+    SongNote $2E
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $20
+    SongSpecial3
+    SongNote $24
+    SongSpecial3
+    SongNote $32
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $20
+    SongSpecial3
+    SongNote $24
+    SongSpecial3
+    SongNote $38
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $20
+    SongSpecial3
+    SongNote $24
+    SongSpecial3
+    SongNote $2E
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $20
+    SongSpecial3
+    SongNote $24
+    SongSpecial3
+    SongNote $28
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $20
+    SongSpecial3
+    SongNote $24
+    SongSpecial3
+    SongNote $2C
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongNote $20
+    SongSpecial3
+    SongNote $24
+    SongSpecial3
+    SongNote $32
+    SongSpecial3
+    SongNote $32
+    SongSpecial3
+    SongNote $38
+    SongSpecial3
+    SongNote $3C
+    SongSpecial3
+    SongNote $58
+    SongSpecial3
+    SongEnd
+;}
+
+; $7A0D
+song_reachedTheGunship_wave_section1:
+;{
+    SongOptions
+        WaveOptions $417B, 2, $0
+    SongNoteLength $4
+    SongNote $62
+    SongNoteLength $7
+    SongNote $5E
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $5C
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $5A
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $58
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $56
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $54
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $58
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $4A
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $46
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $44
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $42
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $4
+    SongNote $40
+    SongNoteLength $7
+    SongNote $3E
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $3C
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $3E
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $40
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $7
+    SongNote $28
+    SongNoteLength $2
+    SongSpecial3
+    SongEnd
+;}
+
+; $7A56
+song_reachedTheGunship_wave_section2:
+;{
+    SongOptions
+        WaveOptions $416B, 2, $0
+    SongRepeatSetup $7
+    SongNoteLength $1
+    SongNote $1A
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $1A
+    SongSpecial3
+    SongNote $1A
+    SongSpecial3
+    SongRepeat
+    SongNoteLength $1
+    SongNote $28
+    SongSpecial3
+    SongMute
+    SongMute
+    SongEnd
+;}
+
+; $7A6B
+song_reachedTheGunship_wave_section3:
+;{
+    SongOptions
+        WaveOptions $417B, 2, $0
+    SongNoteLength $4
+    SongNote $32
+    SongNote $24
+    SongNote $22
+    SongNote $1E
+    SongNote $1A
+    SongNote $24
+    SongNote $28
+    SongNote $24
+    SongRepeatSetup $2
+    SongNoteLength $4
+    SongNote $1A
+    SongNote $24
+    SongNote $22
+    SongNote $1E
+    SongRepeat
+    SongEnd
+;}
+
+; $7A81
+song_reachedTheGunship_wave_section4:
+;{
+    SongRepeatSetup $3
+    SongNoteLength $4
+    SongNote $32
+    SongNote $2E
+    SongRepeat
+    SongNote $24
+    SongNote $2E
+    SongNote $2C
+    SongNote $28
+    SongEnd
+;}
+
+; $7A8C
+song_reachedTheGunship_wave_section5:
+;{
+    SongRepeatSetup $4
+    SongNoteLength $4
+    SongNote $24
+    SongNote $2E
+    SongNote $2C
+    SongNote $28
+    SongRepeat
+    SongEnd
+;}
+
+; $7A95
+song_reachedTheGunship_wave_section6:
+;{
+    SongRepeatSetup $4
+    SongNoteLength $4
+    SongNote $24
+    SongNote $2E
+    SongNote $2C
+    SongNote $28
+    SongRepeat
+    SongEnd
+;}
+
+; $7A9E
+song_reachedTheGunship_wave_section7:
+;{
+    SongRepeatSetup $2
+    SongNoteLength $4
+    SongNote $32
+    SongNote $2E
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $4
+    SongNote $1A
+    SongNote $16
+    SongRepeat
+    SongEnd
+;}
+
+; $7AAB
+song_reachedTheGunship_wave_section8:
+;{
+    SongNoteLength $4
+    SongNote $1A
+    SongNote $24
+    SongNote $22
+    SongNote $1E
+    SongNote $1A
+    SongNote $24
+    SongNote $32
+    SongNote $3C
+    SongOptions
+        WaveOptions $416B, 2, $0
+    SongRepeatSetup $2
+    SongNoteLength $2
+    SongNote $32
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $30
+    SongNoteLength $1
+    SongSpecial3
+    SongNote $28
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $3C
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $3A
+    SongNoteLength $1
+    SongSpecial3
+    SongNote $32
+    SongSpecial3
+    SongRepeat
+    SongNoteLength $2
+    SongNote $4A
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $48
+    SongNoteLength $1
+    SongSpecial3
+    SongNote $40
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $54
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $52
+    SongNoteLength $1
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $4A
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $48
+    SongNoteLength $1
+    SongSpecial3
+    SongNote $40
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $54
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $52
+    SongNoteLength $1
+    SongSpecial3
+    SongNote $4A
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $62
+    SongNoteLength $1
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $60
+    SongNoteLength $1
+    SongSpecial3
+    SongNote $62
+    SongNoteLength $0
+    SongSpecial3
+    SongMute
+    SongNoteLength $7
+    SongNote $58
+    SongNoteLength $2
+    SongSpecial3
+    SongNoteLength $2
+    SongNote $40
+    SongSpecial3
+    SongOptions
+        WaveOptions $416B, 1, $0
+    SongNoteLength $1
+    SongNote $28
+    SongSpecial3
+    SongNoteLength $0
+    SongNote $28
+    SongSpecial3
+    SongNote $28
+    SongSpecial3
+    SongNoteLength $B
+    SongNote $2
+    SongNote $10
+    SongNoteLength $2
+    SongNote $28
+    SongNoteLength $3
+    SongSpecial3
+    SongEnd
+;}
+
+; $7B1E
+song_reachedTheGunship_noise_section0:
+;{
+    SongRepeatSetup $2
+    SongNoteLength $2
+    SongNote $10
+    SongNote $C
+    SongNote $10
+    SongNote $C
+    SongNote $10
+    SongNote $C
+    SongNote $C
+    SongNoteLength $1
+    SongNote $1C
+    SongNote $14
+    SongRepeat
+    SongRepeatSetup $3
+    SongNoteLength $1
+    SongNote $10
+    SongNote $14
+    SongNote $C
+    SongNote $4
+    SongRepeat
+    SongNote $14
+    SongNote $C
+    SongNote $1C
+    SongNote $1C
+    SongRepeatSetup $2
+    SongNote $10
+    SongNote $1C
+    SongNote $C
+    SongNote $4
+    SongRepeat
+    SongNote $1C
+    SongNote $1C
+    SongNote $1C
+    SongNote $1C
+    SongNoteLength $2
+    SongNote $68
+    SongNoteLength $0
+    SongNote $1C
+    SongNote $1C
+    SongNote $1C
+    SongNote $1C
+    SongEnd
+;}
+
+; $7B4B
+song_reachedTheGunship_noise_section1:
+;{
+    SongNoteLength $5
+    SongNote $6C
+    SongMute
+    SongMute
+    SongNoteLength $8
+    SongMute
+    SongNoteLength $3
+    SongNote $68
+    SongNoteLength $3
+    SongNote $6C
+    SongNote $50
+    SongNote $54
+    SongNote $58
+    SongNoteLength $3
+    SongNote $54
+    SongNoteLength $4
+    SongNote $5C
+    SongNoteLength $3
+    SongNote $64
+    SongNote $60
+    SongNote $58
+    SongNoteLength $4
+    SongNote $54
+    SongNoteLength $3
+    SongNote $50
+    SongNote $4C
+    SongNote $54
+    SongNote $50
+    SongRepeatSetup $4
+    SongNoteLength $1
+    SongNote $4C
+    SongNote $64
+    SongRepeat
+    SongNoteLength $1
+    SongNote $14
+    SongNote $14
+    SongNote $14
+    SongNote $14
+    SongNoteLength $3
+    SongNote $6C
+    SongEnd
+;}
+
+; $7B75
+song_reachedTheGunship_noise_section2:
+;{
+    SongRepeatSetup $3
+    SongNoteLength $1
+    SongNote $1C
+    SongNote $C
+    SongNote $14
+    SongNote $14
+    SongRepeat
+    SongNoteLength $2
+    SongNote $68
+    SongNoteLength $1
+    SongNote $1C
+    SongNote $C
+    SongRepeatSetup $3
+    SongNoteLength $1
+    SongNote $1C
+    SongNote $8
+    SongNote $14
+    SongNote $14
+    SongRepeat
+    SongNoteLength $3
+    SongNote $6C
+    SongEnd
+;}
+
+; $7B8D
+song_reachedTheGunship_noise_section3:
+;{
+    SongRepeatSetup $7
+    SongNoteLength $1
+    SongNote $14
+    SongNote $C
+    SongNote $10
+    SongNote $10
+    SongNote $14
+    SongNote $8
+    SongNote $10
+    SongNote $10
+    SongNote $14
+    SongNote $4
+    SongNote $10
+    SongNote $10
+    SongNote $14
+    SongNote $C
+    SongNote $14
+    SongNote $4
+    SongRepeat
+    SongRepeatSetup $3
+    SongNoteLength $1
+    SongNote $14
+    SongNote $8
+    SongNote $10
+    SongNote $10
+    SongRepeat
+    SongNote $1C
+    SongNote $14
+    SongNote $1C
+    SongNote $14
+    SongEnd
+;}
+
+; $7BAE
+song_reachedTheGunship_noise_section4:
+;{
+    SongRepeatSetup $11
+    SongNoteLength $1
+    SongNote $1C
+    SongNote $C
+    SongNote $8
+    SongNote $C
+    SongRepeat
+    SongRepeatSetup $2
+    SongNoteLength $1
+    SongNote $1C
+    SongNote $C
+    SongNote $1C
+    SongNote $C
+    SongRepeat
+    SongNoteLength $1
+    SongNote $1C
+    SongNote $14
+    SongNote $1C
+    SongNote $C
+    SongEnd
+;}
+
+; $7BC4
+song_reachedTheGunship_noise_section5:
+;{
+    SongRepeatSetup $F
+    SongNoteLength $1
+    SongNote $1C
+    SongNote $10
+    SongNote $8
+    SongNote $10
+    SongNote $1C
+    SongNote $C
+    SongNote $10
+    SongNote $8
+    SongRepeat
+    SongNoteLength $1
+    SongNote $1C
+    SongNote $14
+    SongNote $8
+    SongNote $14
+    SongNote $1C
+    SongNote $14
+    SongNote $1C
+    SongNote $14
+    SongEnd
+;}
+
+; $7BDA
+song_reachedTheGunship_noise_section6:
+;{
+    SongRepeatSetup $1E
+    SongNoteLength $1
+    SongNote $14
+    SongNote $C
+    SongNote $8
+    SongNote $C
+    SongRepeat
+    SongNoteLength $1
+    SongNote $1C
+    SongNote $14
+    SongNote $8
+    SongNote $14
+    SongNote $1C
+    SongNote $14
+    SongNote $1C
+    SongNote $14
+    SongEnd
+;}
+
+; $7BEC
+song_reachedTheGunship_noise_section7:
+;{
+    SongRepeatSetup $E
+    SongNoteLength $1
+    SongNote $14
+    SongNote $10
+    SongNote $C
+    SongNote $10
+    SongRepeat
+    SongNoteLength $1
+    SongNote $1C
+    SongNote $14
+    SongNote $8
+    SongNote $14
+    SongNote $1C
+    SongNote $14
+    SongNote $1C
+    SongNote $14
+    SongEnd
+;}
+
+; $7BFE
+song_reachedTheGunship_noise_section8:
+;{
+    SongRepeatSetup $8
+    SongNoteLength $1
+    SongNote $14
+    SongNote $10
+    SongNote $8
+    SongNote $10
+    SongRepeat
+    SongRepeatSetup $4
+    SongNoteLength $1
+    SongNote $14
+    SongNote $C
+    SongNote $14
+    SongNote $10
+    SongRepeat
+    SongRepeatSetup $8
+    SongNoteLength $1
+    SongNote $14
+    SongNote $14
+    SongNote $8
+    SongNote $14
+    SongRepeat
+    SongRepeatSetup $4
+    SongNoteLength $1
+    SongNote $14
+    SongNote $14
+    SongNote $14
+    SongNote $14
+    SongRepeat
+    SongRepeatSetup $8
+    SongNoteLength $1
+    SongNote $1C
+    SongNote $1C
+    SongNote $1C
+    SongNote $1C
+    SongRepeat
+    SongNoteLength $6
+    SongNote $1C
+    SongNote $1C
+    SongNoteLength $2
+    SongNote $1C
+    SongNoteLength $4
+    SongNote $1C
+    SongNoteLength $3
+    SongNote $1C
+    SongNoteLength $2
+    SongNote $1C
+    SongNoteLength $1
+    SongNote $1C
+    SongNote $1C
+    SongNoteLength $B
+    SongNote $1C
+    SongNote $1C
+    SongNoteLength $5
+    SongNote $1C
+    SongEnd
+;}
+
+; $7C3A
+song_mainCaves_noIntro_header:
+    SongHeader $0, $40C5, song_mainCaves_toneSweep.alternateEntry, song_mainCaves_tone.alternateEntry, song_mainCaves_wave.alternateEntry, song_mainCaves_noise.alternateEntry
+
+; $7C45
+song_subCaves1_noIntro_header:
+    SongHeader $0, $40F9, song_subCaves1_toneSweep.alternateEntry, $0000, $0000, $0000
+
+; $7C50
+song_subCaves2_noIntro_header:
+    SongHeader $0, $40F9, $0000, song_subCaves2_tone.alternateEntry, $0000, $0000
+
+; $7C5B
+song_subCaves3_noIntro_header:
+    SongHeader $0, $40DF, song_subCaves3_toneSweep.alternateEntry, song_subCaves3_tone.alternateEntry, song_subCaves3_wave.alternateEntry, $0000
+
+; $7C66
+song_subCaves4_noIntro_header:
+    SongHeader $0, $40C5, $0000, song_subCaves4_tone.alternateEntry, $0000, $0000
+
+; $7C71
+song_metroidHive_withIntro_header:
+    SongHeader $1, $40B8, song_metroidHive_withIntro_toneSweep, song_metroidHive_withIntro_tone, song_metroidHive_withIntro_wave, song_metroidHive_withIntro_noise
+
+; $7C7C
+song_metroidHive_withIntro_toneSweep:
+;{
+    dw song_metroidHive_withIntro_toneSweep_section0 ; $7CA6
+    dw song_metroidHive_withIntro_toneSweep_section1 ; $7D7E
+    dw song_metroidHive_withIntro_toneSweep_section2 ; $7CAD
+    dw song_metroidHive_withIntro_toneSweep_section3 ; $6FD6
+    dw song_metroidHive_withIntro_toneSweep_section4 ; $7CB8
+    dw $00F0, song_metroidHive_withIntro_toneSweep_loop
+;}
+
+; $7C8A
+song_metroidHive_withIntro_tone:
+;{
+    dw song_metroidHive_withIntro_tone_section0 ; $7CBF
+    dw song_metroidHive_withIntro_tone_section1 ; $7CCB
+    dw song_metroidHive_withIntro_tone_section2 ; $6FD6
+    dw song_metroidHive_withIntro_tone_section3 ; $7CD6
+    dw $00F0, song_metroidHive_tone.loop
+;}
+
+; $7C96
+song_metroidHive_withIntro_wave:
+;{
+    dw song_metroidHive_withIntro_wave_section0 ; $7CDD
+    dw song_metroidHive_withIntro_wave_section1 ; $7CEB
+    dw $00F0, song_metroidHive_wave.loop
+;}
+
+; $7C9E
+song_metroidHive_withIntro_noise:
+;{
+    dw song_metroidHive_withIntro_noise_section0 ; $7CF9
+    dw song_metroidHive_withIntro_noise_section1 ; $7D01
+    dw $00F0, song_metroidHive_noise.loop
+;}
+
+; $7CA6
+song_metroidHive_withIntro_toneSweep_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $8
+        AscendingSweepOptions 7, 1
+        LengthDutyOptions $6, 0
+    SongNoteLength $5
+    SongNote $E
+    SongEnd
+;}
+
+; $7CAD
+song_metroidHive_withIntro_toneSweep_section2:
+;{
+    SongOptions
+        AscendingEnvelopeOptions 5, $0
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $5
+    SongNote $62
+    SongOptions
+        DescendingEnvelopeOptions 7, $C
+        AscendingSweepOptions 5, 3
+        LengthDutyOptions $0, 0
+    SongEnd
+;}
+
+; $7CB8
+song_metroidHive_withIntro_toneSweep_section4:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 5, $F
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $5
+    SongNote $6C
+    SongEnd
+;}
+
+; $7CBF
+song_metroidHive_withIntro_tone_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 7, $8
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $1
+    SongNote $36
+    SongNote $1E
+    SongNote $42
+    SongNote $2A
+    SongNoteLength $8
+    SongNote $4E
+    SongEnd
+;}
+
+; $7CCB
+song_metroidHive_withIntro_tone_section1:
+;{
+    SongOptions
+        AscendingEnvelopeOptions 5, $0
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $5
+    SongNote $60
+    SongOptions
+        DescendingEnvelopeOptions 7, $C
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $8, 0
+    SongEnd
+;}
+
+; $7CD6
+song_metroidHive_withIntro_tone_section3:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 5, $F
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $5
+    SongNote $6A
+    SongEnd
+;}
+
+; $7CDD
+song_metroidHive_withIntro_wave_section0:
+;{
+    SongOptions
+        WaveOptions $417B, 2, $0
+    SongNoteLength $1
+    SongNote $4E
+    SongNote $1E
+    SongNote $5A
+    SongNote $2A
+    SongNoteLength $3
+    SongNote $66
+    SongSpecial3
+    SongMute
+    SongEnd
+;}
+
+; $7CEB
+song_metroidHive_withIntro_wave_section1:
+;{
+    SongOptions
+        WaveOptions $416B, 2, $0
+    SongNoteLength $1
+    SongNote $2
+    SongSpecial3
+    SongRepeatSetup $A
+    SongNoteLength $2
+    SongNote $2
+    SongSpecial3
+    SongRepeat
+    SongEnd
+;}
+
+; $7CF9
+song_metroidHive_withIntro_noise_section0:
+;{
+    SongNoteLength $1
+    SongNote $1C
+    SongNote $18
+    SongNote $1C
+    SongNote $18
+    SongNoteLength $8
+    SongNote $1C
+    SongEnd
+;}
+
+; $7D01
+song_metroidHive_withIntro_noise_section1:
+;{
+    SongNoteLength $5
+    SongMute
+    SongMute
+    SongNoteLength $4
+    SongMute
+    SongNoteLength $2
+    SongMute
+    SongEnd
+;}
+
+; $7D09
+song_missilePickup_header:
+    SongHeader $1, $40DF, song_missilePickup_toneSweep, song_missilePickup_tone, song_missilePickup_wave, song_missilePickup_noise
+
+; $7D14
+song_missilePickup_tone:
+song_missilePickup_toneSweep:
+;{
+    dw song_missilePickup_toneSweep_section0 ; $7D20
+    dw $0000
+;}
+
+; $7D18
+song_missilePickup_wave:
+;{
+    dw song_missilePickup_wave_section0 ; $7D2F
+    dw $0000
+;}
+
+; $7D1C
+song_missilePickup_noise:
+;{
+    dw song_missilePickup_noise_section0 ; $7D3C
+    dw $0000
+;}
+
+; $7D20
+song_missilePickup_toneSweep_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 2, $F
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 2
+    SongNoteLength $1
+    SongNote $28
+    SongNote $2C
+    SongNote $2E
+    SongOptions
+        DescendingEnvelopeOptions 5, $F
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 2
+    SongNoteLength $8
+    SongNote $3C
+    SongEnd
+;}
+
+; $7D2F
+song_missilePickup_wave_section0:
+;{
+    SongOptions
+        WaveOptions $417B, 2, $0
+    SongNoteLength $1
+    SongNote $46
+    SongSpecial3
+    SongNote $4A
+    SongNoteLength $2
+    SongNote $32
+    SongSpecial5
+    SongSpecial3
+    SongEnd
+;}
+
+; $7D3C
+song_missilePickup_noise_section0:
+;{
+    SongNoteLength $1
+    SongNote $14
+    SongNote $14
+    SongNote $14
+    SongNote $1C
+    SongEnd
+;}
+
+; $7D42
+song_babyMetroid_tone_section3:
+song_babyMetroid_toneSweep_section3:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 5, $1
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongEnd
+;}
+
+; $7D47
+song_babyMetroid_toneSweep_section5:
+song_babyMetroid_tone_section5:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 5, $3
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongEnd
+;}
+
+; $7D4C
+song_babyMetroid_tone_section7:
+song_babyMetroid_toneSweep_section7:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 5, $6
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongEnd
+;}
+
+; $7D51
+unused7D51_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 5, $8
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongEnd
+;}
+
+; $7D56
+unused7D56_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 5, $A
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongEnd
+;}
+
+; $7D5B
+song_babyMetroid_wave_section3:
+;{
+    SongOptions
+        WaveOptions $417B, 3, $0
+    SongEnd
+;}
+
+; $7D60
+unused7D60_section0:
+;{
+    SongOptions
+        WaveOptions $417B, 2, $0
+    SongEnd
+;}
+
+; $7D65
+unused7D65_section0:
+;{
+    SongOptions
+        WaveOptions $417B, 1, $0
+    SongEnd
+;}
+
+; $7D6A
+song_metroidQueenBattle_toneSweep_section19:
+song_metroidQueenBattle_toneSweep_section13:
+song_metroidQueenBattle_toneSweep_section16:
+;{
+    SongTempo $409E
+    SongEnd
+;}
+
+; $7D6E
+song_metroidQueenBattle_toneSweep_section10:
+song_metroidQueenBattle_toneSweep_section1C:
+;{
+    SongTempo $40AB
+    SongEnd
+;}
+
+; $7D72
+song_metroidQueenBattle_toneSweep_sectionD:
+song_metroidQueenBattle_toneSweep_section1F:
+;{
+    SongTempo $40B8
+    SongEnd
+;}
+
+; $7D76
+song_metroidQueenBattle_toneSweep_sectionA:
+song_metroidQueenBattle_toneSweep_section22:
+;{
+    SongTempo $40C5
+    SongEnd
+;}
+
+; $7D7A
+song_title_toneSweep_sectionA:
+song_metroidQueenBattle_toneSweep_section8:
+song_killedMetroid_toneSweep_section1:
+;{
+    SongTempo $40D2
+    SongEnd
+;}
+
+; $7D7E
+song_metroidQueenBattle_toneSweep_section25:
+song_subCaves3_toneSweep_section1:
+song_subCaves4_toneSweep_section1:
+song_metroidBattle_toneSweep_section1:
+song_metroidHive_withIntro_toneSweep_section1:
+song_title_toneSweep_section6:
+song_metroidQueenBattle_toneSweep_section6:
+;{
+    SongTempo $40DF
+    SongEnd
+;}
+
+; $7D82
+song_metroidQueenBattle_toneSweep_section4:
+;{
+    SongTempo $40EC
+    SongEnd
+;}
+
+; $7D86
+song_metroidQueenBattle_toneSweep_section2:
+song_subCaves1_toneSweep_section1:
+;{
+    SongTempo $40F9
+    SongEnd
+;}
+
+; $7D8A
+song_subCaves2_toneSweep_section1:
+;{
+    SongTempo $4106
+    SongEnd
+;}
+
+; $7D8E
+song_metroidQueenBattle_toneSweep_section26:
+;{
+    SongTranspose $0
+    SongEnd
+;}
+
+; $7D91
+song_metroidQueenBattle_toneSweep_section23:
+song_metroidQueenBattle_toneSweep_sectionB:
+;{
+    SongTranspose $2
+    SongEnd
+;}
+
+; $7D94
+song_metroidQueenBattle_toneSweep_sectionE:
+song_metroidQueenBattle_toneSweep_section20:
+;{
+    SongTranspose $4
+    SongEnd
+;}
+
+; $7D97
+song_metroidQueenBattle_toneSweep_section1D:
+song_metroidQueenBattle_toneSweep_section11:
+;{
+    SongTranspose $8
+    SongEnd
+;}
+
+; $7D9A
+song_metroidQueenBattle_toneSweep_section14:
+song_metroidQueenBattle_toneSweep_section1A:
+;{
+    SongTranspose $C
+    SongEnd
+;}
+
+; $7D9D
+song_metroidQueenBattle_toneSweep_section17:
+;{
+    SongTranspose $10
+    SongEnd
+;}
+
+; $7DA0
+song_subCaves1_toneSweep_section0:
+song_subCaves3_toneSweep_section0:
+song_subCaves4_toneSweep_section0:
+song_subCaves2_toneSweep_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 4, $A
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $2
+    SongNote $32
+    SongSpecial3
+    SongNote $32
+    SongSpecial3
+    SongOptions
+        DescendingEnvelopeOptions 4, $8
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $3
+    SongNote $32
+    SongOptions
+        DescendingEnvelopeOptions 4, $6
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $3
+    SongNote $32
+    SongOptions
+        DescendingEnvelopeOptions 4, $4
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $3
+    SongNote $32
+    SongOptions
+        DescendingEnvelopeOptions 4, $2
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $3
+    SongNote $32
+    SongOptions
+        DescendingEnvelopeOptions 4, $1
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $8
+    SongNote $32
+    SongNoteLength $5
+    SongMute
+    SongEnd
+;}
+
+; $7DCA
+song_subCaves1_tone_section0:
+song_subCaves3_tone_section0:
+song_subCaves2_tone_section0:
+song_subCaves4_tone_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 3, $B
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $2
+    SongNote $C
+    SongSpecial3
+    SongNote $C
+    SongSpecial3
+    SongOptions
+        DescendingEnvelopeOptions 3, $9
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $3
+    SongNote $C
+    SongOptions
+        DescendingEnvelopeOptions 3, $7
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $3
+    SongNote $C
+    SongOptions
+        DescendingEnvelopeOptions 3, $5
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $3
+    SongNote $C
+    SongOptions
+        DescendingEnvelopeOptions 3, $3
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $3
+    SongNote $C
+    SongOptions
+        DescendingEnvelopeOptions 3, $2
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 1
+    SongNoteLength $8
+    SongNote $C
+    SongNoteLength $5
+    SongMute
+    SongEnd
+;}
+
+; $7DF4
+song_subCaves1_wave_section0:
+song_subCaves2_wave_section0:
+song_subCaves4_wave_section0:
+song_subCaves3_wave_section0:
+;{
+    SongOptions
+        WaveOptions $417B, 2, $0
+    SongRepeatSetup $2
+    SongNoteLength $2
+    SongNote $32
+    SongSpecial3
+    SongRepeat
+    SongNoteLength $8
+    SongMute
+    SongMute
+    SongNoteLength $5
+    SongMute
+    SongEnd
+;}
+
+; $7E04
+song_subCaves1_noise_section0:
+song_subCaves4_noise_section0:
+song_subCaves2_noise_section0:
+song_subCaves3_noise_section0:
+;{
+    SongNoteLength $5
+    SongMute
+    SongMute
+    SongMute
+    SongEnd
+;}
+
+; $7E09
+song_babyMetroid_tone_section2:
+song_title_toneSweep_section0:
+song_babyMetroid_toneSweep_section2:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 1, $1
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $4
+    SongMute
+    SongEnd
+;}
+
+; $7E10
+song_title_wave_section0:
+song_babyMetroid_wave_section2:
+;{
+    SongOptions
+        WaveOptions $416B, 3, $0
+    SongNoteLength $4
+    SongMute
+    SongEnd
+;}
+
+; $7E17
+song_babyMetroid_noise_section2:
+song_title_noise_section0:
+;{
+    SongNoteLength $4
+    SongMute
+    SongEnd
+;}
+
+; $7E1A
+song_babyMetroid_tone_section1:
+song_babyMetroid_toneSweep_section0:
+song_babyMetroid_toneSweep_section1:
+song_babyMetroid_tone_section0:
+;{
+    SongOptions
+        DescendingEnvelopeOptions 1, $1
+        AscendingSweepOptions 0, 0
+        LengthDutyOptions $0, 0
+    SongNoteLength $5
+    SongMute
+    SongEnd
+;}
+
+; $7E21
+song_babyMetroid_wave_section0:
+song_babyMetroid_wave_section1:
+;{
+    SongOptions
+        WaveOptions $416B, 3, $0
+    SongNoteLength $5
+    SongMute
+    SongEnd
+;}
+
+; $7E28
+song_babyMetroid_noise_section1:
+song_babyMetroid_noise_section0:
+;{
+    SongNoteLength $5
+    SongMute
+    SongEnd
+;}
+;}
+
+; Freespace - 04:7E2B (filled with $00)
