@@ -1,10 +1,12 @@
 # Script by Alex W
 # Thanks to PJ for the lambda functions
 
+import argparse
+
 # Tool for extracting generic tables of bytes and words from a binary file
 
 gb2hex = lambda gb: gb >> 2 & ~0x3FFF | gb & 0x3FFF
-hex2gb = lambda hex: hex << 2 & ~0xFFFF | hex & 0x3FFF | 0x4000
+hex2gb = lambda hex: hex << 2 & ~0xFFFF | hex & 0x3FFF | (0x4000 if (hex >= 0x4000) else 0)
 romRead = lambda n: sum([ord(rom.read(1)) << i*8 for i in range(n)])
 readLongPointer = lambda: (romRead(1) << 16) | romRead(2)
 
@@ -26,39 +28,33 @@ def printWords(numWords, perRow):
             print(", ", end="")
     print("\n")
 
-def printLevelBank(bankNum):
-    rom.seek( gb2hex((bankNum << 16)|0x4000) )
-    
-    print("; Bank {:X} Level Data".format(bankNum) )
-    print(";  Generated using scripts/extract_data.py")
-    
-    print("SECTION \"ROM Bank ${0:03X}\", ROMX[$4000], BANK[${0:X}]".format(bankNum))
-    print("; Screen Data Pointers")
-    printWords(0x100,16)
-    
-    print("; Scroll Data")
-    printBytes(0x100,16)
-    
-    print("; Room Transition Indexes ")
-    printWords(0x100,16)
-    
-    for screen in range(0x45, 0x80):
-        print("; Screen ${:02X}00".format(screen) )
-        printBytes(0x100,16)
-
-def printVRAMUpdateEntries(numEntries):
-    for x in range(0, numEntries):
-        print("addr{:04X}: db ${:02X}".format(rom.tell(), romRead(1)))
-        print("    dw ${:04X}, ${:04X}, ${:04X}".format( romRead(2), romRead(2), romRead(2) ))
-
-#TODO: Make this take commandline arguments rather than editing these parameters every time
 rom = open("../Metroid2.gb", "rb")
-#source = gb2hex(0x037490)
-source = 0x2242
-length = 0x30
-columns = 1
 
-rom.seek(source)
-print("; Table")
-#printWords(length, columns)
-printVRAMUpdateEntries(3)
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('-a', '--addrmode', choices=['g', 'h'], help='use GB bank addresses or hex rom offsets')
+    ap.add_argument('-o', '--outmode', choices=['b', 'w'])
+    ap.add_argument('-l', '--length', type=int, help='number of bytes/words to print')
+    ap.add_argument('-w', '--width', type=int, default=16, help='width of output columns (default 16)')
+    ap.add_argument('source', help='source address in hex')
+
+    args = ap.parse_args()
+
+    args.source = int(args.source, 16)
+    
+    if (args.addrmode == None) | (args.addrmode == "g"):
+        source = gb2hex(args.source)
+    
+    rom.seek(source)
+    
+    print("; Data: {:06X}".format( hex2gb(rom.tell()) ) )
+    if (args.outmode == None) | (args.outmode == 'b'):
+        printBytes(args.length, args.width)
+    elif  args.outmode == 'w':
+        printWords(args.length, args.width)
+    print("; End Data: {:06X}".format( hex2gb(rom.tell()) ) )
+    
+
+if __name__ == "__main__":
+    main()
+
