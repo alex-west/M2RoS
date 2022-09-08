@@ -6840,24 +6840,27 @@ ret
 ret
 
 
-debugPauseMenu:
+debugPauseMenu: ;{ 00:2D39
+;{ Main input logic for debug menu
     ; Handle right input
     ldh a, [hInputRisingEdge]
     bit PADB_RIGHT, a
-    jr z, jr_000_2d7a
+    jr z, .endIf_A
+        ; Check if holding B
         ldh a, [hInputPressed]
         bit PADB_B, a
-        jr nz, jr_000_2d50
+        jr nz, .endIf_B
             ; Move debug cursor right
             ld a, [debugItemIndex]
             dec a
             and $07
             ld [debugItemIndex], a
-            jr jr_000_2d7a
-        jr_000_2d50:
+            jr .endIf_A
+        .endIf_B:
     
+        ; Check if holding A
         bit PADB_A, a
-        jr z, jr_000_2d68
+        jr z, .endIf_C
             ; Decrement metroid count
             ld a, [metroidCountReal]
             sub $01
@@ -6867,37 +6870,40 @@ debugPauseMenu:
             sub $01
             daa
             ld [metroidCountDisplayed], a
-            jr jr_000_2d7a
-        jr_000_2d68:
+            jr .endIf_A
+        .endIf_C:
     
-        ; Decrease Samus' energy tanks (minimum of zero)
+        ; If not holding A or B
         ld a, [samusEnergyTanks]
         and a
-        jr z, jr_000_2d7a
+        jr z, .endIf_A
+            ; Decrease Samus' energy tanks (minimum of zero)
             dec a
             ld [samusEnergyTanks], a
             ld [samusCurHealthHigh], a
             ld a, $99
             ld [samusCurHealthLow], a
-    jr_000_2d7a:
+    .endIf_A:
 
     ; Handle left input
     ldh a, [hInputRisingEdge]
     bit PADB_LEFT, a
-    jr z, jr_000_2dbc
+    jr z, .endIf_D
+        ; Check if holding B
         ldh a, [hInputPressed]
         bit PADB_B, a
-        jr nz, jr_000_2d91
+        jr nz, .endIf_E
             ; Move debug cursor left
             ld a, [debugItemIndex]
             inc a
             and $07
             ld [debugItemIndex], a
-            jr jr_000_2dbc
-        jr_000_2d91:
+            jr .endIf_D
+        .endIf_E:
     
+        ; Check if holding A
         bit PADB_A, a
-        jr z, jr_000_2da9
+        jr z, .endIf_F
             ; Decrement metroid count
             ld a, [metroidCountReal]
             add $01
@@ -6907,56 +6913,58 @@ debugPauseMenu:
             add $01
             daa
             ld [metroidCountDisplayed], a
-            jr jr_000_2dbc
-        jr_000_2da9:
+            jr .endIf_D
+        .endIf_F:
     
-        ; Increase Samus' energy tanks (max 5)
+        ; If not holding A or B
         ld a, [samusEnergyTanks]
         cp $05
-        jr z, jr_000_2dbc
+        jr z, .endIf_D
+            ; Increase Samus' energy tanks (max 5)
             inc a
             ld [samusEnergyTanks], a
             ld [samusCurHealthHigh], a
             ld a, $99
             ld [samusCurHealthLow], a
-    jr_000_2dbc:
+    .endIf_D:
 
     ; Handle A press
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
-    jr z, jr_000_2dd7
+    jr z, .endIf_G
         ; Toggle item bit 
         ld b, %00000001 ; Initial bitmask
         ld a, [debugItemIndex]
-    
         .bitmaskLoop:
             dec a
             cp $ff
-                jr z, .exitLoop
+                jr z, .break
             sla b
         jr .bitmaskLoop
+        .break:
+        ; Bitmask now corresponds to item index
         
-        .exitLoop:
-        
+        ; Toggle appropriate bit
         ld a, [samusItems]
         xor b
         ld [samusItems], a
-    jr_000_2dd7:
+    .endIf_G:
 
     ; Handle up input
     ldh a, [hInputRisingEdge]
     bit PADB_UP, a
-    jr z, jr_000_2e07
+    jr z, .endIf_H
+        ; Check if holding B
         ldh a, [hInputPressed]
         bit PADB_B, a
-        jr nz, jr_000_2def
+        jr nz, .else_I
             ; Increment weapon equipped
             ld a, [samusActiveWeapon]
             inc a
             ld [samusActiveWeapon], a
             ld [samusBeam], a
-            jr jr_000_2e07
-        jr_000_2def:
+            jr .endIf_H
+        .else_I:
             ; Increment missiles
             ld a, [samusMaxMissilesLow]
             add $10
@@ -6968,21 +6976,24 @@ debugPauseMenu:
             daa
             ld [samusMaxMissilesHigh], a
             ld [samusCurMissilesHigh], a
-    jr_000_2e07:
+    .endIf_H:
 
     ; Handle down input
     ldh a, [hInputRisingEdge]
     bit PADB_DOWN, a
-    jr z, jr_000_2e31
+    jr z, .endIf_J
+        ; Check if holding B
         ldh a, [hInputPressed]
         bit PADB_B, a
-        jr nz, jr_000_2e1f
+        jr nz, .else_K
+            ; Decrement weapon equipped
             ld a, [samusActiveWeapon]
             dec a
             ld [samusActiveWeapon], a
             ld [samusBeam], a
-            jr jr_000_2e31
-        jr_000_2e1f:
+            jr .endIf_J
+        .else_K:
+            ; Decrement max missiles
             ld a, [samusCurMissilesLow]
             sub $10
             daa
@@ -6991,86 +7002,88 @@ debugPauseMenu:
             sbc $00
             daa
             ld [samusCurMissilesHigh], a
-    jr_000_2e31:
+    .endIf_J:
+;}
 
-    ; Render logic
-    switchBank debug_drawNumber ; For this, and other drawing functions
+;{ Render logic for debug menu
+    switchBank debug_drawNumber
     ; Display debug cursor
+    ; ypos is fixed
     ld a, $58
     ldh [hSpriteYPixel], a
+    ; xpos = index*8 + $69
     ld a, [debugItemIndex]
     swap a
     srl a
     xor $ff
     add $69
     ldh [hSpriteXPixel], a
+    ; Display index of item bit
     ld a, [debugItemIndex]
     call debug_drawNumber.oneDigit
-    ; Display item toggle bits
+    
+    ; Draw item toggle icons
+    ; Set common y position and sprite ID
     ld a, $54
     ldh [hSpriteYPixel], a
     ld a, $36
     ldh [hSpriteId], a
-    
+    ; Draw item icons
     ld a, $34
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_UNUSED, a
-    call nz, drawSamusSprite
-    
+        call nz, drawSamusSprite   
     ld a, $3c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_varia, a
-    call nz, drawSamusSprite
-
+        call nz, drawSamusSprite
     ld a, $44
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_spider, a
-    call nz, drawSamusSprite
-
+        call nz, drawSamusSprite
     ld a, $4c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_spring, a
-    call nz, drawSamusSprite
-
+        call nz, drawSamusSprite
     ld a, $54
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_space, a
-    call nz, drawSamusSprite
-
+        call nz, drawSamusSprite
     ld a, $5c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_screw, a
-    call nz, drawSamusSprite
-
+        call nz, drawSamusSprite
     ld a, $64
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_hiJump, a
-    call nz, drawSamusSprite
-
+        call nz, drawSamusSprite
     ld a, $6c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_bomb, a
-    call nz, drawSamusSprite
-    
+        call nz, drawSamusSprite
+
+    ; Draw Samus' current weapon number
     ld a, $68
     ldh [hSpriteYPixel], a
     ld a, $50
     ldh [hSpriteXPixel], a
     ld a, [samusActiveWeapon]
     call debug_drawNumber.twoDigit
-    
+
+    ; OAM bookkeeping
     ldh a, [hOamBufferIndex]
     ld [maxOamPrevFrame], a
+;} End display logic
 
-    ; Save if pressing select and standing or morphing
+; Save if pressing select and standing or morphing
     ldh a, [hInputRisingEdge]
     cp PADF_SELECT
         ret nz
@@ -7079,14 +7092,14 @@ debugPauseMenu:
         ret nz
     ld a, [samusPose]
     and a ; equivalent to "cp pose_standing"
-        jr z, jr_000_2ede
+        jr z, .save
     cp pose_morph
         ret nz
         
-jr_000_2ede:
+.save:
     ld a, $09
     ldh [gameMode], a
-ret
+ret ;}
 
 
 Call_000_2ee3:
@@ -7243,7 +7256,7 @@ ret
 VBlank_deathSequence: ; 00:2FE1
     ld a, [deathFlag]
     and a
-    jr z, unusedDeathAnimation
+        jr z, unusedDeathAnimation
 
     ; Animate once every 4 frames
     ldh a, [frameCounter]
@@ -7316,7 +7329,7 @@ deathAnimationTable:: ; 00:3042
 ; Only jumped to if the death animation vblank handler is called, but the death flag is not set
 ;  which is impossible
 ; Possibly not intended as a death animation
-unusedDeathAnimation: ; 00:3062
+unusedDeathAnimation: ;{ 00:3062
     ldh a, [frameCounter]
     and $01
     jr nz, .endIf_A
@@ -7373,7 +7386,7 @@ unusedDeathAnimation: ; 00:3062
     pop de
     pop bc
     pop af
-reti
+reti ;}
 
 ; 00:30BB - Bomb-enemy collision detection
 Call_000_30bb: ; 00:30BB
