@@ -9,6 +9,10 @@ map_scrollData     = $4200 ; $100 bytes
 map_doorIndexes    = $4300 ; $200 bytes - Also contains sprite priority bits per screen
 ; Note: Map data starts at $4500
 
+; Samus physics constants
+samus_jumpArrayBaseOffset = $40
+samus_unmorphJumpTime = $10
+
 ; Samus' Gear constants
 ;  Bitfields
 itemMask_bomb   = %00000001 ; 01: Bombs

@@ -828,7 +828,7 @@ def samusItems = $D045 ; Samus' equipment
 def debugItemIndex = $D046 ; Debug screen selector index
 def vramTransferFlag = $D047 ; VRAM tiles update flag (see $FFB1..B6, $2BA3, $27BA)
 def waterContactFlag = $D048 ; Flag to tell if Samus is touching water
-;$D049: Timer for something. Decremented every frame. Written to in several places, but only meaningfully read in the falling poseHandler
+def samus_unmorphJumpTimer = $D049 ; Timer for allowing an unmorph jump. Decremented every frame. Written to in several places.
 ;
 ;$D04C: Cleared by handle loading blocks due to scrolling, set to FFh in a few places. Never read
 def samusActiveWeapon = $D04D ; Weapon equipped.  See also $D055

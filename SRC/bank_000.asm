@@ -716,7 +716,7 @@ gameMode_Main: ;{ 00:04DF
         jr nz, .endIf_A
             xor a
             ld [$d05c], a
-            call Call_000_2ee3 ; Damage Samus
+            call hurtSamus ; Damage Samus
             call samus_handlePose ; Samus pose handler
             call Call_000_32ab ; ? Samus/enemy collision logic
             call Call_000_21fb ; Handle shooting or toggling cannon
@@ -733,11 +733,11 @@ gameMode_Main: ;{ 00:04DF
     call handleRespawningBlocks_longJump ; Handle respawning blocks
     call adjustHudValues_longJump ; Handle missile/energy counters
     ; Decrease counter (minimum of zero)
-    ld a, [$d049]
+    ld a, [samus_unmorphJumpTimer]
     and a
     jr z, .endIf_B
         dec a
-        ld [$d049], a
+        ld [samus_unmorphJumpTimer], a
     .endIf_B:
 
     call drawHudMetroid_longJump
@@ -785,11 +785,11 @@ ret
     call drawProjectiles_longJump
     call handleRespawningBlocks_longJump
     call adjustHudValues_longJump
-    ld a, [$d049]
+    ld a, [samus_unmorphJumpTimer]
     and a
     jr z, .endIf_D
         dec a
-        ld [$d049], a
+        ld [samus_unmorphJumpTimer], a
     .endIf_D:
 
     call drawHudMetroid_longJump
@@ -1989,7 +1989,7 @@ poseFunc_0D8B: ;{ $1C - Escaping Queen's mouth
         ret
     jr_000_0dae:
 
-    ld a, $40
+    ld a, samus_jumpArrayBaseOffset
     ld [samus_jumpArcCounter], a
     ld a, $01
     ld [$d00f], a
@@ -2042,7 +2042,7 @@ poseFunc_0DF0: ;{ $19
     jr nz, .else_A
         ld a, $01
         ld [$d00f], a
-        ld a, $40 + $10 ;$50
+        ld a, samus_jumpArrayBaseOffset + $10 ;$50
         ld [samus_jumpArcCounter], a
         ld a, $1d
         ld [samusPose], a
@@ -2050,7 +2050,7 @@ poseFunc_0DF0: ;{ $19
     .else_A:
         cp $20
         jr nz, .else_B
-            ld a, $40
+            ld a, samus_jumpArrayBaseOffset
             ld [samus_jumpArcCounter], a
             ld a, $01
             ld [$d00f], a
@@ -2188,8 +2188,8 @@ poseFunc_0ECB: ;{ $12 and $1D
     bit PADB_UP, a
     jr z, poseFunc_0F6C
         call samus_unmorphInAir
-        ld a, $10
-        ld [$d049], a
+        ld a, samus_unmorphJumpTime
+        ld [samus_unmorphJumpTimer], a
     jr poseFunc_0F6C
 ;}
 
@@ -2207,7 +2207,7 @@ poseFunc_0EF7: ;{ $0F - Knockback
     xor a
     ld [samusInvulnerableTimer], a
     ; High-jump jump value
-    ld a, $21
+    ld a, samus_jumpArrayBaseOffset - $1F ;$21
     ld [samus_jumpArcCounter], a
     ld a, $02
     ld [sfxRequest_square1], a
@@ -2215,7 +2215,7 @@ poseFunc_0EF7: ;{ $0F - Knockback
     bit itemBit_hiJump, a
     jr nz, .endIf_A
         ; Normal jump value
-        ld a, $31
+        ld a, samus_jumpArrayBaseOffset - $0F ;$31
         ld [samus_jumpArcCounter], a
         ld a, $01
         ld [sfxRequest_square1], a
@@ -2242,8 +2242,8 @@ poseFunc_0F38: ;{ $10
     bit PADB_UP, a
     jp z, .endIf_A
         call samus_unmorphInAir
-        ld a, $10
-        ld [$d049], a
+        ld a, samus_unmorphJumpTime
+        ld [samus_unmorphJumpTimer], a
     .endIf_A:
 
     ld a, [samusItems]
@@ -2254,7 +2254,7 @@ poseFunc_0F38: ;{ $10
         jr z, .endIf_B
             xor a
             ld [samusInvulnerableTimer], a
-            ld a, $2e
+            ld a, samus_jumpArrayBaseOffset - $12 ;$2e
             ld [samus_jumpArcCounter], a
             ld a, pose_morphJump
             ld [samusPose], a
@@ -2269,7 +2269,7 @@ poseFunc_0F38: ;{ $10
 
 poseFunc_0F6C: ;{ 00:0F6C - $11: Bombed (standing)
     ld a, [samus_jumpArcCounter]
-    sub $40
+    sub samus_jumpArrayBaseOffset
     ld e, a
     ld d, $00
     ld hl, table_0FF6
@@ -2283,14 +2283,14 @@ poseFunc_0F6C: ;{ 00:0F6C - $11: Bombed (standing)
     call samus_moveVertical
     jr nc, jr_000_0f8b
         ld a, [samus_jumpArcCounter]
-        cp $40 + $17 ; $57
+        cp samus_jumpArrayBaseOffset + $17 ; $57
         jr nc, jr_000_0fc0
     jr_000_0f8b:
 
     ld a, [samus_jumpArcCounter]
     inc a
     ld [samus_jumpArcCounter], a
-    cp $40 + $16 ; $56
+    cp samus_jumpArrayBaseOffset + $16 ; $56
     jr c, jr_000_0fac
         ldh a, [hInputPressed]
         bit PADB_RIGHT, a
@@ -2573,7 +2573,7 @@ poseFunc_spiderJump: ;{ 00:1170 - $0D: Spider ball jumping
     .endIf_A:
 
     ld a, [samus_jumpArcCounter]
-    cp $40
+    cp samus_jumpArrayBaseOffset
     jr nc, .endIf_B
         ldh a, [hInputPressed]
         bit PADB_A, a
@@ -2582,19 +2582,19 @@ poseFunc_spiderJump: ;{ 00:1170 - $0D: Spider ball jumping
                 jr .moveVertical
         .endIf_C:
         
-        ld a, $40 + $16 ;$56
+        ld a, samus_jumpArrayBaseOffset + $16 ;$56
         ld [samus_jumpArcCounter], a
     .endIf_B:
 
     ; Read vertical speed from jump arc table
-    sub $40
+    sub samus_jumpArrayBaseOffset
     ld hl, jumpArcTable
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
     ; Start falling if at the end of the table
-    cp $80
+    cp samus_jumpArrayBaseOffset + $40 ;$80
         jr z, .startFalling
 
 .moveVertical:
@@ -2753,8 +2753,8 @@ poseFunc_morphFall: ;{ 00:123B - $08: Morphball falling
     bit PADB_UP, a
     jr z, .endIf_C
         call samus_unmorphInAir
-        ld a, $10
-        ld [$d049], a
+        ld a, samus_unmorphJumpTime
+        ld [samus_unmorphJumpTimer], a
         jr .exit
     .endIf_C:
 
@@ -2833,10 +2833,10 @@ poseFunc_12F5: ;{ 00:12F5 - $07 - Falling
             ld [samus_jumpArcCounter], a
             jr jr_000_1311
         jr_000_1306:
-            ld a, [$d049]
+            ld a, [samus_unmorphJumpTimer]
             and a
                 jr z, jr_000_1335
-            ld a, $21
+            ld a, samus_jumpArrayBaseOffset - $1F ;$21
             ld [samus_jumpArcCounter], a
         jr_000_1311:
     
@@ -2845,7 +2845,7 @@ poseFunc_12F5: ;{ 00:12F5 - $07 - Falling
         ld a, [samusItems]
         bit itemBit_hiJump, a
         jr nz, jr_000_1327
-            ld a, $31
+            ld a, samus_jumpArrayBaseOffset - $F ;$31
             ld [samus_jumpArcCounter], a
             ld a, $01
             ld [sfxRequest_square1], a
@@ -2856,7 +2856,7 @@ poseFunc_12F5: ;{ 00:12F5 - $07 - Falling
         xor a
         ld [samus_jumpStartCounter], a
         xor a
-        ld [$d049], a
+        ld [samus_unmorphJumpTimer], a
         ret    
     jr_000_1335:
 
@@ -2960,7 +2960,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
             call collision_samusTop
                 ret c
             ; High jump parameters
-            ld a, $21
+            ld a, samus_jumpArrayBaseOffset - $1F ;$21
             ld [samus_jumpArcCounter], a
             ld a, $02
             ld [sfxRequest_square1], a
@@ -2969,7 +2969,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
             bit itemBit_hiJump, a
             jr nz, .endIf_C
                 ; Normal jump parameters
-                ld a, $31
+                ld a, samus_jumpArrayBaseOffset - $0F ;$31
                 ld [samus_jumpArcCounter], a
                 ld a, $01
                 ld [sfxRequest_square1], a
@@ -3079,7 +3079,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
         call collision_samusTop
             ret c
         ; High jump parameters
-        ld a, $21
+        ld a, samus_jumpArrayBaseOffset - $1F ;$21
         ld [samus_jumpArcCounter], a
         ld a, $02
         ld [sfxRequest_square1], a
@@ -3088,7 +3088,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
         bit itemBit_hiJump, a
         jr nz, .endIf_K
             ; Normal jump parameters
-            ld a, $31
+            ld a, samus_jumpArrayBaseOffset - $0F ;$31
             ld [samus_jumpArcCounter], a
             ld a, $01
             ld [sfxRequest_square1], a
@@ -3140,7 +3140,7 @@ poseFunc_running: ;{ 00:14D6 - $03: Running
             call collision_samusTop
                 ret c
             ; High jump parameter
-            ld a, $21
+            ld a, samus_jumpArrayBaseOffset - $1F ;$21
             ld [samus_jumpArcCounter], a
             ; Request sound
             ld a, [samusItems]
@@ -3153,7 +3153,7 @@ poseFunc_running: ;{ 00:14D6 - $03: Running
             bit itemBit_hiJump, a
             jr nz, .endIf_C
                 ; Normal jump parameter
-                ld a, $31
+                ld a, samus_jumpArrayBaseOffset - $0F ;$31
                 ld [samus_jumpArcCounter], a
             .endIf_C:
             ; Decrease jump height in water
@@ -3265,14 +3265,14 @@ poseFunc_running: ;{ 00:14D6 - $03: Running
             ret c
         
         ; High jump parameter
-        ld a, $21
+        ld a, samus_jumpArrayBaseOffset - $1F ;$21
         ld [samus_jumpArcCounter], a
         ; Check equipment
         ld a, [samusItems]
         bit itemBit_hiJump, a
         jr nz, .endIf_K
             ; Normal jump parameter
-            ld a, $31
+            ld a, samus_jumpArrayBaseOffset - $0F ;$31
             ld [samus_jumpArcCounter], a
         .endIf_K:
         
@@ -3429,13 +3429,13 @@ poseFunc_crouch: ;{ 00:15F4 - $04: Crouching
         .endIf_I:
 
         ; High jump counter value
-        ld a, $21
+        ld a, samus_jumpArrayBaseOffset - $1F ;$21
         ld [samus_jumpArcCounter], a
         ld a, [samusItems]
         bit itemBit_hiJump, a
         jr nz, .endIf_J
             ; Normal jump counter value
-            ld a, $31
+            ld a, samus_jumpArrayBaseOffset - $0F ;$31
             ld [samus_jumpArcCounter], a
         .endIf_J:
 
@@ -3537,7 +3537,7 @@ poseFunc_morphBall: ;{ 00:1701 - $05: Morph ball
         ld a, [samusItems]
         bit itemBit_spring, a
         jr z, .endIf_C
-            ld a, $2e
+            ld a, samus_jumpArrayBaseOffset - $12 ;$2e
             ld [samus_jumpArcCounter], a
             ld a, pose_morphJump
             ld [samusPose], a
@@ -3563,12 +3563,12 @@ poseFunc_morphBall: ;{ 00:1701 - $05: Morph ball
         ; Set up initial jump arc table index for morph bounce
         jr nz, .else_B
             ; Unused
-            ld a, $48
+            ld a, samus_jumpArrayBaseOffset + $08 ;$48
             ld [samus_jumpArcCounter], a
             ret
         .else_B:
             ; Used
-            ld a, $44
+            ld a, samus_jumpArrayBaseOffset + $04 ;$44
             ld [samus_jumpArcCounter], a
             ret
     .else_A: ; Move horizontal
@@ -3629,7 +3629,7 @@ poseFunc_morphJump: ;{ 00:179F - $06: Morph Jump
 
 poseFunc_jump: ;{ 00:17BB - Pose $01
     ld a, [samus_jumpArcCounter]
-    cp $40
+    cp samus_jumpArrayBaseOffset
     jr nc, .endIf_A
         ldh a, [hInputPressed]
         bit PADB_A, a
@@ -3643,17 +3643,17 @@ poseFunc_jump: ;{ 00:17BB - Pose $01
                 jr .moveVertical
         .endIf_B:
     
-        ld a, $40 + $16 ;56
+        ld a, samus_jumpArrayBaseOffset + $16 ;56
         ld [samus_jumpArcCounter], a
     .endIf_A:
 
-    sub $40
+    sub samus_jumpArrayBaseOffset
     ld hl, jumpArcTable
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
-    cp $80
+    cp samus_jumpArrayBaseOffset + $40 ;$80
         jr z, .startFalling
 
     ; Skip ahead if moving upwards
@@ -3671,7 +3671,7 @@ poseFunc_jump: ;{ 00:17BB - Pose $01
     ; Bonk head on ceiling
     jr nc, .endIf_D
         ld a, [samus_jumpArcCounter]
-        cp $40 + $17 ; 57
+        cp samus_jumpArrayBaseOffset + $17 ; 57
             jr nc, .startFalling
     .endIf_D:
 
@@ -3688,7 +3688,7 @@ poseFunc_jump: ;{ 00:17BB - Pose $01
         jr z, .endIf_E
             call samus_unmorphInAir
             ld a, $10
-            ld [$d049], a
+            ld [samus_unmorphJumpTimer], a
     .endIf_E:
 
 ;moveHorizontal
@@ -3759,7 +3759,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
 
     ; If jump timer is > $40, then jump ahead
     ld a, [samus_jumpArcCounter]
-    cp $40
+    cp samus_jumpArrayBaseOffset
     jr nc, .endIf_B
         ; Handle linear ascent of the jump
         ; If A is being held, proper upwards
@@ -3778,7 +3778,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
                 jr .moveVertical
         .endIf_C:
         ; Set position to table to the apex of the jump
-        ld a, $40 + $16
+        ld a, samus_jumpArrayBaseOffset + $16
         ld [samus_jumpArcCounter], a
     .endIf_B:
 
@@ -3803,7 +3803,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
             bit itemBit_space, a
             jr z, .endIf_D
                 ; High-jump space jump value
-                ld a, $18
+                ld a, samus_jumpArrayBaseOffset - $28 ;$18
                 ld [samus_jumpArcCounter], a
                 ld a, $02
                 ld [sfxRequest_square1], a
@@ -3812,7 +3812,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
                 bit itemBit_hiJump, a
                 jr nz, .endIf_E
                     ; Normal jump space jump value
-                    ld a, $28
+                    ld a, samus_jumpArrayBaseOffset - $18 ;$28
                     ld [samus_jumpArcCounter], a
                     ld a, $01
                     ld [sfxRequest_square1], a
@@ -3849,7 +3849,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
     ld hl, jumpArcTable
     add hl, de
     ld a, [hl]
-    cp $80
+    cp samus_jumpArrayBaseOffset + $40 ;$80
         jr nz, .moveVertical
     ; Start falling
     jr .breakSpin
@@ -3869,7 +3869,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
     call samus_moveVertical
     jr nc, .endIf_I
         ld a, [samus_jumpArcCounter]
-        cp $40 + $17
+        cp samus_jumpArrayBaseOffset + $17
             jr c, .endIf_I
         jr .startFalling
     .endIf_I:
@@ -4562,7 +4562,7 @@ samus_moveUp: ;{ 00:1D98 - Move up (only directly called by spider ball)
     ld a, b
     call collision_samusTop
     jr nc, .keepResults
-        ld a, $40 + $16 ;$56
+        ld a, samus_jumpArrayBaseOffset + $16 ;$56
         ld [samus_jumpArcCounter], a
         ld a, [$d029]
         ldh [hSamusYPixel], a
@@ -4905,7 +4905,7 @@ Call_000_1f0f: ;{ 00:1F0F
     jr nc, .exit
 
     ld a, $00
-    ld [$d049], a
+    ld [samus_unmorphJumpTimer], a
 
 .exit:
     pop bc
@@ -5032,37 +5032,37 @@ saveFile_magicNumber: ; 00:2083
     db $01, $23, $45, $67, $89, $ab, $cd, $ef
 
 ; Damage pose transition table 
-table_208B: ;{ 00:208B
-    db $0F
-    db $0F
-    db $0F
-    db $0F
-    db $0F
-    db $10
-    db $10
-    db $0F
-    db $10
-    db $0F
-    db $0F
-    db $10
-    db $10
-    db $10
-    db $10
-    db $0F
-    db $10
-    db $0F
-    db $10
-    db $0F
+samus_damagePoseTransitionTable: ;{ 00:208B
+    db $0F ; $00 - Standing
+    db $0F ; $01 - Jumping
+    db $0F ; $02 - Spin-jumping
+    db $0F ; $03 - Running (set to 83h when turning)
+    db $0F ; $04 - Crouching
+    db $10 ; $05 - Morphball
+    db $10 ; $06 - Morphball jumping
+    db $0F ; $07 - Falling
+    db $10 ; $08 - Morphball falling
+    db $0F ; $09 - Starting to jump
+    db $0F ; $0A - Starting to spin-jump
+    db $10 ; $0B - Spider ball rolling
+    db $10 ; $0C - Spider ball falling
+    db $10 ; $0D - Spider ball jumping
+    db $10 ; $0E - Spider ball
+    db $0F ; $0F - Knockback
+    db $10 ; $10 - Morphball knockback
+    db $0F ; $11 - Standing bombed
+    db $10 ; $12 - Morphball bombed
+    db $0F ; $13 - Facing screen
     db $00
     db $00
     db $00
     db $00
-    db $10
-    db $10
-    db $1A
-    db $1B
-    db $1C
-    db $1D
+    db $10 ; $18 - Being eaten by Metroid Queen
+    db $10 ; $19 - In Metroid Queen's mouth
+    db $1A ; $1A - Being swallowed by Metroid Queen
+    db $1B ; $1B - In Metroid Queen's stomach
+    db $1C ; $1C - Escaping Metroid Queen
+    db $1D ; $1D - Escaped Metroid Queen
 ;}
 
 ; 00:20A9 - Spider Ball Direction Tables {
@@ -7102,42 +7102,49 @@ debugPauseMenu: ;{ 00:2D39
 ret ;}
 
 
-Call_000_2ee3:
+hurtSamus: ;{ 00:2EE3
+    ; Exit if hurt flag is not set
     ld a, [samus_hurtFlag]
     cp $01
         ret nz
+    ; Clear hurt flag
     xor a
     ld [samus_hurtFlag], a
+    ; Exit if i-frames are active
     ld a, [samusInvulnerableTimer]
     and a
         ret nz
+    ; Apply damage value to Samus
     ld a, [samus_damageValue]
     call applyDamage.enemySpike
     ; Give Samus i-frames
     ld a, $33
     ld [samusInvulnerableTimer], a
+    ; Use table to force Samus into the appropriate knockback pose
     ld a, [samusPose]
-    res 7, a
+    res 7, a ; Force Samus out of turnaround animation
     ld e, a
     ld d, $00
-    ld hl, table_208B
+    ld hl, samus_damagePoseTransitionTable
     add hl, de
     ld a, [hl]
     ld [samusPose], a
+    ; Set travel direction to damage boost direction
     ld a, [$c423]
     ld [$d00f], a
     ld a, [queen_roomFlag]
     cp $11
-    jr nz, jr_000_2f1f
+    jr nz, .endIf
+        ; Force damage boost to right if in Queen's room
         ld a, $01
         ld [$d00f], a
-    jr_000_2f1f:
-
-    ld a, $40
+    .endIf:
+    ; Set jump arc counter to base
+    ld a, samus_jumpArrayBaseOffset
     ld [samus_jumpArcCounter], a
     xor a
-    ld [$d049], a
-ret
+    ld [samus_unmorphJumpTimer], a
+ret ;}
 
 applyDamage: ;{ This procedure has multiple entry points
     .queenStomach: ; 00:2F29
