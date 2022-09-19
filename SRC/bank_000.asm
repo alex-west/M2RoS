@@ -486,17 +486,21 @@ TimerOverflowInterruptStub: ; 00:039B
     reti
 
 disableLCD: ;{ 00:039C
+    ; Save interrupt status
     ldh a, [rIE]
     ldh [$99], a
     res 0, a
     ldh [rIE], a
+    ; Wait for VBlank
     .waitLoop:
         ldh a, [rLY]
         cp $91
     jr nz, .waitLoop
+    ; Disable LCD
     ldh a, [rLCDC]
     and $7f
     ldh [rLCDC], a
+    ; Restore interrupt status
     ldh a, [$99]
     ldh [rIE], a
 ret
@@ -677,9 +681,9 @@ ret
 
 ; Game Mode $04
 gameMode_Main: ;{ 00:04DF
+    ; Jump ahead if being eaten by the Queen
     ld a, [samusPose]
     and %01111111 ; Mask out upper bit (for turnaround animation)
-    ; Jump ahead if being eaten by the Queen
     cp $18
         jp nc, .queenBranch
     ; Handle window height, save sprite text, earthquake, low heath beep, fade in, and Metroid Queen cry
@@ -692,28 +696,33 @@ gameMode_Main: ;{ 00:04DF
         call z, killSamus
     ; Update Samus position history
     ldh a, [hSamusYPixel]
-    ld [$d029], a
+    ld [prevSamusYPixel], a
     ldh a, [hSamusYScreen]
-    ld [$d02a], a
+    ld [prevSamusYScreen], a
     ldh a, [hSamusXPixel]
-    ld [$d027], a
+    ld [prevSamusXPixel], a
     ldh a, [hSamusXScreen]
-    ld [$d028], a
+    ld [prevSamusXScreen], a
     ; Check if a cutscene is active (i.e. a Metroid is transforming)
     ld a, [cutsceneActive]
     and a
     jr z, .else_A
+        ; Force Samus out of turnaround pose
         ld a, [samusPose]
         res 7, a
         ld [samusPose], a
+        ; Only allow toggling missiles as input
         ldh a, [hInputRisingEdge]
         bit PADB_SELECT, a
             call nz, toggleMissiles
         jr .endIf_A
     .else_A:
+        ; Check if in a door transition
+        ; BUG: This only checks the low byte of the index
         ld a, [doorScrollDirection]
         and a
         jr nz, .endIf_A
+            ; Do various common things
             xor a
             ld [$d05c], a
             call hurtSamus ; Damage Samus
@@ -724,7 +733,7 @@ gameMode_Main: ;{ 00:04DF
             call Call_000_3d99 ; Handle bombs
     .endIf_A:
 
-    call Call_000_0698 ; Handle loading blocks from scrolling
+    call prepMapUpdate ; Handle loading blocks from scrolling
     call Call_000_08fe ; Handle scrolling/triggering door transitions
     call convertCameraToScroll ; Calculate scroll offsets
     call handleItemPickup
@@ -732,17 +741,20 @@ gameMode_Main: ;{ 00:04DF
     call drawProjectiles_longJump ; Draw projectiles
     call handleRespawningBlocks_longJump ; Handle respawning blocks
     call adjustHudValues_longJump ; Handle missile/energy counters
-    ; Decrease counter (minimum of zero)
+    ; Decrement unmorph jump timer
     ld a, [samus_unmorphJumpTimer]
     and a
     jr z, .endIf_B
         dec a
         ld [samus_unmorphJumpTimer], a
     .endIf_B:
-
+    
     call drawHudMetroid_longJump
+    ; Set max OAM offset of non-enemies
     ldh a, [hOamBufferIndex]
-    ld [$d064], a
+    ld [samusTopOamOffset], a
+    ; Handle enemies if not in a door
+    ; BUG: This only checks the low byte of the index
     ld a, [doorIndexLow]
     and a
     jr nz, .endIf_C
@@ -750,10 +762,10 @@ gameMode_Main: ;{ 00:04DF
     .endIf_C:
 
     call clearUnusedOamSlots_longJump ; Clear unused OAM
-    call tryPausing ; Handle pausing ?
+    call tryPausing ; Handle pausing
 ret
 
-.queenBranch: ;{
+.queenBranch: ;{ Branch used when being eaten. Skips a few tasks, but otherwise quite similar to the above
     ; Handle window height, save text, earthquake, low heath beep, fade in, and Metroid Queen cry
     call miscIngameTasks_longJump
     ; Check if dead (when displayed health is zero)
@@ -764,27 +776,29 @@ ret
         call z, killSamus
     ; Update Samus position history
     ldh a, [hSamusYPixel]
-    ld [$d029], a
+    ld [prevSamusYPixel], a
     ldh a, [hSamusYScreen]
-    ld [$d02a], a
+    ld [prevSamusYScreen], a
     ldh a, [hSamusXPixel]
-    ld [$d027], a
+    ld [prevSamusXPixel], a
     ldh a, [hSamusXScreen]
-    ld [$d028], a
+    ld [prevSamusXScreen], a
     xor a
     ld [$d05c], a
+    ; Do various common things
     call samus_handlePose
     call Call_000_32ab
     call Call_000_21fb
     call handleProjectiles_longJump
     call Call_000_3d99
-    call Call_000_0698
+    call prepMapUpdate
     call Call_000_08fe
     call convertCameraToScroll
     call drawSamus_longJump
     call drawProjectiles_longJump
     call handleRespawningBlocks_longJump
     call adjustHudValues_longJump
+    ; Decrement unmorph jump timer
     ld a, [samus_unmorphJumpTimer]
     and a
     jr z, .endIf_D
@@ -793,8 +807,9 @@ ret
     .endIf_D:
 
     call drawHudMetroid_longJump
+    ; Set max OAM offset of non-enemies
     ldh a, [hOamBufferIndex]
-    ld [$d064], a
+    ld [samusTopOamOffset], a
     call handleEnemiesOrQueen
     call clearUnusedOamSlots_longJump
     call tryPausing
@@ -857,15 +872,16 @@ ret
 ;}
 
 ; Only called when entering the queen's room
-Call_000_0673: ;{ 00:0673
+queen_renderRoom: ;{ 00:0673
+    ; Set source coordinate to upper-left corner of screen
     xor a
-    ldh [$cc], a
-    ldh [$ce], a
+    ldh [hMapSource.yPixel], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraYScreen]
-    ldh [$cd], a
+    ldh [hMapSource.yScreen], a
     ldh a, [hCameraXScreen]
-    ldh [$cf], a
-
+    ldh [hMapSource.xScreen], a
+    ; Iterate over every row of the screen
     .loop:
         ld a, LOW(mapUpdateBuffer)
         ldh [hMapUpdate.buffPtrLow], a
@@ -873,15 +889,15 @@ Call_000_0673: ;{ 00:0673
         ldh [hMapUpdate.buffPtrHigh], a
         call prepMapRowUpdate
         call VBlank_updateMap
-        ldh a, [$cc]
+        ldh a, [hMapSource.yPixel]
         add $10
-        ldh [$cc], a
+        ldh [hMapSource.yPixel], a
         and a
     jr nz, .loop
 ret
 ;}
 
-Call_000_0698: ;{ 00:0698
+prepMapUpdate: ;{ 00:0698
     switchBankVar [currentLevelBank]
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
@@ -910,18 +926,18 @@ jr_000_06c1: ; Up
 Call_000_06cc:
     ldh a, [hCameraXPixel]
     sub $80
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
     ldh a, [hCameraYPixel]
     sub $78
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
     and $0f
-    ldh [$cd], a
+    ldh [hMapSource.yScreen], a
     ld a, [$d023]
     res 6, a
     ld [$d023], a
@@ -936,18 +952,18 @@ jr_000_06f3: ; Down
     ld [$d04c], a    
     ldh a, [hCameraXPixel]
     sub $80
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
     ldh a, [hCameraYPixel]
     add $78
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     adc $00
     and $0f
-    ldh [$cd], a
+    ldh [hMapSource.yScreen], a
     ld a, [$d023]
     res 7, a
     ld [$d023], a
@@ -961,18 +977,18 @@ jr_000_0724: ; Left
     ld [$d04c], a
     ldh a, [hCameraXPixel]
     sub $80
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
     ldh a, [hCameraYPixel]
     sub $78
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
     and $0f
-    ldh [$cd], a
+    ldh [hMapSource.yScreen], a
     ld a, [$d023]
     res 5, a
     ld [$d023], a
@@ -986,18 +1002,18 @@ Jump_000_0756: ; Right
     ld [$d04c], a
     ldh a, [hCameraXPixel]
     add $70
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     adc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
     ldh a, [hCameraYPixel]
     sub $78
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
     and $0f
-    ldh [$cd], a
+    ldh [hMapSource.yScreen], a
     ld a, [$d023]
     res 4, a
     ld [$d023], a
@@ -1125,11 +1141,11 @@ ret
 ;  and a VRAM address, for updating scrolling
 ; Also loads the screen pointer into BC
 Call_000_0835: ;{ 00:0835
-    ldh a, [$cd]
+    ldh a, [hMapSource.yScreen]
     swap a
     and $f0
     ld b, a
-    ldh a, [$cf]
+    ldh a, [hMapSource.xScreen]
     and $0f
     or b
     ldh [hMapUpdate.srcScreen], a
@@ -1145,17 +1161,17 @@ Call_000_0835: ;{ 00:0835
     ld a, [hl]
     ld b, a
     
-    ldh a, [$cc]
+    ldh a, [hMapSource.yPixel]
     and $f0
     ld l, a
-    ldh a, [$ce]
+    ldh a, [hMapSource.xPixel]
     swap a
     and $0f
     or l
     ldh [hMapUpdate.srcBlock], a
     
     ld hl, $9800
-    ldh a, [$cc]
+    ldh a, [hMapSource.yPixel]
     and $f0
     ld e, a
     xor a
@@ -1165,7 +1181,7 @@ Call_000_0835: ;{ 00:0835
     sla e
     rl d
     add hl, de
-    ldh a, [$ce]
+    ldh a, [hMapSource.xPixel]
     and $f0
     swap a
     sla a
@@ -4328,9 +4344,9 @@ samus_walkRight: ;{ 00:1C0D
     ld [$c204], a
     call collision_samusHorizontal.right
     jr nc, .keepResults
-        ld a, [$d027]
+        ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
-        ld a, [$d028]
+        ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
     .keepResults:
@@ -4368,9 +4384,9 @@ samus_walkLeft: ;{ 00:1C51
     ld [$c204], a
     call collision_samusHorizontal.left
     jr nc, .keepResults
-        ld a, [$d027]
+        ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
-        ld a, [$d028]
+        ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
     .keepResults:
@@ -4400,9 +4416,9 @@ samus_rollRight: ;{
     call collision_samusHorizontal.right
     jr nc, .keepResults
         ; Revert to previous position
-        ld a, [$d027]
+        ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
-        ld a, [$d028]
+        ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
     .keepResults:
@@ -4434,9 +4450,9 @@ samus_rollLeft: ;{
     ld [$c204], a
     call collision_samusHorizontal.left
     jr nc, jr_000_1cf0
-        ld a, [$d027]
+        ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
-        ld a, [$d028]
+        ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
     jr_000_1cf0:
@@ -4463,9 +4479,9 @@ samus_moveRightInAir: ;{ 00:1CF5
     call collision_samusHorizontal.right
     jr nc, .keepResults
         ; Revert to previous position
-        ld a, [$d027]
+        ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
-        ld a, [$d028]
+        ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
     .keepResults:
@@ -4492,9 +4508,9 @@ samus_moveLeftInAir: ;{ 00:1D22
     call collision_samusHorizontal.left
     jr nc, .keepResults
         ; Revert to previous position
-        ld a, [$d027]
+        ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
-        ld a, [$d028]
+        ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
     .keepResults:
@@ -4521,9 +4537,9 @@ samus_moveVertical: ;{ 00:1D4E - move down
     ld a, b
     call Call_000_1f0f
     jr nc, .keepResults
-        ld a, [$d029]
+        ld a, [prevSamusYPixel]
         ldh [hSamusYPixel], a
-        ld a, [$d02a]
+        ld a, [prevSamusYScreen]
         ldh [hSamusYScreen], a
         scf
         ret
@@ -4532,10 +4548,10 @@ samus_moveVertical: ;{ 00:1D4E - move down
         and a
         jr z, .endIf
             srl b
-            ld a, [$d029]
+            ld a, [prevSamusYPixel]
             add b
             ldh [hSamusYPixel], a
-            ld a, [$d02a]
+            ld a, [prevSamusYScreen]
             adc $00
             ldh [hSamusYScreen], a
         .endIf:
@@ -4564,9 +4580,9 @@ samus_moveUp: ;{ 00:1D98 - Move up (only directly called by spider ball)
     jr nc, .keepResults
         ld a, samus_jumpArrayBaseOffset + $16 ;$56
         ld [samus_jumpArcCounter], a
-        ld a, [$d029]
+        ld a, [prevSamusYPixel]
         ldh [hSamusYPixel], a
-        ld a, [$d02a]
+        ld a, [prevSamusYScreen]
         ldh [hSamusYScreen], a
         ret
     .keepResults:
@@ -4574,10 +4590,10 @@ samus_moveUp: ;{ 00:1D98 - Move up (only directly called by spider ball)
         and a
         jr z, .endIf
             srl b
-            ld a, [$d029]
+            ld a, [prevSamusYPixel]
             sub b
             ldh [hSamusYPixel], a
-            ld a, [$d02a]
+            ld a, [prevSamusYScreen]
             sbc $00
             ldh [hSamusYScreen], a
         .endIf:
@@ -5463,7 +5479,8 @@ executeDoorScript: ; 00:239C
     or b
     jp z, .endDoorScript
 
-    ld a, [$d064]
+    ; Clear non-Samus/HUD OAM entries
+    ld a, [samusTopOamOffset]
     ldh [hOamBufferIndex], a
     call clearUnusedOamSlots_longJump ; Clear unused OAM
     call waitOneFrame
@@ -6211,7 +6228,7 @@ Call_000_2887: ; 00:2887
     ldh [hSamusXScreen], a
     push hl
         call disableLCD
-        call Call_000_0673
+        call queen_renderRoom
         callFar queen_initialize
         ldh a, [hCameraXPixel]
         ld b, a
@@ -6292,18 +6309,18 @@ jr_000_2939:
     ld [$d04c], a
     ldh a, [hCameraXPixel]
     add $50
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     adc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
     ldh a, [hCameraYPixel]
     sub $74
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
     and $0f
-    ldh [$cd], a
+    ldh [hMapSource.yScreen], a
     call prepMapColumnUpdate
     call waitOneFrame
     
@@ -6316,11 +6333,11 @@ jr_000_2939:
     ld [$d04c], a
     ldh a, [hCameraXPixel]
     add $60
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     adc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
     call prepMapColumnUpdate
     call waitOneFrame
     
@@ -6333,11 +6350,11 @@ jr_000_2939:
     ld [$d04c], a
     ldh a, [hCameraXPixel]
     add $70
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     adc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
     call prepMapColumnUpdate
     pop hl
 ret
@@ -6353,18 +6370,18 @@ Jump_000_29c4:
     ld [$d04c], a
     ldh a, [hCameraXPixel]
     sub $60
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
     ldh a, [hCameraYPixel]
     sub $74
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
     and $0f
-    ldh [$cd], a
+    ldh [hMapSource.yScreen], a
     call prepMapColumnUpdate
     call waitOneFrame
     
@@ -6377,11 +6394,11 @@ Jump_000_29c4:
     ld [$d04c], a
     ldh a, [hCameraXPixel]
     sub $70
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
     call prepMapColumnUpdate
     call waitOneFrame
     
@@ -6394,11 +6411,11 @@ Jump_000_29c4:
     ld [$d04c], a
     ldh a, [hCameraXPixel]
     sub $80
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
     call prepMapColumnUpdate
     pop hl
 ret
@@ -6414,18 +6431,18 @@ Jump_000_2a4f:
     ld [$d04c], a
     ldh a, [hCameraXPixel]
     sub $80
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
     ldh a, [hCameraYPixel]
     add $78
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     adc $00
     and $0f
-    ldh [$cd], a
+    ldh [hMapSource.yScreen], a
     call prepMapRowUpdate
     call waitOneFrame
     
@@ -6438,11 +6455,11 @@ Jump_000_2a4f:
     ld [$d04c], a
     ldh a, [hCameraYPixel]
     add $68
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     adc $00
     and $0f
-    ldh [$cd], a
+    ldh [hMapSource.yScreen], a
     call prepMapRowUpdate
     call waitOneFrame
     
@@ -6455,11 +6472,11 @@ Jump_000_2a4f:
     ld [$d04c], a
     ldh a, [hCameraYPixel]
     add $58
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     adc $00
     and $0f
-    ldh [$cd], a
+    ldh [hMapSource.yScreen], a
     call prepMapRowUpdate
     call waitOneFrame
     
@@ -6472,11 +6489,11 @@ Jump_000_2a4f:
     ld [$d04c], a
     ldh a, [hCameraYPixel]
     add $48
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     adc $00
     and $0f
-    ldh [$cd], a
+    ldh [hMapSource.yScreen], a
     call prepMapRowUpdate
     pop hl
 ret
@@ -6492,18 +6509,18 @@ Jump_000_2b04:
     ld [$d04c], a
     ldh a, [hCameraXPixel]
     sub $80
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
     ldh a, [hCameraYPixel]
     sub $78
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
     and $0f
-    ldh [$cd], a
+    ldh [hMapSource.yScreen], a
     call prepMapRowUpdate
     call waitOneFrame
     
@@ -6516,11 +6533,11 @@ Jump_000_2b04:
     ld [$d04c], a
     ldh a, [hCameraYPixel]
     sub $68
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
     and $0f
-    ldh [$cd], a
+    ldh [hMapSource.yScreen], a
     call prepMapRowUpdate
     call waitOneFrame
     
@@ -6533,11 +6550,11 @@ Jump_000_2b04:
     ld [$d04c], a
     ldh a, [hCameraYPixel]
     sub $58
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
     and $0f
-    ldh [$cd], a
+    ldh [hMapSource.yScreen], a
     call prepMapRowUpdate
     pop hl
 ret

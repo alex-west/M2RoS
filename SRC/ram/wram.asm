@@ -754,8 +754,10 @@ def samus_animationTimer = $D022
 def samus_fallArcCounter = $D024 ; Index into falling velocity arrays. Max value is $16
 ;
 def samus_jumpArcCounter = $D026 ; Index into jump velocity arrays. Values below $40 use a linear velocity case instead. Subtract by $40 before indexing an array with this.
-;$D027: Samus' previous X position
-;$D029: Samus' previous Y position
+prevSamusXPixel  = $D027 ; $D027: Samus' previous X position
+prevSamusXScreen = $D028
+prevSamusYPixel  = $D029 ; $D029: Samus' previous Y position
+prevSamusYScreen = $D02A
 def samusFacingDirection = $D02B ; Direction Samus is facing. Saved to SRAM, mirror of $D81E?
 ;{
 ;    0: Left
@@ -867,7 +869,7 @@ samus_screenSpritePriority = $D057 ; Room sprite priority
 def currentLevelBank = $D058 ; Bank for current room
 def deathAnimTimer = $D059 ; Death sequence timer
 ;$D05A: Base address of pixels to clear in Samus' VRAM tiles
-;$D05C: $32AB acknowledgement flag. $32AB acknowledges this when it executes, cleared every in-game frame. $32AB is called by in-game and item pickup sequence.
+;$D05C: $32AB acknowledgement flag. $32AB acknowledges this when it executes, cleared every in-game frame. $32AB is called by in-game and item pickup sequence. Collision related?
 ;$D05D..60: Values for $C466..69 in $2:438F. Guess: generic collision information
 ;{
 ;    $D05D: Projectile type - Set to 9 if enemy bombed. Set to [$D08D] if shot. Set to FFh in $03B5
@@ -882,7 +884,7 @@ def deathFlag = $D063 ; Dying flag
 ;    1: Dying
 ;    FFh: Dead
 ;}
-;$D064: Used in $239C as new OAM stack pointer, set to OAM stack pointer in $04DF (in-game)
+samusTopOamOffset = $D064 ; Last OAM offset used by Samus, HUD, etc. Used in by door transition routine ($239C) to erase enemies
 ;$D065: VRAM tiles update source bank (see $FFB1..B6, $2BA3)
 countdownTimerLow = $D066;  ; Generic countdown timer used for
 countdownTimerHigh = $D067; ;  various events

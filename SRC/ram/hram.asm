@@ -124,10 +124,12 @@ hCameraYPixel::  ds 1 ;$FFC8: Camera Y position
 hCameraYScreen:: ds 1 ;$FFC9: Camera Y position
 hCameraXPixel::  ds 1 ;$FFCA: Camera X position
 hCameraXScreen:: ds 1 ;$FFCB: Camera X position
-;$FFCC: Row to update    (in pixels)
-;$FFCD  (in screens)
-;$FFCE: Column to update (in pixels)
-;$FFCF  (in screens)
+
+hMapSource: ; Coordinates of the source column/row to render to VRAM
+.yPixel:  ds 1 ;$FFCC: Row to update    (in pixels)
+.yScreen: ds 1 ;$FFCD  (in screens)
+.xPixel:  ds 1 ;$FFCE: Column to update (in pixels)
+.xScreen: ds 1 ;$FFCF  (in screens)
 ;
 ;$FFE0..F5: Working enemy data (see $C600..C7FF)
 section "HRAM part enemy local", HRAM[$FFE0]
