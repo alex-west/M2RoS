@@ -744,7 +744,7 @@ def samus_animationTimer = $D022
 ;  Bits 4 and 5 select the animation frame. Clamped to be below $30. Typically incremented by 3 when running.
 ; Also used as a cooldown timer for certain actions (holding down to morph, up to stand, etc.)
 
-;$D023: Direction of screen movement
+def camera_scrollDirection = $D023 ; Direction of screen movement
 ;{
 ;    10: Right
 ;    20: Left
@@ -832,7 +832,7 @@ def vramTransferFlag = $D047 ; VRAM tiles update flag (see $FFB1..B6, $2BA3, $27
 def waterContactFlag = $D048 ; Flag to tell if Samus is touching water
 def samus_unmorphJumpTimer = $D049 ; Timer for allowing an unmorph jump. Decremented every frame. Written to in several places.
 ;
-;$D04C: Cleared by handle loading blocks due to scrolling, set to FFh in a few places. Never read
+def mapUpdate_unusedVar = $D04C ; Cleared by prepMapUpdate, set to FFh in prepMapUpdate or during screen transition when rendering a row/column of blocks. Never read
 def samusActiveWeapon = $D04D ; Weapon equipped.  See also $D055
 ;{
 ;    0: Normal

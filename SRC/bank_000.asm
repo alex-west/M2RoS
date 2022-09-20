@@ -632,7 +632,7 @@ gameMode_LoadB: ;{ 00:0464
         ld a, HIGH(mapUpdateBuffer)
         ldh [hMapUpdate.buffPtrHigh], a
 
-        call Call_000_06cc ; Force row update
+        call prepMapUpdate.forceRow ; Force row update
         call VBlank_updateMap
         ; Move camera down to render next row
         ldh a, [hCameraYPixel]
@@ -904,26 +904,25 @@ prepMapUpdate: ;{ 00:0698
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     xor a
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [frameCounter]
     and $03 ; Up
-        jr z, jr_000_06c1
+        jr z, .up
     cp $01 ; Down
-        jr z, jr_000_06f3
+        jr z, .down
     cp $02 ; Left
-        jr z, jr_000_0724
+        jr z, .left
     cp $03 ; Right
-        jp z, Jump_000_0756
+        jp z, .right
 ret ; Should never end up here
 
-jr_000_06c1: ; Up
-    ld a, [$d023]
-    bit 6, a
+.up: ; Up
+    ld a, [camera_scrollDirection]
+    bit scrollDirBit_up, a
         ret z
     ld a, $ff
-    ld [$d04c], a
-
-Call_000_06cc:
+    ld [mapUpdate_unusedVar], a
+  .forceRow: ; Alternate call point used when loading the game
     ldh a, [hCameraXPixel]
     sub $80
     ldh [hMapSource.xPixel], a
@@ -938,18 +937,17 @@ Call_000_06cc:
     sbc $00
     and $0f
     ldh [hMapSource.yScreen], a
-    ld a, [$d023]
-    res 6, a
-    ld [$d023], a
+    ld a, [camera_scrollDirection]
+    res scrollDirBit_up, a
+    ld [camera_scrollDirection], a
 jp prepMapRowUpdate
 
-
-jr_000_06f3: ; Down
-    ld a, [$d023]
-    bit 7, a
+.down: ; Down
+    ld a, [camera_scrollDirection]
+    bit scrollDirBit_down, a
         ret z
     ld a, $ff
-    ld [$d04c], a    
+    ld [mapUpdate_unusedVar], a    
     ldh a, [hCameraXPixel]
     sub $80
     ldh [hMapSource.xPixel], a
@@ -964,17 +962,17 @@ jr_000_06f3: ; Down
     adc $00
     and $0f
     ldh [hMapSource.yScreen], a
-    ld a, [$d023]
-    res 7, a
-    ld [$d023], a
+    ld a, [camera_scrollDirection]
+    res scrollDirBit_down, a
+    ld [camera_scrollDirection], a
 jr prepMapRowUpdate
 
-jr_000_0724: ; Left
-    ld a, [$d023]
-    bit 5, a
+.left: ; Left
+    ld a, [camera_scrollDirection]
+    bit scrollDirBit_left, a
         ret z
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     sub $80
     ldh [hMapSource.xPixel], a
@@ -989,17 +987,17 @@ jr_000_0724: ; Left
     sbc $00
     and $0f
     ldh [hMapSource.yScreen], a
-    ld a, [$d023]
-    res 5, a
-    ld [$d023], a
+    ld a, [camera_scrollDirection]
+    res scrollDirBit_left, a
+    ld [camera_scrollDirection], a
 jp prepMapColumnUpdate
 
-Jump_000_0756: ; Right
-    ld a, [$d023]
-    bit 4, a
+.right: ; Right
+    ld a, [camera_scrollDirection]
+    bit scrollDirBit_right, a
         ret z
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     add $70
     ldh [hMapSource.xPixel], a
@@ -1014,9 +1012,9 @@ Jump_000_0756: ; Right
     sbc $00
     and $0f
     ldh [hMapSource.yScreen], a
-    ld a, [$d023]
-    res 4, a
-    ld [$d023], a
+    ld a, [camera_scrollDirection]
+    res scrollDirBit_right, a
+    ld [camera_scrollDirection], a
 jp prepMapColumnUpdate
 
 
@@ -1083,9 +1081,9 @@ prepMapRowUpdate: ; 00:0788
 ret
 
 prepMapColumnUpdate: ; 00:07E4
-    ld a, [$d023]
-    and $cf
-    ld [$d023], a
+    ld a, [camera_scrollDirection]
+    and ~(scrollDir_left|scrollDir_right) ; $CF
+    ld [camera_scrollDirection], a
     call Call_000_0835
     
     ld a, $10
@@ -1358,9 +1356,9 @@ Call_000_08fe: ;{ 00:08FE
         adc $00
         and $0f
         ldh [hCameraXScreen], a
-        ld a, [$d023]
-        set 4, a
-        ld [$d023], a
+        ld a, [camera_scrollDirection]
+        set scrollDirBit_right, a
+        ld [camera_scrollDirection], a
         ldh a, [hSamusXPixel]
         sub b
         add $60
@@ -1433,9 +1431,9 @@ Jump_000_0991:
         sbc $00
         and $0f
         ldh [hCameraXScreen], a
-        ld a, [$d023]
-        set 5, a
-        ld [$d023], a
+        ld a, [camera_scrollDirection]
+        set scrollDirBit_left, a
+        ld [camera_scrollDirection], a
         ldh a, [hSamusXPixel]
         sub b
         add $60
@@ -1479,9 +1477,9 @@ Jump_000_0a18:
     bit 7, a
     jp nz, Jump_000_0ab6
         ld [$d038], a
-        ld a, [$d023]
+        ld a, [camera_scrollDirection]
         set 7, a
-        ld [$d023], a
+        ld [camera_scrollDirection], a
         
         ; Why's this case so different from the others
         ldh a, [$98]
@@ -1549,9 +1547,9 @@ Jump_000_0a18:
     cpl
     inc a
     ld [$d037], a
-    ld a, [$d023]
-    set 6, a
-    ld [$d023], a
+    ld a, [camera_scrollDirection]
+    set scrollDirBit_up, a
+    ld [camera_scrollDirection], a
         
     ldh a, [$98]
     bit 2, a ; Check up
@@ -1647,8 +1645,8 @@ Jump_000_0b44: ;{ 00:0B44
         inc a
         ld [samus_animationTimer], a
         ; Set screen movement direction
-        ld a, $10
-        ld [$d023], a
+        ld a, scrollDir_right
+        ld [camera_scrollDirection], a
         ; Move Samus
         ldh a, [hSamusXPixel]
         add $01
@@ -1679,8 +1677,8 @@ Jump_000_0b44: ;{ 00:0B44
         inc a
         ld [samus_animationTimer], a
         ; Set screen movement direction
-        ld a, $20
-        ld [$d023], a
+        ld a, scrollDir_left
+        ld [camera_scrollDirection], a
         ; Move Samus
         ldh a, [hSamusXPixel]
         sub $01
@@ -1711,8 +1709,8 @@ Jump_000_0b44: ;{ 00:0B44
         inc a
         ld [samus_animationTimer], a
         ; Set screen movement direction
-        ld a, $40
-        ld [$d023], a
+        ld a, scrollDir_up
+        ld [camera_scrollDirection], a
         ; Move Samus 1.5 px/frame
         ldh a, [frameCounter]
         and $01
@@ -1747,8 +1745,8 @@ Jump_000_0b44: ;{ 00:0B44
         inc a
         ld [samus_animationTimer], a
         ; Set screen movement direction
-        ld a, $80
-        ld [$d023], a
+        ld a, scrollDir_down
+        ld [camera_scrollDirection], a
         ; Move Samus 1.5 px/frame
         ldh a, [frameCounter]
         and $01
@@ -6306,7 +6304,7 @@ jr_000_2939:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     add $50
     ldh [hMapSource.xPixel], a
@@ -6330,7 +6328,7 @@ jr_000_2939:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     add $60
     ldh [hMapSource.xPixel], a
@@ -6347,7 +6345,7 @@ jr_000_2939:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     add $70
     ldh [hMapSource.xPixel], a
@@ -6367,7 +6365,7 @@ Jump_000_29c4:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     sub $60
     ldh [hMapSource.xPixel], a
@@ -6391,7 +6389,7 @@ Jump_000_29c4:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     sub $70
     ldh [hMapSource.xPixel], a
@@ -6408,7 +6406,7 @@ Jump_000_29c4:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     sub $80
     ldh [hMapSource.xPixel], a
@@ -6428,7 +6426,7 @@ Jump_000_2a4f:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     sub $80
     ldh [hMapSource.xPixel], a
@@ -6452,7 +6450,7 @@ Jump_000_2a4f:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraYPixel]
     add $68
     ldh [hMapSource.yPixel], a
@@ -6469,7 +6467,7 @@ Jump_000_2a4f:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraYPixel]
     add $58
     ldh [hMapSource.yPixel], a
@@ -6486,7 +6484,7 @@ Jump_000_2a4f:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraYPixel]
     add $48
     ldh [hMapSource.yPixel], a
@@ -6506,7 +6504,7 @@ Jump_000_2b04:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     sub $80
     ldh [hMapSource.xPixel], a
@@ -6530,7 +6528,7 @@ Jump_000_2b04:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraYPixel]
     sub $68
     ldh [hMapSource.yPixel], a
@@ -6547,7 +6545,7 @@ Jump_000_2b04:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraYPixel]
     sub $58
     ldh [hMapSource.yPixel], a

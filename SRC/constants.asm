@@ -9,6 +9,16 @@ map_scrollData     = $4200 ; $100 bytes
 map_doorIndexes    = $4300 ; $200 bytes - Also contains sprite priority bits per screen
 ; Note: Map data starts at $4500
 
+; Scrolling Directions (bitfields and bit numbers)
+scrollDir_right = $10
+scrollDir_left  = $20
+scrollDir_up    = $40
+scrollDir_down  = $80
+scrollDirBit_right = 4
+scrollDirBit_left  = 5
+scrollDirBit_up    = 6
+scrollDirBit_down  = 7
+
 ; Samus physics constants
 samus_jumpArrayBaseOffset = $40
 samus_unmorphJumpTime = $10
