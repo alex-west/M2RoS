@@ -887,7 +887,7 @@ queen_renderRoom: ;{ 00:0673
         ldh [hMapUpdate.buffPtrLow], a
         ld a, HIGH(mapUpdateBuffer)
         ldh [hMapUpdate.buffPtrHigh], a
-        call prepMapRowUpdate
+        call prepMapUpdate.row
         call VBlank_updateMap
         ldh a, [hMapSource.yPixel]
         add $10
@@ -898,13 +898,16 @@ ret
 ;}
 
 prepMapUpdate: ;{ 00:0698
+    ; Switch to current level bank
     switchBankVar [currentLevelBank]
+    ; Reset map update buffer pointer
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     xor a
     ld [mapUpdate_unusedVar], a
+    ; Choose direction based on frame counter
     ldh a, [frameCounter]
     and $03 ; Up
         jr z, .up
@@ -917,12 +920,14 @@ prepMapUpdate: ;{ 00:0698
 ret ; Should never end up here
 
 .up: ; Up
+    ; If if not scrolling up
     ld a, [camera_scrollDirection]
     bit scrollDirBit_up, a
         ret z
     ld a, $ff
     ld [mapUpdate_unusedVar], a
   .forceRow: ; Alternate call point used when loading the game
+    ; Get x pixel/screen of the top-left of the source row
     ldh a, [hCameraXPixel]
     sub $80
     ldh [hMapSource.xPixel], a
@@ -930,6 +935,7 @@ ret ; Should never end up here
     sbc $00
     and $0f
     ldh [hMapSource.xScreen], a
+    ; Get y pixel/screen of the top-left of the source row
     ldh a, [hCameraYPixel]
     sub $78
     ldh [hMapSource.yPixel], a
@@ -937,17 +943,20 @@ ret ; Should never end up here
     sbc $00
     and $0f
     ldh [hMapSource.yScreen], a
+    ; Clear scroll direction
     ld a, [camera_scrollDirection]
     res scrollDirBit_up, a
     ld [camera_scrollDirection], a
-jp prepMapRowUpdate
+jp .row
 
 .down: ; Down
+    ; If if not scrolling down
     ld a, [camera_scrollDirection]
     bit scrollDirBit_down, a
         ret z
     ld a, $ff
-    ld [mapUpdate_unusedVar], a    
+    ld [mapUpdate_unusedVar], a
+    ; Get x pixel/screen of the top-left of the source row
     ldh a, [hCameraXPixel]
     sub $80
     ldh [hMapSource.xPixel], a
@@ -955,6 +964,7 @@ jp prepMapRowUpdate
     sbc $00
     and $0f
     ldh [hMapSource.xScreen], a
+    ; Get y pixel/screen of the top-left of the source row
     ldh a, [hCameraYPixel]
     add $78
     ldh [hMapSource.yPixel], a
@@ -962,17 +972,20 @@ jp prepMapRowUpdate
     adc $00
     and $0f
     ldh [hMapSource.yScreen], a
+    ; Clear scroll direction
     ld a, [camera_scrollDirection]
     res scrollDirBit_down, a
     ld [camera_scrollDirection], a
-jr prepMapRowUpdate
+jr .row
 
 .left: ; Left
+    ; If if not scrolling left
     ld a, [camera_scrollDirection]
     bit scrollDirBit_left, a
         ret z
     ld a, $ff
     ld [mapUpdate_unusedVar], a
+    ; Get x pixel/screen of the top-left of the source column
     ldh a, [hCameraXPixel]
     sub $80
     ldh [hMapSource.xPixel], a
@@ -980,6 +993,7 @@ jr prepMapRowUpdate
     sbc $00
     and $0f
     ldh [hMapSource.xScreen], a
+    ; Get y pixel/screen of the top-left of the source column
     ldh a, [hCameraYPixel]
     sub $78
     ldh [hMapSource.yPixel], a
@@ -987,17 +1001,20 @@ jr prepMapRowUpdate
     sbc $00
     and $0f
     ldh [hMapSource.yScreen], a
+    ; Clear scroll direction
     ld a, [camera_scrollDirection]
     res scrollDirBit_left, a
     ld [camera_scrollDirection], a
-jp prepMapColumnUpdate
+jp .column
 
 .right: ; Right
+    ; If if not scrolling right
     ld a, [camera_scrollDirection]
     bit scrollDirBit_right, a
         ret z
     ld a, $ff
     ld [mapUpdate_unusedVar], a
+    ; Get x pixel/screen of the top-left of the source column
     ldh a, [hCameraXPixel]
     add $70
     ldh [hMapSource.xPixel], a
@@ -1005,6 +1022,7 @@ jp prepMapColumnUpdate
     adc $00
     and $0f
     ldh [hMapSource.xScreen], a
+    ; Get y pixel/screen of the top-left of the source column
     ldh a, [hCameraYPixel]
     sub $78
     ldh [hMapSource.yPixel], a
@@ -1012,18 +1030,18 @@ jp prepMapColumnUpdate
     sbc $00
     and $0f
     ldh [hMapSource.yScreen], a
+    ; Clear scroll direction
     ld a, [camera_scrollDirection]
     res scrollDirBit_right, a
     ld [camera_scrollDirection], a
-jp prepMapColumnUpdate
+jp .column
 
-
-prepMapRowUpdate: ; 00:0788
-    call Call_000_0835
+.row: ;{ 00:0788
+    call mapUpdate_getSrcAndDest
 
     ld a, $10
     ldh [hMapUpdate.size], a
-    .loop:
+    .loop_A:
         call loadMapTileToBuffer
         ; Iterate rightwards to next block
         ldh a, [hMapUpdate.destAddrLow]
@@ -1041,7 +1059,7 @@ prepMapRowUpdate: ; 00:0788
         add $01
         ldh [hMapUpdate.srcBlock], a
         and $0f
-        jr nz, .endIf
+        jr nz, .endIf_A
             ; Iterate rightwards to next source screen if necessary
             ldh a, [hMapUpdate.srcBlock]
             sub $10
@@ -1064,12 +1082,12 @@ prepMapRowUpdate: ; 00:0788
             ld c, a
             ld a, [hl]
             ld b, a
-        .endIf:
+        .endIf_A:
     
         ldh a, [hMapUpdate.size]
         dec a
         ldh [hMapUpdate.size], a
-    jr nz, .loop
+    jr nz, .loop_A
     ; Terminate buffer list
     ldh a, [hMapUpdate.buffPtrLow]
     ld l, a
@@ -1078,17 +1096,17 @@ prepMapRowUpdate: ; 00:0788
     ld a, $00
     ld [hl+], a
     ld [hl], a
-ret
+ret ;}
 
-prepMapColumnUpdate: ; 00:07E4
+.column: ;{ 00:07E4
     ld a, [camera_scrollDirection]
     and ~(scrollDir_left|scrollDir_right) ; $CF
     ld [camera_scrollDirection], a
-    call Call_000_0835
+    call mapUpdate_getSrcAndDest
     
     ld a, $10
     ldh [hMapUpdate.size], a
-    .loop:
+    .loop_B:
         call loadMapTileToBuffer
         ; Iterate downwards to next block
         ldh a, [hMapUpdate.destAddrLow]
@@ -1103,7 +1121,7 @@ prepMapColumnUpdate: ; 00:07E4
         add $10
         ldh [hMapUpdate.srcBlock], a
         and $f0
-        jr nz, .endIf
+        jr nz, .endIf_B
             ; Iterate downwards to next source screen if necessary
             ldh a, [hMapUpdate.srcScreen]
             add $10
@@ -1118,12 +1136,12 @@ prepMapColumnUpdate: ; 00:07E4
             ld c, a
             ld a, [hl]
             ld b, a
-        .endIf:
+        .endIf_B:
     
         ldh a, [hMapUpdate.size]
         dec a
         ldh [hMapUpdate.size], a
-    jr nz, .loop
+    jr nz, .loop_B
     ; Terminate buffer list
     ldh a, [hMapUpdate.buffPtrLow]
     ld l, a
@@ -1132,13 +1150,17 @@ prepMapColumnUpdate: ; 00:07E4
     ld a, $00
     ld [hl+], a
     ld [hl], a
-ret
+ret ;}
 ;}
 
 ; Translates X and Y map/screen coordinates into map/screen array indeces
 ;  and a VRAM address, for updating scrolling
-; Also loads the screen pointer into BC
-Call_000_0835: ;{ 00:0835
+; Return values
+;  BC - screen pointer
+;  hMapUpdate.srcBlock (block index in screen (YX))
+;  hMapUpdate.destAddr (VRAM dest address)
+mapUpdate_getSrcAndDest: ;{ 00:0835
+    ; srcScreen = (Y,X)
     ldh a, [hMapSource.yScreen]
     swap a
     and $f0
@@ -1147,7 +1169,7 @@ Call_000_0835: ;{ 00:0835
     and $0f
     or b
     ldh [hMapUpdate.srcScreen], a
-    
+    ; BC = map_screenPointers + *2
     ld e, a
     ld d, $00
     sla e
@@ -1158,7 +1180,7 @@ Call_000_0835: ;{ 00:0835
     ld c, a
     ld a, [hl]
     ld b, a
-    
+    ; srcBlock = upper 16 bits of (Y,X)
     ldh a, [hMapSource.yPixel]
     and $f0
     ld l, a
@@ -1167,7 +1189,7 @@ Call_000_0835: ;{ 00:0835
     and $0f
     or l
     ldh [hMapUpdate.srcBlock], a
-    
+    ; destAddr = $9800 + (upper nybble of ypx*4) + (upper nybble of xpx/8)
     ld hl, $9800
     ldh a, [hMapSource.yPixel]
     and $f0
@@ -6319,7 +6341,7 @@ jr_000_2939:
     sbc $00
     and $0f
     ldh [hMapSource.yScreen], a
-    call prepMapColumnUpdate
+    call prepMapUpdate.column
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6336,7 +6358,7 @@ jr_000_2939:
     adc $00
     and $0f
     ldh [hMapSource.xScreen], a
-    call prepMapColumnUpdate
+    call prepMapUpdate.column
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6353,7 +6375,7 @@ jr_000_2939:
     adc $00
     and $0f
     ldh [hMapSource.xScreen], a
-    call prepMapColumnUpdate
+    call prepMapUpdate.column
     pop hl
 ret
 
@@ -6380,7 +6402,7 @@ Jump_000_29c4:
     sbc $00
     and $0f
     ldh [hMapSource.yScreen], a
-    call prepMapColumnUpdate
+    call prepMapUpdate.column
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6397,7 +6419,7 @@ Jump_000_29c4:
     sbc $00
     and $0f
     ldh [hMapSource.xScreen], a
-    call prepMapColumnUpdate
+    call prepMapUpdate.column
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6414,7 +6436,7 @@ Jump_000_29c4:
     sbc $00
     and $0f
     ldh [hMapSource.xScreen], a
-    call prepMapColumnUpdate
+    call prepMapUpdate.column
     pop hl
 ret
 
@@ -6441,7 +6463,7 @@ Jump_000_2a4f:
     adc $00
     and $0f
     ldh [hMapSource.yScreen], a
-    call prepMapRowUpdate
+    call prepMapUpdate.row
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6458,7 +6480,7 @@ Jump_000_2a4f:
     adc $00
     and $0f
     ldh [hMapSource.yScreen], a
-    call prepMapRowUpdate
+    call prepMapUpdate.row
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6475,7 +6497,7 @@ Jump_000_2a4f:
     adc $00
     and $0f
     ldh [hMapSource.yScreen], a
-    call prepMapRowUpdate
+    call prepMapUpdate.row
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6492,7 +6514,7 @@ Jump_000_2a4f:
     adc $00
     and $0f
     ldh [hMapSource.yScreen], a
-    call prepMapRowUpdate
+    call prepMapUpdate.row
     pop hl
 ret
 
@@ -6519,7 +6541,7 @@ Jump_000_2b04:
     sbc $00
     and $0f
     ldh [hMapSource.yScreen], a
-    call prepMapRowUpdate
+    call prepMapUpdate.row
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6536,7 +6558,7 @@ Jump_000_2b04:
     sbc $00
     and $0f
     ldh [hMapSource.yScreen], a
-    call prepMapRowUpdate
+    call prepMapUpdate.row
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6553,7 +6575,7 @@ Jump_000_2b04:
     sbc $00
     and $0f
     ldh [hMapSource.yScreen], a
-    call prepMapRowUpdate
+    call prepMapUpdate.row
     pop hl
 ret
 
