@@ -7367,7 +7367,7 @@ enAI_flittMoving: ;{ 02:68FC
             ; Move camera and such right
             ld hl, samus_onscreenXPos
             inc [hl]
-            ld hl, $d035
+            ld hl, camera_speedRight
             inc [hl]
             ; Move Samus right
             ld hl, hSamusXPixel
@@ -7399,7 +7399,7 @@ enAI_flittMoving: ;{ 02:68FC
             ; Move camera left
             ld hl, samus_onscreenXPos
             dec [hl]
-            ld hl, $d036
+            ld hl, camera_speedLeft
             inc [hl]
             ; Move Samus left
             ld hl, hSamusXPixel

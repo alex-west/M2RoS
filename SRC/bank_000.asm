@@ -734,7 +734,7 @@ gameMode_Main: ;{ 00:04DF
     .endIf_A:
 
     call prepMapUpdate ; Handle loading blocks from scrolling
-    call Call_000_08fe ; Handle scrolling/triggering door transitions
+    call handleCamera ; Handle scrolling/triggering door transitions
     call convertCameraToScroll ; Calculate scroll offsets
     call handleItemPickup
     call drawSamus_longJump ; Draw Samus
@@ -792,7 +792,7 @@ ret
     call handleProjectiles_longJump
     call Call_000_3d99
     call prepMapUpdate
-    call Call_000_08fe
+    call handleCamera
     call convertCameraToScroll
     call drawSamus_longJump
     call drawProjectiles_longJump
@@ -1042,7 +1042,7 @@ jp .column
     ld a, $10
     ldh [hMapUpdate.size], a
     .loop_A:
-        call loadMapTileToBuffer
+        call mapUpdate_writeToBuffer
         ; Iterate rightwards to next block
         ldh a, [hMapUpdate.destAddrLow]
         add $02
@@ -1107,7 +1107,7 @@ ret ;}
     ld a, $10
     ldh [hMapUpdate.size], a
     .loop_B:
-        call loadMapTileToBuffer
+        call mapUpdate_writeToBuffer
         ; Iterate downwards to next block
         ldh a, [hMapUpdate.destAddrLow]
         add $40
@@ -1216,7 +1216,7 @@ ret
 ;}
 
 ; Load metatile from map to WRAM buffer
-loadMapTileToBuffer: ;{ 00:0886
+mapUpdate_writeToBuffer: ;{ 00:0886
     ; Load tile number from map
     ;  BC is the address of the screen being loaded from
     ;  [$AD] is the tile in that screen ($YX format)
@@ -1320,10 +1320,10 @@ VBlank_updateMap: ;{ 00:08CF
 ret
 ;}
 
-Call_000_08fe: ;{ 00:08FE
+handleCamera: ;{ 00:08FE
     ld a, [doorScrollDirection]
     and a
-        jp nz, Jump_000_0b44 ; Handle scrolling
+        jp nz, Jump_000_0b44 ; Handle door
 
     ; Get screen index from coordinates
     ldh a, [hCameraYScreen]
@@ -1356,6 +1356,7 @@ Call_000_08fe: ;{ 00:08FE
         Jump_000_0936:
     
         jr c, jr_000_0949
+            ; Move camera left
             ldh a, [hCameraXPixel]
             sub $01
             ldh [hCameraXPixel], a
@@ -1366,7 +1367,7 @@ Call_000_08fe: ;{ 00:08FE
             jp Jump_000_0991
     jr_000_0949:
 
-    ld a, [$d035]
+    ld a, [camera_speedRight]
     and a
     jr z, jr_000_0991
         ld b, a
@@ -1440,10 +1441,10 @@ Jump_000_0991:
             jr jr_000_0a18
     jr_000_09cd:
 
-    ld a, [$d036]
+    ld a, [camera_speedLeft]
     and a
     jr z, jr_000_0a18
-        ld a, [$d036]
+        ld a, [camera_speedLeft]
         ld b, a
         ldh a, [hCameraXPixel]
         sub b
@@ -1483,8 +1484,8 @@ Jump_000_0991:
 
 Jump_000_0a18:
     xor a
-    ld [$d035], a
-    ld [$d036], a
+    ld [camera_speedRight], a
+    ld [camera_speedLeft], a
     ldh a, [hCameraYPixel]
     ld b, a
     ldh a, [hSamusYPixel]
@@ -1498,7 +1499,7 @@ Jump_000_0a18:
         jp z, Jump_000_0b2c
     bit 7, a
     jp nz, Jump_000_0ab6
-        ld [$d038], a
+        ld [camera_speedDown], a
         ld a, [camera_scrollDirection]
         set 7, a
         ld [camera_scrollDirection], a
@@ -1542,7 +1543,7 @@ Jump_000_0a18:
                 ldh a, [$99]
                 cp $40
                 jp c, Jump_000_0b2c
-                    ld a, [$d038]
+                    ld a, [camera_speedDown]
                     ld b, a
                     ldh a, [hCameraYPixel]
                     add b
@@ -1555,7 +1556,7 @@ Jump_000_0a18:
             ldh a, [$99]
             cp $50
             jp c, Jump_000_0b2c
-                ld a, [$d038]
+                ld a, [camera_speedDown]
                 ld b, a
                 ldh a, [hCameraYPixel]
                 add b
@@ -1568,7 +1569,7 @@ Jump_000_0a18:
 
     cpl
     inc a
-    ld [$d037], a
+    ld [camera_speedUp], a
     ld a, [camera_scrollDirection]
     set scrollDirBit_up, a
     ld [camera_scrollDirection], a
@@ -1607,7 +1608,7 @@ Jump_000_0a18:
             ldh a, [$99]
             cp $3e
             jr nc, jr_000_0b2c
-                ld a, [$d037]
+                ld a, [camera_speedUp]
                 ld b, a
                 ldh a, [hCameraYPixel]
                 sub b
@@ -1620,7 +1621,7 @@ Jump_000_0a18:
         ldh a, [$99]
         cp $4e
         jr nc, jr_000_0b2c
-            ld a, [$d037]
+            ld a, [camera_speedUp]
             ld b, a
             ldh a, [hCameraYPixel]
             sub b
@@ -1632,8 +1633,8 @@ Jump_000_0a18:
 
 Jump_000_0b2c:
     xor a
-    ld [$d038], a
-    ld [$d037], a
+    ld [camera_speedDown], a
+    ld [camera_speedUp], a
     ldh a, [hSamusYPixel]
     ld [$d00c], a
 ret
@@ -2130,14 +2131,14 @@ poseFunc_0E36: ;{ $18
         sub $01
         ldh [hSamusYPixel], a
         ld a, $01
-        ld [$d037], a
+        ld [camera_speedUp], a
         jr jr_000_0e72
     jr_000_0e67:
         ldh a, [hSamusYPixel]
         add $01
         ldh [hSamusYPixel], a
         ld a, $01
-        ld [$d038], a
+        ld [camera_speedDown], a
     jr_000_0e72:
 
     ld a, [queen_headX]
@@ -2155,14 +2156,14 @@ poseFunc_0E36: ;{ $18
         sub $02
         ldh [hSamusXPixel], a
         ld a, $01
-        ld [$d036], a
+        ld [camera_speedLeft], a
         jr jr_000_0e9b
     jr_000_0e90:
         ldh a, [hSamusXPixel]
         add $01
         ldh [hSamusXPixel], a
         ld a, $01
-        ld [$d035], a
+        ld [camera_speedRight], a
     jr_000_0e9b:
 
     ld a, c
@@ -2562,27 +2563,27 @@ ret
 
 samus_spiderRight: ; 00:1132
     call samus_rollRight.spider
-    ld a, [$d035]
+    ld a, [camera_speedRight]
     ld [spiderDisplacement], a
 ret
 
 samus_spiderLeft: ; 00:113C
     call samus_rollLeft.spider
-    ld a, [$d036]
+    ld a, [camera_speedLeft]
     ld [spiderDisplacement], a
 ret
 
 samus_spiderUp: ; 00:1146
     ld a, $01
     call samus_moveUp
-    ld a, [$d037]
+    ld a, [camera_speedUp]
     ld [spiderDisplacement], a
 ret
 
 samus_spiderDown: ; 00:1152
     ld a, $01
     call samus_moveVertical
-    ld a, [$d038]
+    ld a, [camera_speedDown]
     ld [spiderDisplacement], a
         ret nc
     ld a, [samus_onSolidSprite]
@@ -2799,11 +2800,11 @@ poseFunc_morphFall: ;{ 00:123B - $08: Morphball falling
     bit PADB_RIGHT, a
     jr z, .endIf_D
         call samus_moveRightInAir.turn
-        ; The value loaded from $D035 appears to be immediately discarded after the jump
+        ; The value loaded from camera_speedRight appears to be immediately discarded after the jump
         ld a, [samusItems]
         bit itemBit_spider, a
         jr z, .endIf_D
-            ld a, [$d035]
+            ld a, [camera_speedRight]
             jr .moveVertical
     .endIf_D:
 
@@ -2811,11 +2812,11 @@ poseFunc_morphFall: ;{ 00:123B - $08: Morphball falling
     bit PADB_LEFT, a
     jr z, .endIf_E
         call samus_moveLeftInAir.turn
-        ; The value loaded from $D036 appears to be immediately discarded after the jump
+        ; The value loaded from camera_speedLeft appears to be immediately discarded after the jump
         ld a, [samusItems]
         bit itemBit_spider, a
         jr z, .endIf_E
-            ld a, [$d036]
+            ld a, [camera_speedLeft]
     .endIf_E
 
 .moveVertical:
@@ -3614,14 +3615,14 @@ poseFunc_morphBall: ;{ 00:1701 - $05: Morph ball
         bit PADB_RIGHT, a
         jr z, .else_C
             call samus_rollRight.morph
-            ld a, [$d035]
+            ld a, [camera_speedRight]
             ret
         .else_C:
             ldh a, [hInputPressed]
             bit PADB_LEFT, a
                 ret z
             call samus_rollLeft.morph
-            ld a, [$d036]
+            ld a, [camera_speedLeft]
             ret
 ; end proc
 
@@ -4371,7 +4372,7 @@ samus_walkRight: ;{ 00:1C0D
         ret
     .keepResults:
         ld a, b
-        ld [$d035], a
+        ld [camera_speedRight], a
         ret
 ;} end proc
 
@@ -4411,7 +4412,7 @@ samus_walkLeft: ;{ 00:1C51
         ret
     .keepResults:
         ld a, b
-        ld [$d036], a
+        ld [camera_speedLeft], a
         ret
 ;} end proc
 
@@ -4443,7 +4444,7 @@ samus_rollRight: ;{
         ret
     .keepResults:
         ld a, b
-        ld [$d035], a
+        ld [camera_speedRight], a
         ret
 ;}
 
@@ -4477,7 +4478,7 @@ samus_rollLeft: ;{
         ret
     jr_000_1cf0:
         ld a, b
-        ld [$d036], a
+        ld [camera_speedLeft], a
         ret
 ;}
 
@@ -4506,7 +4507,7 @@ samus_moveRightInAir: ;{ 00:1CF5
         ret
     .keepResults:
         ld a, b
-        ld [$d035], a
+        ld [camera_speedRight], a
         ret
 ;}
 
@@ -4535,7 +4536,7 @@ samus_moveLeftInAir: ;{ 00:1D22
         ret
     .keepResults:
         ld a, b
-        ld [$d036], a
+        ld [camera_speedLeft], a
         ret
 ;}
 
@@ -4576,7 +4577,7 @@ samus_moveVertical: ;{ 00:1D4E - move down
             ldh [hSamusYScreen], a
         .endIf:
         ld a, b
-        ld [$d038], a
+        ld [camera_speedDown], a
         ld a, [$d034]
         ld [$d033], a
         ret
@@ -4618,7 +4619,7 @@ samus_moveUp: ;{ 00:1D98 - Move up (only directly called by spider ball)
             ldh [hSamusYScreen], a
         .endIf:
         ld a, b
-        ld [$d037], a
+        ld [camera_speedUp], a
         ret
 ;}
 ;}
