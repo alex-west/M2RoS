@@ -2977,7 +2977,9 @@ Call_001_5a9a:
 ret
 
 ; 01:5AB1
-include "data/sprites_enemies.asm"
+enemySpritePointerTable:
+    include "data/enemy_spritePointers.asm"
+    include "data/sprites_enemies.asm"
 
 ;------------------------------------------------------------------------------
 ; Alpha Metroid - get angle based on relative positions

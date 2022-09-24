@@ -1,22 +1,3 @@
-; Enemy header pointers - 03:6300 {
-    dw en6509, en6514, enXX,   enXX,   en651F, enXX,   enXX,   enXX,   enXX,   en652A, enXX,   enXX,   enXX,   enXX,   enXX,   enXX
-    dw enXX,   enXX,   en6535, enXX,   en6540, enXX,   en654B, enXX,   enXX,   en6556, en6556, en6561, enXX,   enXX,   en656C, en6577
-    dw en6509, en6514, enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   en6582, en658D, en6598, en65A3, en670E, enXX,   enXX,   enXX
-    dw en65AE, en65B9, enXX,   enXX,   en6719, enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   en6556, en6556, enXX,   enXX
-    dw en65C4, en65CF, enXX,   enXX,   enXX,   enXX,   en65DA, enXX,   enXX,   enXX,   en65E5, enXX,   enXX,   enXX,   enXX,   enXX
-    dw enXX,   en65F0, enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   en65FB, enXX,   enXX,   enXX
-    dw enXX,   enXX,   enXX,   en6606, enXX,   en6611, enXX,   enXX,   en661C, enXX,   en6627, en6632, enXX,   en663D, en6648, enXX
-    dw enXX,   enXX,   en6653, enXX,   enXX,   en665E, en6724, en6724, en6724, en6724, en6724, enXX,   enXX,   enXX,   enXX,   enXX
-    dw en66ED, en66ED, en66ED, en66ED, en66ED, en66ED, en66ED, en66ED, en66ED, en66ED, en66ED, en66ED, en66ED, en66ED, en66ED, en66ED
-    dw en66ED, en66ED, en66ED, en66ED, en66ED, en66ED, en66ED, en66ED, en66ED, en66ED, en6703, en66ED, en672F, en66ED, enXX,   enXX
-    dw en66A0, enXX,   enXX,   en66B6, en66AB, enXX,   en66E2, enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   en66C1, enXX,   enXX
-    dw enXX,   enXX,   enXX,   en66CC, enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX
-    dw enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   en66D7, enXX
-    dw en6669, en6674, enXX,   en667F, enXX,   enXX,   enXX,   enXX,   en668A, enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX
-    dw enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX
-    dw enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   enXX,   en6695, enXX,   enXX,   enXX,   enXX,   enXX,   enXX
-;}
-
 ; Enemy headers {
 ;                                         v--- Working address in HRAM 
 ;        ______________________________ $FFE4 - Base sprite attributes - not modified during runtime (apparently)

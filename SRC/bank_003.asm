@@ -658,10 +658,12 @@ enemyDataPointers:
 
 SECTION "ROM Bank $003 Part 2", ROMX[$6300], BANK[$3]
 enemyHeaderPointers: ; 03:6300 - Enemy headers
+    include "data/enemy_headerPointers.asm"
     include "data/enemyHeaders.asm"
 enemyDamageTable: ; 03:673A - Enemy damage values
-    include "data/enemyDamage.asm"
+    include "data/enemy_damageValues.asm"
 enemyHitboxPointers: ; 03:6839 - Enemy hitboxes
+    include "data/enemy_hitboxPointers.asm"
     include "data/enemyHitboxes.asm"
 
 ; Enemy AI stuff

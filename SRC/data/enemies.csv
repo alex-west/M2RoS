@@ -1,0 +1,255 @@
+sprite5CB5,en6509,hitbox6A6B,$08,TESTCONST_A,Tsumari,$00
+sprite5CC6,en6514,hitbox6A6B,$08,,Tsumari,$01
+sprite5CD7,enXX,hitbox6A6B,$08,,Tsumari,$02
+sprite5CE8,enXX,hitbox6A6B,$08,,Tsumari,$03
+sprite5CF9,en651F,hitbox6A6F,$10,,Skreek,$04
+sprite5D0E,enXX,hitbox6A6F,$10,,Skreek,$05
+sprite5D23,enXX,hitbox6A6F,$10,,Skreek,$06
+sprite5D38,enXX,hitbox6A6F,$10,,Skreek,$07
+sprite5D51,enXX,hitbox6A3F,$03,,Skreek projectile,$08
+sprite5D56,en652A,hitbox6A4B,$10,,Drivel,$09
+sprite5D67,enXX,hitbox6A7F,$10,,Drivel,$0A
+sprite5D80,enXX,hitbox6A77,$10,,Drivel,$0B
+sprite5D91,enXX,hitbox6A3F,$03,,Drivel projectile,$0C
+sprite5D96,enXX,hitbox6A3F,$03,,Drivel projectile,$0D
+sprite5D9B,enXX,hitbox6A3F,$03,,Drivel projectile,$0E
+sprite5DA0,enXX,hitbox6A43,$03,,Drivel projectile,$0F
+sprite5DA9,enXX,hitbox6A7B,$03,,Drivel projectile,$10
+sprite5DBE,enXX,hitbox6AA7,$03,,Drivel projectile,$11
+sprite5DD3,en6535,hitbox6A43,$05,,Yumbo,$12
+sprite5DDC,enXX,hitbox6A43,$05,,Yumbo,$13
+sprite5DE5,en6540,hitbox6A6F,$10,,Hornoad,$14
+sprite5DFE,enXX,hitbox6A6F,$10,,Hornoad,$15
+sprite5E55,en654B,hitbox6A6F,$15,,Senjoo,$16
+sprite5E6E,enXX,hitbox6A6B,$08,,Gawron,$17
+sprite5E7F,enXX,hitbox6A6B,$08,,Gawron,$18
+sprite5CB0,en6556,hitbox6A37,$00,,Gawron spawner?,$19
+sprite5CB0,en6556,hitbox6A37,$00,,Gawron spawner?,$1A
+sprite5E90,en6561,hitbox6A47,$12,,Chute leech,$1B
+sprite5E9D,enXX,hitbox6A6B,$12,,Chute leech,$1C
+sprite5EAE,enXX,hitbox6A6F,$12,,Chute leech,$1D
+sprite60C4,en656C,hitbox6A6B,$15,,(uses same spritemap as 41h autrack),$1E
+sprite61AD,en6577,hitbox6A8F,$15,,(uses same spritemap as 4Ah wallfire),$1F
+sprite5F12,en6509,hitbox6A6B,$10,,Needler,$20
+sprite5F23,en6514,hitbox6A6B,$10,,Needler,$21
+sprite5F12,enXX,hitbox6A6B,$10,,Needler,$22
+sprite5F23,enXX,hitbox6A6B,$10,,Needler,$23
+sprite5CAF,enXX,hitbox6A37,$00,,(no graphics),$24
+sprite5CAF,enXX,hitbox6A37,$00,,(no graphics),$25
+sprite5CAF,enXX,hitbox6A37,$00,,(no graphics),$26
+sprite5CAF,enXX,hitbox6A37,$00,,(no graphics),$27
+sprite5F34,en6582,hitbox6A93,$11,,Skorp,$28
+sprite5F34,en658D,hitbox6A93,$11,,Skorp,$29
+sprite5F4D,en6598,hitbox6A6F,$11,,Skorp,$2A
+sprite5F4D,en65A3,hitbox6A6F,$11,,Skorp,$2B
+sprite5F66,en670E,hitbox6A8F,$10,,Glow fly,$2C
+sprite5F73,enXX,hitbox6A8F,$10,,Glow fly,$2D
+sprite5F80,enXX,hitbox6A6B,$10,,Glow fly,$2E
+sprite5F91,enXX,hitbox6A6B,$10,,Glow fly,$2F
+sprite5FBE,en65AE,hitbox6A6B,$13,,Moheek,$30
+sprite5FCF,en65B9,hitbox6A6B,$13,,Moheek,$31
+sprite5FE0,enXX,hitbox6A6B,$13,,Moheek,$32
+sprite5FF1,enXX,hitbox6A6B,$13,,Moheek,$33
+sprite5FA2,en6719,hitbox6A3F,$00,,Rock icicle,$34
+sprite5FA7,enXX,hitbox6A3F,$08,,Rock icicle,$35
+sprite5FAC,enXX,hitbox6A67,$08,,Rock icicle,$36
+sprite5FB5,enXX,hitbox6A67,$08,,Rock icicle,$37
+sprite6002,enXX,hitbox6A6B,$12,,Yumee,$38
+sprite600F,enXX,hitbox6A6B,$12,,Yumee,$39
+sprite601C,enXX,hitbox6A5B,$12,,Yumee,$3A
+sprite6029,enXX,hitbox6A5B,$12,,Yumee,$3B
+sprite5CB0,en6556,hitbox6A37,$00,,Yumee spawner?,$3C
+sprite5CB0,en6556,hitbox6A37,$00,,Yumee spawner?,$3D
+sprite6069,enXX,hitbox6A73,$20,,Octroll,$3E
+sprite608A,enXX,hitbox6A73,$20,,Octroll,$3F
+sprite60AB,en65C4,hitbox6A73,$20,,Octroll,$40
+sprite60C4,en65CF,hitbox6A6B,$15,,Autrack,$41
+sprite60D5,enXX,hitbox6AA3,$15,,Autrack,$42
+sprite60EE,enXX,hitbox6AC7,$15,,Autrack,$43
+sprite610F,enXX,hitbox6AC7,$15,,Autrack,$44
+sprite6130,enXX,hitbox6A43,$10,,Autrack projectile,$45
+sprite6139,en65DA,hitbox6A6F,$15,,Autoad,$46
+sprite6152,enXX,hitbox6A6F,$15,,Autoad,$47
+sprite6173,enXX,hitbox6A93,$00,,(autoad?),$48
+sprite618C,enXX,hitbox6A93,$00,,(autoad?),$49
+sprite61AD,en65E5,hitbox6A8F,$15,,Wallfire,$4A
+sprite61C2,enXX,hitbox6A8F,$15,,Wallfire,$4B
+sprite61D7,enXX,hitbox6A8F,$FF,,Wallfire,$4C
+sprite61E4,enXX,hitbox6A3F,$10,,Wallfire projectile,$4D
+sprite61ED,enXX,hitbox6A3F,$10,,Wallfire projectile,$4E
+sprite61F2,enXX,hitbox6A67,$10,,Wallfire projectile,$4F
+sprite61FB,enXX,hitbox6AB7,$10,,Wallfire projectile,$50
+sprite6204,en65F0,hitbox6A97,$15,,Gunzoo,$51
+sprite6229,enXX,hitbox6A97,$15,,Gunzoo,$52
+sprite625A,enXX,hitbox6A97,$15,,Gunzoo,$53
+sprite628B,enXX,hitbox6A3F,$08,,Gunzoo projectile,$54
+sprite6290,enXX,hitbox6A67,$08,,Gunzoo projectile,$55
+sprite6299,enXX,hitbox6AB7,$08,,Gunzoo projectile,$56
+sprite62AA,enXX,hitbox6A3F,$08,,Gunzoo projectile,$57
+sprite62AF,enXX,hitbox6A3F,$08,,?,$58
+sprite62B8,enXX,hitbox6A67,$08,,Gunzoo projectile,$59
+sprite62C1,enXX,hitbox6ACF,$08,,Gunzoo projectile,$5A
+sprite62D2,enXX,hitbox6ADB,$08,,Gunzoo projectile,$5B
+sprite62DB,en65FB,hitbox6A97,$15,,Autom,$5C
+sprite62F4,enXX,hitbox6A97,$15,,Autom,$5D
+sprite630D,enXX,hitbox6A3F,$10,,Autom projectile,$5E
+sprite6312,enXX,hitbox6A8F,$10,,Autom projectile,$5F
+sprite631F,enXX,hitbox6ACF,$10,,Autom projectile,$60
+sprite6334,enXX,hitbox6ACF,$10,,Autom projectile,$61
+sprite6351,enXX,hitbox6ACF,$10,,Autom projectile,$62
+sprite636E,en6606,hitbox6A97,$15,,Shirk,$63
+sprite6393,enXX,hitbox6A97,$15,,Shirk,$64
+sprite5E1B,en6611,hitbox6A93,$FF,,Septogg,$65
+sprite5E38,enXX,hitbox6A93,$FF,,Septogg,$66
+sprite63B8,enXX,hitbox6A93,$20,,Moto,$67
+sprite63DD,en661C,hitbox6A93,$20,,Moto,$68
+sprite6402,enXX,hitbox6A93,$20,,Moto,$69
+sprite6427,en6627,hitbox6A67,$10,,Halzyn,$6A
+sprite6440,en6632,hitbox6A6F,$20,,Ramulken,$6B
+sprite645D,enXX,hitbox6A6F,$20,,Ramulken,$6C
+sprite5CB0,en663D,hitbox6A6B,$00,,?,$6D
+sprite64C1,en6648,hitbox6A43,$FF,,(uses same spritemap as 72h proboscum),$6E
+sprite5CAF,enXX,hitbox6A43,$00,,(no graphics),$6F
+sprite5CAF,enXX,hitbox6A43,$00,,(no graphics),$70
+sprite5CAF,enXX,hitbox6A43,$00,,(no graphics),$71
+sprite64C1,en6653,hitbox6A47,$FF,,Proboscum,$72
+sprite64D2,enXX,hitbox6A37,$00,,Proboscum,$73
+sprite64E7,enXX,hitbox6A37,$00,,Proboscum,$74
+sprite687E,en665E,hitbox6A6B,$FF,,Missile block,$75
+sprite64FC,en6724,hitbox6A6B,$20,,Arachnus,$76
+sprite650D,en6724,hitbox6A6B,$20,,Arachnus,$77
+sprite651E,en6724,hitbox6ABB,$20,,Arachnus,$78
+sprite6553,en6724,hitbox6ABB,$20,,Arachnus,$79
+sprite6588,en6724,hitbox6ABB,$20,,Arachnus,$7A
+sprite65C1,enXX,hitbox6A77,$02,,Arachnus projectile,$7B
+sprite65C6,enXX,hitbox6A77,$02,,Arachnus projectile,$7C
+sprite5CAF,enXX,hitbox6A37,$00,,(no graphics),$7D
+sprite5CAF,enXX,hitbox6A37,$00,,(no graphics),$7E
+sprite5CAF,enXX,hitbox6A37,$00,,(no graphics),$7F
+sprite7052,en66ED,hitbox6A6B,$FF,,Plasma beam orb,$80
+sprite7063,en66ED,hitbox6A3F,$00,,Plasma beam,$81
+sprite7052,en66ED,hitbox6A6B,$FF,,Ice beam orb,$82
+sprite7063,en66ED,hitbox6A3F,$00,,Ice beam,$83
+sprite7052,en66ED,hitbox6A6B,$FF,,Wave beam orb,$84
+sprite7063,en66ED,hitbox6A3F,$00,,Wave beam,$85
+sprite7052,en66ED,hitbox6A6B,$FF,,Spazer beam orb,$86
+sprite7063,en66ED,hitbox6A3F,$00,,Spazer beam,$87
+sprite7052,en66ED,hitbox6A6B,$FF,,Bombs orb,$88
+sprite7063,en66ED,hitbox6A3F,$00,,Bombs,$89
+sprite7052,en66ED,hitbox6A6B,$FF,,Screw attack orb,$8A
+sprite7063,en66ED,hitbox6A3F,$00,,Screw attack,$8B
+sprite7052,en66ED,hitbox6A6B,$FF,,Varia suit orb,$8C
+sprite7063,en66ED,hitbox6A3F,$00,,Varia suit,$8D
+sprite7052,en66ED,hitbox6A6B,$FF,,Hi-jump boots orb,$8E
+sprite7063,en66ED,hitbox6A3F,$00,,Hi-jump boots,$8F
+sprite7052,en66ED,hitbox6A6B,$FF,,Space jump orb,$90
+sprite7063,en66ED,hitbox6A3F,$00,,Space jump,$91
+sprite7052,en66ED,hitbox6A6B,$FF,,(spider ball orb?),$92
+sprite7063,en66ED,hitbox6A3F,$00,,Spider ball,$93
+sprite7052,en66ED,hitbox6A6B,$FF,,(spring ball orb?),$94
+sprite7063,en66ED,hitbox6A3F,$00,,Spring ball,$95
+sprite7052,en66ED,hitbox6A6B,$FF,,(energy tank orb?),$96
+sprite7074,en66ED,hitbox6A3F,$00,,Energy tank,$97
+sprite7052,en66ED,hitbox6A6B,$FF,,(missile tank orb?),$98
+sprite7085,en66ED,hitbox6A3F,$00,,Missile tank,$99
+spriteC300,en6703,hitboxC360,$30,,Blob thrower?,$9A
+sprite7096,en66ED,hitbox6A3B,$00,,Energy refill,$9B
+sprite7052,en672F,hitbox6A6B,$FF,,Arachnus orb,$9C
+sprite70A7,en66ED,hitbox6A3B,$00,,Missile refill,$9D
+sprite70B0,enXX,hitbox6A3F,$10,,Blob thrower projectile,$9E
+sprite70B5,enXX,hitbox6A3F,$10,,Blob thrower projectile,$9F
+sprite688F,en66A0,hitbox6A87,$FE,TESTCONST_B,Metroid,$A0
+sprite68C0,enXX,hitbox6A9B,$00,,Metroid hatching,$A1
+sprite5CAF,enXX,hitbox6A9B,$00,,(no graphics),$A2
+sprite68E9,en66B6,hitbox6A9B,$10,,Alpha metroid,$A3
+sprite6916,en66AB,hitbox6A9B,$10,,Alpha metroid,$A4
+sprite6FC1,enXX,hitbox6A97,$FF,,Baby metroid egg,$A5
+sprite6FE6,en66E2,hitbox6A97,$FF,,Baby metroid egg,$A6
+sprite700B,enXX,hitbox6A97,$FF,,Baby metroid egg,$A7
+sprite7030,enXX,hitbox6A6B,$00,,Baby metroid,$A8
+sprite7041,enXX,hitbox6A6B,$00,,Baby metroid,$A9
+sprite5CAF,enXX,hitbox6A3F,$00,,(no graphics),$AA
+sprite5CAF,enXX,hitbox6A5F,$00,,(no graphics),$AB
+sprite5CAF,enXX,hitbox6A63,$00,,(no graphics),$AC
+sprite69C3,en66C1,hitbox6A9F,$15,,Gamma metroid,$AD
+sprite69A5,enXX,hitbox6A9F,$15,,Gamma metroid projectile,$AE
+sprite69B6,enXX,hitbox6A9F,$15,,Gamma metroid projectile,$AF
+sprite6A08,enXX,hitbox6AC3,$15,,Gamma metroid,$B0
+sprite5CAF,enXX,hitbox6A3F,$00,,(no graphics),$B1
+sprite6A55,enXX,hitbox6A37,$00,,Gamma metroid shell,$B2
+sprite6A92,en66CC,hitbox6ABB,$20,,Zeta metroid hatching,$B3
+sprite6AC7,enXX,hitbox6ABB,$20,,Zeta metroid,$B4
+sprite6AFC,enXX,hitbox6ABB,$20,,Zeta metroid,$B5
+sprite6B31,enXX,hitbox6ABB,$20,,Zeta metroid,$B6
+sprite6B66,enXX,hitbox6ABB,$20,,Zeta metroid,$B7
+sprite6BA3,enXX,hitbox6ABB,$20,,Zeta metroid,$B8
+sprite6BE0,enXX,hitbox6ABB,$20,,Zeta metroid,$B9
+sprite6C1D,enXX,hitbox6ABB,$00,,Zeta metroid,$BA
+sprite6C5A,enXX,hitbox6ABB,$00,,Zeta metroid,$BB
+sprite6C97,enXX,hitbox6ABB,$00,,Zeta metroid,$BC
+sprite6CD4,enXX,hitbox6ABB,$00,,Zeta metroid,$BD
+sprite6D11,enXX,hitbox6A3F,$10,,Zeta metroid projectile,$BE
+sprite6D1E,enXX,hitbox6AB3,$25,,Omega metroid,$BF
+sprite6D73,enXX,hitbox6AB3,$25,,Omega metroid,$C0
+sprite6DC8,enXX,hitbox6AB3,$25,,Omega metroid,$C1
+sprite6E1D,enXX,hitbox6AB3,$25,,Omega metroid,$C2
+sprite6E72,enXX,hitbox6AB3,$25,,Omega metroid,$C3
+sprite6EC3,enXX,hitbox6A37,$00,,Omega metroid,$C4
+sprite6F18,enXX,hitbox6A37,$00,,Omega metroid,$C5
+sprite6F69,enXX,hitbox6A3F,$12,,Omega metroid projectile,$C6
+sprite6F7A,enXX,hitbox6A3F,$12,,Omega metroid projectile,$C7
+sprite6F8B,enXX,hitbox6A43,$12,,Omega metroid projectile,$C8
+sprite6F94,enXX,hitbox6A4F,$12,,Omega metroid projectile,$C9
+sprite6FA5,enXX,hitbox6A53,$12,,Omega metroid projectile,$CA
+sprite6FAE,enXX,hitbox6A57,$12,,Omega metroid projectile,$CB
+sprite6FB7,enXX,hitbox6A3F,$12,,Omega metroid projectile,$CC
+sprite6FBC,enXX,hitbox6A3F,$12,,(omega metroid projectile?),$CD
+sprite6943,en66D7,hitbox6A87,$FE,,Metroid,$CE
+sprite6974,enXX,hitbox6A87,$FE,,Metroid,$CF
+sprite6036,en6669,hitbox6A6B,$FF,,Flitt,$D0
+sprite6047,en6674,hitbox6A6B,$FF,,Flitt,$D1
+sprite6058,enXX,hitbox6A37,$00,,(flitt?),$D2
+sprite6482,en667F,hitbox6A6B,$10,,Gravitt,$D3
+sprite6482,enXX,hitbox6A6B,$10,,Gravitt,$D4
+sprite6497,enXX,hitbox6A6B,$10,,Gravitt,$D5
+sprite6482,enXX,hitbox6A6B,$10,,Gravitt,$D6
+sprite64AC,enXX,hitbox6A6B,$10,,Gravitt,$D7
+sprite5EC3,en668A,hitbox6A93,$12,,Gullugg,$D8
+sprite5EE0,enXX,hitbox6A93,$12,,Gullugg,$D9
+sprite5EFD,enXX,hitbox6A93,$12,,Gullugg,$DA
+sprite6FE6,enXX,hitbox6A37,$00,,Baby metroid egg preview,$DB
+sprite5CAF,enXX,hitbox6A37,$00,,(no graphics),$DC
+sprite5CAF,enXX,hitbox6A37,$00,,(no graphics),$DD
+sprite5CAF,enXX,hitbox6A37,$00,,(no graphics),$DE
+sprite5CAF,enXX,hitbox6A37,$00,,(no graphics),$DF
+sprite65CB,enXX,hitbox6A3F,$00,,Small health drop,$E0
+sprite65D0,enXX,hitbox6A3F,$00,,Small health drop,$E1
+sprite65F7,enXX,hitbox6A6B,$00,,Metroid death / missile door / screw attack explosion,$E2
+sprite6608,enXX,hitbox6A6B,$00,,Metroid death / missile door / screw attack explosion,$E3
+sprite6629,enXX,hitbox6A97,$00,,Metroid death / missile door / screw attack explosion,$E4
+sprite6642,enXX,hitbox6A97,$00,,Metroid death / missile door / screw attack explosion,$E5
+sprite665F,enXX,hitbox6A97,$00,,Metroid death / missile door / screw attack explosion,$E6
+sprite6678,enXX,hitbox6A97,$00,,Metroid death / missile door / screw attack explosion,$E7
+sprite667D,enXX,hitbox6A6B,$00,,Enemy death explosion,$E8
+sprite668E,enXX,hitbox6A3F,$00,,Enemy death explosion,$E9
+sprite6693,enXX,hitbox6A97,$00,,Enemy death explosion,$EA
+sprite66B4,enXX,hitbox6ABF,$00,,Enemy death explosion extra,$EB
+sprite65D5,enXX,hitbox6A6B,$00,,Big energy drop,$EC
+sprite65E6,enXX,hitbox6A6B,$00,,Big energy drop,$ED
+sprite66E5,enXX,hitbox6A3F,$00,,Missile drop,$EE
+sprite66EA,enXX,hitbox6A3F,$00,,Missile drop,$EF
+sprite5CAF,enXX,hitbox6A8B,$40,,Metroid Queen (no graphics),$F0
+sprite5CAF,enXX,hitbox6AD7,$40,,Metroid Queen (no graphics),$F1
+sprite5CAF,enXX,hitbox6AAB,$20,,Metroid Queen projectile (no graphics),$F2
+sprite5CAF,enXX,hitbox6AE3,$40,,Metroid Queen (no graphics),$F3
+sprite5CAF,enXX,hitbox6A37,$00,,(no graphics),$F4
+sprite5CAF,enXX,hitbox6AD7,$40,,Metroid Queen (no graphics),$F5
+sprite5CAF,enXX,hitbox6ACB,$40,,Metroid Queen (no graphics),$F6
+sprite5CAF,enXX,hitbox6ACB,$FF,,Metroid Queen (no graphics),$F7
+sprite684D,en6695,hitbox6ADF,$FF,,?,$F8
+sprite5CAF,enXX,hitbox6ADF,$FF,,(no graphics),$F9
+sprite5CAF,enXX,hitbox6ADF,$FF,,(no graphics),$FA
+sprite5CAF,enXX,hitbox6ADF,$00,,(no graphics),$FB
+sprite5CAF,enXX,hitbox6ADF,$00,,(no graphics),$FC
+sprite5CAF,enXX,hitbox6ADF,$00,,Nothing - flitt (no graphics),$FD
+sprite5CB0,enXX,hitbox6A3F,$00,,?,$FE

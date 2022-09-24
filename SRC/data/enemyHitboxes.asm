@@ -1,22 +1,3 @@
-; Enemy Hitbox Pointers: 03:6839 {
-    dw hitbox6A6B, hitbox6A6B, hitbox6A6B, hitbox6A6B, hitbox6A6F, hitbox6A6F, hitbox6A6F, hitbox6A6F, hitbox6A3F, hitbox6A4B, hitbox6A7F, hitbox6A77, hitbox6A3F, hitbox6A3F, hitbox6A3F, hitbox6A43
-    dw hitbox6A7B, hitbox6AA7, hitbox6A43, hitbox6A43, hitbox6A6F, hitbox6A6F, hitbox6A6F, hitbox6A6B, hitbox6A6B, hitbox6A37, hitbox6A37, hitbox6A47, hitbox6A6B, hitbox6A6F, hitbox6A6B, hitbox6A8F
-    dw hitbox6A6B, hitbox6A6B, hitbox6A6B, hitbox6A6B, hitbox6A37, hitbox6A37, hitbox6A37, hitbox6A37, hitbox6A93, hitbox6A93, hitbox6A6F, hitbox6A6F, hitbox6A8F, hitbox6A8F, hitbox6A6B, hitbox6A6B
-    dw hitbox6A6B, hitbox6A6B, hitbox6A6B, hitbox6A6B, hitbox6A3F, hitbox6A3F, hitbox6A67, hitbox6A67, hitbox6A6B, hitbox6A6B, hitbox6A5B, hitbox6A5B, hitbox6A37, hitbox6A37, hitbox6A73, hitbox6A73
-    dw hitbox6A73, hitbox6A6B, hitbox6AA3, hitbox6AC7, hitbox6AC7, hitbox6A43, hitbox6A6F, hitbox6A6F, hitbox6A93, hitbox6A93, hitbox6A8F, hitbox6A8F, hitbox6A8F, hitbox6A3F, hitbox6A3F, hitbox6A67
-    dw hitbox6AB7, hitbox6A97, hitbox6A97, hitbox6A97, hitbox6A3F, hitbox6A67, hitbox6AB7, hitbox6A3F, hitbox6A3F, hitbox6A67, hitbox6ACF, hitbox6ADB, hitbox6A97, hitbox6A97, hitbox6A3F, hitbox6A8F
-    dw hitbox6ACF, hitbox6ACF, hitbox6ACF, hitbox6A97, hitbox6A97, hitbox6A93, hitbox6A93, hitbox6A93, hitbox6A93, hitbox6A93, hitbox6A67, hitbox6A6F, hitbox6A6F, hitbox6A6B, hitbox6A43, hitbox6A43
-    dw hitbox6A43, hitbox6A43, hitbox6A47, hitbox6A37, hitbox6A37, hitbox6A6B, hitbox6A6B, hitbox6A6B, hitbox6ABB, hitbox6ABB, hitbox6ABB, hitbox6A77, hitbox6A77, hitbox6A37, hitbox6A37, hitbox6A37
-    dw hitbox6A6B, hitbox6A3F, hitbox6A6B, hitbox6A3F, hitbox6A6B, hitbox6A3F, hitbox6A6B, hitbox6A3F, hitbox6A6B, hitbox6A3F, hitbox6A6B, hitbox6A3F, hitbox6A6B, hitbox6A3F, hitbox6A6B, hitbox6A3F
-    dw hitbox6A6B, hitbox6A3F, hitbox6A6B, hitbox6A3F, hitbox6A6B, hitbox6A3F, hitbox6A6B, hitbox6A3F, hitbox6A6B, hitbox6A3F, hitboxC360, hitbox6A3B, hitbox6A6B, hitbox6A3B, hitbox6A3F, hitbox6A3F
-    dw hitbox6A87, hitbox6A9B, hitbox6A9B, hitbox6A9B, hitbox6A9B, hitbox6A97, hitbox6A97, hitbox6A97, hitbox6A6B, hitbox6A6B, hitbox6A3F, hitbox6A5F, hitbox6A63, hitbox6A9F, hitbox6A9F, hitbox6A9F
-    dw hitbox6AC3, hitbox6A3F, hitbox6A37, hitbox6ABB, hitbox6ABB, hitbox6ABB, hitbox6ABB, hitbox6ABB, hitbox6ABB, hitbox6ABB, hitbox6ABB, hitbox6ABB, hitbox6ABB, hitbox6ABB, hitbox6A3F, hitbox6AB3
-    dw hitbox6AB3, hitbox6AB3, hitbox6AB3, hitbox6AB3, hitbox6A37, hitbox6A37, hitbox6A3F, hitbox6A3F, hitbox6A43, hitbox6A4F, hitbox6A53, hitbox6A57, hitbox6A3F, hitbox6A3F, hitbox6A87, hitbox6A87
-    dw hitbox6A6B, hitbox6A6B, hitbox6A37, hitbox6A6B, hitbox6A6B, hitbox6A6B, hitbox6A6B, hitbox6A6B, hitbox6A93, hitbox6A93, hitbox6A93, hitbox6A37, hitbox6A37, hitbox6A37, hitbox6A37, hitbox6A37
-    dw hitbox6A3F, hitbox6A3F, hitbox6A6B, hitbox6A6B, hitbox6A97, hitbox6A97, hitbox6A97, hitbox6A97, hitbox6A6B, hitbox6A3F, hitbox6A97, hitbox6ABF, hitbox6A6B, hitbox6A6B, hitbox6A3F, hitbox6A3F
-    dw hitbox6A8B, hitbox6AD7, hitbox6AAB, hitbox6AE3, hitbox6A37, hitbox6AD7, hitbox6ACB, hitbox6ACB, hitbox6ADF, hitbox6ADF, hitbox6ADF, hitbox6ADF, hitbox6ADF, hitbox6ADF, hitbox6A3F
-;}
-
 ; Enemy Hitboxes {
 ;  Top, bottom, left, right
 hitbox6A37: db   0,  0,   0,  0
