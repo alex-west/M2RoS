@@ -2989,7 +2989,7 @@ alpha_getAngle: ; 01:70BA - called from bank 2
     ret
 
 metroid_getDistanceAndDirection: ; 01:70C1
-    ld hl, hEnemyYPos
+    ld hl, hEnemy.yPos
     ld a, [hl]
     add $10
     ld b, a
@@ -3071,7 +3071,7 @@ alpha_getAngleFromTable: ; 01:70FE
     ld hl, alpha_angleTable
     add hl, de
     ld a, [hl]
-    ld [hEnemyState], a
+    ld [hEnemy.state], a
 ret
 
     .pickHorizontalDirection:
@@ -3170,7 +3170,7 @@ ret
 ; Load a (Y,X) sign-magnitude velocity pair to BC
 alpha_getSpeedVector: ; 01:71CB
     ld hl, .jumpTable
-    ld a, [hEnemyState] ; $EA - Metroid angle
+    ld a, [hEnemy.state] ; $EA - Metroid angle
     add a
     ld e, a
     ld d, $00
@@ -3283,7 +3283,7 @@ gamma_getAngleFromTable: ; 01:7242
     ld hl, gamma_angleTable
     add hl, de
     ld a, [hl]
-    ld [hEnemyState], a
+    ld [hEnemy.state], a
 ret
 
     .pickHorizontalDirection:
@@ -3384,7 +3384,7 @@ ret
 ; Load a (Y,X) sign-magnitude velocity pair to BC
 gamma_getSpeedVector: ; 01:7319
     ld hl, .jumpTable
-    ld a, [hEnemyState]
+    ld a, [hEnemy.state]
     add a
     ld e, a
     ld d, $00
