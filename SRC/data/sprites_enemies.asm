@@ -1,7 +1,7 @@
 ; Metasprite Data:
-sprite5CAF:
+enSprite_none:
     db $FF
-sprite5CB0:
+enSprite_blankTile:
     db  -4, -4, $FF, $00
     db $FF
 sprite5CB5:
@@ -1552,7 +1552,7 @@ sprite6FB7:
 sprite6FBC:
     db  -4, -4, $EA, $00
     db $FF
-sprite6FC1:
+enSprite_egg_frame1:
     db -12,-15, $B4, $00
     db -12, -7, $B5, $00
     db -12,  1, $B4, $20
@@ -1563,7 +1563,7 @@ sprite6FC1:
     db   4, -5, $B9, $00
     db   4,  3, $B8, $20
     db $FF
-sprite6FE6:
+enSprite_egg_frame2:
     db -12,-12, $B4, $00
     db -12, -4, $B5, $00
     db -12,  4, $B4, $20
@@ -1574,7 +1574,7 @@ sprite6FE6:
     db   4, -4, $B9, $00
     db   4,  4, $B8, $20
     db $FF
-sprite700B:
+enSprite_egg_frame3:
     db -12, -9, $B4, $00
     db -12, -1, $B5, $00
     db -12,  7, $B4, $20
@@ -1585,55 +1585,55 @@ sprite700B:
     db   4, -3, $B9, $00
     db   4,  5, $B8, $20
     db $FF
-sprite7030:
+enSprite_baby_frame1:
     db  -8, -8, $B0, $00
     db  -8,  0, $B0, $20
     db   0, -8, $B1, $00
     db   0,  0, $B1, $20
     db $FF
-sprite7041:
+enSprite_baby_frame2:
     db  -8, -8, $B2, $00
     db  -8,  0, $B2, $20
     db   0, -8, $B3, $00
     db   0,  0, $B3, $20
     db $FF
-sprite7052:
+enSprite_itemOrb:
     db  -8, -8, $B0, $00
     db  -8,  0, $B1, $00
     db   0, -8, $B2, $00
     db   0,  0, $B3, $00
     db $FF
-sprite7063:
+enSprite_item:
     db  -8, -8, $B4, $00
     db  -8,  0, $B5, $00
     db   0, -8, $B6, $00
     db   0,  0, $B7, $00
     db $FF
-sprite7074:
+enSprite_energyTank:
     db  -8, -8, $AB, $00
     db  -8,  0, $AC, $00
     db   0, -8, $AD, $00
     db   0,  0, $AE, $00
     db $FF
-sprite7085:
+enSprite_missileTank:
     db  -8, -8, $F0, $00
     db  -8,  0, $F1, $00
     db   0, -8, $F2, $00
     db   0,  0, $F3, $00
     db $FF
-sprite7096:
+enSprite_energyRefill:
     db  -8, -8, $FD, $00
     db  -8,  0, $FD, $20
     db   0, -8, $FD, $40
     db   0,  0, $FD, $60
     db $FF
-sprite70A7:
+enSprite_missileRefill:
     db  -8, -4, $FB, $00
     db   0, -4, $FC, $00
     db $FF
-sprite70B0:
+enSprite_blob_frame1:
     db  -4, -4, $E4, $00
     db $FF
-sprite70B5:
+enSprite_blob_frame2:
     db  -4, -4, $E5, $00
     db $FF

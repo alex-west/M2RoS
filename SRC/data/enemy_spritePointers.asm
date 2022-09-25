@@ -24,8 +24,8 @@
     dw sprite5E55 ; Senjoo
     dw sprite5E6E ; Gawron
     dw sprite5E7F ; Gawron
-    dw sprite5CB0 ; Gawron spawner?
-    dw sprite5CB0 ; Gawron spawner?
+    dw enSprite_blankTile ; Gawron spawner?
+    dw enSprite_blankTile ; Gawron spawner?
     dw sprite5E90 ; Chute leech
     dw sprite5E9D ; Chute leech
     dw sprite5EAE ; Chute leech
@@ -35,10 +35,10 @@
     dw sprite5F23 ; Needler
     dw sprite5F12 ; Needler
     dw sprite5F23 ; Needler
-    dw sprite5CAF ; (no graphics)
-    dw sprite5CAF ; (no graphics)
-    dw sprite5CAF ; (no graphics)
-    dw sprite5CAF ; (no graphics)
+    dw enSprite_none ; (no graphics)
+    dw enSprite_none ; (no graphics)
+    dw enSprite_none ; (no graphics)
+    dw enSprite_none ; (no graphics)
     dw sprite5F34 ; Skorp
     dw sprite5F34 ; Skorp
     dw sprite5F4D ; Skorp
@@ -59,8 +59,8 @@
     dw sprite600F ; Yumee
     dw sprite601C ; Yumee
     dw sprite6029 ; Yumee
-    dw sprite5CB0 ; Yumee spawner?
-    dw sprite5CB0 ; Yumee spawner?
+    dw enSprite_blankTile ; Yumee spawner?
+    dw enSprite_blankTile ; Yumee spawner?
     dw sprite6069 ; Octroll
     dw sprite608A ; Octroll
     dw sprite60AB ; Octroll
@@ -108,11 +108,11 @@
     dw sprite6427 ; Halzyn
     dw sprite6440 ; Ramulken
     dw sprite645D ; Ramulken
-    dw sprite5CB0 ; Musical stinger event trigger
+    dw enSprite_blankTile ; Musical stinger event trigger
     dw sprite64C1 ; (uses same spritemap as 72h proboscum)
-    dw sprite5CAF ; (no graphics)
-    dw sprite5CAF ; (no graphics)
-    dw sprite5CAF ; (no graphics)
+    dw enSprite_none ; (no graphics)
+    dw enSprite_none ; (no graphics)
+    dw enSprite_none ; (no graphics)
     dw sprite64C1 ; Proboscum
     dw sprite64D2 ; Proboscum
     dw sprite64E7 ; Proboscum
@@ -124,59 +124,59 @@
     dw sprite6588 ; Arachnus
     dw sprite65C1 ; Arachnus projectile
     dw sprite65C6 ; Arachnus projectile
-    dw sprite5CAF ; (no graphics)
-    dw sprite5CAF ; (no graphics)
-    dw sprite5CAF ; (no graphics)
-    dw sprite7052 ; Plasma beam orb
-    dw sprite7063 ; Plasma beam
-    dw sprite7052 ; Ice beam orb
-    dw sprite7063 ; Ice beam
-    dw sprite7052 ; Wave beam orb
-    dw sprite7063 ; Wave beam
-    dw sprite7052 ; Spazer beam orb
-    dw sprite7063 ; Spazer beam
-    dw sprite7052 ; Bombs orb
-    dw sprite7063 ; Bombs
-    dw sprite7052 ; Screw attack orb
-    dw sprite7063 ; Screw attack
-    dw sprite7052 ; Varia suit orb
-    dw sprite7063 ; Varia suit
-    dw sprite7052 ; Hi-jump boots orb
-    dw sprite7063 ; Hi-jump boots
-    dw sprite7052 ; Space jump orb
-    dw sprite7063 ; Space jump
-    dw sprite7052 ; (spider ball orb?)
-    dw sprite7063 ; Spider ball
-    dw sprite7052 ; (spring ball orb?)
-    dw sprite7063 ; Spring ball
-    dw sprite7052 ; (energy tank orb?)
-    dw sprite7074 ; Energy tank
-    dw sprite7052 ; (missile tank orb?)
-    dw sprite7085 ; Missile tank
+    dw enSprite_none ; (no graphics)
+    dw enSprite_none ; (no graphics)
+    dw enSprite_none ; (no graphics)
+    dw enSprite_itemOrb ; Plasma beam orb
+    dw enSprite_item ; Plasma beam
+    dw enSprite_itemOrb ; Ice beam orb
+    dw enSprite_item ; Ice beam
+    dw enSprite_itemOrb ; Wave beam orb
+    dw enSprite_item ; Wave beam
+    dw enSprite_itemOrb ; Spazer beam orb
+    dw enSprite_item ; Spazer beam
+    dw enSprite_itemOrb ; Bombs orb
+    dw enSprite_item ; Bombs
+    dw enSprite_itemOrb ; Screw attack orb
+    dw enSprite_item ; Screw attack
+    dw enSprite_itemOrb ; Varia suit orb
+    dw enSprite_item ; Varia suit
+    dw enSprite_itemOrb ; Hi-jump boots orb
+    dw enSprite_item ; Hi-jump boots
+    dw enSprite_itemOrb ; Space jump orb
+    dw enSprite_item ; Space jump
+    dw enSprite_itemOrb ; (spider ball orb?)
+    dw enSprite_item ; Spider ball
+    dw enSprite_itemOrb ; (spring ball orb?)
+    dw enSprite_item ; Spring ball
+    dw enSprite_itemOrb ; (energy tank orb?)
+    dw enSprite_energyTank ; Energy tank
+    dw enSprite_itemOrb ; (missile tank orb?)
+    dw enSprite_missileTank ; Missile tank
     dw spriteC300 ; Blob thrower?
-    dw sprite7096 ; Energy refill
-    dw sprite7052 ; Arachnus orb
-    dw sprite70A7 ; Missile refill
-    dw sprite70B0 ; Blob thrower projectile
-    dw sprite70B5 ; Blob thrower projectile
+    dw enSprite_energyRefill ; Energy refill
+    dw enSprite_itemOrb ; Arachnus orb
+    dw enSprite_missileRefill ; Missile refill
+    dw enSprite_blob_frame1 ; Blob thrower projectile
+    dw enSprite_blob_frame2 ; Blob thrower projectile
     dw sprite688F ; Metroid
     dw sprite68C0 ; Metroid hatching
-    dw sprite5CAF ; (no graphics)
+    dw enSprite_none ; (no graphics)
     dw sprite68E9 ; Alpha metroid
     dw sprite6916 ; Alpha metroid
-    dw sprite6FC1 ; Baby metroid egg
-    dw sprite6FE6 ; Baby metroid egg
-    dw sprite700B ; Baby metroid egg
-    dw sprite7030 ; Baby metroid
-    dw sprite7041 ; Baby metroid
-    dw sprite5CAF ; (no graphics)
-    dw sprite5CAF ; (no graphics)
-    dw sprite5CAF ; (no graphics)
+    dw enSprite_egg_frame1 ; Baby metroid egg
+    dw enSprite_egg_frame2 ; Baby metroid egg
+    dw enSprite_egg_frame3 ; Baby metroid egg
+    dw enSprite_baby_frame1 ; Baby metroid
+    dw enSprite_baby_frame2 ; Baby metroid
+    dw enSprite_none ; (no graphics)
+    dw enSprite_none ; (no graphics)
+    dw enSprite_none ; (no graphics)
     dw sprite69C3 ; Gamma metroid
     dw sprite69A5 ; Gamma metroid projectile
     dw sprite69B6 ; Gamma metroid projectile
     dw sprite6A08 ; Gamma metroid
-    dw sprite5CAF ; (no graphics)
+    dw enSprite_none ; (no graphics)
     dw sprite6A55 ; Gamma metroid shell
     dw sprite6A92 ; Zeta metroid hatching
     dw sprite6AC7 ; Zeta metroid
@@ -218,11 +218,11 @@
     dw sprite5EC3 ; Gullugg
     dw sprite5EE0 ; Gullugg
     dw sprite5EFD ; Gullugg
-    dw sprite6FE6 ; Baby metroid egg preview
-    dw sprite5CAF ; (no graphics)
-    dw sprite5CAF ; (no graphics)
-    dw sprite5CAF ; (no graphics)
-    dw sprite5CAF ; (no graphics)
+    dw enSprite_egg_frame2 ; Baby metroid egg preview
+    dw enSprite_none ; (no graphics)
+    dw enSprite_none ; (no graphics)
+    dw enSprite_none ; (no graphics)
+    dw enSprite_none ; (no graphics)
     dw sprite65CB ; Small health drop
     dw sprite65D0 ; Small health drop
     dw sprite65F7 ; Metroid death / missile door / screw attack explosion
@@ -239,18 +239,18 @@
     dw sprite65E6 ; Big energy drop
     dw sprite66E5 ; Missile drop
     dw sprite66EA ; Missile drop
-    dw sprite5CAF ; Metroid Queen (no graphics)
-    dw sprite5CAF ; Metroid Queen (no graphics)
-    dw sprite5CAF ; Metroid Queen projectile (no graphics)
-    dw sprite5CAF ; Metroid Queen (no graphics)
-    dw sprite5CAF ; (no graphics)
-    dw sprite5CAF ; Metroid Queen (no graphics)
-    dw sprite5CAF ; Metroid Queen (no graphics)
-    dw sprite5CAF ; Metroid Queen (no graphics)
+    dw enSprite_none ; Metroid Queen (no graphics)
+    dw enSprite_none ; Metroid Queen (no graphics)
+    dw enSprite_none ; Metroid Queen projectile (no graphics)
+    dw enSprite_none ; Metroid Queen (no graphics)
+    dw enSprite_none ; (no graphics)
+    dw enSprite_none ; Metroid Queen (no graphics)
+    dw enSprite_none ; Metroid Queen (no graphics)
+    dw enSprite_none ; Metroid Queen (no graphics)
     dw sprite684D ; Missile door
-    dw sprite5CAF ; (no graphics)
-    dw sprite5CAF ; (no graphics)
-    dw sprite5CAF ; (no graphics)
-    dw sprite5CAF ; (no graphics)
-    dw sprite5CAF ; Nothing - flitt (no graphics)
-    dw sprite5CB0 ; ?
+    dw enSprite_none ; (no graphics)
+    dw enSprite_none ; (no graphics)
+    dw enSprite_none ; (no graphics)
+    dw enSprite_none ; (no graphics)
+    dw enSprite_none ; Nothing - flitt (no graphics)
+    dw enSprite_blankTile ; ?
