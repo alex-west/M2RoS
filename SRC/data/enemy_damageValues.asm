@@ -17,8 +17,8 @@
     db $03 ; Drivel projectile
     db $03 ; Drivel projectile
     db $03 ; Drivel projectile
-    db $05 ; Yumbo
-    db $05 ; Yumbo
+    db $05 ; Small bugs
+    db $05 ; Small bugs
     db $10 ; Hornoad
     db $10 ; Hornoad
     db $15 ; Senjoo
@@ -108,7 +108,7 @@
     db $10 ; Halzyn
     db $20 ; Ramulken
     db $20 ; Ramulken
-    db $00 ; ?
+    db $00 ; Musical stinger event trigger
     db $FF ; (uses same spritemap as 72h proboscum)
     db $00 ; (no graphics)
     db $00 ; (no graphics)
@@ -247,7 +247,7 @@
     db $40 ; Metroid Queen (no graphics)
     db $40 ; Metroid Queen (no graphics)
     db $FF ; Metroid Queen (no graphics)
-    db $FF ; ?
+    db $FF ; Missile door
     db $FF ; (no graphics)
     db $FF ; (no graphics)
     db $00 ; (no graphics)

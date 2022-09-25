@@ -1,256 +1,256 @@
 ; This file was automatically generated from enemies.csv. Please do not edit this directly.
-    dw en6509 ; Tsumari
-    dw en6514 ; Tsumari
-    dw enXX ; Tsumari
-    dw enXX ; Tsumari
-    dw en651F ; Skreek
-    dw enXX ; Skreek
-    dw enXX ; Skreek
-    dw enXX ; Skreek
-    dw enXX ; Skreek projectile
-    dw en652A ; Drivel
-    dw enXX ; Drivel
-    dw enXX ; Drivel
-    dw enXX ; Drivel projectile
-    dw enXX ; Drivel projectile
-    dw enXX ; Drivel projectile
-    dw enXX ; Drivel projectile
-    dw enXX ; Drivel projectile
-    dw enXX ; Drivel projectile
-    dw en6535 ; Yumbo
-    dw enXX ; Yumbo
-    dw en6540 ; Hornoad
-    dw enXX ; Hornoad
-    dw en654B ; Senjoo
-    dw enXX ; Gawron
-    dw enXX ; Gawron
-    dw en6556 ; Gawron spawner?
-    dw en6556 ; Gawron spawner?
-    dw en6561 ; Chute leech
-    dw enXX ; Chute leech
-    dw enXX ; Chute leech
-    dw en656C ; (uses same spritemap as 41h autrack)
-    dw en6577 ; (uses same spritemap as 4Ah wallfire)
-    dw en6509 ; Needler
-    dw en6514 ; Needler
-    dw enXX ; Needler
-    dw enXX ; Needler
-    dw enXX ; (no graphics)
-    dw enXX ; (no graphics)
-    dw enXX ; (no graphics)
-    dw enXX ; (no graphics)
-    dw en6582 ; Skorp
-    dw en658D ; Skorp
-    dw en6598 ; Skorp
-    dw en65A3 ; Skorp
-    dw en670E ; Glow fly
-    dw enXX ; Glow fly
-    dw enXX ; Glow fly
-    dw enXX ; Glow fly
-    dw en65AE ; Moheek
-    dw en65B9 ; Moheek
-    dw enXX ; Moheek
-    dw enXX ; Moheek
-    dw en6719 ; Rock icicle
-    dw enXX ; Rock icicle
-    dw enXX ; Rock icicle
-    dw enXX ; Rock icicle
-    dw enXX ; Yumee
-    dw enXX ; Yumee
-    dw enXX ; Yumee
-    dw enXX ; Yumee
-    dw en6556 ; Yumee spawner?
-    dw en6556 ; Yumee spawner?
-    dw enXX ; Octroll
-    dw enXX ; Octroll
-    dw en65C4 ; Octroll
-    dw en65CF ; Autrack
-    dw enXX ; Autrack
-    dw enXX ; Autrack
-    dw enXX ; Autrack
-    dw enXX ; Autrack projectile
-    dw en65DA ; Autoad
-    dw enXX ; Autoad
-    dw enXX ; (autoad?)
-    dw enXX ; (autoad?)
-    dw en65E5 ; Wallfire
-    dw enXX ; Wallfire
-    dw enXX ; Wallfire
-    dw enXX ; Wallfire projectile
-    dw enXX ; Wallfire projectile
-    dw enXX ; Wallfire projectile
-    dw enXX ; Wallfire projectile
-    dw en65F0 ; Gunzoo
-    dw enXX ; Gunzoo
-    dw enXX ; Gunzoo
-    dw enXX ; Gunzoo projectile
-    dw enXX ; Gunzoo projectile
-    dw enXX ; Gunzoo projectile
-    dw enXX ; Gunzoo projectile
-    dw enXX ; ?
-    dw enXX ; Gunzoo projectile
-    dw enXX ; Gunzoo projectile
-    dw enXX ; Gunzoo projectile
-    dw en65FB ; Autom
-    dw enXX ; Autom
-    dw enXX ; Autom projectile
-    dw enXX ; Autom projectile
-    dw enXX ; Autom projectile
-    dw enXX ; Autom projectile
-    dw enXX ; Autom projectile
-    dw en6606 ; Shirk
-    dw enXX ; Shirk
-    dw en6611 ; Septogg
-    dw enXX ; Septogg
-    dw enXX ; Moto
-    dw en661C ; Moto
-    dw enXX ; Moto
-    dw en6627 ; Halzyn
-    dw en6632 ; Ramulken
-    dw enXX ; Ramulken
-    dw en663D ; ?
-    dw en6648 ; (uses same spritemap as 72h proboscum)
-    dw enXX ; (no graphics)
-    dw enXX ; (no graphics)
-    dw enXX ; (no graphics)
-    dw en6653 ; Proboscum
-    dw enXX ; Proboscum
-    dw enXX ; Proboscum
-    dw en665E ; Missile block
-    dw en6724 ; Arachnus
-    dw en6724 ; Arachnus
-    dw en6724 ; Arachnus
-    dw en6724 ; Arachnus
-    dw en6724 ; Arachnus
-    dw enXX ; Arachnus projectile
-    dw enXX ; Arachnus projectile
-    dw enXX ; (no graphics)
-    dw enXX ; (no graphics)
-    dw enXX ; (no graphics)
-    dw en66ED ; Plasma beam orb
-    dw en66ED ; Plasma beam
-    dw en66ED ; Ice beam orb
-    dw en66ED ; Ice beam
-    dw en66ED ; Wave beam orb
-    dw en66ED ; Wave beam
-    dw en66ED ; Spazer beam orb
-    dw en66ED ; Spazer beam
-    dw en66ED ; Bombs orb
-    dw en66ED ; Bombs
-    dw en66ED ; Screw attack orb
-    dw en66ED ; Screw attack
-    dw en66ED ; Varia suit orb
-    dw en66ED ; Varia suit
-    dw en66ED ; Hi-jump boots orb
-    dw en66ED ; Hi-jump boots
-    dw en66ED ; Space jump orb
-    dw en66ED ; Space jump
-    dw en66ED ; (spider ball orb?)
-    dw en66ED ; Spider ball
-    dw en66ED ; (spring ball orb?)
-    dw en66ED ; Spring ball
-    dw en66ED ; (energy tank orb?)
-    dw en66ED ; Energy tank
-    dw en66ED ; (missile tank orb?)
-    dw en66ED ; Missile tank
-    dw en6703 ; Blob thrower?
-    dw en66ED ; Energy refill
-    dw en672F ; Arachnus orb
-    dw en66ED ; Missile refill
-    dw enXX ; Blob thrower projectile
-    dw enXX ; Blob thrower projectile
-    dw en66A0 ; Metroid
-    dw enXX ; Metroid hatching
-    dw enXX ; (no graphics)
-    dw en66B6 ; Alpha metroid
-    dw en66AB ; Alpha metroid
-    dw enXX ; Baby metroid egg
-    dw en66E2 ; Baby metroid egg
-    dw enXX ; Baby metroid egg
-    dw enXX ; Baby metroid
-    dw enXX ; Baby metroid
-    dw enXX ; (no graphics)
-    dw enXX ; (no graphics)
-    dw enXX ; (no graphics)
-    dw en66C1 ; Gamma metroid
-    dw enXX ; Gamma metroid projectile
-    dw enXX ; Gamma metroid projectile
-    dw enXX ; Gamma metroid
-    dw enXX ; (no graphics)
-    dw enXX ; Gamma metroid shell
-    dw en66CC ; Zeta metroid hatching
-    dw enXX ; Zeta metroid
-    dw enXX ; Zeta metroid
-    dw enXX ; Zeta metroid
-    dw enXX ; Zeta metroid
-    dw enXX ; Zeta metroid
-    dw enXX ; Zeta metroid
-    dw enXX ; Zeta metroid
-    dw enXX ; Zeta metroid
-    dw enXX ; Zeta metroid
-    dw enXX ; Zeta metroid
-    dw enXX ; Zeta metroid projectile
-    dw enXX ; Omega metroid
-    dw enXX ; Omega metroid
-    dw enXX ; Omega metroid
-    dw enXX ; Omega metroid
-    dw enXX ; Omega metroid
-    dw enXX ; Omega metroid
-    dw enXX ; Omega metroid
-    dw enXX ; Omega metroid projectile
-    dw enXX ; Omega metroid projectile
-    dw enXX ; Omega metroid projectile
-    dw enXX ; Omega metroid projectile
-    dw enXX ; Omega metroid projectile
-    dw enXX ; Omega metroid projectile
-    dw enXX ; Omega metroid projectile
-    dw enXX ; (omega metroid projectile?)
-    dw en66D7 ; Metroid
-    dw enXX ; Metroid
-    dw en6669 ; Flitt
-    dw en6674 ; Flitt
-    dw enXX ; (flitt?)
-    dw en667F ; Gravitt
-    dw enXX ; Gravitt
-    dw enXX ; Gravitt
-    dw enXX ; Gravitt
-    dw enXX ; Gravitt
-    dw en668A ; Gullugg
-    dw enXX ; Gullugg
-    dw enXX ; Gullugg
-    dw enXX ; Baby metroid egg preview
-    dw enXX ; (no graphics)
-    dw enXX ; (no graphics)
-    dw enXX ; (no graphics)
-    dw enXX ; (no graphics)
-    dw enXX ; Small health drop
-    dw enXX ; Small health drop
-    dw enXX ; Metroid death / missile door / screw attack explosion
-    dw enXX ; Metroid death / missile door / screw attack explosion
-    dw enXX ; Metroid death / missile door / screw attack explosion
-    dw enXX ; Metroid death / missile door / screw attack explosion
-    dw enXX ; Metroid death / missile door / screw attack explosion
-    dw enXX ; Metroid death / missile door / screw attack explosion
-    dw enXX ; Enemy death explosion
-    dw enXX ; Enemy death explosion
-    dw enXX ; Enemy death explosion
-    dw enXX ; Enemy death explosion extra
-    dw enXX ; Big energy drop
-    dw enXX ; Big energy drop
-    dw enXX ; Missile drop
-    dw enXX ; Missile drop
-    dw enXX ; Metroid Queen (no graphics)
-    dw enXX ; Metroid Queen (no graphics)
-    dw enXX ; Metroid Queen projectile (no graphics)
-    dw enXX ; Metroid Queen (no graphics)
-    dw enXX ; (no graphics)
-    dw enXX ; Metroid Queen (no graphics)
-    dw enXX ; Metroid Queen (no graphics)
-    dw enXX ; Metroid Queen (no graphics)
-    dw en6695 ; ?
-    dw enXX ; (no graphics)
-    dw enXX ; (no graphics)
-    dw enXX ; (no graphics)
-    dw enXX ; (no graphics)
-    dw enXX ; Nothing - flitt (no graphics)
-    dw enXX ; ?
+    dw enHead_crawlerRight ; Tsumari
+    dw enHead_crawlerLeft ; Tsumari
+    dw enHead_NULL ; Tsumari
+    dw enHead_NULL ; Tsumari
+    dw enHead_skreek ; Skreek
+    dw enHead_NULL ; Skreek
+    dw enHead_NULL ; Skreek
+    dw enHead_NULL ; Skreek
+    dw enHead_NULL ; Skreek projectile
+    dw enHead_drivel ; Drivel
+    dw enHead_NULL ; Drivel
+    dw enHead_NULL ; Drivel
+    dw enHead_NULL ; Drivel projectile
+    dw enHead_NULL ; Drivel projectile
+    dw enHead_NULL ; Drivel projectile
+    dw enHead_NULL ; Drivel projectile
+    dw enHead_NULL ; Drivel projectile
+    dw enHead_NULL ; Drivel projectile
+    dw enHead_smallBug ; Small bugs
+    dw enHead_NULL ; Small bugs
+    dw enHead_hornoad ; Hornoad
+    dw enHead_NULL ; Hornoad
+    dw enHead_senjoo ; Senjoo
+    dw enHead_NULL ; Gawron
+    dw enHead_NULL ; Gawron
+    dw enHead_pipeBug ; Gawron spawner?
+    dw enHead_pipeBug ; Gawron spawner?
+    dw enHead_chuteLeech ; Chute leech
+    dw enHead_NULL ; Chute leech
+    dw enHead_NULL ; Chute leech
+    dw enHead_autrackFlipped ; (uses same spritemap as 41h autrack)
+    dw enHead_wallfireFlipped ; (uses same spritemap as 4Ah wallfire)
+    dw enHead_crawlerRight ; Needler
+    dw enHead_crawlerLeft ; Needler
+    dw enHead_NULL ; Needler
+    dw enHead_NULL ; Needler
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; (no graphics)
+    dw enHead_skorpUp ; Skorp
+    dw enHead_skorpDown ; Skorp
+    dw enHead_skorpRight ; Skorp
+    dw enHead_skorpLeft ; Skorp
+    dw enHead_glowFly ; Glow fly
+    dw enHead_NULL ; Glow fly
+    dw enHead_NULL ; Glow fly
+    dw enHead_NULL ; Glow fly
+    dw enHead_moheekRight ; Moheek
+    dw enHead_moheekLeft ; Moheek
+    dw enHead_NULL ; Moheek
+    dw enHead_NULL ; Moheek
+    dw enHead_rockIcicle ; Rock icicle
+    dw enHead_NULL ; Rock icicle
+    dw enHead_NULL ; Rock icicle
+    dw enHead_NULL ; Rock icicle
+    dw enHead_NULL ; Yumee
+    dw enHead_NULL ; Yumee
+    dw enHead_NULL ; Yumee
+    dw enHead_NULL ; Yumee
+    dw enHead_pipeBug ; Yumee spawner?
+    dw enHead_pipeBug ; Yumee spawner?
+    dw enHead_NULL ; Octroll
+    dw enHead_NULL ; Octroll
+    dw enHead_octroll ; Octroll
+    dw enHead_autrack ; Autrack
+    dw enHead_NULL ; Autrack
+    dw enHead_NULL ; Autrack
+    dw enHead_NULL ; Autrack
+    dw enHead_NULL ; Autrack projectile
+    dw enHead_autoad ; Autoad
+    dw enHead_NULL ; Autoad
+    dw enHead_NULL ; (autoad?)
+    dw enHead_NULL ; (autoad?)
+    dw enHead_wallfire ; Wallfire
+    dw enHead_NULL ; Wallfire
+    dw enHead_NULL ; Wallfire
+    dw enHead_NULL ; Wallfire projectile
+    dw enHead_NULL ; Wallfire projectile
+    dw enHead_NULL ; Wallfire projectile
+    dw enHead_NULL ; Wallfire projectile
+    dw enHead_gunzoo ; Gunzoo
+    dw enHead_NULL ; Gunzoo
+    dw enHead_NULL ; Gunzoo
+    dw enHead_NULL ; Gunzoo projectile
+    dw enHead_NULL ; Gunzoo projectile
+    dw enHead_NULL ; Gunzoo projectile
+    dw enHead_NULL ; Gunzoo projectile
+    dw enHead_NULL ; ?
+    dw enHead_NULL ; Gunzoo projectile
+    dw enHead_NULL ; Gunzoo projectile
+    dw enHead_NULL ; Gunzoo projectile
+    dw enHead_autom ; Autom
+    dw enHead_NULL ; Autom
+    dw enHead_NULL ; Autom projectile
+    dw enHead_NULL ; Autom projectile
+    dw enHead_NULL ; Autom projectile
+    dw enHead_NULL ; Autom projectile
+    dw enHead_NULL ; Autom projectile
+    dw enHead_shirk ; Shirk
+    dw enHead_NULL ; Shirk
+    dw enHead_septogg ; Septogg
+    dw enHead_NULL ; Septogg
+    dw enHead_NULL ; Moto
+    dw enHead_moto ; Moto
+    dw enHead_NULL ; Moto
+    dw enHead_halzyn ; Halzyn
+    dw enHead_ramulken ; Ramulken
+    dw enHead_NULL ; Ramulken
+    dw enHead_metroidStinger ; Musical stinger event trigger
+    dw enHead_proboscumFlipped ; (uses same spritemap as 72h proboscum)
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; (no graphics)
+    dw enHead_proboscum ; Proboscum
+    dw enHead_NULL ; Proboscum
+    dw enHead_NULL ; Proboscum
+    dw enHead_missileBlock ; Missile block
+    dw enHead_arachnus ; Arachnus
+    dw enHead_arachnus ; Arachnus
+    dw enHead_arachnus ; Arachnus
+    dw enHead_arachnus ; Arachnus
+    dw enHead_arachnus ; Arachnus
+    dw enHead_NULL ; Arachnus projectile
+    dw enHead_NULL ; Arachnus projectile
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; (no graphics)
+    dw enHead_item ; Plasma beam orb
+    dw enHead_item ; Plasma beam
+    dw enHead_item ; Ice beam orb
+    dw enHead_item ; Ice beam
+    dw enHead_item ; Wave beam orb
+    dw enHead_item ; Wave beam
+    dw enHead_item ; Spazer beam orb
+    dw enHead_item ; Spazer beam
+    dw enHead_item ; Bombs orb
+    dw enHead_item ; Bombs
+    dw enHead_item ; Screw attack orb
+    dw enHead_item ; Screw attack
+    dw enHead_item ; Varia suit orb
+    dw enHead_item ; Varia suit
+    dw enHead_item ; Hi-jump boots orb
+    dw enHead_item ; Hi-jump boots
+    dw enHead_item ; Space jump orb
+    dw enHead_item ; Space jump
+    dw enHead_item ; (spider ball orb?)
+    dw enHead_item ; Spider ball
+    dw enHead_item ; (spring ball orb?)
+    dw enHead_item ; Spring ball
+    dw enHead_item ; (energy tank orb?)
+    dw enHead_item ; Energy tank
+    dw enHead_item ; (missile tank orb?)
+    dw enHead_item ; Missile tank
+    dw enHead_blobThrower ; Blob thrower?
+    dw enHead_item ; Energy refill
+    dw enHead_arachnusOrb ; Arachnus orb
+    dw enHead_item ; Missile refill
+    dw enHead_NULL ; Blob thrower projectile
+    dw enHead_NULL ; Blob thrower projectile
+    dw enHead_alphaHatching ; Metroid
+    dw enHead_NULL ; Metroid hatching
+    dw enHead_NULL ; (no graphics)
+    dw enHead_gammaMetroid ; Alpha metroid
+    dw enHead_alphaMetroid ; Alpha metroid
+    dw enHead_NULL ; Baby metroid egg
+    dw enHead_babyMetroid ; Baby metroid egg
+    dw enHead_NULL ; Baby metroid egg
+    dw enHead_NULL ; Baby metroid
+    dw enHead_NULL ; Baby metroid
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; (no graphics)
+    dw enHead_zetaMetroid ; Gamma metroid
+    dw enHead_NULL ; Gamma metroid projectile
+    dw enHead_NULL ; Gamma metroid projectile
+    dw enHead_NULL ; Gamma metroid
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; Gamma metroid shell
+    dw enHead_omegaMetroid ; Zeta metroid hatching
+    dw enHead_NULL ; Zeta metroid
+    dw enHead_NULL ; Zeta metroid
+    dw enHead_NULL ; Zeta metroid
+    dw enHead_NULL ; Zeta metroid
+    dw enHead_NULL ; Zeta metroid
+    dw enHead_NULL ; Zeta metroid
+    dw enHead_NULL ; Zeta metroid
+    dw enHead_NULL ; Zeta metroid
+    dw enHead_NULL ; Zeta metroid
+    dw enHead_NULL ; Zeta metroid
+    dw enHead_NULL ; Zeta metroid projectile
+    dw enHead_NULL ; Omega metroid
+    dw enHead_NULL ; Omega metroid
+    dw enHead_NULL ; Omega metroid
+    dw enHead_NULL ; Omega metroid
+    dw enHead_NULL ; Omega metroid
+    dw enHead_NULL ; Omega metroid
+    dw enHead_NULL ; Omega metroid
+    dw enHead_NULL ; Omega metroid projectile
+    dw enHead_NULL ; Omega metroid projectile
+    dw enHead_NULL ; Omega metroid projectile
+    dw enHead_NULL ; Omega metroid projectile
+    dw enHead_NULL ; Omega metroid projectile
+    dw enHead_NULL ; Omega metroid projectile
+    dw enHead_NULL ; Omega metroid projectile
+    dw enHead_NULL ; (omega metroid projectile?)
+    dw enHead_metroid ; Metroid
+    dw enHead_NULL ; Metroid
+    dw enHead_flittVanishing ; Flitt
+    dw enHead_flittMoving ; Flitt
+    dw enHead_NULL ; (flitt?)
+    dw enHead_gravitt ; Gravitt
+    dw enHead_NULL ; Gravitt
+    dw enHead_NULL ; Gravitt
+    dw enHead_NULL ; Gravitt
+    dw enHead_NULL ; Gravitt
+    dw enHead_gullugg ; Gullugg
+    dw enHead_NULL ; Gullugg
+    dw enHead_NULL ; Gullugg
+    dw enHead_NULL ; Baby metroid egg preview
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; Small health drop
+    dw enHead_NULL ; Small health drop
+    dw enHead_NULL ; Metroid death / missile door / screw attack explosion
+    dw enHead_NULL ; Metroid death / missile door / screw attack explosion
+    dw enHead_NULL ; Metroid death / missile door / screw attack explosion
+    dw enHead_NULL ; Metroid death / missile door / screw attack explosion
+    dw enHead_NULL ; Metroid death / missile door / screw attack explosion
+    dw enHead_NULL ; Metroid death / missile door / screw attack explosion
+    dw enHead_NULL ; Enemy death explosion
+    dw enHead_NULL ; Enemy death explosion
+    dw enHead_NULL ; Enemy death explosion
+    dw enHead_NULL ; Enemy death explosion extra
+    dw enHead_NULL ; Big energy drop
+    dw enHead_NULL ; Big energy drop
+    dw enHead_NULL ; Missile drop
+    dw enHead_NULL ; Missile drop
+    dw enHead_NULL ; Metroid Queen (no graphics)
+    dw enHead_NULL ; Metroid Queen (no graphics)
+    dw enHead_NULL ; Metroid Queen projectile (no graphics)
+    dw enHead_NULL ; Metroid Queen (no graphics)
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; Metroid Queen (no graphics)
+    dw enHead_NULL ; Metroid Queen (no graphics)
+    dw enHead_NULL ; Metroid Queen (no graphics)
+    dw enHead_missileDoor ; Missile door
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; (no graphics)
+    dw enHead_NULL ; Nothing - flitt (no graphics)
+    dw enHead_NULL ; ?

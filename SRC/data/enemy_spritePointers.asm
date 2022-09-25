@@ -17,8 +17,8 @@
     dw sprite5DA0 ; Drivel projectile
     dw sprite5DA9 ; Drivel projectile
     dw sprite5DBE ; Drivel projectile
-    dw sprite5DD3 ; Yumbo
-    dw sprite5DDC ; Yumbo
+    dw sprite5DD3 ; Small bugs
+    dw sprite5DDC ; Small bugs
     dw sprite5DE5 ; Hornoad
     dw sprite5DFE ; Hornoad
     dw sprite5E55 ; Senjoo
@@ -108,7 +108,7 @@
     dw sprite6427 ; Halzyn
     dw sprite6440 ; Ramulken
     dw sprite645D ; Ramulken
-    dw sprite5CB0 ; ?
+    dw sprite5CB0 ; Musical stinger event trigger
     dw sprite64C1 ; (uses same spritemap as 72h proboscum)
     dw sprite5CAF ; (no graphics)
     dw sprite5CAF ; (no graphics)
@@ -247,7 +247,7 @@
     dw sprite5CAF ; Metroid Queen (no graphics)
     dw sprite5CAF ; Metroid Queen (no graphics)
     dw sprite5CAF ; Metroid Queen (no graphics)
-    dw sprite684D ; ?
+    dw sprite684D ; Missile door
     dw sprite5CAF ; (no graphics)
     dw sprite5CAF ; (no graphics)
     dw sprite5CAF ; (no graphics)

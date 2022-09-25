@@ -17,8 +17,8 @@
     dw hitbox6A43 ; Drivel projectile
     dw hitbox6A7B ; Drivel projectile
     dw hitbox6AA7 ; Drivel projectile
-    dw hitbox6A43 ; Yumbo
-    dw hitbox6A43 ; Yumbo
+    dw hitbox6A43 ; Small bugs
+    dw hitbox6A43 ; Small bugs
     dw hitbox6A6F ; Hornoad
     dw hitbox6A6F ; Hornoad
     dw hitbox6A6F ; Senjoo
@@ -108,7 +108,7 @@
     dw hitbox6A67 ; Halzyn
     dw hitbox6A6F ; Ramulken
     dw hitbox6A6F ; Ramulken
-    dw hitbox6A6B ; ?
+    dw hitbox6A6B ; Musical stinger event trigger
     dw hitbox6A43 ; (uses same spritemap as 72h proboscum)
     dw hitbox6A43 ; (no graphics)
     dw hitbox6A43 ; (no graphics)
@@ -247,7 +247,7 @@
     dw hitbox6AD7 ; Metroid Queen (no graphics)
     dw hitbox6ACB ; Metroid Queen (no graphics)
     dw hitbox6ACB ; Metroid Queen (no graphics)
-    dw hitbox6ADF ; ?
+    dw hitbox6ADF ; Missile door
     dw hitbox6ADF ; (no graphics)
     dw hitbox6ADF ; (no graphics)
     dw hitbox6ADF ; (no graphics)
