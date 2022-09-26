@@ -4,52 +4,54 @@ enSprite_none:
 enSprite_blankTile:
     db  -4, -4, $FF, $00
     db $FF
-sprite5CB5:
+
+enSprite_tsumuriHori_frame1:
     db  -8, -8, $B4, $00
     db  -8,  0, $B5, $00
     db   0, -8, $B6, $00
     db   0,  0, $B7, $00
     db $FF
-sprite5CC6:
+enSprite_tsumuriHori_frame2:
     db  -8, -8, $B4, $00
     db  -8,  0, $B5, $00
     db   0, -8, $B9, $00
     db   0,  0, $B8, $00
     db $FF
-sprite5CD7:
+enSprite_tsumuriVert_frame1:
     db  -8, -8, $BA, $00
     db  -8,  0, $BB, $00
     db   0, -8, $BC, $00
     db   0,  0, $BD, $00
     db $FF
-sprite5CE8:
+enSprite_tsumuriVert_frame2:
     db  -8, -8, $BA, $00
     db  -8,  0, $BE, $00
     db   0, -8, $BC, $00
     db   0,  0, $BF, $00
     db $FF
-sprite5CF9:
+
+enSprite_skreek_frame1:
     db  -6,-12, $C0, $00
     db  -8, -4, $C1, $00
     db  -8,  4, $C2, $00
     db   0, -4, $C3, $00
     db   0,  4, $C4, $00
     db $FF
-sprite5D0E:
+enSprite_skreek_frame2:
     db  -6,-12, $C5, $00
     db  -8, -4, $C6, $00
     db  -8,  4, $C7, $00
     db   0, -4, $C8, $00
     db   0,  4, $C9, $00
     db $FF
-sprite5D23:
+enSprite_skreek_frame3:
     db  -6,-12, $CA, $00
     db  -8, -4, $CB, $00
     db  -8,  4, $CC, $00
     db   0, -4, $CD, $00
     db   0,  4, $CE, $00
     db $FF
-sprite5D38:
+enSprite_skreek_frame4:
     db  -8,-12, $CF, $00
     db  -8, -4, $D0, $00
     db  -8,  4, $C2, $00
@@ -57,16 +59,17 @@ sprite5D38:
     db   0, -4, $D2, $00
     db   0,  4, $C4, $00
     db $FF
-sprite5D51:
+enSprite_skreekSpit:
     db  -4, -4, $D3, $00
     db $FF
-sprite5D56:
+
+enSprite_drivel_frame1:
     db  -4,-16, $D4, $00
     db  -4, -8, $D5, $00
     db  -4,  0, $D5, $20
     db  -4,  8, $D4, $20
     db $FF
-sprite5D67:
+enSprite_drivel_frame2:
     db  -4,-16, $D7, $00
     db  -4, -8, $D8, $00
     db  -4,  0, $D8, $20
@@ -74,48 +77,50 @@ sprite5D67:
     db   4,-16, $D6, $00
     db   4,  8, $D6, $20
     db $FF
-sprite5D80:
+enSprite_drivel_frame3:
     db  -4, -8, $DA, $00
     db  -4,  0, $DA, $20
     db   4, -8, $D9, $00
     db   4,  0, $D9, $20
     db $FF
-sprite5D91:
+enSprite_drivelSpit_frame1:
     db  -4, -4, $DB, $00
     db $FF
-sprite5D96:
+enSprite_drivelSpit_frame2:
     db  -4, -4, $DC, $00
     db $FF
-sprite5D9B:
+enSprite_drivelSpit_frame3:
     db  -4, -4, $DD, $00
     db $FF
-sprite5DA0:
+enSprite_drivelSpit_frame4:
     db  -4, -8, $DE, $00
     db  -4,  0, $DE, $20
     db $FF
-sprite5DA9:
+enSprite_drivelSpit_frame5:
     db -12, -4, $DF, $00
     db -10,-10, $E0, $00
     db -10,  2, $E0, $20
     db  -4,-12, $E1, $00
     db  -4,  4, $E1, $20
     db $FF
-sprite5DBE:
+enSprite_drivelSpit_frame6:
     db -25, -4, $DF, $00
     db -17,-17, $E0, $00
     db -17,  9, $E0, $20
     db  -4,-20, $E1, $00
     db  -4, 12, $E1, $20
     db $FF
-sprite5DD3:
+
+enSprite_smallBug_frame1:
     db  -4, -8, $B0, $00
     db  -4,  0, $B1, $00
     db $FF
-sprite5DDC:
+enSprite_smallBug_frame2:
     db  -4, -8, $B2, $00
     db  -4,  0, $B3, $00
     db $FF
-sprite5DE5:
+
+enSprite_hornoad_frame1:
     db  -8,-12, $E2, $00
     db  -8, -4, $E3, $00
     db  -8,  4, $E4, $00
@@ -123,7 +128,7 @@ sprite5DE5:
     db   0, -4, $E6, $00
     db   0,  4, $E7, $00
     db $FF
-sprite5DFE:
+enSprite_hornoad_frame2:
     db  -8,-12, $E2, $00
     db  -8, -4, $E3, $00
     db  -8,  4, $E4, $00
@@ -132,7 +137,8 @@ sprite5DFE:
     db   0,  4, $E9, $00
     db   8,  4, $EA, $00
     db $FF
-sprite5E1B:
+
+enSprite_septogg_frame1:
     db -12, -8, $EB, $00
     db -12,  0, $EB, $20
     db  -4,-12, $EC, $00
@@ -141,7 +147,7 @@ sprite5E1B:
     db   4, -8, $EF, $00
     db   4,  0, $EF, $20
     db $FF
-sprite5E38:
+enSprite_septogg_frame2:
     db -12, -8, $EB, $00
     db -12,  0, $EB, $20
     db  -4,-12, $EE, $00
@@ -150,7 +156,8 @@ sprite5E38:
     db   4, -8, $EF, $00
     db   4,  0, $EF, $20
     db $FF
-sprite5E55:
+
+enSprite_senjoo:
     db  -8,-12, $B4, $00
     db  -8, -4, $B5, $00
     db  -8,  4, $B6, $00
@@ -158,37 +165,40 @@ sprite5E55:
     db   0, -4, $B8, $00
     db   0,  4, $B9, $00
     db $FF
-sprite5E6E:
+
+enSprite_gawron_frame1:
     db  -8, -8, $BC, $00
     db  -8,  0, $BD, $00
     db   0, -8, $BE, $00
     db   0,  0, $BF, $00
     db $FF
-sprite5E7F:
+enSprite_gawron_frame2:
     db  -8, -8, $C0, $00
     db  -8,  0, $C1, $00
     db   0, -8, $BE, $00
     db   0,  0, $BF, $00
     db $FF
-sprite5E90:
+
+enSprite_chuteLeech_frame1:
     db  -4,-12, $C2, $00
     db  -4, -4, $C3, $00
     db  -4,  4, $C2, $20
     db $FF
-sprite5E9D:
+enSprite_chuteLeech_frame2:
     db  -8, -8, $C5, $00
     db  -8,  0, $C5, $20
     db   0, -8, $C4, $00
     db   0,  0, $C4, $20
     db $FF
-sprite5EAE:
+enSprite_chuteLeech_frame3:
     db  -8, -4, $C9, $00
     db  -8,  4, $CA, $00
     db   0,-12, $C6, $00
     db   0, -4, $C7, $00
     db   0,  4, $C8, $00
     db $FF
-sprite5EC3:
+
+enSprite_gullugg_frame1:
     db -12,-16, $CB, $00
     db -12, -8, $CC, $00
     db -12,  0, $CC, $20
@@ -197,7 +207,7 @@ sprite5EC3:
     db  -4,  0, $CE, $00
     db   4,  0, $CF, $00
     db $FF
-sprite5EE0:
+enSprite_gullugg_frame2:
     db -12,-16, $D0, $00
     db -12, -8, $D1, $00
     db -12,  0, $D1, $20
@@ -206,26 +216,28 @@ sprite5EE0:
     db  -4,  0, $CE, $00
     db   4,  0, $CF, $00
     db $FF
-sprite5EFD:
+enSprite_gullugg_frame3:
     db -12, -8, $D2, $00
     db -12,  0, $D2, $20
     db  -4, -8, $CD, $00
     db  -4,  0, $CE, $00
     db   4,  0, $CF, $00
     db $FF
-sprite5F12:
+
+enSprite_needler_frame1:
     db  -8, -8, $E6, $00
     db  -8,  0, $E7, $00
     db   0, -8, $E8, $00
     db   0,  0, $E9, $00
     db $FF
-sprite5F23:
+enSprite_needler_frame2:
     db  -8, -8, $EA, $00
     db  -8,  0, $EB, $00
     db   0, -8, $EC, $00
     db   0,  0, $ED, $00
     db $FF
-sprite5F34:
+
+enSprite_skorpVert:
     db -12, -8, $B4, $00
     db -12,  0, $B4, $00
     db  -4, -8, $B6, $00
@@ -233,7 +245,7 @@ sprite5F34:
     db   4, -8, $B8, $00
     db   4,  0, $B9, $00
     db $FF
-sprite5F4D:
+enSprite_skorpHori:
     db  -8,-12, $BA, $00
     db  -8, -4, $BB, $00
     db  -8,  4, $B4, $00
@@ -241,105 +253,112 @@ sprite5F4D:
     db   0, -4, $BD, $00
     db   0,  4, $B4, $00
     db $FF
-sprite5F66:
+
+enSprite_glowFly_frame1:
     db -12, -4, $BE, $00
     db  -4, -4, $BF, $00
     db   4, -4, $C1, $00
     db $FF
-sprite5F73:
+enSprite_glowFly_frame2:
     db -12, -4, $BE, $00
     db  -4, -4, $BF, $00
     db   4, -4, $C0, $00
     db $FF
-sprite5F80:
+enSprite_glowFly_frame3:
     db  -8, -8, $C2, $00
     db  -8,  0, $C3, $00
     db   0, -8, $C4, $00
     db   0,  0, $C5, $00
     db $FF
-sprite5F91:
+enSprite_glowFly_frame4:
     db  -8, -8, $C6, $00
     db  -8,  0, $C7, $00
     db   0, -8, $C8, $00
     db   0,  0, $C9, $00
     db $FF
-sprite5FA2:
+
+enSprite_rockIcicle_frame1:
     db  -4, -4, $D2, $00
     db $FF
-sprite5FA7:
+enSprite_rockIcicle_frame2:
     db  -4, -4, $D3, $00
     db $FF
-sprite5FAC:
+enSprite_rockIcicle_frame3:
     db  -8, -4, $D4, $00
     db   0, -4, $D5, $00
     db $FF
-sprite5FB5:
+enSprite_rockIcicle_frame4:
     db  -8, -4, $D4, $00
     db   0, -4, $D6, $00
     db $FF
-sprite5FBE:
+
+enSprite_moheekHori_frame1:
     db  -8, -8, $D7, $00
     db  -8,  0, $D8, $00
     db   0, -8, $DB, $00
     db   0,  0, $DC, $00
     db $FF
-sprite5FCF:
+enSprite_moheekHori_frame2:
     db  -8, -8, $D9, $00
     db  -8,  0, $DA, $00
     db   0, -8, $DB, $00
     db   0,  0, $DD, $00
     db $FF
-sprite5FE0:
+enSprite_moheekVert_frame1:
     db  -8, -8, $DE, $00
     db  -8,  0, $DF, $00
     db   0, -8, $E1, $00
     db   0,  0, $E2, $00
     db $FF
-sprite5FF1:
+enSprite_moheekVert_frame2:
     db  -8, -8, $E3, $00
     db  -8,  0, $E0, $00
     db   0, -8, $E4, $00
     db   0,  0, $E2, $00
     db $FF
-sprite6002:
+
+enSprite_yumee_frame1:
     db  -8, -8, $E5, $00
     db  -8,  0, $E9, $00
     db   0,  0, $EA, $00
     db $FF
-sprite600F:
+enSprite_yumee_frame2:
     db  -8, -8, $E5, $00
     db  -8,  0, $E9, $00
     db   0,  0, $EB, $00
     db $FF
-sprite601C:
+enSprite_yumee_frame3:
     db  -8, -8, $E5, $00
     db  -8,  0, $E6, $00
     db  -8,  8, $E7, $00
     db $FF
-sprite6029:
+enSprite_yumee_frame4:
     db  -8, -8, $E5, $00
     db  -8,  0, $E6, $00
     db  -8,  8, $E8, $00
     db $FF
-sprite6036:
+
+enSprite_flitt_frame1:
     db  -8, -8, $CA, $00
     db  -8,  0, $CB, $00
     db   0, -8, $CC, $00
     db   0,  0, $CD, $00
     db $FF
-sprite6047:
+enSprite_flitt_frame2:
     db  -8, -8, $CE, $00
     db  -8,  0, $CF, $00
     db   0, -8, $D0, $00
     db   0,  0, $D1, $00
     db $FF
-sprite6058:
+
+enSprite_stalagtite: ; Unused
     db  -8, -8, $EC, $00
     db  -8,  0, $ED, $00
     db   0, -4, $EE, $00
     db   8, -4, $EF, $00
     db $FF
-sprite6069:
+
+enSprite_octroll_frame1:
     db  -8, -8, $B4, $00
     db  -8,  0, $B4, $20
     db   0,-16, $B5, $00
@@ -349,7 +368,7 @@ sprite6069:
     db   8, -8, $B7, $00
     db   8,  0, $B7, $20
     db $FF
-sprite608A:
+enSprite_octroll_frame2:
     db  -8, -8, $B4, $00
     db  -8,  0, $B4, $20
     db   0,-16, $BA, $00
@@ -359,7 +378,7 @@ sprite608A:
     db   8, -8, $B7, $00
     db   8,  0, $B7, $20
     db $FF
-sprite60AB:
+enSprite_octroll_frame3:
     db  -8, -8, $B4, $00
     db  -8,  0, $B4, $20
     db   0,-16, $B8, $00
@@ -367,13 +386,14 @@ sprite60AB:
     db   0,  0, $B9, $20
     db   0,  8, $B8, $20
     db $FF
-sprite60C4:
+
+enSprite_autrack_frame1:
     db  -8, -8, $BB, $00
     db  -8,  0, $BC, $00
     db   0, -8, $BD, $00
     db   0,  0, $BE, $00
     db $FF
-sprite60D5:
+enSprite_autrack_frame2:
     db -16, -8, $BF, $00
     db -16,  0, $C0, $00
     db  -8, -8, $C1, $00
@@ -381,7 +401,7 @@ sprite60D5:
     db   0, -8, $BD, $00
     db   0,  0, $BE, $00
     db $FF
-sprite60EE:
+enSprite_autrack_frame3:
     db -24, -8, $BF, $00
     db -24,  0, $C0, $00
     db -16, -8, $C3, $00
@@ -391,7 +411,7 @@ sprite60EE:
     db   0, -8, $BD, $00
     db   0,  0, $BE, $00
     db $FF
-sprite610F:
+enSprite_autrack_frame4:
     db -24, -8, $C5, $00
     db -24,  0, $C0, $00
     db -16, -8, $C3, $00
@@ -401,11 +421,12 @@ sprite610F:
     db   0, -8, $BD, $00
     db   0,  0, $BE, $00
     db $FF
-sprite6130:
+enSprite_autrackShot:
     db  -4, -8, $C6, $00
     db  -4,  0, $C6, $00
     db $FF
-sprite6139:
+
+enSprite_autoad_frame1:
     db  -8,-12, $C8, $00
     db  -8, -4, $C9, $00
     db  -8,  4, $C8, $20
@@ -413,7 +434,7 @@ sprite6139:
     db   0, -4, $CB, $00
     db   0,  4, $CA, $20
     db $FF
-sprite6152:
+enSprite_autoad_frame2:
     db  -8,-12, $C8, $00
     db  -8, -4, $CF, $00
     db  -8,  4, $C8, $20
@@ -423,7 +444,8 @@ sprite6152:
     db   8,-10, $CE, $00
     db   8,  2, $CE, $20
     db $FF
-sprite6173:
+
+enSprite_sideAutoad_frame1:
     db -12, -8, $D0, $00
     db -12,  0, $D1, $00
     db  -4, -8, $D2, $00
@@ -431,7 +453,7 @@ sprite6173:
     db   4, -8, $D0, $40
     db   4,  0, $D1, $40
     db $FF
-sprite618C:
+enSprite_sideAutoad_frame2:
     db -12, -8, $D0, $00
     db -12,  0, $D4, $00
     db -10,  8, $D6, $00
@@ -441,41 +463,43 @@ sprite618C:
     db   4, -8, $D0, $40
     db   4,  0, $D4, $40
     db $FF
-sprite61AD:
+
+enSprite_wallfire_frame1:
     db -12, -4, $D8, $00
     db -12,  4, $D9, $00
     db  -4, -4, $DA, $00
     db  -4,  4, $DB, $00
     db   4, -4, $DC, $00
     db $FF
-sprite61C2:
+enSprite_wallfire_frame2:
     db -12, -4, $DD, $00
     db -12,  4, $DE, $00
     db  -4, -4, $DA, $00
     db  -4,  4, $E0, $00
     db   4, -4, $DC, $00
     db $FF
-sprite61D7:
+enSprite_wallfire_broken:
     db -12, -4, $E5, $00
     db  -4, -4, $E6, $00
     db   4, -4, $E7, $00
     db $FF
-sprite61E4:
+enSprite_wallfireShot_frame1:
     db  -4,-12, $E1, $00
     db  -4, -4, $E2, $00
     db $FF
-sprite61ED:
+enSprite_wallfireShot_frame2:
     db  -4, -4, $E3, $00
     db $FF
-sprite61F2:
+enSprite_wallfireShot_frame3:
     db  -8, -4, $E4, $00
     db   0, -4, $E4, $40
     db $FF
-sprite61FB:
+enSprite_wallfireShot_frame4:
     db -16, -4, $E4, $00
     db   8, -4, $E4, $40
     db $FF
-sprite6204:
+
+enSprite_gunzoo_frame1:
     db -12,-12, $B4, $00
     db -12, -4, $B5, $00
     db -12,  4, $B6, $00
@@ -486,7 +510,7 @@ sprite6204:
     db   4, -4, $BB, $00
     db   4,  4, $BC, $00
     db $FF
-sprite6229:
+enSprite_gunzoo_frame2:
     db -12,-12, $BD, $00
     db -12, -4, $B5, $00
     db -12,  4, $BF, $00
@@ -500,7 +524,7 @@ sprite6229:
     db   4,  4, $C4, $00
     db   4, 12, $C5, $00
     db $FF
-sprite625A:
+enSprite_gunzoo_frame3:
     db -12,-12, $B4, $00
     db -12, -4, $B5, $00
     db -12,  4, $BF, $00
@@ -514,41 +538,44 @@ sprite625A:
     db   4,  4, $C4, $00
     db   4, 12, $C5, $00
     db $FF
-sprite628B:
+
+enSprite_gunzooShotDiag_frame1:
     db  -4, -4, $CE, $00
     db $FF
-sprite6290:
+enSprite_gunzooShotDiag_frame2:
     db  -8, -4, $D0, $00
     db   0, -4, $CF, $00
     db $FF
-sprite6299:
+enSprite_gunzooShotDiag_frame3:
     db -16, -4, $D2, $00
     db  -8, -4, $D1, $00
     db   0, -4, $D0, $00
     db   8, -4, $CF, $00
     db $FF
-sprite62AA:
+
+enSprite_gunzooShotHori_frame1:
     db  -4, -4, $C6, $00
     db $FF
-sprite62AF:
+enSprite_gunzooShotHori_frame2:
     db  -4, -4, $C7, $00
     db  -4,  4, $C8, $00
     db $FF
-sprite62B8:
+enSprite_gunzooShotHori_frame3:
     db  -8, -4, $C9, $00
     db   0, -4, $C9, $40
     db $FF
-sprite62C1:
+enSprite_gunzooShotHori_frame4:
     db -20, -4, $CA, $00
     db -12, -4, $CB, $00
     db   4, -4, $CB, $40
     db  12, -4, $CA, $40
     db $FF
-sprite62D2:
+enSprite_gunzooShotHori_frame5:
     db -24, -4, $CC, $00
     db  16, -4, $CC, $40
     db $FF
-sprite62DB:
+
+enSprite_autom_frame1:
     db -12,-12, $D3, $00
     db -12, -4, $D4, $00
     db  -4,-12, $D5, $00
@@ -556,7 +583,7 @@ sprite62DB:
     db  -4,  4, $D7, $00
     db   4, -4, $D8, $00
     db $FF
-sprite62F4:
+enSprite_autom_frame2:
     db -12,-12, $D3, $00
     db -12, -4, $D4, $00
     db  -4,-12, $E0, $00
@@ -564,22 +591,22 @@ sprite62F4:
     db  -4,  4, $D7, $00
     db   4, -4, $D8, $00
     db $FF
-sprite630D:
+enSprite_automShot_frame1:
     db  -4, -4, $D9, $00
     db $FF
-sprite6312:
+enSprite_automShot_frame2:
     db -12, -4, $DA, $00
     db  -4, -4, $DB, $00
     db   4, -4, $D9, $00
     db $FF
-sprite631F:
+enSprite_automShot_frame3:
     db -20, -4, $DB, $00
     db -12, -4, $DA, $00
     db  -4, -4, $DB, $00
     db   4, -4, $DA, $00
     db  12, -4, $D9, $00
     db $FF
-sprite6334:
+enSprite_automShot_frame4:
     db -20, -4, $DA, $00
     db -12, -4, $DB, $00
     db  -4, -4, $DA, $00
@@ -588,7 +615,7 @@ sprite6334:
     db  12, -4, $DD, $00
     db  12,  4, $DC, $20
     db $FF
-sprite6351:
+enSprite_automShot_frame5:
     db -20, -4, $DB, $00
     db -12, -4, $DA, $00
     db  -4, -4, $DB, $00
@@ -597,7 +624,8 @@ sprite6351:
     db  12, -4, $DF, $00
     db  12,  4, $DE, $20
     db $FF
-sprite636E:
+
+enSprite_shirk_frame1:
     db -12,-12, $E1, $00
     db -12, -4, $E2, $00
     db -12,  4, $E3, $00
@@ -608,7 +636,7 @@ sprite636E:
     db   4, -4, $EE, $00
     db   4,  4, $E9, $00
     db $FF
-sprite6393:
+enSprite_shirk_frame2:
     db -12,-12, $EA, $00
     db -12, -4, $EB, $00
     db -12,  4, $E3, $00
@@ -619,7 +647,8 @@ sprite6393:
     db   4, -4, $E8, $00
     db   4,  4, $E9, $00
     db $FF
-sprite63B8:
+
+enSprite_moto_frame1:
     db -12,-16, $BD, $00
     db -12, -8, $BE, $00
     db -12,  0, $BF, $00
@@ -630,7 +659,7 @@ sprite63B8:
     db   4, -8, $C4, $00
     db   4,  0, $C5, $00
     db $FF
-sprite63DD:
+enSprite_moto_frame2:
     db -13,-16, $BD, $00
     db -13, -8, $BE, $00
     db -13,  0, $BF, $00
@@ -641,7 +670,7 @@ sprite63DD:
     db   3, -8, $C8, $00
     db   3,  0, $C9, $00
     db $FF
-sprite6402:
+enSprite_moto_frame3:
     db -12,-16, $BD, $00
     db -12, -8, $BE, $00
     db -12,  0, $BF, $00
@@ -652,7 +681,8 @@ sprite6402:
     db   4, -8, $CA, $00
     db   4,  0, $CB, $00
     db $FF
-sprite6427:
+
+enSprite_halzyn:
     db  -8,-12, $CC, $00
     db  -8, -4, $CD, $00
     db  -8,  4, $CE, $00
@@ -660,7 +690,8 @@ sprite6427:
     db   0, -4, $D0, $00
     db   0,  4, $D1, $00
     db $FF
-sprite6440:
+
+enSprite_ramulken_frame1:
     db -16, -4, $D2, $00
     db  -8,-12, $D3, $00
     db  -8, -4, $D4, $00
@@ -669,7 +700,7 @@ sprite6440:
     db   0, -4, $D7, $00
     db   0,  4, $D8, $00
     db $FF
-sprite645D:
+enSprite_ramulken_frame2:
     db -16, -4, $D2, $00
     db  -8,-12, $D3, $00
     db  -8, -4, $D4, $00
@@ -680,60 +711,63 @@ sprite645D:
     db   8, -8, $DC, $00
     db   8,  0, $DD, $00
     db $FF
-sprite6482:
+
+enSprite_gravitt_frame1:
     db -16, -4, $B8, $00
     db  -8, -8, $B6, $00
     db  -8,  0, $B7, $00
     db   0, -8, $B4, $00
     db   0,  0, $B5, $00
     db $FF
-sprite6497:
+enSprite_gravitt_frame2:
     db -16, -4, $B8, $00
     db  -8, -8, $B6, $00
     db  -8,  0, $B7, $00
     db   0, -8, $B9, $00
     db   0,  0, $BA, $00
     db $FF
-sprite64AC:
+enSprite_gravitt_frame3:
     db -16, -4, $B8, $00
     db  -8, -8, $B6, $00
     db  -8,  0, $B7, $00
     db   0, -8, $BB, $00
     db   0,  0, $BC, $00
     db $FF
-sprite64C1:
+
+enSprite_proboscum_frame1:
     db  -4,-12, $E4, $00
     db  -4, -4, $E5, $00
     db  -4,  4, $E6, $00
     db   4,-12, $E7, $00
     db $FF
-sprite64D2:
+enSprite_proboscum_frame2:
     db  -4,-12, $E4, $00
     db  -4, -4, $E8, $00
     db   4,-12, $E7, $00
     db   4, -4, $E9, $00
     db   4,  4, $EA, $00
     db $FF
-sprite64E7:
+enSprite_proboscum_frame3:
     db  -4,-12, $E4, $00
     db  -4, -4, $EB, $00
     db   4,-12, $E7, $00
     db   4, -4, $EC, $00
     db  12, -4, $ED, $00
     db $FF
-sprite64FC:
+
+enSprite_arachnus_frame1:
     db  -8, -8, $CB, $00
     db  -8,  0, $CC, $00
     db   0, -8, $CD, $00
     db   0,  0, $CE, $00
     db $FF
-sprite650D:
+enSprite_arachnus_frame2:
     db  -8, -8, $CD, $40
     db  -8,  0, $CB, $20
     db   0, -8, $CE, $20
     db   0,  0, $CC, $40
     db $FF
-sprite651E:
+enSprite_arachnus_frame3:
     db -16, -4, $B8, $00
     db -16,  4, $B9, $00
     db  -8,-12, $BB, $00
@@ -748,7 +782,7 @@ sprite651E:
     db   8, -4, $C3, $00
     db   8,  4, $C4, $00
     db $FF
-sprite6553:
+enSprite_arachnus_frame4:
     db -16, -4, $B8, $00
     db -16,  4, $B9, $00
     db  -8,-28, $C5, $00
@@ -763,7 +797,7 @@ sprite6553:
     db   8, -4, $C3, $00
     db   8,  4, $C4, $00
     db $FF
-sprite6588:
+enSprite_arachnus_frame5:
     db -16,-28, $CF, $00
     db -16, -4, $B8, $00
     db -16,  4, $B9, $00
@@ -779,37 +813,40 @@ sprite6588:
     db   8, -4, $C3, $00
     db   8,  4, $C4, $00
     db $FF
-sprite65C1:
+enSprite_arachnusShot_frame1:
     db  -4, -4, $CA, $00
     db $FF
-sprite65C6:
+enSprite_arachnusShot_frame2:
     db  -4, -4, $C9, $00
     db $FF
-sprite65CB:
+
+enSprite_smallHealth_frame1:
     db  -4, -4, $92, $00
     db $FF
-sprite65D0:
+enSprite_smallHealth_frame2:
     db  -4, -4, $93, $00
     db $FF
-sprite65D5:
+
+enSprite_bigHealth_frame1:
     db  -8, -8, $94, $00
     db  -8,  0, $94, $20
     db   0, -8, $94, $40
     db   0,  0, $94, $60
     db $FF
-sprite65E6:
+enSprite_bigHealth_frame2:
     db  -8, -8, $95, $00
     db  -8,  0, $95, $20
     db   0, -8, $95, $40
     db   0,  0, $95, $60
     db $FF
-sprite65F7:
+
+enSprite_bigExplosion_frame1:
     db  -9, -4, $89, $00
     db  -4,-10, $96, $20
     db  -4,  1, $96, $20
     db   1, -4, $89, $40
     db $FF
-sprite6608:
+enSprite_bigExplosion_frame2:
     db -12, -4, $89, $00
     db -10,-10, $97, $00
     db -10,  2, $97, $20
@@ -819,7 +856,7 @@ sprite6608:
     db   2,  2, $97, $60
     db   4, -4, $89, $20
     db $FF
-sprite6629:
+enSprite_bigExplosion_frame3:
     db -18,-18, $97, $00
     db -13, -4, $89, $00
     db  -4,-18, $96, $00
@@ -827,7 +864,7 @@ sprite6629:
     db   4,-12, $97, $40
     db   4, -4, $89, $40
     db $FF
-sprite6642:
+enSprite_bigExplosion_frame4:
     db -20,-20, $97, $00
     db -20, 11, $97, $20
     db -14, -4, $89, $00
@@ -836,7 +873,7 @@ sprite6642:
     db   8,-16, $97, $40
     db  16, -4, $89, $40
     db $FF
-sprite665F:
+enSprite_bigExplosion_frame5:
     db -20, 16, $89, $00
     db -16, -4, $89, $20
     db  -4,-20, $96, $00
@@ -844,19 +881,20 @@ sprite665F:
     db  12,-16, $89, $40
     db  12, 12, $97, $60
     db $FF
-sprite6678:
+enSprite_bigExplosion_frame6:
     db  -4,-20, $96, $00
     db $FF
-sprite667D:
+
+enSprite_smallExplosion_frame1:
     db  -8, -8, $88, $00
     db  -8,  0, $88, $20
     db   0, -8, $88, $40
     db   0,  0, $88, $60
     db $FF
-sprite668E:
+enSprite_smallExplosion_frame2:
     db  -4, -4, $8A, $00
     db $FF
-sprite6693:
+enSprite_smallExplosion_frame3:
     db -12,-12, $85, $00
     db -12, -4, $86, $00
     db -12,  4, $85, $20
@@ -866,7 +904,7 @@ sprite6693:
     db   4, -4, $86, $40
     db   4,  4, $85, $60
     db $FF
-sprite66B4:
+enSprite_smallExplosion_frame4:
     db -16,-16, $7B, $00
     db -16, -8, $7C, $00
     db -16,  0, $7C, $20
@@ -880,12 +918,14 @@ sprite66B4:
     db   8,  0, $7C, $60
     db   8,  8, $7B, $60
     db $FF
-sprite66E5:
+
+enSprite_missileDrop_frame1:
     db  -4, -4, $99, $00
     db $FF
-sprite66EA:
+enSprite_missileDrop_frame2:
     db  -4, -4, $99, $10
     db $FF
+
 ; 01:66EF - Unreferenced sprite 0
     db  -8, -8, $B8, $00
     db   0, -8, $C8, $00
@@ -1005,7 +1045,8 @@ sprite66EA:
     db  -8, -4, $DF, $00
     db -16, -4, $DF, $40
     db $FF
-sprite684D:
+
+enSprite_missileDoor:
     db -24,-23, $F4, $20
     db -16,-23, $F5, $20
     db  -8,-23, $F6, $20
@@ -1019,13 +1060,14 @@ sprite684D:
     db   8, 16, $F5, $40
     db  16, 16, $F4, $40
     db $FF
-sprite687E:
+enSprite_missileBlock:
     db  -8, -8, $F7, $00
     db  -8,  0, $F8, $00
     db   0, -8, $F9, $00
     db   0,  0, $FA, $00
     db $FF
-sprite688F:
+
+enSprite_metroid_frame1:
     db -12,-16, $B4, $00
     db -12, -8, $B5, $00
     db -12,  0, $B6, $00
@@ -1039,7 +1081,7 @@ sprite688F:
     db   4,  0, $D6, $00
     db   4,  8, $D7, $00
     db $FF
-sprite68C0:
+enSprite_alpha_face:
     db -12,-12, $C8, $00
     db -12, -4, $C9, $00
     db -12,  4, $CA, $00
@@ -1051,7 +1093,7 @@ sprite68C0:
     db   4, -4, $E9, $00
     db   4,  4, $EA, $00
     db $FF
-sprite68E9:
+enSprite_alpha_frame1:
     db -12,-16, $B0, $00
     db -12, -8, $B1, $00
     db -12,  0, $B2, $00
@@ -1064,7 +1106,7 @@ sprite68E9:
     db   4, -1, $D2, $00
     db   4,  7, $D3, $00
     db $FF
-sprite6916:
+enSprite_alpha_frame2:
     db -12,-16, $B0, $00
     db -12, -8, $B1, $00
     db -12,  0, $E4, $00
@@ -1077,7 +1119,7 @@ sprite6916:
     db   4,  0, $D2, $00
     db   4,  8, $D3, $00
     db $FF
-sprite6943:
+enSprite_metroid_frame2:
     db -12,-16, $EB, $00
     db -12, -8, $EC, $00
     db -12,  0, $ED, $00
@@ -1091,7 +1133,7 @@ sprite6943:
     db   4,  0, $DF, $00
     db   4,  8, $EF, $00
     db $FF
-sprite6974:
+enSprite_metroid_frame3:
     db -12,-16, $B4, $00
     db -12, -8, $D0, $00
     db -12,  0, $DC, $00
@@ -1105,18 +1147,19 @@ sprite6974:
     db   4,  0, $D6, $00
     db   4,  8, $D7, $00
     db $FF
-sprite69A5:
+
+enSprite_gammaBolt_frame1:
     db  -4, -4, $BE, $00
     db   4,-12, $CE, $00
     db   4, -4, $CF, $00
     db  12,-12, $BF, $00
     db $FF
-sprite69B6:
+enSprite_gammaBolt_frame2:
     db  -4,-20, $ED, $00
     db  -4,-12, $EE, $00
     db  -4, -4, $EF, $00
     db $FF
-sprite69C3:
+enSprite_gamma_frame1:
     db -12,-20, $B4, $00
     db -12,-12, $B5, $00
     db -12, -4, $B6, $00
@@ -1135,7 +1178,7 @@ sprite69C3:
     db  12,  4, $E7, $00
     db  12, 12, $E8, $00
     db $FF
-sprite6A08:
+enSprite_gamma_frame2:
     db -16,-20, $B4, $00
     db -16,-12, $B5, $00
     db -16, -4, $B6, $00
@@ -1156,7 +1199,8 @@ sprite6A08:
     db  16, -4, $EB, $00
     db  16,  4, $EC, $00
     db $FF
-sprite6A55:
+
+enSprite_gammaHusk:
     db -12,-20, $B4, $00
     db -12,-12, $B5, $00
     db -12, -4, $C4, $00
@@ -1173,7 +1217,7 @@ sprite6A55:
     db  12,  4, $E7, $00
     db  12, 12, $E8, $00
     db $FF
-sprite6A92:
+enSprite_zeta_frame1:
     db -16,-12, $B0, $00
     db -16, -4, $B1, $00
     db -16,  4, $B2, $00
@@ -1188,7 +1232,7 @@ sprite6A92:
     db   8, -4, $E1, $00
     db   8,  4, $E2, $00
     db $FF
-sprite6AC7:
+enSprite_zeta_frame2:
     db -16,-12, $B0, $00
     db -16, -4, $B1, $00
     db -16,  4, $B2, $00
@@ -1203,7 +1247,7 @@ sprite6AC7:
     db   8, -4, $E1, $00
     db   8,  4, $E2, $00
     db $FF
-sprite6AFC:
+enSprite_zeta_frame3:
     db -16,-12, $B0, $00
     db -16, -4, $B1, $00
     db -16,  4, $B2, $00
@@ -1218,7 +1262,7 @@ sprite6AFC:
     db   8, -4, $E1, $00
     db   8,  4, $E2, $00
     db $FF
-sprite6B31:
+enSprite_zeta_frame4:
     db -16,-12, $B0, $00
     db -16, -4, $B1, $00
     db -16,  4, $B2, $00
@@ -1233,7 +1277,7 @@ sprite6B31:
     db   8, -4, $E1, $00
     db   8,  4, $E2, $00
     db $FF
-sprite6B66:
+enSprite_zeta_frame5:
     db -16,-12, $B0, $00
     db -16, -4, $B1, $00
     db -16,  4, $B2, $00
@@ -1250,7 +1294,7 @@ sprite6B66:
     db  16, -4, $EA, $00
     db  16,  4, $EB, $00
     db $FF
-sprite6BA3:
+enSprite_zeta_frame6:
     db -16,-20, $B3, $00
     db -16,-12, $B9, $00
     db -16, -4, $BA, $00
@@ -1267,7 +1311,7 @@ sprite6BA3:
     db   8, -4, $E1, $00
     db   8,  4, $E2, $00
     db $FF
-sprite6BE0:
+enSprite_zeta_frame7:
     db -16,-20, $B3, $00
     db -16,-12, $B9, $00
     db -16, -4, $BA, $00
@@ -1284,7 +1328,7 @@ sprite6BE0:
     db   8, -4, $E1, $00
     db   8,  4, $E2, $00
     db $FF
-sprite6C1D:
+enSprite_zeta_frame8:
     db -16,-12, $B0, $00
     db -16, -4, $B1, $00
     db -16,  4, $B2, $00
@@ -1301,7 +1345,7 @@ sprite6C1D:
     db  16, -4, $EA, $00
     db  16,  4, $EB, $00
     db $FF
-sprite6C5A:
+enSprite_zeta_frame9:
     db -16,-12, $B0, $00
     db -16, -4, $B1, $00
     db -16,  4, $B2, $00
@@ -1318,7 +1362,7 @@ sprite6C5A:
     db  16, -4, $EA, $00
     db  16,  4, $EB, $00
     db $FF
-sprite6C97:
+enSprite_zeta_frameA:
     db -16,-12, $B0, $00
     db -16, -4, $B1, $00
     db -16,  4, $B2, $00
@@ -1335,7 +1379,7 @@ sprite6C97:
     db  16, -4, $EA, $00
     db  16,  4, $EB, $00
     db $FF
-sprite6CD4:
+enSprite_zeta_frameB:
     db -16,-12, $B0, $00
     db -16, -4, $B1, $00
     db -16,  4, $B2, $00
@@ -1352,12 +1396,13 @@ sprite6CD4:
     db  16, -4, $EA, $00
     db  16,  4, $EB, $00
     db $FF
-sprite6D11:
+enSprite_zetaShot:
     db  -4, -4, $DC, $00
     db  -4,  4, $DD, $00
     db   4, -4, $EC, $00
     db $FF
-sprite6D1E:
+
+enSprite_omega_frame1:
     db -16,-16, $B4, $00
     db -16, -8, $B5, $00
     db  -8,-24, $C3, $00
@@ -1380,7 +1425,7 @@ sprite6D1E:
     db  32,  0, $E8, $00
     db  32,  8, $E9, $00
     db $FF
-sprite6D73:
+enSprite_omega_frame2:
     db -16,-16, $B4, $00
     db -16, -8, $B5, $00
     db  -8,-24, $C3, $00
@@ -1403,7 +1448,7 @@ sprite6D73:
     db  32,  0, $E8, $00
     db  32,  8, $E9, $00
     db $FF
-sprite6DC8:
+enSprite_omega_frame3:
     db -16,-16, $B4, $00
     db -16, -8, $B5, $00
     db  -8,-24, $B3, $00
@@ -1426,7 +1471,7 @@ sprite6DC8:
     db  32,  0, $E8, $00
     db  32,  8, $E9, $00
     db $FF
-sprite6E1D:
+enSprite_omega_frame4:
     db -16,-16, $B4, $00
     db -16, -8, $B5, $00
     db  -8,-24, $B3, $00
@@ -1449,7 +1494,7 @@ sprite6E1D:
     db  32,  0, $E8, $00
     db  32,  8, $E9, $00
     db $FF
-sprite6E72:
+enSprite_omega_frame5:
     db -16,-16, $B4, $00
     db -16, -8, $B5, $00
     db  -8,-24, $C3, $00
@@ -1471,7 +1516,7 @@ sprite6E72:
     db  24, 16, $DC, $00
     db  32,  8, $EB, $00
     db $FF
-sprite6EC3:
+enSprite_omega_frame6:
     db -16,-16, $B6, $00
     db -16, -8, $B7, $00
     db  -8,-24, $B8, $00
@@ -1494,7 +1539,7 @@ sprite6EC3:
     db  32,  0, $E8, $00
     db  32,  8, $E9, $00
     db $FF
-sprite6F18:
+enSprite_omega_frame7:
     db -16,-16, $B6, $00
     db -16, -8, $B7, $00
     db  -8,-24, $B8, $00
@@ -1516,42 +1561,44 @@ sprite6F18:
     db  24, 16, $DC, $00
     db  32,  8, $EB, $00
     db $FF
-sprite6F69:
+
+enSprite_omegaShot_frame1:
     db -12, -4, $BC, $00
     db -12,  4, $BD, $00
     db  -4, -4, $CC, $00
     db  -4,  4, $CD, $00
     db $FF
-sprite6F7A:
+enSprite_omegaShot_frame2:
     db -12, -4, $D3, $00
     db -12,  4, $E3, $00
     db  -4, -4, $CE, $00
     db  -4,  4, $CF, $00
     db $FF
-sprite6F8B:
+enSprite_omegaShot_frame3:
     db  -4, -8, $DD, $00
     db  -4,  0, $DE, $00
     db $FF
-sprite6F94:
+enSprite_omegaShot_frame4:
     db  -4,-20, $EC, $00
     db  -4,-12, $ED, $00
     db  -4,  4, $ED, $20
     db  -4, 12, $EC, $20
     db $FF
-sprite6FA5:
+enSprite_omegaShot_frame5:
     db  -4,-24, $EE, $00
     db  -4, 16, $EE, $20
     db $FF
-sprite6FAE:
+enSprite_omegaShot_frame6:
     db  -4,-28, $EF, $00
     db  -4, 20, $EF, $20
     db $FF
-sprite6FB7:
+enSprite_omegaShot_frame7:
     db  -4, -4, $DF, $00
     db $FF
-sprite6FBC:
+enSprite_omegaShot_frame8:
     db  -4, -4, $EA, $00
     db $FF
+
 enSprite_egg_frame1:
     db -12,-15, $B4, $00
     db -12, -7, $B5, $00
@@ -1585,6 +1632,7 @@ enSprite_egg_frame3:
     db   4, -3, $B9, $00
     db   4,  5, $B8, $20
     db $FF
+
 enSprite_baby_frame1:
     db  -8, -8, $B0, $00
     db  -8,  0, $B0, $20
@@ -1597,6 +1645,7 @@ enSprite_baby_frame2:
     db   0, -8, $B3, $00
     db   0,  0, $B3, $20
     db $FF
+
 enSprite_itemOrb:
     db  -8, -8, $B0, $00
     db  -8,  0, $B1, $00
@@ -1621,6 +1670,7 @@ enSprite_missileTank:
     db   0, -8, $F2, $00
     db   0,  0, $F3, $00
     db $FF
+
 enSprite_energyRefill:
     db  -8, -8, $FD, $00
     db  -8,  0, $FD, $20
@@ -1631,6 +1681,7 @@ enSprite_missileRefill:
     db  -8, -4, $FB, $00
     db   0, -4, $FC, $00
     db $FF
+
 enSprite_blob_frame1:
     db  -4, -4, $E4, $00
     db $FF

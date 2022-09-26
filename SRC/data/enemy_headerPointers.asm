@@ -71,8 +71,8 @@
     dw enHead_NULL ; Autrack projectile
     dw enHead_autoad ; Autoad
     dw enHead_NULL ; Autoad
-    dw enHead_NULL ; (autoad?)
-    dw enHead_NULL ; (autoad?)
+    dw enHead_NULL ; Sideways Autoad (unused)
+    dw enHead_NULL ; Sideways Autoad (unused)
     dw enHead_wallfire ; Wallfire
     dw enHead_NULL ; Wallfire
     dw enHead_NULL ; Wallfire
@@ -83,14 +83,14 @@
     dw enHead_gunzoo ; Gunzoo
     dw enHead_NULL ; Gunzoo
     dw enHead_NULL ; Gunzoo
-    dw enHead_NULL ; Gunzoo projectile
-    dw enHead_NULL ; Gunzoo projectile
-    dw enHead_NULL ; Gunzoo projectile
-    dw enHead_NULL ; Gunzoo projectile
-    dw enHead_NULL ; ?
-    dw enHead_NULL ; Gunzoo projectile
-    dw enHead_NULL ; Gunzoo projectile
-    dw enHead_NULL ; Gunzoo projectile
+    dw enHead_NULL ; Gunzoo diagonal projectile
+    dw enHead_NULL ; Gunzoo diagonal projectile
+    dw enHead_NULL ; Gunzoo diagonal projectile
+    dw enHead_NULL ; Gunzoo horizontal projectile
+    dw enHead_NULL ; Gunzoo horizontal projectile (unused frame)
+    dw enHead_NULL ; Gunzoo horizontal projectile
+    dw enHead_NULL ; Gunzoo horizontal projectile
+    dw enHead_NULL ; Gunzoo horizontal projectile
     dw enHead_autom ; Autom
     dw enHead_NULL ; Autom
     dw enHead_NULL ; Autom projectile
@@ -206,10 +206,10 @@
     dw enHead_NULL ; Omega metroid projectile
     dw enHead_NULL ; (omega metroid projectile?)
     dw enHead_metroid ; Metroid
-    dw enHead_NULL ; Metroid
+    dw enHead_NULL ; Metroid (hurt)
     dw enHead_flittVanishing ; Flitt
     dw enHead_flittMoving ; Flitt
-    dw enHead_NULL ; (flitt?)
+    dw enHead_NULL ; Stalagtite (unused)
     dw enHead_gravitt ; Gravitt
     dw enHead_NULL ; Gravitt
     dw enHead_NULL ; Gravitt

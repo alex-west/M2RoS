@@ -41,6 +41,7 @@ def gameOver_LCDC_copy = $C219 ; LCD control mirror. Only set by death routine. 
 ;    b: Enable BG. If CGB, then 0 additionally disables window regardless of w
 ;}
 ;
+def enSprite_blobThrower = $C300
 def spriteC300 = $C300 ;$C300..3D: Set to [$2:4FFE..503A] in $2:4DB1
 ;{
 ;    $C302/06: Set to DFh in $2:4EA1 if [$C382] = 0, set to E2h if [$C382] = 1, set to E3h if [$C382] = 2

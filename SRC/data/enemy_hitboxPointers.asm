@@ -71,8 +71,8 @@
     dw hitbox6A43 ; Autrack projectile
     dw hitbox6A6F ; Autoad
     dw hitbox6A6F ; Autoad
-    dw hitbox6A93 ; (autoad?)
-    dw hitbox6A93 ; (autoad?)
+    dw hitbox6A93 ; Sideways Autoad (unused)
+    dw hitbox6A93 ; Sideways Autoad (unused)
     dw hitbox6A8F ; Wallfire
     dw hitbox6A8F ; Wallfire
     dw hitbox6A8F ; Wallfire
@@ -83,14 +83,14 @@
     dw hitbox6A97 ; Gunzoo
     dw hitbox6A97 ; Gunzoo
     dw hitbox6A97 ; Gunzoo
-    dw hitbox_tile ; Gunzoo projectile
-    dw hitbox6A67 ; Gunzoo projectile
-    dw hitbox6AB7 ; Gunzoo projectile
-    dw hitbox_tile ; Gunzoo projectile
-    dw hitbox_tile ; ?
-    dw hitbox6A67 ; Gunzoo projectile
-    dw hitbox6ACF ; Gunzoo projectile
-    dw hitbox6ADB ; Gunzoo projectile
+    dw hitbox_tile ; Gunzoo diagonal projectile
+    dw hitbox6A67 ; Gunzoo diagonal projectile
+    dw hitbox6AB7 ; Gunzoo diagonal projectile
+    dw hitbox_tile ; Gunzoo horizontal projectile
+    dw hitbox_tile ; Gunzoo horizontal projectile (unused frame)
+    dw hitbox6A67 ; Gunzoo horizontal projectile
+    dw hitbox6ACF ; Gunzoo horizontal projectile
+    dw hitbox6ADB ; Gunzoo horizontal projectile
     dw hitbox6A97 ; Autom
     dw hitbox6A97 ; Autom
     dw hitbox_tile ; Autom projectile
@@ -206,10 +206,10 @@
     dw hitbox_tile ; Omega metroid projectile
     dw hitbox_tile ; (omega metroid projectile?)
     dw hitbox_metroid ; Metroid
-    dw hitbox_metroid ; Metroid
+    dw hitbox_metroid ; Metroid (hurt)
     dw hitbox_block ; Flitt
     dw hitbox_block ; Flitt
-    dw hitbox_point ; (flitt?)
+    dw hitbox_point ; Stalagtite (unused)
     dw hitbox_block ; Gravitt
     dw hitbox_block ; Gravitt
     dw hitbox_block ; Gravitt

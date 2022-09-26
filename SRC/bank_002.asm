@@ -2318,7 +2318,7 @@ enCollision_up: ;{ 02:4BC2
 blobThrower_loadSprite: ;{ 02:4DB1
     ; Load the sprite
     ld hl, enAI_blobThrower.sprite ;$4ffe
-    ld de, spriteC300
+    ld de, enSprite_blobThrower
     ld b, $3e
     .loop_A:
         ld a, [hl+]
@@ -2514,7 +2514,7 @@ enAI_blobThrower: ;{ 02:4EA1
         ; Blink the first three tiles
         ld de, $0004
         ld b, $03
-        ld hl, spriteC300 + 4*4 + 2 ;$C312
+        ld hl, enSprite_blobThrower + 4*4 + 2 ;$C312
         .blinkLoop:
             ld a, [hl]
             xor $07
@@ -2523,11 +2523,11 @@ enAI_blobThrower: ;{ 02:4EA1
             dec b
         jr nz, .blinkLoop
         ; Blink two other tiles (8 and 11)
-        ld hl, spriteC300 + 8*4 + 2 ; $C322
+        ld hl, enSprite_blobThrower + 8*4 + 2 ; $C322
         ld a, [hl]
         xor $0d
         ld [hl], a
-        ld hl, spriteC300 + 11*4 + 2 ; $C32E
+        ld hl, enSprite_blobThrower + 11*4 + 2 ; $C32E
         ld a, [hl]
         xor $0d
         ld [hl], a
@@ -2554,7 +2554,7 @@ enAI_blobThrower: ;{ 02:4EA1
 
 .state_0: ; Main action
     ; Adjust sprites
-    ld de, spriteC300
+    ld de, enSprite_blobThrower
     ld hl, .speedTable_top
     ld a, $04
     call .moveSprites
@@ -2589,7 +2589,7 @@ enAI_blobThrower: ;{ 02:4EA1
         ret nz
 
     ; Open up mouth by modifying first four tile numbers
-    ld hl, spriteC300 + 2 ;$c302
+    ld hl, enSprite_blobThrower + 2 ;$c302
     ld de, $0004
     ld [hl], $df
     add hl, de
@@ -2599,7 +2599,7 @@ enAI_blobThrower: ;{ 02:4EA1
     add hl, de
     ld [hl], $e1
     ; Set y-pos for the 13th sprite so it and the next one get rendered
-    ld hl, spriteC300 + 13*4; $C334
+    ld hl, enSprite_blobThrower + 13*4; $C334
     ld [hl], $e8
     ; Prep next state
     ld a, $04
@@ -2609,7 +2609,7 @@ enAI_blobThrower: ;{ 02:4EA1
 ret
 
 .state_1: ; Open mouth
-    ld hl, spriteC300 + 2 ;$c302
+    ld hl, enSprite_blobThrower + 2 ;$c302
     ld de, $0004
     ld [hl], $e2
     add hl, de
@@ -2621,7 +2621,7 @@ ret
 ret
 
 .state_2: ; Spew blobs
-    ld hl, spriteC300 + 2 ;$c302
+    ld hl, enSprite_blobThrower + 2 ;$c302
     ld de, $0004
     ld [hl], $e3
     add hl, de
@@ -2680,7 +2680,7 @@ ret
 ret
 
 .state_3: ; State 3 - Close mouth
-    ld hl, spriteC300 + 2 ; $c302
+    ld hl, enSprite_blobThrower + 2 ; $c302
     ld de, $0004
     ld [hl], $dd
     add hl, de
@@ -2690,7 +2690,7 @@ ret
     add hl, de
     ld [hl], $de
     ; Set this y coordinate to $FF so this sprite and the one after it don't get rendered
-    ld hl, spriteC300 + 13*4; $C334
+    ld hl, enSprite_blobThrower + 13*4; $C334
     ld [hl], $ff
     xor a
     ld [blobThrower_state], a

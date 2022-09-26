@@ -71,8 +71,8 @@
     db $10 ; Autrack projectile
     db $15 ; Autoad
     db $15 ; Autoad
-    db $00 ; (autoad?)
-    db $00 ; (autoad?)
+    db $00 ; Sideways Autoad (unused)
+    db $00 ; Sideways Autoad (unused)
     db $15 ; Wallfire
     db $15 ; Wallfire
     db $FF ; Wallfire
@@ -83,14 +83,14 @@
     db $15 ; Gunzoo
     db $15 ; Gunzoo
     db $15 ; Gunzoo
-    db $08 ; Gunzoo projectile
-    db $08 ; Gunzoo projectile
-    db $08 ; Gunzoo projectile
-    db $08 ; Gunzoo projectile
-    db $08 ; ?
-    db $08 ; Gunzoo projectile
-    db $08 ; Gunzoo projectile
-    db $08 ; Gunzoo projectile
+    db $08 ; Gunzoo diagonal projectile
+    db $08 ; Gunzoo diagonal projectile
+    db $08 ; Gunzoo diagonal projectile
+    db $08 ; Gunzoo horizontal projectile
+    db $08 ; Gunzoo horizontal projectile (unused frame)
+    db $08 ; Gunzoo horizontal projectile
+    db $08 ; Gunzoo horizontal projectile
+    db $08 ; Gunzoo horizontal projectile
     db $15 ; Autom
     db $15 ; Autom
     db $10 ; Autom projectile
@@ -206,10 +206,10 @@
     db $12 ; Omega metroid projectile
     db $12 ; (omega metroid projectile?)
     db $FE ; Metroid
-    db $FE ; Metroid
+    db $FE ; Metroid (hurt)
     db $FF ; Flitt
     db $FF ; Flitt
-    db $00 ; (flitt?)
+    db $00 ; Stalagtite (unused)
     db $10 ; Gravitt
     db $10 ; Gravitt
     db $10 ; Gravitt
