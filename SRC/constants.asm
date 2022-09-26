@@ -3,6 +3,9 @@
 ; Hardware related constants (not covered by hardware.inc)
 rMBC_BANK_REG = $2100 ; Dunno why it just doesn't use $2000
 
+
+METASPRITE_END = $FF
+
 ; Map related memory locations (fixed in each bank)
 map_screenPointers = $4000 ; $200 bytes
 map_scrollData     = $4200 ; $100 bytes

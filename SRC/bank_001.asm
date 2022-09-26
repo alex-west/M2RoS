@@ -440,7 +440,7 @@ drawSamusSprite: ; 01:4B62
         ; No sprite flipping logic here
         ; Load y coordinate
         ld a, [de]
-        cp $ff
+        cp METASPRITE_END
             jr z, .exit
         
         add b
@@ -2907,7 +2907,7 @@ drawEnemySprite: ; 01:5A3F
 
     .spriteLoop:
         ld a, [de]
-        cp $ff
+        cp METASPRITE_END
             jr z, .exit
     
         ld a, [$c431]
@@ -3557,7 +3557,7 @@ drawNonGameSprite: ;{ 01:73F7
     .spriteLoop:
         ; Load y coordinate
         ld a, [de]
-        cp $ff
+        cp METASPRITE_END
             jr z, .exit
         ; Handle y flipping
         ldh a, [hSpriteAttr]

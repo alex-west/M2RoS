@@ -76,7 +76,7 @@ samusSpritePointerTable:
 sprite408A: ; L counter
     db   0,  0, $36, $80
     db   0,  8, $0F, $80
-    db $FF
+    db METASPRITE_END
 sprite4093: ; "COMPLETED"
     db   0,  0, $C2, $80
     db   0,  8, $CE, $80
@@ -87,7 +87,7 @@ sprite4093: ; "COMPLETED"
     db   0, 48, $D3, $80
     db   0, 56, $C4, $80
     db   0, 64, $C3, $80
-    db $FF
+    db METASPRITE_END
 sprite40B8: ; "PRESS START"
     db   0,  0, $CF, $00
     db   0,  8, $D1, $00
@@ -99,7 +99,7 @@ sprite40B8: ; "PRESS START"
     db   0, 64, $C0, $00
     db   0, 72, $D1, $00
     db   0, 80, $D3, $00
-    db $FF
+    db METASPRITE_END
 sprite40E1: ; Unknown. Possibly a message (like the two sprites above), but doesn't appear to match any obvious character mapping
     db   0,  0, $ED, $00
     db   0,  8, $EE, $00
@@ -111,58 +111,58 @@ sprite40E1: ; Unknown. Possibly a message (like the two sprites above), but does
     db   0, 64, $F9, $00
     db   0, 72, $FA, $00
     db   0, 80, $FB, $00
-    db $FF
+    db METASPRITE_END
 sprite410A:
     db  -4, -4, $7E, $00
-    db $FF
+    db METASPRITE_END
 sprite410F:
     db   4, -8, $59, $00
     db   4,  0, $5A, $00
     db  12, -8, $69, $00
     db  12,  0, $6A, $00
-    db $FF
+    db METASPRITE_END
 sprite4120:
     db   3, -8, $5A, $20
     db   3,  0, $6A, $40
     db  11, -8, $59, $40
     db  11,  0, $69, $20
-    db $FF
+    db METASPRITE_END
 sprite4131:
     db   4, -8, $6A, $60
     db   4,  0, $69, $60
     db  12, -8, $5A, $60
     db  12,  0, $59, $60
-    db $FF
+    db METASPRITE_END
 sprite4142:
     db   3, -8, $69, $40
     db   3,  0, $59, $20
     db  11, -8, $6A, $20
     db  11,  0, $5A, $40
-    db $FF
+    db METASPRITE_END
 sprite4153:
     db   4, -8, $5A, $20
     db   4,  0, $59, $20
     db  12, -8, $6A, $20
     db  12,  0, $69, $20
-    db $FF
+    db METASPRITE_END
 sprite4164:
     db   3, -8, $6A, $60
     db   3,  0, $5A, $00
     db  11, -8, $69, $00
     db  11,  0, $59, $60
-    db $FF
+    db METASPRITE_END
 sprite4175:
     db   4, -8, $69, $40
     db   4,  0, $6A, $40
     db  12, -8, $59, $40
     db  12,  0, $5A, $40
-    db $FF
+    db METASPRITE_END
 sprite4186:
     db   3, -8, $59, $00
     db   3,  0, $69, $60
     db  11, -8, $5A, $60
     db  11,  0, $6A, $00
-    db $FF
+    db METASPRITE_END
 sprite4197:
     db   0,-12, $50, $00
     db   0, -4, $51, $00
@@ -170,7 +170,7 @@ sprite4197:
     db   8,-12, $60, $00
     db   8, -4, $61, $00
     db   8,  4, $62, $00
-    db $FF
+    db METASPRITE_END
 sprite41B0:
     db  -4, -8, $56, $60
     db  -4,  0, $55, $60
@@ -178,7 +178,7 @@ sprite41B0:
     db   4,  0, $63, $60
     db  12, -8, $54, $60
     db  12,  0, $53, $60
-    db $FF
+    db METASPRITE_END
 sprite41C9:
     db   0,-12, $62, $60
     db   0, -4, $61, $60
@@ -186,7 +186,7 @@ sprite41C9:
     db   8,-12, $52, $60
     db   8, -4, $51, $60
     db   8,  4, $50, $60
-    db $FF
+    db METASPRITE_END
 sprite41E2:
     db  -4, -8, $53, $00
     db  -4,  0, $54, $00
@@ -194,7 +194,7 @@ sprite41E2:
     db   4,  0, $64, $00
     db  12, -8, $55, $00
     db  12,  0, $56, $00
-    db $FF
+    db METASPRITE_END
 sprite41FB:
     db   0,-12, $52, $20
     db   0, -4, $51, $20
@@ -202,7 +202,7 @@ sprite41FB:
     db   8,-12, $62, $20
     db   8, -4, $61, $20
     db   8,  4, $60, $20
-    db $FF
+    db METASPRITE_END
 sprite4214:
     db  -4, -8, $55, $40
     db  -4,  0, $56, $40
@@ -210,7 +210,7 @@ sprite4214:
     db   4,  0, $64, $40
     db  12, -8, $53, $40
     db  12,  0, $54, $40
-    db $FF
+    db METASPRITE_END
 sprite422D:
     db   0,-12, $60, $40
     db   0, -4, $61, $40
@@ -218,7 +218,7 @@ sprite422D:
     db   8,-12, $50, $40
     db   8, -4, $51, $40
     db   8,  4, $52, $40
-    db $FF
+    db METASPRITE_END
 sprite4246:
     db  -4, -8, $54, $20
     db  -4,  0, $53, $20
@@ -226,7 +226,7 @@ sprite4246:
     db   4,  0, $63, $20
     db  12, -8, $56, $20
     db  12,  0, $55, $20
-    db $FF
+    db METASPRITE_END
 sprite425F:
     db -20,-12, $00, $00
     db -20, -4, $01, $00
@@ -243,7 +243,7 @@ sprite425F:
     db  12,-12, $40, $00
     db  12, -4, $41, $00
     db  12,  4, $42, $00
-    db $FF
+    db METASPRITE_END
 sprite429C:
     db -20, -8, $03, $00
     db -20,  0, $04, $00
@@ -257,7 +257,7 @@ sprite429C:
     db  12,-16, $43, $00
     db  12, -8, $44, $00
     db  12,  0, $45, $00
-    db $FF
+    db METASPRITE_END
 sprite42CD:
     db -20, -8, $04, $20
     db -20,  0, $06, $00
@@ -271,7 +271,7 @@ sprite42CD:
     db  12, -8, $45, $20
     db  12,  0, $44, $20
     db  12,  8, $43, $20
-    db $FF
+    db METASPRITE_END
 sprite42FE:
     db -26, -2, $08, $00
     db -20, -8, $17, $00
@@ -285,7 +285,7 @@ sprite42FE:
     db  12,-16, $43, $00
     db  12, -8, $44, $00
     db  12,  0, $45, $00
-    db $FF
+    db METASPRITE_END
 sprite432F:
     db -26, -6, $08, $00
     db -20, -8, $47, $00
@@ -299,7 +299,7 @@ sprite432F:
     db  12, -8, $45, $20
     db  12,  0, $44, $20
     db  12,  8, $43, $20
-    db $FF
+    db METASPRITE_END
 sprite4360:
     db -20, -4, $0A, $00
     db -20,  4, $0B, $00
@@ -313,7 +313,7 @@ sprite4360:
     db   4,  4, $3B, $00
     db  12,-12, $49, $00
     db  12, -4, $4A, $00
-    db $FF
+    db METASPRITE_END
 sprite4391:
     db -20, -7, $0E, $00
     db -20,  1, $04, $00
@@ -328,7 +328,7 @@ sprite4391:
     db   4,  4, $5F, $00
     db  12, -4, $6E, $00
     db  12,  4, $6F, $00
-    db $FF
+    db METASPRITE_END
 sprite43C6:
     db -20, -4, $0D, $00
     db -20,  4, $0B, $00
@@ -339,7 +339,7 @@ sprite43C6:
     db   4, -4, $3D, $00
     db  12,-12, $4C, $00
     db  12, -4, $4D, $00
-    db $FF
+    db METASPRITE_END
 sprite43EB:
     db -20,-12, $0B, $20
     db -20, -4, $0A, $20
@@ -353,7 +353,7 @@ sprite43EB:
     db   4,  4, $39, $20
     db  12, -4, $4A, $20
     db  12,  4, $49, $20
-    db $FF
+    db METASPRITE_END
 sprite441C:
     db -20,-10, $04, $20
     db -20, -2, $0E, $20
@@ -368,7 +368,7 @@ sprite441C:
     db   4, 12, $3E, $20
     db  12,-12, $6F, $20
     db  12, -4, $6E, $20
-    db $FF
+    db METASPRITE_END
 sprite4451:
     db -20,-12, $0B, $20
     db -20, -4, $0D, $20
@@ -379,7 +379,7 @@ sprite4451:
     db   4, -4, $3D, $20
     db  12, -4, $4D, $20
     db  12,  4, $4C, $20
-    db $FF
+    db METASPRITE_END
 sprite4476:
     db -20, -4, $0A, $00
     db -20,  4, $0B, $00
@@ -394,7 +394,7 @@ sprite4476:
     db   4,  4, $3B, $00
     db  12,-12, $49, $00
     db  12, -4, $4A, $00
-    db $FF
+    db METASPRITE_END
 sprite44AB:
     db -19, -5, $0A, $00
     db -19,  3, $0B, $00
@@ -411,7 +411,7 @@ sprite44AB:
     db   4,  4, $5F, $00
     db  12, -4, $6E, $00
     db  12,  4, $6F, $00
-    db $FF
+    db METASPRITE_END
 sprite44E8:
     db -20, -4, $0A, $00
     db -20,  4, $0B, $00
@@ -423,7 +423,7 @@ sprite44E8:
     db   4, -4, $3D, $00
     db  12,-12, $4C, $00
     db  12, -4, $4D, $00
-    db $FF
+    db METASPRITE_END
 sprite4511:
     db -20,-12, $0B, $20
     db -20, -4, $0D, $20
@@ -438,7 +438,7 @@ sprite4511:
     db   4,  4, $39, $20
     db  12, -4, $4A, $20
     db  12,  4, $49, $20
-    db $FF
+    db METASPRITE_END
 sprite4546:
     db -19,-11, $0B, $20
     db -19, -3, $0D, $20
@@ -455,7 +455,7 @@ sprite4546:
     db   4, 12, $3E, $20
     db  12,-12, $6F, $20
     db  12, -4, $6E, $20
-    db $FF
+    db METASPRITE_END
 sprite4583:
     db -20,-12, $0B, $20
     db -20, -4, $0D, $20
@@ -467,7 +467,7 @@ sprite4583:
     db   4, -4, $3D, $20
     db  12, -4, $4D, $20
     db  12,  4, $4C, $20
-    db $FF
+    db METASPRITE_END
 sprite45AC:
     db -12, -8, $03, $00
     db -12,  0, $04, $00
@@ -480,7 +480,7 @@ sprite45AC:
     db  12,-16, $6B, $00
     db  12, -8, $6C, $00
     db  12,  0, $6D, $00
-    db $FF
+    db METASPRITE_END
 sprite45D9:
     db -12, -8, $04, $20
     db -12,  0, $06, $00
@@ -493,7 +493,7 @@ sprite45D9:
     db  12, -8, $6D, $20
     db  12,  0, $6C, $20
     db  12,  8, $6B, $20
-    db $FF
+    db METASPRITE_END
 sprite4606:
     db -17, -2, $08, $00
     db -12, -8, $17, $00
@@ -506,7 +506,7 @@ sprite4606:
     db  12,-16, $6B, $00
     db  12, -8, $6C, $00
     db  12,  0, $6D, $00
-    db $FF
+    db METASPRITE_END
 sprite4633:
     db -17, -6, $08, $00
     db -12, -8, $47, $00
@@ -519,7 +519,7 @@ sprite4633:
     db  12, -8, $6D, $20
     db  12,  0, $6C, $20
     db  12,  8, $6B, $20
-    db $FF
+    db METASPRITE_END
 sprite4660:
     db -10, -8, $03, $00
     db -10,  0, $04, $00
@@ -531,7 +531,7 @@ sprite4660:
     db  12,-16, $76, $00
     db  12, -8, $77, $00
     db  12,  0, $78, $00
-    db $FF
+    db METASPRITE_END
 sprite4689:
     db -10, -8, $04, $20
     db -10,  0, $06, $00
@@ -543,7 +543,7 @@ sprite4689:
     db  12, -8, $78, $20
     db  12,  0, $77, $20
     db  12,  8, $76, $20
-    db $FF
+    db METASPRITE_END
 sprite46B2:
     db -12, -8, $70, $00
     db -12,  0, $71, $00
@@ -555,7 +555,7 @@ sprite46B2:
     db  12,-16, $6B, $00
     db  12, -8, $6C, $00
     db  12,  0, $3C, $00
-    db $FF
+    db METASPRITE_END
 sprite46DB:
     db -12, -8, $71, $20
     db -12,  0, $70, $20
@@ -567,7 +567,7 @@ sprite46DB:
     db  12, -8, $3C, $20
     db  12,  0, $6C, $20
     db  12,  8, $6B, $20
-    db $FF
+    db METASPRITE_END
 sprite4704:
     db -26, -2, $08, $00
     db -20, -8, $17, $00
@@ -581,7 +581,7 @@ sprite4704:
     db   4,  3, $3B, $00
     db  12,-13, $49, $00
     db  12, -5, $4A, $00
-    db $FF
+    db METASPRITE_END
 sprite4735:
     db -25, -2, $08, $00
     db -19, -8, $17, $00
@@ -597,7 +597,7 @@ sprite4735:
     db   4,  3, $5F, $00
     db  12, -5, $6E, $00
     db  12,  3, $6F, $00
-    db $FF
+    db METASPRITE_END
 sprite476E:
     db -26, -2, $08, $00
     db -20, -8, $17, $00
@@ -608,7 +608,7 @@ sprite476E:
     db   4, -5, $3D, $00
     db  12,-13, $4C, $00
     db  12, -5, $4D, $00
-    db $FF
+    db METASPRITE_END
 sprite4793:
     db -26, -6, $08, $00
     db -20, -8, $47, $00
@@ -622,7 +622,7 @@ sprite4793:
     db   4,  5, $39, $20
     db  12, -3, $4A, $20
     db  12,  5, $49, $20
-    db $FF
+    db METASPRITE_END
 sprite47C4:
     db -25, -6, $08, $00
     db -19, -8, $47, $00
@@ -638,7 +638,7 @@ sprite47C4:
     db   4, 13, $3E, $20
     db  12,-11, $6F, $20
     db  12, -3, $6E, $20
-    db $FF
+    db METASPRITE_END
 sprite47FD:
     db -26, -6, $08, $00
     db -20, -8, $47, $00
@@ -649,10 +649,10 @@ sprite47FD:
     db   4, -3, $3D, $20
     db  12, -3, $4D, $20
     db  12,  5, $4C, $20
-    db $FF
+    db METASPRITE_END
 sprite4822:
     db  -4, -4, $8E, $00
-    db $FF
+    db METASPRITE_END
 sprite4827:
     db -12,-12, $8B, $00
     db -12, -4, $8C, $00
@@ -662,13 +662,13 @@ sprite4827:
     db   4,-12, $8B, $40
     db   4, -4, $8C, $40
     db   4,  4, $8B, $60
-    db $FF
+    db METASPRITE_END
 sprite4848:
     db  -8, -8, $84, $00
     db  -8,  0, $84, $20
     db   0, -8, $84, $40
     db   0,  0, $84, $60
-    db $FF
+    db METASPRITE_END
 sprite4859:
     db -16,-16, $80, $00
     db -16, -8, $81, $00
@@ -686,66 +686,66 @@ sprite4859:
     db   8, -8, $81, $40
     db   8,  0, $81, $60
     db   8,  8, $80, $60
-    db $FF
+    db METASPRITE_END
 sprite489A:
     db  -4, -4, $90, $00
-    db $FF
+    db METASPRITE_END
 sprite489F:
     db  -4, -4, $91, $00
-    db $FF
+    db METASPRITE_END
 sprite48A4:
     db   4, -8, $05, $00
     db   4,  0, $07, $00
     db  12, -8, $33, $00
     db  12,  0, $29, $00
-    db $FF
+    db METASPRITE_END
 sprite48B5:
     db   3, -8, $07, $20
     db   3,  0, $29, $40
     db  11, -8, $05, $40
     db  11,  0, $33, $20
-    db $FF
+    db METASPRITE_END
 sprite48C6:
     db   4, -8, $29, $60
     db   4,  0, $33, $60
     db  12, -8, $07, $60
     db  12,  0, $05, $60
-    db $FF
+    db METASPRITE_END
 sprite48D7:
     db   3, -8, $33, $40
     db   3,  0, $05, $20
     db  11, -8, $29, $20
     db  11,  0, $07, $40
-    db $FF
+    db METASPRITE_END
 sprite48E8:
     db   4, -8, $07, $20
     db   4,  0, $05, $20
     db  12, -8, $29, $20
     db  12,  0, $33, $20
-    db $FF
+    db METASPRITE_END
 sprite48F9:
     db   3, -8, $29, $60
     db   3,  0, $07, $00
     db  11, -8, $33, $00
     db  11,  0, $05, $60
-    db $FF
+    db METASPRITE_END
 sprite490A:
     db   4, -8, $33, $40
     db   4,  0, $29, $40
     db  12, -8, $05, $40
     db  12,  0, $07, $40
-    db $FF
+    db METASPRITE_END
 sprite491B:
     db   3, -8, $05, $00
     db   3,  0, $33, $60
     db  11, -8, $07, $60
     db  11,  0, $29, $00
-    db $FF
+    db METASPRITE_END
 sprite492C:
     db   0,  0, $9A, $00
     db   0,  8, $9A, $20
-    db $FF
+    db METASPRITE_END
 sprite4935:
     db   0,  0, $9B, $00
     db   0,  8, $9B, $20
-    db $FF
+    db METASPRITE_END
