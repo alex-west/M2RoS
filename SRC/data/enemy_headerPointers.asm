@@ -153,7 +153,7 @@
     dw enHead_item ; Energy tank
     dw enHead_item ; (missile tank orb?)
     dw enHead_item ; Missile tank
-    dw enHead_blobThrower ; Blob thrower?
+    dw enHead_blobThrower ; Blob thrower (sprite is written to WRAM)
     dw enHead_item ; Energy refill
     dw enHead_arachnusOrb ; Arachnus orb
     dw enHead_item ; Missile refill
@@ -234,7 +234,7 @@
     dw enHead_NULL ; Enemy death explosion
     dw enHead_NULL ; Enemy death explosion
     dw enHead_NULL ; Enemy death explosion
-    dw enHead_NULL ; Enemy death explosion extra
+    dw enHead_NULL ; Enemy death explosion (extra frame for enemies not dropping small health)
     dw enHead_NULL ; Big energy drop
     dw enHead_NULL ; Big energy drop
     dw enHead_NULL ; Missile drop

@@ -153,7 +153,7 @@
     dw hitbox_tile ; Energy tank
     dw hitbox_block ; (missile tank orb?)
     dw hitbox_tile ; Missile tank
-    dw hitboxC360 ; Blob thrower?
+    dw hitboxC360 ; Blob thrower (sprite is written to WRAM)
     dw hitbox_refill ; Energy refill
     dw hitbox_block ; Arachnus orb
     dw hitbox_refill ; Missile refill
@@ -234,7 +234,7 @@
     dw hitbox_block ; Enemy death explosion
     dw hitbox_tile ; Enemy death explosion
     dw hitbox6A97 ; Enemy death explosion
-    dw hitbox6ABF ; Enemy death explosion extra
+    dw hitbox6ABF ; Enemy death explosion (extra frame for enemies not dropping small health)
     dw hitbox_block ; Big energy drop
     dw hitbox_block ; Big energy drop
     dw hitbox_tile ; Missile drop

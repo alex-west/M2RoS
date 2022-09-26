@@ -153,7 +153,7 @@
     db $00 ; Energy tank
     db $FF ; (missile tank orb?)
     db $00 ; Missile tank
-    db $30 ; Blob thrower?
+    db $30 ; Blob thrower (sprite is written to WRAM)
     db $00 ; Energy refill
     db $FF ; Arachnus orb
     db $00 ; Missile refill
@@ -234,7 +234,7 @@
     db $00 ; Enemy death explosion
     db $00 ; Enemy death explosion
     db $00 ; Enemy death explosion
-    db $00 ; Enemy death explosion extra
+    db $00 ; Enemy death explosion (extra frame for enemies not dropping small health)
     db $00 ; Big energy drop
     db $00 ; Big energy drop
     db $00 ; Missile drop

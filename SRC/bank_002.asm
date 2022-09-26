@@ -549,9 +549,9 @@ jr .deleteDrop
 .applyDamage:
     ; Exit if the sprite type is metroid-related (range $A0-$CF)
     ldh a, [hEnemy.spriteType]
-    cp $a0
+    cp METROID_SPRITES_START ;$a0
     jr c, .endIf_C
-        cp $d0
+        cp METROID_SPRITES_END + 1 ;$d0
         jp c, Jump_002_438f ; Exit
     .endIf_C:
 
@@ -2420,7 +2420,7 @@ ret
         jr nz, .checkIfDone
 
     ld a, c
-    cp $9b ; Jump ahead if not energy refill
+    cp SPRITE_ENERGY_REFILL ; $9B ; Jump ahead if not energy refill
         jr nz, .branchMissileRefill
 ; Energy refill branch
     ; Return if at full health
@@ -2435,7 +2435,7 @@ ret
 ret
 
 .branchMissileRefill:
-    cp $9d ; Jump ahead if not missile refill
+    cp SPRITE_MISSILE_REFILL ; $9D ; Jump ahead if not missile refill
         jr nz, .getItemNum
     ; Return if full at full missiles
     ld a, [samusCurMissilesLow]
@@ -2457,7 +2457,7 @@ ret
     ld c, $01
 
     .loop:
-        cp $81
+        cp SPRITE_ITEM_BASE_ID ; $81
             jr z, .break
         sub $02
         inc c
@@ -2835,7 +2835,7 @@ enAI_arachnus: ;{ 02:5109
         ret nc
 ; Actually start the fight
     ; Set sprite to arachnus
-    ld a, $76
+    ld a, SPRITE_ARACHNUS_ROLL_1 ; $76
     ldh [hEnemy.spriteType], a
   .nextStateAndResetJumpCounterAndUnknownVar:
     ld a, $05
@@ -2959,7 +2959,7 @@ ret
         ldh a, [hEnemy.yPos]
         sub $08
         ldh [hEnemy.yPos], a
-        ld a, $78
+        ld a, SPRITE_ARACHNUS_UPRIGHT_1 ; $78
       .nextStateAndSetSprite:
         ldh [hEnemy.spriteType], a
         ld a, $04 ; value for animation timer
@@ -2974,7 +2974,7 @@ ret
         ld [arachnus_actionTimer], a
         ret
     .else_F:
-        ld a, $7a ; Set sprite type
+        ld a, SPRITE_ARACHNUS_UPRIGHT_3 ; $7A ; Set sprite type
         jr .nextStateAndSetSprite
 ; end state
 
@@ -3007,7 +3007,7 @@ ret
             ret
         .else_I:
             ; Spit fireball sprite
-            ld a, $7a
+            ld a, SPRITE_ARACHNUS_UPRIGHT_3 ; $7A
             ldh [hEnemy.spriteType], a
             ldh a, [hEnemy.spawnFlag]
             cp $01
@@ -3015,7 +3015,7 @@ ret
             ; Spawn projectile
             ld de, .fireballHeader
             call .shootFireball
-            ld a, $79
+            ld a, SPRITE_ARACHNUS_UPRIGHT_2 ; $79
             ldh [hEnemy.spriteType], a
             ; Reset action timer
             ld a, $10
@@ -3025,7 +3025,7 @@ ret
         ldh a, [hEnemy.yPos]
         add $08
         ldh [hEnemy.yPos], a
-        ld a, $76
+        ld a, SPRITE_ARACHNUS_ROLL_1 ; $76
         ldh [hEnemy.spriteType], a
         jp .nextStateAndResetJumpCounter
 ; end state
@@ -3036,7 +3036,7 @@ ret
     ; Transform into spring ball
     ld hl, hEnemy.health
     ld [hl], $ff
-    ld a, $95 ; Spring Ball
+    ld a, SPRITE_SPRING_BALL_ITEM ; Spring Ball
     ldh [hEnemy.spriteType], a
     ld hl, hEnemy.pAI_low ;$fff1
     ld de, enAI_itemOrb ;$4dd3
@@ -3136,7 +3136,7 @@ ret
     and $06
         ret nz
     ldh a, [hEnemy.spriteType]
-    xor $07
+    xor SPRITE_ARACHNUS_FIREBALL_1 ^ SPRITE_ARACHNUS_FIREBALL_2 ; $07
     ldh [hEnemy.spriteType], a
 ret
 
@@ -3173,7 +3173,7 @@ enAI_blobProjectile: ;{ 02:536F
     and $01
     jr nz, .endIf_A ; This conditional seems superfluous given the conditional return above
         ldh a, [hEnemy.spriteType]
-        xor $01
+        xor SPRITE_BLOB_1 ^ SPRITE_BLOB_2 ; $01
         ldh [hEnemy.spriteType], a
     .endIf_A:
 
@@ -3308,14 +3308,14 @@ ret
 
 .case_windUpFrame:
     ; Animate wind-up frame before movement
-    ld a, $2e
+    ld a, SPRITE_GLOWFLY_WINDUP ; $2E
     ldh [hEnemy.spriteType], a
 ret
 
 .case_launch:
     ; Start launching off the wall
     ; Set sprite graphics
-    ld a, $2e
+    ld a, SPRITE_GLOWFLY_WINDUP ; $2E
     ldh [hEnemy.spriteType], a
     ; Reset wait timer
     ld [hl], $00
@@ -3326,7 +3326,7 @@ ret
 
 .case_move:
     ; Set sprite type
-    ld a, $2f
+    ld a, SPRITE_GLOWFLY_MOVING ; $2F
     ldh [hEnemy.spriteType], a
     call .move
     call .tryFlip
@@ -3364,7 +3364,7 @@ ret
 
 .flip:
     ; Animate sprite
-    ld a, $2c
+    ld a, SPRITE_GLOWFLY_IDLE_1 ; $2C
     ldh [hEnemy.spriteType], a
     ; Flip sprite (graphics)
     ld hl, hEnemy.attr
@@ -3411,20 +3411,20 @@ ret
         ret nz
     ; Looks like a really convoluted way of oscillating between $2C and $2D
     ldh a, [hEnemy.spriteType]
-    cp $2c
+    cp SPRITE_GLOWFLY_IDLE_1 ; $2C
     jr nz, .else_B
         inc a
         ldh [hEnemy.spriteType], a
         ret
     .else_B:
         ldh a, [hEnemy.spriteType]
-        cp $2d
+        cp SPRITE_GLOWFLY_IDLE_2 ; $2D
         jr nz, .else_C
             dec a
             ldh [hEnemy.spriteType], a
             ret
         .else_C:
-            ld a, $2c
+            ld a, SPRITE_GLOWFLY_IDLE_1 ; $2C
             ldh [hEnemy.spriteType], a
             ret
 ;}
@@ -3450,7 +3450,7 @@ ret
 
 .case_0:
     ; set the sprite ID
-    ld a, $34
+    ld a, SPRITE_ROCKICICLE_IDLE_1 ; $34
     ldh [hEnemy.spriteType], a
     ; inc the animation counter
     ld hl, hEnemy.counter
@@ -3465,7 +3465,7 @@ ret
     inc a
     ldh [hEnemy.state], a
     ; set the next sprite ID
-    ld a, $35
+    ld a, SPRITE_ROCKICICLE_IDLE_2 ; $35
     ldh [hEnemy.spriteType], a
     ; clear the counter
     ld hl, hEnemy.counter
@@ -3506,7 +3506,7 @@ ret
     cp $04 ; Move to next state after moving 4 pixels
         ret nz
 
-    ld a, $36
+    ld a, SPRITE_ROCKICICLE_MOVING_1 ; $36
     ldh [hEnemy.spriteType], a
     ; inc to next state
     ldh a, [hEnemy.state]
@@ -3600,7 +3600,7 @@ ret
     xor a
     ldh [hEnemy.generalVar], a ; Reset distance travelled
     ldh [hEnemy.state], a ; Reset state to 0
-    ld a, $34
+    ld a, SPRITE_ROCKICICLE_IDLE_1 ; $34
     ldh [hEnemy.spriteType], a
 ret
 
@@ -3610,7 +3610,7 @@ ret
     ret nz
 
     ldh a, [hEnemy.spriteType]
-    cp $36
+    cp SPRITE_ROCKICICLE_MOVING_1 ; $36
     jr nz, .endIf_B
         inc a
         ldh [hEnemy.spriteType], a
@@ -3618,14 +3618,14 @@ ret
     .endIf_B:
     
     ldh a, [hEnemy.spriteType]
-    cp $37
+    cp SPRITE_ROCKICICLE_MOVING_2 ; $37
     jr nz, .endIf_C
         dec a
         ldh [hEnemy.spriteType], a
             ret
     .endIf_C:
     
-    ld a, $36
+    ld a, SPRITE_ROCKICICLE_MOVING_1 ; $36
     ldh [hEnemy.spriteType], a
 ret
 ;}
@@ -3668,11 +3668,11 @@ enemy_animateIce: ;{ 02:5652
     ; Check if sprite is a standard metroid
     ; (the standard metroid will call this on its own terms)
     ldh a, [hEnemy.spriteType]
-    cp $a0
+    cp METROID_SPRITES_START ; $A0
         jr z, enemy_commonAI.jumpToAI
-    sub $ce
+    sub SPRITE_METROID_2 ; $CE
         jr z, enemy_commonAI.jumpToAI
-    dec a
+    dec a ; checks for $CF
         jr z, enemy_commonAI.jumpToAI
 .call: ; 02:565F - Called directly by normal metroids
     ; Act every other frame
@@ -3766,7 +3766,7 @@ enemy_animateExplosion: ;{ 02:56BF
     bit 5, a
         jr nz, .screwExplosion
 ; Normal explosions
-    ld b, $03
+    ld b, SPRITE_NORMAL_EXPLOSION_END - SPRITE_NORMAL_EXPLOSION_START + 1 ; $03
     cp $11 ; Small health
         jr z, .normalExplosion
     ; Make explosions for other drops last an extra frame
@@ -3779,9 +3779,9 @@ jr .normalExplosion
     ld a, [hl]
     inc [hl]
     ; Become drop after 6 frames
-    cp $06
+    cp SPRITE_SCREW_EXPLOSION_END - SPRITE_SCREW_EXPLOSION_START + 1 ; $06
         jr z, .becomeDrop
-    add $e2 ; Base sprite number of screw explosion
+    add SPRITE_SCREW_EXPLOSION_START ; $E2 ; Base sprite number of screw explosion
     ldh [hEnemy.spriteType], a
 ret
 
@@ -3793,7 +3793,7 @@ ret
     ; Become drop after 3 or 4 frames
     cp b
         jr z, .becomeDrop
-    add $e8 ; Base sprite number of normal explosion
+    add SPRITE_NORMAL_EXPLOSION_START ; $E8 ; Base sprite number of normal explosion
     ldh [hEnemy.spriteType], a
 ret
 
@@ -3818,13 +3818,13 @@ ret
         jr z, .dropLargeHealth ; Case 2 - Large health
 
     ; Missile drop
-        ld bc, $04ee ; drop type, sprite ID
+        ld bc, ($04 << 8) | SPRITE_MISSILE_DROP ; $04EE ; drop type, sprite ID
         jr .setDrop
     .dropSmallHealth:
-        ld bc, $01e0 ; drop type, sprite ID
+        ld bc, ($01 << 8) | SPRITE_SMALL_HEALTH ; $01E0 ; drop type, sprite ID
         jr .setDrop
     .dropLargeHealth:
-        ld bc, $02ec ; drop type, sprite ID
+        ld bc, ($02 << 8) | SPRITE_BIG_HEALTH ; $02EC ; drop type, sprite ID
         jr .setDrop
 
 .setDrop:
@@ -3869,9 +3869,9 @@ enemy_metroidExplosion: ;{ 02:5732
         jr z, .deleteProjectile
     ; If not a Metroid explosion, do AI
     ldh a, [hEnemy.spriteType]
-    cp $e2
+    cp SPRITE_SCREW_EXPLOSION_START ; $E2
         jp c, enemy_commonAI.jumpToAI
-    cp $e8
+    cp SPRITE_SCREW_EXPLOSION_END + 1 ; $E8
         jp nc, enemy_commonAI.jumpToAI
 
     ; Activate cutscene (freeze Samus) if not activated
@@ -3886,10 +3886,10 @@ enemy_metroidExplosion: ;{ 02:5732
     ; Check counter
     ld hl, hEnemy.counter
     ld a, [hl]
-    cp $06
+    cp SPRITE_SCREW_EXPLOSION_END - SPRITE_SCREW_EXPLOSION_START + 1 ; $06
     jr z, .else_B
         ; Set sprite type
-        add $e2 ; Base sprite number of explosion
+        add SPRITE_SCREW_EXPLOSION_START ; $E2 ; Base sprite number of explosion
         ldh [hEnemy.spriteType], a
         ; Increment animation counter
         inc [hl]
@@ -4430,7 +4430,7 @@ ret
     cp $03
         ret z
     ; Close mouth
-    ld a, $04
+    ld a, SPRITE_SKREEK_1 ; $04
     ldh [hEnemy.spriteType], a
     ; Set state to 3
     ld a, $03
@@ -4508,7 +4508,7 @@ ret
         .endIf_D:
         ld [hl+], a
         ; Set sprite number
-        ld a, $08
+        ld a, SPRITE_SKREEK_SPIT ; $08
         ld [hl+], a
         ; Set base sprite attribute
         ld a, $80
@@ -4526,7 +4526,7 @@ ret
         ld a, $03
         ldh [hEnemy.spawnFlag], a
         ; Open mouth
-        ld a, $07
+        ld a, SPRITE_SKREEK_4 ; $07
         ldh [hEnemy.spriteType], a
         ; *spit*
         ld a, $12
@@ -4554,12 +4554,12 @@ ret
     ; Animate 4-5-6, 4-5-6, etc.
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $06
+    cp SPRITE_SKREEK_3 ; $06
     jr z, .else_E
         inc [hl]
         ret
     .else_E:
-        ld [hl], $04
+        ld [hl], SPRITE_SKREEK_1 ; $04
         ret
 ;}
 
@@ -4741,7 +4741,7 @@ ret
     cp $0c
         jr nc, .nextFrame        
 .resetAnimation:
-    ld [hl], $09
+    ld [hl], SPRITE_DRIVEL_1 ; $09
     ret
     
 .forceInaction:
@@ -4755,7 +4755,7 @@ ret
         ret nz
     ; Loop back to start of animation if at the end
     ld a, [hl]
-    cp $0b
+    cp SPRITE_DRIVEL_3 ; $0B
         jr z, .resetAnimation
     ; Set next frame
     inc [hl]
@@ -4767,7 +4767,7 @@ enAI_drivelSpit: ;{ 02:5BD4
     ; Initial enemySpriteType is $0C
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $0e
+    cp SPRITE_DRIVEL_SPIT_3 ; $0E
         jr z, .fall  ; Jump if equal
         jr nc, .explode ; Jump if greater
 
@@ -4789,7 +4789,7 @@ ret
     bit 1, a
         ret z
     ; Ground has been hit, so move on to next state
-    ld a, $0f
+    ld a, SPRITE_DRIVEL_SPIT_4 ; $0F
     ldh [hEnemy.spriteType], a
     ld a, $11
     ld [sfxRequest_noise], a
@@ -4804,7 +4804,7 @@ ret
     ; inc enemySpriteType
     inc [hl]
     ld a, [hl]
-    cp $12
+    cp SPRITE_DRIVEL_SPIT_6 + 1 ; $12
         ret c
     
     ; Get WRAM offset for parent creature
@@ -5002,7 +5002,7 @@ ret
         ret nz
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $63
+    cp SPRITE_SHIRK_1 ; $63
     jr nc, .endIf_B
         ; Senjoo animation
         ld hl, hEnemy.attr
@@ -5012,7 +5012,7 @@ ret
         ret
     .endIf_B:
         ; Shirk animation
-        xor $07
+        xor SPRITE_SHIRK_1 ^ SPRITE_SHIRK_2 ; $07
         ld [hl], a
         ret
 ;} end proc
@@ -5085,12 +5085,12 @@ ret
     ; Three-frame animation cycling from $D8->$D9->$DA->$D9, etc.
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $da
+    cp SPRITE_GULLUGG_3 ; $DC
     jr z, .endIf
         inc [hl]
             ret
     .endIf:
-    ld [hl], $d8
+    ld [hl], SPRITE_GULLUGG_1 ; $D8
 ret
 ;} End of gullugg code
 
@@ -5128,19 +5128,19 @@ enAI_chuteLeech: ;{ 02:5E0B
     ; Animate ascent
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $3e ; Check if an octroll
+    cp SPRITE_OCTROLL_1 ; $3E ; Check if an octroll
     jr nc, .else_A
-        ld [hl], $1c ; Chute leech ascent pose
+        ld [hl], SPRITE_CHUTELEECH_2 ; $1C ; Chute leech ascent pose
         ret
     .else_A:
-        ld [hl], $3e
+        ld [hl], SPRITE_OCTROLL_1 ; $3E
         ret
 ; end proc
 
 .case_ascend:
     ; Animate if an octroll
     ldh a, [hEnemy.spriteType]
-    cp $3e
+    cp SPRITE_OCTROLL_1 ; $3E
         call nc, enemy_flipSpriteId.twoFrame
 
     ; Check if counter == $16
@@ -5167,12 +5167,12 @@ ret
     ; Animate
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $3e ; Check if not an octroll
+    cp SPRITE_OCTROLL_1 ; $3E ; Check if not an octroll
     jr nc, .else_B
-        ld [hl], $1d ; chute leech descent pose
+        ld [hl], SPRITE_CHUTELEECH_3 ; $1D ; chute leech descent pose
         ret
     .else_B:
-        ld [hl], $40
+        ld [hl], SPRITE_OCTROLL_3 ; $40
         ret
 ; end proc
 
@@ -5197,9 +5197,9 @@ ret
     ; Animate
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $3e ; Check if not octroll
+    cp SPRITE_OCTROLL_1 ; $3E ; Check if not octroll
         ret nc
-    ld [hl], $1b
+    ld [hl], SPRITE_CHUTELEECH_1 ; $1B
 ret
 
 
@@ -5328,12 +5328,12 @@ enAI_pipeBug: ;{ 02:5F67
 
     ; Set sprite type depending on current sprite type
     ldh a, [hEnemy.spriteType]
-    cp $3c
+    cp SPRITE_YUMEE_SPAWNER ; $3C
     jr nc, .else_B
-        ld a, $17 ; Gawron
+        ld a, SPRITE_GAWRON_1 ; $17 ; Gawron
         jr .endIf_B
     .else_B:
-        ld a, $38 ; Yumee
+        ld a, SPRITE_YUMEE_1 ; $38 ; Yumee
     .endIf_B:
     ld [hl+], a
 
@@ -5479,9 +5479,9 @@ ret
     ; Animate if a Yumee
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $38
+    cp SPRITE_YUMEE_1 ; $38
         ret c
-    ld [hl], $3a
+    ld [hl], SPRITE_YUMEE_3 ; $3A
 ret
 
 .case_moveHorizontal: ; State 2
@@ -5542,14 +5542,14 @@ ret
 .animate: ; 02:609B
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $38
+    cp SPRITE_YUMEE_1 ; $38
     jr nc, .else_K
-        ; Yumee animation
-        xor $0f
+        ; Gawron animation
+        xor SPRITE_GAWRON_1 ^ SPRITE_GAWRON_2 ; $0F
         jr .endIf_K
     .else_K:
-        ; Gawron animation
-        xor $01
+        ; Yumee animation
+        xor SPRITE_YUMEE_1 ^ SPRITE_YUMEE_2 ; $01
     .endIf_K:    
     ld [hl], a
 ret
@@ -5721,9 +5721,9 @@ ret
 enAI_autrack: ;{ 02:6145
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $1e ; Check to change the flipped version to refer to the proper sprite
+    cp SPRITE_AUTRACK_FLIPPED ; $1E ; Check to change the flipped version to refer to the proper sprite
     jr nz, .endIf_A
-        ld [hl], $41
+        ld [hl], SPRITE_AUTRACK_1 ; $41
     .endIf_A:
     
     ; Check if this object is actually the laser
@@ -5736,13 +5736,13 @@ enAI_autrack: ;{ 02:6145
     bit 1, a
     jr nz, .else_B
         ld a, [hl]
-        cp $43
+        cp SPRITE_AUTRACK_3 ; $43
             jr z, .fireLaser
         inc [hl]
         ret
     .else_B:
         ld a, [hl]
-        cp $41
+        cp SPRITE_AUTRACK_1 ; $41
             jr z, .action
         dec [hl]
         ret
@@ -5777,7 +5777,7 @@ enAI_autrack: ;{ 02:6145
     .endIf_C:
     ld [hl+], a
     ; Set sprite ID
-    ld a, $45
+    ld a, SPRITE_AUTRACK_LASER ; $45
     ld [hl+], a
     
     ld a, $00
@@ -5792,7 +5792,7 @@ enAI_autrack: ;{ 02:6145
     call enemy_spawnObject.shortHeader
     
     ; Animate cannon
-    ld a, $44
+    ld a, SPRITE_AUTRACK_4 ; $44
     ldh [hEnemy.spriteType], a
     ; Request sound effect
     ld a, $13
@@ -5906,7 +5906,7 @@ ret
     inc [hl]
     ld a, [hl]
     ; Play jumping SFX if a certain enemy type during a certain frame
-    cp $47
+    cp SPRITE_AUTOAD_2 ; $47
         ret nz
     ld a, $1a
     ld [sfxRequest_noise], a
@@ -6014,9 +6014,9 @@ enAI_wallfire: ;{ 02:62B4
     ; Set the opposite facing ones to the right direction
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $1f
+    cp SPRITE_WALLFIRE_FLIPPED ; $1F
     jr nz, .endIf_A
-        ld [hl], $4a
+        ld [hl], SPRITE_WALLFIRE_1 ; $4A
     .endIf_A:
     ; Check if a projectile
     call enemy_getSamusCollisionResults
@@ -6026,14 +6026,14 @@ enAI_wallfire: ;{ 02:62B4
     ; Exit if destroyed
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $4c
+    cp SPRITE_WALLFIRE_DEAD ; $4C
         ret z
     ; Check if damaged
     ld a, [$c46d]
     cp $20 ; Touch
         jr nc, .normalAction
     ; Become destroyed
-    ld a, $4c
+    ld a, SPRITE_WALLFIRE_DEAD ; $4C
     ld [hl], a
     ld a, $ff
     ld [sfxRequest_square1], a
@@ -6077,7 +6077,7 @@ ret
     .endIf_B:
     ld [hl+], a
     ; Set sprite type
-    ld a, $4d
+    ld a, SPRITE_WALLFIRE_SHOT_1 ; $4D
     ld [hl+], a
     ; Set base sprite attributes
     ld a, $00
@@ -6092,7 +6092,7 @@ ret
     ; Spawn
     call enemy_spawnObject.shortHeader
     ; Open mouth
-    ld a, $4b
+    ld a, SPRITE_WALLFIRE_2 ; $4B
     ldh [hEnemy.spriteType], a
     ld a, $12
     ld [sfxRequest_noise], a
@@ -6107,14 +6107,14 @@ ret
         ret nz
     ; Reset timer
     ld [hl], $00
-    ld a, $4a ; Close mouth
+    ld a, SPRITE_WALLFIRE_1 ; $4A ; Close mouth
     ldh [hEnemy.spriteType], a
 ret
 
 .projectileCode:
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $4f ; Check in an explosion sprite type
+    cp SPRITE_WALLFIRE_SHOT_3 ; $4F ; Check in an explosion sprite type
         jr nc, .explode
     ; Animate
     call enemy_flipSpriteId_2Bits.twoFrame
@@ -6135,7 +6135,7 @@ ret
             ret z
     .startExploding: ; Explode if collision is made
         ; Set sprite type and make noise
-        ld a, $4f
+        ld a, SPRITE_WALLFIRE_SHOT_3 ; $4F
         ldh [hEnemy.spriteType], a
         ld a, $03
         ld [sfxRequest_noise], a
@@ -6154,7 +6154,7 @@ ret
 
 .explode:
     ; Check if at end of explosion animation or not
-    cp $50
+    cp SPRITE_WALLFIRE_SHOT_4 ; $50
     jr z, .else_D
         ; Increment sprite type
         inc [hl]
@@ -6193,7 +6193,7 @@ enAI_gunzoo: ;{ 02:638C
     ; Animate
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $51
+    cp SPRITE_GUNZOO_1 ; $51
         call nz, .resetSpriteType
 
     ; Check state (number of shots fired, for this case)
@@ -6308,7 +6308,7 @@ ret
     call enemy_spawnObject.longHeader
 
     ; Animate (lower cannon fired)
-    ld a, $53
+    ld a, SPRITE_GUNZOO_3 ; $53
     ldh [hEnemy.spriteType], a
     ; Increment state
     ld hl, hEnemy.state
@@ -6320,7 +6320,7 @@ ret
 
 .switchToHorizontal:
     ; Reset sprite type
-    ld a, $51
+    ld a, SPRITE_GUNZOO_1 ; $51
     ldh [hEnemy.spriteType], a
     ; Set movement direction to right
     xor a
@@ -6425,15 +6425,15 @@ ret
 .projectileCode:
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $57 ; Sprite $57+ (left)
+    cp SPRITE_GUNZOO_HSHOT_1 ; $57 ; Sprite $57+ (left)
         jr nc, .horizontalShot
 ; Diagonal projectile
-    sub $55 ; Sprite $55
+    sub SPRITE_GUNZOO_DIAGSHOT_2 ; $55 ; Sprite $55
         jr z, .diagonalShotExplosion
-    dec a ; Sprite $56
+    dec a ; Sprite $56 (SPRITE_GUNZOO_DIAGSHOT_3)
         jr z, .projectileDelete
 
-; Sprite $54 (diagonal)
+; Sprite $54 (SPRITE_GUNZOO_DIAGSHOT_1)
     ; Move down
     ld hl, hEnemy.yPos
     ld a, [hl]
@@ -6448,7 +6448,7 @@ ret
     bit 1, a
         ret z
     ; Set sprite type
-    ld a, $55
+    ld a, SPRITE_GUNZOO_DIAGSHOT_2 ; $55
     ldh [hEnemy.spriteType], a
     ; Move up
     ld hl, hEnemy.yPos
@@ -6462,7 +6462,7 @@ ret
 
 .diagonalShotExplosion:
     ; Increment sprite type
-    ld [hl], $56
+    ld [hl], SPRITE_GUNZOO_DIAGSHOT_3 ; $56
     ; Move up
     ld hl, hEnemy.yPos
     ld a, [hl]
@@ -6478,9 +6478,9 @@ ret
 
 .horizontalShot:
     ; Check if at end of explosion
-    cp $5b
+    cp SPRITE_GUNZOO_HSHOT_5 ; $5B
         jr z, .projectileDelete
-    cp $59
+    cp SPRITE_GUNZOO_HSHOT_3 ; $59
     jr nc, .else_B
         ; Move left
         ld hl, hEnemy.xPos
@@ -6493,7 +6493,7 @@ ret
         bit 2, a
             ret z
         ; Change sprite to explosion
-        ld a, $59
+        ld a, SPRITE_GUNZOO_HSHOT_3 ; $59
         ldh [hEnemy.spriteType], a
         ; Make noise
         ld a, $03
@@ -6506,20 +6506,23 @@ ret
 
 ; Enemy Headers
 .upperCannonShotHeader: ; 02:6511 - Horizontal from upper cannon (random)
-    db $57, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $01
+    db SPRITE_GUNZOO_HSHOT_1 ; $57
+    db $00, $00, $00, $00, $00, $00, $00, $00, $fe, $01
     dw enAI_gunzoo
 .lowerCannonShotHeader: ; 02:651E - Horizontal from lower cannon (regular)
-    db $57, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $02
+    db SPRITE_GUNZOO_HSHOT_1 ; $57
+    db $00, $00, $00, $00, $00, $00, $00, $00, $fe, $02
     dw enAI_gunzoo
 .diagonalShotHeader: ; 92:651E - Diagonal
-    db $54, $00, $00, $00, $00, $00, $00, $00, $00, $fe, $03
+    db SPRITE_GUNZOO_DIAGSHOT_1 ; $54
+    db $00, $00, $00, $00, $00, $00, $00, $00, $fe, $03
     dw enAI_gunzoo
 
 .resetSpriteType:
     ldh a, [hEnemy_frameCounter]
     and $07
         ret nz
-    ld [hl], $51
+    ld [hl], SPRITE_GUNZOO_1 ; $51
 ret
 ;}
 
@@ -6538,7 +6541,7 @@ enAI_autom: ;{ 02:6540
         jr z, .useFlamethrower
 
     ; Animate
-    ld a, $5c ; Sprite with light off
+    ld a, SPRITE_AUTOM_1 ; $5C ; Sprite with light off
     ldh [hEnemy.spriteType], a
     ; Prep variables
     ld de, hEnemy.xPos
@@ -6594,7 +6597,7 @@ enAI_autom: ;{ 02:6540
     call enemy_spawnObject.longHeader
     ; Animate
     ld hl, hEnemy.spriteType
-    ld [hl], $5d ; Sprite with light on
+    ld [hl], SPRITE_AUTOM_2 ; $5D ; Sprite with light on
     ; Stay inactive while projectile is onscreen
     ld a, $03
     ldh [hEnemy.spawnFlag], a
@@ -6606,7 +6609,7 @@ ret
     ; Check sprite type
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $60
+    cp SPRITE_AUTOM_SHOT_3 ; $60
     jr z, .else_B
     jr nc, .else_C
         ; Increment sprite type
@@ -6640,7 +6643,8 @@ ret
 ; end proc
 
 .header_65C8:
-    db $5e, $00, $00, $00, $00, $00, $00, $00, $00, $ff, $00
+    db SPRITE_AUTOM_SHOT_1 ; $5E
+    db $00, $00, $00, $00, $00, $00, $00, $00, $ff, $00
     dw enAI_autom
 ;}
 
@@ -6649,9 +6653,9 @@ ret
 enAI_proboscum: ;{ 02:65D5
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $6E ; Check to make sure the flipped version has the correct sprite
+    cp SPRITE_PROBOSCUM_FLIPPED ; $6E ; Check to make sure the flipped version has the correct sprite
     jr nz, .endIf
-        ld [hl], $72
+        ld [hl], SPRITE_PROBOSCUM_1 ; $72
     .endIf:
 
     ; State graph is a simple 0->1->2->3->0 loop, but with a clever trick that makes states 0 and 2 use the same code
@@ -6674,7 +6678,7 @@ enAI_proboscum: ;{ 02:65D5
 
     ; Reset counter
     ld [hl], $00
-    ld a, $73 ; Nose half-extended
+    ld a, SPRITE_PROBOSCUM_2 ; $73 ; Nose half-extended
     ldh [hEnemy.spriteType], a
     ; state becomes 1 or 3, depending on if we fell-through to here or not
     ld hl, hEnemy.state
@@ -6692,7 +6696,7 @@ ret
     ; Reset counter
     ld [hl], $00
     ; Change sprite
-    ld a, $74 ; Nose down
+    ld a, SPRITE_PROBOSCUM_3 ; $74 ; Nose down
     ldh [hEnemy.spriteType], a
     ; state = 2
     ld a, $02
@@ -6710,7 +6714,7 @@ ret
     ; Reset counter
     ld [hl], $00
     ; Change sprite
-    ld a, $72 ; Nose forward
+    ld a, SPRITE_PROBOSCUM_1 ; $72 ; Nose forward
     ldh [hEnemy.spriteType], a
     ; state = 0 (fall-through to 2)
     xor a
@@ -6799,7 +6803,7 @@ enAI_missileBlock: ;{ 02:6622
     ld a, $03
     ldh [hEnemy.state], a
     ; Set sprite to explosion
-    ld a, $e2
+    ld a, SPRITE_SCREW_EXPLOSION_START ; $E2
     ldh [hEnemy.spriteType], a
 ret
 
@@ -6842,7 +6846,7 @@ ret
     ; Animate from $E2 to $E7
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $e7
+    cp SPRITE_SCREW_EXPLOSION_END ; $E7
         jr z, .deleteSelf
     inc [hl]
 ret
@@ -6957,7 +6961,7 @@ ret
     ; Skip ahead if not sprite $68
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $68
+    cp SPRITE_MOTO_2 ; $68
     jr nz, .endIf
         ; Inc/Dec depending on this flag
         ldh a, [hEnemy.counter]
@@ -6971,7 +6975,7 @@ ret
     .endIf:
 
     ; Reset sprite type
-    ld [hl], $68
+    ld [hl], SPRITE_MOTO_2 ; $68
     ; Switch between incrementing/decrementing the sprite type
     ld hl, hEnemy.counter
     ld a, [hl]
@@ -7287,7 +7291,7 @@ enAI_flittVanishing: ;{ 02:68A0
     ; Animate
     ld a, $01
     ldh [hEnemy.state], a
-    ld a, $d1 ; Close mouth
+    ld a, SPRITE_FLITT_2 ; $D1 ; Close mouth
     ldh [hEnemy.spriteType], a
 ret
 
@@ -7302,7 +7306,7 @@ ret
     ; Disappear
     ld a, $02
     ldh [hEnemy.state], a
-    ld a, $fd ; Disappear (no graphics)
+    ld a, SPRITE_FLITT_INVISIBLE ; $FD ; Disappear (no graphics)
     ldh [hEnemy.spriteType], a
 ret
 ; Funny note: Sprite $FD uses the same hitbox as the Queen's body, so it's absolutely huge (nearly 50x50 pixels)
@@ -7319,7 +7323,7 @@ ret
     ; Reappear
     ld a, $03
     ldh [hEnemy.state], a
-    ld a, $d1 ; Closed mouth
+    ld a, SPRITE_FLITT_2 ; $D1 ; Closed mouth
     ldh [hEnemy.spriteType], a
 ret
 
@@ -7334,7 +7338,7 @@ ret
     ; Animate
     ld a, $00
     ldh [hEnemy.state], a
-    ld a, $d0 ; Open mouth
+    ld a, SPRITE_FLITT_1 ; $D0 ; Open mouth
     ldh [hEnemy.spriteType], a
 ret
 ;}
@@ -7550,7 +7554,7 @@ enAI_gravitt: ;{ 02:695F
         ld a, $05
         ldh [hEnemy.state], a
         ; Animate
-        ld a, $d3
+        ld a, SPRITE_GRAVITT_1 ; $D3
         ldh [hEnemy.spriteType], a
         ret
 ; end state
@@ -7578,7 +7582,7 @@ ret
     ld hl, hEnemy.spriteType
     inc [hl]
     ld a, [hl]
-    cp $d8
+    cp SPRITE_GRAVITT_5 + 1 ; $D8
         ret nz
     ld [hl], $d4
 ret
@@ -7592,7 +7596,7 @@ enAI_missileDoor: ;{ 02:6A14
     ; If not the door sprite, jump ahead
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $f8
+    cp SPRITE_MISSILE_DOOR ; $F8
         jr nz, .exploding
 
     ; Exit if not hit with a projectile
@@ -7631,7 +7635,7 @@ enAI_missileDoor: ;{ 02:6A14
     ld [hl], a
     ldh [hEnemy.stunCounter], a
     ; Change sprite ID to explosion
-    ld a, $e2
+    ld a, SPRITE_SCREW_EXPLOSION_START ; $E2
     ldh [hEnemy.spriteType], a
     ; Play sound effect
     ld a, $10
@@ -7654,7 +7658,7 @@ ret
     ; Animate the explosion (sprites $E2 thru $E7)
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $e7
+    cp SPRITE_SCREW_EXPLOSION_END ; $E7
         jr z, .deleteDoor
     inc [hl]
 ret
@@ -7668,13 +7672,11 @@ ret
 ret
 
 .deleteDoor:
-    call enemy_deleteSelf_farCall ; Delete self?
+    call enemy_deleteSelf_farCall ; Delete self
     ; Set enemy spawn flag to dead
     ld a, $02
     ldh [hEnemy.spawnFlag], a
-ret
-; end of missile door code
-;}
+ret ;}
 
 ; Called by multiple enemies
 ; Used to move enemies "forwards" (right or down) in an accelerating fashion
@@ -7956,7 +7958,7 @@ enAI_hatchingAlpha: ;{ 02:6BB2
             ldh [hEnemy.status], a
             ld a, $ff
             ldh [hEnemy.directionFlags], a
-            ld a, $a3 ; Alpha metroid
+            ld a, SPRITE_ALPHA_1 ; $A3 ; Alpha metroid
             ldh [hEnemy.spriteType], a
     .endIf_A:
     ; State 2 = fight is happening
@@ -7976,7 +7978,7 @@ enAI_hatchingAlpha: ;{ 02:6BB2
         jp z, enAI_alphaMetroid.startFight
     ; Check if in screen-facing pose
     ldh a, [hEnemy.spriteType]
-    cp $a1 ; Metroid hatching
+    cp SPRITE_ALPHA_FACE ; $A1 ; Metroid hatching
         jp z, enAI_alphaMetroid.appearanceRise
 
     ld a, [cutsceneActive]
@@ -8041,7 +8043,7 @@ enAI_alphaMetroid: ;{ 02:6C44
     ld a, $04
     ldh [hEnemy.spawnFlag], a
 .checkIfInRange: ; Jump from hatchingAlpha
-    ld a, $a3 ; Alpha metroid
+    ld a, SPRITE_ALPHA_1 ; $A3 ; Alpha metroid
     ldh [hEnemy.spriteType], a
     ; Check if samus is within $50 pixels
     ld hl, hEnemy.xPos
@@ -8093,7 +8095,7 @@ ret
         ld [hl], $00
         ld a, $ff
         ldh [hEnemy.directionFlags], a
-        ld a, $a3
+        ld a, SPRITE_ALPHA_1 ; $A3
         ldh [hEnemy.spriteType], a
         xor a
         ldh [hEnemy.counter], a
@@ -8226,7 +8228,7 @@ ret
     ld a, $80
     ld [metroid_state], a
     ; Explode
-    ld a, $e2
+    ld a, SPRITE_SCREW_EXPLOSION_START ; $E2
     ldh [hEnemy.spriteType], a
     ld a, $0d
     ld [sfxRequest_noise], a
@@ -8258,7 +8260,7 @@ ret
 ; Appearance related branches
 .startFight:
     ld hl, hEnemy.spriteType
-    ld [hl], $a3
+    ld [hl], SPRITE_ALPHA_1 ; $A3
     ld a, $04
     ldh [hEnemy.spawnFlag], a
     xor a
@@ -8273,7 +8275,7 @@ ret
     ld [hl], a
     ldh [hEnemy.stunCounter], a
     ; Screen-facing pose
-    ld a, $a1
+    ld a, SPRITE_ALPHA_FACE ; $A1
     ldh [hEnemy.spriteType], a
 ret
 
@@ -8374,7 +8376,7 @@ jr .startFight
 .animate: ; 02:6E39
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    xor $07
+    xor SPRITE_ALPHA_1 ^ SPRITE_ALPHA_2 ; $07
     ld [hl], a
 ret
 ;}
@@ -8677,13 +8679,13 @@ ret
     cp $10
         jp z, .longIntroEnd
     ldh a, [hEnemy.spriteType]
-    xor $A3^$AD ; $0E -- Switch between Alpha and Gamma sprites
+    xor SPRITE_ALPHA_1 ^ SPRITE_GAMMA_1 ; $0E -- Switch between Alpha and Gamma sprites
     ldh [hEnemy.spriteType], a
 ret
 
 .quickIntro:
     ; Load proper Gamma sprite
-    ld a, $ad
+    ld a, SPRITE_GAMMA_1 ; $AD
     ldh [hEnemy.spriteType], a
     ; Check if Samus is in range
     ld hl, hEnemy.xPos
@@ -8715,7 +8717,7 @@ ret
     xor a
     ld [hl], a
     ; Load proper Gamma sprite
-    ld a, $ad
+    ld a, SPRITE_GAMMA_1 ; $AD
     ldh [hEnemy.spriteType], a
     xor a
     ld [cutsceneActive], a
@@ -8875,7 +8877,7 @@ ret
     ldh [hEnemy.state], a
     ld a, $80
     ld [metroid_state], a
-    ld a, $e2
+    ld a, SPRITE_SCREW_EXPLOSION_START ; $E2
     ldh [hEnemy.spriteType], a
     ld a, $0d
     ld [sfxRequest_noise], a
@@ -8920,7 +8922,7 @@ ret
         ldh [hEnemy.state], a
         inc a
         ld [metroid_state], a
-        ld a, $ad
+        ld a, SPRITE_GAMMA_1 ; $AD
         ldh [hEnemy.spriteType], a
         ret
     .endIf_G:
@@ -8952,7 +8954,7 @@ ret
     jr nc, .else_J
         call gamma_getSpeedVector_farCall
         call enAI_alphaMetroid.lungeMovement
-        ld a, $b0
+        ld a, SPRITE_GAMMA_2 ; $B0
         ldh [hEnemy.spriteType], a
         ret
     .else_J:
@@ -8977,7 +8979,7 @@ ret
         .endIf_K:
     
         ld [hl+], a
-        ld a, $ae
+        ld a, SPRITE_GAMMA_BOLT_1 ; $AE
         ld [hl+], a
         ld a, $00
         ld [hl+], a
@@ -9005,8 +9007,8 @@ ret
         ret nz
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $ae
-    jr z, .endIf_L
+    cp SPRITE_GAMMA_BOLT_1 ; $AE
+    jr z, .else_L
         dec [hl]
         ldh a, [hEnemy.attr]
         set OAMB_YFLIP, a
@@ -9026,33 +9028,31 @@ ret
             sub $04
             ldh [hEnemy.xPos], a
             ret
-    .endIf_L:
-
-    ldh a, [hEnemy.attr]
-    bit OAMB_YFLIP, a
-    jr nz, .endIf_N
-        inc [hl]
-        ldh a, [hEnemy.yPos]
-        sub $10
-        ldh [hEnemy.yPos], a
+    .else_L:
         ldh a, [hEnemy.attr]
-        bit OAMB_XFLIP, a
-        jr nz, .else_O
-            ldh a, [hEnemy.xPos]
-            sub $04
-            ldh [hEnemy.xPos], a
+        bit OAMB_YFLIP, a
+        jr nz, .else_N
+            inc [hl]
+            ldh a, [hEnemy.yPos]
+            sub $10
+            ldh [hEnemy.yPos], a
+            ldh a, [hEnemy.attr]
+            bit OAMB_XFLIP, a
+            jr nz, .else_O
+                ldh a, [hEnemy.xPos]
+                sub $04
+                ldh [hEnemy.xPos], a
+                ret
+            .else_O:
+                ldh a, [hEnemy.xPos]
+                add $04
+                ldh [hEnemy.xPos], a
+                ret
+        .else_N:
+            call enemy_deleteSelf_farCall
+            ld a, $ff
+            ldh [hEnemy.spawnFlag], a
             ret
-        .else_O:
-            ldh a, [hEnemy.xPos]
-            add $04
-            ldh [hEnemy.xPos], a
-            ret
-    .endIf_N:
-
-    call enemy_deleteSelf_farCall
-    ld a, $ff
-    ldh [hEnemy.spawnFlag], a
-ret
 ;}
 
 ;------------------------------------------------------------------------------
@@ -9166,7 +9166,7 @@ ret
     ldh [hEnemy.status], a
     ld a, $ff
     ldh [hEnemy.directionFlags], a
-    ld a, $b7
+    ld a, SPRITE_ZETA_5 ; $B7
     ldh [hEnemy.spriteType], a
     ; Reset chasing vector
     ld a, $10
@@ -9187,9 +9187,9 @@ ret
     cp $02 ; When the husk has fallen offscreen
         jp z, .startFight
     ldh a, [hEnemy.spriteType]
-    sub $b2
+    sub SPRITE_GAMMA_HUSK ; $B2
         jp z, .gammaHuskBranch
-    dec a
+    dec a ; Checks for $B3
         jp z, .appearanceRise
     ld a, [cutsceneActive]
     and a
@@ -9241,7 +9241,7 @@ ret
 ret
 
 .quickIntro:
-    ld a, $b7
+    ld a, SPRITE_ZETA_5 ; $B7
     ldh [hEnemy.spriteType], a
     ld hl, hEnemy.xPos
     ld a, [samus_onscreenXPos]
@@ -9283,7 +9283,7 @@ jr .standardAction
         ld [hl], $00
         ld a, $ff
         ldh [hEnemy.directionFlags], a
-        ld a, $b7
+        ld a, SPRITE_ZETA_5 ; $B7
         ldh [hEnemy.spriteType], a
         ld a, $10
         ldh [hEnemy.counter], a
@@ -9345,7 +9345,7 @@ jr .standardAction
     xor a
     ldh [hEnemy.counter], a
     ldh [hEnemy.state], a
-    ld a, $b8
+    ld a, SPRITE_ZETA_6 ; $B8
     ldh [hEnemy.spriteType], a
 ret
 
@@ -9381,7 +9381,7 @@ ret
     and a
         jr z, .death
 
-    ld a, $ba
+    ld a, SPRITE_ZETA_8 ; $BA
     ldh [hEnemy.spriteType], a
     ld a, $08
     ld [zeta_stunCounter], a
@@ -9440,7 +9440,7 @@ ret
     ldh [hEnemy.state], a
     ld a, $80
     ld [metroid_state], a
-    ld a, $e2
+    ld a, SPRITE_SCREW_EXPLOSION_START ; $E2
     ldh [hEnemy.spriteType], a
     ld a, $0d
     ld [sfxRequest_noise], a
@@ -9488,7 +9488,7 @@ ret
     and a
     jr z, .else_J
         ld a, [hl]
-        cp $b7
+        cp SPRITE_ZETA_5 ; $B7
         jr z, .moveToState5
             dec [hl]
             ret
@@ -9556,7 +9556,7 @@ ret
         ld [metroid_state], a
         xor a
         ldh [hEnemy.generalVar], a
-        ld a, $b3
+        ld a, SPRITE_ZETA_1 ; $B3
         ldh [hEnemy.spriteType], a
         ret
 ; end state
@@ -9578,14 +9578,14 @@ ret
         ld [metroid_state], a
         ld a, $04
         ldh [hEnemy.spawnFlag], a
-        ld a, $b7
+        ld a, SPRITE_ZETA_5 ; $B7
         ldh [hEnemy.spriteType], a
         ret
 ; end state
 
 .startFight:
     ld hl, hEnemy.spriteType
-    ld [hl], $b7
+    ld [hl], SPRITE_ZETA_5 ; $B7
     ; Initialize chasing vector
     ld a, $10
     ldh [hEnemy.counter], a
@@ -9644,7 +9644,7 @@ ret
     sub $08
     ld [hl], a
     ; Set sprite type to zeta
-    ld a, $b3
+    ld a, SPRITE_ZETA_1 ; $B3
     ldh [hEnemy.spriteType], a
 ret
 
@@ -9676,7 +9676,8 @@ ret
 
 ; Gamma husk header
 .gammaHuskHeader: ; 02:759F
-    db $b2, $80, $00, $00, $00, $00, $00, $00, $00, $ff, $06
+    db SPRITE_GAMMA_HUSK ; $B2
+    db $80, $00, $00, $00, $00, $00, $00, $00, $ff, $06
     dw enAI_zetaMetroid
 
 .spawnFireball: ; 02:75AC
@@ -9700,7 +9701,7 @@ ret
         ld [hl+], a
     .endIf_Q:
 
-    ld a, $be
+    ld a, SPRITE_ZETA_SHOT ; $BE
     ld [hl+], a
     ld a, $80
     ld [hl+], a
@@ -9772,9 +9773,9 @@ ret
 
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $b6
+    cp SPRITE_ZETA_4 ; $B6
     jr nz, .endIf
-        ld [hl], $b2 ; $B3 is first proper zeta frame
+        ld [hl], SPRITE_ZETA_1 - 1 ; $B2
     .endIf:
     inc [hl]
 ret
@@ -9782,9 +9783,9 @@ ret
 .animateHurt:
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $bd
+    cp SPRITE_ZETA_B ; $BD
     jr nz, .endIf_T
-        ld [hl], $ba
+        ld [hl], SPRITE_ZETA_8 ; $BA
     .endIf_T:
     inc [hl]
 ret
@@ -9921,7 +9922,7 @@ ret
     ; Prep explosion
     ld a, $80
     ld [metroid_state], a
-    ld a, $e2
+    ld a, SPRITE_SCREW_EXPLOSION_START ; $E2
     ldh [hEnemy.spriteType], a
     ; Play noise
     ld a, $0e
@@ -9973,7 +9974,7 @@ ret
     ldh [hEnemy.counter], a
     ld a, $10
     ldh [hEnemy.state], a
-    ld a, $c3
+    ld a, SPRITE_OMEGA_5 ; $C3
     ldh [hEnemy.spriteType], a
     ld a, $05
     ld [metroid_state], a
@@ -10004,7 +10005,7 @@ ret
     ld a, $01
     ld [metroid_state], a
   .closeMouth:
-    ld a, $bf
+    ld a, SPRITE_OMEGA_1 ; $BF
     ldh [hEnemy.spriteType], a
     ret
 ; end state 4
@@ -10132,7 +10133,7 @@ ret
         ld [metroid_state], a
         xor a
         ldh [hEnemy.generalVar], a
-        ld a, $bf
+        ld a, SPRITE_OMEGA_1 ; $BF
         ldh [hEnemy.spriteType], a
         ret
 ; end state 6
@@ -10152,7 +10153,7 @@ ret
     ld [metroid_state], a
     ld a, $05
     ldh [hEnemy.spawnFlag], a
-    ld a, $c1
+    ld a, SPRITE_OMEGA_3 ; $C1
     ldh [hEnemy.spriteType], a
     ld a, $15
     ld [sfxRequest_noise], a
@@ -10231,14 +10232,14 @@ ret
     xor a
     ldh [hEnemy.counter], a
     ldh [hEnemy.state], a
-    ld a, $c8
+    ld a, SPRITE_OMEGA_SHOT_3 ; $C8
     ldh [hEnemy.spriteType], a
 ret
 
 .fireballExplode: ; Animate fireball explosion
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    cp $cc
+    cp SPRITE_OMEGA_SHOT_7 ; $CC
         jr z, .fireballDelete
     ldh a, [hEnemy_frameCounter]
     and $01
@@ -10303,7 +10304,7 @@ ret
         jp z, .startFight
     ; Switch between zeta and omega sprites
     ldh a, [hEnemy.spriteType]
-    xor $0c
+    xor SPRITE_ZETA_1 ^ SPRITE_OMEGA_1 ; $0C
     ldh [hEnemy.spriteType], a
 ret
 
@@ -10327,7 +10328,7 @@ ret
         ld [hl+], a
     .endIf_N:
 
-    ld a, $c6
+    ld a, SPRITE_OMEGA_SHOT_1 ; $C6
     ld [hl+], a
     xor a
     ld [hl+], a
@@ -10340,7 +10341,7 @@ ret
 ret
 
 .quickIntro:
-    ld a, $bf
+    ld a, SPRITE_OMEGA_1 ; $BF
     ldh [hEnemy.spriteType], a
     ; Check if Samus is in range
     ld hl, hEnemy.xPos
@@ -10379,7 +10380,7 @@ ret
     ; Clear counter
     xor a
     ld [hl], a
-    ld a, $bf
+    ld a, SPRITE_OMEGA_1 ; $BF
     ldh [hEnemy.spriteType], a
     xor a
     ld [cutsceneActive], a
@@ -10451,7 +10452,7 @@ ret
     ld a, $10
     ldh [hEnemy.state], a
     ; Set sprite type, SFX, and state
-    ld a, $c3
+    ld a, SPRITE_OMEGA_5 ; $C3
     ldh [hEnemy.spriteType], a
     ld a, $2d
     ld [sfxRequest_square1], a
@@ -10527,7 +10528,7 @@ ret
     ; Oscillate between two values
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    xor $BF^$C0 ; $7f - Osciallates between $BF and $C0
+    xor SPRITE_OMEGA_1 ^ SPRITE_OMEGA_2 ; $7f - Osciallates between $BF and $C0
     ld [hl], a
 ret
 ;}
@@ -10616,7 +10617,7 @@ ret
     jr z, .endIf_B
         dec [hl]
             ret nz
-        ld a, $ce
+        ld a, SPRITE_METROID_2 ; $CE
         ldh [hEnemy.spriteType], a
     .endIf_B:
 
@@ -10649,7 +10650,7 @@ ret
     ldh [hEnemy.counter], a
     ldh [hEnemy.state], a
     ; Reset sprite type
-    ld a, $ce
+    ld a, SPRITE_METROID_2 ; $CE
     ldh [hEnemy.spriteType], a
     ; Reset health
     ld a, $05
@@ -10666,7 +10667,7 @@ ret
     ; Animate and make sound
     ld a, $03
     ld [larva_hurtAnimCounter], a
-    ld a, $cf
+    ld a, METROID_SPRITES_END ; $CF
     ldh [hEnemy.spriteType], a
     ld a, $05
     ld [sfxRequest_noise], a
@@ -10800,7 +10801,7 @@ ret
         ret nz
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    xor $6e ; Osciallate between $A0 and $CE
+    xor METROID_SPRITES_START ^ SPRITE_METROID_2 ; $6E ; Osciallate between $A0 and $CE
     ld [hl], a
 ret
 
@@ -10912,7 +10913,7 @@ ret
         ld [sfxRequest_noise], a
         ret
     .else_A:
-        ld a, $a8
+        ld a, SPRITE_BABY_1 ; $A8
         ldh [hEnemy.spriteType], a
         ; Check if Samus is in range
         ld hl, hEnemy.xPos
@@ -10942,13 +10943,13 @@ ret
     bit 0, a
     jr z, .else_E
         srl a
-        add $e2 ; Explosion
+        add SPRITE_SCREW_EXPLOSION_START ; $E2 ; Explosion
         ldh [hEnemy.spriteType], a
         ret
     .else_E:
         cp $0c
             call z, .prepState1
-        ld a, $a8
+        ld a, SPRITE_BABY_1 ; $A8
         ldh [hEnemy.spriteType], a
         ret
 ; end proc
@@ -10983,7 +10984,7 @@ ret
     jr z, .else
         inc [hl]
         ld a, [hl]
-        cp $a7 ; Upper threshold of wiggle
+        cp SPRITE_EGG_3 ; $A7 ; Upper threshold of wiggle
             ret nz
     
     ; Switch direction of wiggle
@@ -10997,7 +10998,7 @@ ret
     .else:
         dec [hl]
         ld a, [hl]
-        cp $a5 ; Lower threshold of wiggle
+        cp SPRITE_EGG_1 ; $A5 ; Lower threshold of wiggle
             ret nz
         jr .switchDirection
 ; end proc
