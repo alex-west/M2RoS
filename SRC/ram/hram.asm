@@ -124,29 +124,33 @@ hCameraYPixel::  ds 1 ;$FFC8: Camera Y position
 hCameraYScreen:: ds 1 ;$FFC9: Camera Y position
 hCameraXPixel::  ds 1 ;$FFCA: Camera X position
 hCameraXScreen:: ds 1 ;$FFCB: Camera X position
-;$FFCC: Row to update    (in pixels)
-;$FFCD  (in screens)
-;$FFCE: Column to update (in pixels)
-;$FFCF  (in screens)
-;
+
+hMapSource: ; Coordinates of the source column/row to render to VRAM
+.yPixel:  ds 1 ;$FFCC: Row to update    (in pixels)
+.yScreen: ds 1 ;$FFCD  (in screens)
+.xPixel:  ds 1 ;$FFCE: Column to update (in pixels)
+.xScreen: ds 1 ;$FFCF  (in screens)
+
+; $FFD0-$FFDF: Unused ??
+
 ;$FFE0..F5: Working enemy data (see $C600..C7FF)
 section "HRAM part enemy local", HRAM[$FFE0]
 ;{
 hEnemyWorkingHram:
-
-hEnemyStatus: ds 1 ; $FFE0 - Active, offscreen, invisible, empty
-hEnemyYPos: ds 1 ; $FFE1: Enemy Y position (camera space).
-hEnemyXPos: ds 1 ; $FFE2: Enemy X position (camera space).
+hEnemy:
+.status: ds 1 ; $FFE0 - Active, offscreen, invisible, empty
+.yPos: ds 1 ; $FFE1: Enemy Y position (camera space).
+.xPos: ds 1 ; $FFE2: Enemy X position (camera space).
 ;    {
 ;        Sets $C40E = 0 if less than [Samus' X position on screen] else 2 by $2:45E4.
 ;        $C386 = [Samus' X position on screen] >= $FFE2.
 ;        If [$FFE8] = 0, 3 is added, else 3 is subtracted in $2:54D2.
 ;        Oscillated between 36h and 37h every other frame in $2:5612.
 ;    }
-hEnemySpriteType: ds 1 ; $FFE3: Sprite ID when first loaded, and sprite graphic
+.spriteType: ds 1 ; $FFE3: Sprite ID when first loaded, and sprite graphic
 ; The following three variables are XOR'd together to get the sprite attributes for display
-hEnemyBaseAttr: ds 1 ; $FFE4: Enemy base sprite attribute flags (first byte header). Never modified during runtime.
-hEnemyAttr:     ds 1 ; $FFE5: Enemy sprite attribute flags. Modified during runtime.
+.baseAttr: ds 1 ; $FFE4: Enemy base sprite attribute flags (first byte header). Never modified during runtime.
+.attr:     ds 1 ; $FFE5: Enemy sprite attribute flags. Modified during runtime.
      ; (Set to 0 if [$FFE8] != 0 else 20h by $2:45FA. XOR'd with 20 in $2:5513)
 ;    {
 ;        10h: Palette
@@ -154,32 +158,31 @@ hEnemyAttr:     ds 1 ; $FFE5: Enemy sprite attribute flags. Modified during runt
 ;        40h: Y flip
 ;        80h: BG priority
 ;    }
-hEnemyStunCounter: ds 1 ; $FFE6: Stun counter
+.stunCounter: ds 1 ; $FFE6: Stun counter
 ; Values:
 ;  $00: Nothing
 ;  $10: Palette changed, but value does not increment (used for visual component of ice beam)
 ;  $11-$13: Stunned (increments each frame until $13, then it stops)
 
-; General purpose enemy variables?
-;    $FFE7: ; Usually a counter or a state ; Incremented in $2:514A and $2:55AC
-;    $FFE8: ; Logical sprite flip direction? Sets $FFE5 to 0 if non-zero else 20h by $2:45FA. Adds 3 to $FFE2 if 0 else subtracts 3 in $2:54D2. XOR'd with 1 in $2:5513
+.generalVar: ds 1 ; $FFE7: General enemy variable. Usually a counter or a state
+.directionFlags: ds 1 ; $FFE8: ; Directional flags. Logical sprite flip direction? Sets $FFE5 to 0 if non-zero else 20h by $2:45FA. Adds 3 to $FFE2 if 0 else subtracts 3 in $2:54D2. XOR'd with 1 in $2:5513
 ;     - Upper nybble encodes directional vulnerability flags
 ;         %0001xxxx - resist rightward shots
 ;         %0010xxxx - left
 ;         %0100xxxx - up
 ;         %1000xxxx - down
-;    $FFE9: ; Generally a behavior counter
-def hEnemyState = $FFEA ; Generally an enemy state
-def hEnemyIceCounter = $FFEB ; Frozen enemy counter
-def hEnemyHealth = $FFEC ; Enemy health
-def hEnemyDropType = $FFED ; Drop type: Checked for 0/1/2 in $2:4239
+.counter: ds 1 ;    $FFE9: General enemy variable. Usually behavior counter
+.state: ds 1 ; $FFEA: General enemy variable. Usually an enemy state
+.iceCounter: ds 1 ; $FFEB: Frozen enemy counter
+.health: ds 1 ; $FFEC: Enemy health
+.dropType: ds 1 ; $FFED: Drop type: Checked for 0/1/2 in $2:4239
 ;    {
 ;        0: None
 ;        1: Small health
 ;        2: Large health
 ;        4 (or otherwise): missile drop
 ;    }
-def hEnemyExplosionFlag = $FFEE ; Enemy explosion and future-drop status
+.explosionFlag: ds 1 ; $FFEE: Enemy explosion and future-drop status
 ; Values
 ; - Non-zero - Explosion happening
 ; - $1x - Explosion type A
@@ -189,13 +192,13 @@ def hEnemyExplosionFlag = $FFEE ; Enemy explosion and future-drop status
 ; - $x2 - Large health
 ; - $x4 - Missile drop
 ; $FFE9 is used as an explosion timer when exploding.
-def hEnemySpawnFlag = $FFEF ; Enemy spawn flag
-def hEnemySpawnNumber = $FFF0 ; The enemy's number on the map (for respawning)
-def hEnemyAI_low  = $FFF1 ; Enemy AI pointer (low byte)
-def hEnemyAI_high = $FFF2 ; Enemy AI pointer (high byte)
-def hEnemyYScreen = $FFF3 ; Enemy Y position (in screens in camera-space)
-def hEnemyXScreen = $FFF4 ; Enemy X position (in screens in camera-space)
-def hEnemyMaxHealth = $FFF5 ; Initial health value
+.spawnFlag: ds 1 ; $FFEF: Enemy spawn flag
+.spawnNumber: ds 1 ; $FFF0: The enemy's number on the map (for respawning)
+.pAI_low: ds 1 ; $FFF1: Enemy AI pointer (low byte)
+.pAI_high: ds 1 ; $FFF2: Enemy AI pointer (high byte)
+.yScreen: ds 1 ; $FFF3: Enemy Y position (in screens in camera-space)
+.xScreen: ds 1 ; $FFF4: Enemy X position (in screens in camera-space)
+.maxHealth: ds 1 ; $FFF5: Initial health value
 ; Determines enemy drops (used when setting the explosion flag):
 ; - If $FD or $FE - No drops
 ; - If value is even, drop missile
@@ -203,7 +206,7 @@ def hEnemyMaxHealth = $FFF5 ; Initial health value
 ; - Else, drop small health
 ; - Note: Drops have a 50% chance of happening or being nothing
 ;}
-;
+; $FFF6-$FFFB - Unused?
 def hEnemyWramAddrLow  = $FFFC ; WRAM address of current enemy
 def hEnemyWramAddrHigh = $FFFD ;  '' high byte
 

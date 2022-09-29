@@ -3,11 +3,28 @@
 ; Hardware related constants (not covered by hardware.inc)
 rMBC_BANK_REG = $2100 ; Dunno why it just doesn't use $2000
 
+
+METASPRITE_END = $FF
+
 ; Map related memory locations (fixed in each bank)
 map_screenPointers = $4000 ; $200 bytes
 map_scrollData     = $4200 ; $100 bytes
 map_doorIndexes    = $4300 ; $200 bytes - Also contains sprite priority bits per screen
 ; Note: Map data starts at $4500
+
+; Scrolling Directions (bitfields and bit numbers)
+scrollDir_right = $10
+scrollDir_left  = $20
+scrollDir_up    = $40
+scrollDir_down  = $80
+scrollDirBit_right = 4
+scrollDirBit_left  = 5
+scrollDirBit_up    = 6
+scrollDirBit_down  = 7
+
+; Samus physics constants
+samus_jumpArrayBaseOffset = $40
+samus_unmorphJumpTime = $10
 
 ; Samus' Gear constants
 ;  Bitfields

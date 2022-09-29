@@ -440,7 +440,7 @@ drawSamusSprite: ; 01:4B62
         ; No sprite flipping logic here
         ; Load y coordinate
         ld a, [de]
-        cp $ff
+        cp METASPRITE_END
             jr z, .exit
         
         add b
@@ -1284,7 +1284,7 @@ handleProjectiles: ; 01:500D
         call .spazer_splitVertically
         ldh a, [$9a]
         add $04
-        ld hl, $d035
+        ld hl, camera_speedRight
         add [hl]
         ldh [$9a], a
         jr .spazerEnd
@@ -1296,7 +1296,7 @@ handleProjectiles: ; 01:500D
         call .spazer_splitVertically
         ldh a, [$9a]
         sub $04
-        ld hl, $d036
+        ld hl, camera_speedLeft
         sub [hl]
         ldh [$9a], a
         jr .spazerEnd
@@ -1308,7 +1308,7 @@ handleProjectiles: ; 01:500D
         call .spazer_splitHorizontally
         ldh a, [$99]
         sub $04
-        ld hl, $d037
+        ld hl, camera_speedUp
         sub [hl]
         ldh [$99], a
         jr .spazerEnd
@@ -1319,7 +1319,7 @@ handleProjectiles: ; 01:500D
         call .spazer_splitHorizontally
         ldh a, [$99]
         add $04
-        ld hl, $d038
+        ld hl, camera_speedDown
         add [hl]
         ldh [$99], a
         
@@ -1413,7 +1413,7 @@ jp .commonBranch
             ; Move right
             ldh a, [$9a]
             add $02
-            ld hl, $d035 ; Adjust for camera velocity
+            ld hl, camera_speedRight ; Adjust for camera velocity
             add [hl]
             ldh [$9a], a
             jr .endIf_F
@@ -1421,7 +1421,7 @@ jp .commonBranch
             ; Move left
             ldh a, [$9a]
             sub $02
-            ld hl, $d036 ; Adjust for camera velocity
+            ld hl, camera_speedLeft ; Adjust for camera velocity
             sub [hl]
             ldh [$9a], a
             jr .endIf_F
@@ -1443,7 +1443,7 @@ jp .commonBranch
             ; Move down
             ldh a, [$99]
             add $02
-            ld hl, $d038 ; Adjust for camera velocity
+            ld hl, camera_speedDown ; Adjust for camera velocity
             add [hl]
             ldh [$99], a
             jr .endIf_F
@@ -1451,7 +1451,7 @@ jp .commonBranch
             ; Move up
             ldh a, [$99]
             sub $02
-            ld hl, $d037 ; Adjust for camera velocity
+            ld hl, camera_speedUp ; Adjust for camera velocity
             sub [hl]
             ldh [$99], a
     .endIf_F:
@@ -1541,7 +1541,7 @@ jp .commonBranch
         ; Go right
         ldh a, [$9a]
         add b
-        ld hl, $d035
+        ld hl, camera_speedRight
         add [hl]
         ldh [$9a], a
         jp .commonBranch
@@ -1552,7 +1552,7 @@ jp .commonBranch
         ; Go left
         ldh a, [$9a]
         sub b
-        ld hl, $d036
+        ld hl, camera_speedLeft
         sub [hl]
         ldh [$9a], a
         jp .commonBranch
@@ -1563,7 +1563,7 @@ jp .commonBranch
         ; Go up
         ldh a, [$99]
         sub b
-        ld hl, $d037
+        ld hl, camera_speedUp
         sub [hl]
         ldh [$99], a
         jr .commonBranch
@@ -1573,7 +1573,7 @@ jp .commonBranch
         ; Go down
         ldh a, [$99]
         add b
-        ld hl, $d038
+        ld hl, camera_speedDown
         add [hl]
         ldh [$99], a
         jr .commonBranch
@@ -1587,7 +1587,7 @@ jp .commonBranch
         ; Move right
         ldh a, [$9a]
         add $04
-        ld hl, $d035 ; Adjust for camera
+        ld hl, camera_speedRight ; Adjust for camera
         add [hl]
         ldh [$9a], a
         ldh a, [$b9]
@@ -1604,7 +1604,7 @@ jp .commonBranch
         ; Move left
         ldh a, [$9a]
         sub $04
-        ld hl, $d036
+        ld hl, camera_speedLeft
         sub [hl]
         ldh [$9a], a
         ldh a, [$b9]
@@ -1621,7 +1621,7 @@ jp .commonBranch
         ; Move up
         ldh a, [$99]
         sub $04
-        ld hl, $d037
+        ld hl, camera_speedUp
         sub [hl]
         ldh [$99], a
         ldh a, [$b9]
@@ -1637,7 +1637,7 @@ jp .commonBranch
         ; Move down
         ldh a, [$99]
         add $04
-        ld hl, $d038
+        ld hl, camera_speedDown
         add [hl]
         ldh [$99], a
         ldh a, [$b9]
@@ -2907,7 +2907,7 @@ drawEnemySprite: ; 01:5A3F
 
     .spriteLoop:
         ld a, [de]
-        cp $ff
+        cp METASPRITE_END
             jr z, .exit
     
         ld a, [$c431]
@@ -2977,7 +2977,9 @@ Call_001_5a9a:
 ret
 
 ; 01:5AB1
-include "data/sprites_enemies.asm"
+enemySpritePointerTable:
+    include "data/enemy_spritePointers.asm"
+    include "data/sprites_enemies.asm"
 
 ;------------------------------------------------------------------------------
 ; Alpha Metroid - get angle based on relative positions
@@ -2987,7 +2989,7 @@ alpha_getAngle: ; 01:70BA - called from bank 2
     ret
 
 metroid_getDistanceAndDirection: ; 01:70C1
-    ld hl, hEnemyYPos
+    ld hl, hEnemy.yPos
     ld a, [hl]
     add $10
     ld b, a
@@ -3069,7 +3071,7 @@ alpha_getAngleFromTable: ; 01:70FE
     ld hl, alpha_angleTable
     add hl, de
     ld a, [hl]
-    ld [hEnemyState], a
+    ld [hEnemy.state], a
 ret
 
     .pickHorizontalDirection:
@@ -3168,7 +3170,7 @@ ret
 ; Load a (Y,X) sign-magnitude velocity pair to BC
 alpha_getSpeedVector: ; 01:71CB
     ld hl, .jumpTable
-    ld a, [hEnemyState] ; $EA - Metroid angle
+    ld a, [hEnemy.state] ; $EA - Metroid angle
     add a
     ld e, a
     ld d, $00
@@ -3281,7 +3283,7 @@ gamma_getAngleFromTable: ; 01:7242
     ld hl, gamma_angleTable
     add hl, de
     ld a, [hl]
-    ld [hEnemyState], a
+    ld [hEnemy.state], a
 ret
 
     .pickHorizontalDirection:
@@ -3382,7 +3384,7 @@ ret
 ; Load a (Y,X) sign-magnitude velocity pair to BC
 gamma_getSpeedVector: ; 01:7319
     ld hl, .jumpTable
-    ld a, [hEnemyState]
+    ld a, [hEnemy.state]
     add a
     ld e, a
     ld d, $00
@@ -3555,7 +3557,7 @@ drawNonGameSprite: ;{ 01:73F7
     .spriteLoop:
         ; Load y coordinate
         ld a, [de]
-        cp $ff
+        cp METASPRITE_END
             jr z, .exit
         ; Handle y flipping
         ldh a, [hSpriteAttr]

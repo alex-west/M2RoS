@@ -41,6 +41,7 @@ def gameOver_LCDC_copy = $C219 ; LCD control mirror. Only set by death routine. 
 ;    b: Enable BG. If CGB, then 0 additionally disables window regardless of w
 ;}
 ;
+def enSprite_blobThrower = $C300
 def spriteC300 = $C300 ;$C300..3D: Set to [$2:4FFE..503A] in $2:4DB1
 ;{
 ;    $C302/06: Set to DFh in $2:4EA1 if [$C382] = 0, set to E2h if [$C382] = 1, set to E3h if [$C382] = 2
@@ -776,7 +777,7 @@ def samus_animationTimer = $D022
 ;  Bits 4 and 5 select the animation frame. Clamped to be below $30. Typically incremented by 3 when running.
 ; Also used as a cooldown timer for certain actions (holding down to morph, up to stand, etc.)
 
-;$D023: Direction of screen movement
+def camera_scrollDirection = $D023 ; Direction of screen movement
 ;{
 ;    10: Right
 ;    20: Left
@@ -786,8 +787,10 @@ def samus_animationTimer = $D022
 def samus_fallArcCounter = $D024 ; Index into falling velocity arrays. Max value is $16
 ;
 def samus_jumpArcCounter = $D026 ; Index into jump velocity arrays. Values below $40 use a linear velocity case instead. Subtract by $40 before indexing an array with this.
-;$D027: Samus' previous X position
-;$D029: Samus' previous Y position
+prevSamusXPixel  = $D027 ; $D027: Samus' previous X position
+prevSamusXScreen = $D028
+prevSamusYPixel  = $D029 ; $D029: Samus' previous Y position
+prevSamusYScreen = $D02A
 def samusFacingDirection = $D02B ; Direction Samus is facing. Saved to SRAM, mirror of $D81E?
 ;{
 ;    0: Left
@@ -799,10 +802,11 @@ def samus_turnAnimTimer = $D02C ; Timer for turnaround animation (facing the scr
 def projectileIndex = $D032 ; Index of working projectile
 ;$D033: Cleared by morph
 ;
-;$D035: Screen right velocity
-;$D036: Screen left velocity
-;$D037: Screen up velocity
-;$D038: Screen down velocity
+def camera_speedRight = $D035 ; Screen right velocity
+def camera_speedLeft  = $D036 ; Screen left velocity
+def camera_speedUp    = $D037 ; Screen up velocity
+def camera_speedDown  = $D038 ; Screen down velocity
+
 def title_unusedD039 = $D039 ; Set to 0 by load title screen, otherwise unused
 ;
 def samus_onscreenYPos = $D03B ; Samus' Y position on screen
@@ -860,9 +864,9 @@ def samusItems = $D045 ; Samus' equipment
 def debugItemIndex = $D046 ; Debug screen selector index
 def vramTransferFlag = $D047 ; VRAM tiles update flag (see $FFB1..B6, $2BA3, $27BA)
 def waterContactFlag = $D048 ; Flag to tell if Samus is touching water
-;$D049: Timer for something. Decremented every frame. Written to in several places, but only meaningfully read in the falling poseHandler
+def samus_unmorphJumpTimer = $D049 ; Timer for allowing an unmorph jump. Decremented every frame. Written to in several places.
 ;
-;$D04C: Cleared by handle loading blocks due to scrolling, set to FFh in a few places. Never read
+def mapUpdate_unusedVar = $D04C ; Cleared by prepMapUpdate, set to FFh in prepMapUpdate or during screen transition when rendering a row/column of blocks. Never read
 def samusActiveWeapon = $D04D ; Weapon equipped.  See also $D055
 ;{
 ;    0: Normal
@@ -899,7 +903,7 @@ samus_screenSpritePriority = $D057 ; Room sprite priority
 def currentLevelBank = $D058 ; Bank for current room
 def deathAnimTimer = $D059 ; Death sequence timer
 ;$D05A: Base address of pixels to clear in Samus' VRAM tiles
-;$D05C: $32AB acknowledgement flag. $32AB acknowledges this when it executes, cleared every in-game frame. $32AB is called by in-game and item pickup sequence.
+;$D05C: $32AB acknowledgement flag. $32AB acknowledges this when it executes, cleared every in-game frame. $32AB is called by in-game and item pickup sequence. Collision related?
 ;$D05D..60: Values for $C466..69 in $2:438F. Guess: generic collision information
 ;{
 ;    $D05D: Projectile type - Set to 9 if enemy bombed. Set to [$D08D] if shot. Set to FFh in $03B5
@@ -914,7 +918,7 @@ def deathFlag = $D063 ; Dying flag
 ;    1: Dying
 ;    FFh: Dead
 ;}
-;$D064: Used in $239C as new OAM stack pointer, set to OAM stack pointer in $04DF (in-game)
+samusTopOamOffset = $D064 ; Last OAM offset used by Samus, HUD, etc. Used in by door transition routine ($239C) to erase enemies
 ;$D065: VRAM tiles update source bank (see $FFB1..B6, $2BA3)
 countdownTimerLow = $D066;  ; Generic countdown timer used for
 countdownTimerHigh = $D067; ;  various events

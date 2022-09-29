@@ -658,10 +658,12 @@ enemyDataPointers:
 
 SECTION "ROM Bank $003 Part 2", ROMX[$6300], BANK[$3]
 enemyHeaderPointers: ; 03:6300 - Enemy headers
+    include "data/enemy_headerPointers.asm"
     include "data/enemyHeaders.asm"
 enemyDamageTable: ; 03:673A - Enemy damage values
-    include "data/enemyDamage.asm"
+    include "data/enemy_damageValues.asm"
 enemyHitboxPointers: ; 03:6839 - Enemy hitboxes
+    include "data/enemy_hitboxPointers.asm"
     include "data/enemyHitboxes.asm"
 
 ; Enemy AI stuff
@@ -669,7 +671,7 @@ enemyHitboxPointers: ; 03:6839 - Enemy hitboxes
 ; Deletes the enemy currently loaded in HRAM
 enemy_deleteSelf: ;{ 03:6AE7
     ld hl, hEnemyWorkingHram ; $FFE0
-    ; Save hEnemyStatus to C
+    ; Save hEnemy.status to C
     ld c, [hl]
     ; Clear first 15 bytes of enemy data in HRAM
     ld a, $ff
@@ -679,11 +681,11 @@ enemy_deleteSelf: ;{ 03:6AE7
         dec b
     jr nz, .clearLoop
 
-    ; Read hEnemySpawnFlag to see if enemy has a parent
+    ; Read hEnemy.spawnFlag to see if enemy has a parent
     ld a, [hl]
     and $0f
     jr nz, .endIf_A
-        ; Get address of parent object from link in hEnemySpawnFlag
+        ; Get address of parent object from link in hEnemy.spawnFlag
         ld a, [hl]
         ld h, HIGH(enemyDataSlots)
         bit 4, a
@@ -721,7 +723,7 @@ enemy_deleteSelf: ;{ 03:6AE7
     .endIf_A:
 
     ; Clear enemy AI pointer, and screen coordinates
-    ld hl, hEnemyAI_low
+    ld hl, hEnemy.pAI_low
     ld a, $ff
     ld [hl+], a
     ld [hl+], a
@@ -777,10 +779,10 @@ enemy_seekSamus: ;{ 03:6B44
     ld a, [samus_onscreenYPos]
     add $10
     ld [hl-], a
-    ldh a, [hEnemyXPos]
+    ldh a, [hEnemy.xPos]
     add $10
     ld [hl-], a
-    ldh a, [hEnemyYPos]
+    ldh a, [hEnemy.yPos]
     add $10
     ld [hl], a
     
@@ -790,19 +792,19 @@ enemy_seekSamus: ;{ 03:6B44
     jr z, .endIf_A
         jr c, .else_B
             ; Samus below
-            ldh a, [$e9]
+            ldh a, [hEnemy.counter]
             cp d ; Clamp vector Y to max value
             jr z, .endIf_A
                 add b
-                ldh [$e9], a
+                ldh [hEnemy.counter], a
                 jr .endIf_A
         .else_B:
             ; Samus above
-            ldh a, [$e9]
+            ldh a, [hEnemy.counter]
             cp e ; Clamp vector Y to min value
             jr z, .endIf_A
                 sub b
-                ldh [$e9], a
+                ldh [hEnemy.counter], a
     .endIf_A:
 
     ; Compare X positions to modify X component of vector
@@ -812,39 +814,39 @@ enemy_seekSamus: ;{ 03:6B44
     jr z, .endIf_C
         jr c, .else_D
             ; Samus right
-            ldh a, [hEnemyState]
+            ldh a, [hEnemy.state]
             cp d ; Clamp vector x to max value
             jr z, .endIf_C
                 add b
-                ldh [hEnemyState], a
+                ldh [hEnemy.state], a
                 jr .endIf_C
         .else_D:
             ; Samus left
-            ldh a, [hEnemyState]
+            ldh a, [hEnemy.state]
             cp e ; Clamp vector x to min value
             jr z, .endIf_C
                 sub b
-                ldh [hEnemyState], a
+                ldh [hEnemy.state], a
     .endIf_C:
 
     ; Adjust y position
-    ldh a, [$e9]
+    ldh a, [hEnemy.counter]
     ld e, a
     ld d, $00
     ld hl, .speedTable
     add hl, de
     ld a, [hl]
-    ld hl, hEnemyYPos
+    ld hl, hEnemy.yPos
     add [hl]
     ld [hl], a
     ; Adjust x position
-    ldh a, [hEnemyState]
+    ldh a, [hEnemy.state]
     ld e, a
     ld d, $00
     ld hl, .speedTable
     add hl, de
     ld a, [hl]
-    ld hl, hEnemyXPos
+    ld hl, hEnemy.xPos
     add [hl]
     ld [hl], a
 ret
@@ -891,7 +893,7 @@ scrollEnemies: ;{ 03:6BD2
 
     push hl
         call scrollEnemies_loadToHram ; Load enemy positions to HRAM
-        ld hl, hEnemyYPos
+        ld hl, hEnemy.yPos
         ; Check if we moved up or down
         bit 7, b
         jr z, .else_A
@@ -903,12 +905,12 @@ scrollEnemies: ;{ 03:6BD2
             ld [hl+], a
             ; If value carries and the enemy is offscreen, move it down a screen
             jr nc, .endIf_A
-                ldh a, [hEnemyStatus]
+                ldh a, [hEnemy.status]
                 cp $01
                 jr nz, .endIf_A
-                    ldh a, [hEnemyYScreen]
+                    ldh a, [hEnemy.yScreen]
                     inc a
-                    ldh [hEnemyYScreen], a
+                    ldh [hEnemy.yScreen], a
                     jr .endIf_A
         .else_A:
             ; We moved down, so move the enemy up in camera-space
@@ -917,12 +919,12 @@ scrollEnemies: ;{ 03:6BD2
             ld [hl+], a
             ; If value carries and the enemy is offscreen, move it up a screen
             jr nc, .endIf_A
-                ldh a, [hEnemyStatus]
+                ldh a, [hEnemy.status]
                 cp $01
                 jr nz, .endIf_A
-                    ldh a, [hEnemyYScreen]
+                    ldh a, [hEnemy.yScreen]
                     dec a
-                    ldh [hEnemyYScreen], a
+                    ldh [hEnemy.yScreen], a
         .endIf_A:
     
         ; Check if we moved left or right
@@ -936,10 +938,10 @@ scrollEnemies: ;{ 03:6BD2
             ld [hl], a
             ; If value carries and the enemy is offscreen, move it right a screen
             jr nc, .endIf_B
-                ldh a, [hEnemyStatus]
+                ldh a, [hEnemy.status]
                 cp $01
                 jr nz, .endIf_B
-                    ld hl, hEnemyXScreen
+                    ld hl, hEnemy.xScreen
                     inc [hl]
                     jr .endIf_B
         .else_B:
@@ -949,10 +951,10 @@ scrollEnemies: ;{ 03:6BD2
             ld [hl], a
             ; If value carries and the enemy is offscreen, move it left a screen
             jr nc, .endIf_B
-                ldh a, [hEnemyStatus]
+                ldh a, [hEnemy.status]
                 cp $01
                 jr nz, .endIf_B
-                    ld hl, hEnemyXScreen
+                    ld hl, hEnemy.xScreen
                     dec [hl]
         .endIf_B:
     
@@ -974,19 +976,19 @@ scrollEnemies_loadToHram: ;{ 03:6C58
     ld [enemy_pWramHigh], a
     ; Load status and pixel position
     ld a, [hl+]
-    ldh [hEnemyStatus], a
+    ldh [hEnemy.status], a
     ld a, [hl+]
-    ldh [hEnemyYPos], a
+    ldh [hEnemy.yPos], a
     ld a, [hl]
-    ldh [hEnemyXPos], a
+    ldh [hEnemy.xPos], a
     ; Load screen position
     ld a, l
     add $0d
     ld l, a
     ld a, [hl+]
-    ldh [hEnemyYScreen], a
+    ldh [hEnemy.yScreen], a
     ld a, [hl]
-    ldh [hEnemyXScreen], a
+    ldh [hEnemy.xScreen], a
 ret ;}
 
 ; Helper function as well
@@ -999,17 +1001,17 @@ scrollEnemies_saveToWram: ;{ 03:6C74
     ; Don't bother saving status
     inc l
     ; Save pixel position
-    ldh a, [hEnemyYPos]
+    ldh a, [hEnemy.yPos]
     ld [hl+], a
-    ldh a, [hEnemyXPos]
+    ldh a, [hEnemy.xPos]
     ld [hl], a
     ; Save screen position
     ld a, l
     add $0d
     ld l, a
-    ldh a, [hEnemyYScreen]
+    ldh a, [hEnemy.yScreen]
     ld [hl+], a
-    ldh a, [hEnemyXScreen]
+    ldh a, [hEnemy.xScreen]
     ld [hl], a
 ret ;}
 
@@ -1901,7 +1903,7 @@ jr_003_7291:
     ld de, $0004
     add hl, de
     ld [hl], $ff
-    ld de, $fff4 ; Unsure if this is hEnemyXScreen
+    ld de, $fff4 ; Don't think this is hEnemy.xScreen
     add hl, de
     ld a, $00
     cp l

@@ -44,13 +44,13 @@ creditsSpritePointerTable:
 ; Metasprite Data:
 sprite7496:
     db   0, 54, $FB, $80
-    db $FF
+    db METASPRITE_END
 sprite749B:
     db   0, 54, $FC, $80
-    db $FF
+    db METASPRITE_END
 sprite74A0:
     db   0, 54, $FD, $80
-    db $FF
+    db METASPRITE_END
 sprite74A5:
     db -24,-20, $00, $80
     db -24,-12, $01, $80
@@ -68,7 +68,7 @@ sprite74A5:
     db  -8,  4, $0D, $80
     db  -8, 12, $0E, $80
     db   0, 12, $12, $80
-    db $FF
+    db METASPRITE_END
 sprite74E6:
     db -24,-20, $1A, $80
     db -24,-12, $1B, $80
@@ -90,7 +90,7 @@ sprite74E6:
     db   0, -4, $2B, $80
     db   0,  4, $2C, $80
     db   0, 12, $2D, $80
-    db $FF
+    db METASPRITE_END
 sprite7537:
     db -24,-20, $35, $80
     db -24,-12, $36, $80
@@ -108,7 +108,7 @@ sprite7537:
     db  -8,  4, $42, $80
     db  -8, 12, $43, $80
     db   0,-20, $44, $80
-    db $FF
+    db METASPRITE_END
 sprite7578:
     db -24,-20, $53, $80
     db -24,-12, $54, $80
@@ -146,36 +146,36 @@ sprite7578:
     db  40,-12, $72, $80
     db  40,  3, $72, $A0
     db  40, 11, $71, $A0
-    db $FF
+    db METASPRITE_END
 sprite7609:
     db   0,  0, $EF, $80
-    db $FF
+    db METASPRITE_END
 sprite_titleStart:
     db   0,  0, $F1, $00
     db   0,  8, $F2, $00
     db   0, 16, $F3, $00
     db   0, 24, $F4, $00
     db   0, 32, $F5, $00
-    db $FF
+    db METASPRITE_END
 sprite_titleClear:
     db   0,  0, $F6, $00
     db   0,  8, $F7, $00
     db   0, 16, $F8, $00
     db   0, 24, $F9, $00
     db   0, 32, $FA, $00
-    db $FF
+    db METASPRITE_END
 sprite7638:
     db   0,  0, $ED, $00
-    db $FF
+    db METASPRITE_END
 sprite763D:
     db   0,  0, $EE, $00
-    db $FF
+    db METASPRITE_END
 sprite7642:
     db   0,  0, $EF, $00
-    db $FF
+    db METASPRITE_END
 sprite7647:
     db   0,  0, $F0, $00
-    db $FF
+    db METASPRITE_END
 sprite764C:
     db   0,-12, $0F, $80
     db   0, -4, $10, $80
@@ -187,7 +187,7 @@ sprite764C:
     db  24,  0, $17, $80
     db  32,  0, $18, $80
     db  40, -1, $19, $80
-    db $FF
+    db METASPRITE_END
 sprite7675:
     db   8,-12, $2E, $80
     db   8, -4, $2F, $80
@@ -196,7 +196,7 @@ sprite7675:
     db  16,  0, $32, $80
     db  24, -1, $33, $80
     db  32, -1, $34, $80
-    db $FF
+    db METASPRITE_END
 sprite7692:
     db -16,-16, $45, $80
     db -16, -8, $46, $80
@@ -214,7 +214,7 @@ sprite7692:
     db   8, -8, $4C, $80
     db   8,  0, $4C, $A0
     db   8,  8, $4B, $A0
-    db $FF
+    db METASPRITE_END
 sprite76D3:
     db -16,-16, $4D, $80
     db -16, -8, $4E, $80
@@ -232,7 +232,7 @@ sprite76D3:
     db   8, -8, $4C, $80
     db   8,  0, $4C, $A0
     db   8,  8, $4B, $A0
-    db $FF
+    db METASPRITE_END
 sprite7714:
     db -16,-16, $4B, $C0
     db -16, -8, $4C, $C0
@@ -250,7 +250,7 @@ sprite7714:
     db   8, -8, $46, $C0
     db   8,  0, $46, $E0
     db   8,  8, $45, $E0
-    db $FF
+    db METASPRITE_END
 sprite7755:
     db -16,-16, $4B, $C0
     db -16, -8, $4C, $C0
@@ -268,13 +268,13 @@ sprite7755:
     db   8, -8, $4C, $80
     db   8,  0, $4C, $A0
     db   8,  8, $4B, $A0
-    db $FF
+    db METASPRITE_END
 sprite7796:
     db -32, -8, $AA, $80
     db -32,  0, $AB, $80
     db -24, -8, $AC, $80
     db -24,  0, $AD, $80
-    db $FF
+    db METASPRITE_END
 sprite77A7:
     db -16,-16, $AE, $80
     db -16, -8, $AF, $80
@@ -282,7 +282,7 @@ sprite77A7:
     db  -8, -8, $B3, $80
     db   0,-16, $B6, $80
     db   8,-16, $BA, $80
-    db $FF
+    db METASPRITE_END
 sprite77C0:
     db -16,  0, $B0, $80
     db -16,  8, $B1, $80
@@ -303,7 +303,7 @@ sprite77C0:
     db  40, -8, $C4, $80
     db  40,  0, $C5, $80
     db  40,  8, $C6, $80
-    db $FF
+    db METASPRITE_END
 sprite780D:
     db   0, -8, $90, $80
     db   0,  0, $91, $80
@@ -331,7 +331,7 @@ sprite780D:
     db  40, -8, $A7, $80
     db  40,  0, $A8, $80
     db  40,  8, $A9, $80
-    db $FF
+    db METASPRITE_END
 sprite7876:
     db   0,-20, $53, $80
     db   0,-12, $54, $80
@@ -366,14 +366,14 @@ sprite7876:
     db  40,-12, $8C, $80
     db  40, -4, $8D, $80
     db  40,  4, $8E, $80
-    db $FF
+    db METASPRITE_END
 sprite78FB:
     db -16,-24, $C7, $80
     db -16,-16, $C8, $80
     db -16, -8, $C9, $80
     db  -8,-16, $CA, $80
     db  -8, -8, $CB, $80
-    db $FF
+    db METASPRITE_END
 sprite7910:
     db -32,-16, $CC, $80
     db -32, -8, $CD, $80
@@ -384,19 +384,19 @@ sprite7910:
     db -16,-16, $D0, $80
     db -16, -8, $D1, $80
     db  -8, -8, $D2, $80
-    db $FF
+    db METASPRITE_END
 sprite7935:
     db -32, -8, $E3, $80
     db -32,  0, $E4, $80
     db -24, -8, $E5, $80
     db -24,  0, $E6, $80
-    db $FF
+    db METASPRITE_END
 sprite7946:
     db -32, -8, $E7, $80
     db -32,  0, $E8, $80
     db -24, -8, $E9, $80
     db -24,  0, $EA, $80
-    db $FF
+    db METASPRITE_END
 sprite7957:
     db -32,-16, $D4, $80
     db -32, -8, $D5, $80
@@ -404,33 +404,33 @@ sprite7957:
     db -24,-16, $D7, $80
     db -24, -8, $D8, $80
     db -24,  0, $D9, $80
-    db $FF
+    db METASPRITE_END
 sprite7970:
     db -32, -8, $DA, $80
     db -32,  0, $DB, $80
     db -24,-16, $DC, $80
     db -24, -8, $DD, $80
     db -24,  0, $DE, $80
-    db $FF
+    db METASPRITE_END
 sprite7985:
     db -32, -8, $DF, $80
     db -32,  0, $E0, $80
     db -24, -8, $E1, $80
     db -24,  0, $E2, $80
-    db $FF
+    db METASPRITE_END
 sprite7996:
     db -32, -8, $DA, $80
     db -32,  0, $DB, $80
     db -24,-16, $EB, $80
     db -24, -8, $EC, $80
     db -24,  0, $ED, $80
-    db $FF
+    db METASPRITE_END
 sprite79AB:
     db  -4, -4, $EE, $80
-    db $FF
+    db METASPRITE_END
 sprite79B0:
     db  -4, -4, $EF, $80
-    db $FF
+    db METASPRITE_END
 sprite79B5:
     db  -8,-16, $F0, $80
     db  -8, -8, $F1, $80
@@ -439,7 +439,7 @@ sprite79B5:
     db   0, -8, $F7, $80
     db   0,  0, $F8, $80
     db   0,  8, $F9, $80
-    db $FF
+    db METASPRITE_END
 sprite79D2:
     db  -8,-16, $F3, $80
     db  -8, -8, $F4, $80
@@ -448,4 +448,4 @@ sprite79D2:
     db   0, -8, $FB, $80
     db   0,  0, $FC, $80
     db   0,  8, $FD, $80
-    db $FF
+    db METASPRITE_END

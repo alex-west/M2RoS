@@ -486,17 +486,21 @@ TimerOverflowInterruptStub: ; 00:039B
     reti
 
 disableLCD: ;{ 00:039C
+    ; Save interrupt status
     ldh a, [rIE]
     ldh [$99], a
     res 0, a
     ldh [rIE], a
+    ; Wait for VBlank
     .waitLoop:
         ldh a, [rLY]
         cp $91
     jr nz, .waitLoop
+    ; Disable LCD
     ldh a, [rLCDC]
     and $7f
     ldh [rLCDC], a
+    ; Restore interrupt status
     ldh a, [$99]
     ldh [rIE], a
 ret
@@ -628,7 +632,7 @@ gameMode_LoadB: ;{ 00:0464
         ld a, HIGH(mapUpdateBuffer)
         ldh [hMapUpdate.buffPtrHigh], a
 
-        call Call_000_06cc ; Force row update
+        call prepMapUpdate.forceRow ; Force row update
         call VBlank_updateMap
         ; Move camera down to render next row
         ldh a, [hCameraYPixel]
@@ -677,9 +681,9 @@ ret
 
 ; Game Mode $04
 gameMode_Main: ;{ 00:04DF
+    ; Jump ahead if being eaten by the Queen
     ld a, [samusPose]
     and %01111111 ; Mask out upper bit (for turnaround animation)
-    ; Jump ahead if being eaten by the Queen
     cp $18
         jp nc, .queenBranch
     ; Handle window height, save sprite text, earthquake, low heath beep, fade in, and Metroid Queen cry
@@ -692,31 +696,36 @@ gameMode_Main: ;{ 00:04DF
         call z, killSamus
     ; Update Samus position history
     ldh a, [hSamusYPixel]
-    ld [$d029], a
+    ld [prevSamusYPixel], a
     ldh a, [hSamusYScreen]
-    ld [$d02a], a
+    ld [prevSamusYScreen], a
     ldh a, [hSamusXPixel]
-    ld [$d027], a
+    ld [prevSamusXPixel], a
     ldh a, [hSamusXScreen]
-    ld [$d028], a
+    ld [prevSamusXScreen], a
     ; Check if a cutscene is active (i.e. a Metroid is transforming)
     ld a, [cutsceneActive]
     and a
     jr z, .else_A
+        ; Force Samus out of turnaround pose
         ld a, [samusPose]
         res 7, a
         ld [samusPose], a
+        ; Only allow toggling missiles as input
         ldh a, [hInputRisingEdge]
         bit PADB_SELECT, a
             call nz, toggleMissiles
         jr .endIf_A
     .else_A:
+        ; Check if in a door transition
+        ; BUG: This only checks the low byte of the index
         ld a, [doorScrollDirection]
         and a
         jr nz, .endIf_A
+            ; Do various common things
             xor a
             ld [$d05c], a
-            call Call_000_2ee3 ; Damage Samus
+            call hurtSamus ; Damage Samus
             call samus_handlePose ; Samus pose handler
             call Call_000_32ab ; ? Samus/enemy collision logic
             call Call_000_21fb ; Handle shooting or toggling cannon
@@ -724,25 +733,28 @@ gameMode_Main: ;{ 00:04DF
             call Call_000_3d99 ; Handle bombs
     .endIf_A:
 
-    call Call_000_0698 ; Handle loading blocks from scrolling
-    call Call_000_08fe ; Handle scrolling/triggering door transitions
+    call prepMapUpdate ; Handle loading blocks from scrolling
+    call handleCamera ; Handle scrolling/triggering door transitions
     call convertCameraToScroll ; Calculate scroll offsets
     call handleItemPickup
     call drawSamus_longJump ; Draw Samus
     call drawProjectiles_longJump ; Draw projectiles
     call handleRespawningBlocks_longJump ; Handle respawning blocks
     call adjustHudValues_longJump ; Handle missile/energy counters
-    ; Decrease counter (minimum of zero)
-    ld a, [$d049]
+    ; Decrement unmorph jump timer
+    ld a, [samus_unmorphJumpTimer]
     and a
     jr z, .endIf_B
         dec a
-        ld [$d049], a
+        ld [samus_unmorphJumpTimer], a
     .endIf_B:
-
+    
     call drawHudMetroid_longJump
+    ; Set max OAM offset of non-enemies
     ldh a, [hOamBufferIndex]
-    ld [$d064], a
+    ld [samusTopOamOffset], a
+    ; Handle enemies if not in a door
+    ; BUG: This only checks the low byte of the index
     ld a, [doorIndexLow]
     and a
     jr nz, .endIf_C
@@ -750,10 +762,10 @@ gameMode_Main: ;{ 00:04DF
     .endIf_C:
 
     call clearUnusedOamSlots_longJump ; Clear unused OAM
-    call tryPausing ; Handle pausing ?
+    call tryPausing ; Handle pausing
 ret
 
-.queenBranch: ;{
+.queenBranch: ;{ Branch used when being eaten. Skips a few tasks, but otherwise quite similar to the above
     ; Handle window height, save text, earthquake, low heath beep, fade in, and Metroid Queen cry
     call miscIngameTasks_longJump
     ; Check if dead (when displayed health is zero)
@@ -764,37 +776,40 @@ ret
         call z, killSamus
     ; Update Samus position history
     ldh a, [hSamusYPixel]
-    ld [$d029], a
+    ld [prevSamusYPixel], a
     ldh a, [hSamusYScreen]
-    ld [$d02a], a
+    ld [prevSamusYScreen], a
     ldh a, [hSamusXPixel]
-    ld [$d027], a
+    ld [prevSamusXPixel], a
     ldh a, [hSamusXScreen]
-    ld [$d028], a
+    ld [prevSamusXScreen], a
     xor a
     ld [$d05c], a
+    ; Do various common things
     call samus_handlePose
     call Call_000_32ab
     call Call_000_21fb
     call handleProjectiles_longJump
     call Call_000_3d99
-    call Call_000_0698
-    call Call_000_08fe
+    call prepMapUpdate
+    call handleCamera
     call convertCameraToScroll
     call drawSamus_longJump
     call drawProjectiles_longJump
     call handleRespawningBlocks_longJump
     call adjustHudValues_longJump
-    ld a, [$d049]
+    ; Decrement unmorph jump timer
+    ld a, [samus_unmorphJumpTimer]
     and a
     jr z, .endIf_D
         dec a
-        ld [$d049], a
+        ld [samus_unmorphJumpTimer], a
     .endIf_D:
 
     call drawHudMetroid_longJump
+    ; Set max OAM offset of non-enemies
     ldh a, [hOamBufferIndex]
-    ld [$d064], a
+    ld [samusTopOamOffset], a
     call handleEnemiesOrQueen
     call clearUnusedOamSlots_longJump
     call tryPausing
@@ -857,160 +872,177 @@ ret
 ;}
 
 ; Only called when entering the queen's room
-Call_000_0673: ;{ 00:0673
+queen_renderRoom: ;{ 00:0673
+    ; Set source coordinate to upper-left corner of screen
     xor a
-    ldh [$cc], a
-    ldh [$ce], a
+    ldh [hMapSource.yPixel], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraYScreen]
-    ldh [$cd], a
+    ldh [hMapSource.yScreen], a
     ldh a, [hCameraXScreen]
-    ldh [$cf], a
-
+    ldh [hMapSource.xScreen], a
+    ; Iterate over every row of the screen
     .loop:
         ld a, LOW(mapUpdateBuffer)
         ldh [hMapUpdate.buffPtrLow], a
         ld a, HIGH(mapUpdateBuffer)
         ldh [hMapUpdate.buffPtrHigh], a
-        call prepMapRowUpdate
+        call prepMapUpdate.row
         call VBlank_updateMap
-        ldh a, [$cc]
+        ldh a, [hMapSource.yPixel]
         add $10
-        ldh [$cc], a
+        ldh [hMapSource.yPixel], a
         and a
     jr nz, .loop
 ret
 ;}
 
-Call_000_0698: ;{ 00:0698
+prepMapUpdate: ;{ 00:0698
+    ; Switch to current level bank
     switchBankVar [currentLevelBank]
+    ; Reset map update buffer pointer
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     xor a
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
+    ; Choose direction based on frame counter
     ldh a, [frameCounter]
     and $03 ; Up
-        jr z, jr_000_06c1
+        jr z, .up
     cp $01 ; Down
-        jr z, jr_000_06f3
+        jr z, .down
     cp $02 ; Left
-        jr z, jr_000_0724
+        jr z, .left
     cp $03 ; Right
-        jp z, Jump_000_0756
+        jp z, .right
 ret ; Should never end up here
 
-jr_000_06c1: ; Up
-    ld a, [$d023]
-    bit 6, a
+.up: ; Up
+    ; If if not scrolling up
+    ld a, [camera_scrollDirection]
+    bit scrollDirBit_up, a
         ret z
     ld a, $ff
-    ld [$d04c], a
-
-Call_000_06cc:
+    ld [mapUpdate_unusedVar], a
+  .forceRow: ; Alternate call point used when loading the game
+    ; Get x pixel/screen of the top-left of the source row
     ldh a, [hCameraXPixel]
     sub $80
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
+    ; Get y pixel/screen of the top-left of the source row
     ldh a, [hCameraYPixel]
     sub $78
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
     and $0f
-    ldh [$cd], a
-    ld a, [$d023]
-    res 6, a
-    ld [$d023], a
-jp prepMapRowUpdate
+    ldh [hMapSource.yScreen], a
+    ; Clear scroll direction
+    ld a, [camera_scrollDirection]
+    res scrollDirBit_up, a
+    ld [camera_scrollDirection], a
+jp .row
 
-
-jr_000_06f3: ; Down
-    ld a, [$d023]
-    bit 7, a
+.down: ; Down
+    ; If if not scrolling down
+    ld a, [camera_scrollDirection]
+    bit scrollDirBit_down, a
         ret z
     ld a, $ff
-    ld [$d04c], a    
+    ld [mapUpdate_unusedVar], a
+    ; Get x pixel/screen of the top-left of the source row
     ldh a, [hCameraXPixel]
     sub $80
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
+    ; Get y pixel/screen of the top-left of the source row
     ldh a, [hCameraYPixel]
     add $78
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     adc $00
     and $0f
-    ldh [$cd], a
-    ld a, [$d023]
-    res 7, a
-    ld [$d023], a
-jr prepMapRowUpdate
+    ldh [hMapSource.yScreen], a
+    ; Clear scroll direction
+    ld a, [camera_scrollDirection]
+    res scrollDirBit_down, a
+    ld [camera_scrollDirection], a
+jr .row
 
-jr_000_0724: ; Left
-    ld a, [$d023]
-    bit 5, a
+.left: ; Left
+    ; If if not scrolling left
+    ld a, [camera_scrollDirection]
+    bit scrollDirBit_left, a
         ret z
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
+    ; Get x pixel/screen of the top-left of the source column
     ldh a, [hCameraXPixel]
     sub $80
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
+    ; Get y pixel/screen of the top-left of the source column
     ldh a, [hCameraYPixel]
     sub $78
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
     and $0f
-    ldh [$cd], a
-    ld a, [$d023]
-    res 5, a
-    ld [$d023], a
-jp prepMapColumnUpdate
+    ldh [hMapSource.yScreen], a
+    ; Clear scroll direction
+    ld a, [camera_scrollDirection]
+    res scrollDirBit_left, a
+    ld [camera_scrollDirection], a
+jp .column
 
-Jump_000_0756: ; Right
-    ld a, [$d023]
-    bit 4, a
+.right: ; Right
+    ; If if not scrolling right
+    ld a, [camera_scrollDirection]
+    bit scrollDirBit_right, a
         ret z
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
+    ; Get x pixel/screen of the top-left of the source column
     ldh a, [hCameraXPixel]
     add $70
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     adc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
+    ; Get y pixel/screen of the top-left of the source column
     ldh a, [hCameraYPixel]
     sub $78
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
     and $0f
-    ldh [$cd], a
-    ld a, [$d023]
-    res 4, a
-    ld [$d023], a
-jp prepMapColumnUpdate
+    ldh [hMapSource.yScreen], a
+    ; Clear scroll direction
+    ld a, [camera_scrollDirection]
+    res scrollDirBit_right, a
+    ld [camera_scrollDirection], a
+jp .column
 
-
-prepMapRowUpdate: ; 00:0788
-    call Call_000_0835
+.row: ;{ 00:0788
+    call mapUpdate_getSrcAndDest
 
     ld a, $10
     ldh [hMapUpdate.size], a
-    .loop:
-        call loadMapTileToBuffer
+    .loop_A:
+        call mapUpdate_writeToBuffer
         ; Iterate rightwards to next block
         ldh a, [hMapUpdate.destAddrLow]
         add $02
@@ -1027,7 +1059,7 @@ prepMapRowUpdate: ; 00:0788
         add $01
         ldh [hMapUpdate.srcBlock], a
         and $0f
-        jr nz, .endIf
+        jr nz, .endIf_A
             ; Iterate rightwards to next source screen if necessary
             ldh a, [hMapUpdate.srcBlock]
             sub $10
@@ -1050,12 +1082,12 @@ prepMapRowUpdate: ; 00:0788
             ld c, a
             ld a, [hl]
             ld b, a
-        .endIf:
+        .endIf_A:
     
         ldh a, [hMapUpdate.size]
         dec a
         ldh [hMapUpdate.size], a
-    jr nz, .loop
+    jr nz, .loop_A
     ; Terminate buffer list
     ldh a, [hMapUpdate.buffPtrLow]
     ld l, a
@@ -1064,18 +1096,18 @@ prepMapRowUpdate: ; 00:0788
     ld a, $00
     ld [hl+], a
     ld [hl], a
-ret
+ret ;}
 
-prepMapColumnUpdate: ; 00:07E4
-    ld a, [$d023]
-    and $cf
-    ld [$d023], a
-    call Call_000_0835
+.column: ;{ 00:07E4
+    ld a, [camera_scrollDirection]
+    and ~(scrollDir_left|scrollDir_right) ; $CF
+    ld [camera_scrollDirection], a
+    call mapUpdate_getSrcAndDest
     
     ld a, $10
     ldh [hMapUpdate.size], a
-    .loop:
-        call loadMapTileToBuffer
+    .loop_B:
+        call mapUpdate_writeToBuffer
         ; Iterate downwards to next block
         ldh a, [hMapUpdate.destAddrLow]
         add $40
@@ -1089,7 +1121,7 @@ prepMapColumnUpdate: ; 00:07E4
         add $10
         ldh [hMapUpdate.srcBlock], a
         and $f0
-        jr nz, .endIf
+        jr nz, .endIf_B
             ; Iterate downwards to next source screen if necessary
             ldh a, [hMapUpdate.srcScreen]
             add $10
@@ -1104,12 +1136,12 @@ prepMapColumnUpdate: ; 00:07E4
             ld c, a
             ld a, [hl]
             ld b, a
-        .endIf:
+        .endIf_B:
     
         ldh a, [hMapUpdate.size]
         dec a
         ldh [hMapUpdate.size], a
-    jr nz, .loop
+    jr nz, .loop_B
     ; Terminate buffer list
     ldh a, [hMapUpdate.buffPtrLow]
     ld l, a
@@ -1118,22 +1150,26 @@ prepMapColumnUpdate: ; 00:07E4
     ld a, $00
     ld [hl+], a
     ld [hl], a
-ret
+ret ;}
 ;}
 
 ; Translates X and Y map/screen coordinates into map/screen array indeces
 ;  and a VRAM address, for updating scrolling
-; Also loads the screen pointer into BC
-Call_000_0835: ;{ 00:0835
-    ldh a, [$cd]
+; Return values
+;  BC - screen pointer
+;  hMapUpdate.srcBlock (block index in screen (YX))
+;  hMapUpdate.destAddr (VRAM dest address)
+mapUpdate_getSrcAndDest: ;{ 00:0835
+    ; srcScreen = (Y,X)
+    ldh a, [hMapSource.yScreen]
     swap a
     and $f0
     ld b, a
-    ldh a, [$cf]
+    ldh a, [hMapSource.xScreen]
     and $0f
     or b
     ldh [hMapUpdate.srcScreen], a
-    
+    ; BC = map_screenPointers + *2
     ld e, a
     ld d, $00
     sla e
@@ -1144,18 +1180,18 @@ Call_000_0835: ;{ 00:0835
     ld c, a
     ld a, [hl]
     ld b, a
-    
-    ldh a, [$cc]
+    ; srcBlock = upper 16 bits of (Y,X)
+    ldh a, [hMapSource.yPixel]
     and $f0
     ld l, a
-    ldh a, [$ce]
+    ldh a, [hMapSource.xPixel]
     swap a
     and $0f
     or l
     ldh [hMapUpdate.srcBlock], a
-    
+    ; destAddr = $9800 + (upper nybble of ypx*4) + (upper nybble of xpx/8)
     ld hl, $9800
-    ldh a, [$cc]
+    ldh a, [hMapSource.yPixel]
     and $f0
     ld e, a
     xor a
@@ -1165,7 +1201,7 @@ Call_000_0835: ;{ 00:0835
     sla e
     rl d
     add hl, de
-    ldh a, [$ce]
+    ldh a, [hMapSource.xPixel]
     and $f0
     swap a
     sla a
@@ -1180,7 +1216,7 @@ ret
 ;}
 
 ; Load metatile from map to WRAM buffer
-loadMapTileToBuffer: ;{ 00:0886
+mapUpdate_writeToBuffer: ;{ 00:0886
     ; Load tile number from map
     ;  BC is the address of the screen being loaded from
     ;  [$AD] is the tile in that screen ($YX format)
@@ -1284,10 +1320,10 @@ VBlank_updateMap: ;{ 00:08CF
 ret
 ;}
 
-Call_000_08fe: ;{ 00:08FE
+handleCamera: ;{ 00:08FE
     ld a, [doorScrollDirection]
     and a
-        jp nz, Jump_000_0b44 ; Handle scrolling
+        jp nz, Jump_000_0b44 ; Handle door
 
     ; Get screen index from coordinates
     ldh a, [hCameraYScreen]
@@ -1320,6 +1356,7 @@ Call_000_08fe: ;{ 00:08FE
         Jump_000_0936:
     
         jr c, jr_000_0949
+            ; Move camera left
             ldh a, [hCameraXPixel]
             sub $01
             ldh [hCameraXPixel], a
@@ -1330,7 +1367,7 @@ Call_000_08fe: ;{ 00:08FE
             jp Jump_000_0991
     jr_000_0949:
 
-    ld a, [$d035]
+    ld a, [camera_speedRight]
     and a
     jr z, jr_000_0991
         ld b, a
@@ -1342,9 +1379,9 @@ Call_000_08fe: ;{ 00:08FE
         adc $00
         and $0f
         ldh [hCameraXScreen], a
-        ld a, [$d023]
-        set 4, a
-        ld [$d023], a
+        ld a, [camera_scrollDirection]
+        set scrollDirBit_right, a
+        ld [camera_scrollDirection], a
         ldh a, [hSamusXPixel]
         sub b
         add $60
@@ -1404,10 +1441,10 @@ Jump_000_0991:
             jr jr_000_0a18
     jr_000_09cd:
 
-    ld a, [$d036]
+    ld a, [camera_speedLeft]
     and a
     jr z, jr_000_0a18
-        ld a, [$d036]
+        ld a, [camera_speedLeft]
         ld b, a
         ldh a, [hCameraXPixel]
         sub b
@@ -1417,9 +1454,9 @@ Jump_000_0991:
         sbc $00
         and $0f
         ldh [hCameraXScreen], a
-        ld a, [$d023]
-        set 5, a
-        ld [$d023], a
+        ld a, [camera_scrollDirection]
+        set scrollDirBit_left, a
+        ld [camera_scrollDirection], a
         ldh a, [hSamusXPixel]
         sub b
         add $60
@@ -1447,8 +1484,8 @@ Jump_000_0991:
 
 Jump_000_0a18:
     xor a
-    ld [$d035], a
-    ld [$d036], a
+    ld [camera_speedRight], a
+    ld [camera_speedLeft], a
     ldh a, [hCameraYPixel]
     ld b, a
     ldh a, [hSamusYPixel]
@@ -1462,10 +1499,10 @@ Jump_000_0a18:
         jp z, Jump_000_0b2c
     bit 7, a
     jp nz, Jump_000_0ab6
-        ld [$d038], a
-        ld a, [$d023]
+        ld [camera_speedDown], a
+        ld a, [camera_scrollDirection]
         set 7, a
-        ld [$d023], a
+        ld [camera_scrollDirection], a
         
         ; Why's this case so different from the others
         ldh a, [$98]
@@ -1506,7 +1543,7 @@ Jump_000_0a18:
                 ldh a, [$99]
                 cp $40
                 jp c, Jump_000_0b2c
-                    ld a, [$d038]
+                    ld a, [camera_speedDown]
                     ld b, a
                     ldh a, [hCameraYPixel]
                     add b
@@ -1519,7 +1556,7 @@ Jump_000_0a18:
             ldh a, [$99]
             cp $50
             jp c, Jump_000_0b2c
-                ld a, [$d038]
+                ld a, [camera_speedDown]
                 ld b, a
                 ldh a, [hCameraYPixel]
                 add b
@@ -1532,10 +1569,10 @@ Jump_000_0a18:
 
     cpl
     inc a
-    ld [$d037], a
-    ld a, [$d023]
-    set 6, a
-    ld [$d023], a
+    ld [camera_speedUp], a
+    ld a, [camera_scrollDirection]
+    set scrollDirBit_up, a
+    ld [camera_scrollDirection], a
         
     ldh a, [$98]
     bit 2, a ; Check up
@@ -1571,7 +1608,7 @@ Jump_000_0a18:
             ldh a, [$99]
             cp $3e
             jr nc, jr_000_0b2c
-                ld a, [$d037]
+                ld a, [camera_speedUp]
                 ld b, a
                 ldh a, [hCameraYPixel]
                 sub b
@@ -1584,7 +1621,7 @@ Jump_000_0a18:
         ldh a, [$99]
         cp $4e
         jr nc, jr_000_0b2c
-            ld a, [$d037]
+            ld a, [camera_speedUp]
             ld b, a
             ldh a, [hCameraYPixel]
             sub b
@@ -1596,8 +1633,8 @@ Jump_000_0a18:
 
 Jump_000_0b2c:
     xor a
-    ld [$d038], a
-    ld [$d037], a
+    ld [camera_speedDown], a
+    ld [camera_speedUp], a
     ldh a, [hSamusYPixel]
     ld [$d00c], a
 ret
@@ -1631,8 +1668,8 @@ Jump_000_0b44: ;{ 00:0B44
         inc a
         ld [samus_animationTimer], a
         ; Set screen movement direction
-        ld a, $10
-        ld [$d023], a
+        ld a, scrollDir_right
+        ld [camera_scrollDirection], a
         ; Move Samus
         ldh a, [hSamusXPixel]
         add $01
@@ -1663,8 +1700,8 @@ Jump_000_0b44: ;{ 00:0B44
         inc a
         ld [samus_animationTimer], a
         ; Set screen movement direction
-        ld a, $20
-        ld [$d023], a
+        ld a, scrollDir_left
+        ld [camera_scrollDirection], a
         ; Move Samus
         ldh a, [hSamusXPixel]
         sub $01
@@ -1695,8 +1732,8 @@ Jump_000_0b44: ;{ 00:0B44
         inc a
         ld [samus_animationTimer], a
         ; Set screen movement direction
-        ld a, $40
-        ld [$d023], a
+        ld a, scrollDir_up
+        ld [camera_scrollDirection], a
         ; Move Samus 1.5 px/frame
         ldh a, [frameCounter]
         and $01
@@ -1731,8 +1768,8 @@ Jump_000_0b44: ;{ 00:0B44
         inc a
         ld [samus_animationTimer], a
         ; Set screen movement direction
-        ld a, $80
-        ld [$d023], a
+        ld a, scrollDir_down
+        ld [camera_scrollDirection], a
         ; Move Samus 1.5 px/frame
         ldh a, [frameCounter]
         and $01
@@ -1989,7 +2026,7 @@ poseFunc_0D8B: ;{ $1C - Escaping Queen's mouth
         ret
     jr_000_0dae:
 
-    ld a, $40
+    ld a, samus_jumpArrayBaseOffset
     ld [samus_jumpArcCounter], a
     ld a, $01
     ld [$d00f], a
@@ -2042,7 +2079,7 @@ poseFunc_0DF0: ;{ $19
     jr nz, .else_A
         ld a, $01
         ld [$d00f], a
-        ld a, $40 + $10 ;$50
+        ld a, samus_jumpArrayBaseOffset + $10 ;$50
         ld [samus_jumpArcCounter], a
         ld a, $1d
         ld [samusPose], a
@@ -2050,7 +2087,7 @@ poseFunc_0DF0: ;{ $19
     .else_A:
         cp $20
         jr nz, .else_B
-            ld a, $40
+            ld a, samus_jumpArrayBaseOffset
             ld [samus_jumpArcCounter], a
             ld a, $01
             ld [$d00f], a
@@ -2094,14 +2131,14 @@ poseFunc_0E36: ;{ $18
         sub $01
         ldh [hSamusYPixel], a
         ld a, $01
-        ld [$d037], a
+        ld [camera_speedUp], a
         jr jr_000_0e72
     jr_000_0e67:
         ldh a, [hSamusYPixel]
         add $01
         ldh [hSamusYPixel], a
         ld a, $01
-        ld [$d038], a
+        ld [camera_speedDown], a
     jr_000_0e72:
 
     ld a, [queen_headX]
@@ -2119,14 +2156,14 @@ poseFunc_0E36: ;{ $18
         sub $02
         ldh [hSamusXPixel], a
         ld a, $01
-        ld [$d036], a
+        ld [camera_speedLeft], a
         jr jr_000_0e9b
     jr_000_0e90:
         ldh a, [hSamusXPixel]
         add $01
         ldh [hSamusXPixel], a
         ld a, $01
-        ld [$d035], a
+        ld [camera_speedRight], a
     jr_000_0e9b:
 
     ld a, c
@@ -2188,8 +2225,8 @@ poseFunc_0ECB: ;{ $12 and $1D
     bit PADB_UP, a
     jr z, poseFunc_0F6C
         call samus_unmorphInAir
-        ld a, $10
-        ld [$d049], a
+        ld a, samus_unmorphJumpTime
+        ld [samus_unmorphJumpTimer], a
     jr poseFunc_0F6C
 ;}
 
@@ -2207,7 +2244,7 @@ poseFunc_0EF7: ;{ $0F - Knockback
     xor a
     ld [samusInvulnerableTimer], a
     ; High-jump jump value
-    ld a, $21
+    ld a, samus_jumpArrayBaseOffset - $1F ;$21
     ld [samus_jumpArcCounter], a
     ld a, $02
     ld [sfxRequest_square1], a
@@ -2215,7 +2252,7 @@ poseFunc_0EF7: ;{ $0F - Knockback
     bit itemBit_hiJump, a
     jr nz, .endIf_A
         ; Normal jump value
-        ld a, $31
+        ld a, samus_jumpArrayBaseOffset - $0F ;$31
         ld [samus_jumpArcCounter], a
         ld a, $01
         ld [sfxRequest_square1], a
@@ -2242,8 +2279,8 @@ poseFunc_0F38: ;{ $10
     bit PADB_UP, a
     jp z, .endIf_A
         call samus_unmorphInAir
-        ld a, $10
-        ld [$d049], a
+        ld a, samus_unmorphJumpTime
+        ld [samus_unmorphJumpTimer], a
     .endIf_A:
 
     ld a, [samusItems]
@@ -2254,7 +2291,7 @@ poseFunc_0F38: ;{ $10
         jr z, .endIf_B
             xor a
             ld [samusInvulnerableTimer], a
-            ld a, $2e
+            ld a, samus_jumpArrayBaseOffset - $12 ;$2e
             ld [samus_jumpArcCounter], a
             ld a, pose_morphJump
             ld [samusPose], a
@@ -2269,7 +2306,7 @@ poseFunc_0F38: ;{ $10
 
 poseFunc_0F6C: ;{ 00:0F6C - $11: Bombed (standing)
     ld a, [samus_jumpArcCounter]
-    sub $40
+    sub samus_jumpArrayBaseOffset
     ld e, a
     ld d, $00
     ld hl, table_0FF6
@@ -2283,14 +2320,14 @@ poseFunc_0F6C: ;{ 00:0F6C - $11: Bombed (standing)
     call samus_moveVertical
     jr nc, jr_000_0f8b
         ld a, [samus_jumpArcCounter]
-        cp $40 + $17 ; $57
+        cp samus_jumpArrayBaseOffset + $17 ; $57
         jr nc, jr_000_0fc0
     jr_000_0f8b:
 
     ld a, [samus_jumpArcCounter]
     inc a
     ld [samus_jumpArcCounter], a
-    cp $40 + $16 ; $56
+    cp samus_jumpArrayBaseOffset + $16 ; $56
     jr c, jr_000_0fac
         ldh a, [hInputPressed]
         bit PADB_RIGHT, a
@@ -2526,27 +2563,27 @@ ret
 
 samus_spiderRight: ; 00:1132
     call samus_rollRight.spider
-    ld a, [$d035]
+    ld a, [camera_speedRight]
     ld [spiderDisplacement], a
 ret
 
 samus_spiderLeft: ; 00:113C
     call samus_rollLeft.spider
-    ld a, [$d036]
+    ld a, [camera_speedLeft]
     ld [spiderDisplacement], a
 ret
 
 samus_spiderUp: ; 00:1146
     ld a, $01
     call samus_moveUp
-    ld a, [$d037]
+    ld a, [camera_speedUp]
     ld [spiderDisplacement], a
 ret
 
 samus_spiderDown: ; 00:1152
     ld a, $01
     call samus_moveVertical
-    ld a, [$d038]
+    ld a, [camera_speedDown]
     ld [spiderDisplacement], a
         ret nc
     ld a, [samus_onSolidSprite]
@@ -2573,7 +2610,7 @@ poseFunc_spiderJump: ;{ 00:1170 - $0D: Spider ball jumping
     .endIf_A:
 
     ld a, [samus_jumpArcCounter]
-    cp $40
+    cp samus_jumpArrayBaseOffset
     jr nc, .endIf_B
         ldh a, [hInputPressed]
         bit PADB_A, a
@@ -2582,19 +2619,19 @@ poseFunc_spiderJump: ;{ 00:1170 - $0D: Spider ball jumping
                 jr .moveVertical
         .endIf_C:
         
-        ld a, $40 + $16 ;$56
+        ld a, samus_jumpArrayBaseOffset + $16 ;$56
         ld [samus_jumpArcCounter], a
     .endIf_B:
 
     ; Read vertical speed from jump arc table
-    sub $40
+    sub samus_jumpArrayBaseOffset
     ld hl, jumpArcTable
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
     ; Start falling if at the end of the table
-    cp $80
+    cp samus_jumpArrayBaseOffset + $40 ;$80
         jr z, .startFalling
 
 .moveVertical:
@@ -2753,8 +2790,8 @@ poseFunc_morphFall: ;{ 00:123B - $08: Morphball falling
     bit PADB_UP, a
     jr z, .endIf_C
         call samus_unmorphInAir
-        ld a, $10
-        ld [$d049], a
+        ld a, samus_unmorphJumpTime
+        ld [samus_unmorphJumpTimer], a
         jr .exit
     .endIf_C:
 
@@ -2763,11 +2800,11 @@ poseFunc_morphFall: ;{ 00:123B - $08: Morphball falling
     bit PADB_RIGHT, a
     jr z, .endIf_D
         call samus_moveRightInAir.turn
-        ; The value loaded from $D035 appears to be immediately discarded after the jump
+        ; The value loaded from camera_speedRight appears to be immediately discarded after the jump
         ld a, [samusItems]
         bit itemBit_spider, a
         jr z, .endIf_D
-            ld a, [$d035]
+            ld a, [camera_speedRight]
             jr .moveVertical
     .endIf_D:
 
@@ -2775,11 +2812,11 @@ poseFunc_morphFall: ;{ 00:123B - $08: Morphball falling
     bit PADB_LEFT, a
     jr z, .endIf_E
         call samus_moveLeftInAir.turn
-        ; The value loaded from $D036 appears to be immediately discarded after the jump
+        ; The value loaded from camera_speedLeft appears to be immediately discarded after the jump
         ld a, [samusItems]
         bit itemBit_spider, a
         jr z, .endIf_E
-            ld a, [$d036]
+            ld a, [camera_speedLeft]
     .endIf_E
 
 .moveVertical:
@@ -2833,10 +2870,10 @@ poseFunc_12F5: ;{ 00:12F5 - $07 - Falling
             ld [samus_jumpArcCounter], a
             jr jr_000_1311
         jr_000_1306:
-            ld a, [$d049]
+            ld a, [samus_unmorphJumpTimer]
             and a
                 jr z, jr_000_1335
-            ld a, $21
+            ld a, samus_jumpArrayBaseOffset - $1F ;$21
             ld [samus_jumpArcCounter], a
         jr_000_1311:
     
@@ -2845,7 +2882,7 @@ poseFunc_12F5: ;{ 00:12F5 - $07 - Falling
         ld a, [samusItems]
         bit itemBit_hiJump, a
         jr nz, jr_000_1327
-            ld a, $31
+            ld a, samus_jumpArrayBaseOffset - $F ;$31
             ld [samus_jumpArcCounter], a
             ld a, $01
             ld [sfxRequest_square1], a
@@ -2856,7 +2893,7 @@ poseFunc_12F5: ;{ 00:12F5 - $07 - Falling
         xor a
         ld [samus_jumpStartCounter], a
         xor a
-        ld [$d049], a
+        ld [samus_unmorphJumpTimer], a
         ret    
     jr_000_1335:
 
@@ -2960,7 +2997,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
             call collision_samusTop
                 ret c
             ; High jump parameters
-            ld a, $21
+            ld a, samus_jumpArrayBaseOffset - $1F ;$21
             ld [samus_jumpArcCounter], a
             ld a, $02
             ld [sfxRequest_square1], a
@@ -2969,7 +3006,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
             bit itemBit_hiJump, a
             jr nz, .endIf_C
                 ; Normal jump parameters
-                ld a, $31
+                ld a, samus_jumpArrayBaseOffset - $0F ;$31
                 ld [samus_jumpArcCounter], a
                 ld a, $01
                 ld [sfxRequest_square1], a
@@ -3079,7 +3116,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
         call collision_samusTop
             ret c
         ; High jump parameters
-        ld a, $21
+        ld a, samus_jumpArrayBaseOffset - $1F ;$21
         ld [samus_jumpArcCounter], a
         ld a, $02
         ld [sfxRequest_square1], a
@@ -3088,7 +3125,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
         bit itemBit_hiJump, a
         jr nz, .endIf_K
             ; Normal jump parameters
-            ld a, $31
+            ld a, samus_jumpArrayBaseOffset - $0F ;$31
             ld [samus_jumpArcCounter], a
             ld a, $01
             ld [sfxRequest_square1], a
@@ -3140,7 +3177,7 @@ poseFunc_running: ;{ 00:14D6 - $03: Running
             call collision_samusTop
                 ret c
             ; High jump parameter
-            ld a, $21
+            ld a, samus_jumpArrayBaseOffset - $1F ;$21
             ld [samus_jumpArcCounter], a
             ; Request sound
             ld a, [samusItems]
@@ -3153,7 +3190,7 @@ poseFunc_running: ;{ 00:14D6 - $03: Running
             bit itemBit_hiJump, a
             jr nz, .endIf_C
                 ; Normal jump parameter
-                ld a, $31
+                ld a, samus_jumpArrayBaseOffset - $0F ;$31
                 ld [samus_jumpArcCounter], a
             .endIf_C:
             ; Decrease jump height in water
@@ -3265,14 +3302,14 @@ poseFunc_running: ;{ 00:14D6 - $03: Running
             ret c
         
         ; High jump parameter
-        ld a, $21
+        ld a, samus_jumpArrayBaseOffset - $1F ;$21
         ld [samus_jumpArcCounter], a
         ; Check equipment
         ld a, [samusItems]
         bit itemBit_hiJump, a
         jr nz, .endIf_K
             ; Normal jump parameter
-            ld a, $31
+            ld a, samus_jumpArrayBaseOffset - $0F ;$31
             ld [samus_jumpArcCounter], a
         .endIf_K:
         
@@ -3429,13 +3466,13 @@ poseFunc_crouch: ;{ 00:15F4 - $04: Crouching
         .endIf_I:
 
         ; High jump counter value
-        ld a, $21
+        ld a, samus_jumpArrayBaseOffset - $1F ;$21
         ld [samus_jumpArcCounter], a
         ld a, [samusItems]
         bit itemBit_hiJump, a
         jr nz, .endIf_J
             ; Normal jump counter value
-            ld a, $31
+            ld a, samus_jumpArrayBaseOffset - $0F ;$31
             ld [samus_jumpArcCounter], a
         .endIf_J:
 
@@ -3537,7 +3574,7 @@ poseFunc_morphBall: ;{ 00:1701 - $05: Morph ball
         ld a, [samusItems]
         bit itemBit_spring, a
         jr z, .endIf_C
-            ld a, $2e
+            ld a, samus_jumpArrayBaseOffset - $12 ;$2e
             ld [samus_jumpArcCounter], a
             ld a, pose_morphJump
             ld [samusPose], a
@@ -3563,12 +3600,12 @@ poseFunc_morphBall: ;{ 00:1701 - $05: Morph ball
         ; Set up initial jump arc table index for morph bounce
         jr nz, .else_B
             ; Unused
-            ld a, $48
+            ld a, samus_jumpArrayBaseOffset + $08 ;$48
             ld [samus_jumpArcCounter], a
             ret
         .else_B:
             ; Used
-            ld a, $44
+            ld a, samus_jumpArrayBaseOffset + $04 ;$44
             ld [samus_jumpArcCounter], a
             ret
     .else_A: ; Move horizontal
@@ -3578,14 +3615,14 @@ poseFunc_morphBall: ;{ 00:1701 - $05: Morph ball
         bit PADB_RIGHT, a
         jr z, .else_C
             call samus_rollRight.morph
-            ld a, [$d035]
+            ld a, [camera_speedRight]
             ret
         .else_C:
             ldh a, [hInputPressed]
             bit PADB_LEFT, a
                 ret z
             call samus_rollLeft.morph
-            ld a, [$d036]
+            ld a, [camera_speedLeft]
             ret
 ; end proc
 
@@ -3629,7 +3666,7 @@ poseFunc_morphJump: ;{ 00:179F - $06: Morph Jump
 
 poseFunc_jump: ;{ 00:17BB - Pose $01
     ld a, [samus_jumpArcCounter]
-    cp $40
+    cp samus_jumpArrayBaseOffset
     jr nc, .endIf_A
         ldh a, [hInputPressed]
         bit PADB_A, a
@@ -3643,17 +3680,17 @@ poseFunc_jump: ;{ 00:17BB - Pose $01
                 jr .moveVertical
         .endIf_B:
     
-        ld a, $40 + $16 ;56
+        ld a, samus_jumpArrayBaseOffset + $16 ;56
         ld [samus_jumpArcCounter], a
     .endIf_A:
 
-    sub $40
+    sub samus_jumpArrayBaseOffset
     ld hl, jumpArcTable
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
-    cp $80
+    cp samus_jumpArrayBaseOffset + $40 ;$80
         jr z, .startFalling
 
     ; Skip ahead if moving upwards
@@ -3671,7 +3708,7 @@ poseFunc_jump: ;{ 00:17BB - Pose $01
     ; Bonk head on ceiling
     jr nc, .endIf_D
         ld a, [samus_jumpArcCounter]
-        cp $40 + $17 ; 57
+        cp samus_jumpArrayBaseOffset + $17 ; 57
             jr nc, .startFalling
     .endIf_D:
 
@@ -3688,7 +3725,7 @@ poseFunc_jump: ;{ 00:17BB - Pose $01
         jr z, .endIf_E
             call samus_unmorphInAir
             ld a, $10
-            ld [$d049], a
+            ld [samus_unmorphJumpTimer], a
     .endIf_E:
 
 ;moveHorizontal
@@ -3759,7 +3796,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
 
     ; If jump timer is > $40, then jump ahead
     ld a, [samus_jumpArcCounter]
-    cp $40
+    cp samus_jumpArrayBaseOffset
     jr nc, .endIf_B
         ; Handle linear ascent of the jump
         ; If A is being held, proper upwards
@@ -3778,7 +3815,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
                 jr .moveVertical
         .endIf_C:
         ; Set position to table to the apex of the jump
-        ld a, $40 + $16
+        ld a, samus_jumpArrayBaseOffset + $16
         ld [samus_jumpArcCounter], a
     .endIf_B:
 
@@ -3803,7 +3840,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
             bit itemBit_space, a
             jr z, .endIf_D
                 ; High-jump space jump value
-                ld a, $18
+                ld a, samus_jumpArrayBaseOffset - $28 ;$18
                 ld [samus_jumpArcCounter], a
                 ld a, $02
                 ld [sfxRequest_square1], a
@@ -3812,7 +3849,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
                 bit itemBit_hiJump, a
                 jr nz, .endIf_E
                     ; Normal jump space jump value
-                    ld a, $28
+                    ld a, samus_jumpArrayBaseOffset - $18 ;$28
                     ld [samus_jumpArcCounter], a
                     ld a, $01
                     ld [sfxRequest_square1], a
@@ -3849,7 +3886,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
     ld hl, jumpArcTable
     add hl, de
     ld a, [hl]
-    cp $80
+    cp samus_jumpArrayBaseOffset + $40 ;$80
         jr nz, .moveVertical
     ; Start falling
     jr .breakSpin
@@ -3869,7 +3906,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
     call samus_moveVertical
     jr nc, .endIf_I
         ld a, [samus_jumpArcCounter]
-        cp $40 + $17
+        cp samus_jumpArrayBaseOffset + $17
             jr c, .endIf_I
         jr .startFalling
     .endIf_I:
@@ -4328,14 +4365,14 @@ samus_walkRight: ;{ 00:1C0D
     ld [$c204], a
     call collision_samusHorizontal.right
     jr nc, .keepResults
-        ld a, [$d027]
+        ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
-        ld a, [$d028]
+        ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
     .keepResults:
         ld a, b
-        ld [$d035], a
+        ld [camera_speedRight], a
         ret
 ;} end proc
 
@@ -4368,14 +4405,14 @@ samus_walkLeft: ;{ 00:1C51
     ld [$c204], a
     call collision_samusHorizontal.left
     jr nc, .keepResults
-        ld a, [$d027]
+        ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
-        ld a, [$d028]
+        ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
     .keepResults:
         ld a, b
-        ld [$d036], a
+        ld [camera_speedLeft], a
         ret
 ;} end proc
 
@@ -4400,14 +4437,14 @@ samus_rollRight: ;{
     call collision_samusHorizontal.right
     jr nc, .keepResults
         ; Revert to previous position
-        ld a, [$d027]
+        ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
-        ld a, [$d028]
+        ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
     .keepResults:
         ld a, b
-        ld [$d035], a
+        ld [camera_speedRight], a
         ret
 ;}
 
@@ -4434,14 +4471,14 @@ samus_rollLeft: ;{
     ld [$c204], a
     call collision_samusHorizontal.left
     jr nc, jr_000_1cf0
-        ld a, [$d027]
+        ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
-        ld a, [$d028]
+        ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
     jr_000_1cf0:
         ld a, b
-        ld [$d036], a
+        ld [camera_speedLeft], a
         ret
 ;}
 
@@ -4463,14 +4500,14 @@ samus_moveRightInAir: ;{ 00:1CF5
     call collision_samusHorizontal.right
     jr nc, .keepResults
         ; Revert to previous position
-        ld a, [$d027]
+        ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
-        ld a, [$d028]
+        ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
     .keepResults:
         ld a, b
-        ld [$d035], a
+        ld [camera_speedRight], a
         ret
 ;}
 
@@ -4492,14 +4529,14 @@ samus_moveLeftInAir: ;{ 00:1D22
     call collision_samusHorizontal.left
     jr nc, .keepResults
         ; Revert to previous position
-        ld a, [$d027]
+        ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
-        ld a, [$d028]
+        ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
     .keepResults:
         ld a, b
-        ld [$d036], a
+        ld [camera_speedLeft], a
         ret
 ;}
 
@@ -4521,9 +4558,9 @@ samus_moveVertical: ;{ 00:1D4E - move down
     ld a, b
     call Call_000_1f0f
     jr nc, .keepResults
-        ld a, [$d029]
+        ld a, [prevSamusYPixel]
         ldh [hSamusYPixel], a
-        ld a, [$d02a]
+        ld a, [prevSamusYScreen]
         ldh [hSamusYScreen], a
         scf
         ret
@@ -4532,15 +4569,15 @@ samus_moveVertical: ;{ 00:1D4E - move down
         and a
         jr z, .endIf
             srl b
-            ld a, [$d029]
+            ld a, [prevSamusYPixel]
             add b
             ldh [hSamusYPixel], a
-            ld a, [$d02a]
+            ld a, [prevSamusYScreen]
             adc $00
             ldh [hSamusYScreen], a
         .endIf:
         ld a, b
-        ld [$d038], a
+        ld [camera_speedDown], a
         ld a, [$d034]
         ld [$d033], a
         ret
@@ -4562,11 +4599,11 @@ samus_moveUp: ;{ 00:1D98 - Move up (only directly called by spider ball)
     ld a, b
     call collision_samusTop
     jr nc, .keepResults
-        ld a, $40 + $16 ;$56
+        ld a, samus_jumpArrayBaseOffset + $16 ;$56
         ld [samus_jumpArcCounter], a
-        ld a, [$d029]
+        ld a, [prevSamusYPixel]
         ldh [hSamusYPixel], a
-        ld a, [$d02a]
+        ld a, [prevSamusYScreen]
         ldh [hSamusYScreen], a
         ret
     .keepResults:
@@ -4574,15 +4611,15 @@ samus_moveUp: ;{ 00:1D98 - Move up (only directly called by spider ball)
         and a
         jr z, .endIf
             srl b
-            ld a, [$d029]
+            ld a, [prevSamusYPixel]
             sub b
             ldh [hSamusYPixel], a
-            ld a, [$d02a]
+            ld a, [prevSamusYScreen]
             sbc $00
             ldh [hSamusYScreen], a
         .endIf:
         ld a, b
-        ld [$d037], a
+        ld [camera_speedUp], a
         ret
 ;}
 ;}
@@ -4905,7 +4942,7 @@ Call_000_1f0f: ;{ 00:1F0F
     jr nc, .exit
 
     ld a, $00
-    ld [$d049], a
+    ld [samus_unmorphJumpTimer], a
 
 .exit:
     pop bc
@@ -5032,37 +5069,37 @@ saveFile_magicNumber: ; 00:2083
     db $01, $23, $45, $67, $89, $ab, $cd, $ef
 
 ; Damage pose transition table 
-table_208B: ;{ 00:208B
-    db $0F
-    db $0F
-    db $0F
-    db $0F
-    db $0F
-    db $10
-    db $10
-    db $0F
-    db $10
-    db $0F
-    db $0F
-    db $10
-    db $10
-    db $10
-    db $10
-    db $0F
-    db $10
-    db $0F
-    db $10
-    db $0F
+samus_damagePoseTransitionTable: ;{ 00:208B
+    db $0F ; $00 - Standing
+    db $0F ; $01 - Jumping
+    db $0F ; $02 - Spin-jumping
+    db $0F ; $03 - Running (set to 83h when turning)
+    db $0F ; $04 - Crouching
+    db $10 ; $05 - Morphball
+    db $10 ; $06 - Morphball jumping
+    db $0F ; $07 - Falling
+    db $10 ; $08 - Morphball falling
+    db $0F ; $09 - Starting to jump
+    db $0F ; $0A - Starting to spin-jump
+    db $10 ; $0B - Spider ball rolling
+    db $10 ; $0C - Spider ball falling
+    db $10 ; $0D - Spider ball jumping
+    db $10 ; $0E - Spider ball
+    db $0F ; $0F - Knockback
+    db $10 ; $10 - Morphball knockback
+    db $0F ; $11 - Standing bombed
+    db $10 ; $12 - Morphball bombed
+    db $0F ; $13 - Facing screen
     db $00
     db $00
     db $00
     db $00
-    db $10
-    db $10
-    db $1A
-    db $1B
-    db $1C
-    db $1D
+    db $10 ; $18 - Being eaten by Metroid Queen
+    db $10 ; $19 - In Metroid Queen's mouth
+    db $1A ; $1A - Being swallowed by Metroid Queen
+    db $1B ; $1B - In Metroid Queen's stomach
+    db $1C ; $1C - Escaping Metroid Queen
+    db $1D ; $1D - Escaped Metroid Queen
 ;}
 
 ; 00:20A9 - Spider Ball Direction Tables {
@@ -5463,7 +5500,8 @@ executeDoorScript: ; 00:239C
     or b
     jp z, .endDoorScript
 
-    ld a, [$d064]
+    ; Clear non-Samus/HUD OAM entries
+    ld a, [samusTopOamOffset]
     ldh [hOamBufferIndex], a
     call clearUnusedOamSlots_longJump ; Clear unused OAM
     call waitOneFrame
@@ -6211,7 +6249,7 @@ Call_000_2887: ; 00:2887
     ldh [hSamusXScreen], a
     push hl
         call disableLCD
-        call Call_000_0673
+        call queen_renderRoom
         callFar queen_initialize
         ldh a, [hCameraXPixel]
         ld b, a
@@ -6289,22 +6327,22 @@ jr_000_2939:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     add $50
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     adc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
     ldh a, [hCameraYPixel]
     sub $74
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
     and $0f
-    ldh [$cd], a
-    call prepMapColumnUpdate
+    ldh [hMapSource.yScreen], a
+    call prepMapUpdate.column
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6313,15 +6351,15 @@ jr_000_2939:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     add $60
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     adc $00
     and $0f
-    ldh [$cf], a
-    call prepMapColumnUpdate
+    ldh [hMapSource.xScreen], a
+    call prepMapUpdate.column
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6330,15 +6368,15 @@ jr_000_2939:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     add $70
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     adc $00
     and $0f
-    ldh [$cf], a
-    call prepMapColumnUpdate
+    ldh [hMapSource.xScreen], a
+    call prepMapUpdate.column
     pop hl
 ret
 
@@ -6350,22 +6388,22 @@ Jump_000_29c4:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     sub $60
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
     ldh a, [hCameraYPixel]
     sub $74
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
     and $0f
-    ldh [$cd], a
-    call prepMapColumnUpdate
+    ldh [hMapSource.yScreen], a
+    call prepMapUpdate.column
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6374,15 +6412,15 @@ Jump_000_29c4:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     sub $70
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
     and $0f
-    ldh [$cf], a
-    call prepMapColumnUpdate
+    ldh [hMapSource.xScreen], a
+    call prepMapUpdate.column
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6391,15 +6429,15 @@ Jump_000_29c4:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     sub $80
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
     and $0f
-    ldh [$cf], a
-    call prepMapColumnUpdate
+    ldh [hMapSource.xScreen], a
+    call prepMapUpdate.column
     pop hl
 ret
 
@@ -6411,22 +6449,22 @@ Jump_000_2a4f:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     sub $80
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
     ldh a, [hCameraYPixel]
     add $78
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     adc $00
     and $0f
-    ldh [$cd], a
-    call prepMapRowUpdate
+    ldh [hMapSource.yScreen], a
+    call prepMapUpdate.row
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6435,15 +6473,15 @@ Jump_000_2a4f:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraYPixel]
     add $68
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     adc $00
     and $0f
-    ldh [$cd], a
-    call prepMapRowUpdate
+    ldh [hMapSource.yScreen], a
+    call prepMapUpdate.row
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6452,15 +6490,15 @@ Jump_000_2a4f:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraYPixel]
     add $58
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     adc $00
     and $0f
-    ldh [$cd], a
-    call prepMapRowUpdate
+    ldh [hMapSource.yScreen], a
+    call prepMapUpdate.row
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6469,15 +6507,15 @@ Jump_000_2a4f:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraYPixel]
     add $48
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     adc $00
     and $0f
-    ldh [$cd], a
-    call prepMapRowUpdate
+    ldh [hMapSource.yScreen], a
+    call prepMapUpdate.row
     pop hl
 ret
 
@@ -6489,22 +6527,22 @@ Jump_000_2b04:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraXPixel]
     sub $80
-    ldh [$ce], a
+    ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
     and $0f
-    ldh [$cf], a
+    ldh [hMapSource.xScreen], a
     ldh a, [hCameraYPixel]
     sub $78
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
     and $0f
-    ldh [$cd], a
-    call prepMapRowUpdate
+    ldh [hMapSource.yScreen], a
+    call prepMapUpdate.row
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6513,15 +6551,15 @@ Jump_000_2b04:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraYPixel]
     sub $68
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
     and $0f
-    ldh [$cd], a
-    call prepMapRowUpdate
+    ldh [hMapSource.yScreen], a
+    call prepMapUpdate.row
     call waitOneFrame
     
     switchBankVar [currentLevelBank]
@@ -6530,15 +6568,15 @@ Jump_000_2b04:
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
-    ld [$d04c], a
+    ld [mapUpdate_unusedVar], a
     ldh a, [hCameraYPixel]
     sub $58
-    ldh [$cc], a
+    ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
     and $0f
-    ldh [$cd], a
-    call prepMapRowUpdate
+    ldh [hMapSource.yScreen], a
+    call prepMapUpdate.row
     pop hl
 ret
 
@@ -6840,24 +6878,27 @@ ret
 ret
 
 
-debugPauseMenu:
+debugPauseMenu: ;{ 00:2D39
+;{ Main input logic for debug menu
     ; Handle right input
     ldh a, [hInputRisingEdge]
     bit PADB_RIGHT, a
-    jr z, jr_000_2d7a
+    jr z, .endIf_A
+        ; Check if holding B
         ldh a, [hInputPressed]
         bit PADB_B, a
-        jr nz, jr_000_2d50
+        jr nz, .endIf_B
             ; Move debug cursor right
             ld a, [debugItemIndex]
             dec a
             and $07
             ld [debugItemIndex], a
-            jr jr_000_2d7a
-        jr_000_2d50:
+            jr .endIf_A
+        .endIf_B:
     
+        ; Check if holding A
         bit PADB_A, a
-        jr z, jr_000_2d68
+        jr z, .endIf_C
             ; Decrement metroid count
             ld a, [metroidCountReal]
             sub $01
@@ -6867,37 +6908,40 @@ debugPauseMenu:
             sub $01
             daa
             ld [metroidCountDisplayed], a
-            jr jr_000_2d7a
-        jr_000_2d68:
+            jr .endIf_A
+        .endIf_C:
     
-        ; Decrease Samus' energy tanks (minimum of zero)
+        ; If not holding A or B
         ld a, [samusEnergyTanks]
         and a
-        jr z, jr_000_2d7a
+        jr z, .endIf_A
+            ; Decrease Samus' energy tanks (minimum of zero)
             dec a
             ld [samusEnergyTanks], a
             ld [samusCurHealthHigh], a
             ld a, $99
             ld [samusCurHealthLow], a
-    jr_000_2d7a:
+    .endIf_A:
 
     ; Handle left input
     ldh a, [hInputRisingEdge]
     bit PADB_LEFT, a
-    jr z, jr_000_2dbc
+    jr z, .endIf_D
+        ; Check if holding B
         ldh a, [hInputPressed]
         bit PADB_B, a
-        jr nz, jr_000_2d91
+        jr nz, .endIf_E
             ; Move debug cursor left
             ld a, [debugItemIndex]
             inc a
             and $07
             ld [debugItemIndex], a
-            jr jr_000_2dbc
-        jr_000_2d91:
+            jr .endIf_D
+        .endIf_E:
     
+        ; Check if holding A
         bit PADB_A, a
-        jr z, jr_000_2da9
+        jr z, .endIf_F
             ; Decrement metroid count
             ld a, [metroidCountReal]
             add $01
@@ -6907,56 +6951,58 @@ debugPauseMenu:
             add $01
             daa
             ld [metroidCountDisplayed], a
-            jr jr_000_2dbc
-        jr_000_2da9:
+            jr .endIf_D
+        .endIf_F:
     
-        ; Increase Samus' energy tanks (max 5)
+        ; If not holding A or B
         ld a, [samusEnergyTanks]
         cp $05
-        jr z, jr_000_2dbc
+        jr z, .endIf_D
+            ; Increase Samus' energy tanks (max 5)
             inc a
             ld [samusEnergyTanks], a
             ld [samusCurHealthHigh], a
             ld a, $99
             ld [samusCurHealthLow], a
-    jr_000_2dbc:
+    .endIf_D:
 
     ; Handle A press
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
-    jr z, jr_000_2dd7
+    jr z, .endIf_G
         ; Toggle item bit 
         ld b, %00000001 ; Initial bitmask
         ld a, [debugItemIndex]
-    
         .bitmaskLoop:
             dec a
             cp $ff
-                jr z, .exitLoop
+                jr z, .break
             sla b
         jr .bitmaskLoop
+        .break:
+        ; Bitmask now corresponds to item index
         
-        .exitLoop:
-        
+        ; Toggle appropriate bit
         ld a, [samusItems]
         xor b
         ld [samusItems], a
-    jr_000_2dd7:
+    .endIf_G:
 
     ; Handle up input
     ldh a, [hInputRisingEdge]
     bit PADB_UP, a
-    jr z, jr_000_2e07
+    jr z, .endIf_H
+        ; Check if holding B
         ldh a, [hInputPressed]
         bit PADB_B, a
-        jr nz, jr_000_2def
+        jr nz, .else_I
             ; Increment weapon equipped
             ld a, [samusActiveWeapon]
             inc a
             ld [samusActiveWeapon], a
             ld [samusBeam], a
-            jr jr_000_2e07
-        jr_000_2def:
+            jr .endIf_H
+        .else_I:
             ; Increment missiles
             ld a, [samusMaxMissilesLow]
             add $10
@@ -6968,21 +7014,24 @@ debugPauseMenu:
             daa
             ld [samusMaxMissilesHigh], a
             ld [samusCurMissilesHigh], a
-    jr_000_2e07:
+    .endIf_H:
 
     ; Handle down input
     ldh a, [hInputRisingEdge]
     bit PADB_DOWN, a
-    jr z, jr_000_2e31
+    jr z, .endIf_J
+        ; Check if holding B
         ldh a, [hInputPressed]
         bit PADB_B, a
-        jr nz, jr_000_2e1f
+        jr nz, .else_K
+            ; Decrement weapon equipped
             ld a, [samusActiveWeapon]
             dec a
             ld [samusActiveWeapon], a
             ld [samusBeam], a
-            jr jr_000_2e31
-        jr_000_2e1f:
+            jr .endIf_J
+        .else_K:
+            ; Decrement max missiles
             ld a, [samusCurMissilesLow]
             sub $10
             daa
@@ -6991,86 +7040,88 @@ debugPauseMenu:
             sbc $00
             daa
             ld [samusCurMissilesHigh], a
-    jr_000_2e31:
+    .endIf_J:
+;}
 
-    ; Render logic
-    switchBank debug_drawNumber ; For this, and other drawing functions
+;{ Render logic for debug menu
+    switchBank debug_drawNumber
     ; Display debug cursor
+    ; ypos is fixed
     ld a, $58
     ldh [hSpriteYPixel], a
+    ; xpos = index*8 + $69
     ld a, [debugItemIndex]
     swap a
     srl a
     xor $ff
     add $69
     ldh [hSpriteXPixel], a
+    ; Display index of item bit
     ld a, [debugItemIndex]
     call debug_drawNumber.oneDigit
-    ; Display item toggle bits
+    
+    ; Draw item toggle icons
+    ; Set common y position and sprite ID
     ld a, $54
     ldh [hSpriteYPixel], a
     ld a, $36
     ldh [hSpriteId], a
-    
+    ; Draw item icons
     ld a, $34
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_UNUSED, a
-    call nz, drawSamusSprite
-    
+        call nz, drawSamusSprite   
     ld a, $3c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_varia, a
-    call nz, drawSamusSprite
-
+        call nz, drawSamusSprite
     ld a, $44
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_spider, a
-    call nz, drawSamusSprite
-
+        call nz, drawSamusSprite
     ld a, $4c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_spring, a
-    call nz, drawSamusSprite
-
+        call nz, drawSamusSprite
     ld a, $54
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_space, a
-    call nz, drawSamusSprite
-
+        call nz, drawSamusSprite
     ld a, $5c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_screw, a
-    call nz, drawSamusSprite
-
+        call nz, drawSamusSprite
     ld a, $64
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_hiJump, a
-    call nz, drawSamusSprite
-
+        call nz, drawSamusSprite
     ld a, $6c
     ldh [hSpriteXPixel], a
     ld a, [samusItems]
     bit itemBit_bomb, a
-    call nz, drawSamusSprite
-    
+        call nz, drawSamusSprite
+
+    ; Draw Samus' current weapon number
     ld a, $68
     ldh [hSpriteYPixel], a
     ld a, $50
     ldh [hSpriteXPixel], a
     ld a, [samusActiveWeapon]
     call debug_drawNumber.twoDigit
-    
+
+    ; OAM bookkeeping
     ldh a, [hOamBufferIndex]
     ld [maxOamPrevFrame], a
+;} End display logic
 
-    ; Save if pressing select and standing or morphing
+; Save if pressing select and standing or morphing
     ldh a, [hInputRisingEdge]
     cp PADF_SELECT
         ret nz
@@ -7079,52 +7130,59 @@ debugPauseMenu:
         ret nz
     ld a, [samusPose]
     and a ; equivalent to "cp pose_standing"
-        jr z, jr_000_2ede
+        jr z, .save
     cp pose_morph
         ret nz
         
-jr_000_2ede:
+.save:
     ld a, $09
     ldh [gameMode], a
-ret
+ret ;}
 
 
-Call_000_2ee3:
+hurtSamus: ;{ 00:2EE3
+    ; Exit if hurt flag is not set
     ld a, [samus_hurtFlag]
     cp $01
         ret nz
+    ; Clear hurt flag
     xor a
     ld [samus_hurtFlag], a
+    ; Exit if i-frames are active
     ld a, [samusInvulnerableTimer]
     and a
         ret nz
+    ; Apply damage value to Samus
     ld a, [samus_damageValue]
     call applyDamage.enemySpike
     ; Give Samus i-frames
     ld a, $33
     ld [samusInvulnerableTimer], a
+    ; Use table to force Samus into the appropriate knockback pose
     ld a, [samusPose]
-    res 7, a
+    res 7, a ; Force Samus out of turnaround animation
     ld e, a
     ld d, $00
-    ld hl, table_208B
+    ld hl, samus_damagePoseTransitionTable
     add hl, de
     ld a, [hl]
     ld [samusPose], a
+    ; Set travel direction to damage boost direction
     ld a, [$c423]
     ld [$d00f], a
     ld a, [queen_roomFlag]
     cp $11
-    jr nz, jr_000_2f1f
+    jr nz, .endIf
+        ; Force damage boost to right if in Queen's room
         ld a, $01
         ld [$d00f], a
-    jr_000_2f1f:
-
-    ld a, $40
+    .endIf:
+    ; Set jump arc counter to base
+    ld a, samus_jumpArrayBaseOffset
     ld [samus_jumpArcCounter], a
     xor a
-    ld [$d049], a
-ret
+    ld [samus_unmorphJumpTimer], a
+ret ;}
 
 applyDamage: ;{ This procedure has multiple entry points
     .queenStomach: ; 00:2F29
@@ -7243,7 +7301,7 @@ ret
 VBlank_deathSequence: ; 00:2FE1
     ld a, [deathFlag]
     and a
-    jr z, unusedDeathAnimation
+        jr z, unusedDeathAnimation
 
     ; Animate once every 4 frames
     ldh a, [frameCounter]
@@ -7316,7 +7374,7 @@ deathAnimationTable:: ; 00:3042
 ; Only jumped to if the death animation vblank handler is called, but the death flag is not set
 ;  which is impossible
 ; Possibly not intended as a death animation
-unusedDeathAnimation: ; 00:3062
+unusedDeathAnimation: ;{ 00:3062
     ldh a, [frameCounter]
     and $01
     jr nz, .endIf_A
@@ -7373,7 +7431,7 @@ unusedDeathAnimation: ; 00:3062
     pop de
     pop bc
     pop af
-reti
+reti ;}
 
 ; 00:30BB - Bomb-enemy collision detection
 Call_000_30bb: ; 00:30BB
