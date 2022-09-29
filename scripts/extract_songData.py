@@ -60,7 +60,7 @@ def outputSongData():
         class Header:
             def __init__(self, address, name):
                 self.address = address
-                self.name = name
+                self.labels = [f'{name}_header']
                 rom.seek(gb2hex(0x40000 | address))
                 self.musicNoteOffset = romRead(1)
                 self.CF01 = romRead(2)
@@ -76,8 +76,13 @@ def outputSongData():
             
             def print(self):
                 print(f'; ${self.address:X}')
-                print(f'{self.name}_header:')
+                for label in self.labels:
+                    print(f'{label}:')
+                    
                 print(f'    SongHeader ${self.musicNoteOffset:X}, ${self.CF01:X}, {self.label_toneSweep}, {self.label_tone}, {self.label_wave}, {self.label_noise}')
+            
+            def addLabel(self, name):
+                self.labels += [f'{name}_header']
         
         class Channel:
             class Section:
@@ -85,31 +90,73 @@ def outputSongData():
                     def __str__(self):
                         return 'SongEnd'
                 
-                class Mute:
+                class Rest:
                     def __str__(self):
-                        return 'SongMute'
+                        return 'SongRest'
                 
-                class Special3:
+                class Echo1:
                     def __str__(self):
-                        return 'SongSpecial3'
+                        return 'Echo1'
                 
-                class Special5:
+                class Echo2:
                     def __str__(self):
-                        return 'SongSpecial5'
+                        return 'Echo2'
                 
-                class Note: # TODO
-                    def __init__(self, i_note):
-                        self.i_note = i_note
+                class Note:
+                    def __init__(self, i_channel, i_note):
+                        self.i_channel = i_channel
+                        if i_channel == 4:
+                            self.i_note = i_note // 4
+                        else:
+                            i_note = i_note // 2 - 1
+                            self.i_note = i_note % 12
+                            self.i_octave = i_note // 12
                         
                     def __str__(self):
-                        return f'SongNote ${self.i_note:X}'
+                        if self.i_channel == 4:
+                            return f'SongNoiseNote ${self.i_note:X}'
+                            
+                        noteNames = [
+                            'C',
+                            'Db',
+                            'D',
+                            'Eb',
+                            'E',
+                            'F',
+                            'Gb',
+                            'G',
+                            'Ab',
+                            'A',
+                            'Bb',
+                            'B'
+                        ]
+                        
+                        return f'SongNote "{noteNames[self.i_note]}{self.i_octave + 2}"'
                 
                 class NoteLength:
                     def __init__(self, i_noteLength):
                         self.i_noteLength = i_noteLength & ~0xA0
+                        if self.i_noteLength > 0xC:
+                            raise RuntimeError(f'Invalid note length {self.i_noteLength:X}h')
                         
                     def __str__(self):
-                        return f'SongNoteLength ${self.i_noteLength:X}'
+                        noteLengthNames = [
+                            'Demisemiquaver',
+                            'Semiquaver',
+                            'Quaver',
+                            'Crochet',
+                            'Minum',
+                            'Semibreve',
+                            'DottedQuaver',
+                            'DottedCrochet',
+                            'DottedMinum',
+                            'TripletQuaver',
+                            'TripletCrochet',
+                            'Hemidemisemiquaver',
+                            'Breve'
+                        ]
+                        
+                        return f'SongNoteLength_{noteLengthNames[self.i_noteLength]}'
                 
                 class Options:
                     def __init__(self, channel):
@@ -182,13 +229,13 @@ def outputSongData():
                                 self.instructions += [self.End()]
                                 break
                             elif instructionId == 1:
-                                self.instructions += [self.Mute()]
+                                self.instructions += [self.Rest()]
                             elif instructionId == 3 and self.channel != 4:
-                                self.instructions += [self.Special3()]
+                                self.instructions += [self.Echo1()]
                             elif instructionId == 5 and self.channel != 4:
-                                self.instructions += [self.Special5()]
+                                self.instructions += [self.Echo2()]
                             elif instructionId < 0x9F:
-                                self.instructions += [self.Note(instructionId)]
+                                self.instructions += [self.Note(self.channel, instructionId)]
                             elif instructionId < 0xF1:
                                 self.instructions += [self.NoteLength(instructionId)]
                             elif instructionId == 0xF1:
@@ -214,7 +261,15 @@ def outputSongData():
                         print(f'{label}_section{i_section:X}:')
                     
                     print(';{')
-                    print('    ' + '\n    '.join(f'{instruction}' for instruction in self.instructions))
+                    n_indent = 1
+                    for instruction in self.instructions:
+                        if isinstance(instruction, self.Repeat):
+                            n_indent -= 1
+                        indent = '    ' * n_indent
+                        print(f'{indent}{instruction}')
+                        if isinstance(instruction, self.RepeatSetup):
+                            n_indent += 1
+                        
                     print(';}')
                 
                 def addLabel(self, label, i_section):
@@ -337,7 +392,10 @@ def outputSongData():
         
     def loadSong(p_songData, name):
         header = Song.Header(p_songData, name)
-        Song.data[p_songData] = header
+        if p_songData in Song.data:
+            Song.data[p_songData].addLabel(name)
+        else:
+            Song.data[p_songData] = header
         
         channelNames = ["toneSweep", "tone", "wave", "noise"]
         if header.toneSweep != 0:

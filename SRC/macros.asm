@@ -122,28 +122,81 @@ macro SongEnd
     db $00
 endm
 
-macro SongMute
+macro SongRest
     db $01
 endm
 
-macro SongSpecial3
+macro Echo1
     db $03
 endm
 
-macro SongSpecial5
+macro Echo2
     db $05
 endm
 
-; TODO
-macro SongNote ; [note]
-    static_assert \1 < $100, "Invalid note"
-    db \1
+macro SongNote ; [note name in "[A-G]b?[2-7]" format]
+    def _note   equs strsub(\1, 0, strlen(\1) - 1)
+    def _octave equs strsub(\1, -1, 1)
+    
+    def _i_octave equ _octave - 2
+    static_assert _i_octave < 6, "Invalid note octave"
+    
+    if strcmp("\"{_note}\"", "\"C\"") == 0
+        def _i_note equ 0
+    elif strcmp("\"{_note}\"", "\"Db\"") == 0
+        def _i_note equ 1
+    elif strcmp("\"{_note}\"", "\"D\"") == 0
+        def _i_note equ 2
+    elif strcmp("\"{_note}\"", "\"Eb\"") == 0
+        def _i_note equ 3
+    elif strcmp("\"{_note}\"", "\"E\"") == 0
+        def _i_note equ 4
+    elif strcmp("\"{_note}\"", "\"F\"") == 0
+        def _i_note equ 5
+    elif strcmp("\"{_note}\"", "\"Gb\"") == 0
+        def _i_note equ 6
+    elif strcmp("\"{_note}\"", "\"G\"") == 0
+        def _i_note equ 7
+    elif strcmp("\"{_note}\"", "\"Ab\"") == 0
+        def _i_note equ 8
+    elif strcmp("\"{_note}\"", "\"A\"") == 0
+        def _i_note equ 9
+    elif strcmp("\"{_note}\"", "\"Bb\"") == 0
+        def _i_note equ $A
+    elif strcmp("\"{_note}\"", "\"B\"") == 0
+        def _i_note equ $B
+    else
+        fail "Invalid note name"
+    endc
+    
+    db (_i_octave * $C + _i_note + 1) * 2
+    
+    purge _note, _octave, _i_octave, _i_note
+endm
+
+macro SongNoiseNote ; [note index]
+    static_assert \1 < $2A, "Invalid noise note index"
+    db \1 * 4
 endm
 
 macro SongNoteLength ; [note length index]
     static_assert \1 < $20, "Invalid note length index"
     db \1 | $A0
 endm
+
+def SongNoteLength_Demisemiquaver     equs "SongNoteLength 0"
+def SongNoteLength_Semiquaver         equs "SongNoteLength 1"
+def SongNoteLength_Quaver             equs "SongNoteLength 2"
+def SongNoteLength_Crochet            equs "SongNoteLength 3"
+def SongNoteLength_Minum              equs "SongNoteLength 4"
+def SongNoteLength_Semibreve          equs "SongNoteLength 5"
+def SongNoteLength_DottedQuaver       equs "SongNoteLength 6"
+def SongNoteLength_DottedCrochet      equs "SongNoteLength 7"
+def SongNoteLength_DottedMinum        equs "SongNoteLength 8"
+def SongNoteLength_TripletQuaver      equs "SongNoteLength 9"
+def SongNoteLength_TripletCrochet     equs "SongNoteLength $A"
+def SongNoteLength_Hemidemisemiquaver equs "SongNoteLength $B"
+def SongNoteLength_Breve              equs "SongNoteLength $C"
 
 macro SongOptions
     db $F1
