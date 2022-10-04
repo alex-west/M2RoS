@@ -1340,36 +1340,42 @@ handleCamera: ;{ 00:08FE
     ld a, [hl]
     ldh [$98], a
     
+    ; Rightward camera checks {
     ldh a, [$98]
-    bit 0, a ; Check right
-    jr z, jr_000_0949
+    bit 0, a ; Check if screen blocks scrolling to the right
+    jr z, .endIf_A
+        ; Check if the camera is on the right edge of the screen
         ldh a, [hCameraXPixel]
         cp $b0
-        jp nz, Jump_000_0936        
+        jp nz, .else_B
+            ; If so, check if Samus is to the right of the screen boundary
             ld a, [samus_onscreenXPos]
             cp $a1
-                jr c, jr_000_0991
+                jr c, .endRightCase
+            ; If so, initiate a rightward door transition
             ld a, $01 ; Right
             ld [doorScrollDirection], a
             call loadDoorIndex
-            jp Jump_000_0991
-        Jump_000_0936:
-    
-        jr c, jr_000_0949
-            ; Move camera left
-            ldh a, [hCameraXPixel]
-            sub $01
-            ldh [hCameraXPixel], a
-            ldh a, [hCameraXScreen]
-            sbc $00
-            and $0f
-            ldh [hCameraXScreen], a
-            jp Jump_000_0991
-    jr_000_0949:
+            jp .endRightCase
+        .else_B:
+            ; Check if camera is beyond the right boundary of the screen
+            jr c, .endIf_A
+                ; If so, move the camera left one pixel
+                ldh a, [hCameraXPixel]
+                sub $01
+                ldh [hCameraXPixel], a
+                ldh a, [hCameraXScreen]
+                sbc $00
+                and $0f
+                ldh [hCameraXScreen], a
+                jp .endRightCase
+    .endIf_A:
 
+    ; Check if camera speed is non-zero
     ld a, [camera_speedRight]
     and a
-    jr z, jr_000_0991
+    jr z, .endIf_C
+        ; Move camera rightward
         ld b, a
         ldh a, [hCameraXPixel]
         add b
@@ -1379,14 +1385,22 @@ handleCamera: ;{ 00:08FE
         adc $00
         and $0f
         ldh [hCameraXScreen], a
+
+        ; Set scroll bit (for prepMapUpdate)
         ld a, [camera_scrollDirection]
         set scrollDirBit_right, a
         ld [camera_scrollDirection], a
+
+        ; samusX - cameraX + $60
+        ; (Get Samus's coordinate in camera-space, relative to the left edge of the screen)
         ldh a, [hSamusXPixel]
         sub b
-        add $60
+        add $60 ; Adjusts math to be relative to the edge, not center, of the screen
+        
+        ; Check if camera has not caught up with the right-scrolling guide
         cp $40
-        jr c, jr_000_097f
+        jr c, .else_D
+            ; Move camera an extra pixel right
             ldh a, [hCameraXPixel]
             add $01
             ldh [hCameraXPixel], a
@@ -1394,10 +1408,12 @@ handleCamera: ;{ 00:08FE
             adc $00
             and $0f
             ldh [hCameraXScreen], a
-            jr jr_000_0991
-        jr_000_097f:
+            jr .endIf_C
+        .else_D:
+            ; Check if the camera is past the right-scrolling guide
             cp $3f
-            jr nc, jr_000_0991
+            jr nc, .endIf_C
+                ; Move camera an extra pixel left
                 ldh a, [hCameraXPixel]
                 sub $01
                 ldh [hCameraXPixel], a
@@ -1405,45 +1421,53 @@ handleCamera: ;{ 00:08FE
                 sbc $00
                 and $0f
                 ldh [hCameraXScreen], a
-    jr_000_0991:
+    .endIf_C:
+    .endRightCase: ;}
 
-Jump_000_0991:
-
+    ; Leftward camera checks {
     ldh a, [$98]
-    bit 1, a ; Check left
-    jr z, jr_000_09cd
+    bit 1, a ; Check if screen blocks scrolling to the left
+    jr z, .endIf_E
+        ; Check if camera is on the left edge of the screen
         ldh a, [hCameraXPixel]
         cp $50
-        jr nz, jr_000_09bb
+        jr nz, .else_F
+            ; If so, check if Samus is to the left of the screen boundary
             ld a, [samus_onscreenXPos]
             cp $0f
-                jp nc, Jump_000_0a18
+                jp nc, .endLeftCase
+            ; If so, initiate a leftwards screen transition
             ld a, $02 ; Left
             ld [doorScrollDirection], a
+            ; Normalize Samus's x position
             ld a, $00
             ldh [hSamusXPixel], a
+            ; Increment Samus's x screen so the correct door transition is sourced
             ldh a, [hSamusXScreen]
             inc a
             and $0f
             ldh [hSamusXScreen], a
             call loadDoorIndex
-            jp Jump_000_0a18
-        jr_000_09bb:
-    
-        jr nc, jr_000_09cd
-            ldh a, [hCameraXPixel]
-            add $01
-            ldh [hCameraXPixel], a
-            ldh a, [hCameraXScreen]
-            adc $00
-            and $0f
-            ldh [hCameraXScreen], a
-            jr jr_000_0a18
-    jr_000_09cd:
+            jp .endLeftCase
+        .else_F:
+            ; Check if camera is past the left edge of the screen
+            jr nc, .endIf_E
+                ; Move camera one pixel to the right
+                ldh a, [hCameraXPixel]
+                add $01
+                ldh [hCameraXPixel], a
+                ldh a, [hCameraXScreen]
+                adc $00
+                and $0f
+                ldh [hCameraXScreen], a
+                jr .endLeftCase
+    .endIf_E:
 
+    ; Check if camera is moving left
     ld a, [camera_speedLeft]
     and a
-    jr z, jr_000_0a18
+    jr z, .endIf_G
+        ; Move camera left
         ld a, [camera_speedLeft]
         ld b, a
         ldh a, [hCameraXPixel]
@@ -1454,14 +1478,22 @@ Jump_000_0991:
         sbc $00
         and $0f
         ldh [hCameraXScreen], a
+        
+        ; Set scroll bit (for prepMapUpdate)
         ld a, [camera_scrollDirection]
         set scrollDirBit_left, a
         ld [camera_scrollDirection], a
+ 
+        ; samusX - cameraX + $60
+        ; (Get Samus's coordinate in camera-space, relative to the left edge of the screen)
         ldh a, [hSamusXPixel]
         sub b
-        add $60
+        add $60 ; Adjusts math to be relative to the edge, not center, of the screen
+
+        ; Check if the camera has not caught up with the left-scrolling guide
         cp $70
-        jr nc, jr_000_0a06
+        jr nc, .else_H
+            ; Move an extra pixel to the left
             ldh a, [hCameraXPixel]
             sub $01
             ldh [hCameraXPixel], a
@@ -1469,10 +1501,12 @@ Jump_000_0991:
             sbc $00
             and $0f
             ldh [hCameraXScreen], a
-            jr jr_000_0a18
-        jr_000_0a06:
+            jr .endIf_G
+        .else_H:
+            ; Check if the camera is beyond the left-scrolling guide
             cp $71
-            jr c, jr_000_0a18
+            jr c, .endIf_G
+                ; Move an extra pixel to the right
                 ldh a, [hCameraXPixel]
                 add $01
                 ldh [hCameraXPixel], a
@@ -1480,18 +1514,20 @@ Jump_000_0991:
                 adc $00
                 and $0f
                 ldh [hCameraXScreen], a
-    jr_000_0a18:
-
-Jump_000_0a18:
+    .endIf_G:
+    .endLeftCase: ;}
+    ; Clear horizontal camera speed variables
     xor a
     ld [camera_speedRight], a
     ld [camera_speedLeft], a
+    
     ldh a, [hCameraYPixel]
     ld b, a
     ldh a, [hSamusYPixel]
     sub b
     add $60
     ldh [$99], a
+    
     ld a, [$d00c]
     ld b, a
     ldh a, [hSamusYPixel]
