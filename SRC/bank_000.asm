@@ -1516,57 +1516,74 @@ handleCamera: ;{ 00:08FE
                 ldh [hCameraXScreen], a
     .endIf_G:
     .endLeftCase: ;}
+
     ; Clear horizontal camera speed variables
     xor a
     ld [camera_speedRight], a
     ld [camera_speedLeft], a
     
+    ; samusY - cameraY + $60
+    ; (Get Samus's coordinate in camera-space, relative to the left edge of the screen)
     ldh a, [hCameraYPixel]
     ld b, a
     ldh a, [hSamusYPixel]
     sub b
-    add $60
+    add $60 ; Adjusts math to be relative to the edge, not center, of the screen
     ldh [$99], a
     
-    ld a, [$d00c]
+    ; deltaY = y - yPrev
+    ld a, [samusPrevYPixel]
     ld b, a
     ldh a, [hSamusYPixel]
     sub b
-        jp z, Jump_000_0b2c
+        ; Exit if no change in vertical position
+        jp z, .exit
+    
+    ; Upward camera checks {
+    ; Jump ahead if Samus moved up
     bit 7, a
-    jp nz, Jump_000_0ab6
+    jp nz, .endIf_I
+        ; Load deltaY to down speed
         ld [camera_speedDown], a
+        ; Set scroll bit (for prepMapUpdate)
         ld a, [camera_scrollDirection]
         set 7, a
         ld [camera_scrollDirection], a
         
-        ; Why's this case so different from the others
+        ; Check if screen blocks scrolling downwards
         ldh a, [$98]
         bit 3, a ; Check down
-        jr z, jr_000_0a9d
+        jr z, .else_J
+            ; Different behaviors for queen room/otherwise
             ld a, [queen_roomFlag]
             cp $11
-            jr nz, jr_000_0a58
+            jr nz, .else_K
+                ; Check if camera is at bottom of queen's room
                 ldh a, [hCameraYPixel]
                 cp $a0
-                    jr nz, jr_000_0a71
-                jr jr_000_0a5e
-            jr_000_0a58:
+                    jr nz, .endIf_K
+                jr .checkBottomExit
+            .else_K:
+                ; Check if camera is at bottom of screen
                 ldh a, [hCameraYPixel]
                 cp $c0
-                jr nz, jr_000_0a71
+                jr nz, .endIf_K
     
-                jr_000_0a5e:
+                .checkBottomExit:
+                    ; Check if Samus is at the bottom of the screen
                     ld a, [samus_onscreenYPos]
                     cp $78
-                        jp c, Jump_000_0b2c
+                        jp c, .exit
+                    ; If so, initiate a downwards door transition
                     ld a, $08 ; Down
                     ld [doorScrollDirection], a
                     call loadDoorIndex
-                    jp Jump_000_0ab6
-            jr_000_0a71:
-        
-            jr c, jr_000_0a84
+                    jp .endIf_I
+            .endIf_K:
+            
+            ; Check if camera is below the lower bound of the screen
+            jr c, .else_L
+                ; If so, move the camera a pixel up
                 ldh a, [hCameraYPixel]
                 sub $01
                 ldh [hCameraYPixel], a
@@ -1574,11 +1591,14 @@ handleCamera: ;{ 00:08FE
                 sbc $00
                 and $0f
                 ldh [hCameraYScreen], a
-                jp Jump_000_0b2c
-            jr_000_0a84:
+                jp .exit
+            .else_L:
+                ; (Screen does block downward scrolling)
+                ; Check if Samus is below a certain threshold
                 ldh a, [$99]
                 cp $40
-                jp c, Jump_000_0b2c
+                jp c, .exit
+                    ; If so, move the camera down
                     ld a, [camera_speedDown]
                     ld b, a
                     ldh a, [hCameraYPixel]
@@ -1587,11 +1607,14 @@ handleCamera: ;{ 00:08FE
                     ldh a, [hCameraYScreen]
                     adc $00
                     ldh [hCameraYScreen], a
-                    jp Jump_000_0b2c
-        jr_000_0a9d:
+                    jp .exit
+        .else_J:
+            ; (Screen does no block downward scrolling)
+            ; Check if Samus is below a certain threshold
             ldh a, [$99]
             cp $50
-            jp c, Jump_000_0b2c
+            jp c, .exit
+                ; If so, move the camera down
                 ld a, [camera_speedDown]
                 ld b, a
                 ldh a, [hCameraYPixel]
@@ -1600,63 +1623,80 @@ handleCamera: ;{ 00:08FE
                 ldh a, [hCameraYScreen]
                 adc $00
                 ldh [hCameraYScreen], a
-                jp Jump_000_0b2c
-    Jump_000_0ab6:
+                jp .exit
+    .endIf_I: ;}
 
+    ; Downward camera checks {
+    ; Invert deltaY to get upward scrolling speed
     cpl
     inc a
     ld [camera_speedUp], a
+    ; Set scroll bit (for prepMapUpdate)
     ld a, [camera_scrollDirection]
     set scrollDirBit_up, a
     ld [camera_scrollDirection], a
-        
+    
+    ; Check if screen stops scrolling upwards
     ldh a, [$98]
     bit 2, a ; Check up
-    jr z, jr_000_0b17
+    jr z, .else_M
+        ; (Screen blocks scrolling upwards)
+        ; Check if screen is at threshold
         ldh a, [hCameraYPixel]
         cp $48
-        jr nz, jr_000_0aee
+        jr nz, .else_N
+            ; Check if Samus is above threshold
             ld a, [samus_onscreenYPos]
             cp $1b
-                jr nc, jr_000_0b2c
+                jr nc, .endIf_M
+            ; If so, initiate upwards door transition
             ld a, $04 ; Up
             ld [doorScrollDirection], a
+            ; Normalize Samus's y position
             ld a, $00
             ldh [hSamusYPixel], a
             ldh a, [hCameraYScreen]
             ldh [hSamusYScreen], a
+            ; Perform a check to not initiate an upward transition during the queen fight
             ld a, [queen_roomFlag]
             cp $11
                 call nz, loadDoorIndex
-            jp Jump_000_0b2c
-        jr_000_0aee:
-    
-        jr nc, jr_000_0b00
-            ldh a, [hCameraYPixel]
-            add $01
-            ldh [hCameraYPixel], a
-            ldh a, [hCameraYScreen]
-            adc $00
-            and $0f
-            ldh [hCameraYScreen], a
-            jr jr_000_0b2c
-        jr_000_0b00:
-            ldh a, [$99]
-            cp $3e
-            jr nc, jr_000_0b2c
-                ld a, [camera_speedUp]
-                ld b, a
+            jp .endIf_M
+        .else_N:
+            ; Check if camera is above threshold
+            jr nc, .else_O
+                ; If above, scroll down
                 ldh a, [hCameraYPixel]
-                sub b
+                add $01
                 ldh [hCameraYPixel], a
                 ldh a, [hCameraYScreen]
-                sbc $00
+                adc $00
+                and $0f
                 ldh [hCameraYScreen], a
-                jr jr_000_0b2c   
-    jr_000_0b17:
+                jr .endIf_M
+            .else_O:
+                ; If camera is below threshold
+                ; Check if Samus is below threshold
+                ldh a, [$99]
+                cp $3e
+                jr nc, .endIf_M
+                    ; If so, scroll upwards
+                    ld a, [camera_speedUp]
+                    ld b, a
+                    ldh a, [hCameraYPixel]
+                    sub b
+                    ldh [hCameraYPixel], a
+                    ldh a, [hCameraYScreen]
+                    sbc $00
+                    ldh [hCameraYScreen], a
+                    jr .endIf_M   
+    .else_M:
+        ; (Screen does not block scrolling upwards)
+        ; Check if Samus is below threshold
         ldh a, [$99]
         cp $4e
-        jr nc, jr_000_0b2c
+        jr nc, .endIf_M
+            ; If so, scroll upwards
             ld a, [camera_speedUp]
             ld b, a
             ldh a, [hCameraYPixel]
@@ -1665,14 +1705,16 @@ handleCamera: ;{ 00:08FE
             ldh a, [hCameraYScreen]
             sbc $00
             ldh [hCameraYScreen], a
-    jr_000_0b2c:
+    .endIf_M: ;}
 
-Jump_000_0b2c:
+.exit:
+    ; Clear vertical speed values
     xor a
     ld [camera_speedDown], a
     ld [camera_speedUp], a
+    ; Save previous y position
     ldh a, [hSamusYPixel]
-    ld [$d00c], a
+    ld [samusPrevYPixel], a
 ret
 ;}
 
@@ -1913,7 +1955,7 @@ loadGame_samusData: ;{ 00:0CA3
     
     ld a, [saveBuf_samusYPixel]
     ldh [hSamusYPixel], a
-    ld [$d00c], a
+    ld [samusPrevYPixel], a
     
     ld a, [saveBuf_samusXScreen]
     ldh [hSamusXScreen], a

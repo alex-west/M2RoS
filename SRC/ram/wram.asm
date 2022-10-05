@@ -691,7 +691,7 @@ tempMetatile:
 .bottomLeft:  ds 1 ; $D00A: Metatile bottom-left
 .bottomRight: ds 1 ; $D00B: Metatile bottom-right
 
-;$D00C: Samus' previous Y position. Used for scrolling, low byte only
+def samusPrevYPixel = $D00C ; Samus' previous Y position. Used for scrolling, low byte only
 def samusBeamCooldown = $D00D ; Auto-fire cooldown counter
 def doorScrollDirection = $D00E ; Door transition direction
 ;{
