@@ -1323,7 +1323,7 @@ ret
 handleCamera: ;{ 00:08FE
     ld a, [doorScrollDirection]
     and a
-        jp nz, Jump_000_0b44 ; Handle door
+        jp nz, handleCamera_door ; Handle door
 
     ; Get screen index from coordinates
     ldh a, [hCameraYScreen]
@@ -1718,19 +1718,20 @@ handleCamera: ;{ 00:08FE
 ret
 ;}
 
-; 00:0B39 - Unreferenced data?
+.unusedTable ; 00:0B39 - Unreferenced data of unknown purpose
     db $00, $01, $01, $00, $00, $00, $01, $02, $02, $01, $01
 
 ; Already in a door transition?
-Jump_000_0b44: ;{ 00:0B44
+handleCamera_door: ;{ 00:0B44
     ; Make sure spinning animation happens during transition
     ld a, [samus_spinAnimationTimer]
     inc a
     ld [samus_spinAnimationTimer], a
     
+    ; Check if scrolling right {
     ld a, [doorScrollDirection]
     bit 0, a
-    jr z, jr_000_0b82
+    jr z, .endIf_A
         ; Scroll right
         ldh a, [hCameraXPixel]
         add $04
@@ -1739,7 +1740,7 @@ Jump_000_0b44: ;{ 00:0B44
         adc $00
         and $0f
         ldh [hCameraXScreen], a
-        ; Also force the running/rolling animation to happen if applicable
+        ; Ensure the rolling/running pose animates
         ld a, [samus_animationTimer]
         inc a
         inc a
@@ -1748,21 +1749,23 @@ Jump_000_0b44: ;{ 00:0B44
         ; Set screen movement direction
         ld a, scrollDir_right
         ld [camera_scrollDirection], a
-        ; Move Samus
+        ; Move Samus 1 pixel/frame
         ldh a, [hSamusXPixel]
         add $01
         ldh [hSamusXPixel], a
         ldh a, [hSamusXScreen]
         adc $00
         ldh [hSamusXScreen], a
+        ; Check if camera has reached threshold
         ldh a, [hCameraXPixel]
         cp $50
             ret nz
-        jp Jump_000_0c24
-    jr_000_0b82:
+        jp .endDoor
+    .endIf_A: ;}
 
+    ; Check if scrolling left {
     bit 1, a
-    jr z, jr_000_0bb5
+    jr z, .endIf_B
         ; Scroll left
         ldh a, [hCameraXPixel]
         sub $04
@@ -1771,7 +1774,7 @@ Jump_000_0b44: ;{ 00:0B44
         sbc $00
         and $0f
         ldh [hCameraXScreen], a
-        ; Also force the running/rolling animation to happen if applicable
+        ; Ensure the rolling/running pose animates
         ld a, [samus_animationTimer]
         inc a
         inc a
@@ -1787,14 +1790,16 @@ Jump_000_0b44: ;{ 00:0B44
         ldh a, [hSamusXScreen]
         sbc $00
         ldh [hSamusXScreen], a
+        ; Check if camera has reached threshold
         ldh a, [hCameraXPixel]
         cp $b0
             ret nz
-        jr jr_000_0c24
-    jr_000_0bb5:
+        jr .endDoor
+    .endIf_B: ;}
 
+    ; Check if scrolling up {
     bit 2, a
-    jr z, jr_000_0bee
+    jr z, .endIf_C
         ; Scroll up
         ldh a, [hCameraYPixel]
         sub $04
@@ -1803,7 +1808,7 @@ Jump_000_0b44: ;{ 00:0B44
         sbc $00
         and $0f
         ldh [hCameraYScreen], a
-        ; Also force the running/rolling animation to happen if applicable
+        ; Ensure the rolling/running pose animates
         ld a, [samus_animationTimer]
         inc a
         inc a
@@ -1812,7 +1817,7 @@ Jump_000_0b44: ;{ 00:0B44
         ; Set screen movement direction
         ld a, scrollDir_up
         ld [camera_scrollDirection], a
-        ; Move Samus 1.5 px/frame
+        ; Move Samus up 1.5 px/frame
         ldh a, [frameCounter]
         and $01
         add $01
@@ -1823,12 +1828,14 @@ Jump_000_0b44: ;{ 00:0B44
         ldh a, [hSamusYScreen]
         sbc $00
         ldh [hSamusYScreen], a
+        ; Check if camera has reached threshold
         ldh a, [hCameraYPixel]
         cp $b8
             ret nz
-        jr jr_000_0c24
-    jr_000_0bee:
+        jr .endDoor
+    .endIf_C: ;}
 
+    ; Check if scrolling down {
     bit 3, a
     ret z
         ; Scroll down
@@ -1839,7 +1846,7 @@ Jump_000_0b44: ;{ 00:0B44
         adc $00
         and $0f
         ldh [hCameraYScreen], a
-        ; Also force the running/rolling animation to happen if applicable
+        ; Ensure the rolling/running pose animates
         ld a, [samus_animationTimer]
         inc a
         inc a
@@ -1848,7 +1855,7 @@ Jump_000_0b44: ;{ 00:0B44
         ; Set screen movement direction
         ld a, scrollDir_down
         ld [camera_scrollDirection], a
-        ; Move Samus 1.5 px/frame
+        ; Move Samus down 1.5 px/frame
         ldh a, [frameCounter]
         and $01
         add $01
@@ -1859,17 +1866,22 @@ Jump_000_0b44: ;{ 00:0B44
         ldh a, [hSamusYScreen]
         adc $00
         ldh [hSamusYScreen], a
+        ; Check if camera has reached threshold
         ldh a, [hCameraYPixel]
         cp $48
             ret nz
-    ; end cases
+    ;} end downwards case
 
-Jump_000_0c24:
-jr_000_0c24:
+    ; We get here if the once the camera reaches the appropriate threshold
+    ; (Note that since the thresholds are checked for equality, so if the
+    ;  camera position and speed are somehow misaligned from the threshold,
+    ;  then the transition scrolling will continue forever.)
+.endDoor:
+    ; Clear flags
     xor a
     ld [doorScrollDirection], a
     ld [cutsceneActive], a
-    ; Apply fade-in if we have faded out.
+    ; Set fade-in timer if the transition triggered a fade-out
     ld a, [bg_palette]
     cp $93
         ret z
