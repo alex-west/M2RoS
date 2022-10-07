@@ -1890,6 +1890,7 @@ handleCamera_door: ;{ 00:0B44
 ret
 ;}
 
+; Called from handleCamera
 loadDoorIndex: ;{ 00:0C37
     ; Check related to being in the Queen fight
     ld a, [queen_roomFlag]
@@ -1905,19 +1906,22 @@ loadDoorIndex: ;{ 00:0C37
                 ld [samusPose], a
     .endIf:
 
+    ; Clear some collision flags
     xor a
     ld [samus_hurtFlag], a
     ld [saveContactFlag], a
+
     ; Clear bomb slots
     ld a, $ff
-    ld hl, $dd30
+    ld hl, bombArray.slotA ; $DD30
     ld [hl], a
-    ld hl, $dd40
+    ld hl, bombArray.slotB ; $DD40
     ld [hl], a
-    ld hl, $dd50
+    ld hl, bombArray.slotC ; $DD50
     ld [hl], a
     ; Set flag to indicate a screen transition just started
     ld [justStartedTransition], a
+    
     ; Get screen ID from coordinates
     ldh a, [hCameraYScreen]
     swap a
@@ -1936,12 +1940,14 @@ loadDoorIndex: ;{ 00:0C37
     ld a, [hl]
     res 3, a ; Remove sprite priority bit from door index in ROM
     ld [doorIndexHigh], a
+    
     ; Set status
     ld a, $02
     ld [doorExitStatus], a
     xor a
     ld [fadeInTimer], a
-    ; If in debug mode, check cheat to warp to queen
+    
+    ; If in debug mode, check input to warp to queen
     ld a, [debugFlag]
     and a
         ret z
@@ -1955,8 +1961,7 @@ loadDoorIndex: ;{ 00:0C37
     ld [doorIndexLow], a
     ld a, $01
     ld [doorIndexHigh], a
-ret
-;}
+ret;}
 
 ; Loads Samus' information from the WRAM save buffer to working locations in RAM
 loadGame_samusData: ;{ 00:0CA3
@@ -2079,56 +2084,62 @@ samus_handlePose: ;{ 00:0D21
         dw poseFunc_faceScreen ; $16
         dw poseFunc_faceScreen ; $17
         ; Poses related to being eaten by the queen
-        dw poseFunc_0E36       ; $18 Being eaten by Metroid Queen
+        dw poseFunc_beingEaten ; $18 Being eaten by Metroid Queen
         dw poseFunc_0DF0       ; $19 In Metroid Queen's mouth
-        dw poseFunc_0DBE       ; $1A Being swallowed by Metroid Queen
-        dw poseFunc_0D87       ; $1B In Metroid Queen's stomach
+        dw poseFunc_toStomach  ; $1A Being swallowed by Metroid Queen
+        dw poseFunc_inStomach  ; $1B In Metroid Queen's stomach
         dw poseFunc_0D8B       ; $1C Escaping Metroid Queen
         dw poseFunc_0ECB       ; $1D Escaped Metroid Queen
 ;}
 
 ; Samus' pose functions: {
 
-poseFunc_0D87: ;{ $1B - In Queen's stomach
+poseFunc_inStomach: ;{ 00:0D87 $1B - In Queen's stomach
+    ; Hurt Samus
     call applyDamage.queenStomach
+    ; Note: Firing weapons is handled elsewhere
 ret ;}
 
 poseFunc_0D8B: ;{ $1C - Escaping Queen's mouth
     call applyDamage.queenStomach
     ldh a, [hSamusXPixel]
     cp $b0
-    jr z, jr_000_0dae
+    jr z, .else_A
         add $02
         ldh [hSamusXPixel], a
         cp $80
-        jr nc, jr_000_0da4
+        jr nc, .else_B
             ldh a, [hSamusYPixel]
             sub $02
             ldh [hSamusYPixel], a
-            jr jr_000_0dad
-        jr_000_0da4:
+            jr .endIf_B
+        .else_B:
             cp $98
-            jr c, jr_000_0dad
+            jr c, .endIf_B
                 ldh a, [hSamusYPixel]
                 dec a
                 ldh [hSamusYPixel], a
-        jr_000_0dad:
+        .endIf_B:
         ret
-    jr_000_0dae:
+    .else_A:
+        ld a, samus_jumpArrayBaseOffset
+        ld [samus_jumpArcCounter], a
+        ld a, $01
+        ld [$d00f], a
+        ld a, $1d
+        ld [samusPose], a
+        ret 
+;}
 
-    ld a, samus_jumpArrayBaseOffset
-    ld [samus_jumpArcCounter], a
-    ld a, $01
-    ld [$d00f], a
-    ld a, $1d
-    ld [samusPose], a
-ret ;}
-
-poseFunc_0DBE: ;{ $1A
+poseFunc_toStomach: ;{ 00:0DBE - $1A - Being swallowed by Metroid Queen
+    ; Hurt Samus
     call applyDamage.queenStomach
+    ; Check if Samus has reached stomach
     ldh a, [hSamusXPixel]
     cp $68
-    jr z, jr_000_0dea
+    jr z, .else_A
+        ; If not, move Samus
+        ; Check if (queenX + 6 + scrollX) < samusX
         ld a, [queen_headX]
         add $06
         ld b, a
@@ -2137,33 +2148,40 @@ poseFunc_0DBE: ;{ $1A
         ld b, a
         ldh a, [hSamusXPixel]
         cp b
-        jr c, jr_000_0ddc
+        jr c, .endIf_B
+            ; If so, have Samus move up a pixel
             ldh a, [hSamusYPixel]
             dec a
             ldh [hSamusYPixel], a
-        jr_000_0ddc:
-    
+        .endIf_B:
+        ; Move Samus left
         ldh a, [hSamusXPixel]
         dec a
         ldh [hSamusXPixel], a
+        ; Check if Samus is left of a threshold
         cp $80
             ret nc
+        ; If so, move Samus down
         ldh a, [hSamusYPixel]
         inc a
         ldh [hSamusYPixel], a
         ret
-    jr_000_0dea:
+    .else_A:
+        ; Move to next pose
         ld a, $1b
         ld [samusPose], a
         ret
 ;} end proc
 
-poseFunc_0DF0: ;{ $19
+poseFunc_0DF0: ;{ $19 -  In Metroid Queen's mouth
+    ; Lock Samus's position
     ld a, $6c
     ldh [hSamusYPixel], a
     ld a, $a6
     ldh [hSamusXPixel], a
+    ; Hurt Samus
     call applyDamage.queenStomach
+    ; Check if Samus is escaping the Queen's mouth
     ld a, [queen_eatingState]
     cp $05
     jr nz, .else_A
@@ -2175,6 +2193,7 @@ poseFunc_0DF0: ;{ $19
         ld [samusPose], a
         ret
     .else_A:
+        ; Check if the Queen just died from its mouth being bombed
         cp $20
         jr nz, .else_B
             ld a, samus_jumpArrayBaseOffset
@@ -2185,9 +2204,11 @@ poseFunc_0DF0: ;{ $19
             ld [samusPose], a
             ret
         .else_B:
+            ; Check if Samus is pressing left
             ldh a, [hInputRisingEdge]
             bit PADB_LEFT, a
                 ret z
+            ; If so, start swallowing Samus
             ld a, $1a
             ld [samusPose], a
             ld a, $06
@@ -2195,70 +2216,84 @@ poseFunc_0DF0: ;{ $19
             ret
 ;}
 
-poseFunc_0E36: ;{ $18
+poseFunc_beingEaten: ;{ 00:0E36 - $18 - Being eaten by Metroid Queen
     call applyDamage.queenStomach
+    ; Move on to next pose if the Queen's mouth is closed
     ld a, [queen_eatingState]
     cp $03
-    jr nz, jr_000_0e46
+    jr nz, .endIf_A
         ld a, $19
         ld [samusPose], a
         ret
-    jr_000_0e46:
+    .endIf_A:
 
+    ; Use C as a counter to count the number of axes Samus is aligned with the queen
     ld c, $00
+    ; queenY + $13 - samusY
     ld a, [queen_headY]
     add $13
     ld b, a
     ld a, [samus_onscreenYPos]
     cp b
-    jr nz, jr_000_0e58
+    ; Check if the y positions are equal
+    jr nz, .elseIf_B
+        ; Set C to 1 to indicate the y positions are equal
         ld c, $01
-            jr jr_000_0e72
-    jr_000_0e58:
-    
-    jr c, jr_000_0e67
+        jr .endIf_B
+    .elseIf_B:
+    ; Check if Samus is above or below the queen's head
+    jr c, .else_B
+        ; Move Samus up
         ldh a, [hSamusYPixel]
         sub $01
         ldh [hSamusYPixel], a
         ld a, $01
         ld [camera_speedUp], a
-        jr jr_000_0e72
-    jr_000_0e67:
+        jr .endIf_B
+    .else_B:
+        ; Move Samus down
         ldh a, [hSamusYPixel]
         add $01
         ldh [hSamusYPixel], a
         ld a, $01
         ld [camera_speedDown], a
-    jr_000_0e72:
+    .endIf_B:
 
+    ; queenX + $1A - samusX
     ld a, [queen_headX]
     add $1a
     ld b, a
     ld a, [samus_onscreenXPos]
     cp b
-    jr nz, jr_000_0e81
+    ; Check if the x positions are equal
+    jr nz, .elseIf_C
+        ; Increment C to indicate that the x positions are equal
         inc c
-            jr z, jr_000_0e9b
-    jr_000_0e81:
-
-    jr c, jr_000_0e90
+        jr z, .endIf_C
+    .elseIf_C:
+    ; Check if Samus is left or right of the queen's head
+    jr c, .else_C
+        ; Move Samus left (2 pixels/frame !?)
         ldh a, [hSamusXPixel]
         sub $02
         ldh [hSamusXPixel], a
         ld a, $01
         ld [camera_speedLeft], a
-        jr jr_000_0e9b
-    jr_000_0e90:
+        jr .endIf_C
+    .else_C:
+        ; Move Samus right
         ldh a, [hSamusXPixel]
         add $01
         ldh [hSamusXPixel], a
         ld a, $01
         ld [camera_speedRight], a
-    jr_000_0e9b:
+    .endIf_C:
 
+    ; Verify that Samus is aligned with the mouth on both axes
     ld a, c
     cp $02
         ret nz
+    ; If so, have the queen's mouth start closing
     ld a, $02
     ld [queen_eatingState], a
 ret

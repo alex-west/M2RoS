@@ -1127,7 +1127,10 @@ projectileArray:: ds $10 * 3 ;$DD00..2F: Projectile data. 10h byte slots
 ;    + 4: Wave index
 ;    + 5: Frame counter
 ;}
-bombArray:: ds $10 * 3 ;$DD30..5F: Bomb data. 10h byte slots
+bombArray:: ;$DD30..5F: Bomb data. 10h byte slots
+.slotA: ds $10
+.slotB: ds $10
+.slotC: ds $10
 ;{
 ;    + 0: Type
 ;        1: Bomb
