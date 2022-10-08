@@ -768,8 +768,8 @@ def samus_turnAnimTimer = $D02C ; Timer for turnaround animation (facing the scr
 ;
 ;$D031: Unused?
 def projectileIndex = $D032 ; Index of working projectile
-;$D033: Cleared by morph
-;
+def samus_speedDown = $D033 ; Set by samus_moveVertical. Cleared by morph
+def samus_speedDownTemp = $D034 ; Temp variable used by samus_moveVertical
 def camera_speedRight = $D035 ; Screen right velocity
 def camera_speedLeft  = $D036 ; Screen left velocity
 def camera_speedUp    = $D037 ; Screen up velocity

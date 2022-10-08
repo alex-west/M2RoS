@@ -1999,7 +1999,7 @@ Call_001_540e:
                     cp $08
                     jr nz, jr_001_547e
                         ld a, [samusPose]
-                        cp $18
+                        cp pose_beingEaten ; $18
                             call c, Call_001_54d7
                         ld a, c
                         srl a

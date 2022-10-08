@@ -684,7 +684,7 @@ gameMode_Main: ;{ 00:04DF
     ; Jump ahead if being eaten by the Queen
     ld a, [samusPose]
     and %01111111 ; Mask out upper bit (for turnaround animation)
-    cp $18
+    cp pose_beingEaten ; $18
         jp nc, .queenBranch
     ; Handle window height, save sprite text, earthquake, low heath beep, fade in, and Metroid Queen cry
     call miscIngameTasks_longJump
@@ -1898,11 +1898,11 @@ loadDoorIndex: ;{ 00:0C37
     jr nz, .endIf
         ; If in a spider ball pose, return to morph ball
         ld a, [samusPose]
-        cp $0b
+        cp pose_spiderRoll ; $0B
         jr c, .endIf
-            cp $0f
+            cp pose_spider + 1 ; $0F
             jr nc, .endIf
-                ld a, $05
+                ld a, pose_morph ; $05
                 ld [samusPose], a
     .endIf:
 
@@ -2019,7 +2019,7 @@ loadGame_samusData: ;{ 00:0CA3
     ld [samusDispMissilesHigh], a
     
     ; Prep the Samus appearance sequence
-    ld a, $13
+    ld a, pose_faceScreen ; $13
     ld [samusPose], a
     ld a, $40
     ld [countdownTimerLow], a
@@ -2066,7 +2066,7 @@ samus_handlePose: ;{ 00:0D21
         dw poseFunc_crouch     ; $04 Crouching
         dw poseFunc_morphBall  ; $05 Morphball
         dw poseFunc_morphJump  ; $06 Morphball jumping
-        dw poseFunc_12F5       ; $07 Falling
+        dw poseFunc_fall       ; $07 Falling
         dw poseFunc_morphFall  ; $08 Morphball falling
         dw poseFunc_jumpStart  ; $09 Starting to jump
         dw poseFunc_jumpStart  ; $0A Starting to spin-jump
@@ -2136,7 +2136,7 @@ poseFunc_outStomach: ;{ 00:0D8B - $1C - Escaping Queen's mouth
         ld a, $01
         ld [samusAirDirection], a
         ; Set pose to escape Queen
-        ld a, $1d
+        ld a, pose_exitQueen ; $1D
         ld [samusPose], a
         ret 
 ;}
@@ -2178,7 +2178,7 @@ poseFunc_toStomach: ;{ 00:0DBE - $1A - Being swallowed by Metroid Queen
         ret
     .else_A:
         ; Move to next pose
-        ld a, $1b
+        ld a, pose_inStomach ; $1B
         ld [samusPose], a
         ret
 ;} end proc
@@ -2202,7 +2202,7 @@ poseFunc_inMouth: ;{ 00:0DF0 - $19 -  In Metroid Queen's mouth
         ld a, samus_jumpArrayBaseOffset + $10 ;$50
         ld [samus_jumpArcCounter], a
         ; Set pose to escape Queen
-        ld a, $1d
+        ld a, pose_exitQueen ; $1D
         ld [samusPose], a
         ret
     .else_A:
@@ -2215,7 +2215,7 @@ poseFunc_inMouth: ;{ 00:0DF0 - $19 -  In Metroid Queen's mouth
             ld a, $01
             ld [samusAirDirection], a
             ; Set pose to escape Queen
-            ld a, $1d
+            ld a, pose_exitQueen ; $1D
             ld [samusPose], a
             ret
         .else_B:
@@ -2224,7 +2224,7 @@ poseFunc_inMouth: ;{ 00:0DF0 - $19 -  In Metroid Queen's mouth
             bit PADB_LEFT, a
                 ret z
             ; If so, start swallowing Samus
-            ld a, $1a
+            ld a, pose_toStomach ; $1A
             ld [samusPose], a
             ld a, $06
             ld [queen_eatingState], a
@@ -2237,7 +2237,7 @@ poseFunc_beingEaten: ;{ 00:0E36 - $18 - Being eaten by Metroid Queen
     ld a, [queen_eatingState]
     cp $03
     jr nz, .endIf_A
-        ld a, $19
+        ld a, pose_inMouth ; $19
         ld [samusPose], a
         ret
     .endIf_A:
@@ -2417,7 +2417,7 @@ poseFunc_hurt: ;{ 00:0EF7 - $0F - Knockback
     .endIf_B:
 
     ; Start jumping
-    ld a, pose_jumpStart
+    ld a, pose_nJumpStart
     ld [samusPose], a
     xor a
     ld [samus_jumpStartCounter], a
@@ -2791,7 +2791,7 @@ ret
     ld [spiderDisplacement], a
     ; Exit if Samus was unimpeded moving down
         ret nc
-    ; Exit if Samus ran into a solid sprite
+    ; Exit if Samus landed into a solid sprite
     ld a, [samus_onSolidSprite]
     and a
         ret nz
@@ -2850,14 +2850,14 @@ poseFunc_spiderJump: ;{ 00:1170 - $0D: Spider ball jumping
     ; Move vertically
     call samus_moveVertical
         ; If we hit something, consider sticking to it
-        jp c, Jump_000_1233
+        jp c, poseFunc_spiderFall.land
 
     ; Spider collision check
     call collision_checkSpiderSet
     ld a, [spiderContactState]
     and a
         ; If we touched something, then stick to it
-        jp nz, Jump_000_1241
+        jp nz, poseFunc_spiderFall.attach
 
     ; Increment jump counter
     ld a, [samus_jumpArcCounter]
@@ -2897,28 +2897,34 @@ ret
 ;}
 
 poseFunc_spiderFall: ;{ 00:11E4 - $0C
+    ; Un-spider if we pressed A
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
-    jr z, jr_000_11f5
+    jr z, .endIf_A
         ld a, pose_morphFall
         ld [samusPose], a
+        ; Play sound
         ld a, $06
         ld [sfxRequest_square1], a
         ret
-    jr_000_11f5:
+    .endIf_A:
 
+    ; If we pressed right, move right
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
-    jr z, jr_000_1200
+    jr z, .else_B
         call poseFunc_spiderRoll.right
-        jr jr_000_1209
-    jr_000_1200:
+        jr .endIf_B
+    .else_B:
+        ; If we pressed left, move left
         ldh a, [hInputPressed]
         bit PADB_LEFT, a
-        jr z, jr_000_1209
+        jr z, .endIf_C
             call poseFunc_spiderRoll.left
-    jr_000_1209:
+        .endIf_C:
+    .endIf_B:
 
+    ; Move vertically according to value in fallArcTable
     ld hl, fallArcTable
     ld a, [samus_fallArcCounter]
     ld e, a
@@ -2926,58 +2932,64 @@ poseFunc_spiderFall: ;{ 00:11E4 - $0C
     add hl, de
     ld a, [hl]
     call samus_moveVertical
-    jr c, jr_000_1233
+        ; If Samus hit something, then land
+        jr c, .land
 
+    ; Check spider collision points
     call collision_checkSpiderSet
     ld a, [spiderContactState]
     and a
-    jr nz, jr_000_1241
+        ; If Samus touched something, then stick to it
+        jr nz, .attach
 
+    ; Increment fall counter
     ld a, [samus_fallArcCounter]
     inc a
     ld [samus_fallArcCounter], a
-    
+    ; Clamp value to $16
     cp $17
-    jr c, jr_000_1232
+    jr c, .endIf_D
+        ld a, $16
+        ld [samus_fallArcCounter], a
+    .endIf_D:
+ret
 
-    ld a, $16
-    ld [samus_fallArcCounter], a
-
-jr_000_1232:
-    ret
-
-
-Jump_000_1233:
-jr_000_1233:
+.land:
+    ; Check if Samus landed on a solid sprite
     ld a, [samus_onSolidSprite]
     and a
-    jr nz, jr_000_1241
-
-    ldh a, [hSamusYPixel]
-    and $f8
-    or $04
-    ldh [hSamusYPixel], a
-
-Jump_000_1241:
-jr_000_1241:
+    jr nz, .endIf_E
+        ; If not, then normalize Samus's y position
+        ldh a, [hSamusYPixel]
+        and $f8
+        or $04
+        ldh [hSamusYPixel], a
+    .endIf_E:
+.attach:
+    ; Set pose to spider rolling
     ld a, pose_spiderRoll
     ld [samusPose], a
+    ; Clear counter
     xor a
     ld [samus_fallArcCounter], a
-    ret
+ret
 ;}
 
 poseFunc_morphFall: ;{ 00:123B - $08: Morphball falling
+    ; Check if down was just pressed
     ldh a, [hInputRisingEdge]
     bit PADB_DOWN, a
     jr z, .endIf_A
+        ; If so, check if we have spider
         ld a, [samusItems]
         bit itemBit_spider, a
         jr z, .endIf_A
+            ; If so, enter spider falling pose
             ld a, pose_spiderFall
             ld [samusPose], a
             xor a
             ld [spiderRotationState], a
+            ; Play sound
             ld a, $0d
             ld [sfxRequest_square1], a
             ret
@@ -2994,27 +3006,34 @@ poseFunc_morphFall: ;{ 00:123B - $08: Morphball falling
         and a
         jr z, .endIf_B
             ; This code is never executed
+            ; Set jump counter to acidContactFlag's value
             ld [samus_jumpArcCounter], a
+            ; Set pose
             ld a, pose_morphJump
             ld [samusPose], a
+            ;
             xor a
             ld [samus_jumpStartCounter], a
+            ; Play jump sound
             ld a, $01
             ld [sfxRequest_square1], a
             ret
     .endIf_B:
 
-    ; Handle unmorphing
+    ; Check if up was just pressed
     ldh a, [hInputRisingEdge]
     bit PADB_UP, a
     jr z, .endIf_C
+        ; If so, try unmorphing
         call samus_unmorphInAir
+        ; Set grace period of mid-air jumping
         ld a, samus_unmorphJumpTime
         ld [samus_unmorphJumpTimer], a
         jr .exit
     .endIf_C:
 
 ;moveHorizontal
+    ; Move right if right is pressed
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
     jr z, .endIf_D
@@ -3027,6 +3046,7 @@ poseFunc_morphFall: ;{ 00:123B - $08: Morphball falling
             jr .moveVertical
     .endIf_D:
 
+    ; Move left if left is pressed
     ldh a, [hInputPressed]
     bit PADB_LEFT, a
     jr z, .endIf_E
@@ -3039,6 +3059,7 @@ poseFunc_morphFall: ;{ 00:123B - $08: Morphball falling
     .endIf_E
 
 .moveVertical:
+    ; Move vertically according to the value in the fallArcTable
     ld hl, fallArcTable
     ld a, [samus_fallArcCounter]
     ld e, a
@@ -3046,13 +3067,14 @@ poseFunc_morphFall: ;{ 00:123B - $08: Morphball falling
     add hl, de
     ld a, [hl]
     call samus_moveVertical
+    ; Branch ahead if Samus landed on something
     jr c, .else
         ; Keep falling
         ; Increase fall counter
         ld a, [samus_fallArcCounter]
         inc a
         ld [samus_fallArcCounter], a
-        ; Cap value to $16
+        ; Clamp value to $16
         cp $17
         jr c, .endIf_F
             ld a, $16
@@ -3068,10 +3090,11 @@ poseFunc_morphFall: ;{ 00:123B - $08: Morphball falling
         ; Clear counter
         xor a
         ld [samus_fallArcCounter], a
-        ; Clamp y pixel to 8x8 tile boundary if this condition is met
+        ; Exit if Samus landed on a solid enemy
         ld a, [samus_onSolidSprite]
         and a
             ret nz
+        ; Normalize Samus's y position
         ldh a, [hSamusYPixel]
         and $f8
         or $04
@@ -3079,55 +3102,72 @@ poseFunc_morphFall: ;{ 00:123B - $08: Morphball falling
         ret
 ;} end proc
 
-poseFunc_12F5: ;{ 00:12F5 - $07 - Falling
+poseFunc_fall: ;{ 00:12F5 - $07 - Falling
+    ; Check if A was just pressed
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
-    jr z, jr_000_1335
+    jr z, .endIf_A
+        ; Check if Samus has touched acid
         ld a, [acidContactFlag]
         and a
-        jr z, jr_000_1306
+        jr z, .else_B
+            ; Set jump counter to value of acidContactFlag
+            ; Note: Samus BG collision has not been evaluated yet for this frame,
+            ;  so this branch is never executed.
             ld [samus_jumpArcCounter], a
-            jr jr_000_1311
-        jr_000_1306:
+            jr .endIf_B
+        .else_B:
+            ; Check if unmorph jump timer is non-zero
             ld a, [samus_unmorphJumpTimer]
             and a
-                jr z, jr_000_1335
+                jr z, .endIf_A
+            ; If so, initiate aerial jump (high jump)
             ld a, samus_jumpArrayBaseOffset - $1F ;$21
             ld [samus_jumpArcCounter], a
-        jr_000_1311:
-    
+        .endIf_B:
+        ; High jump SFX
         ld a, $02
         ld [sfxRequest_square1], a
+
+        ; Check if Samus does not have high jump
         ld a, [samusItems]
         bit itemBit_hiJump, a
-        jr nz, jr_000_1327
+        jr nz, .endIf_C
+            ; If so, provide normal jump parameters
             ld a, samus_jumpArrayBaseOffset - $F ;$31
             ld [samus_jumpArcCounter], a
+            ; High jump 
             ld a, $01
             ld [sfxRequest_square1], a
-        jr_000_1327:
-    
-        ld a, pose_jumpStart
+        .endIf_C:
+        ; Set pose
+        ld a, pose_nJumpStart
         ld [samusPose], a
+        ; Clear timers
         xor a
         ld [samus_jumpStartCounter], a
         xor a
         ld [samus_unmorphJumpTimer], a
         ret    
-    jr_000_1335:
+    .endIf_A:
 
+    ; Check if right is held
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
-    jr z, jr_000_1340
+    jr z, .else_D
+        ; If so, move right
         call samus_moveRightInAir.turn
-        jr jr_000_1349
-    jr_000_1340:
+        jr .endIf_D
+    .else_D:
+        ; Check if left is held
         ldh a, [hInputPressed]
         bit PADB_LEFT, a
-        jr z, jr_000_1349
+        jr z, .endIf_D
+            ; If so, move left
             call samus_moveLeftInAir.turn
-    jr_000_1349:
+    .endIf_D:
 
+    ; Read fall arc table and move accordingly
     ld hl, fallArcTable
     ld a, [samus_fallArcCounter]
     ld e, a
@@ -3135,28 +3175,35 @@ poseFunc_12F5: ;{ 00:12F5 - $07 - Falling
     add hl, de
     ld a, [hl]
     call samus_moveVertical
-    jr c, jr_000_136a
+    ; Branch ahead if Samus hit something
+    jr c, .else_E
+        ; Increment fall counter
         ld a, [samus_fallArcCounter]
         inc a
         ld [samus_fallArcCounter], a
+        ; Clamp fall counter to $16
         cp $17
-        jr c, jr_000_1369
+        jr c, .endIf_F
             ld a, $16
             ld [samus_fallArcCounter], a
-        jr_000_1369:
+        .endIf_F:
         ret
-    jr_000_136a:
+    .else_E:
+        ; Try standing
         call samus_tryStanding
-        jr nc, jr_000_1374
+        jr nc, .endIf_G
+            ; Crouch if we didn't have room to stand
             ld a, pose_crouch
             ld [samusPose], a
-        jr_000_1374:
-    
+        .endIf_G:
+        ; Clear fall counter
         xor a
         ld [samus_fallArcCounter], a
+        ; Exit if Samus landed on a solid sprite
         ld a, [samus_onSolidSprite]
         and a
             ret nz
+        ; Normalize y position if not on solid sprite
         ldh a, [hSamusYPixel]
         and $f8
         or $04
@@ -3170,7 +3217,7 @@ fallArcTable: ;{ 00:1386
 ;}
 
 handleTurnaroundTimer: ;{ Called if MSB of Samus' pose is set
-    call Call_000_1f0f ; Downwards BG collision
+    call collision_samusBottom ; Downwards BG collision
     ; Exit this state if jump is pressed
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
@@ -3189,7 +3236,7 @@ handleTurnaroundTimer: ;{ Called if MSB of Samus' pose is set
 
 poseFunc_standing: ;{ 00:13B7 - $00: Standing
     ; Fall if ground is missing
-    call Call_000_1f0f
+    call collision_samusBottom
     jr c, .endIf_A
         ld a, pose_fall
         ld [samusPose], a
@@ -3358,7 +3405,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
             ld [samus_jumpArcCounter], a
         .endIf_L:
         ; Set pose
-        ld a, pose_jumpStart
+        ld a, pose_nJumpStart
         ld [samusPose], a
         ; Clear counter
         xor a
@@ -3370,7 +3417,7 @@ ret
 
 poseFunc_running: ;{ 00:14D6 - $03: Running
     ; Fall if ground is missing
-    call Call_000_1f0f
+    call collision_samusBottom
     jr c, .endIf_A
         ld a, pose_fall
         ld [samusPose], a
@@ -3533,7 +3580,7 @@ poseFunc_running: ;{ 00:14D6 - $03: Running
         .endIf_K:
         
         ; Set pose
-        ld a, pose_jumpStart
+        ld a, pose_nJumpStart
         ld [samusPose], a
         ; Clear counter
         xor a
@@ -3565,7 +3612,7 @@ ret
 
 poseFunc_crouch: ;{ 00:15F4 - $04: Crouching
     ; Start falling if ground disappears
-    call Call_000_1f0f
+    call collision_samusBottom
     jr c, .endIf_A
         ld a, pose_fall
         ld [samusPose], a
@@ -3763,7 +3810,7 @@ ret
 
 poseFunc_morphBall: ;{ 00:1701 - $05: Morph ball
     ; Start falling if nothing below
-    call Call_000_1f0f
+    call collision_samusBottom
     jr c, .endIf_A
         ld a, pose_morphFall
         ld [samusPose], a
@@ -3787,25 +3834,31 @@ poseFunc_morphBall: ;{ 00:1701 - $05: Morph ball
     .endIf_B:
 
     ; Handle spring ball
+    ; Check if A is pressed
     ldh a, [hInputPressed]
     bit PADB_A, a
     jr z, .endIf_C
+        ; Check if we have spring ball
         ld a, [samusItems]
         bit itemBit_spring, a
         jr z, .endIf_C
+            ; Set jump parameter
             ld a, samus_jumpArrayBaseOffset - $12 ;$2e
             ld [samus_jumpArcCounter], a
+            ; Set pose
             ld a, pose_morphJump
             ld [samusPose], a
+            ; Clear counter
             xor a
             ld [samus_jumpStartCounter], a
+            ; Play SFX
             ld a, $01
             ld [sfxRequest_square1], a
             ret
     .endIf_C:
 
     ; Bounce if last vertical speed was >= 2
-    ld a, [$d033]
+    ld a, [samus_speedDown]
     cp $02
     jr c, .else_A
         ; Handle morph bounce
@@ -3829,7 +3882,7 @@ poseFunc_morphBall: ;{ 00:1701 - $05: Morph ball
             ret
     .else_A: ; Move horizontal
         xor a
-        ld [$d033], a
+        ld [samus_speedDown], a
         ldh a, [hInputPressed]
         bit PADB_RIGHT, a
         jr z, .else_C
@@ -3884,31 +3937,36 @@ poseFunc_morphJump: ;{ 00:179F - $06: Morph Jump
 ;} end proc
 
 poseFunc_jump: ;{ 00:17BB - Pose $01
+    ; Check if in linear portion of ascent
     ld a, [samus_jumpArcCounter]
     cp samus_jumpArrayBaseOffset
     jr nc, .endIf_A
+        ; If so, check if A is pressed
         ldh a, [hInputPressed]
         bit PADB_A, a
         jr z, .endIf_B
+            ; Set speed, subtracting an extra 1 from it if we have high jump
             ld a, [samusItems]
             and itemMask_hiJump
             srl a
             ld b, a
-            ld a, $fe
+            ld a, -2 ; $FE
             sub b
                 jr .moveVertical
         .endIf_B:
-    
+        ; If A is not pressed, start falling portion of arc
         ld a, samus_jumpArrayBaseOffset + $16 ;56
         ld [samus_jumpArcCounter], a
     .endIf_A:
 
+    ; Get vertical speed from jumpArcTable
     sub samus_jumpArrayBaseOffset
     ld hl, jumpArcTable
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
+    ; Start falling pose if at the end of the table
     cp samus_jumpArrayBaseOffset + $40 ;$80
         jr z, .startFalling
 
@@ -3927,6 +3985,7 @@ poseFunc_jump: ;{ 00:17BB - Pose $01
     ; Bonk head on ceiling
     jr nc, .endIf_D
         ld a, [samus_jumpArcCounter]
+        ; Enter falling pose if prior to the falling portion of the jump
         cp samus_jumpArrayBaseOffset + $17 ; 57
             jr nc, .startFalling
     .endIf_D:
@@ -3948,12 +4007,14 @@ poseFunc_jump: ;{ 00:17BB - Pose $01
     .endIf_E:
 
 ;moveHorizontal
+    ; Move right if right is pressed
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
     jr z, .endIf_F
         call samus_moveRightInAir.turn
     .endIf_F:
-    
+
+    ; Move left if left is pressed
     ldh a, [hInputPressed]
     bit PADB_LEFT, a
     jr z, .endIf_G
@@ -3965,17 +4026,19 @@ ret
     ; Why write to ROM?
     xor a
     ld [jumpArcTable], a
-
+    ; Set counter
     ld a, $16
     ld [samus_fallArcCounter], a
-
+    ; Check if morphed
     ld a, [samusPose]
     cp pose_morphJump
     jr z, .endIf_H
+        ; If not, just fall
         ld a, pose_fall
         ld [samusPose], a
         ret
     .endIf_H:
+        ; If morphed, fall as a ball
         ld a, pose_morphFall
         ld [samusPose], a
         ret
@@ -4040,7 +4103,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
 
     ; Handle arc of jump (tabular data)
     ; Get index into the table
-    sub $40
+    sub samus_jumpArrayBaseOffset
     ld e, a
     ld d, $00
     ; Skip ahead if not holding jump
@@ -4080,7 +4143,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
                     ld a, $03
                     ld [sfxRequest_square1], a
                 .endIf_F:
-                ; Something regarding damage boosting?
+                ; Convert Samus's air direction to her facing direction
                 ld a, [samusAirDirection]
                 and a
                     ret z
@@ -4090,12 +4153,15 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
                 ret
     .endIf_D:
 
+    ; Check if Samus is doing a neutral spinning jump (yes, it's possible)
     ld a, [samusAirDirection]
     and a
     jr nz, .endIf_G
+        ; Check if up is being held
         ldh a, [hInputPressed]
         bit PADB_UP, a
         jr z, .endIf_G
+            ; Exit every 3 out of 4 frames (fall slowly)
             ldh a, [frameCounter]
             and $03
                 ret nz
@@ -4122,11 +4188,14 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
         ld a, [hl]
     .endIf_H:
 
+    ; Move Samus vertically
     call samus_moveVertical
     jr nc, .endIf_I
+        ; If Samus hit the ceiling during the ascending part of the jump
         ld a, [samus_jumpArcCounter]
         cp samus_jumpArrayBaseOffset + $17
             jr c, .endIf_I
+        ; Then enter the falling pose
         jr .startFalling
     .endIf_I:
 
@@ -4135,7 +4204,8 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
     inc a
     ld [samus_jumpArcCounter], a
 
-;moveHorizontal
+;.moveHorizontal:
+    ; Make Samus face right if right is pressed
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
     jr z, .endIf_J
@@ -4143,6 +4213,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
         ld [samusAirDirection], a
     .endIf_J:
 
+    ; Make Samus face left if left is pressed
     ldh a, [hInputPressed]
     bit PADB_LEFT, a
     jr z, .endIf_K
@@ -4150,21 +4221,24 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
         ld [samusAirDirection], a
     .endIf_K:
 
+    ; If Samus is facing right, move right
     ld a, [samusAirDirection]
     cp $01
     jr nz, .else
-        call samus_moveRightInAir.noTurn ; Is this name correct?
+        call samus_moveRightInAir.noTurn
         ret
     .else:
+        ; If Samus is facing left, move left
         ld a, [samusAirDirection]
         cp $ff
             ret nz
         call samus_moveLeftInAir.noTurn
         ret
 
-    ret ; Unreferenced return :(
+    ret ; Unreferenced return :-(
 
 .breakSpin:
+    ; Play a sound effect when breaking spin if Samus has either space or screw
     ld a, [samusItems]
     and itemMask_space | itemMask_screw
     jr z, .endIf_L
@@ -4176,22 +4250,26 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
     ; Why write to rom?
     xor a
     ld [jumpArcTable], a
+    ; Set fall arc counter to max
     ld a, $16
     ld [samus_fallArcCounter], a
+    ; Set pose
     ld a, pose_fall
     ld [samusPose], a
 ret
 ;}
 
 poseFunc_jumpStart: ;{ 00:19E2 - $09 and $0A - Starting to jump
+    ; Check if A is pressed
     ldh a, [hInputPressed]
     bit PADB_A, a
     jr z, .endIf_A
+        ; Move up 2 pixel/frame, with an extra pixel 2 out of 4 frames
         ldh a, [frameCounter]
         and $02
         srl a
         ld b, a
-        ld a, $fe
+        ld a, -2 ; $FE
         sub b
         call samus_moveVertical
         jr nc, .endIf_B
@@ -4199,19 +4277,22 @@ poseFunc_jumpStart: ;{ 00:19E2 - $09 and $0A - Starting to jump
             ret
         .endIf_B:
     
-        ; Inc jump-start counter
+        ; Increment jump-start counter
         ld a, [samus_jumpStartCounter]
         inc a
         ld [samus_jumpStartCounter], a
+        ; Branch ahead if counter has expired
         cp $06
         jr nc, .endIf_A
+            ; Move/turn right if right is pressed
             ldh a, [hInputPressed]
             bit PADB_RIGHT, a
             jr z, .endIf_C
                 call samus_moveRightInAir.turn
                 ret
             .endIf_C:
-        
+            
+            ; Move/turn left if left is pressed
             ldh a, [hInputPressed]
             bit PADB_LEFT, a
             jr z, .endIf_D
@@ -4221,13 +4302,17 @@ poseFunc_jumpStart: ;{ 00:19E2 - $09 and $0A - Starting to jump
             ret
     .endIf_A:
 
+    ; Check if Samus is starting a normal jump or spin jump
     ld a, [samusPose]
-    cp pose_jumpStart
+    cp pose_nJumpStart
     jr nz, .else
+        ; Start a normal jump
         ld a, pose_jump
         ld [samusPose], a
         ret
     .else:
+        ; Start a spin jump
+        ; Use inputs to set samusAirDirection from .directionTable
         ldh a, [hInputPressed]
         and PADF_LEFT | PADF_RIGHT
         swap a
@@ -4237,6 +4322,7 @@ poseFunc_jumpStart: ;{ 00:19E2 - $09 and $0A - Starting to jump
         add hl, de
         ld a, [hl]
         ld [samusAirDirection], a
+        ; Set pose to spin jump
         ld a, pose_spinJump
         ld [samusPose], a
         ret
@@ -4488,7 +4574,7 @@ samus_groundUnmorph_cont: ;{ 00:1B6B - Unmorph on ground, continued
     ld [samusPose], a
     ; Clear vertical speed
     xor a
-    ld [$d033], a
+    ld [samus_speedDown], a
 ret
 ;}
 
@@ -4498,7 +4584,7 @@ samus_morphOnGround: ;{ 00:1BA4
     ld [samusPose], a
     ; Clear vertical speed
     xor a
-    ld [$d033], a
+    ld [samus_speedDown], a
     ; Play morphing sound
     ld a, $06
     ld [sfxRequest_square1], a
@@ -4766,7 +4852,7 @@ samus_moveVertical: ;{ 00:1D4E - move down
     ; else, move down
     ld b, a
     ld a, b
-    ld [$d034], a
+    ld [samus_speedDownTemp], a
     ldh a, [hSamusYPixel]
     add b
     ldh [hSamusYPixel], a
@@ -4775,7 +4861,7 @@ samus_moveVertical: ;{ 00:1D4E - move down
     and $0f
     ldh [hSamusYScreen], a
     ld a, b
-    call Call_000_1f0f
+    call collision_samusBottom
     jr nc, .keepResults
         ld a, [prevSamusYPixel]
         ldh [hSamusYPixel], a
@@ -4797,8 +4883,8 @@ samus_moveVertical: ;{ 00:1D4E - move down
         .endIf:
         ld a, b
         ld [camera_speedDown], a
-        ld a, [$d034]
-        ld [$d033], a
+        ld a, [samus_speedDownTemp]
+        ld [samus_speedDown], a
         ret
 
 .moveUp:
@@ -5049,7 +5135,7 @@ ret
 ;}
 
 ; Samus downwards BG collision detection
-Call_000_1f0f: ;{ 00:1F0F
+collision_samusBottom: ;{ 00:1F0F
     push hl
     push de
     push bc
@@ -7824,7 +7910,7 @@ Call_000_30ea:
         jr nz, .endIf_D
             ld a, $07
             ld [queen_eatingState], a
-            ld a, $1c
+            ld a, pose_outStomach ; $1C
             ld [samusPose], a
     .endIf_D:
     ; A collision happened
@@ -8012,7 +8098,7 @@ ret
 Call_000_32ab: ; Samus enemy collision detection ?
     ; Conditions for exiting early early
     ld a, [samusPose]
-    cp $18
+    cp pose_beingEaten ; $18
         jp nc, Jump_000_3698
     ld a, [deathFlag]
     and a
@@ -8030,7 +8116,7 @@ Call_000_32ab: ; Samus enemy collision detection ?
 
 Call_000_32cf:
     ld a, [samusPose]
-    cp $18
+    cp pose_beingEaten ; $18
     jp nc, Jump_000_3698
 
     ld a, [deathFlag]
@@ -8274,7 +8360,7 @@ jr_000_3426:
             jr_000_343c:
                 ld a, $01
                 ld [queen_eatingState], a
-                ld a, $18
+                ld a, pose_beingEaten ; $18
                 ld [samusPose], a
     jr_000_3446:
     ; A collision happened
@@ -8334,7 +8420,7 @@ ret
 
 Call_000_348d:
     ld a, [samusPose]
-    cp $18
+    cp pose_beingEaten ; $18
         jp nc, Jump_000_3698
     ld a, [deathFlag]
     and a
@@ -8392,7 +8478,7 @@ ret
 
 Call_000_34ef:
     ld a, [samusPose]
-    cp $18
+    cp pose_beingEaten ; $18
         jp nc, Jump_000_3698
     ld a, [deathFlag]
     and a
@@ -8616,7 +8702,7 @@ jr_000_362e:
             jr_000_3644:
                 ld a, $01
                 ld [queen_eatingState], a
-                ld a, $18
+                ld a, pose_beingEaten ; $18
                 ld [samusPose], a
     jr_000_364e:
     scf
