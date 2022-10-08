@@ -2111,7 +2111,7 @@ Call_001_54d7: ; 01:54D7
                             ld c, $01
                     jr_001_550e:
                     ld a, c
-                    ld [$d00f], a
+                    ld [samusAirDirection], a
                     ld a, $40
                     ld [samus_jumpArcCounter], a
                     ld a, [samusPose]

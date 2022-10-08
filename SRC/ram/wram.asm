@@ -700,11 +700,11 @@ def doorScrollDirection = $D00E ; Door transition direction
 ;    4: Up
 ;    8: Down
 ;}
-;$D00F: Current damage boosting direction (set to $C423 during damage boost)
+def samusAirDirection = $D00F ; Direction Samus is moving in air, used for spin-jumping, damage boosting, and bomb knockback
 ;{
+;    FFh: Up-left
 ;    0: Up
 ;    1: Up-right
-;    FFh: Up-left
 ;}
 def samus_jumpStartCounter = $D010 ; Counter for the beginning of Samus's jump state (used in the jumpStart pose)
 def unused_D011 = $D011 ; Nothing. Only cleared
@@ -973,18 +973,18 @@ def doorIndexHigh = $D08F
 def queen_eatingState = $D090 ; Metroid Queen eating pose
 ;{
 ;    Sets Samus pose = escaping Metroid Queen when 7, checked for 5/20h and set to 6 in in Metroid Queen's mouth
-;    0: Otherwise
-;    1: Samus entering mouth
-;    2: Mouth closing
-;    3: Mouth closed
-;    4: Bombed whilst mouth closed
-;    5: Samus escaping mouth
-;    6: Swallowing Samus
-;    7: Bombed whilst swallowing Samus
-;    8: Samus escaping stomach
-;    10h: Paralysed (can enter mouth)
-;    20h:
-;    22h: Dying
+;    0: Otherwise                        - Set by Queen
+;    1: Samus entering mouth             - Set by Samus collision
+;    2: Mouth closing                    - Set by Samus pose handler
+;    3: Mouth closed                     - Set by Queen
+;    4: Bombed whilst mouth closed       - Set by bomb collision
+;    5: Samus escaping bombed mouth      - Set by Queen
+;    6: Swallowing Samus                 - Set by Samus pose handler
+;    7: Bombed whilst swallowing Samus   - Set by bomb collision
+;    8: Samus escaping bombed stomach    - Set by Queen
+;    10h: Paralysed (can enter mouth)    - Set by beam collision
+;    20h: Dying (from bombing the mouth) - Set by Queen
+;    22h: Dying                          - Set by Queen
 ;}
 def nextEarthquakeTimer = $D091 ; Time until next Metroid earthquake. Counts down in $100h frame intervals after killing a metroid.
 def currentRoomSong = $D092 ; Song for room. Used when restoring song when loading a save and after some other events

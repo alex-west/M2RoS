@@ -77,12 +77,13 @@ pose_morphHurt   = $10 ;Morphball knockback
 pose_bombed      = $11 ;Standing bombed
 pose_morphBombed = $12 ;Morphball bombed
 pose_faceScreen  = $13 ;Facing screen
-;pose_          = $18 ;Being eaten by Metroid Queen
-;pose_          = $19 ;In Metroid Queen's mouth
-;pose_          = $1A ;Being swallowed by Metroid Queen
-;pose_          = $1B ;In Metroid Queen's stomach
-;pose_          = $1C ;Escaping Metroid Queen
-;pose_          = $1D ;Escaped Metroid Queen
+
+pose_beingEaten  = $18 ;Being eaten by Metroid Queen
+pose_inMouth     = $19 ;In Metroid Queen's mouth
+pose_toStomach   = $1A ;Being swallowed by Metroid Queen
+pose_inStomach   = $1B ;In Metroid Queen's stomach
+pose_outStomach  = $1C ;Escaping Metroid Queen
+pose_exitQueen   = $1D ;Escaped Metroid Queen
 
 ; Queen related constants
 

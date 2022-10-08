@@ -2074,10 +2074,10 @@ samus_handlePose: ;{ 00:0D21
         dw poseFunc_spiderFall ; $0C Spider ball falling
         dw poseFunc_spiderJump ; $0D Spider ball jumping
         dw poseFunc_spiderBall ; $0E Spider ball
-        dw poseFunc_0EF7       ; $0F Knockback
-        dw poseFunc_0F38       ; $10 Morphball knockback
-        dw poseFunc_0F6C       ; $11 Standing bombed
-        dw poseFunc_0ECB       ; $12 Morphball bombed
+        dw poseFunc_hurt       ; $0F Knockback
+        dw poseFunc_morphHurt  ; $10 Morphball knockback
+        dw poseFunc_bombed     ; $11 Standing bombed (and general knockback handler)
+        dw poseFunc_morphBombed; $12 Morphball bombed
         dw poseFunc_faceScreen ; $13 Facing screen
         dw poseFunc_faceScreen ; $14
         dw poseFunc_faceScreen ; $15
@@ -2085,11 +2085,11 @@ samus_handlePose: ;{ 00:0D21
         dw poseFunc_faceScreen ; $17
         ; Poses related to being eaten by the queen
         dw poseFunc_beingEaten ; $18 Being eaten by Metroid Queen
-        dw poseFunc_0DF0       ; $19 In Metroid Queen's mouth
+        dw poseFunc_inMouth    ; $19 In Metroid Queen's mouth
         dw poseFunc_toStomach  ; $1A Being swallowed by Metroid Queen
         dw poseFunc_inStomach  ; $1B In Metroid Queen's stomach
-        dw poseFunc_0D8B       ; $1C Escaping Metroid Queen
-        dw poseFunc_0ECB       ; $1D Escaped Metroid Queen
+        dw poseFunc_outStomach ; $1C Escaping Metroid Queen
+        dw poseFunc_morphBombed; $1D Escaped Metroid Queen
 ;}
 
 ; Samus' pose functions: {
@@ -2100,32 +2100,42 @@ poseFunc_inStomach: ;{ 00:0D87 $1B - In Queen's stomach
     ; Note: Firing weapons is handled elsewhere
 ret ;}
 
-poseFunc_0D8B: ;{ $1C - Escaping Queen's mouth
+poseFunc_outStomach: ;{ 00:0D8B - $1C - Escaping Queen's mouth
+    ; Hurt Samus
     call applyDamage.queenStomach
+    
+    ; Check if Samus has reached a horizontal threshold
     ldh a, [hSamusXPixel]
     cp $b0
     jr z, .else_A
+        ; If not, move Samus right
         add $02
         ldh [hSamusXPixel], a
+        ; Check if Samus has reached another horizontal threshold
         cp $80
         jr nc, .else_B
+            ; If not, move Samus upwards
             ldh a, [hSamusYPixel]
             sub $02
             ldh [hSamusYPixel], a
             jr .endIf_B
         .else_B:
+            ; Check if Samus has reached yet another horizontal threshold
             cp $98
             jr c, .endIf_B
+                ; If so, move Samus downwards
                 ldh a, [hSamusYPixel]
                 dec a
                 ldh [hSamusYPixel], a
         .endIf_B:
         ret
     .else_A:
+        ; Set up "bomb jump" to the right
         ld a, samus_jumpArrayBaseOffset
         ld [samus_jumpArcCounter], a
         ld a, $01
-        ld [$d00f], a
+        ld [samusAirDirection], a
+        ; Set pose to escape Queen
         ld a, $1d
         ld [samusPose], a
         ret 
@@ -2173,7 +2183,7 @@ poseFunc_toStomach: ;{ 00:0DBE - $1A - Being swallowed by Metroid Queen
         ret
 ;} end proc
 
-poseFunc_0DF0: ;{ $19 -  In Metroid Queen's mouth
+poseFunc_inMouth: ;{ 00:0DF0 - $19 -  In Metroid Queen's mouth
     ; Lock Samus's position
     ld a, $6c
     ldh [hSamusYPixel], a
@@ -2181,25 +2191,30 @@ poseFunc_0DF0: ;{ $19 -  In Metroid Queen's mouth
     ldh [hSamusXPixel], a
     ; Hurt Samus
     call applyDamage.queenStomach
-    ; Check if Samus is escaping the Queen's mouth
+    
+    ; Check if Samus bombed the Queen's mouth (non-fatally)
     ld a, [queen_eatingState]
     cp $05
     jr nz, .else_A
+        ; Set up "bomb jump" to the right
         ld a, $01
-        ld [$d00f], a
+        ld [samusAirDirection], a
         ld a, samus_jumpArrayBaseOffset + $10 ;$50
         ld [samus_jumpArcCounter], a
+        ; Set pose to escape Queen
         ld a, $1d
         ld [samusPose], a
         ret
     .else_A:
-        ; Check if the Queen just died from its mouth being bombed
+        ; Check if Samus bombed the Queen's mouth (fatally)
         cp $20
         jr nz, .else_B
+            ; If so, set up "bomb jump" to the right
             ld a, samus_jumpArrayBaseOffset
             ld [samus_jumpArcCounter], a
             ld a, $01
-            ld [$d00f], a
+            ld [samusAirDirection], a
+            ; Set pose to escape Queen
             ld a, $1d
             ld [samusPose], a
             ret
@@ -2330,13 +2345,16 @@ poseFunc_faceScreen: ;{ 00:0EA5 - poses $13-$17
 ret
 ;}
 
-poseFunc_0ECB: ;{ $12 and $1D
+poseFunc_morphBombed: ;{ 00:0ECB - $12 and $1D - Morphball bombed
+    ; Check if down is pressed
     ldh a, [hInputRisingEdge]
     bit PADB_DOWN, a
     jr z, .endIf
+        ; If so, check if we have the Spider Ball
         ld a, [samusItems]
         bit itemBit_spider, a
         jr z, .endIf
+            ; If so, activate Spider Ball
             ld a, pose_spiderFall
             ld [samusPose], a
             xor a
@@ -2346,20 +2364,24 @@ poseFunc_0ECB: ;{ $12 and $1D
             ret
     .endIf:
 
+    ; Check if Up is pressed
     ldh a, [hInputRisingEdge]
     bit PADB_UP, a
-    jr z, poseFunc_0F6C
+    jr z, poseFunc_bombed
+        ; If so, unmorph
         call samus_unmorphInAir
+        ; Set grace period for unmorph jumping
         ld a, samus_unmorphJumpTime
         ld [samus_unmorphJumpTimer], a
-    jr poseFunc_0F6C
+    jr poseFunc_bombed
 ;}
 
-poseFunc_0EF7: ;{ $0F - Knockback
+poseFunc_hurt: ;{ 00:0EF7 - $0F - Knockback
     ; Go to "bombed" pose handler if jump is not pressed
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
-        jr z, poseFunc_0F6C
+        jr z, poseFunc_bombed
+    ; Do a mid-air jump
 
     ; Return if colliding with something
     call collision_samusTop
@@ -2368,15 +2390,17 @@ poseFunc_0EF7: ;{ $0F - Knockback
     ; Clear i-frames
     xor a
     ld [samusInvulnerableTimer], a
-    ; High-jump jump value
+    ; Set jump counter value and play sound effect
+    ;  High-jump case
     ld a, samus_jumpArrayBaseOffset - $1F ;$21
     ld [samus_jumpArcCounter], a
     ld a, $02
     ld [sfxRequest_square1], a
+    ; Verify we have high jump
     ld a, [samusItems]
     bit itemBit_hiJump, a
     jr nz, .endIf_A
-        ; Normal jump value
+        ; Normal jump case
         ld a, samus_jumpArrayBaseOffset - $0F ;$31
         ld [samus_jumpArcCounter], a
         ld a, $01
@@ -2392,6 +2416,7 @@ poseFunc_0EF7: ;{ $0F - Knockback
         ld [samus_jumpArcCounter], a
     .endIf_B:
 
+    ; Start jumping
     ld a, pose_jumpStart
     ld [samusPose], a
     xor a
@@ -2399,29 +2424,40 @@ poseFunc_0EF7: ;{ $0F - Knockback
 ret
 ;}
 
-poseFunc_0F38: ;{ $10
+poseFunc_morphHurt: ;{ 00:0F38 - $10 - Morphball knockback
+    ; Check if up is pressed
     ldh a, [hInputRisingEdge]
     bit PADB_UP, a
     jp z, .endIf_A
+        ; Attempt to unmorph if so
         call samus_unmorphInAir
+        ; Set grace period for unmorph jumping
         ld a, samus_unmorphJumpTime
         ld [samus_unmorphJumpTimer], a
     .endIf_A:
 
+    ; Check if we have Spring Ball
     ld a, [samusItems]
     bit itemBit_spring, a
     jr z, .endIf_B
+        ; Check if A is pressed
         ldh a, [hInputRisingEdge]
         bit PADB_A, a
         jr z, .endIf_B
+            ; Do mid-air jump
+            ; Clear i-frames
             xor a
             ld [samusInvulnerableTimer], a
+            ; Set jump counter value
             ld a, samus_jumpArrayBaseOffset - $12 ;$2e
             ld [samus_jumpArcCounter], a
+            ; Set pose
             ld a, pose_morphJump
             ld [samusPose], a
+            ; Clear counter
             xor a
             ld [samus_jumpStartCounter], a
+            ; Play sound
             ld a, $01
             ld [sfxRequest_square1], a
             ret
@@ -2429,72 +2465,88 @@ poseFunc_0F38: ;{ $10
 ; Fallthrough to next pose handler
 ;}
 
-poseFunc_0F6C: ;{ 00:0F6C - $11: Bombed (standing)
+poseFunc_bombed: ;{ 00:0F6C - $11: Bombed (standing)
+    ; Load y speed from bombArcTable
     ld a, [samus_jumpArcCounter]
     sub samus_jumpArrayBaseOffset
     ld e, a
     ld d, $00
-    ld hl, table_0FF6
+    ld hl, .bombArcTable
     add hl, de
     ld a, [hl]
+    ; Enter falling pose if at end of the table
     cp $80
-    jr nz, jr_000_0f7f
-        jr jr_000_0fc0
-    jr_000_0f7f:
+    jr nz, .endIf_A
+        jr .startFalling
+    .endIf_A:
 
+    ; Move Samus vertically
     call samus_moveVertical
-    jr nc, jr_000_0f8b
+    ; Check if she hit anything
+    jr nc, .endIf_B
+        ; If so, start falling if she bonked the ceiling during the rising portion of the knockback
         ld a, [samus_jumpArcCounter]
         cp samus_jumpArrayBaseOffset + $17 ; $57
-        jr nc, jr_000_0fc0
-    jr_000_0f8b:
+        jr nc, .startFalling
+    .endIf_B:
 
+    ; Increment jump arc counter
     ld a, [samus_jumpArcCounter]
     inc a
     ld [samus_jumpArcCounter], a
+
+    ; Don't let Samus change aerial direction during the rising portion of the knockback
     cp samus_jumpArrayBaseOffset + $16 ; $56
-    jr c, jr_000_0fac
+    jr c, .endIf_C
+        ; Check if right is pressed
         ldh a, [hInputPressed]
         bit PADB_RIGHT, a
-        jr z, jr_000_0fa1
+        jr z, .endIf_D
+            ; Face right
             ld a, $01
-            ld [$d00f], a
-        jr_000_0fa1:
+            ld [samusAirDirection], a
+        .endIf_D:
     
+        ; Check if left is pressed
         ldh a, [hInputPressed]
         bit PADB_LEFT, a
-        jr z, jr_000_0fac
+        jr z, .endIf_E
+            ; Face left
             ld a, $ff
-            ld [$d00f], a
-        jr_000_0fac:
-    ;jr_000_0fac:
+            ld [samusAirDirection], a
+        .endIf_E:
+    .endIf_C:
 
-    ld a, [$d00f]
+    ; Move right if applicable
+    ld a, [samusAirDirection]
     cp $01
-    jr nz, jr_000_0fb6
+    jr nz, .endIf_F
         call samus_moveRightInAir.noTurn
-    jr_000_0fb6:
-        ld a, [$d00f]
-        cp $ff
-            ret nz
-        call samus_moveLeftInAir.noTurn
-        ret
+    .endIf_F:
+    ; Move left if applicable
+    ld a, [samusAirDirection]
+    cp $ff
+        ret nz
+    call samus_moveLeftInAir.noTurn
+ret
 
-jr_000_0fc0:
+.startFalling:
+    ; Set up counters for falling pose
     xor a
     ld [samus_jumpArcCounter], a
     ld a, $16
     ld [samus_fallArcCounter], a
+    ; Set falling pose based on the table below
     ld a, [samusPose]
     ld e, a
     ld d, $00
-    ld hl, table_0FD8
+    ld hl, .fallingPoseTable
     add hl, de
     ld a, [hl]
     ld [samusPose], a
 ret
 
-table_0FD8: ; 00:0FD8 - A pose-transition table
+.fallingPoseTable: ; 00:0FD8 - A pose-transition table for going from bombed to falling
     db $00 ; 00: Standing
     db $00 ; 01: Jumping
     db $00 ; 02: Spin-jumping
@@ -2527,14 +2579,14 @@ table_0FD8: ; 00:0FD8 - A pose-transition table
     db $08 ; 1D: Escaped Metroid Queen
 
 ; Bombed arc table?
-table_0FF6: ; 00:0FF6
+.bombArcTable: ; 00:0FF6
     db $fd, $fd, $fd, $fd, $fe, $fd, $fe, $fd, $fe, $fe, $fe, $fe, $fe, $fe, $ff, $fe
     db $fe, $ff, $fe, $ff, $fe, $ff, $ff, $00, $00, $00, $00, $01, $01, $02, $01, $02
     db $01, $02, $02, $01, $02, $02, $02, $02, $02, $02, $03, $02, $03, $02, $03, $03
     db $03, $03, $80
 ;}
 
-poseFunc_spiderBall: ;{ 00:1029 - $0E: spider ball (not moving)
+poseFunc_spiderBall: ;{ 00:1029 - $0E: Spider Ball (not moving)
     ; Un-spider if A is pressed
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
@@ -2587,6 +2639,7 @@ poseFunc_spiderBall: ;{ 00:1029 - $0E: spider ball (not moving)
         ld [samusPose], a
         ret
     .fall:
+        ; Note: It should be impossible to get to this branch
         ; Set pose to fall
         ld a, pose_spiderFall
         ld [samusPose], a
@@ -2594,6 +2647,7 @@ poseFunc_spiderBall: ;{ 00:1029 - $0E: spider ball (not moving)
 ;}
 
 poseFunc_spiderRoll: ;{ 00:1083 - $0B: Spider Ball (rolling)
+    ; Un-spider if A is pressed
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
     jr z, .endIf_A
@@ -2604,6 +2658,7 @@ poseFunc_spiderRoll: ;{ 00:1083 - $0B: Spider Ball (rolling)
         ret
     .endIf_A:
 
+    ; Go to normal spider pose if no direction inputs are pressed
     ldh a, [hInputPressed]
     and PADF_DOWN | PADF_UP | PADF_LEFT | PADF_RIGHT ;$f0
     jr nz, .endIf_B
@@ -2614,7 +2669,9 @@ poseFunc_spiderRoll: ;{ 00:1083 - $0B: Spider Ball (rolling)
         ret
     .endIf_B:
 
+    ; Check collision points surrounding ball
     call collision_checkSpiderSet
+    ; Start falling if not touching anything
     ld a, [spiderContactState]
     and a
         jr z, poseFunc_spiderBall.fall
@@ -2631,8 +2688,8 @@ poseFunc_spiderRoll: ;{ 00:1083 - $0B: Spider Ball (rolling)
             ret z
         ld hl, table_20C9
     .endIf_C:
-
     add hl, de
+    
     ld a, [hl]
     ld [spiderBallDirection], a
     xor a
@@ -2649,6 +2706,8 @@ poseFunc_spiderRoll: ;{ 00:1083 - $0B: Spider Ball (rolling)
     ld a, [spiderBallDirection]
     bit 3, a
         call nz, samus_spiderDown
+
+    ; Exit if the spider ball moved at all
     ld a, [spiderDisplacement]
     and a
         ret nz
@@ -3987,7 +4046,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
                     ld [sfxRequest_square1], a
                 .endIf_F:
                 ; Something regarding damage boosting?
-                ld a, [$d00f]
+                ld a, [samusAirDirection]
                 and a
                     ret z
                 inc a
@@ -3996,7 +4055,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
                 ret
     .endIf_D:
 
-    ld a, [$d00f]
+    ld a, [samusAirDirection]
     and a
     jr nz, .endIf_G
         ldh a, [hInputPressed]
@@ -4046,23 +4105,23 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
     bit PADB_RIGHT, a
     jr z, .endIf_J
         ld a, $01
-        ld [$d00f], a
+        ld [samusAirDirection], a
     .endIf_J:
 
     ldh a, [hInputPressed]
     bit PADB_LEFT, a
     jr z, .endIf_K
         ld a, $ff
-        ld [$d00f], a
+        ld [samusAirDirection], a
     .endIf_K:
 
-    ld a, [$d00f]
+    ld a, [samusAirDirection]
     cp $01
     jr nz, .else
         call samus_moveRightInAir.noTurn ; Is this name correct?
         ret
     .else:
-        ld a, [$d00f]
+        ld a, [samusAirDirection]
         cp $ff
             ret nz
         call samus_moveLeftInAir.noTurn
@@ -4142,7 +4201,7 @@ poseFunc_jumpStart: ;{ 00:19E2 - $09 and $0A - Starting to jump
         ld hl, .directionTable
         add hl, de
         ld a, [hl]
-        ld [$d00f], a
+        ld [samusAirDirection], a
         ld a, pose_spinJump
         ld [samusPose], a
         ret
@@ -7294,13 +7353,13 @@ hurtSamus: ;{ 00:2EE3
     ld [samusPose], a
     ; Set travel direction to damage boost direction
     ld a, [$c423]
-    ld [$d00f], a
+    ld [samusAirDirection], a
     ld a, [queen_roomFlag]
     cp $11
     jr nz, .endIf
         ; Force damage boost to right if in Queen's room
         ld a, $01
-        ld [$d00f], a
+        ld [samusAirDirection], a
     .endIf:
     ; Set jump arc counter to base
     ld a, samus_jumpArrayBaseOffset
