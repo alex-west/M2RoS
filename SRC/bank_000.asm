@@ -2676,113 +2676,138 @@ poseFunc_spiderRoll: ;{ 00:1083 - $0B: Spider Ball (rolling)
     and a
         jr z, poseFunc_spiderBall.fall
 
+    ; Based off of spiderContactState and spiderRotationState
+    ;  load the first movement direction to test
     ld e, a
     ld d, $00
     ld a, [spiderRotationState]
     bit 0, a
     jr z, .else_C
-        ld hl, table_20A9
+        ld hl, spiderDirectionTable.ccw_try1 ; CCW
         jr .endIf_C
     .else_C:
         bit 1, a
             ret z
-        ld hl, table_20C9
+        ld hl, spiderDirectionTable.cw_try1 ; CW
     .endIf_C:
     add hl, de
-    
     ld a, [hl]
     ld [spiderBallDirection], a
+    
+    ; Init variable
     xor a
     ld [spiderDisplacement], a
+    
+    ; Move in the direction given by whichever table we just read
     ld a, [spiderBallDirection]
     bit 0, a
-        call nz, samus_spiderRight
+        call nz, .right
     ld a, [spiderBallDirection]
     bit 1, a
-        call nz, samus_spiderLeft
+        call nz, .left
     ld a, [spiderBallDirection]
     bit 2, a
-        call nz, samus_spiderUp
+        call nz, .up
     ld a, [spiderBallDirection]
     bit 3, a
-        call nz, samus_spiderDown
+        call nz, .down
 
     ; Exit if the spider ball moved at all
     ld a, [spiderDisplacement]
     and a
         ret nz
 
+    ; If the spider ball was unable to move in the first direction it tried (because
+    ;  the wall was solid), then try the secondary direction.
+
+    ; Based off of spiderContactState and spiderRotationState
+    ;  load the second movement direction to test
     ld a, [spiderContactState]
     ld e, a
     ld d, $00
     ld a, [spiderRotationState]
     bit 0, a
     jr z, .else_D
-        ld hl, table_20B9
+        ld hl, spiderDirectionTable.ccw_try2 ; CCW
         jr .endIf_D
     .else_D:
         bit 1, a
             ret z
-        ld hl, table_20D9
+        ld hl, spiderDirectionTable.cw_try2 ; CW
     .endIf_D:
-
     add hl, de
     ld a, [hl]
     ld [spiderBallDirection], a
+    
+    ; Clear variable
     xor a
     ld [spiderDisplacement], a
+
+    ; Move in the direction given by whichever table we just read
     ld a, [spiderBallDirection]
     bit 0, a
-        call nz, samus_spiderRight
+        call nz, .right
     ld a, [spiderBallDirection]
     bit 1, a
-        call nz, samus_spiderLeft
+        call nz, .left
     ld a, [spiderBallDirection]
     bit 2, a
-        call nz, samus_spiderUp
+        call nz, .up
     ld a, [spiderBallDirection]
     bit 3, a
-        call nz, samus_spiderDown
+        call nz, .down
+    ; If we had any luck, the spider ball should have moved
 ret
 
-samus_spiderRight: ; 00:1132
+.right: ; 00:1132
     call samus_rollRight.spider
+    ; Save displacement
     ld a, [camera_speedRight]
     ld [spiderDisplacement], a
 ret
 
-samus_spiderLeft: ; 00:113C
+.left: ; 00:113C
     call samus_rollLeft.spider
+    ; Save displacement
     ld a, [camera_speedLeft]
     ld [spiderDisplacement], a
 ret
 
-samus_spiderUp: ; 00:1146
+.up: ; 00:1146
+    ; Move up 1 pixel
     ld a, $01
     call samus_moveUp
+    ; Save displacement
     ld a, [camera_speedUp]
     ld [spiderDisplacement], a
 ret
 
-samus_spiderDown: ; 00:1152
+.down: ; 00:1152
+    ; Move down 1 pixel
     ld a, $01
     call samus_moveVertical
+    ; Save displacement
     ld a, [camera_speedDown]
     ld [spiderDisplacement], a
+    ; Exit if Samus was unimpeded moving down
         ret nc
+    ; Exit if Samus ran into a solid sprite
     ld a, [samus_onSolidSprite]
     and a
         ret nz
+    ; Normalize Samus's y position
     ldh a, [hSamusYPixel]
     and $f8
     or $04
     ldh [hSamusYPixel], a
+    ; Clear displacement
     xor a
     ld [spiderDisplacement], a
 ret
 ;}
 
 poseFunc_spiderJump: ;{ 00:1170 - $0D: Spider ball jumping
+    ; Un-spider if A is pressed
     ldh a, [hInputRisingEdge]
     bit PADB_A, a
     jr z, .endIf_A
@@ -2793,18 +2818,21 @@ poseFunc_spiderJump: ;{ 00:1170 - $0D: Spider ball jumping
         ret
     .endIf_A:
 
+    ; Check if were in the linear portion of the jump
     ld a, [samus_jumpArcCounter]
     cp samus_jumpArrayBaseOffset
     jr nc, .endIf_B
+        ; Check if A is being held down
         ldh a, [hInputPressed]
         bit PADB_A, a
-        jr z, .endIf_C
-            ld a, $fe
+        jr z, .else_C
+            ; If so, ascend 2 pixels/frame
+            ld a, -2 ; $FE
                 jr .moveVertical
-        .endIf_C:
-        
-        ld a, samus_jumpArrayBaseOffset + $16 ;$56
-        ld [samus_jumpArcCounter], a
+        .else_C:
+            ; Else, start falling
+            ld a, samus_jumpArrayBaseOffset + $16 ;$56
+            ld [samus_jumpArcCounter], a
     .endIf_B:
 
     ; Read vertical speed from jump arc table
@@ -2819,13 +2847,16 @@ poseFunc_spiderJump: ;{ 00:1170 - $0D: Spider ball jumping
         jr z, .startFalling
 
 .moveVertical:
+    ; Move vertically
     call samus_moveVertical
+        ; If we hit something, consider sticking to it
         jp c, Jump_000_1233
 
     ; Spider collision check
     call collision_checkSpiderSet
     ld a, [spiderContactState]
     and a
+        ; If we touched something, then stick to it
         jp nz, Jump_000_1241
 
     ; Increment jump counter
@@ -2833,25 +2864,29 @@ poseFunc_spiderJump: ;{ 00:1170 - $0D: Spider ball jumping
     inc a
     ld [samus_jumpArcCounter], a
 
-;moveHorizontal    
+;moveHorizontal
+    ; Move right if right is pressed
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
-    jr z, .else
-        call samus_spiderRight ; Change to "samus_rollRight.morph" for BIDIRECTIONAL SPIDER THROWING ($1132 -> $1C98)
+    jr z, .else_D
+        call poseFunc_spiderRoll.right ; Change to "samus_rollRight.morph" for BIDIRECTIONAL SPIDER THROWING ($1132 -> $1C98)
         ret
-    .else:
+    .else_D:
+        ; Move left if left is pressed
         ldh a, [hInputPressed]
         bit PADB_LEFT, a
-        jr z, .endIf_D
+        jr z, .else_E
             call samus_rollLeft.morph
             ret
-        .endIf_D:
-        ret
+        .else_E:
+            ; Don't move horizontally
+            ret
 
 .startFalling:
     ; What? Why is this writing to ROM?
     xor a
     ld [jumpArcTable], a
+    ; Start falling
     ld a, $16
     ld [samus_fallArcCounter], a
     ld a, pose_spiderFall
@@ -2875,13 +2910,13 @@ poseFunc_spiderFall: ;{ 00:11E4 - $0C
     ldh a, [hInputPressed]
     bit PADB_RIGHT, a
     jr z, jr_000_1200
-        call samus_spiderRight
+        call poseFunc_spiderRoll.right
         jr jr_000_1209
     jr_000_1200:
         ldh a, [hInputPressed]
         bit PADB_LEFT, a
         jr z, jr_000_1209
-            call samus_spiderLeft
+            call poseFunc_spiderRoll.left
     jr_000_1209:
 
     ld hl, fallArcTable
@@ -5311,10 +5346,17 @@ samus_damagePoseTransitionTable: ;{ 00:208B
 ;              |   |   |   |   |   |   |   |   |   |   |   |   |   |    _____ E: Inside corner:  Of right-facing wall and floor
 ;              |   |   |   |   |   |   |   |   |   |   |   |   |   |   |    _ F: Unused:         Embedded in solid
 ;              |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-table_20A9: db 0, $4, $1, $4, $2, $2,  0, $2, $8,  0, $1, $4, $8, $8, $1,  0
-table_20B9: db 0, $2, $4, $2, $8, $8,  0, $8, $1,  0, $4, $2, $1, $1, $4,  0
-table_20C9: db 0, $1, $8, $8, $4, $1,  0, $8, $2,  0, $2, $2, $4, $1, $4,  0
-table_20D9: db 0, $8, $2, $2, $1, $8,  0, $2, $4,  0, $4, $4, $1, $8, $1,  0
+spiderDirectionTable:
+ .ccw_try1: db 0, $4, $1, $4, $2, $2,  0, $2, $8,  0, $1, $4, $8, $8, $1,  0
+ .ccw_try2: db 0, $2, $4, $2, $8, $8,  0, $8, $1,  0, $4, $2, $1, $1, $4,  0
+ .cw_try1:  db 0, $1, $8, $8, $4, $1,  0, $8, $2,  0, $2, $2, $4, $1, $4,  0
+ .cw_try2:  db 0, $8, $2, $2, $1, $8,  0, $2, $4,  0, $4, $4, $1, $8, $1,  0
+
+; How this works:
+; - For a given direction (ccw or cw), the spider ball checks its collision state.
+; - It then tries going in the direction given corresponding to the collision state from "try1"
+; - If the spider ball successfully moved, then it's done.
+; - If the spider ball could not move in the direction given in try1, it tries going in the direction given by try2.
 ;}
 
 table_20E9: ;{ 00:20E9 - Samus pose related (y pixel offsets?)
