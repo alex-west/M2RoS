@@ -39,7 +39,7 @@ musicNotes:
     dw $87c1, $87c4, $87c8, $87cb, $87ce, $87d1, $87d4, $87d6, $87d9, $87db, $87dd, $87df ; Octave 7
 ;}
 
-instructionTimerArrays:
+; Song instruction timer arrays
 ;{
 ; One of these pointers will be loaded by an F2 pppp song instruction, then subsequent Ax instructions will set the next instruction timer
 ; Essentially, this means that the F2 pppp song instruction controls the tempo of the song
@@ -728,7 +728,7 @@ handleSongPlaying:
         jr nc, clearSongPlaying
 
     xor a
-    ld [ramCF08], a
+    ld [workingSoundChannelOptionsSetFlag], a
     ld a, [songToneSweepChannelEnable]
     and a
         jr z, .endToneSweep
@@ -763,7 +763,7 @@ handleSongPlaying:
     .endToneSweep
 
     xor a
-    ld [ramCF08], a
+    ld [workingSoundChannelOptionsSetFlag], a
     ld a, [songToneChannelEnable]
     and a
         jr z, .endTone
@@ -798,7 +798,7 @@ handleSongPlaying:
     .endTone
 
     xor a
-    ld [ramCF08], a
+    ld [workingSoundChannelOptionsSetFlag], a
     ld a, [songWaveChannelEnable]
     and a
         jr z, .endWave
@@ -834,7 +834,7 @@ handleSongPlaying:
     .endWave
 
     xor a
-    ld [ramCF08], a
+    ld [workingSoundChannelOptionsSetFlag], a
     ld a, [songNoiseChannelEnable]
     and a
         jr z, .endNoise
@@ -1054,7 +1054,7 @@ silenceAudio:
     ld [sfxRequest_noise], a
     ld [toneSweepChannelSoundEffectPlaying], a
     ld [toneChannelSoundEffectPlaying], a
-    ld [ramCECF], a
+    ld [sfxPlaying_fakeWave], a
     ld [noiseChannelSoundEffectPlaying], a
     ld a, $ff
     ld [songRequest], a
@@ -1148,15 +1148,14 @@ audioPause:
     xor a
     ld [toneSweepChannelSoundEffectPlaying], a
     ld [toneChannelSoundEffectPlaying], a
-    ld [ramCECF], a
+    ld [sfxPlaying_fakeWave], a
     ld [noiseChannelSoundEffectPlaying], a
     ld a, $40
     ld [audioPauseSoundEffectTimer], a
     ld de, $487c
 ;}
 
-; Set noise channel option set [de] and clear sound channel 1/2/4 sound effects to play
-jr_004_4819:
+handleAudio_paused_noiseSfx:
 ;{
     call setChannelOptionSet.noise
     jp clearNonWaveSoundEffectRequests
@@ -1165,19 +1164,19 @@ jr_004_4819:
 handleAudio_paused_frame3D:
 ;{
     ld de, $4880
-    jr jr_004_4819
+    jr handleAudio_paused_noiseSfx
 ;}
 
 handleAudio_paused_frame32:
 ;{
     ld de, $488e
-    jr jr_004_4819
+    jr handleAudio_paused_noiseSfx
 ;}
 
 handleAudio_paused_frame27:
 ;{
     ld de, $4897
-    jr jr_004_4819
+    jr handleAudio_paused_noiseSfx
 ;}
 
 handleAudio_paused_frame3F:
@@ -1185,8 +1184,7 @@ handleAudio_paused_frame3F:
     ld de, $4884
 ;}
 
-; Set tone/sweep channel option set [de] and clear sound channel 1/2/4 sound effects to play
-jr_004_4831:
+handleAudio_paused_toneSweepSfx:
 ;{
     call setChannelOptionSet.toneSweep
     jp clearNonWaveSoundEffectRequests
@@ -1195,19 +1193,19 @@ jr_004_4831:
 handleAudio_paused_frame3A:
 ;{
     ld de, $4889
-    jr jr_004_4831
+    jr handleAudio_paused_toneSweepSfx
 ;}
 
 handleAudio_paused_frame2F:
 ;{
     ld de, $4892
-    jr jr_004_4831
+    jr handleAudio_paused_toneSweepSfx
 ;}
 
 handleAudio_paused_frame24:
 ;{
     ld de, $489b
-    jr jr_004_4831
+    jr handleAudio_paused_toneSweepSfx
 ;}
 
 audioUnpause:
@@ -1447,7 +1445,7 @@ handleSong_loadNextToneSweepChannelSound:
     ld hl, toneSweepChannelSongProcessingState
     ld de, workingChannelSongProcessingState
     call copyChannelSongProcessingState
-    ld a, [ramCF08]
+    ld a, [workingSoundChannelOptionsSetFlag]
     cp $01
     jr nz, .endIf
         ld a, [workingSoundChannelSweep]
@@ -1502,7 +1500,7 @@ handleSong_loadNextToneChannelSound:
     ld hl, toneChannelSongProcessingState
     ld de, workingChannelSongProcessingState
     call copyChannelSongProcessingState
-    ld a, [ramCF08]
+    ld a, [workingSoundChannelOptionsSetFlag]
     cp $02
     jr nz, .endIf_setSoundLength
         ld a, [workingSoundChannelSoundLength]
@@ -1883,7 +1881,7 @@ songInstruction_setWorkingSoundChannelOptions:
 ;{
     inc hl
     ld a, [workingSoundChannel]
-    ld [ramCF08], a
+    ld [workingSoundChannelOptionsSetFlag], a
     cp $03
         jr z, songInstruction_setWorkingSoundChannelOptions_wave
 
@@ -2038,7 +2036,6 @@ copyChannelSongProcessingState:
     ret
 ;}
 
-; Handle song sound channel effect
 handleSongSoundChannelEffect:
 ;{
     ld a, [workingEffectIndex]

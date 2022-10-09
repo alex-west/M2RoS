@@ -395,7 +395,7 @@ saveBuf_enemySaveFlags = $C900 ;$C900..CABF: Copied to/from SRAM ($B000 + [save 
 ;    
 ;    $CEC0: Tone/sweep channel sound effect
 ;    {
-def sfxRequest_square1 = $CEC0 ; Tone/sweep channel sound effect to play (rename to request)
+def sfxRequest_square1 = $CEC0 ; Tone/sweep channel sound effect request
 def toneSweepChannelSoundEffectPlaying equ $CEC1 ; Tone/sweep channel sound effect playing
 ; {
     def toneSweepSoundEffect_nothing                  equ $0 ; Nothing
@@ -443,7 +443,7 @@ def samusHealthChangedOptionSetIndex equ $CEC4 ; Samus' health changed option se
 ;
 ;    $CEC7: Tone channel sound effect
 ;    {
-def sfxRequest_square2 = $CEC7 ; Tone channel sound effect to play
+def sfxRequest_square2 = $CEC7 ; Tone channel sound effect request
 def toneChannelSoundEffectPlaying equ $CEC8 ; Tone channel sound effect playing
 ; {
     def toneSoundEffect_0                        equ 0 ; Nothing
@@ -463,11 +463,11 @@ def variableToneChannelFrequency equ $CECC ; Variable tone channel frequency. On
 ;
 ;    $CECE..CED4: Would be the wave channel sound effect, but is unused (only cleared) and $CEE6/$CFE5 is used instead.
 def sfxRequest_fakeWave equ $CECE
-def ramCECF equ $CECF
+def sfxPlaying_fakeWave equ $CECF
 ;
 ;    $CED5: Noise channel sound effect
 ;    {
-def sfxRequest_noise = $CED5 ; Noise channel sound effect to play
+def sfxRequest_noise = $CED5 ; Noise channel sound effect request
 def noiseChannelSoundEffectPlaying equ $CED6 ; Noise channel sound effect playing
 ;        {
 ;            FFh: Clear sound effect and disable noise channel
@@ -503,7 +503,7 @@ def noiseChannelSoundEffectPlaying equ $CED6 ; Noise channel sound effect playin
 def noiseChannelSoundEffectTimer equ $CED8 ; Noise channel sound effect timer
 ;    }
 ;
-def songRequest = $CEDC ; Song to play
+def songRequest = $CEDC ; Song request
 def songPlaying = $CEDD ; Song playing
 ;{
     def song_nothing                   equ 0 ; Nothing
@@ -540,7 +540,7 @@ def songPlaying = $CEDD ; Song playing
     def song_metroidHive_withIntro     equ $1F ; Metroid hive with intro
     def song_missilePickup             equ $20 ; Missile pickup
 ;}
-def isolatedSoundEffectToPlay equ $CEDE ; Isolated sound effect to play
+def isolatedSoundEffectToPlay equ $CEDE ; Isolated sound effect request
 def isolatedSoundEffectPlaying equ $CEDF ; Isolated sound effect playing
 ;{
     def isolatedSoundEffect_itemGet       equ 1 ; Play item-get music
@@ -557,7 +557,7 @@ def toneChannelSoundEffectIsPlayingFlag equ $CEE5 ; Tone channel sound effect is
 def waveChannelSoundEffectIsPlayingFlag equ $CEE6 ; Wave channel sound effect is playing flag (checked by song handler)
 def noiseChannelSoundEffectIsPlayingFlag equ $CEE7 ; Noise channel sound effect is playing flag (checked by song handler)
 def resumeScrewAttackSoundEffectFlag equ $CEE8 ; Resume screw attack sound effect flag
-;
+
 def songProcessingState equ $CF00 ; $CF00..60: Song processing state
 ;    {
 def songTranspose equ $CF00 ; Transpose
@@ -567,7 +567,7 @@ def songToneSweepChannelEnable equ $CF04 ; Song tone/sweep channel enable. Set t
 def songToneChannelEnable equ $CF05 ; Song tone channel enable. Set to 2 if [$CF41] != 0 in $48A0
 def songWaveChannelEnable equ $CF06 ; Song wave channel enable. Set to 3 if [$CF4A] != 0 in $48A0
 def songNoiseChannelEnable equ $CF07 ; Song noise channel enable. Set to 4 if [$CF53] != 0 in $48A0
-def ramCF08 equ $CF08 ; Checked to mirror $CF0B/0C to $CF10/11 in $497A
+def workingSoundChannelOptionsSetFlag equ $CF08 ; Working sound channel options set flag. Set by song instruction F1h. Checked to update channel sweep and sound length / wave pattern duty for tone(/sweep0 channels
 def wavePatternDataPointer equ $CF09 ; Pointer to wave pattern data, 10h bytes
 def workingSoundChannelSweep equ $CF0B ; Working sound channel sweep / enable
 def workingSoundChannelEnable equ $CF0B ; Working sound channel sweep / enable
@@ -678,7 +678,7 @@ endm
 
 def songFadeoutTimer equ $CF5C ; Song fadeout timer. Set to D0h when initiating fading out music
 ;        {
-;            0: Song play = isolated sound effect to play = 0, disable sound channels
+;            0: Song play = isolated sound effect request = 0, disable sound channels
 ;            10h: Sound envelope / volume = 13h
 ;            30h: Sound envelope / volume = 25h
 ;            70h: Sound envelope / volume = 45h. Disable noise channel. Wave channel volume = 60h
@@ -687,12 +687,12 @@ def songFadeoutTimer equ $CF5C ; Song fadeout timer. Set to D0h when initiating 
 def ramCF5D equ $CF5D ; Set to tone/sweep sound envelope when fading out music. Never read
 def ramCF5E equ $CF5E ; Set to tone sound envelope when fading out music. Never read
 def ramCF5F equ $CF5F ; Set to wave volume when fading out music. Never read
-def toneChannelFrequencyTweak equ $CF60 ; Tone channel frequency tweak. Set to 1 if [$5F30 + ([song to play] - 1) * 2] & 1 in $48A0
+def toneChannelFrequencyTweak equ $CF60 ; Tone channel frequency tweak. Set to 1 if [$5F30 + ([song request] - 1) * 2] & 1 in $48A0
 ;    }
 def songProcessingStateBackup equ $CF61 ; $CF61..C1: Backup of song processing state (during isolated sound effect)
-;
+
 def songPlayingBackup equ $CFC5 ; Backup of song playing (during isolated sound effect)
-;
+
 def audioPauseControl equ $CFC7 ; Audio pause control
 ;{
     def audioPauseControl_pause equ 1 ; Pause (play pause sound effect, stop other music)
@@ -700,12 +700,12 @@ def audioPauseControl equ $CFC7 ; Audio pause control
 ;}
 def audioPauseSoundEffectTimer equ $CFC8 ; Audio pause sound effect timer
 def toneSweepChannelSweepBackup equ $CFC9 ; Backup of tone/sweep channel sweep (during isolated sound effect)
-;
+
 def variableToneSweepChannelFrequency equ $CFD1 ; Variable tone/sweep channel frequency. Only the lower byte. Used by metroid cry
-;
-def ramCFE3 equ $CFE3 ; Mirror of pointer to wave pattern data (set by song instruction F1 pppp vv)
-def lowHealthBeepSoundEffectToPlay equ $CFE5 ; Low health beep / wave channel sound effect to play
-def waveChannelSoundEffectToPlay equ $CFE5 ; Low health beep / wave channel sound effect to play
+
+def ramCFE3 equ $CFE3 ; Set to wave pattern data pointer by song instruction F1h. Never read
+def lowHealthBeepSoundEffectToPlay equ $CFE5 ; Low health beep / wave channel sound effect request
+def waveChannelSoundEffectToPlay equ $CFE5 ; Low health beep / wave channel sound effect request
 def lowHealthBeepSoundEffectPlaying equ $CFE6 ; Low health beep / wave channel sound effect playing
 def waveChannelSoundEffectPlaying equ $CFE6 ; Low health beep / wave channel sound effect playing
 ;    {
