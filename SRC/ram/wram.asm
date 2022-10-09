@@ -18,8 +18,10 @@ wram_oamBuffer:: ds $A0 ; $C000
 ;         80: Priority (set: behind background)
 ;}
 ;
-;$C203: Tile Y (see $22BC)
-;$C204: Tile X (see $22BC)
+
+; Pixel coordinate of a tile to read
+def tileY = $C203 ; Tile Y (see $22BC)
+def tileX = $C204 ; Tile X (see $22BC)
 def scrollY = $C205 ; Scroll Y
 def scrollX = $C206 ; Scroll X
 ;
@@ -41,6 +43,7 @@ def gameOver_LCDC_copy = $C219 ; LCD control mirror. Only set by death routine. 
 ;    b: Enable BG. If CGB, then 0 additionally disables window regardless of w
 ;}
 ;
+def unknown_C227 = $C227
 def enSprite_blobThrower = $C300
 def spriteC300 = $C300 ;$C300..3D: Set to [$2:4FFE..503A] in $2:4DB1
 ;{
@@ -736,7 +739,7 @@ tempMetatile:
 .bottomLeft:  ds 1 ; $D00A: Metatile bottom-left
 .bottomRight: ds 1 ; $D00B: Metatile bottom-right
 
-;$D00C: Samus' previous Y position. Used for scrolling, low byte only
+def samusPrevYPixel = $D00C ; Samus' previous Y position. Used for scrolling, low byte only
 def samusBeamCooldown = $D00D ; Auto-fire cooldown counter
 def doorScrollDirection = $D00E ; Door transition direction
 ;{
@@ -745,11 +748,11 @@ def doorScrollDirection = $D00E ; Door transition direction
 ;    4: Up
 ;    8: Down
 ;}
-;$D00F: Current damage boosting direction (set to $C423 during damage boost)
+def samusAirDirection = $D00F ; Direction Samus is moving in air, used for spin-jumping, damage boosting, and bomb knockback
 ;{
+;    FFh: Up-left
 ;    0: Up
 ;    1: Up-right
-;    FFh: Up-left
 ;}
 def samus_jumpStartCounter = $D010 ; Counter for the beginning of Samus's jump state (used in the jumpStart pose)
 def unused_D011 = $D011 ; Nothing. Only cleared
@@ -813,8 +816,8 @@ def samus_turnAnimTimer = $D02C ; Timer for turnaround animation (facing the scr
 ;
 ;$D031: Unused?
 def projectileIndex = $D032 ; Index of working projectile
-;$D033: Cleared by morph
-;
+def samus_speedDown = $D033 ; Set by samus_moveVertical. Cleared by morph
+def samus_speedDownTemp = $D034 ; Temp variable used by samus_moveVertical
 def camera_speedRight = $D035 ; Screen right velocity
 def camera_speedLeft  = $D036 ; Screen left velocity
 def camera_speedUp    = $D037 ; Screen up velocity
@@ -915,7 +918,8 @@ samus_screenSpritePriority = $D057 ; Room sprite priority
 ;}
 def currentLevelBank = $D058 ; Bank for current room
 def deathAnimTimer = $D059 ; Death sequence timer
-;$D05A: Base address of pixels to clear in Samus' VRAM tiles
+def pDeathAltAnimBaseLow  = $D05A ; Base address of pixels to clear in Samus' VRAM tiles (for unused animation)
+def pDeathAltAnimBaseHigh = $D05B
 ;$D05C: $32AB acknowledgement flag. $32AB acknowledges this when it executes, cleared every in-game frame. $32AB is called by in-game and item pickup sequence. Collision related?
 ;$D05D..60: Values for $C466..69 in $2:438F. Guess: generic collision information
 ;{
@@ -1018,18 +1022,18 @@ def doorIndexHigh = $D08F
 def queen_eatingState = $D090 ; Metroid Queen eating pose
 ;{
 ;    Sets Samus pose = escaping Metroid Queen when 7, checked for 5/20h and set to 6 in in Metroid Queen's mouth
-;    0: Otherwise
-;    1: Samus entering mouth
-;    2: Mouth closing
-;    3: Mouth closed
-;    4: Bombed whilst mouth closed
-;    5: Samus escaping mouth
-;    6: Swallowing Samus
-;    7: Bombed whilst swallowing Samus
-;    8: Samus escaping stomach
-;    10h: Paralysed (can enter mouth)
-;    20h:
-;    22h: Dying
+;    0: Otherwise                        - Set by Queen
+;    1: Samus entering mouth             - Set by Samus collision
+;    2: Mouth closing                    - Set by Samus pose handler
+;    3: Mouth closed                     - Set by Queen
+;    4: Bombed whilst mouth closed       - Set by bomb collision
+;    5: Samus escaping bombed mouth      - Set by Queen
+;    6: Swallowing Samus                 - Set by Samus pose handler
+;    7: Bombed whilst swallowing Samus   - Set by bomb collision
+;    8: Samus escaping bombed stomach    - Set by Queen
+;    10h: Paralysed (can enter mouth)    - Set by beam collision
+;    20h: Dying (from bombing the mouth) - Set by Queen
+;    22h: Dying                          - Set by Queen
 ;}
 def nextEarthquakeTimer = $D091 ; Time until next Metroid earthquake. Counts down in $100h frame intervals after killing a metroid.
 def currentRoomSong = $D092 ; Song for room. Used when restoring song when loading a save and after some other events
@@ -1172,7 +1176,10 @@ projectileArray:: ds $10 * 3 ;$DD00..2F: Projectile data. 10h byte slots
 ;    + 4: Wave index
 ;    + 5: Frame counter
 ;}
-bombArray:: ds $10 * 3 ;$DD30..5F: Bomb data. 10h byte slots
+bombArray:: ;$DD30..5F: Bomb data. 10h byte slots
+.slotA: ds $10
+.slotB: ds $10
+.slotC: ds $10
 ;{
 ;    + 0: Type
 ;        1: Bomb

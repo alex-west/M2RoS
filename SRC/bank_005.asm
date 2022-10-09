@@ -1287,9 +1287,9 @@ credits_scrollHandler: ;{ 05:593E
         ; Adjust cursor position
         ld a, [scrollY]
         add $a0 ; Set Y cursor to just below the bottom of the screen
-        ld [$c203], a
+        ld [tileY], a
         ld a, $08 ; Set X cursor position to near the left edge
-        ld [$c204], a
+        ld [tileX], a
         call getTilemapAddress
         ; Signal that the next line is ready to be drawn
         ld a, $ff
