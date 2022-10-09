@@ -1469,13 +1469,13 @@ jp .commonBranch
     ld [hl+], a
     ; Adjust for collision
     add $04
-    ld [$c203], a
+    ld [tileY], a
     ; Save X position
     ldh a, [$9a]
     ld [hl+], a
     ; Adjust for collision
     add $04
-    ld [$c204], a
+    ld [tileX], a
     ; Save wave index
     ldh a, [$ba]
     ld [hl], a
@@ -1661,13 +1661,13 @@ jp .commonBranch
     ld [hl+], a
     ; Adjust for collision
     add $04
-    ld [$c203], a
+    ld [tileY], a
     ; Save X
     ldh a, [$9a]
     ld [hl+], a
     ; Adjust for collision
     add $04
-    ld [$c204], a
+    ld [tileX], a
     ; Save wave index
     ldh a, [$ba]
     ld [hl+], a
@@ -2125,9 +2125,9 @@ Call_001_54d7: ; 01:54D7
 
     ld a, [$d04a]
     sub $10
-    ld [$c203], a
+    ld [tileY], a
     ld a, [$d04b]
-    ld [$c204], a
+    ld [tileX], a
     call beam_getTileIndex
     cp $04
     jr nc, jr_001_553f
@@ -2145,7 +2145,7 @@ Call_001_54d7: ; 01:54D7
     jr_001_554d:
 
     ld a, [$d04a]
-    ld [$c203], a
+    ld [tileY], a
     call beam_getTileIndex
     cp $04
     jr nc, jr_001_555f
@@ -2164,7 +2164,7 @@ Call_001_54d7: ; 01:54D7
 
     ld a, [$d04a]
     add $10
-    ld [$c203], a
+    ld [tileY], a
     call beam_getTileIndex
     cp $04
     jr nc, jr_001_5581
@@ -2182,10 +2182,10 @@ Call_001_54d7: ; 01:54D7
     jr_001_558f:
 
     ld a, [$d04a]
-    ld [$c203], a
+    ld [tileY], a
     ld a, [$d04b]
     add $10
-    ld [$c204], a
+    ld [tileX], a
     call beam_getTileIndex
     cp $04
     jr nc, jr_001_55a9
@@ -2204,7 +2204,7 @@ Call_001_54d7: ; 01:54D7
 
     ld a, [$d04b]
     sub $10
-    ld [$c204], a
+    ld [tileX], a
     call beam_getTileIndex
     cp $04
     jr nc, jr_001_55cb
@@ -2394,10 +2394,10 @@ destroyRespawningBlock: ; 01:5671
     ld a, $01
     ld [hl+], a
     ; Set Y pos
-    ld a, [$c203]
+    ld a, [tileY]
     ld [hl+], a
     ; Set X pos
-    ld a, [$c204]
+    ld a, [tileX]
     ld [hl+], a
     ; Request sound effect
     ld a, $04
@@ -2418,7 +2418,7 @@ handleRespawningBlocks: ; 01:5692
             ld a, [scrollY]
             ld b, a
             ld a, [hl+]
-            ld [$c203], a
+            ld [tileY], a
             sub b
             and $f0
             cp $c0 ; Remove from table if offscreen
@@ -2428,7 +2428,7 @@ handleRespawningBlocks: ; 01:5692
             ld a, [scrollX]
             ld b, a
             ld a, [hl]
-            ld [$c204], a
+            ld [tileX], a
             sub b
             and $f0
             cp $d0 ; Remove from table if offscreen
@@ -2611,7 +2611,7 @@ ret
     ld b, a
 
     ; Bounds checking for y position
-    ld a, [$c203]
+    ld a, [tileY]
     sub $10
     and $f0
     ld c, a
@@ -2622,7 +2622,7 @@ ret
     cp b
         jr nc, .exit
     ; Bounds checking for x position
-    ld a, [$c204]
+    ld a, [tileX]
     sub $08
     and $f0
     ld b, a

@@ -4369,11 +4369,11 @@ collision_checkSpiderSet: ;{ 00:1A42
 ; Point 0 ($15, $1E)
     ldh a, [hSamusXPixel]
     add spiderXRight
-    ld [$c204], a
+    ld [tileX], a
 
     ldh a, [hSamusYPixel]
     add spiderYTop
-    ld [$c203], a
+    ld [tileY], a
     call collision_checkSpiderPoint
     
     ld a, [spiderContactState]
@@ -4383,7 +4383,7 @@ collision_checkSpiderSet: ;{ 00:1A42
 ; Point 1 ($15, $2C)
     ldh a, [hSamusYPixel]
     add spiderYBottom
-    ld [$c203], a
+    ld [tileY], a
     call collision_checkSpiderPoint
     
     ld a, [spiderContactState]
@@ -4393,11 +4393,11 @@ collision_checkSpiderSet: ;{ 00:1A42
 ; Point 2 ($0A, $1E)
     ldh a, [hSamusXPixel]
     add spiderXLeft
-    ld [$c204], a
+    ld [tileX], a
 
     ldh a, [hSamusYPixel]
     add spiderYTop
-    ld [$c203], a
+    ld [tileY], a
     call collision_checkSpiderPoint
     
     ld a, [spiderContactState]
@@ -4407,7 +4407,7 @@ collision_checkSpiderSet: ;{ 00:1A42
 ; Point 3 ($0A, $2C)
     ldh a, [hSamusYPixel]
     add spiderYBottom
-    ld [$c203], a
+    ld [tileY], a
     call collision_checkSpiderPoint
     
     ld a, [spiderContactState]
@@ -4420,11 +4420,11 @@ collision_checkSpiderSet: ;{ 00:1A42
 ; Point 4 ($15, $25)
     ldh a, [hSamusXPixel]
     add spiderXRight
-    ld [$c204], a
+    ld [tileX], a
 
     ldh a, [hSamusYPixel]
     add spiderYMid
-    ld [$c203], a
+    ld [tileY], a
     call collision_checkSpiderPoint
     
     jr nc, .endIf_A
@@ -4436,11 +4436,11 @@ collision_checkSpiderSet: ;{ 00:1A42
 ; Point 5 ($0A, $25)
     ldh a, [hSamusXPixel]
     add spiderXLeft
-    ld [$c204], a
+    ld [tileX], a
 
     ldh a, [hSamusYPixel]
     add spiderYMid
-    ld [$c203], a
+    ld [tileY], a
     call collision_checkSpiderPoint
     
     jr nc, .endIf_B
@@ -4452,11 +4452,11 @@ collision_checkSpiderSet: ;{ 00:1A42
 ; Point 6 ($0F, $1E)
     ldh a, [hSamusXPixel]
     add spiderXMid
-    ld [$c204], a
+    ld [tileX], a
 
     ldh a, [hSamusYPixel]
     add spiderYTop
-    ld [$c203], a
+    ld [tileY], a
     call collision_checkSpiderPoint
     
     jr nc, .endIf_C
@@ -4468,11 +4468,11 @@ collision_checkSpiderSet: ;{ 00:1A42
 ; Point 7 ($0F, $2C)
     ldh a, [hSamusYPixel]
     add spiderYBottom
-    ld [$c203], a
+    ld [tileY], a
 
     ldh a, [hSamusXPixel]
     add spiderXMid
-    ld [$c204], a
+    ld [tileX], a
     ; I don't know why this doesn't just use collision_checkSpiderPoint,
     ;  unless it's to minimize the damage from the acid
     call samus_getTileIndex
@@ -4506,7 +4506,7 @@ samus_groundUnmorph: ;{ 00:1B2E - Unmorph on ground
     ; Check upper left pixel
     ldh a, [hSamusXPixel]
     add $0b
-    ld [$c204], a
+    ld [tileX], a
 jr samus_groundUnmorph_cont ;} This is structured like it used to be a conditional jump...
 
 ; Attempts to stand up. Returns carry if it fails.
@@ -4516,10 +4516,10 @@ samus_tryStanding: ;{ 00:1B37
     ; Check upper left pixel
     ldh a, [hSamusXPixel]
     add $0c
-    ld [$c204], a
+    ld [tileX], a
     ldh a, [hSamusYPixel]
     add $10
-    ld [$c203], a
+    ld [tileY], a
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
@@ -4527,7 +4527,7 @@ samus_tryStanding: ;{ 00:1B37
     ; Check upper right pixel
     ldh a, [hSamusXPixel]
     add $14
-    ld [$c204], a
+    ld [tileX], a
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
@@ -4544,7 +4544,7 @@ samus_groundUnmorph_cont: ;{ 00:1B6B - Unmorph on ground, continued
     ; Check upper left pixel (cont.)
     ldh a, [hSamusYPixel]
     add $18
-    ld [$c203], a
+    ld [tileY], a
     call samus_getTileIndex
     ; Check if solid
     ld hl, samusSolidityIndex
@@ -4553,7 +4553,7 @@ samus_groundUnmorph_cont: ;{ 00:1B6B - Unmorph on ground, continued
         ; Was not solid, check upper right pixel
         ldh a, [hSamusXPixel]
         add $14
-        ld [$c204], a
+        ld [tileX], a
         call samus_getTileIndex
         ; Check if solid
         ld hl, samusSolidityIndex
@@ -4594,10 +4594,10 @@ ret
 samus_unmorphInAir: ;{ 00:1BB3
     ldh a, [hSamusYPixel]
     add $08
-    ld [$c203], a
+    ld [tileY], a
     ldh a, [hSamusXPixel]
     add $0b
-    ld [$c204], a
+    ld [tileX], a
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
@@ -4605,7 +4605,7 @@ samus_unmorphInAir: ;{ 00:1BB3
 
     ldh a, [hSamusXPixel]
     add $14
-    ld [$c204], a
+    ld [tileX], a
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
@@ -4613,10 +4613,10 @@ samus_unmorphInAir: ;{ 00:1BB3
 
     ldh a, [hSamusYPixel]
     add $18
-    ld [$c203], a
+    ld [tileY], a
     ldh a, [hSamusXPixel]
     add $0b
-    ld [$c204], a
+    ld [tileX], a
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
@@ -4624,7 +4624,7 @@ samus_unmorphInAir: ;{ 00:1BB3
 
     ldh a, [hSamusXPixel]
     add $14
-    ld [$c204], a
+    ld [tileX], a
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
@@ -4667,7 +4667,7 @@ samus_walkRight: ;{ 00:1C0D
     adc $00
     and $0f
     ldh [hSamusXScreen], a
-    ld [$c204], a
+    ld [tileX], a
     call collision_samusHorizontal.right
     jr nc, .keepResults
         ld a, [prevSamusXPixel]
@@ -4707,7 +4707,7 @@ samus_walkLeft: ;{ 00:1C51
     sbc $00
     and $0f
     ldh [hSamusXScreen], a
-    ld [$c204], a
+    ld [tileX], a
     call collision_samusHorizontal.left
     jr nc, .keepResults
         ld a, [prevSamusXPixel]
@@ -4738,7 +4738,7 @@ samus_rollRight: ;{
     adc $00
     and $0f
     ldh [hSamusXScreen], a
-    ld [$c204], a
+    ld [tileX], a
     call collision_samusHorizontal.right
     jr nc, .keepResults
         ; Revert to previous position
@@ -4773,7 +4773,7 @@ samus_rollLeft: ;{
     and $0f
     ldh [hSamusXScreen], a
     
-    ld [$c204], a
+    ld [tileX], a
     call collision_samusHorizontal.left
     jr nc, jr_000_1cf0
         ld a, [prevSamusXPixel]
@@ -4801,7 +4801,7 @@ samus_moveRightInAir: ;{ 00:1CF5
     adc $00
     and $0f
     ldh [hSamusXScreen], a    
-    ld [$c204], a
+    ld [tileX], a
     call collision_samusHorizontal.right
     jr nc, .keepResults
         ; Revert to previous position
@@ -4830,7 +4830,7 @@ samus_moveLeftInAir: ;{ 00:1D22
     sbc $00
     and $0f
     ldh [hSamusXScreen], a
-    ld [$c204], a
+    ld [tileX], a
     call collision_samusHorizontal.left
     jr nc, .keepResults
         ; Revert to previous position
@@ -4938,7 +4938,7 @@ collision_samusHorizontal: ;{ Has two entry points (left and right)
         push bc
         ldh a, [hSamusXPixel]
         add $0b
-        ld [$c204], a
+        ld [tileX], a
         jr .start
     .right: ; 00:1DE2 - Entry point for right-side collision
         push hl
@@ -4946,7 +4946,7 @@ collision_samusHorizontal: ;{ Has two entry points (left and right)
         push bc
         ldh a, [hSamusXPixel]
         add $14
-        ld [$c204], a
+        ld [tileX], a
 .start: ; Start
     call Call_000_32cf ; Sprite collision?
         jp c, .exit
@@ -4981,7 +4981,7 @@ collision_samusHorizontal: ;{ Has two entry points (left and right)
                         ld b, a
                         ldh a, [hSamusYPixel]
                         add b
-                        ld [$c203], a
+                        ld [tileY], a
                         call samus_getTileIndex
                         ld hl, samusSolidityIndex
                         cp [hl]
@@ -4991,7 +4991,7 @@ collision_samusHorizontal: ;{ Has two entry points (left and right)
                     ld b, a
                     ldh a, [hSamusYPixel]
                     add b
-                    ld [$c203], a
+                    ld [tileY], a
                     call samus_getTileIndex
                     ld hl, samusSolidityIndex
                     cp [hl]
@@ -5002,7 +5002,7 @@ collision_samusHorizontal: ;{ Has two entry points (left and right)
                 ld b, a
                 ldh a, [hSamusYPixel]
                 add b
-                ld [$c203], a
+                ld [tileY], a
                 call samus_getTileIndex
                 ld hl, samusSolidityIndex
                 cp [hl]
@@ -5013,7 +5013,7 @@ collision_samusHorizontal: ;{ Has two entry points (left and right)
             ld b, a
             ldh a, [hSamusYPixel]
             add b
-            ld [$c203], a
+            ld [tileY], a
             call samus_getTileIndex
             ld hl, samusSolidityIndex
             cp [hl]
@@ -5024,7 +5024,7 @@ collision_samusHorizontal: ;{ Has two entry points (left and right)
         ld b, a
         ldh a, [hSamusYPixel]
         add b
-        ld [$c203], a
+        ld [tileY], a
         call samus_getTileIndex
         ld hl, samusSolidityIndex
         cp [hl]
@@ -5049,7 +5049,7 @@ collision_samusTop: ;{ 00:1E88
 ; Top left side
     ldh a, [hSamusXPixel]
     add $0c
-    ld [$c204], a
+    ld [tileX], a
     ld hl, table_20E9
     ld a, [samusPose]
     ld e, a
@@ -5059,7 +5059,7 @@ collision_samusTop: ;{ 00:1E88
     ld b, a
     ldh a, [hSamusYPixel]
     add b
-    ld [$c203], a
+    ld [tileY], a
     call samus_getTileIndex
 
     ld hl, samusSolidityIndex
@@ -5096,7 +5096,7 @@ collision_samusTop: ;{ 00:1E88
 ; Top right side
     ldh a, [hSamusXPixel]
     add $14
-    ld [$c204], a
+    ld [tileX], a
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
@@ -5155,10 +5155,10 @@ collision_samusBottom: ;{ 00:1F0F
 ; Bottom left side
     ldh a, [hSamusXPixel]
     add $0c
-    ld [$c204], a
+    ld [tileX], a
     ldh a, [hSamusYPixel]
     add $2c
-    ld [$c203], a
+    ld [tileY], a
     call samus_getTileIndex
     ld hl, samusSolidityIndex
     cp [hl]
@@ -5204,7 +5204,7 @@ collision_samusBottom: ;{ 00:1F0F
 ; Bottom right side
     ldh a, [hSamusXPixel]
     add $14
-    ld [$c204], a
+    ld [tileX], a
     call samus_getTileIndex
 
     ld hl, samusSolidityIndex
@@ -5570,12 +5570,12 @@ enemy_getTileIndex: ; 00:2250 - Called by enemy routines
     ld b, a
     ld a, [enemy_testPointYPos]
     add b
-    ld [$c203], a
+    ld [tileY], a
     ld a, [scrollX]
     ld b, a
     ld a, [enemy_testPointXPos]
     add b
-    ld [$c204], a
+    ld [tileX], a
     
 beam_getTileIndex: ; 00:2266 - Entry point for beam routines
     call getTilemapAddress
@@ -5648,123 +5648,147 @@ main_readInput: ;{ 00:2287
     ldh [rP1], a
 ret ;}
 
-; Given pixels coordinates in y:[$C203], x:[$C204]
+; Given pixels coordinates in y:[tileY], x:[tileX]
 ;  returns the tilemap address in [pTilemapDestLow] and [pTilemapDestHigh]
-getTilemapAddress: ; 00:22BC
-    ld a, [$c203]
+getTilemapAddress: ;{ 00:22BC
+    ; HL = $9800 + (tileY-$10)/8*$20
+    ld a, [tileY]
     sub $10
     ld b, $08
     ld de, $0020
-    ld hl, $9800 - $20 ;$97e0
-
+    ld hl, $9800 - $20 ;$97E0
     .loop:
-        add hl, de
-        sub b
+        add hl, de ; Add one row of bytes to the pointer per loop
+        sub b ; Subtract one row of pixels from A per loop
     jr nc, .loop
-
-    ; subtract 8 and divide by 8
-    ld a, [$c204]
+    ; HL += (tileX-8)/8
+    ld a, [tileX]
     sub b
     srl a
     srl a
     srl a
     add l
+    ; Save HL to pTilemapDest
     ld l, a
     ld [pTilemapDestLow], a
     ld a, h
     ld [pTilemapDestHigh], a
-ret
+ret ;}
 
-unknown_22E1: ; 00:22E1 - Unused ?
+; Given a particular tilemap address, possibly returns the XY pixel coordinates of the tile
+;  Function is unused
+getTilemapCoordinates: ;{ 00:22E1
+    ; DE = pTilemapDest
     ld a, [pTilemapDestHigh]
     ld d, a
     ld a, [pTilemapDestLow]
     ld e, a
+    ; Can't entirely make sense of this math that calculates tileY
+    ; essentially DE/16 (D is discarded so the rotated-in bits don't matter)
     ld b, $04
-
     .loop:
         rr d
         rr e
         dec b
     jr nz, .loop
-
     ld a, e
+    ; The $8x part seems to adjust for the $9800 base address
+    ; The $x4 seems to adjust for 2 rows of tiles
     sub $84
+    ; Mask out lowest bit
     and $fe
+    ; A*4 + 8
     rlca
     rlca
     add $08
-    ld [$c203], a
+    ld [tileY], a
+    ; X = (low mod 32)*8 + 
     ld a, [pTilemapDestLow]
     and $1f
     rla
     rla
     rla
     add $08
-    ld [$c204], a
-ret
+    ld [tileX], a
+ret ;}
 
-unknown_230C: ; 00:230C - Unused?
-    ld a, [$c227]
+; Unused function - no idea what this could have been used for
+;  Seems to assume HL, DE, and C227 were set before entry
+unknownProc_230C: ;{ 00:230C
+    ; Exit if zero
+    ld a, [unknown_C227]
     and a
-    ret z
-
+        ret z
+    
+    ; Set loop counter
     ld c, $03
+    ; Clear value
     xor a
-    ld [$c227], a
-
-    jr_000_2317:
+    ld [unknown_C227], a
+    .loop:
+        ; Branch if upper nybble is nonzero
         ld a, [de]
         ld b, a
         swap a
         and $0f
-            jr nz, jr_000_234a
+            jr nz, .branch_A
     
-        ld a, [$c227]
+        ; Load 0 to HL if unknown var is non-zero
+        ld a, [unknown_C227]
         and a
         ld a, $00
-        jr nz, jr_000_2329
+        jr nz, .endIf_A
+            ; Else load $FF to HL
             ld a, $ff
-        jr_000_2329:
-
+        .endIf_A:
+    .reentry_A:
         ld [hl+], a
+        
+        ; Branch is lower nybble is nonzero
         ld a, b
         and $0f
-        jr nz, jr_000_2353
+            jr nz, .branch_B
     
-        ld a, [$c227]
+        ; Load 0 to HL if var is non-zero
+        ld a, [unknown_C227]
         and a
         ld a, $00
-        jr nz, jr_000_2340
+        jr nz, .endIf_B
+            ; Write FF to HL if this is the last loop iteration
             ld a, $01
             cp c
             ld a, $00
-            jr z, jr_000_2340
+            jr z, .endIf_B
                 ld a, $ff
-    
-    jr_000_2340:
+        .endIf_B:
+    .reentry_B:
         ld [hl+], a
+        ; Get address of next source byte
         dec e
+        ; Decrement loop counter
         dec c
-    jr nz, jr_000_2317
-
+    jr nz, .loop
+    ; Clear variable
     xor a
-    ld [$c227], a
+    ld [unknown_C227], a
 ret
 
-jr_000_234a:
+.branch_A:
     push af
+    ; Set variable to 1
     ld a, $01
-    ld [$c227], a
+    ld [unknown_C227], a
     pop af
-    jr jr_000_2329
+jr .reentry_A
 
-jr_000_2353:
+.branch_B:
     push af
+    ; Set variable to 1
     ld a, $01
-    ld [$c227], a
+    ld [unknown_C227], a
     pop af
-        jr jr_000_2340
+jr .reentry_B
+;}
 
 ;------------------------------------------------------------------------------
 oamDMA_routine: ;{ 00:235C Copied to $FFA0 in HRAM
@@ -5778,6 +5802,7 @@ ret ;}
 
 ; Converts camera values to hardware scroll values
 convertCameraToScroll: ;{ 00:2366
+    ; Camera values are in the center of the screen
     ldh a, [hCameraYPixel]
     sub $48
     ld [scrollY], a
@@ -7060,12 +7085,12 @@ waitOneFrame: ; 00:2C5E
 ret
 
 
-tryPausing: ; 00:2C79
+tryPausing: ;{ 00:2C79
     ; Don't try pausing unless start is pressed
     ldh a, [hInputRisingEdge]
     cp PADF_START
         ret nz
-    ; Exit if in Queen's room
+    ; No pausing in Queen's room
     ld a, [queen_roomFlag]
     cp $11
         ret z
@@ -7073,13 +7098,16 @@ tryPausing: ; 00:2C79
     ld a, [samusPose]
     cp pose_faceScreen
         ret z
+    ; No pausing if in a scroll direction
     ld a, [doorScrollDirection]
     and a
         ret nz
+    ; No pausing when on a save pillar
     ld a, [saveContactFlag]
     and a
         ret nz
 
+    ; Read L counter value from table
     ld hl, metroidLCounterTable
     ld a, [metroidCountReal]
     ld e, a
@@ -7087,18 +7115,19 @@ tryPausing: ; 00:2C79
     add hl, de
     ld a, [hl]
     ld [metroidLCounterDisp], a
-    ; Clear L counter value if an earthquake is either queued up or happening
+    ; Clear displayed L counter value if an earthquake is either queued up or happening
     ld a, [nextEarthquakeTimer]
     and a
-    jr nz, .else_A
+    jr nz, .then_A
         ld a, [earthquakeTimer]
         and a
         jr z, .endIf_A
-    .else_A:
+    .then_A:
         xor a
         ld [metroidLCounterDisp], a
     .endIf_A:
 
+    ; Clear sprites if debug mode is enabled
     ld a, [debugFlag]
     and a
     jr z, .endIf_B
@@ -7107,40 +7136,54 @@ tryPausing: ; 00:2C79
         call clearUnusedOamSlots_longJump
     .endIf_B:
 
+    ; Clear variables
     xor a
     ld [debugItemIndex], a
     ld [unused_D011], a
+    
+    ; Set HL to align with sprite tile byte
     ld hl, wram_oamBuffer + $2
-
+    
+    ; Attempt to find the first sprite that uses the HUD Metroid sprite tiles ($9A and $9B)
+    ; Note that the following hex values would all be detected by this loop:
+    ;  9A, 9B, 9E, 9F, BA, BB, BE, BF, DA, DB, DE, DF, FA, FB, FE, FF
+    ; The HUD Metroid is rendered after Samus and the beams, which menas that they
+    ;  should not use tiles with those values. (Enemy sprites are not a concern here.)
     .loop:
         ld a, [hl]
         and $9a
         cp $9a
             jr z, .break
         ld a, l
+        ; Iterate to next sprite
         add $04
         ld l, a
-        cp $a0
+        cp OAM_MAX ; $A0
     jr c, .loop
-
     jr .exit
 
 .break:
+    ; Draw the L counter sprite
     ld de, $0004
+    ; Write blank tile
     ld a, $36
     ld [hl], a
+    ; Iterate to next sprite
     add hl, de
+    ; Write L tile
     ld a, $0f
     ld [hl], a
 
 .exit:
+    ; Play sound
     ld a, $01
     ld [$cfc7], a
+    ; Set game mode
     ld a, $08
     ldh [gameMode], a
-ret
+ret ;}
 
-gameMode_Paused:
+gameMode_Paused: ;{ 00:2CED
     ; Change palette on a 32 frame cycle (16 frame light/dark phases)
     ld b, $e7
     ldh a, [frameCounter]
@@ -7148,7 +7191,7 @@ gameMode_Paused:
     jr z, .endIf
         ld b, $93
     .endIf:
-
+    ; Set palette
     ld a, b
     ld [bg_palette], a
     ld [ob_palette0], a
@@ -7166,8 +7209,10 @@ gameMode_Paused:
     ld a, $93
     ld [bg_palette], a
     ld [ob_palette0], a
+    ; Play sound
     ld a, $02
     ld [$cfc7], a
+    ; Switch game mode
     ld a, $04
     ldh [gameMode], a
 ret
@@ -7187,8 +7232,7 @@ ret
     ld [$cfc7], a
     ld a, $04
     ldh [gameMode], a
-ret
-
+ret ;}
 
 debugPauseMenu: ;{ 00:2D39
 ;{ Main input logic for debug menu
@@ -7451,7 +7495,6 @@ debugPauseMenu: ;{ 00:2D39
     ldh [gameMode], a
 ret ;}
 
-
 hurtSamus: ;{ 00:2EE3
     ; Exit if hurt flag is not set
     ld a, [samus_hurtFlag]
@@ -7561,7 +7604,7 @@ applyDamage: ;{ This procedure has multiple entry points
     .endIf_B:
 ret ;}
 
-gameMode_dying: ; 00:2F86
+gameMode_dying: ;{ 00:2F86
     ; Do some things, only during the queen fight
     ld a, [queen_roomFlag]
     cp $11
@@ -7571,43 +7614,53 @@ gameMode_dying: ; 00:2F86
         callFar queenHandler
         call clearUnusedOamSlots_longJump
     .endIf:
-ret
+ret ;}
 
-
-killSamus: ; Kill Samus
-    call silenceAudio_longJump ; Music related
-
+; Tasks to do once Samus's displayed health reaches zero
+killSamus: ;{ 00:2FA2
+    ; Silence audio
+    call silenceAudio_longJump
+    ; Play noise
     ld a, $0b
     ld [sfxRequest_noise], a
+    ; Delay a frame
     call waitOneFrame
-    call drawSamus_ignoreDamageFrames_longJump ; Draw Samus regardless of i-frames
-
+    ; Draw Samus regardless of i-frames
+    call drawSamus_ignoreDamageFrames_longJump
     ; Set timer
     ld a, $20
     ld [deathAnimTimer], a
-
+    ; Set base address of tile manipulation
+    ;  Note: the actual death animation does not use this variable
     xor a
-    ld [$d05a], a
+    ld [pDeathAltAnimBaseLow], a
     ld a, $80
-    ld [$d05b], a
+    ld [pDeathAltAnimBaseHigh], a
     ld a, $01
     ld [deathFlag], a
     ld a, $06
     ldh [gameMode], a
-ret
+ret ;}
 
-; 00:2FC8 - Unused
+prepUnusedDeathAnimation: ;{ 00:2FC8 - Unused
+    ; Force Samus to face screen for 160 frames
     ld a, $a0
     ld [samus_turnAnimTimer], a
+    ; Set pose to standing, in turnaround state
     ld a, $80 | pose_standing
     ld [samusPose], a
+    ; Set timer
+    ; Note: The reason it is suspected that this function pertains to 
+    ;  "unusedDeathAnimation" is because it sets deathAnimTimer but
+    ;  not deathFlag.
     ld a, $20
     ld [deathAnimTimer], a
+    ; Set base address of tile effect
     xor a
-    ld [$d05a], a
+    ld [pDeathAltAnimBaseLow], a
     ld a, $80
-    ld [$d05b], a
-ret
+    ld [pDeathAltAnimBaseHigh], a
+ret ;}
 
 ; Vblank routine for death
 VBlank_deathSequence: ; 00:2FE1
@@ -7690,9 +7743,9 @@ unusedDeathAnimation: ;{ 00:3062
     ldh a, [frameCounter]
     and $01
     jr nz, .endIf_A
-        ld a, [$d05a]
+        ld a, [pDeathAltAnimBaseLow]
         ld l, a
-        ld a, [$d05b]
+        ld a, [pDeathAltAnimBaseHigh]
         ld h, a
         ld de, $0010
     
@@ -7721,9 +7774,9 @@ unusedDeathAnimation: ;{ 00:3062
         .endIf_B:
     
         ld a, l
-        ld [$d05a], a
+        ld [pDeathAltAnimBaseLow], a
         ld a, h
-        ld [$d05b], a
+        ld [pDeathAltAnimBaseHigh], a
         cp $85
         jr nz, .endIf_A
             xor a
@@ -7927,12 +7980,12 @@ ret
 Call_000_31b6: ; 00:31B6 - Projectile/enemy collision function
     ld a, [scrollY]
     ld b, a
-    ld a, [$c203]
+    ld a, [tileY]
     sub b
     ldh [$98], a
     ld a, [scrollX]
     ld b, a
-    ld a, [$c204]
+    ld a, [tileX]
     sub b
     ldh [$99], a
     ld a, $03
@@ -8133,7 +8186,7 @@ Call_000_32cf:
 
     ldh a, [hCameraXPixel]
     ld b, a
-    ld a, [$c204]
+    ld a, [tileX]
     sub b
     add $50
     ldh [$99], a
@@ -8167,7 +8220,7 @@ jr_000_32f7:
     jr nz, jr_000_3311
 ret
 
-
+; Samus vs. Single Enemy Collision
 Call_000_3324:
     push hl
     inc hl
@@ -8417,7 +8470,7 @@ Jump_000_3489:
     ccf
 ret
 
-
+; Samus standing on sprite collision loop?
 Call_000_348d:
     ld a, [samusPose]
     cp pose_beingEaten ; $18
@@ -8475,7 +8528,7 @@ Call_000_348d:
     jr nz, jr_000_34c3
 ret
 
-
+; A Samus-sprite routine
 Call_000_34ef:
     ld a, [samusPose]
     cp pose_beingEaten ; $18
@@ -8526,7 +8579,7 @@ Call_000_34ef:
     jr nz, jr_000_3532
 ret
 
-
+; Another Samus-sprite routine
 Call_000_3545:
     push hl
     inc hl
@@ -9871,9 +9924,9 @@ unusedDeathAnimation_copy: ;{ 00:3F07
     ldh a, [frameCounter]
     and $01
     jr nz, .endIf_A
-        ld a, [$d05a]
+        ld a, [pDeathAltAnimBaseLow]
         ld l, a
-        ld a, [$d05b]
+        ld a, [pDeathAltAnimBaseHigh]
         ld h, a
         ld de, $0010
     
@@ -9902,9 +9955,9 @@ unusedDeathAnimation_copy: ;{ 00:3F07
         .endIf_B:
     
         ld a, l
-        ld [$d05a], a
+        ld [pDeathAltAnimBaseLow], a
         ld a, h
-        ld [$d05b], a
+        ld [pDeathAltAnimBaseHigh], a
         cp $85
         jr nz, .endIf_A
             xor a

@@ -18,8 +18,10 @@ wram_oamBuffer:: ds $A0 ; $C000
 ;         80: Priority (set: behind background)
 ;}
 ;
-;$C203: Tile Y (see $22BC)
-;$C204: Tile X (see $22BC)
+
+; Pixel coordinate of a tile to read
+def tileY = $C203 ; Tile Y (see $22BC)
+def tileX = $C204 ; Tile X (see $22BC)
 def scrollY = $C205 ; Scroll Y
 def scrollX = $C206 ; Scroll X
 ;
@@ -41,6 +43,7 @@ def gameOver_LCDC_copy = $C219 ; LCD control mirror. Only set by death routine. 
 ;    b: Enable BG. If CGB, then 0 additionally disables window regardless of w
 ;}
 ;
+def unknown_C227 = $C227
 def enSprite_blobThrower = $C300
 def spriteC300 = $C300 ;$C300..3D: Set to [$2:4FFE..503A] in $2:4DB1
 ;{
@@ -870,7 +873,8 @@ samus_screenSpritePriority = $D057 ; Room sprite priority
 ;}
 def currentLevelBank = $D058 ; Bank for current room
 def deathAnimTimer = $D059 ; Death sequence timer
-;$D05A: Base address of pixels to clear in Samus' VRAM tiles
+def pDeathAltAnimBaseLow  = $D05A ; Base address of pixels to clear in Samus' VRAM tiles (for unused animation)
+def pDeathAltAnimBaseHigh = $D05B
 ;$D05C: $32AB acknowledgement flag. $32AB acknowledges this when it executes, cleared every in-game frame. $32AB is called by in-game and item pickup sequence. Collision related?
 ;$D05D..60: Values for $C466..69 in $2:438F. Guess: generic collision information
 ;{
