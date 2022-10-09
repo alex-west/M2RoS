@@ -59,11 +59,27 @@ def outputSongData():
     class Song:
         class Header:
             def __init__(self, address, name):
+                tempoMap = {
+                    0x409E: 448,
+                    0x40AB: 224,
+                    0x40B8: 149,
+                    0x40C5: 112,
+                    0x40D2: 90,
+                    0x40DF: 75,
+                    0x40EC: 64,
+                    0x40F9: 56,
+                    0x4106: 50
+                }
+                
                 self.address = address
                 self.labels = [f'{name}_header']
                 rom.seek(gb2hex(0x40000 | address))
                 self.musicNoteOffset = romRead(1)
-                self.CF01 = romRead(2)
+                self.p_tempo = romRead(2)
+                if self.p_tempo not in tempoMap:
+                    raise RuntimeError(f'Unknown tempo pointer ${self.p_tempo:X}')
+                
+                self.tempo = tempoMap[self.p_tempo]
                 self.toneSweep = romRead(2)
                 self.tone = romRead(2)
                 self.wave = romRead(2)
@@ -79,7 +95,7 @@ def outputSongData():
                 for label in self.labels:
                     print(f'{label}:')
                     
-                print(f'    SongHeader ${self.musicNoteOffset:X}, ${self.CF01:X}, {self.label_toneSweep}, {self.label_tone}, {self.label_wave}, {self.label_noise}')
+                print(f'    SongHeader ${self.musicNoteOffset:X}, tempoTable_{self.tempo}, {self.label_toneSweep}, {self.label_tone}, {self.label_wave}, {self.label_noise}')
             
             def addLabel(self, name):
                 self.labels += [f'{name}_header']
@@ -141,19 +157,19 @@ def outputSongData():
                         
                     def __str__(self):
                         noteLengthNames = [
+                            'Hemidemisemiquaver',
                             'Demisemiquaver',
                             'Semiquaver',
                             'Quaver',
                             'Crochet',
                             'Minum',
-                            'Semibreve',
+                            'DottedSemiquaver',
                             'DottedQuaver',
                             'DottedCrochet',
-                            'DottedMinum',
+                            'TripletSemiquaver',
                             'TripletQuaver',
-                            'TripletCrochet',
-                            'Hemidemisemiquaver',
-                            'Breve'
+                            'Semihemidemisemiquaver',
+                            'Semibreve'
                         ]
                         
                         return f'SongNoteLength_{noteLengthNames[self.i_noteLength]}'
@@ -191,10 +207,26 @@ def outputSongData():
                 
                 class Tempo:
                     def __init__(self):
-                        self.tempo = romRead(2)
+                        tempoMap = {
+                            0x409E: 448,
+                            0x40AB: 224,
+                            0x40B8: 149,
+                            0x40C5: 112,
+                            0x40D2: 90,
+                            0x40DF: 75,
+                            0x40EC: 64,
+                            0x40F9: 56,
+                            0x4106: 50
+                        }
+                        
+                        self.p_tempo = romRead(2)
+                        if self.p_tempo not in tempoMap:
+                            raise RuntimeError(f'Unknown tempo pointer ${self.p_tempo:X}')
+                        
+                        self.tempo = tempoMap[self.p_tempo]
                         
                     def __str__(self):
-                        return f'SongTempo ${self.tempo:X}'
+                        return f'SongTempo tempoTable_{self.tempo}'
                 
                 class Transpose:
                     def __init__(self):

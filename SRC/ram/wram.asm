@@ -599,34 +599,35 @@ def songToneSweepChannelInstructionPointer equ $CF26 ; Song tone/sweep channel i
 def songToneChannelInstructionPointer equ $CF28 ; Song tone channel instruction pointer
 def songWaveChannelInstructionPointer equ $CF2A ; Song wave channel instruction pointer
 def songNoiseChannelInstructionPointer equ $CF2C ; Song noise channel instruction pointer
-;        $CF2E: A 12 frame timer
+def songSoundChannelEffectTimer equ $CF2E ; Song sound channel effect timer. 11h frame timer (bug?) for indexing table at $4263/$4273/$4283. Shared across all sound channels(!)
 
 def songProcessingStates equ $CF2F
-;        $CF2F..37: Working channel song processing state
 ;        {
-;            $CF2F: Instruction pointer list, an 'instruction pointer' of 00F0 followed by pppp means to go to pppp, 0000 means end of list.
+;            $CF2F: Instruction pointer list. Big endian(!). An 'instruction pointer' of 00F0 followed by pppp means to go to pppp, 0000 means end of list.
 ;            {
 ;                Instruction format:
 ;                    00:          End of instruction list
-;                    ii:          For 9F <= ii <= F0h. Instruction timer = [[$CF01] + (ii & ~A0h)]
+;                    ii:          For 9Fh <= ii <= F0h (only A0h..ACh is usable). Instruction timer = [[$CF01] + (ii & ~A0h)]
 ;                    F1 ee ss ll: For non-wave channels.
 ;                                     Working sound channel envelope = ee
 ;                                     Working sound channel sweep = ss
-;                                     Working sound channel sound length / wave pattern duty = ll
+;                                     Working sound channel wave pattern duty = ll & C0h
+;                                     Working sound channel effect index / sound length = ll & ~C0h
 ;                    F1 pppp vv:  For the wave channel.
 ;                                     Pointer to wave pattern data = pppp
-;                                     Working sound channel volume = vv
+;                                     Working sound channel volume = vv & 60h
+;                                     Working sound channel effect index = vv & ~60h
 ;                    F2 pppp:     Set tempo: $CF01 = pppp
 ;                    F3 oo:       Set transpose: $CF00 = oo. (Add oo to any played music notes)
 ;                    F4 nn:       Repeat from after this instruction nn times |: (sets $CF31/$CF33)
 ;                    F5:          Repeat :| (decrements $CF31)
 ;                    ii:          For ii >= F6h. Clear sound effects and song
-;                    oo ii:       For 00 < oo < 9Fh:
-;                        oo 01:   Mute working sound channel
-;                        oo 03:   For non-noise channels. If fading out music: working sound channel envelope / volume = 8, else working sound channel envelope / volume = 66h. Set working sound channel frequency
-;                        oo 05:   For non-noise channels. If fading out music: working sound channel envelope / volume = 8, else working sound channel envelope / volume = 46h. Set working sound channel frequency
-;                        oo ii:   Otherwise. For non-noise channels. Working sound channel frequency = [music notes + [ii]], working sound channel envelope = [$CF35]
-;                        oo ii:   Otherwise. For the noise channel:
+;                    ii:          For 00 < ii < 9Fh:
+;                        01:      Rest. Mute working sound channel
+;                        03:      Echo note. For non-noise channels. If fading out music: working sound channel envelope / volume = 8, else working sound channel envelope / volume = 66h. Set working sound channel frequency
+;                        05:      Echo note. For non-noise channels. If fading out music: working sound channel envelope / volume = 8, else working sound channel envelope / volume = 46h. Set working sound channel frequency
+;                        ii:      Otherwise. For non-noise channels. Working sound channel frequency = [music notes + [ii]], working sound channel envelope = [$CF35]
+;                        ii:      Otherwise. For the noise channel:
 ;                                     Working sound channel sound length       = [$41BB + ii]
 ;                                     Working sound channel envelope           = [$41BB + ii + 1]
 ;                                     Working sound channel polynomial counter = [$41BB + ii + 2]
@@ -637,7 +638,18 @@ def songProcessingStates equ $CF2F
 ;            $CF34: Instruction length
 ;            $CF35: Sound envelope / volume
 ;            $CF36: Instruction timer
-;            $CF37: Sound length (according to song instruction F1h)
+;            $CF37: Effect index (non-noise) / sound length (noise)
+;            {
+;                ; Effect indices
+;                2: World's most negligible effect
+;                3: Vibrato
+;                4: Chorus
+;                6: Slide up - slow
+;                7: Slide up - fast
+;                8: Slide down
+;                9: Tiny pitch up
+;                Ah: Small pitch up
+;            }
 ;        }
 ;        $CF38..40: Tone/sweep channel song processing state
 ;        $CF41..49: Tone channel song processing state
@@ -652,6 +664,7 @@ macro makeChannelSongProcessingState ; [label prefix], [base address]
     def \1SoundEnvelope equ \2+6
     def \1Volume equ \2+6
     def \1InstructionTimer equ \2+7
+    def \1EffectIndex equ \2+8
     def \1SoundLength equ \2+8
 endm
     makeChannelSongProcessingState working,$CF2F

@@ -41,15 +41,32 @@ musicNotes:
 
 instructionTimerArrays:
 ;{
-    db $01, $01, $02, $04, $08, $10, $03, $06, $0c, $01, $03, $01, $20
-    db $01, $02, $04, $08, $10, $20, $06, $0c, $18, $02, $05, $01, $40
-    db $02, $03, $06, $0c, $18, $30, $09, $12, $24, $04, $08, $01, $60
-    db $02, $04, $08, $10, $20, $40, $0c, $18, $30, $05, $0a, $01, $80
-    db $03, $05, $0a, $14, $28, $50, $0f, $1e, $3c, $07, $0e, $01, $a0
-    db $03, $06, $0c, $18, $30, $60, $12, $24, $48, $08, $10, $02, $c0
-    db $03, $07, $0e, $1c, $38, $70, $15, $2a, $54, $09, $12, $02, $e0
-    db $04, $08, $10, $20, $40, $80, $18, $30, $60, $0a, $14, $02, $ff
-    db $04, $09, $12, $24, $48, $90, $1b, $36, $6c, $0c, $1a, $02, $ff
+; One of these pointers will be loaded by an F2 pppp song instruction, then subsequent Ax instructions will set the next instruction timer
+; Essentially, this means that the F2 pppp song instruction controls the tempo of the song
+
+;                   _____________________________________________________________ 0: 1/32. Demisemiquaver
+;                  |     ________________________________________________________ 1: 1/16. Semiquaver
+;                  |    |     ___________________________________________________ 2: 1/8. Quaver
+;                  |    |    |     ______________________________________________ 3: 1/4. Crochet
+;                  |    |    |    |     _________________________________________ 4: 1/2. Minum
+;                  |    |    |    |    |     ____________________________________ 5: 1. Semibreve
+;                  |    |    |    |    |    |     _______________________________ 6: 3/16. Dotted quaver
+;                  |    |    |    |    |    |    |     __________________________ 7: 3/8. Dotted crochet
+;                  |    |    |    |    |    |    |    |     _____________________ 8: 3/4. Dotted minum
+;                  |    |    |    |    |    |    |    |    |     ________________ 9: 1/12. Triplet quaver
+;                  |    |    |    |    |    |    |    |    |    |     ___________ Ah: 1/6. Triplet crochet
+;                  |    |    |    |    |    |    |    |    |    |    |     ______ Bh: 1/64. Hemidemisemiquaver
+;                  |    |    |    |    |    |    |    |    |    |    |    |     _ Ch: 2. Breve
+;                  |    |    |    |    |    |    |    |    |    |    |    |    |
+tempoTable_448: db $01, $01, $02, $04, $08, $10, $03, $06, $0c, $01, $03, $01, $20
+tempoTable_224: db $01, $02, $04, $08, $10, $20, $06, $0c, $18, $02, $05, $01, $40
+tempoTable_149: db $02, $03, $06, $0c, $18, $30, $09, $12, $24, $04, $08, $01, $60
+tempoTable_112: db $02, $04, $08, $10, $20, $40, $0c, $18, $30, $05, $0a, $01, $80
+tempoTable_90:  db $03, $05, $0a, $14, $28, $50, $0f, $1e, $3c, $07, $0e, $01, $a0
+tempoTable_75:  db $03, $06, $0c, $18, $30, $60, $12, $24, $48, $08, $10, $02, $c0
+tempoTable_64:  db $03, $07, $0e, $1c, $38, $70, $15, $2a, $54, $09, $12, $02, $e0
+tempoTable_56:  db $04, $08, $10, $20, $40, $80, $18, $30, $60, $0a, $14, $02, $ff
+tempoTable_50:  db $04, $09, $12, $24, $48, $90, $1b, $36, $6c, $0c, $1a, $02, $ff
 ;}
 
 wavePatterns:
@@ -156,26 +173,21 @@ songNoiseChannelOptionSets:
     db $00,$F4,$7B,$80
 ;}
 
-; Data for $CF0E, indexed by [toneSweepChannelFrequency]/[toneChannelFrequency]/[waveChannelFrequency] (sound channel frequencies)
+; Song sound channel effect tables
 ;{
-data4263:
-; workingSoundLength = 2
+songSoundChannelEffectTable_index2:
     db $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $01
 
-data4273:
-; workingSoundLength = 3
+songSoundChannelEffectTable_index3:
     db $08, $10, $18, $20, $28, $30, $38, $40, $38, $30, $28, $20, $18, $10, $08, $00
 
-data4283:
-; workingSoundLength = 4
+songSoundChannelEffectTable_index4:
     db $00, $05, $00, $05, $00, $05, $00, $05, $05, $00, $05, $00, $05, $00, $05, $00
 
-data4293:
-; workingSoundLength = 9
+songSoundChannelEffectTable_index9:
     db $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01
 
-data42A3:
-; workingSoundLength = Ah
+songSoundChannelEffectTable_indexA:
     db $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03
 ;}
 
@@ -734,8 +746,8 @@ handleSongPlaying:
     and a
         jr nz, .endToneSweep
 
-    ld a, [toneSweepSoundLength]
-    ld [workingSoundLength], a
+    ld a, [toneSweepEffectIndex]
+    ld [workingEffectIndex], a
     and a
         jr z, .endToneSweep
 
@@ -743,7 +755,7 @@ handleSongPlaying:
     ld c, a
     ld a, [toneSweepChannelFrequency+1]
     ld b, a
-    call Call_004_4d75
+    call handleSongSoundChannelEffect
     ld a, [workingSoundChannelFrequency]
     ldh [rAUD1LOW], a
     ld a, [workingSoundChannelFrequency+1]
@@ -769,8 +781,8 @@ handleSongPlaying:
     and a
         jr nz, .endTone
 
-    ld a, [toneSoundLength]
-    ld [workingSoundLength], a
+    ld a, [toneEffectIndex]
+    ld [workingEffectIndex], a
     and a
         jr z, .endTone
 
@@ -778,7 +790,7 @@ handleSongPlaying:
     ld c, a
     ld a, [toneChannelFrequency+1]
     ld b, a
-    call Call_004_4d75
+    call handleSongSoundChannelEffect
     ld a, [workingSoundChannelFrequency]
     ldh [rAUD2LOW], a
     ld a, [workingSoundChannelFrequency+1]
@@ -804,8 +816,8 @@ handleSongPlaying:
     and a
         jr nz, .endWave
 
-    ld a, [waveSoundLength]
-    ld [workingSoundLength], a
+    ld a, [waveEffectIndex]
+    ld [workingEffectIndex], a
     and a
         jr z, .endWave
 
@@ -813,7 +825,7 @@ handleSongPlaying:
     ld c, a
     ld a, [waveChannelFrequency+1]
     ld b, a
-    call Call_004_4d75
+    call handleSongSoundChannelEffect
     ld a, [workingSoundChannelFrequency]
     ldh [rNR33], a
     ld a, [workingSoundChannelFrequency+1]
@@ -1894,13 +1906,13 @@ songInstruction_setWorkingSoundChannelOptions:
     res 6, a
     res 7, a
 
-.soundLength
+.effectIndex
     and a
     jr nz, .endIf_badCode
         xor a
     .endIf_badCode
 
-    ld [workingSoundLength], a
+    ld [workingEffectIndex], a
 ;}
 
 endSongInstructionWithParameter:
@@ -1947,7 +1959,7 @@ songInstruction_setWorkingSoundChannelOptions_wave:
     ld a, [workingSoundChannelVolume]
     res 5, a
     res 6, a
-    jr songInstruction_setWorkingSoundChannelOptions.soundLength
+    jr songInstruction_setWorkingSoundChannelOptions.effectIndex
 ;}
 
 songInstruction_setInstructionTimerArrayPointer:
@@ -2026,37 +2038,38 @@ copyChannelSongProcessingState:
     ret
 ;}
 
-Call_004_4d75:
+; Handle song sound channel effect
+handleSongSoundChannelEffect:
 ;{
-    ld a, [workingSoundLength]
+    ld a, [workingEffectIndex]
     cp $02
-        jr z, .soundLength2
+        jr z, .effectIndex2
     cp $03
-        jr z, .soundLength3
+        jr z, .effectIndex3
     cp $04
-        jr z, .soundLength4
+        jr z, .effectIndex4
     cp $06
-        jr z, .soundLength6
+        jr z, .effectIndex6
     cp $07
-        jp z, .soundLength7
+        jp z, .effectIndex7
     cp $08
-        jp z, .soundLength8
+        jp z, .effectIndex8
     cp $09
-        jp z, .soundLength9
+        jp z, .effectIndex9
     cp $0a
-        jp z, .soundLengthA
+        jp z, .effectIndexA
     ret
 
 .merge
-    ld a, [$cf2e]
+    ld a, [songSoundChannelEffectTimer]
     and a
     jr nz, .endIf_resetTimer
         ld a, $11
-        ld [$cf2e], a
+        ld [songSoundChannelEffectTimer], a
     .endIf_resetTimer
 
     dec a
-    ld [$cf2e], a
+    ld [songSoundChannelEffectTimer], a
     ld e, a
     xor a
     ld d, a
@@ -2076,27 +2089,27 @@ Call_004_4d75:
     ld [workingSoundChannelFrequency+1], a
     ret
 
-.soundLength2:
-    ld hl, $4263
+.effectIndex2:
+    ld hl, songSoundChannelEffectTable_index2
     jr .merge
 
-.soundLength3:
-    ld hl, $4273
+.effectIndex3:
+    ld hl, songSoundChannelEffectTable_index3
     jr .merge
 
-.soundLength4:
-    ld hl, $4283
+.effectIndex4:
+    ld hl, songSoundChannelEffectTable_index4
     jr .merge
 
-.soundLength9:
-    ld hl, $4293
+.effectIndex9:
+    ld hl, songSoundChannelEffectTable_index9
     jr .merge
 
-.soundLengthA:
-    ld hl, $42a3
+.effectIndexA:
+    ld hl, songSoundChannelEffectTable_indexA
     jr .merge
 
-.soundLength6:
+.effectIndex6:
     inc bc
     ld a, c
     ld [workingSoundChannelFrequency], a
@@ -2135,7 +2148,7 @@ Call_004_4d75:
     ld [waveChannelFrequency+1], a
     ret
 
-.soundLength7:
+.effectIndex7:
     inc bc
     inc bc
     inc bc
@@ -2148,7 +2161,7 @@ Call_004_4d75:
     ld [workingSoundChannelFrequency+1], a
     jr .setFrequency
 
-.soundLength8:
+.effectIndex8:
     dec bc
     dec bc
     dec bc
@@ -5786,7 +5799,7 @@ songStereoFlags:
 
 ; $5F90
 song_babyMetroid_header:
-    SongHeader $1, $4106, song_babyMetroid_toneSweep, song_babyMetroid_tone, song_babyMetroid_wave, song_babyMetroid_noise
+    SongHeader $1, tempoTable_50, song_babyMetroid_toneSweep, song_babyMetroid_tone, song_babyMetroid_wave, song_babyMetroid_noise
 
 ; $5F9B
 song_babyMetroid_toneSweep:
@@ -5850,12 +5863,12 @@ song_babyMetroid_noise:
 song_babyMetroid_toneSweep_section4:
 ;{
     SongRepeatSetup $2
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "C4"
         SongNote "F4"
         SongNote "G4"
         SongNote "Bb4"
-        SongNoteLength_Crochet
+        SongNoteLength_Quaver
         SongNote "Eb4"
     SongRepeat
     SongEnd
@@ -5865,15 +5878,15 @@ song_babyMetroid_toneSweep_section4:
 song_babyMetroid_toneSweep_section6:
 ;{
     SongRepeatSetup $2
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "C4"
         SongNote "F4"
         SongNote "G4"
         SongNote "Bb4"
-        SongNoteLength_Crochet
+        SongNoteLength_Quaver
         SongNote "Eb4"
     SongRepeat
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C4"
     SongNote "F4"
     SongNote "G4"
@@ -5901,15 +5914,15 @@ song_babyMetroid_toneSweep_section9:
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 2
     SongRepeatSetup $4
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "C4"
         SongNote "F4"
         SongNote "G4"
         SongNote "Bb4"
-        SongNoteLength_Crochet
+        SongNoteLength_Quaver
         SongNote "Eb4"
     SongRepeat
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C4"
     SongNote "F4"
     SongNote "G4"
@@ -5927,7 +5940,7 @@ song_babyMetroid_toneSweep_section9:
 song_babyMetroid_tone_section4:
 ;{
     SongRepeatSetup $3
-        SongNoteLength_DottedQuaver
+        SongNoteLength_DottedSemiquaver
         SongNote "C4"
         SongNote "F4"
         SongNote "G4"
@@ -5976,7 +5989,7 @@ song_babyMetroid_tone_section9:
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 2
     SongRepeatSetup $4
-        SongNoteLength_DottedQuaver
+        SongNoteLength_DottedSemiquaver
         SongNote "C4"
         SongNote "F4"
         SongNote "G4"
@@ -6004,7 +6017,7 @@ song_babyMetroid_wave_section5:
 song_babyMetroid_wave_section4:
 ;{
     SongRepeatSetup $4
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C5"
         Echo1
         SongNote "F5"
@@ -6013,11 +6026,11 @@ song_babyMetroid_wave_section4:
         Echo1
         SongNote "Bb5"
         Echo1
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "Eb5"
         Echo1
     SongRepeat
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C5"
     Echo1
     SongNote "F5"
@@ -6042,17 +6055,17 @@ song_babyMetroid_wave_section4:
 ; $6084
 song_babyMetroid_noise_section3:
 ;{
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNoiseNote $1D
     SongNoiseNote $1E
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongRest
     SongEnd
 ;}
 
 ; $608A
 song_metroidQueenBattle_header:
-    SongHeader $1, $4106, song_metroidQueenBattle_toneSweep, song_metroidQueenBattle_tone, song_metroidQueenBattle_wave, song_metroidQueenBattle_noise
+    SongHeader $1, tempoTable_50, song_metroidQueenBattle_toneSweep, song_metroidQueenBattle_tone, song_metroidQueenBattle_wave, song_metroidQueenBattle_noise
 
 ; $6095
 song_metroidQueenBattle_toneSweep:
@@ -6143,11 +6156,11 @@ song_metroidQueenBattle_toneSweep_section0:
 
 ; $610C
 song_metroidQueenBattle_toneSweep_section1E:
-song_metroidQueenBattle_toneSweep_section24:
 song_metroidQueenBattle_toneSweep_section1B:
 song_metroidQueenBattle_toneSweep_section21:
+song_metroidQueenBattle_toneSweep_section24:
 ;{
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "E3"
     SongNote "Bb3"
     SongNote "C3"
@@ -6156,18 +6169,18 @@ song_metroidQueenBattle_toneSweep_section21:
 ;}
 
 ; $6112
+song_metroidQueenBattle_toneSweep_section3:
+song_metroidQueenBattle_toneSweep_section9:
+song_metroidQueenBattle_toneSweep_sectionC:
+song_metroidQueenBattle_toneSweep_section12:
 song_metroidQueenBattle_toneSweep_sectionF:
 song_metroidQueenBattle_toneSweep_section15:
 song_metroidQueenBattle_toneSweep_section5:
 song_metroidQueenBattle_toneSweep_section18:
 song_metroidQueenBattle_toneSweep_section1:
 song_metroidQueenBattle_toneSweep_section7:
-song_metroidQueenBattle_toneSweep_section3:
-song_metroidQueenBattle_toneSweep_section9:
-song_metroidQueenBattle_toneSweep_sectionC:
-song_metroidQueenBattle_toneSweep_section12:
 ;{
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "E3"
     SongNote "Bb3"
     SongNote "C3"
@@ -6182,7 +6195,7 @@ song_metroidQueenBattle_toneSweep_section27:
         DescendingEnvelopeOptions 7, $8
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongNote "E3"
     SongNote "Bb3"
     SongNote "C3"
@@ -6198,7 +6211,7 @@ song_metroidQueenBattle_tone_section0:
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
     SongRepeatSetup $A
-        SongNoteLength_DottedCrochet
+        SongNoteLength_DottedQuaver
         SongNote "A3"
         SongNote "Eb4"
         SongNote "F3"
@@ -6215,7 +6228,7 @@ song_metroidQueenBattle_tone_section1:
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
     SongRepeatSetup $4
-        SongNoteLength_Crochet
+        SongNoteLength_Quaver
         SongNote "A3"
         SongNote "Eb4"
         SongNote "F3"
@@ -6231,7 +6244,7 @@ song_metroidQueenBattle_tone_section2:
         DescendingEnvelopeOptions 7, $8
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongNote "A3"
     SongNote "Eb4"
     SongNote "F3"
@@ -6245,7 +6258,7 @@ song_metroidQueenBattle_wave_section0:
     SongOptions
         WaveOptions $416B, 2, $0
     SongRepeatSetup $A
-        SongNoteLength_DottedCrochet
+        SongNoteLength_DottedQuaver
         SongNote "A2"
         SongNote "Eb3"
         SongNote "F2"
@@ -6260,7 +6273,7 @@ song_metroidQueenBattle_wave_section1:
     SongOptions
         WaveOptions $416B, 2, $0
     SongRepeatSetup $4
-        SongNoteLength_Crochet
+        SongNoteLength_Quaver
         SongNote "A3"
         SongNote "Eb4"
         SongNote "F3"
@@ -6272,7 +6285,7 @@ song_metroidQueenBattle_wave_section1:
 ; $6160
 song_metroidQueenBattle_wave_section2:
 ;{
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "C5"
     Echo1
     SongNote "Eb5"
@@ -6284,55 +6297,55 @@ song_metroidQueenBattle_wave_section2:
     SongNote "Gb4"
     Echo1
     SongNote "G4"
+    SongNoteLength_Demisemiquaver
+    SongNote "E5"
+    Echo1
+    SongNote "Eb5"
+    Echo1
+    SongNote "Db5"
+    Echo1
+    SongNote "C5"
+    Echo1
+    SongNote "Db5"
+    Echo1
+    SongNote "Eb5"
+    Echo1
+    SongNote "E5"
+    Echo1
+    SongNote "Eb5"
+    Echo1
+    SongNote "Db5"
+    Echo1
+    SongNote "C5"
+    Echo1
+    SongNote "Db5"
+    Echo1
+    SongNote "Eb5"
+    Echo1
     SongNoteLength_Semiquaver
-    SongNote "E5"
-    Echo1
-    SongNote "Eb5"
-    Echo1
-    SongNote "Db5"
-    Echo1
-    SongNote "C5"
-    Echo1
-    SongNote "Db5"
-    Echo1
-    SongNote "Eb5"
-    Echo1
-    SongNote "E5"
-    Echo1
-    SongNote "Eb5"
-    Echo1
-    SongNote "Db5"
-    Echo1
-    SongNote "C5"
-    Echo1
-    SongNote "Db5"
-    Echo1
-    SongNote "Eb5"
-    Echo1
-    SongNoteLength_Quaver
     SongNote "E5"
     Echo1
     SongNote "Ab4"
     Echo1
     SongNote "C5"
     Echo1
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "B4"
     Echo1
     SongNote "F4"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "Gb4"
     Echo1
     SongNote "C5"
     Echo1
     SongNote "B4"
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "F5"
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "C2"
     SongNote "Db2"
     SongNote "Eb2"
@@ -6368,10 +6381,10 @@ song_metroidQueenBattle_wave_section2:
 song_metroidQueenBattle_noise_section0:
 ;{
     SongRepeatSetup $A
-        SongNoteLength_DottedCrochet
-        SongNoteLength_Demisemiquaver
+        SongNoteLength_DottedQuaver
+        SongNoteLength_Hemidemisemiquaver
         SongRest
-        SongNoteLength_Minum
+        SongNoteLength_Crochet
         SongRest
     SongRepeat
     SongEnd
@@ -6381,7 +6394,7 @@ song_metroidQueenBattle_noise_section0:
 song_metroidQueenBattle_noise_section1:
 ;{
     SongRepeatSetup $4
-        SongNoteLength_Crochet
+        SongNoteLength_Quaver
         SongNoiseNote $9
         SongRest
         SongNoiseNote $D
@@ -6393,11 +6406,11 @@ song_metroidQueenBattle_noise_section1:
 ; $61CC
 song_metroidQueenBattle_noise_section2:
 ;{
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNoiseNote $7
-    SongNoteLength_Minum
-    SongNoteLength_Demisemiquaver
-    SongNoteLength_DottedQuaver
+    SongNoteLength_Crochet
+    SongNoteLength_Hemidemisemiquaver
+    SongNoteLength_DottedSemiquaver
     SongRest
     SongNoiseNote $1A
     SongEnd
@@ -6406,7 +6419,7 @@ song_metroidQueenBattle_noise_section2:
 ; $61D4
 song_chozoRuins_header:
 song_chozoRuins_clone_header:
-    SongHeader $1, $40DF, song_chozoRuins_toneSweep, song_chozoRuins_tone, song_chozoRuins_wave, $0000
+    SongHeader $1, tempoTable_75, song_chozoRuins_toneSweep, song_chozoRuins_tone, song_chozoRuins_wave, $0000
 
 ; $61DF
 song_chozoRuins_clone_toneSweep:
@@ -6463,28 +6476,28 @@ song_chozoRuins_toneSweep_section0:
         DescendingEnvelopeOptions 0, $5
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 2
-    SongNoteLength_Crochet
-    SongRest
     SongNoteLength_Quaver
+    SongRest
+    SongNoteLength_Semiquaver
     SongNote "C4"
     Echo2
     SongNote "B3"
     Echo2
     SongNote "Bb3"
     Echo2
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "Gb3"
     Echo2
     SongNote "G3"
     Echo2
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "G3"
     Echo2
     SongNote "Gb3"
     Echo2
     SongNote "Eb3"
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "B3"
     Echo2
     SongNote "C4"
@@ -6497,10 +6510,10 @@ song_chozoRuins_toneSweep_section0:
     Echo2
     SongNote "C3"
     Echo2
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "B3"
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C4"
     Echo2
     SongNote "Eb4"
@@ -6516,27 +6529,27 @@ song_chozoRuins_toneSweep_section0:
 song_chozoRuins_toneSweep_section6:
 song_chozoRuins_toneSweep_section1:
 ;{
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "Eb3"
     Echo2
     SongNote "Gb3"
     Echo2
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "A3"
     SongNote "Gb3"
-    SongNoteLength_Crochet
-    SongNote "C3"
     SongNoteLength_Quaver
+    SongNote "C3"
+    SongNoteLength_Semiquaver
     SongNote "Db3"
     SongRest
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "B2"
         SongNote "C3"
         SongNote "B2"
         SongNote "C3"
     SongRepeat
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongRest
     SongEnd
 ;}
@@ -6545,30 +6558,30 @@ song_chozoRuins_toneSweep_section1:
 song_chozoRuins_toneSweep_section7:
 song_chozoRuins_toneSweep_section2:
 ;{
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "E4"
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C4"
     Echo1
     SongNote "Db4"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "A3"
     Echo1
     SongNote "E4"
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C4"
     Echo1
     SongNote "B4"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F3"
     Echo1
     SongNote "B3"
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "G3"
     Echo1
     SongNote "Bb3"
@@ -6577,23 +6590,23 @@ song_chozoRuins_toneSweep_section2:
     Echo1
     SongNote "Gb3"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F3"
     Echo1
     SongNote "A3"
     Echo1
     SongNote "G3"
     Echo1
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "Gb3"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "E3"
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "D3"
     Echo2
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongRest
     SongEnd
 ;}
@@ -6602,7 +6615,7 @@ song_chozoRuins_toneSweep_section2:
 song_chozoRuins_toneSweep_section3:
 ;{
     SongTranspose $FE
-    SongTempo $40EC
+    SongTempo tempoTable_64
     SongEnd
 ;}
 
@@ -6610,7 +6623,7 @@ song_chozoRuins_toneSweep_section3:
 song_chozoRuins_toneSweep_section5:
 ;{
     SongTranspose $0
-    SongTempo $40DF
+    SongTempo tempoTable_75
     SongEnd
 ;}
 
@@ -6622,7 +6635,7 @@ song_chozoRuins_toneSweep_section8:
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "F2"
         SongNote "Bb2"
         SongNote "F2"
@@ -6652,7 +6665,7 @@ song_chozoRuins_toneSweep_section8:
         DescendingEnvelopeOptions 2, $6
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "F4"
     SongNote "Bb4"
     SongNote "F4"
@@ -6693,23 +6706,23 @@ song_chozoRuins_toneSweep_section8:
         DescendingEnvelopeOptions 7, $8
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNote "C6"
     SongRest
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongRest
     SongEnd
 ;}
 
 ; $62F6
-song_chozoRuins_tone_section0:
 song_chozoRuins_tone_section3:
+song_chozoRuins_tone_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 0, $5
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 2
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "B3"
     SongNote "C4"
     SongNote "G4"
@@ -6718,19 +6731,19 @@ song_chozoRuins_tone_section3:
     Echo2
     SongNote "E4"
     Echo2
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "B3"
     Echo2
     SongNote "C4"
     Echo2
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "G3"
     Echo2
     SongNote "Gb3"
     Echo2
     SongNote "Eb3"
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "B3"
     Echo2
     SongNote "C4"
@@ -6743,37 +6756,37 @@ song_chozoRuins_tone_section3:
     Echo2
     SongNote "C3"
     Echo2
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "B3"
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C4"
     Echo2
     SongNote "Eb4"
     Echo2
     SongNote "E4"
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     Echo2
     SongEnd
 ;}
 
 ; $6328
-song_chozoRuins_tone_section1:
 song_chozoRuins_tone_section4:
+song_chozoRuins_tone_section1:
 ;{
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C4"
     Echo2
     SongNote "D4"
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "F4"
     Echo2
     SongNote "E4"
     Echo2
     SongNote "C4"
     Echo2
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "D4"
     Echo2
     SongRest
@@ -6782,16 +6795,16 @@ song_chozoRuins_tone_section4:
     SongNote "G3"
     Echo2
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "Gb3"
     Echo2
     SongNote "Eb3"
     Echo2
     SongNote "E3"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C3"
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     Echo2
     SongEnd
 ;}
@@ -6800,53 +6813,53 @@ song_chozoRuins_tone_section4:
 song_chozoRuins_tone_section5:
 song_chozoRuins_tone_section2:
 ;{
-    SongNoteLength_Quaver
-    SongNote "G4"
-    SongNoteLength_DottedCrochet
-    Echo2
     SongNoteLength_Semiquaver
+    SongNote "G4"
+    SongNoteLength_DottedQuaver
+    Echo2
+    SongNoteLength_Demisemiquaver
     SongNote "Eb4"
     Echo2
     SongNote "E4"
     Echo2
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C4"
     Echo2
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "G4"
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "Eb4"
     Echo2
     SongNote "E4"
     Echo2
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C4"
     Echo2
     SongNote "G3"
     Echo2
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "Bb3"
+    Echo2
+    SongNoteLength_Crochet
+    SongRest
+    SongNoteLength_Semiquaver
+    SongNote "A3"
+    Echo2
+    SongNote "G3"
+    Echo2
+    SongNoteLength_Semiquaver
+    SongNote "Bb3"
+    SongNoteLength_Quaver
+    Echo2
+    SongNoteLength_Semiquaver
+    SongNote "Ab3"
+    SongNoteLength_DottedQuaver
+    Echo2
+    SongNoteLength_DottedQuaver
+    SongNote "A3"
     Echo2
     SongNoteLength_Minum
-    SongRest
-    SongNoteLength_Quaver
-    SongNote "A3"
-    Echo2
-    SongNote "G3"
-    Echo2
-    SongNoteLength_Quaver
-    SongNote "Bb3"
-    SongNoteLength_Crochet
-    Echo2
-    SongNoteLength_Quaver
-    SongNote "Ab3"
-    SongNoteLength_DottedCrochet
-    Echo2
-    SongNoteLength_DottedCrochet
-    SongNote "A3"
-    Echo2
-    SongNoteLength_Semibreve
     SongRest
     SongEnd
 ;}
@@ -6858,7 +6871,7 @@ song_chozoRuins_tone_section6:
         DescendingEnvelopeOptions 2, $6
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "F2"
     SongNote "Bb2"
     SongNote "F2"
@@ -6883,7 +6896,7 @@ song_chozoRuins_tone_section6:
     SongNote "Db2"
     SongNote "F2"
     SongNote "Db2"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "A3"
     SongNote "C4"
     SongNote "A3"
@@ -6908,7 +6921,7 @@ song_chozoRuins_tone_section6:
     SongNote "D5"
     SongNote "F5"
     SongNote "G5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "A3"
     SongNote "C4"
     SongNote "A3"
@@ -6949,42 +6962,42 @@ song_chozoRuins_tone_section6:
         DescendingEnvelopeOptions 7, $8
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNote "C6"
     SongRest
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongRest
     SongEnd
 ;}
 
 ; $63DF
-song_chozoRuins_wave_section3:
 song_chozoRuins_wave_section0:
+song_chozoRuins_wave_section3:
 ;{
     SongOptions
         WaveOptions $417B, 2, $0
-    SongNoteLength_Crochet
-    SongRest
     SongNoteLength_Quaver
+    SongRest
+    SongNoteLength_Semiquaver
     SongNote "C4"
     Echo1
     SongNote "B3"
     Echo1
     SongNote "Bb3"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "Gb3"
     Echo1
     SongNote "G3"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "G3"
     Echo1
     SongNote "Gb3"
     Echo1
     SongNote "Eb3"
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "B3"
     Echo1
     SongNote "C4"
@@ -6997,10 +7010,10 @@ song_chozoRuins_wave_section0:
     Echo1
     SongNote "C3"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "B3"
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C4"
     Echo1
     SongNote "Eb4"
@@ -7013,98 +7026,98 @@ song_chozoRuins_wave_section0:
 ;}
 
 ; $6412
-song_chozoRuins_wave_section4:
 song_chozoRuins_wave_section1:
+song_chozoRuins_wave_section4:
 ;{
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C4"
     Echo1
     SongNote "D4"
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "F4"
     Echo1
     SongNote "E4"
     Echo1
     SongNote "C4"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "D4"
     SongNoteLength_Quaver
+    SongNote "D4"
+    SongNoteLength_Semiquaver
     Echo1
     SongNote "Gb3"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "G3"
     SongNoteLength_Quaver
-    Echo1
+    SongNote "G3"
     SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongNote "Gb3"
     Echo1
     SongNote "Eb3"
     Echo1
     SongNote "E3"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C3"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongRest
     SongEnd
 ;}
 
 ; $6435
-song_chozoRuins_wave_section2:
 song_chozoRuins_wave_section5:
+song_chozoRuins_wave_section2:
 ;{
-    SongNoteLength_Crochet
-    SongNote "G4"
     SongNoteLength_Quaver
+    SongNote "G4"
+    SongNoteLength_Semiquaver
     Echo1
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "Eb4"
     Echo1
     SongNote "E4"
     Echo1
-    SongNoteLength_Quaver
-    SongNote "C4"
     SongNoteLength_Semiquaver
+    SongNote "C4"
+    SongNoteLength_Demisemiquaver
     Echo1
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "G4"
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "Eb4"
     Echo1
     SongNote "E4"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C4"
-    Echo1
-    SongNote "G3"
-    Echo1
-    SongNoteLength_DottedCrochet
-    SongNote "Bb3"
-    Echo1
-    SongNoteLength_Quaver
-    SongNote "A3"
     Echo1
     SongNote "G3"
     Echo1
     SongNoteLength_DottedQuaver
     SongNote "Bb3"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "Ab3"
-    Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Semiquaver
     SongNote "A3"
     Echo1
-    SongNoteLength_Semibreve
+    SongNote "G3"
+    Echo1
+    SongNoteLength_DottedSemiquaver
+    SongNote "Bb3"
+    Echo1
+    SongNoteLength_Quaver
+    SongNote "Ab3"
+    Echo1
+    SongNoteLength_Quaver
+    SongNote "A3"
+    Echo1
+    SongNoteLength_Minum
     SongRest
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongRest
     SongEnd
 ;}
@@ -7112,10 +7125,10 @@ song_chozoRuins_wave_section5:
 ; $6467
 song_chozoRuins_wave_section6:
 ;{
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
     SongRest
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "A3"
     Echo1
     SongNote "C4"
@@ -7164,7 +7177,7 @@ song_chozoRuins_wave_section6:
     Echo1
     SongNote "G5"
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "A3"
     Echo1
     SongNote "C4"
@@ -7237,12 +7250,12 @@ song_chozoRuins_wave_section6:
     Echo1
     SongNote "E2"
     Echo1
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "C6"
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongRest
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
     SongRest
     SongEnd
@@ -7250,7 +7263,7 @@ song_chozoRuins_wave_section6:
 
 ; $64ED
 song_mainCaves_header:
-    SongHeader $0, $40C5, song_mainCaves_toneSweep, song_mainCaves_tone, song_mainCaves_wave, song_mainCaves_noise
+    SongHeader $0, tempoTable_112, song_mainCaves_toneSweep, song_mainCaves_tone, song_mainCaves_wave, song_mainCaves_noise
 
 ; $64F8
 song_mainCaves_toneSweep:
@@ -7320,7 +7333,7 @@ song_mainCaves_toneSweep_section0:
         DescendingEnvelopeOptions 5, $5
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C3"
     SongNote "F3"
     SongNote "A4"
@@ -7340,40 +7353,40 @@ song_mainCaves_toneSweep_sectionF:
         DescendingEnvelopeOptions 6, $2
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
+    SongNoteLength_Semiquaver
+    SongNote "C5"
+    SongNote "F5"
+    SongNote "C5"
+    SongNote "C5"
     SongNoteLength_Quaver
+    SongNote "F5"
+    SongNoteLength_Semiquaver
+    SongNote "C5"
+    SongNote "F5"
     SongNote "C5"
     SongNote "F5"
     SongNote "C5"
     SongNote "C5"
-    SongNoteLength_Crochet
-    SongNote "F5"
     SongNoteLength_Quaver
-    SongNote "C5"
     SongNote "F5"
-    SongNote "C5"
-    SongNote "F5"
-    SongNote "C5"
-    SongNote "C5"
-    SongNoteLength_Crochet
-    SongNote "F5"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C5"
     SongNote "C5"
-    SongNote "Bb4"
-    SongNote "Eb5"
-    SongNote "Bb4"
-    SongNote "Bb4"
-    SongNoteLength_Crochet
-    SongNote "Eb5"
-    SongNoteLength_Quaver
-    SongNote "Bb4"
-    SongNote "Eb5"
     SongNote "Bb4"
     SongNote "Eb5"
     SongNote "Bb4"
     SongNote "Bb4"
     SongNoteLength_Quaver
     SongNote "Eb5"
+    SongNoteLength_Semiquaver
+    SongNote "Bb4"
+    SongNote "Eb5"
+    SongNote "Bb4"
+    SongNote "Eb5"
+    SongNote "Bb4"
+    SongNote "Bb4"
+    SongNoteLength_Semiquaver
+    SongNote "Eb5"
     SongNote "Bb4"
     SongNote "Eb5"
     SongNote "Eb5"
@@ -7381,28 +7394,28 @@ song_mainCaves_toneSweep_sectionF:
     SongNote "F5"
     SongNote "C5"
     SongNote "C5"
-    SongNoteLength_Crochet
-    SongNote "F5"
     SongNoteLength_Quaver
+    SongNote "F5"
+    SongNoteLength_Semiquaver
     SongNote "C5"
     SongNote "F5"
     SongNote "C5"
     SongNote "F5"
     SongNote "C5"
     SongNote "C5"
-    SongNoteLength_Crochet
-    SongNote "F5"
     SongNoteLength_Quaver
+    SongNote "F5"
+    SongNoteLength_Semiquaver
     SongNote "C5"
     SongNote "C5"
     SongNote "Bb4"
     SongNote "Eb5"
     SongNote "Bb4"
     SongNote "Bb4"
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "Bb4"
     SongNote "Bb2"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F3"
     SongNote "Bb3"
     SongNote "C4"
@@ -7425,32 +7438,32 @@ song_mainCaves_toneSweep_sectionA:
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
     SongRepeatSetup $3
+        SongNoteLength_Semiquaver
+        SongNote "C3"
+        SongNote "F3"
+        SongNote "C3"
+        SongNote "C3"
         SongNoteLength_Quaver
+        SongNote "F3"
+        SongNoteLength_Semiquaver
+        SongNote "C3"
+        SongNote "F3"
         SongNote "C3"
         SongNote "F3"
         SongNote "C3"
         SongNote "C3"
-        SongNoteLength_Crochet
-        SongNote "F3"
         SongNoteLength_Quaver
-        SongNote "C3"
         SongNote "F3"
-        SongNote "C3"
-        SongNote "F3"
-        SongNote "C3"
-        SongNote "C3"
-        SongNoteLength_Crochet
-        SongNote "F3"
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "C3"
         SongNote "C3"
         SongNote "Bb2"
         SongNote "Eb3"
         SongNote "Bb2"
         SongNote "Bb2"
-        SongNoteLength_Crochet
-        SongNote "Eb3"
         SongNoteLength_Quaver
+        SongNote "Eb3"
+        SongNoteLength_Semiquaver
         SongNote "Bb2"
         SongNote "Eb3"
         SongNote "Bb2"
@@ -7462,33 +7475,33 @@ song_mainCaves_toneSweep_sectionA:
         SongNote "Eb3"
         SongNote "Eb3"
     SongRepeat
+    SongNoteLength_Semiquaver
+    SongNote "C3"
+    SongNote "F3"
+    SongNote "C3"
+    SongNote "C3"
     SongNoteLength_Quaver
+    SongNote "F3"
+    SongNoteLength_Semiquaver
+    SongNote "C3"
+    SongNote "F3"
     SongNote "C3"
     SongNote "F3"
     SongNote "C3"
     SongNote "C3"
-    SongNoteLength_Crochet
-    SongNote "F3"
     SongNoteLength_Quaver
-    SongNote "C3"
     SongNote "F3"
-    SongNote "C3"
-    SongNote "F3"
-    SongNote "C3"
-    SongNote "C3"
-    SongNoteLength_Crochet
-    SongNote "F3"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F3"
     SongNote "C3"
     SongNote "Bb2"
     SongNote "Eb3"
     SongNote "Bb2"
     SongNote "Bb2"
-    SongNoteLength_Crochet
-    SongNote "Bb2"
-    SongNote "Bb2"
     SongNoteLength_Quaver
+    SongNote "Bb2"
+    SongNote "Bb2"
+    SongNoteLength_Semiquaver
     SongNote "F3"
     SongNote "Bb3"
     SongNote "C4"
@@ -7501,24 +7514,24 @@ song_mainCaves_toneSweep_sectionA:
 ;}
 
 ; $65EB
-song_mainCaves_toneSweep_section5:
 song_mainCaves_toneSweep_section6:
 song_mainCaves_toneSweep_section7:
 song_mainCaves_toneSweep_section4:
+song_mainCaves_toneSweep_section5:
 ;{
     SongOptions
         DescendingEnvelopeOptions 3, $6
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
     SongRepeatSetup $4
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "C3"
         SongNote "F3"
         SongNote "A3"
         SongNote "Bb3"
     SongRepeat
     SongRepeatSetup $4
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "Bb2"
         SongNote "Eb3"
         SongNote "F3"
@@ -7528,24 +7541,24 @@ song_mainCaves_toneSweep_section4:
 ;}
 
 ; $6600
-song_mainCaves_toneSweep_sectionB:
 song_mainCaves_toneSweep_sectionC:
 song_mainCaves_toneSweep_sectionD:
 song_mainCaves_toneSweep_sectionE:
+song_mainCaves_toneSweep_sectionB:
 ;{
     SongOptions
         AscendingEnvelopeOptions 2, $0
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
     SongRepeatSetup $4
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "C5"
         SongNote "F5"
         SongNote "A5"
         SongNote "Bb5"
     SongRepeat
     SongRepeatSetup $4
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "Bb4"
         SongNote "Eb5"
         SongNote "A5"
@@ -7561,7 +7574,7 @@ song_mainCaves_tone_section0:
         DescendingEnvelopeOptions 5, $7
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C3"
     SongNote "F3"
     SongNote "A3"
@@ -7580,7 +7593,7 @@ song_mainCaves_tone_section1:
         AscendingEnvelopeOptions 7, $0
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNote "F3"
     Echo1
     SongNote "Eb3"
@@ -7600,7 +7613,7 @@ song_mainCaves_tone_section2:
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
     SongRepeatSetup $8
-        SongNoteLength_Crochet
+        SongNoteLength_Quaver
         SongNote "F2"
         Echo1
         SongNote "F2"
@@ -7623,7 +7636,7 @@ song_mainCaves_tone_section2:
         DescendingSweepOptions 4, 6
         LengthDutyOptions $0, 2
     SongRepeatSetup $8
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C6"
         SongNote "B5"
         SongNote "D5"
@@ -7668,44 +7681,44 @@ song_mainCaves_tone_section3:
         DescendingEnvelopeOptions 7, $4
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongNote "F3"
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "C3"
+    SongNote "C3"
+    SongNoteLength_Quaver
+    SongNote "C3"
+    SongNote "F3"
     SongNote "C3"
     SongNoteLength_Crochet
-    SongNote "C3"
-    SongNote "F3"
-    SongNote "C3"
-    SongNoteLength_Minum
     SongNote "Eb3"
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "Bb2"
-    SongNote "Bb2"
-    SongNoteLength_Crochet
-    SongNote "Bb2"
-    SongNote "Eb3"
-    SongNote "Bb2"
-    SongNoteLength_Minum
-    SongNote "F3"
-    SongNoteLength_DottedCrochet
-    SongNote "C3"
-    SongNote "C3"
-    SongNoteLength_Crochet
-    SongNote "C3"
-    SongNote "F3"
-    SongNote "C3"
-    SongNoteLength_Minum
-    SongNote "Eb3"
-    SongNoteLength_DottedCrochet
     SongNote "Bb2"
     SongNoteLength_Quaver
+    SongNote "Bb2"
+    SongNote "Eb3"
+    SongNote "Bb2"
+    SongNoteLength_Crochet
+    SongNote "F3"
+    SongNoteLength_DottedQuaver
+    SongNote "C3"
+    SongNote "C3"
+    SongNoteLength_Quaver
+    SongNote "C3"
+    SongNote "F3"
+    SongNote "C3"
+    SongNoteLength_Crochet
+    SongNote "Eb3"
+    SongNoteLength_DottedQuaver
+    SongNote "Bb2"
+    SongNoteLength_Semiquaver
     SongNote "Bb2"
     SongNote "F2"
     SongNote "Bb2"
     SongNote "C3"
     SongNote "Eb3"
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongNote "F2"
     SongEnd
 ;}
@@ -7715,7 +7728,7 @@ song_mainCaves_wave_section0:
 ;{
     SongOptions
         WaveOptions $417B, 2, $0
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C2"
     SongNote "F2"
     SongNote "A2"
@@ -7732,46 +7745,46 @@ song_mainCaves_wave_section1:
 ;{
     SongOptions
         WaveOptions $417B, 2, $0
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
+    SongNote "C4"
+    SongNoteLength_Semiquaver
+    Echo1
     SongNote "C4"
     SongNoteLength_Quaver
     Echo1
-    SongNote "C4"
-    SongNoteLength_Crochet
+    SongNoteLength_Minum
+    SongRest
+    SongNoteLength_Quaver
+    SongRest
+    SongNote "Bb3"
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semibreve
-    SongRest
-    SongNoteLength_Crochet
-    SongRest
     SongNote "Bb3"
     SongNoteLength_Quaver
     Echo1
-    SongNote "Bb3"
-    SongNoteLength_Crochet
+    SongNoteLength_Minum
+    SongRest
+    SongNoteLength_Quaver
+    SongRest
+    SongNote "C4"
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semibreve
-    SongRest
-    SongNoteLength_Crochet
-    SongRest
     SongNote "C4"
     SongNoteLength_Quaver
     Echo1
-    SongNote "C4"
-    SongNoteLength_Crochet
+    SongNoteLength_Minum
+    SongRest
+    SongNoteLength_Quaver
+    SongRest
+    SongNote "Bb3"
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semibreve
-    SongRest
-    SongNoteLength_Crochet
-    SongRest
     SongNote "Bb3"
     SongNoteLength_Quaver
     Echo1
-    SongNote "Bb3"
-    SongNoteLength_Crochet
-    Echo1
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "C3"
     Echo1
     SongEnd
@@ -7782,141 +7795,141 @@ song_mainCaves_wave_section2:
 ;{
     SongOptions
         WaveOptions $417B, 2, $0
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "C4"
     Echo1
     SongNote "F4"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "G4"
     Echo1
     SongNote "Bb4"
     Echo1
     SongRest
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "A4"
     Echo1
     SongNote "F4"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "G4"
     Echo1
     SongNote "Eb4"
     Echo1
     SongRest
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "C4"
     Echo1
     SongNote "F4"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "G4"
     Echo1
     SongNote "Bb4"
     Echo1
     SongRest
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "A4"
     Echo1
     SongNote "Bb4"
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "C5"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "G4"
     Echo1
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "C4"
     Echo1
     SongNote "F4"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "G4"
     Echo1
     SongNote "Bb4"
     Echo1
     SongRest
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "A4"
     Echo1
     SongNote "F4"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "G4"
     Echo1
     SongRest
     SongRest
     SongRest
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "C4"
     Echo1
     SongNote "F4"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "G4"
     Echo1
     SongNote "Bb4"
     Echo1
     SongRest
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "A4"
     Echo1
     SongNote "Bb4"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "C5"
     Echo1
     SongNote "Eb5"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "D5"
     Echo1
     SongRepeatSetup $2
-        SongNoteLength_DottedQuaver
+        SongNoteLength_DottedSemiquaver
         SongNote "C5"
         Echo1
         SongNote "Bb4"
         Echo1
-        SongNoteLength_Crochet
+        SongNoteLength_Quaver
         SongNote "A4"
         Echo1
-        SongNoteLength_DottedCrochet
+        SongNoteLength_DottedQuaver
         SongNote "F4"
         Echo1
-        SongNoteLength_DottedQuaver
+        SongNoteLength_DottedSemiquaver
         SongNote "Eb4"
         Echo1
         SongNote "G4"
         Echo1
-        SongNoteLength_DottedCrochet
+        SongNoteLength_DottedQuaver
         SongNote "Bb4"
         Echo1
-        SongNoteLength_Crochet
+        SongNoteLength_Quaver
         SongNote "A4"
         Echo1
-        SongNoteLength_DottedQuaver
+        SongNoteLength_DottedSemiquaver
         SongNote "C5"
         Echo1
         SongNote "Bb4"
         Echo1
-        SongNoteLength_Crochet
+        SongNoteLength_Quaver
         SongNote "A4"
         Echo1
         SongNote "F5"
         Echo1
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "Eb5"
         Echo1
-        SongNoteLength_DottedQuaver
+        SongNoteLength_DottedSemiquaver
         SongNote "D5"
         Echo1
         SongNote "Bb4"
         Echo1
-        SongNoteLength_DottedCrochet
+        SongNoteLength_DottedQuaver
         SongNote "C5"
         Echo1
-        SongNoteLength_Minum
+        SongNoteLength_Crochet
         SongRest
     SongRepeat
     SongEnd
@@ -7927,74 +7940,74 @@ song_mainCaves_wave_section3:
 ;{
     SongOptions
         WaveOptions $417B, 2, $0
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "F3"
     Echo1
     SongNote "Bb3"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "C4"
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "Eb4"
     Echo1
     SongNote "D4"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "Bb3"
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "F3"
     Echo1
     SongNote "C4"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "D4"
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "Eb4"
     Echo1
     SongNote "F4"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "G4"
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "F3"
     Echo1
     SongNote "A3"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "Bb3"
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "C4"
     Echo1
     SongNote "D4"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "Eb4"
     Echo1
     SongNote "F4"
     Echo1
     SongNote "A4"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "Bb4"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "C5"
     Echo1
     SongNote "Eb5"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F5"
     Echo1
     SongNote "A5"
     Echo1
     SongNote "Bb5"
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C6"
     Echo1
     SongNote "Eb6"
@@ -8018,7 +8031,7 @@ song_mainCaves_wave_section3:
 song_mainCaves_noise_section0:
 ;{
     SongRepeatSetup $8
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $4
     SongRepeat
     SongEnd
@@ -8028,7 +8041,7 @@ song_mainCaves_noise_section0:
 song_mainCaves_noise_section1:
 ;{
     SongRepeatSetup $3
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNoiseNote $24
         SongNoiseNote $3
         SongNoiseNote $1
@@ -8046,7 +8059,7 @@ song_mainCaves_noise_section1:
         SongNoiseNote $1
         SongNoiseNote $3
     SongRepeat
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNoiseNote $24
     SongNoiseNote $1
     SongNoiseNote $3
@@ -8059,7 +8072,7 @@ song_mainCaves_noise_section1:
     SongNoiseNote $4
     SongNoiseNote $5
     SongNoiseNote $4
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongNoiseNote $7
     SongEnd
 ;}
@@ -8068,7 +8081,7 @@ song_mainCaves_noise_section1:
 song_mainCaves_noise_section2:
 ;{
     SongRepeatSetup $F
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNoiseNote $24
         SongNoiseNote $1
         SongNoiseNote $3
@@ -8078,7 +8091,7 @@ song_mainCaves_noise_section2:
         SongNoiseNote $3
         SongNoiseNote $1
     SongRepeat
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNoiseNote $5
     SongNoiseNote $4
     SongNoiseNote $4
@@ -8094,7 +8107,7 @@ song_mainCaves_noise_section2:
 song_mainCaves_noise_section3:
 ;{
     SongRepeatSetup $7
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNoiseNote $24
         SongNoiseNote $3
         SongNoiseNote $1
@@ -8135,27 +8148,27 @@ song_mainCaves_noise_section3:
 song_mainCaves_noise_section4:
 ;{
     SongRepeatSetup $4
+        SongNoteLength_Semiquaver
+        SongNoiseNote $5
+        SongNoiseNote $3
+        SongNoiseNote $5
+        SongNoiseNote $1
+        SongNoiseNote $2
+        SongNoiseNote $3
+        SongNoiseNote $2
+        SongNoiseNote $1
+        SongNoiseNote $1
+        SongNoiseNote $3
+        SongNoiseNote $2
+        SongNoiseNote $1
+        SongNoiseNote $2
         SongNoteLength_Quaver
-        SongNoiseNote $5
-        SongNoiseNote $3
-        SongNoiseNote $5
-        SongNoiseNote $1
-        SongNoiseNote $2
-        SongNoiseNote $3
-        SongNoiseNote $2
-        SongNoiseNote $1
-        SongNoiseNote $1
-        SongNoiseNote $3
-        SongNoiseNote $2
-        SongNoiseNote $1
-        SongNoiseNote $2
-        SongNoteLength_Crochet
         SongNoiseNote $1A
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNoiseNote $3
     SongRepeat
     SongRepeatSetup $3
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNoiseNote $4
         SongNoiseNote $4
         SongNoiseNote $1
@@ -8169,9 +8182,9 @@ song_mainCaves_noise_section4:
         SongNoiseNote $2
         SongNoiseNote $1
         SongNoiseNote $24
-        SongNoteLength_Crochet
-        SongNoiseNote $1A
         SongNoteLength_Quaver
+        SongNoiseNote $1A
+        SongNoteLength_Semiquaver
         SongNoiseNote $3
     SongRepeat
     SongNoiseNote $24
@@ -8190,7 +8203,7 @@ song_mainCaves_noise_section4:
 
 ; $685F
 song_subCaves1_header:
-    SongHeader $0, $40C5, song_subCaves1_toneSweep, song_subCaves1_tone, song_subCaves1_wave, song_subCaves1_noise
+    SongHeader $0, tempoTable_112, song_subCaves1_toneSweep, song_subCaves1_tone, song_subCaves1_wave, song_subCaves1_noise
 
 ; $686A
 song_subCaves1_toneSweep:
@@ -8231,9 +8244,9 @@ song_subCaves1_toneSweep_section2:
         DescendingEnvelopeOptions 7, $3
         AscendingSweepOptions 5, 3
         LengthDutyOptions $0, 2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "G5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "Ab5"
     SongNote "A5"
     SongNote "Bb5"
@@ -8243,7 +8256,7 @@ song_subCaves1_toneSweep_section2:
     SongNote "D6"
     SongNote "Eb6"
     SongNote "E6"
-    SongNoteLength_TripletQuaver
+    SongNoteLength_TripletSemiquaver
     SongNote "F6"
     SongNote "Gb6"
     SongNote "G6"
@@ -8251,9 +8264,9 @@ song_subCaves1_toneSweep_section2:
     SongNote "A6"
     SongNote "Bb6"
     SongNote "B6"
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNote "C7"
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "G5"
     SongNote "Ab5"
     SongNote "A5"
@@ -8264,84 +8277,84 @@ song_subCaves1_toneSweep_section2:
     SongNote "D6"
     SongNote "Eb6"
     SongNote "E6"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "F6"
     SongNote "Gb6"
     SongNote "G6"
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongNote "Ab6"
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongRest
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongRest
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "Ab6"
     SongNote "A6"
     SongNote "Bb6"
     SongNote "B6"
     SongNote "C7"
     SongNote "Db7"
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongNote "D7"
-    SongNoteLength_TripletQuaver
+    SongNoteLength_TripletSemiquaver
     SongNote "Db6"
     SongNote "E6"
     SongNote "Gb6"
     SongNote "A6"
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongNote "C6"
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongRest
-    SongNoteLength_TripletQuaver
+    SongNoteLength_TripletSemiquaver
     SongNote "C7"
     SongNote "Db7"
     SongNote "D7"
     SongNote "Eb7"
     SongNote "E7"
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNote "F7"
-    SongNoteLength_TripletCrochet
-    SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_TripletQuaver
     SongRest
     SongNoteLength_Demisemiquaver
+    SongRest
+    SongNoteLength_Hemidemisemiquaver
     SongNote "Ab6"
     SongNote "A6"
     SongNote "Bb6"
     SongNote "B6"
     SongNote "C7"
     SongNote "Db7"
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongNote "D7"
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "Ab5"
     SongNote "A5"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "Bb5"
     SongNote "B5"
     SongNote "C6"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "Db6"
     SongNote "D6"
-    SongNoteLength_TripletQuaver
+    SongNoteLength_TripletSemiquaver
     SongNote "Eb6"
     SongNote "E6"
     SongNote "F6"
     SongNote "Ab6"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "A6"
     SongNote "Bb6"
     SongNote "B6"
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNote "C7"
-    SongNoteLength_TripletCrochet
+    SongNoteLength_TripletQuaver
     SongRest
     SongEnd
 ;}
 
 ; $68EE
 song_subCaves2_header:
-    SongHeader $0, $40C5, song_subCaves2_toneSweep, song_subCaves2_tone, song_subCaves2_wave, song_subCaves2_noise
+    SongHeader $0, tempoTable_112, song_subCaves2_toneSweep, song_subCaves2_tone, song_subCaves2_wave, song_subCaves2_noise
 
 ; $68F9
 song_subCaves2_toneSweep:
@@ -8359,9 +8372,9 @@ song_subCaves2_tone:
     .alternateEntry
     dw song_subCaves2_tone_section1 ; $6911
     dw $00F0, .loop
+    dw $0000
 ;}
 
-ds $2, $00
 ; $6909
 song_subCaves2_wave:
 ;{
@@ -8383,38 +8396,25 @@ song_subCaves2_tone_section1:
         DescendingEnvelopeOptions 7, $4
         AscendingSweepOptions 0, 0
         LengthDutyOptions $7, 0
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
     SongRest
+    SongNoteLength_Hemidemisemiquaver
+    SongNote "G6"
+    SongNote "E6"
+    SongNote "A6"
+    SongNote "B6"
+    SongNote "F6"
+    SongNote "E6"
+    SongNote "A6"
+    SongNote "D6"
     SongNoteLength_Demisemiquaver
-    SongNote "G6"
-    SongNote "E6"
-    SongNote "A6"
-    SongNote "B6"
-    SongNote "F6"
-    SongNote "E6"
-    SongNote "A6"
-    SongNote "D6"
-    SongNoteLength_Semiquaver
     SongNote "C7"
     SongNote "B6"
     SongNote "A6"
     SongNote "B6"
     SongNote "F6"
-    SongNoteLength_Semibreve
-    SongRest
-    SongNoteLength_Semiquaver
-    SongNote "C7"
-    SongNote "B6"
-    SongNote "D6"
-    SongNote "G6"
-    SongNote "E6"
-    SongNote "A6"
-    SongNote "B6"
-    SongNote "F6"
-    SongNoteLength_Semibreve
-    SongRest
-    SongNoteLength_DottedMinum
+    SongNoteLength_Minum
     SongRest
     SongNoteLength_Demisemiquaver
     SongNote "C7"
@@ -8425,11 +8425,11 @@ song_subCaves2_tone_section1:
     SongNote "A6"
     SongNote "B6"
     SongNote "F6"
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongRest
     SongNoteLength_DottedCrochet
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "C7"
     SongNote "B6"
     SongNote "D6"
@@ -8438,12 +8438,25 @@ song_subCaves2_tone_section1:
     SongNote "A6"
     SongNote "B6"
     SongNote "F6"
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
+    SongRest
+    SongNoteLength_DottedQuaver
+    SongRest
+    SongNoteLength_Demisemiquaver
+    SongNote "C7"
+    SongNote "B6"
+    SongNote "D6"
+    SongNote "G6"
+    SongNote "E6"
+    SongNote "A6"
+    SongNote "B6"
+    SongNote "F6"
+    SongNoteLength_Minum
     SongRest
     SongRest
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "B6"
     SongNote "D6"
     SongNote "C7"
@@ -8455,28 +8468,28 @@ song_subCaves2_tone_section1:
     SongNote "E6"
     SongNote "A6"
     SongNote "G6"
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "E6"
     SongNote "F6"
     SongNote "Gb6"
     SongNote "G6"
     SongNote "A6"
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C7"
     SongNote "E6"
     SongNote "C6"
     SongNote "G5"
     SongNote "F6"
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
     SongRest
     SongRest
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "B6"
     SongNote "D6"
     SongNote "C7"
@@ -8487,22 +8500,22 @@ song_subCaves2_tone_section1:
     SongNote "A6"
     SongNote "G6"
     SongNote "E6"
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C6"
     SongNote "C7"
     SongNote "B6"
     SongNote "D6"
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongRest
     SongEnd
 ;}
 
 ; $6988
 song_subCaves3_header:
-    SongHeader $0, $40C5, song_subCaves3_toneSweep, song_subCaves3_tone, song_subCaves3_wave, song_subCaves3_noise
+    SongHeader $0, tempoTable_112, song_subCaves3_toneSweep, song_subCaves3_tone, song_subCaves3_wave, song_subCaves3_noise
 
 ; $6993
 song_subCaves3_toneSweep:
@@ -8550,7 +8563,7 @@ song_subCaves3_toneSweep_section2:
         AscendingSweepOptions 5, 1
         LengthDutyOptions $0, 2
     SongRepeatSetup $A
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C7"
         SongNote "B6"
         SongNote "D6"
@@ -8560,11 +8573,11 @@ song_subCaves3_toneSweep_section2:
         SongNote "B6"
         SongNote "F6"
     SongRepeat
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongRest
     SongRest
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C7"
         SongNote "B6"
         SongNote "D6"
@@ -8574,10 +8587,10 @@ song_subCaves3_toneSweep_section2:
         SongNote "B6"
         SongNote "F6"
     SongRepeat
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongRest
     SongRepeatSetup $16
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "D7"
         SongNote "B6"
         SongNote "F6"
@@ -8587,7 +8600,7 @@ song_subCaves3_toneSweep_section2:
         SongNote "B6"
         SongNote "C6"
     SongRepeat
-    SongNoteLength_Breve
+    SongNoteLength_Semibreve
     SongRest
     SongRest
     SongEnd
@@ -8600,10 +8613,10 @@ song_subCaves3_tone_section1:
         DescendingEnvelopeOptions 7, $3
         AscendingSweepOptions 0, 0
         LengthDutyOptions $7, 0
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongRest
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "Db2"
     SongNote "B2"
     SongNote "Db3"
@@ -8625,10 +8638,10 @@ song_subCaves3_tone_section1:
         SongNote "Db6"
         SongNote "C6"
         SongNote "Db6"
-        SongNoteLength_Breve
+        SongNoteLength_Semibreve
         SongRest
         SongRest
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "Db2"
         SongNote "F2"
         SongNote "G2"
@@ -8665,11 +8678,11 @@ song_subCaves3_tone_section1:
         SongNote "Db3"
         SongNote "C2"
         SongNote "Db2"
-        SongNoteLength_Breve
+        SongNoteLength_Semibreve
         SongRest
         SongRest
         SongRest
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "F7"
         SongNote "F7"
         SongNote "F2"
@@ -8732,13 +8745,13 @@ song_subCaves3_tone_section1:
         SongNote "G2"
         SongNote "C2"
         SongNote "Db2"
-        SongNoteLength_Breve
+        SongNoteLength_Semibreve
         SongRest
         SongOptions
         DescendingEnvelopeOptions 7, $4
         AscendingSweepOptions 0, 0
         LengthDutyOptions $2, 2
-        SongNoteLength_Demisemiquaver
+        SongNoteLength_Hemidemisemiquaver
         SongNote "G7"
         SongNote "F7"
         SongNote "C7"
@@ -8762,12 +8775,12 @@ song_subCaves3_tone_section1:
         SongNote "G2"
         SongNote "F2"
         SongNote "C2"
+        SongNoteLength_Minum
+        SongNote "B6"
+        SongRest
+        SongRest
+        SongNote "B6"
         SongNoteLength_Semibreve
-        SongNote "B6"
-        SongRest
-        SongRest
-        SongNote "B6"
-        SongNoteLength_Breve
         SongRest
         SongRest
         SongEnd
@@ -8778,7 +8791,7 @@ song_subCaves3_wave_section1:
 ;{
     SongOptions
         WaveOptions $418B, 3, $3
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRepeatSetup $6
         SongNote "B3"
     SongRepeat
@@ -8833,7 +8846,7 @@ song_subCaves3_wave_section1:
     SongRepeatSetup $6
         SongNote "Bb3"
     SongRepeat
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongRest
     SongEnd
 ;}
@@ -8841,7 +8854,7 @@ song_subCaves3_wave_section1:
 ; $6AE2
 song_finalCaves_header:
 song_finalCaves_clone_header:
-    SongHeader $1, $40B8, song_finalCaves_toneSweep, song_finalCaves_tone, song_finalCaves_wave, song_finalCaves_noise
+    SongHeader $1, tempoTable_149, song_finalCaves_toneSweep, song_finalCaves_tone, song_finalCaves_wave, song_finalCaves_noise
 
 ; $6AED
 song_finalCaves_clone_toneSweep:
@@ -8886,14 +8899,14 @@ song_finalCaves_toneSweep_section0:
         DescendingEnvelopeOptions 3, $C
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "C3"
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "C3"
     Echo1
     Echo1
-    SongNoteLength_Breve
+    SongNoteLength_Semibreve
     Echo2
     SongRest
     SongRest
@@ -8907,14 +8920,14 @@ song_finalCaves_tone_section0:
         DescendingEnvelopeOptions 4, $C
         AscendingSweepOptions 0, 0
         LengthDutyOptions $A, 0
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "C2"
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "C2"
     Echo1
     Echo1
-    SongNoteLength_Breve
+    SongNoteLength_Semibreve
     Echo2
     SongRest
     SongRest
@@ -8927,14 +8940,14 @@ song_finalCaves_wave_section0:
     SongOptions
         WaveOptions $417B, 2, $4
     SongRepeatSetup $5
-        SongNoteLength_Breve
-        SongRest
-        SongRest
-        SongNoteLength_Semiquaver
-        SongRest
         SongNoteLength_Semibreve
         SongRest
-        SongNoteLength_Semiquaver
+        SongRest
+        SongNoteLength_Demisemiquaver
+        SongRest
+        SongNoteLength_Minum
+        SongRest
+        SongNoteLength_Demisemiquaver
         SongNote "E3"
         Echo1
         SongNote "F3"
@@ -8943,36 +8956,36 @@ song_finalCaves_wave_section0:
         Echo1
         SongNote "Bb3"
         Echo1
-        SongNoteLength_Minum
+        SongNoteLength_Crochet
         SongNote "A3"
         Echo1
         SongRest
         SongNote "G4"
-        SongNoteLength_Crochet
+        SongNoteLength_Quaver
         Echo1
         SongRest
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "Eb3"
         Echo1
         SongNote "A3"
         Echo1
-        SongNoteLength_Minum
-        SongNote "Db4"
         SongNoteLength_Crochet
+        SongNote "Db4"
+        SongNoteLength_Quaver
         Echo1
         SongRest
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C4"
         Echo1
         SongNote "B3"
         Echo1
-        SongNoteLength_Semibreve
+        SongNoteLength_Minum
         SongNote "F3"
         Echo1
         SongRest
-        SongNoteLength_Breve
+        SongNoteLength_Semibreve
         SongRest
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "Eb3"
         Echo1
         SongNote "E3"
@@ -8983,32 +8996,32 @@ song_finalCaves_wave_section0:
         Echo1
         SongNote "A3"
         Echo1
-        SongNoteLength_Minum
+        SongNoteLength_Crochet
         SongNote "Gb3"
         Echo1
         SongRest
         SongRest
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "D3"
         Echo1
         SongNote "Eb3"
         Echo1
         SongNote "G3"
         Echo1
-        SongNoteLength_DottedCrochet
+        SongNoteLength_DottedQuaver
         SongNote "B2"
         Echo1
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "Db3"
         Echo1
-        SongNoteLength_DottedMinum
+        SongNoteLength_DottedCrochet
         SongNote "G2"
         Echo1
         SongNote "A2"
         Echo1
         SongNote "F2"
         Echo1
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C2"
         Echo1
         SongNote "Gb2"
@@ -9019,15 +9032,15 @@ song_finalCaves_wave_section0:
         Echo1
         SongNote "F3"
         Echo1
-        SongNoteLength_DottedCrochet
+        SongNoteLength_DottedQuaver
         SongNote "B3"
         Echo1
         SongNote "Bb3"
         Echo1
-        SongNoteLength_DottedMinum
+        SongNoteLength_DottedCrochet
         SongNote "C4"
         Echo1
-        SongNoteLength_DottedCrochet
+        SongNoteLength_DottedQuaver
         SongNote "G4"
         Echo1
         SongNote "Ab4"
@@ -9042,14 +9055,14 @@ song_finalCaves_wave_section0:
         Echo1
         SongNote "B3"
         Echo1
-        SongNoteLength_Minum
+        SongNoteLength_Crochet
         SongNote "G3"
         Echo1
-        SongNoteLength_DottedMinum
+        SongNoteLength_DottedCrochet
         SongNote "Ab3"
         Echo1
         SongRest
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "G3"
         Echo1
         SongNote "Gb3"
@@ -9060,12 +9073,12 @@ song_finalCaves_wave_section0:
         Echo1
         SongNote "Gb2"
         Echo1
-        SongNoteLength_Minum
+        SongNoteLength_Crochet
         SongNote "C3"
         Echo1
     SongRepeat
     SongRepeatSetup $8
-        SongNoteLength_Breve
+        SongNoteLength_Semibreve
         SongRest
     SongRepeat
     SongEnd
@@ -9074,13 +9087,13 @@ song_finalCaves_wave_section0:
 ; $6BBA
 song_finalCaves_noise_section0:
 ;{
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongNoiseNote $1D
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongRest
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNoiseNote $1E
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongRest
     SongEnd
 ;}
@@ -9088,7 +9101,7 @@ song_finalCaves_noise_section0:
 ; $6BC3
 song_metroidHive_header:
 song_metroidHive_clone_header:
-    SongHeader $FE, $40DF, $0000, song_metroidHive_tone, song_metroidHive_wave, song_metroidHive_noise
+    SongHeader $FE, tempoTable_75, $0000, song_metroidHive_tone, song_metroidHive_wave, song_metroidHive_noise
 
 ; $6BCE
 song_metroidHive_withIntro_toneSweep_loop:
@@ -9139,10 +9152,10 @@ song_metroidHive_noise:
 ;}
 
 ; $6C00
-song_metroidHive_withIntro_toneSweep_loop_section3:
 song_metroidHive_withIntro_toneSweep_loop_section6:
-song_metroidHive_withIntro_toneSweep_loop_section0:
 song_metroidHive_withIntro_toneSweep_loop_section1:
+song_metroidHive_withIntro_toneSweep_loop_section3:
+song_metroidHive_withIntro_toneSweep_loop_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 1, $6
@@ -9157,7 +9170,7 @@ song_metroidHive_tone_section2:
 song_metroidHive_tone_section4:
 ;{
     SongRepeatSetup $2
-        SongNoteLength_TripletQuaver
+        SongNoteLength_TripletSemiquaver
         SongNote "B6"
         Echo2
         Echo1
@@ -9251,15 +9264,15 @@ song_metroidHive_tone_section0:
 ;}
 
 ; $6C5F
-song_metroidHive_tone_section6:
-song_metroidHive_withIntro_toneSweep_loop_section4:
-song_metroidHive_withIntro_toneSweep_loop_section2:
-song_metroidHive_tone_section5:
 song_metroidHive_withIntro_toneSweep_loop_section5:
 song_metroidHive_tone_section3:
+song_metroidHive_withIntro_toneSweep_loop_section4:
+song_metroidHive_tone_section6:
+song_metroidHive_withIntro_toneSweep_loop_section2:
+song_metroidHive_tone_section5:
 ;{
     SongRepeatSetup $6
-        SongNoteLength_Semibreve
+        SongNoteLength_Minum
         SongRest
     SongRepeat
     SongEnd
@@ -9271,28 +9284,28 @@ song_metroidHive_wave_section0:
     SongOptions
         WaveOptions $417B, 2, $0
     SongRepeatSetup $A
-        SongNoteLength_Semibreve
+        SongNoteLength_Minum
         SongNote "B2"
-        SongNoteLength_DottedCrochet
+        SongNoteLength_DottedQuaver
         SongNote "F3"
-        SongNoteLength_Semibreve
+        SongNoteLength_Minum
         SongNote "Eb3"
         SongNote "A2"
         SongNote "F2"
-        SongNoteLength_DottedCrochet
+        SongNoteLength_DottedQuaver
         SongNote "Db3"
-        SongNoteLength_Semibreve
+        SongNoteLength_Minum
         SongNote "A2"
         SongNote "F2"
         SongNote "C3"
     SongRepeat
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongNote "B2"
-    SongNoteLength_Semibreve
-    SongNote "Bb2"
     SongNoteLength_Minum
+    SongNote "Bb2"
+    SongNoteLength_Crochet
     SongNote "A2"
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNote "Ab2"
     SongNote "F3"
     SongNote "A2"
@@ -9302,13 +9315,13 @@ song_metroidHive_wave_section0:
 ; $6C85
 song_metroidHive_noise_section0:
 ;{
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNoiseNote $1D
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongRest
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNoiseNote $1E
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
     SongEnd
 ;}
@@ -9316,7 +9329,7 @@ song_metroidHive_noise_section0:
 ; $6C8E
 song_itemGet_header:
 song_itemGet_clone_header:
-    SongHeader $B, $40C5, song_itemGet_toneSweep, song_itemGet_tone, song_itemGet_wave, song_itemGet_noise
+    SongHeader $B, tempoTable_112, song_itemGet_toneSweep, song_itemGet_tone, song_itemGet_wave, song_itemGet_noise
 
 ; $6C99
 song_itemGet_clone_toneSweep:
@@ -9357,7 +9370,7 @@ song_itemGet_toneSweep_section0:
         DescendingEnvelopeOptions 1, $A
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "A6"
     SongNote "Bb6"
     SongNote "A6"
@@ -9366,15 +9379,15 @@ song_itemGet_toneSweep_section0:
         DescendingEnvelopeOptions 0, $8
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 2
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C4"
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "A3"
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "G3"
     Echo1
     SongNote "E3"
@@ -9388,25 +9401,25 @@ song_itemGet_toneSweep_section0:
     SongNote "Bb3"
     Echo1
     SongNote "G3"
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     Echo1
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "Eb3"
     Echo1
     SongOptions
         AscendingEnvelopeOptions 5, $0
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 2
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "E3"
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     Echo1
     SongOptions
         DescendingEnvelopeOptions 1, $8
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
     SongRepeatSetup $4
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C7"
         SongNote "E7"
     SongRepeat
@@ -9415,7 +9428,7 @@ song_itemGet_toneSweep_section0:
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
     SongRepeatSetup $6
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C7"
         SongNote "E7"
     SongRepeat
@@ -9429,11 +9442,11 @@ song_itemGet_tone_section0:
         DescendingEnvelopeOptions 0, $F
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 2
-    SongNoteLength_Hemidemisemiquaver
-    SongRest
-    SongNoteLength_Crochet
+    SongNoteLength_Semihemidemisemiquaver
     SongRest
     SongNoteLength_Quaver
+    SongRest
+    SongNoteLength_Semiquaver
     SongNote "F4"
     Echo1
     SongNote "Bb4"
@@ -9455,7 +9468,7 @@ song_itemGet_tone_section0:
     SongNote "D5"
     Echo1
     SongNote "Bb4"
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     Echo1
     SongNote "G4"
     Echo1
@@ -9463,13 +9476,13 @@ song_itemGet_tone_section0:
         AscendingEnvelopeOptions 3, $0
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 2
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "A4"
     SongOptions
         DescendingEnvelopeOptions 6, $B
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 2
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNote "A4"
     SongEnd
 ;}
@@ -9479,9 +9492,9 @@ song_itemGet_wave_section0:
 ;{
     SongOptions
         WaveOptions $4123, 1, $0
-    SongNoteLength_Crochet
-    SongRest
     SongNoteLength_Quaver
+    SongRest
+    SongNoteLength_Semiquaver
     SongNote "F5"
     Echo2
     SongNote "Bb5"
@@ -9503,16 +9516,16 @@ song_itemGet_wave_section0:
     SongNote "D6"
     Echo2
     SongNote "Bb5"
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     Echo2
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "G5"
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     Echo2
     Echo1
-    SongNoteLength_Minum
-    SongNote "A5"
     SongNoteLength_Crochet
+    SongNote "A5"
+    SongNoteLength_Quaver
     Echo2
     Echo1
     SongEnd
@@ -9521,15 +9534,15 @@ song_itemGet_wave_section0:
 ; $6D46
 song_itemGet_noise_section0:
 ;{
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNoiseNote $1A
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNoiseNote $1B
     SongRest
     SongRest
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNoiseNote $1A
-    SongNoteLength_Breve
+    SongNoteLength_Semibreve
     SongNoiseNote $1B
     SongEnd
 ;}
@@ -9537,7 +9550,7 @@ song_itemGet_noise_section0:
 ; $6D51
 song_metroidQueenHallway_header:
 song_metroidQueenHallway_clone_header:
-    SongHeader $1, $40D2, song_metroidQueenHallway_toneSweep, song_metroidQueenHallway_tone, song_metroidQueenHallway_wave, song_metroidQueenHallway_noise
+    SongHeader $1, tempoTable_90, song_metroidQueenHallway_toneSweep, song_metroidQueenHallway_tone, song_metroidQueenHallway_wave, song_metroidQueenHallway_noise
 
 ; $6D5C
 song_metroidQueenHallway_clone_tone:
@@ -9576,7 +9589,7 @@ song_metroidQueenHallway_toneSweep_section0:
         DescendingEnvelopeOptions 0, $9
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongRest
     SongEnd
 ;}
@@ -9592,7 +9605,7 @@ song_metroidQueenHallway_wave_section0:
 song_metroidQueenHallway_toneSweep_section1:
 ;{
     SongRepeatSetup $3
-        SongNoteLength_Crochet
+        SongNoteLength_Quaver
         SongNote "A2"
         Echo1
     SongRepeat
@@ -9602,13 +9615,13 @@ song_metroidQueenHallway_toneSweep_section1:
 ; $6D82
 song_metroidQueenHallway_noise_section0:
 ;{
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNoiseNote $1D
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongRest
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNoiseNote $1E
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
     SongEnd
 ;}
@@ -9616,7 +9629,7 @@ song_metroidQueenHallway_noise_section0:
 ; $6D8B
 song_metroidBattle_header:
 song_metroidBattle_clone_header:
-    SongHeader $0, $40C5, song_metroidBattle_toneSweep, song_metroidBattle_tone, song_metroidBattle_wave, song_metroidBattle_noise
+    SongHeader $0, tempoTable_112, song_metroidBattle_toneSweep, song_metroidBattle_tone, song_metroidBattle_wave, song_metroidBattle_noise
 
 ; $6D96
 song_metroidBattle_clone_toneSweep:
@@ -9666,9 +9679,9 @@ song_metroidBattle_toneSweep_section0:
         DescendingEnvelopeOptions 0, $A
         AscendingSweepOptions 7, 1
         LengthDutyOptions $6, 0
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNote "Gb2"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "Db4"
     SongNote "Eb4"
     SongNote "Ab4"
@@ -9685,7 +9698,7 @@ song_metroidBattle_toneSweep_section2:
         DescendingEnvelopeOptions 7, $8
         DescendingSweepOptions 7, 7
         LengthDutyOptions $0, 0
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C3"
     SongRest
     SongNote "Db3"
@@ -9701,10 +9714,10 @@ song_metroidBattle_toneSweep_section2:
         DescendingEnvelopeOptions 7, $6
         AscendingSweepOptions 4, 3
         LengthDutyOptions $0, 0
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "G3"
     SongRepeatSetup $3
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "C4"
         SongRest
         SongNote "D4"
@@ -9718,14 +9731,14 @@ song_metroidBattle_toneSweep_section2:
         DescendingEnvelopeOptions 3, $8
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C5"
     SongNote "B5"
     SongNote "C5"
     SongNote "B5"
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "C5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C5"
     SongNote "B5"
     SongNote "C5"
@@ -9733,15 +9746,15 @@ song_metroidBattle_toneSweep_section2:
         DescendingEnvelopeOptions 1, $D
         AscendingSweepOptions 0, 0
         LengthDutyOptions $8, 0
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "G5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
     SongOptions
         DescendingEnvelopeOptions 7, $6
         AscendingSweepOptions 7, 7
         LengthDutyOptions $0, 0
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "E3"
     SongRest
     SongNote "Eb3"
@@ -9760,14 +9773,14 @@ song_metroidBattle_tone_section0:
         DescendingEnvelopeOptions 5, $A
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "D4"
     SongNote "D3"
     SongNote "Ab4"
     SongNote "Ab3"
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongNote "D5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "D7"
     SongNote "Db7"
     SongNote "D7"
@@ -9776,7 +9789,7 @@ song_metroidBattle_tone_section0:
         DescendingEnvelopeOptions 5, $8
         AscendingSweepOptions 0, 0
         LengthDutyOptions $8, 0
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C6"
     SongNote "B5"
     SongNote "Bb5"
@@ -9793,7 +9806,7 @@ song_metroidBattle_tone_section1:
         DescendingEnvelopeOptions 3, $8
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "B3"
     SongNote "F3"
     SongNote "A3"
@@ -9805,10 +9818,10 @@ song_metroidBattle_tone_section1:
     SongNote "B3"
     SongNote "F3"
     SongNote "A3"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "Gb3"
     SongRepeatSetup $3
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "B3"
         SongNote "F3"
         SongNote "A3"
@@ -9818,14 +9831,14 @@ song_metroidBattle_tone_section1:
         SongNote "G3"
         SongNote "F3"
     SongRepeat
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "Ab5"
     SongNote "Gb5"
     SongNote "Ab5"
     SongNote "Gb5"
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "Ab5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "Ab5"
     SongNote "Gb5"
     SongNote "Ab5"
@@ -9833,15 +9846,15 @@ song_metroidBattle_tone_section1:
         DescendingEnvelopeOptions 1, $D
         AscendingSweepOptions 0, 0
         LengthDutyOptions $8, 0
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "Ab5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
     SongOptions
         DescendingEnvelopeOptions 1, $A
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "B3"
     SongNote "F3"
     SongNote "A3"
@@ -9858,15 +9871,15 @@ song_metroidBattle_wave_section0:
 ;{
     SongOptions
         WaveOptions $416B, 2, $0
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "D5"
     SongNote "D3"
     SongNote "Ab5"
     SongNote "Ab3"
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "D6"
     Echo1
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
     SongEnd
 ;}
@@ -9876,18 +9889,18 @@ song_metroidBattle_wave_section1:
 ;{
     SongOptions
         WaveOptions $418B, 2, $7
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "A3"
     SongNote "A3"
     SongNote "A3"
     SongNote "A3"
     SongNote "Ab3"
-    SongNoteLength_Quaver
-    SongNote "G3"
     SongNoteLength_Semiquaver
+    SongNote "G3"
+    SongNoteLength_Demisemiquaver
     SongRest
     SongRepeatSetup $3
-        SongNoteLength_Crochet
+        SongNoteLength_Quaver
         SongNote "Bb3"
         SongNote "A3"
         SongNote "Bb3"
@@ -9895,21 +9908,21 @@ song_metroidBattle_wave_section1:
     SongRepeat
     SongOptions
         WaveOptions $417B, 2, $7
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "Db7"
     SongNote "Gb7"
     SongNote "Ab7"
     SongNote "Bb7"
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "Gb5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "Ab7"
     SongNote "E7"
     SongNote "Db7"
     SongNote "E7"
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "D5"
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongNote "Ab3"
     SongNote "Ab3"
     SongEnd
@@ -9918,14 +9931,14 @@ song_metroidBattle_wave_section1:
 ; $6EA3
 song_metroidBattle_noise_section0:
 ;{
+    SongNoteLength_Demisemiquaver
+    SongNoiseNote $7
+    SongNoiseNote $6
+    SongNoiseNote $7
+    SongNoiseNote $6
+    SongNoteLength_DottedCrochet
+    SongNoiseNote $7
     SongNoteLength_Semiquaver
-    SongNoiseNote $7
-    SongNoiseNote $6
-    SongNoiseNote $7
-    SongNoiseNote $6
-    SongNoteLength_DottedMinum
-    SongNoiseNote $7
-    SongNoteLength_Quaver
     SongNoiseNote $4
     SongNoiseNote $5
     SongNoiseNote $6
@@ -9938,35 +9951,35 @@ song_metroidBattle_noise_section0:
 ; $6EB2
 song_metroidBattle_noise_section1:
 ;{
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNoiseNote $5
+    SongNoiseNote $5
+    SongNoiseNote $5
+    SongNoiseNote $5
+    SongNoiseNote $5
+    SongNoteLength_Semiquaver
+    SongRest
+    SongNoteLength_Demisemiquaver
+    SongNoiseNote $4
+    SongRepeatSetup $6
+        SongNoteLength_Quaver
+        SongNoiseNote $5
+        SongNoiseNote $5
+    SongRepeat
+    SongNoteLength_Demisemiquaver
     SongNoiseNote $5
     SongNoiseNote $5
     SongNoiseNote $5
     SongNoiseNote $5
     SongNoteLength_Quaver
-    SongRest
-    SongNoteLength_Semiquaver
-    SongNoiseNote $4
-    SongRepeatSetup $6
-        SongNoteLength_Crochet
-        SongNoiseNote $5
-        SongNoiseNote $5
-    SongRepeat
-    SongNoteLength_Semiquaver
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoteLength_Crochet
     SongNoiseNote $7
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNoiseNote $5
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNoiseNote $12
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNoiseNote $5
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNoiseNote $5
     SongNoiseNote $5
     SongNoiseNote $5
@@ -9976,7 +9989,7 @@ song_metroidBattle_noise_section1:
 
 ; $6ED5
 song_subCaves4_header:
-    SongHeader $0, $40C5, song_subCaves4_toneSweep, song_subCaves4_tone, song_subCaves4_wave, song_subCaves4_noise
+    SongHeader $0, tempoTable_112, song_subCaves4_toneSweep, song_subCaves4_tone, song_subCaves4_wave, song_subCaves4_noise
 
 ; $6EE0
 song_subCaves4_toneSweep:
@@ -10017,7 +10030,7 @@ song_subCaves4_tone_section1:
         DescendingEnvelopeOptions 7, $1
         AscendingSweepOptions 0, 0
         LengthDutyOptions $7, 2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C6"
     SongNote "E5"
     SongNote "A5"
@@ -10026,38 +10039,38 @@ song_subCaves4_tone_section1:
     SongNote "D5"
     SongNote "G5"
     SongNote "F5"
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C6"
     SongNote "G5"
     SongNote "E5"
     SongNote "B5"
     SongNote "D5"
-    SongNoteLength_Breve
+    SongNoteLength_Semibreve
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "D5"
     SongNote "G5"
     SongNote "E5"
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "G5"
     SongNote "E5"
     SongNote "A5"
     SongNote "D5"
     SongNote "G6"
     SongNote "E5"
+    SongNoteLength_Minum
+    SongRest
+    SongNoteLength_Semiquaver
+    SongNote "G5"
+    SongNote "E5"
     SongNoteLength_Semibreve
     SongRest
-    SongNoteLength_Quaver
-    SongNote "G5"
-    SongNote "E5"
-    SongNoteLength_Breve
-    SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "F5"
     SongNote "B5"
     SongNote "A5"
@@ -10065,49 +10078,49 @@ song_subCaves4_tone_section1:
     SongNote "E5"
     SongNote "B5"
     SongNote "C6"
-    SongNoteLength_DottedMinum
-    SongNote "E5"
-    SongNote "G5"
-    SongNote "D5"
-    SongRest
-    SongRest
-    SongNoteLength_Semiquaver
-    SongNote "C6"
-    SongNote "B5"
-    SongRest
-    SongNote "Gb5"
-    SongNote "F5"
-    SongNote "G5"
-    SongNote "E5"
-    SongRest
-    SongRest
-    SongNote "G5"
-    SongNote "D5"
-    SongNote "B5"
     SongNoteLength_DottedCrochet
+    SongNote "E5"
+    SongNote "G5"
+    SongNote "D5"
     SongRest
-    SongNoteLength_Breve
     SongRest
+    SongNoteLength_Demisemiquaver
+    SongNote "C6"
+    SongNote "B5"
+    SongRest
+    SongNote "Gb5"
+    SongNote "F5"
+    SongNote "G5"
+    SongNote "E5"
+    SongRest
+    SongRest
+    SongNote "G5"
+    SongNote "D5"
+    SongNote "B5"
     SongNoteLength_DottedQuaver
+    SongRest
+    SongNoteLength_Semibreve
+    SongRest
+    SongNoteLength_DottedSemiquaver
     SongNote "D5"
     SongNote "G5"
     SongNote "E5"
-    SongNoteLength_Breve
+    SongNoteLength_Semibreve
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "A5"
     SongNote "B5"
     SongNote "F5"
     SongNote "Gb5"
     SongNote "G5"
-    SongNoteLength_Breve
+    SongNoteLength_Semibreve
     SongRest
     SongEnd
 ;}
 
 ; $6F50
 song_earthquake_header:
-    SongHeader $0, $40DF, $0000, $0000, $0000, song_earthquake_noise
+    SongHeader $0, tempoTable_75, $0000, $0000, $0000, song_earthquake_noise
 
 ; $6F5B
 song_earthquake_noise:
@@ -10119,10 +10132,10 @@ song_earthquake_noise:
 ; $6F5F
 song_earthquake_noise_section0:
 ;{
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNoiseNote $12
     SongRepeatSetup $3
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $B
         SongNoiseNote $B
     SongRepeat
@@ -10142,7 +10155,7 @@ song_earthquake_noise_section0:
         SongNoiseNote $D
         SongNoiseNote $E
     SongRepeat
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNoiseNote $8
     SongNoiseNote $D
     SongNoiseNote $B
@@ -10167,7 +10180,7 @@ song_earthquake_noise_section0:
     SongNoiseNote $C
     SongNoiseNote $A
     SongNoiseNote $B
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNoiseNote $9
     SongNoiseNote $17
     SongRepeatSetup $3
@@ -10178,14 +10191,14 @@ song_earthquake_noise_section0:
         SongNoiseNote $A
         SongNoiseNote $B
     SongRepeat
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNoiseNote $A
     SongEnd
 ;}
 
 ; $6FA4
 song_killedMetroid_header:
-    SongHeader $D, $40F9, song_killedMetroid_toneSweep, song_killedMetroid_tone, song_killedMetroid_wave, $0000
+    SongHeader $D, tempoTable_56, song_killedMetroid_toneSweep, song_killedMetroid_tone, song_killedMetroid_wave, $0000
 
 ; $6FAF
 song_killedMetroid_tone:
@@ -10222,13 +10235,13 @@ song_killedMetroid_toneSweep_section0:
         AscendingEnvelopeOptions 1, $0
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "C6"
     SongOptions
         DescendingEnvelopeOptions 5, $F
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongNote "C6"
     SongEnd
 ;}
@@ -10247,7 +10260,7 @@ song_killedMetroid_toneSweep_section2:
 song_metroidHive_withIntro_tone_section2:
 song_metroidHive_withIntro_toneSweep_section3:
 ;{
-    SongNoteLength_Hemidemisemiquaver
+    SongNoteLength_Semihemidemisemiquaver
     SongNote "C4"
     SongNote "G4"
     SongNote "D4"
@@ -10282,17 +10295,17 @@ song_metroidHive_withIntro_toneSweep_section3:
 ;}
 
 ; $6FF6
-unused6FB9_section2:
 song_killedMetroid_toneSweep_section3:
+unused6FB9_section2:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $C
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 2
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "E5"
     SongRest
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNote "F5"
     SongEnd
 ;}
@@ -10302,22 +10315,22 @@ song_killedMetroid_wave_section0:
 ;{
     SongOptions
         WaveOptions $416B, 1, $0
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
     SongRepeatSetup $4
-        SongNoteLength_Demisemiquaver
+        SongNoteLength_Hemidemisemiquaver
         SongNote "C2"
         Echo1
     SongRepeat
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongRest
     SongOptions
         WaveOptions $416B, 3, $0
-    SongNoteLength_Hemidemisemiquaver
+    SongNoteLength_Semihemidemisemiquaver
     SongNote "C4"
     SongNote "G4"
     SongNote "D4"
@@ -10348,10 +10361,10 @@ song_killedMetroid_wave_section0:
     SongNote "F6"
     SongNote "C6"
     SongNote "G6"
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "E5"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "F5"
     Echo1
     SongEnd
@@ -10359,7 +10372,7 @@ song_killedMetroid_wave_section0:
 
 ; $703C
 song_title_header:
-    SongHeader $1, $40D2, song_title_toneSweep, song_title_tone, song_title_wave, song_title_noise
+    SongHeader $1, tempoTable_90, song_title_toneSweep, song_title_tone, song_title_wave, song_title_noise
 
 ; $7047
 song_title_tone:
@@ -10412,30 +10425,30 @@ song_title_noise:
 ;}
 
 ; $708B
-song_title_toneSweep_section4:
 song_title_toneSweep_section2:
-song_title_toneSweep_section3:
 song_title_toneSweep_section5:
 song_title_toneSweep_section1:
+song_title_toneSweep_section3:
+song_title_toneSweep_section4:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $D
         AscendingSweepOptions 0, 0
         LengthDutyOptions $4, 1
     SongRepeatSetup $4
-        SongNoteLength_Breve
+        SongNoteLength_Semibreve
         SongNote "Bb6"
     SongRepeat
     SongEnd
 ;}
 
 ; $7095
-song_title_wave_section1:
 song_title_wave_section4:
+song_title_wave_section1:
 ;{
     SongOptions
         WaveOptions $4123, 3, $3
-    SongNoteLength_Breve
+    SongNoteLength_Semibreve
     SongRest
     SongRest
     SongRest
@@ -10446,9 +10459,9 @@ song_title_wave_section4:
 ; $709F
 song_title_wave_section2:
 ;{
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "Ab6"
     SongNote "A5"
     SongNote "C6"
@@ -10459,9 +10472,9 @@ song_title_wave_section2:
     SongNote "A5"
     SongRest
     SongNote "C6"
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongRest
     SongNote "Db6"
     SongNote "Ab6"
@@ -10472,9 +10485,9 @@ song_title_wave_section2:
     SongNote "Gb6"
     SongNote "Ab6"
     SongRest
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "Ab6"
     SongNote "E6"
     SongNote "F5"
@@ -10485,9 +10498,9 @@ song_title_wave_section2:
     Echo1
     SongNote "Ab5"
     SongNote "Eb6"
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "Gb6"
     SongRest
     SongNote "Ab5"
@@ -10500,9 +10513,9 @@ song_title_wave_section2:
     Echo1
     SongOptions
         WaveOptions $4123, 2, $3
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "Bb6"
     Echo1
     SongNote "Ab6"
@@ -10515,9 +10528,9 @@ song_title_wave_section2:
     SongNote "C6"
     SongNote "Bb6"
     Echo1
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongRest
     SongNote "Db6"
     SongNote "B6"
@@ -10528,9 +10541,9 @@ song_title_wave_section2:
     SongNote "F6"
     SongNote "Gb6"
     Echo1
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C6"
     SongNote "E6"
     SongNote "Ab6"
@@ -10543,9 +10556,9 @@ song_title_wave_section2:
     Echo1
     SongNote "A6"
     Echo1
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "D6"
     Echo1
     SongNote "Ab6"
@@ -10566,7 +10579,7 @@ song_title_wave_section3:
 ;{
     SongOptions
         WaveOptions $4113, 2, $0
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "F7"
     Echo1
     SongNote "C7"
@@ -10587,33 +10600,33 @@ song_title_wave_section3:
     Echo1
     SongNote "D7"
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "Db7"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongRest
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "A6"
     Echo1
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongRest
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongNote "G6"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
     SongEnd
 ;}
 
 ; $713E
-song_title_noise_section1:
 song_title_noise_section2:
 song_title_noise_section5:
+song_title_noise_section1:
 ;{
-    SongNoteLength_Breve
+    SongNoteLength_Semibreve
     SongRest
     SongRest
     SongRest
@@ -10626,15 +10639,15 @@ song_title_noise_section3:
 song_title_noise_section4:
 ;{
     SongRepeatSetup $2
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNoiseNote $5
-        SongNoteLength_Semibreve
-        SongNoiseNote $8
         SongNoteLength_Minum
+        SongNoiseNote $8
+        SongNoteLength_Crochet
         SongRest
-        SongNoteLength_DottedCrochet
+        SongNoteLength_DottedQuaver
         SongRest
-        SongNoteLength_Breve
+        SongNoteLength_Semibreve
         SongNoiseNote $C
     SongRepeat
     SongEnd
@@ -10647,53 +10660,53 @@ song_title_toneSweep_section7:
         AscendingEnvelopeOptions 4, $0
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "G4"
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongRest
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "F4"
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongRest
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "E4"
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongRest
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "Eb4"
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongRest
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "D4"
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongRest
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "Bb4"
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongRest
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "Eb4"
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongRest
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "B4"
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongRest
     SongEnd
 ;}
@@ -10705,69 +10718,69 @@ song_title_toneSweep_section8:
         AscendingEnvelopeOptions 7, $0
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_DottedMinum
-    SongNote "C5"
-    SongNoteLength_Crochet
-    Echo1
-    SongNoteLength_DottedMinum
-    SongNote "B4"
-    SongNoteLength_Crochet
-    Echo1
-    SongNoteLength_DottedMinum
-    SongNote "Bb4"
-    SongNoteLength_Crochet
-    Echo1
-    SongNoteLength_DottedMinum
-    SongNote "A4"
-    SongNoteLength_Crochet
-    Echo1
-    SongNoteLength_DottedMinum
-    SongNote "Ab4"
-    SongNoteLength_Crochet
-    Echo1
-    SongNoteLength_DottedMinum
-    SongNote "G4"
-    SongNoteLength_Crochet
-    Echo1
-    SongNoteLength_DottedMinum
-    SongNote "Gb4"
-    SongNoteLength_Crochet
-    Echo1
-    SongNoteLength_DottedMinum
-    SongNote "B4"
-    SongNoteLength_Crochet
-    Echo1
-    SongNoteLength_DottedMinum
-    SongNote "C4"
-    SongNoteLength_Crochet
-    Echo1
-    SongNoteLength_DottedMinum
-    SongNote "B3"
-    SongNoteLength_Crochet
-    Echo1
-    SongNoteLength_DottedMinum
-    SongNote "Bb3"
-    SongNoteLength_Crochet
-    Echo1
-    SongNoteLength_DottedMinum
-    SongNote "A3"
-    SongNoteLength_Crochet
-    Echo1
-    SongNoteLength_DottedMinum
-    SongNote "G3"
-    SongNoteLength_Crochet
-    Echo1
-    SongNoteLength_DottedMinum
-    SongNote "F3"
-    SongNoteLength_Crochet
-    Echo1
-    SongNoteLength_DottedMinum
-    SongNote "Eb3"
-    SongNoteLength_Crochet
-    Echo1
-    SongNoteLength_DottedMinum
-    SongNote "C3"
     SongNoteLength_DottedCrochet
+    SongNote "C5"
+    SongNoteLength_Quaver
+    Echo1
+    SongNoteLength_DottedCrochet
+    SongNote "B4"
+    SongNoteLength_Quaver
+    Echo1
+    SongNoteLength_DottedCrochet
+    SongNote "Bb4"
+    SongNoteLength_Quaver
+    Echo1
+    SongNoteLength_DottedCrochet
+    SongNote "A4"
+    SongNoteLength_Quaver
+    Echo1
+    SongNoteLength_DottedCrochet
+    SongNote "Ab4"
+    SongNoteLength_Quaver
+    Echo1
+    SongNoteLength_DottedCrochet
+    SongNote "G4"
+    SongNoteLength_Quaver
+    Echo1
+    SongNoteLength_DottedCrochet
+    SongNote "Gb4"
+    SongNoteLength_Quaver
+    Echo1
+    SongNoteLength_DottedCrochet
+    SongNote "B4"
+    SongNoteLength_Quaver
+    Echo1
+    SongNoteLength_DottedCrochet
+    SongNote "C4"
+    SongNoteLength_Quaver
+    Echo1
+    SongNoteLength_DottedCrochet
+    SongNote "B3"
+    SongNoteLength_Quaver
+    Echo1
+    SongNoteLength_DottedCrochet
+    SongNote "Bb3"
+    SongNoteLength_Quaver
+    Echo1
+    SongNoteLength_DottedCrochet
+    SongNote "A3"
+    SongNoteLength_Quaver
+    Echo1
+    SongNoteLength_DottedCrochet
+    SongNote "G3"
+    SongNoteLength_Quaver
+    Echo1
+    SongNoteLength_DottedCrochet
+    SongNote "F3"
+    SongNoteLength_Quaver
+    Echo1
+    SongNoteLength_DottedCrochet
+    SongNote "Eb3"
+    SongNoteLength_Quaver
+    Echo1
+    SongNoteLength_DottedCrochet
+    SongNote "C3"
+    SongNoteLength_DottedQuaver
     Echo1
     SongEnd
 ;}
@@ -10780,7 +10793,7 @@ song_title_toneSweep_section9:
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
     SongRepeatSetup $2
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "C6"
         Echo1
         SongNote "Bb6"
@@ -10789,17 +10802,17 @@ song_title_toneSweep_section9:
         Echo1
         SongNote "F6"
         Echo1
-        SongNoteLength_Crochet
+        SongNoteLength_Quaver
         SongNote "G6"
         Echo1
-        SongNoteLength_DottedMinum
+        SongNoteLength_DottedCrochet
         SongRest
     SongRepeat
     SongOptions
         DescendingEnvelopeOptions 3, $C
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C6"
     Echo1
     SongNote "Bb6"
@@ -10808,29 +10821,29 @@ song_title_toneSweep_section9:
     Echo1
     SongNote "F6"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "G6"
     Echo1
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
     SongOptions
         DescendingEnvelopeOptions 4, $8
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "C6"
     SongNote "Bb6"
     SongNote "A6"
     SongNote "F6"
     SongNote "G6"
     SongRest
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
     SongOptions
         DescendingEnvelopeOptions 7, $4
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "C6"
     SongNote "Bb6"
     SongNote "A6"
@@ -10838,7 +10851,7 @@ song_title_toneSweep_section9:
     SongNote "G6"
     SongRest
     SongRepeatSetup $E
-        SongNoteLength_Semibreve
+        SongNoteLength_Minum
         SongRest
     SongRepeat
     SongEnd
@@ -10849,59 +10862,59 @@ song_title_wave_section5:
 ;{
     SongOptions
         WaveOptions $41AB, 1, $0
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "E5"
     Echo1
     SongRest
+    SongNoteLength_Semiquaver
+    SongNote "F5"
+    Echo1
     SongNoteLength_Quaver
-    SongNote "F5"
-    Echo1
-    SongNoteLength_Crochet
     SongNote "G5"
     Echo1
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "C5"
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "Bb5"
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     Echo1
     SongRest
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "A5"
     Echo1
     SongNote "F5"
     Echo1
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "G5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongRest
     SongRest
     SongRest
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongRest
     SongRest
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "Bb5"
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "A5"
     Echo1
     SongNote "F5"
     Echo1
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "G5"
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     Echo1
     SongRest
     SongRest
@@ -10913,338 +10926,338 @@ song_title_wave_section6:
 ;{
     SongOptions
         WaveOptions $418B, 1, $0
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongRest
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "E5"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
     Echo2
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "G5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "F5"
     Echo1
     SongNote "E5"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "E5"
     Echo1
     SongNote "D5"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C5"
     Echo1
     SongNote "D5"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "D5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
     Echo2
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
     Echo2
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "B4"
     Echo1
     SongNote "A4"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "B4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C5"
     Echo1
     SongNote "D5"
     SongOptions
         WaveOptions $418B, 1, $0
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "E5"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
     Echo2
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "G5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "F5"
     Echo1
     SongNote "E5"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "E5"
     Echo1
     SongNote "D5"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "B4"
     Echo1
     SongNote "A4"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "B4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "A4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
     Echo2
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "B4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "Bb4"
     Echo1
     SongNote "A4"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "G4"
-    SongNoteLength_Semiquaver
-    SongRest
-    SongNoteLength_Quaver
-    Echo2
-    SongNoteLength_Semiquaver
-    SongRest
-    SongNoteLength_Quaver
-    Echo1
-    SongNoteLength_Semiquaver
-    SongRest
-    SongNoteLength_Quaver
-    Echo1
-    SongNoteLength_Semiquaver
-    SongRest
-    SongNoteLength_Quaver
-    SongNote "F4"
-    SongNoteLength_Semiquaver
-    SongRest
-    Echo2
-    SongNoteLength_Quaver
-    SongNote "G4"
-    SongNoteLength_Semiquaver
-    SongRest
     SongNoteLength_Demisemiquaver
-    Echo2
-    SongNoteLength_Quaver
-    SongNote "G4"
+    SongRest
     SongNoteLength_Semiquaver
+    Echo2
+    SongNoteLength_Demisemiquaver
+    SongRest
+    SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
+    SongRest
+    SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
+    SongRest
+    SongNoteLength_Semiquaver
+    SongNote "F4"
+    SongNoteLength_Demisemiquaver
+    SongRest
+    Echo2
+    SongNoteLength_Semiquaver
+    SongNote "G4"
+    SongNoteLength_Demisemiquaver
+    SongRest
+    SongNoteLength_Hemidemisemiquaver
+    Echo2
+    SongNoteLength_Semiquaver
+    SongNote "G4"
+    SongNoteLength_Demisemiquaver
     SongRest
     SongNote "G4"
     SongRest
     SongNote "G4"
     SongRest
     SongNote "Ab4"
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongRest
     SongNote "Ab4"
     SongRest
@@ -11268,15 +11281,15 @@ song_title_wave_section7:
 ;{
     SongOptions
         WaveOptions $416B, 1, $0
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C3"
     Echo1
     SongNote "C3"
     Echo1
     SongRepeatSetup $8
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "C3"
         Echo1
         SongNote "C3"
@@ -11287,7 +11300,7 @@ song_title_wave_section7:
     SongOptions
         WaveOptions $416B, 2, $0
     SongRepeatSetup $3
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "C3"
         Echo1
         SongNote "C3"
@@ -11298,7 +11311,7 @@ song_title_wave_section7:
     SongOptions
         WaveOptions $416B, 3, $0
     SongRepeatSetup $5
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "C3"
         Echo1
         SongNote "C3"
@@ -11307,10 +11320,10 @@ song_title_wave_section7:
         Echo1
     SongRepeat
     SongRepeatSetup $B
-        SongNoteLength_Semibreve
+        SongNoteLength_Minum
         SongRest
     SongRepeat
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
     SongEnd
 ;}
@@ -11319,7 +11332,7 @@ song_title_wave_section7:
 song_title_noise_section6:
 ;{
     SongRepeatSetup $8
-        SongNoteLength_Semibreve
+        SongNoteLength_Minum
         SongRest
     SongRepeat
     SongEnd
@@ -11329,34 +11342,34 @@ song_title_noise_section6:
 song_title_noise_section7:
 ;{
     SongRepeatSetup $8
-        SongNoteLength_Semibreve
+        SongNoteLength_Minum
         SongRest
     SongRepeat
-    SongNoteLength_Quaver
-    SongRest
-    SongNoteLength_Minum
-    SongRest
-    SongNoteLength_Semibreve
-    SongNoiseNote $8
-    SongRest
-    SongRest
-    SongNoiseNote $8
-    SongRest
-    SongRest
-    SongNoteLength_DottedCrochet
-    SongNoiseNote $8
     SongNoteLength_Semiquaver
     SongRest
-    SongNoteLength_Quaver
+    SongNoteLength_Crochet
+    SongRest
+    SongNoteLength_Minum
+    SongNoiseNote $8
+    SongRest
+    SongRest
+    SongNoiseNote $8
+    SongRest
+    SongRest
+    SongNoteLength_DottedQuaver
+    SongNoiseNote $8
+    SongNoteLength_Demisemiquaver
+    SongRest
+    SongNoteLength_Semiquaver
     SongNoiseNote $1F
     SongRest
     SongNoiseNote $20
     SongRest
     SongNoiseNote $21
     SongRest
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNoiseNote $21
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongRest
     SongEnd
 ;}
@@ -11365,7 +11378,7 @@ song_title_noise_section7:
 song_title_noise_section8:
 ;{
     SongRepeatSetup $5
-        SongNoteLength_DottedMinum
+        SongNoteLength_DottedCrochet
         SongNoiseNote $8
         SongNoiseNote $C
         SongNoiseNote $8
@@ -11382,7 +11395,7 @@ song_title_noise_section8:
     SongNoiseNote $F
     SongNoiseNote $F
     SongRepeatSetup $5
-        SongNoteLength_Semibreve
+        SongNoteLength_Minum
         SongRest
     SongRepeat
     SongEnd
@@ -11390,7 +11403,7 @@ song_title_noise_section8:
 
 ; $7427
 song_samusFanfare_header:
-    SongHeader $1, $40DF, song_samusFanfare_toneSweep, song_samusFanfare_tone, song_samusFanfare_wave, song_samusFanfare_noise
+    SongHeader $1, tempoTable_75, song_samusFanfare_toneSweep, song_samusFanfare_tone, song_samusFanfare_wave, song_samusFanfare_noise
 
 ; $7432
 song_samusFanfare_tone:
@@ -11421,36 +11434,36 @@ song_samusFanfare_toneSweep_section0:
         AscendingEnvelopeOptions 3, $0
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "G2"
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongRest
     SongOptions
         AscendingEnvelopeOptions 1, $0
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "G3"
-    SongNoteLength_Semiquaver
-    Echo1
-    SongNoteLength_DottedQuaver
-    SongNote "G4"
-    SongNoteLength_Semiquaver
-    Echo1
-    SongNoteLength_DottedQuaver
-    SongNote "Gb4"
-    SongNoteLength_Semiquaver
-    Echo1
     SongNoteLength_Demisemiquaver
-    SongRest
-    SongNoteLength_DottedQuaver
-    SongNote "D4"
-    SongNoteLength_Quaver
     Echo1
-    SongNoteLength_Minum
+    SongNoteLength_DottedSemiquaver
+    SongNote "G4"
+    SongNoteLength_Demisemiquaver
+    Echo1
+    SongNoteLength_DottedSemiquaver
+    SongNote "Gb4"
+    SongNoteLength_Demisemiquaver
+    Echo1
+    SongNoteLength_Hemidemisemiquaver
+    SongRest
+    SongNoteLength_DottedSemiquaver
+    SongNote "D4"
+    SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Crochet
     SongNote "E4"
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     Echo1
     SongEnd
 ;}
@@ -11460,24 +11473,24 @@ song_samusFanfare_wave_section0:
 ;{
     SongOptions
         WaveOptions $417B, 2, $0
-    SongNoteLength_DottedMinum
-    SongRest
-    SongNoteLength_Quaver
-    SongRest
     SongNoteLength_DottedCrochet
-    SongNote "C6"
-    SongNoteLength_Quaver
-    Echo1
-    SongNoteLength_DottedCrochet
-    SongNote "D6"
-    SongNoteLength_Quaver
-    Echo1
+    SongRest
     SongNoteLength_Semiquaver
     SongRest
+    SongNoteLength_DottedQuaver
+    SongNote "C6"
+    SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_DottedQuaver
+    SongNote "D6"
+    SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongRest
-    SongNoteLength_Minum
+    SongRest
+    SongNoteLength_Crochet
     SongNote "A5"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
     SongEnd
 ;}
@@ -11485,27 +11498,27 @@ song_samusFanfare_wave_section0:
 ; $747A
 song_samusFanfare_noise_section0:
 ;{
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNoiseNote $12
     SongNoiseNote $1D
     SongNoiseNote $12
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNoiseNote $17
     SongNoiseNote $15
     SongNoiseNote $13
     SongNoiseNote $14
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNoiseNote $16
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNoiseNote $1A
-    SongNoteLength_Breve
+    SongNoteLength_Semibreve
     SongNoiseNote $1B
     SongEnd
 ;}
 
 ; $748A
 song_reachedTheGunship_header:
-    SongHeader $0, $40F9, song_reachedTheGunship_toneSweep, song_reachedTheGunship_tone, song_reachedTheGunship_wave, song_reachedTheGunship_noise
+    SongHeader $0, tempoTable_56, song_reachedTheGunship_toneSweep, song_reachedTheGunship_tone, song_reachedTheGunship_wave, song_reachedTheGunship_noise
 
 ; $7495
 song_reachedTheGunship_toneSweep:
@@ -11580,7 +11593,7 @@ song_reachedTheGunship_toneSweep_section0:
         DescendingEnvelopeOptions 0, $6
         AscendingSweepOptions 0, 0
         LengthDutyOptions $9, 0
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongRest
     SongRest
     SongEnd
@@ -11604,28 +11617,28 @@ song_reachedTheGunship_toneSweep_section4:
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C5"
         SongNote "F5"
         SongNote "G5"
         SongNote "C6"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "F4"
         SongNote "C5"
         SongNote "D5"
         SongNote "F5"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C5"
         SongNote "F5"
         SongNote "G5"
         SongNote "C6"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "F4"
         SongNote "C5"
         SongNote "D5"
@@ -11642,63 +11655,63 @@ song_reachedTheGunship_toneSweep_section5:
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C5"
         SongNote "F5"
         SongNote "G5"
         SongNote "C6"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "F4"
         SongNote "C5"
         SongNote "D5"
         SongNote "F5"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C5"
         SongNote "E5"
         SongNote "F5"
         SongNote "C6"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "D5"
         SongNote "E5"
         SongNote "F5"
         SongNote "D6"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C5"
         SongNote "F5"
         SongNote "G5"
         SongNote "C6"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "F4"
         SongNote "C5"
         SongNote "D5"
         SongNote "F5"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "G4"
         SongNote "C5"
         SongNote "D5"
         SongNote "G5"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "F4"
         SongNote "C5"
         SongNote "D5"
         SongNote "F5"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C5"
         SongNote "E5"
         SongNote "F5"
@@ -11743,7 +11756,7 @@ song_reachedTheGunship_toneSweep_section6:
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
     SongRepeatSetup $3
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C5"
         SongNote "E5"
         SongNote "F5"
@@ -11762,28 +11775,28 @@ song_reachedTheGunship_toneSweep_section6:
         SongNote "Bb5"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "F4"
         SongNote "C5"
         SongNote "D5"
         SongNote "F5"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "Bb4"
         SongNote "E5"
         SongNote "F5"
         SongNote "Bb5"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "A4"
         SongNote "E5"
         SongNote "F5"
         SongNote "A5"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "G4"
         SongNote "C5"
         SongNote "D5"
@@ -11793,38 +11806,38 @@ song_reachedTheGunship_toneSweep_section6:
 ;}
 
 ; $75C5
-song_reachedTheGunship_toneSweep_section9:
-song_reachedTheGunship_toneSweep_sectionA:
 song_reachedTheGunship_toneSweep_section7:
 song_reachedTheGunship_toneSweep_section8:
+song_reachedTheGunship_toneSweep_section9:
+song_reachedTheGunship_toneSweep_sectionA:
 ;{
     SongOptions
         DescendingEnvelopeOptions 1, $6
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "F4"
         SongNote "C5"
         SongNote "D5"
         SongNote "F5"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "Bb4"
         SongNote "E5"
         SongNote "F5"
         SongNote "Bb5"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "A4"
         SongNote "E5"
         SongNote "F5"
         SongNote "A5"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "G4"
         SongNote "C5"
         SongNote "D5"
@@ -11841,7 +11854,7 @@ song_reachedTheGunship_toneSweep_sectionB:
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 2
     SongRepeatSetup $4
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "F4"
         SongNote "A4"
         SongNote "D5"
@@ -11886,7 +11899,7 @@ song_reachedTheGunship_toneSweep_sectionC:
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
     SongRepeatSetup $4
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C5"
         SongNote "E5"
         SongNote "F5"
@@ -11914,7 +11927,7 @@ song_reachedTheGunship_toneSweep_sectionD:
         DescendingEnvelopeOptions 2, $8
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C5"
     SongNote "E5"
     SongNote "F5"
@@ -11952,7 +11965,7 @@ song_reachedTheGunship_toneSweep_sectionD:
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
     SongRepeatSetup $5
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C5"
         SongNote "E5"
         SongNote "F5"
@@ -11974,7 +11987,7 @@ song_reachedTheGunship_toneSweep_sectionD:
         DescendingEnvelopeOptions 3, $C
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C5"
     SongNote "E5"
     SongNote "F5"
@@ -11995,46 +12008,46 @@ song_reachedTheGunship_toneSweep_sectionD:
         DescendingEnvelopeOptions 4, $D
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Quaver
-    SongNote "C5"
     SongNoteLength_Semiquaver
+    SongNote "C5"
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "B4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
     SongNote "C5"
     Echo1
-    SongTempo $4106
-    SongNoteLength_Minum
+    SongTempo tempoTable_50
+    SongNoteLength_Crochet
     SongNote "F5"
     SongOptions
         AscendingEnvelopeOptions 1, $0
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "E5"
     Echo1
     SongOptions
         DescendingEnvelopeOptions 5, $D
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Semiquaver
-    SongNote "C5"
-    Echo1
     SongNoteLength_Demisemiquaver
     SongNote "C5"
     Echo1
+    SongNoteLength_Hemidemisemiquaver
     SongNote "C5"
     Echo1
-    SongNoteLength_Hemidemisemiquaver
+    SongNote "C5"
+    Echo1
+    SongNoteLength_Semihemidemisemiquaver
     SongNote "C4"
     SongNote "G4"
     SongOptions
         DescendingEnvelopeOptions 7, $C
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNote "C6"
     SongEnd
 ;}
@@ -12046,7 +12059,7 @@ song_reachedTheGunship_tone_section0:
         DescendingEnvelopeOptions 0, $6
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongRest
     SongRest
     SongEnd
@@ -12064,142 +12077,142 @@ song_reachedTheGunship_tone_section2:
 ; $76BA
 song_reachedTheGunship_toneSweep_section3:
 ;{
-    SongNoteLength_Crochet
-    SongNote "E5"
     SongNoteLength_Quaver
+    SongNote "E5"
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "F5"
     Echo1
     SongNote "E5"
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "D5"
-    SongNoteLength_Quaver
-    Echo1
     SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongNote "C5"
-    SongNoteLength_Quaver
-    Echo1
     SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongNote "Bb4"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C5"
     Echo1
     SongNote "F4"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "F5"
     SongNoteLength_Quaver
+    SongNote "F5"
+    SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Hemidemisemiquaver
+    SongNote "E5"
+    Echo1
+    SongNote "D5"
+    Echo1
+    SongNoteLength_Quaver
+    SongNote "E5"
+    SongNoteLength_Semiquaver
     Echo1
     SongNoteLength_Demisemiquaver
-    SongNote "E5"
-    Echo1
     SongNote "D5"
-    Echo1
-    SongNoteLength_Crochet
-    SongNote "E5"
-    SongNoteLength_Quaver
     Echo1
     SongNoteLength_Semiquaver
-    SongNote "D5"
-    Echo1
-    SongNoteLength_Quaver
     SongNote "D5"
     Echo1
     SongNote "A4"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "C5"
     SongNoteLength_Quaver
+    SongNote "C5"
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "B4"
     Echo1
     SongNote "A4"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "B4"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "E5"
     SongNoteLength_Quaver
+    SongNote "E5"
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "F5"
     Echo1
     SongNote "E5"
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "D5"
-    SongNoteLength_Quaver
-    Echo1
     SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongNote "C5"
-    SongNoteLength_Quaver
-    Echo1
     SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongNote "Bb4"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "C5"
     SongNoteLength_Quaver
+    SongNote "C5"
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "D5"
     Echo1
     SongNote "E5"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "F5"
     SongNoteLength_Quaver
+    SongNote "F5"
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "G5"
     Echo1
     SongNote "F5"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "E5"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
+    SongNote "D5"
     Echo1
     SongNoteLength_Semiquaver
     SongNote "D5"
     Echo1
-    SongNoteLength_Quaver
-    SongNote "D5"
-    Echo1
     SongNote "A4"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "C5"
     SongNoteLength_Quaver
+    SongNote "C5"
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "B4"
     Echo1
     SongNote "C5"
-    Echo1
-    SongNoteLength_Quaver
-    SongNote "D5"
-    Echo1
-    SongNote "A4"
-    Echo1
-    SongNoteLength_Crochet
-    SongNote "C5"
-    SongNoteLength_Quaver
-    Echo1
-    SongNoteLength_Demisemiquaver
-    SongNote "B4"
-    Echo1
-    SongNote "A4"
-    Echo1
-    SongNoteLength_Crochet
-    SongNote "B4"
-    SongNoteLength_Quaver
     Echo1
     SongNoteLength_Semiquaver
+    SongNote "D5"
+    Echo1
+    SongNote "A4"
+    Echo1
+    SongNoteLength_Quaver
+    SongNote "C5"
+    SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Hemidemisemiquaver
+    SongNote "B4"
+    Echo1
+    SongNote "A4"
+    Echo1
+    SongNoteLength_Quaver
+    SongNote "B4"
+    SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongNote "G5"
     Echo1
     SongEnd
@@ -12212,17 +12225,17 @@ song_reachedTheGunship_tone_section3:
         DescendingEnvelopeOptions 0, $A
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "C6"
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "G4"
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "C6"
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C3"
     Echo1
     SongRest
@@ -12237,101 +12250,101 @@ song_reachedTheGunship_tone_section4:
         DescendingEnvelopeOptions 0, $C
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Crochet
-    SongNote "C5"
     SongNoteLength_Quaver
+    SongNote "C5"
+    SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
+    SongNote "C5"
     Echo1
     SongNoteLength_Semiquaver
-    SongNote "C5"
-    Echo1
-    SongNoteLength_Quaver
     SongNote "Bb4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "A4"
-    SongNoteLength_Semiquaver
-    Echo1
     SongNoteLength_Demisemiquaver
+    Echo1
+    SongNoteLength_Hemidemisemiquaver
     SongNote "G4"
     Echo1
     SongNote "F4"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "G4"
-    SongNoteLength_DottedMinum
-    Echo1
-    SongNoteLength_Crochet
-    SongNote "E4"
     SongNoteLength_Quaver
-    Echo1
-    SongNoteLength_Semiquaver
     SongNote "G4"
-    Echo1
-    SongNoteLength_Quaver
-    SongNote "F4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_DottedCrochet
     Echo1
     SongNoteLength_Quaver
     SongNote "E4"
     SongNoteLength_Semiquaver
     Echo1
     SongNoteLength_Demisemiquaver
+    SongNote "G4"
+    Echo1
+    SongNoteLength_Semiquaver
+    SongNote "F4"
+    SongNoteLength_Demisemiquaver
+    Echo1
+    SongNoteLength_Semiquaver
+    SongNote "E4"
+    SongNoteLength_Demisemiquaver
+    Echo1
+    SongNoteLength_Hemidemisemiquaver
     SongNote "D4"
     Echo1
     SongNote "C4"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "D4"
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     Echo1
-    SongNoteLength_Crochet
-    SongNote "G4"
     SongNoteLength_Quaver
-    Echo1
+    SongNote "G4"
     SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongNote "C5"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "Bb4"
-    SongNoteLength_Semiquaver
-    Echo1
-    SongNoteLength_Quaver
-    SongNote "A4"
-    SongNoteLength_Semiquaver
-    Echo1
     SongNoteLength_Demisemiquaver
+    Echo1
+    SongNoteLength_Semiquaver
+    SongNote "A4"
+    SongNoteLength_Demisemiquaver
+    Echo1
+    SongNoteLength_Hemidemisemiquaver
     SongNote "G4"
     Echo1
     SongNote "F4"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "G4"
-    SongNoteLength_DottedMinum
-    Echo1
-    SongNoteLength_Crochet
-    SongNote "G4"
     SongNoteLength_Quaver
+    SongNote "G4"
+    SongNoteLength_DottedCrochet
     Echo1
+    SongNoteLength_Quaver
+    SongNote "G4"
     SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongNote "C5"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F4"
-    SongNoteLength_Semiquaver
-    Echo1
-    SongNoteLength_Quaver
-    SongNote "G4"
-    SongNoteLength_Semiquaver
-    Echo1
     SongNoteLength_Demisemiquaver
+    Echo1
+    SongNoteLength_Semiquaver
+    SongNote "G4"
+    SongNoteLength_Demisemiquaver
+    Echo1
+    SongNoteLength_Hemidemisemiquaver
     SongNote "A4"
     Echo1
     SongNote "F4"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "G4"
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     Echo1
     SongEnd
 ;}
@@ -12343,88 +12356,88 @@ song_reachedTheGunship_tone_section5:
         DescendingEnvelopeOptions 0, $B
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Crochet
-    SongNote "E5"
     SongNoteLength_Quaver
+    SongNote "E5"
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "D5"
     Echo1
     SongNote "E5"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "F5"
     SongNoteLength_Quaver
+    SongNote "F5"
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "E5"
     Echo1
     SongNote "D5"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "E5"
     SongNoteLength_Quaver
+    SongNote "E5"
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "D5"
     Echo1
     SongNote "E5"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "F5"
     SongNoteLength_Quaver
+    SongNote "F5"
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "E5"
     Echo1
     SongNote "F5"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "G5"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "F5"
     Echo1
     SongNote "E5"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "F5"
     SongNoteLength_Quaver
+    SongNote "F5"
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "E5"
     Echo1
     SongNote "D5"
     Echo1
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "C5"
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "D5"
     Echo1
     SongNote "E5"
     Echo1
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "D5"
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "C5"
     Echo1
     SongNote "Bb4"
     Echo1
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "C5"
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "Bb4"
     Echo1
     SongNote "A4"
     Echo1
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNote "Bb4"
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "A4"
     Echo1
     SongNote "G4"
@@ -12440,60 +12453,60 @@ song_reachedTheGunship_tone_section6:
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
     SongRepeatSetup $2
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "C5"
         Echo1
         SongNote "G5"
         Echo1
-        SongNoteLength_Crochet
+        SongNoteLength_Quaver
         SongNote "F5"
-        SongNoteLength_Quaver
-        Echo1
         SongNoteLength_Semiquaver
-        SongNote "C5"
-        Echo1
-        SongNoteLength_Crochet
-        SongNote "C5"
-        SongNoteLength_Quaver
         Echo1
         SongNoteLength_Demisemiquaver
+        SongNote "C5"
+        Echo1
+        SongNoteLength_Quaver
+        SongNote "C5"
+        SongNoteLength_Semiquaver
+        Echo1
+        SongNoteLength_Hemidemisemiquaver
         SongNote "Bb4"
         Echo1
         SongNote "A4"
         Echo1
-        SongNoteLength_Crochet
-        SongNote "Bb4"
         SongNoteLength_Quaver
-        Echo1
+        SongNote "Bb4"
         SongNoteLength_Semiquaver
+        Echo1
+        SongNoteLength_Demisemiquaver
         SongNote "D5"
         Echo1
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "C5"
         Echo1
         SongNote "G5"
         Echo1
-        SongNoteLength_Crochet
+        SongNoteLength_Quaver
         SongNote "F5"
-        SongNoteLength_Quaver
-        Echo1
         SongNoteLength_Semiquaver
-        SongNote "C5"
-        Echo1
-        SongNoteLength_Crochet
-        SongNote "C5"
-        SongNoteLength_Quaver
         Echo1
         SongNoteLength_Demisemiquaver
+        SongNote "C5"
+        Echo1
+        SongNoteLength_Quaver
+        SongNote "C5"
+        SongNoteLength_Semiquaver
+        Echo1
+        SongNoteLength_Hemidemisemiquaver
         SongNote "Bb4"
         Echo1
         SongNote "A4"
         Echo1
-        SongNoteLength_Crochet
-        SongNote "Bb4"
         SongNoteLength_Quaver
+        SongNote "Bb4"
+        SongNoteLength_Semiquaver
         Echo1
-        SongNoteLength_Demisemiquaver
+        SongNoteLength_Hemidemisemiquaver
         SongNote "A4"
         Echo1
         SongNote "G4"
@@ -12510,50 +12523,50 @@ song_reachedTheGunship_tone_section7:
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 2
     SongRepeatSetup $2
-        SongNoteLength_Crochet
-        SongNote "C6"
-        SongNoteLength_Minum
-        Echo1
         SongNoteLength_Quaver
-        SongRest
+        SongNote "C6"
+        SongNoteLength_Crochet
+        Echo1
         SongNoteLength_Semiquaver
+        SongRest
+        SongNoteLength_Demisemiquaver
         SongNote "D6"
         Echo1
-        SongNoteLength_DottedQuaver
+        SongNoteLength_DottedSemiquaver
         SongNote "C6"
         Echo1
+        SongNoteLength_Hemidemisemiquaver
+        SongNote "Bb5"
+        Echo1
+        SongNote "A5"
+        Echo1
+        SongNoteLength_DottedSemiquaver
+        SongNote "Bb5"
+        Echo1
+        SongNoteLength_Demisemiquaver
+        SongNote "A5"
+        Echo1
+        SongNoteLength_DottedSemiquaver
+        SongNote "A5"
+        SongNoteLength_Crochet
+        Echo1
+        SongNoteLength_DottedSemiquaver
+        SongRest
         SongNoteLength_Demisemiquaver
         SongNote "Bb5"
         Echo1
-        SongNote "A5"
-        Echo1
-        SongNoteLength_DottedQuaver
-        SongNote "Bb5"
-        Echo1
         SongNoteLength_Semiquaver
-        SongNote "A5"
-        Echo1
-        SongNoteLength_DottedQuaver
-        SongNote "A5"
-        SongNoteLength_Minum
-        Echo1
-        SongNoteLength_DottedQuaver
-        SongRest
-        SongNoteLength_Semiquaver
-        SongNote "Bb5"
-        Echo1
-        SongNoteLength_Quaver
         SongNote "F5"
-        SongNoteLength_Crochet
+        SongNoteLength_Quaver
         Echo1
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "G5"
         Echo1
-        SongNoteLength_Quaver
-        SongNote "A5"
-        SongNoteLength_Crochet
-        Echo1
         SongNoteLength_Semiquaver
+        SongNote "A5"
+        SongNoteLength_Quaver
+        Echo1
+        SongNoteLength_Demisemiquaver
         SongNote "Bb5"
         Echo1
     SongRepeat
@@ -12567,84 +12580,84 @@ song_reachedTheGunship_tone_section8:
         DescendingEnvelopeOptions 0, $D
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Crochet
-    SongNote "E4"
     SongNoteLength_Quaver
+    SongNote "E4"
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "F4"
     Echo1
     SongNote "E4"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "D4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "Bb3"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "G4"
     SongNoteLength_Quaver
+    SongNote "G4"
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "A4"
     Echo1
     SongNote "G4"
     Echo1
-    SongNoteLength_Quaver
-    SongNote "F4"
     SongNoteLength_Semiquaver
+    SongNote "F4"
+    SongNoteLength_Demisemiquaver
+    Echo1
+    SongNoteLength_Semiquaver
+    SongNote "E4"
+    SongNoteLength_Demisemiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
+    SongNote "D4"
     Echo1
     SongNoteLength_Quaver
     SongNote "E4"
     SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Hemidemisemiquaver
+    SongNote "F4"
+    Echo1
+    SongNote "E4"
     Echo1
     SongNoteLength_Semiquaver
     SongNote "D4"
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Semiquaver
     SongNote "E4"
-    SongNoteLength_Quaver
+    SongNoteLength_Demisemiquaver
     Echo1
     SongNoteLength_Demisemiquaver
     SongNote "F4"
     Echo1
-    SongNote "E4"
-    Echo1
     SongNoteLength_Quaver
-    SongNote "D4"
-    SongNoteLength_Semiquaver
-    Echo1
-    SongNoteLength_Quaver
-    SongNote "E4"
-    SongNoteLength_Semiquaver
-    Echo1
-    SongNoteLength_Semiquaver
-    SongNote "F4"
-    Echo1
-    SongNoteLength_Crochet
     SongNote "G4"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "A4"
     Echo1
     SongNote "G4"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "G4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "A4"
     Echo1
     SongEnd
@@ -12657,126 +12670,126 @@ song_reachedTheGunship_tone_section9:
         DescendingEnvelopeOptions 0, $B
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Crochet
-    SongNote "G4"
     SongNoteLength_Quaver
-    Echo1
+    SongNote "G4"
     SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongNote "C5"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "A4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "G4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "F4"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "G4"
-    SongNoteLength_Quaver
-    Echo1
     SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongNote "C5"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "A4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "F5"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "G4"
     SongNoteLength_Quaver
-    Echo1
+    SongNote "G4"
     SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongNote "C5"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "A4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "G4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "F4"
     Echo1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "G4"
-    SongNoteLength_Quaver
-    Echo1
     SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongNote "C5"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "A4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "F5"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "E5"
     SongNoteLength_Quaver
-    Echo1
+    SongNote "E5"
     SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongNote "G5"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
-    SongNote "E5"
     SongNoteLength_Semiquaver
+    SongNote "E5"
+    SongNoteLength_Demisemiquaver
     Echo1
     SongNote "C5"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "E5"
     SongNoteLength_Quaver
-    Echo1
+    SongNote "E5"
     SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongNote "G5"
     Echo1
-    SongNoteLength_Quaver
-    SongNote "F5"
     SongNoteLength_Semiquaver
+    SongNote "F5"
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "A5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
     SongNote "C6"
     Echo1
-    SongNoteLength_Crochet
-    SongNote "E5"
     SongNoteLength_Quaver
-    Echo1
+    SongNote "E5"
     SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongNote "G5"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
-    SongNote "E5"
     SongNoteLength_Semiquaver
+    SongNote "E5"
+    SongNoteLength_Demisemiquaver
     Echo1
     SongNote "C5"
     Echo1
@@ -12784,62 +12797,62 @@ song_reachedTheGunship_tone_section9:
         DescendingEnvelopeOptions 0, $D
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
-    SongNote "E4"
     SongNoteLength_Semiquaver
+    SongNote "E4"
+    SongNoteLength_Demisemiquaver
     Echo1
     SongNote "C4"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
-    SongNote "E5"
     SongNoteLength_Semiquaver
+    SongNote "E5"
+    SongNoteLength_Demisemiquaver
     Echo1
     SongNote "C5"
     Echo1
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "F5"
-    SongNoteLength_Quaver
-    Echo1
     SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongNote "E5"
-    SongNoteLength_Quaver
-    Echo1
     SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Demisemiquaver
     SongNote "F5"
     Echo1
     SongOptions
         DescendingEnvelopeOptions 0, $D
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "C4"
-    SongNoteLength_Quaver
-    Echo1
-    SongNoteLength_Quaver
-    SongNote "C4"
+    SongNoteLength_Semiquaver
     Echo1
     SongNoteLength_Semiquaver
-    SongNote "C3"
+    SongNote "C4"
     Echo1
     SongNoteLength_Demisemiquaver
     SongNote "C3"
     Echo1
+    SongNoteLength_Hemidemisemiquaver
     SongNote "C3"
     Echo1
-    SongNoteLength_Hemidemisemiquaver
+    SongNote "C3"
+    Echo1
+    SongNoteLength_Semihemidemisemiquaver
     SongNote "C2"
     SongNote "G2"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C3"
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     Echo2
     SongEnd
 ;}
@@ -12850,7 +12863,7 @@ song_reachedTheGunship_wave_section0:
     SongOptions
         WaveOptions $416B, 2, $0
     SongRepeatSetup $2
-        SongNoteLength_Demisemiquaver
+        SongNoteLength_Hemidemisemiquaver
         SongNote "C3"
         Echo1
         SongNote "Eb3"
@@ -12890,7 +12903,7 @@ song_reachedTheGunship_wave_section0:
 song_reachedTheGunship_tone_section1:
 song_reachedTheGunship_toneSweep_section1:
 ;{
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNote "C3"
     Echo1
     SongNote "Eb3"
@@ -12963,73 +12976,73 @@ song_reachedTheGunship_wave_section1:
 ;{
     SongOptions
         WaveOptions $417B, 2, $0
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongNote "C6"
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "Bb5"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "A5"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "Ab5"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "G5"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "Gb5"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "F5"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "G5"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "C5"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "Bb4"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "A4"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "Ab4"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongNote "G4"
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "Gb4"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "F4"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "Gb4"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "G4"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
-    SongNoteLength_DottedCrochet
+    SongNoteLength_DottedQuaver
     SongNote "G3"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     Echo1
     SongEnd
 ;}
@@ -13040,16 +13053,16 @@ song_reachedTheGunship_wave_section2:
     SongOptions
         WaveOptions $416B, 2, $0
     SongRepeatSetup $7
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNote "C3"
         Echo1
-        SongNoteLength_Demisemiquaver
+        SongNoteLength_Hemidemisemiquaver
         SongNote "C3"
         Echo1
         SongNote "C3"
         Echo1
     SongRepeat
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "G3"
     Echo1
     SongRest
@@ -13062,7 +13075,7 @@ song_reachedTheGunship_wave_section3:
 ;{
     SongOptions
         WaveOptions $417B, 2, $0
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongNote "C4"
     SongNote "F3"
     SongNote "E3"
@@ -13072,7 +13085,7 @@ song_reachedTheGunship_wave_section3:
     SongNote "G3"
     SongNote "F3"
     SongRepeatSetup $2
-        SongNoteLength_Minum
+        SongNoteLength_Crochet
         SongNote "C3"
         SongNote "F3"
         SongNote "E3"
@@ -13085,7 +13098,7 @@ song_reachedTheGunship_wave_section3:
 song_reachedTheGunship_wave_section4:
 ;{
     SongRepeatSetup $3
-        SongNoteLength_Minum
+        SongNoteLength_Crochet
         SongNote "C4"
         SongNote "Bb3"
     SongRepeat
@@ -13100,7 +13113,7 @@ song_reachedTheGunship_wave_section4:
 song_reachedTheGunship_wave_section5:
 ;{
     SongRepeatSetup $4
-        SongNoteLength_Minum
+        SongNoteLength_Crochet
         SongNote "F3"
         SongNote "Bb3"
         SongNote "A3"
@@ -13113,7 +13126,7 @@ song_reachedTheGunship_wave_section5:
 song_reachedTheGunship_wave_section6:
 ;{
     SongRepeatSetup $4
-        SongNoteLength_Minum
+        SongNoteLength_Crochet
         SongNote "F3"
         SongNote "Bb3"
         SongNote "A3"
@@ -13126,12 +13139,12 @@ song_reachedTheGunship_wave_section6:
 song_reachedTheGunship_wave_section7:
 ;{
     SongRepeatSetup $2
-        SongNoteLength_Minum
+        SongNoteLength_Crochet
         SongNote "C4"
         SongNote "Bb3"
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Minum
+        SongNoteLength_Crochet
         SongNote "C3"
         SongNote "Bb2"
     SongRepeat
@@ -13141,7 +13154,7 @@ song_reachedTheGunship_wave_section7:
 ; $7AAB
 song_reachedTheGunship_wave_section8:
 ;{
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongNote "C3"
     SongNote "F3"
     SongNote "E3"
@@ -13153,102 +13166,102 @@ song_reachedTheGunship_wave_section8:
     SongOptions
         WaveOptions $416B, 2, $0
     SongRepeatSetup $2
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "C4"
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         Echo1
-        SongNoteLength_Quaver
-        SongNote "B3"
         SongNoteLength_Semiquaver
+        SongNote "B3"
+        SongNoteLength_Demisemiquaver
         Echo1
         SongNote "G3"
         Echo1
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "F4"
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         Echo1
-        SongNoteLength_Quaver
-        SongNote "E4"
         SongNoteLength_Semiquaver
+        SongNote "E4"
+        SongNoteLength_Demisemiquaver
         Echo1
         SongNote "C4"
         Echo1
     SongRepeat
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
-    SongNote "B4"
     SongNoteLength_Semiquaver
+    SongNote "B4"
+    SongNoteLength_Demisemiquaver
     Echo1
     SongNote "G4"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "E5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
     SongNote "C5"
     Echo1
-    SongNoteLength_Quaver
-    SongNote "C5"
     SongNoteLength_Semiquaver
+    SongNote "C5"
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "B4"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
     SongNote "G4"
     Echo1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F5"
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
-    SongNote "E5"
     SongNoteLength_Semiquaver
+    SongNote "E5"
+    SongNoteLength_Demisemiquaver
     Echo1
     SongNote "C5"
     Echo1
-    SongNoteLength_Quaver
-    SongNote "C6"
     SongNoteLength_Semiquaver
-    Echo1
-    SongNoteLength_Quaver
-    SongNote "B5"
-    SongNoteLength_Semiquaver
-    Echo1
     SongNote "C6"
     SongNoteLength_Demisemiquaver
     Echo1
-    SongRest
-    SongNoteLength_DottedCrochet
-    SongNote "G5"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
+    SongNote "B5"
+    SongNoteLength_Demisemiquaver
     Echo1
-    SongNoteLength_Quaver
+    SongNote "C6"
+    SongNoteLength_Hemidemisemiquaver
+    Echo1
+    SongRest
+    SongNoteLength_DottedQuaver
+    SongNote "G5"
+    SongNoteLength_Semiquaver
+    Echo1
+    SongNoteLength_Semiquaver
     SongNote "G4"
     Echo1
     SongOptions
         WaveOptions $416B, 1, $0
-    SongNoteLength_Semiquaver
-    SongNote "G3"
-    Echo1
     SongNoteLength_Demisemiquaver
     SongNote "G3"
     Echo1
+    SongNoteLength_Hemidemisemiquaver
     SongNote "G3"
     Echo1
-    SongNoteLength_Hemidemisemiquaver
+    SongNote "G3"
+    Echo1
+    SongNoteLength_Semihemidemisemiquaver
     SongNote "C2"
     SongNote "G2"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "G3"
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     Echo1
     SongEnd
 ;}
@@ -13257,20 +13270,20 @@ song_reachedTheGunship_wave_section8:
 song_reachedTheGunship_noise_section0:
 ;{
     SongRepeatSetup $2
-        SongNoteLength_Quaver
-        SongNoiseNote $4
-        SongNoiseNote $3
-        SongNoiseNote $4
-        SongNoiseNote $3
-        SongNoiseNote $4
-        SongNoiseNote $3
-        SongNoiseNote $3
         SongNoteLength_Semiquaver
+        SongNoiseNote $4
+        SongNoiseNote $3
+        SongNoiseNote $4
+        SongNoiseNote $3
+        SongNoiseNote $4
+        SongNoiseNote $3
+        SongNoiseNote $3
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $7
         SongNoiseNote $5
     SongRepeat
     SongRepeatSetup $3
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $4
         SongNoiseNote $5
         SongNoiseNote $3
@@ -13290,9 +13303,9 @@ song_reachedTheGunship_noise_section0:
     SongNoiseNote $7
     SongNoiseNote $7
     SongNoiseNote $7
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNoiseNote $1A
-    SongNoteLength_Demisemiquaver
+    SongNoteLength_Hemidemisemiquaver
     SongNoiseNote $7
     SongNoiseNote $7
     SongNoiseNote $7
@@ -13303,45 +13316,45 @@ song_reachedTheGunship_noise_section0:
 ; $7B4B
 song_reachedTheGunship_noise_section1:
 ;{
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNoiseNote $1B
     SongRest
     SongRest
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNoiseNote $1A
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNoiseNote $1B
     SongNoiseNote $14
     SongNoiseNote $15
     SongNoiseNote $16
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNoiseNote $15
-    SongNoteLength_Minum
-    SongNoiseNote $17
     SongNoteLength_Crochet
+    SongNoiseNote $17
+    SongNoteLength_Quaver
     SongNoiseNote $19
     SongNoiseNote $18
     SongNoiseNote $16
-    SongNoteLength_Minum
-    SongNoiseNote $15
     SongNoteLength_Crochet
+    SongNoiseNote $15
+    SongNoteLength_Quaver
     SongNoiseNote $14
     SongNoiseNote $13
     SongNoiseNote $15
     SongNoiseNote $14
     SongRepeatSetup $4
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $13
         SongNoiseNote $19
     SongRepeat
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNoiseNote $5
     SongNoiseNote $5
     SongNoiseNote $5
     SongNoiseNote $5
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNoiseNote $1B
     SongEnd
 ;}
@@ -13350,25 +13363,25 @@ song_reachedTheGunship_noise_section1:
 song_reachedTheGunship_noise_section2:
 ;{
     SongRepeatSetup $3
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $7
         SongNoiseNote $3
         SongNoiseNote $5
         SongNoiseNote $5
     SongRepeat
-    SongNoteLength_Quaver
-    SongNoiseNote $1A
     SongNoteLength_Semiquaver
+    SongNoiseNote $1A
+    SongNoteLength_Demisemiquaver
     SongNoiseNote $7
     SongNoiseNote $3
     SongRepeatSetup $3
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $7
         SongNoiseNote $2
         SongNoiseNote $5
         SongNoiseNote $5
     SongRepeat
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNoiseNote $1B
     SongEnd
 ;}
@@ -13377,7 +13390,7 @@ song_reachedTheGunship_noise_section2:
 song_reachedTheGunship_noise_section3:
 ;{
     SongRepeatSetup $7
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $5
         SongNoiseNote $3
         SongNoiseNote $4
@@ -13396,7 +13409,7 @@ song_reachedTheGunship_noise_section3:
         SongNoiseNote $1
     SongRepeat
     SongRepeatSetup $3
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $5
         SongNoiseNote $2
         SongNoiseNote $4
@@ -13413,20 +13426,20 @@ song_reachedTheGunship_noise_section3:
 song_reachedTheGunship_noise_section4:
 ;{
     SongRepeatSetup $11
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $7
         SongNoiseNote $3
         SongNoiseNote $2
         SongNoiseNote $3
     SongRepeat
     SongRepeatSetup $2
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $7
         SongNoiseNote $3
         SongNoiseNote $7
         SongNoiseNote $3
     SongRepeat
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNoiseNote $7
     SongNoiseNote $5
     SongNoiseNote $7
@@ -13438,7 +13451,7 @@ song_reachedTheGunship_noise_section4:
 song_reachedTheGunship_noise_section5:
 ;{
     SongRepeatSetup $F
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $7
         SongNoiseNote $4
         SongNoiseNote $2
@@ -13448,7 +13461,7 @@ song_reachedTheGunship_noise_section5:
         SongNoiseNote $4
         SongNoiseNote $2
     SongRepeat
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNoiseNote $7
     SongNoiseNote $5
     SongNoiseNote $2
@@ -13464,13 +13477,13 @@ song_reachedTheGunship_noise_section5:
 song_reachedTheGunship_noise_section6:
 ;{
     SongRepeatSetup $1E
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $5
         SongNoiseNote $3
         SongNoiseNote $2
         SongNoiseNote $3
     SongRepeat
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNoiseNote $7
     SongNoiseNote $5
     SongNoiseNote $2
@@ -13486,13 +13499,13 @@ song_reachedTheGunship_noise_section6:
 song_reachedTheGunship_noise_section7:
 ;{
     SongRepeatSetup $E
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $5
         SongNoiseNote $4
         SongNoiseNote $3
         SongNoiseNote $4
     SongRepeat
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNoiseNote $7
     SongNoiseNote $5
     SongNoiseNote $2
@@ -13508,46 +13521,44 @@ song_reachedTheGunship_noise_section7:
 song_reachedTheGunship_noise_section8:
 ;{
     SongRepeatSetup $8
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $5
         SongNoiseNote $4
         SongNoiseNote $2
         SongNoiseNote $4
     SongRepeat
     SongRepeatSetup $4
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $5
         SongNoiseNote $3
         SongNoiseNote $5
         SongNoiseNote $4
     SongRepeat
     SongRepeatSetup $8
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $5
         SongNoiseNote $5
         SongNoiseNote $2
         SongNoiseNote $5
     SongRepeat
     SongRepeatSetup $4
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $5
         SongNoiseNote $5
         SongNoiseNote $5
         SongNoiseNote $5
     SongRepeat
     SongRepeatSetup $8
-        SongNoteLength_Semiquaver
+        SongNoteLength_Demisemiquaver
         SongNoiseNote $7
         SongNoiseNote $7
         SongNoiseNote $7
         SongNoiseNote $7
     SongRepeat
-    SongNoteLength_DottedQuaver
+    SongNoteLength_DottedSemiquaver
     SongNoiseNote $7
     SongNoiseNote $7
-    SongNoteLength_Quaver
-    SongNoiseNote $7
-    SongNoteLength_Minum
+    SongNoteLength_Semiquaver
     SongNoiseNote $7
     SongNoteLength_Crochet
     SongNoiseNote $7
@@ -13555,38 +13566,40 @@ song_reachedTheGunship_noise_section8:
     SongNoiseNote $7
     SongNoteLength_Semiquaver
     SongNoiseNote $7
+    SongNoteLength_Demisemiquaver
     SongNoiseNote $7
-    SongNoteLength_Hemidemisemiquaver
+    SongNoiseNote $7
+    SongNoteLength_Semihemidemisemiquaver
     SongNoiseNote $7
     SongNoiseNote $7
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNoiseNote $7
     SongEnd
 ;}
 
 ; $7C3A
 song_mainCaves_noIntro_header:
-    SongHeader $0, $40C5, song_mainCaves_toneSweep.alternateEntry, song_mainCaves_tone.alternateEntry, song_mainCaves_wave.alternateEntry, song_mainCaves_noise.alternateEntry
+    SongHeader $0, tempoTable_112, song_mainCaves_toneSweep.alternateEntry, song_mainCaves_tone.alternateEntry, song_mainCaves_wave.alternateEntry, song_mainCaves_noise.alternateEntry
 
 ; $7C45
 song_subCaves1_noIntro_header:
-    SongHeader $0, $40F9, song_subCaves1_toneSweep.alternateEntry, $0000, $0000, $0000
+    SongHeader $0, tempoTable_56, song_subCaves1_toneSweep.alternateEntry, $0000, $0000, $0000
 
 ; $7C50
 song_subCaves2_noIntro_header:
-    SongHeader $0, $40F9, $0000, song_subCaves2_tone.alternateEntry, $0000, $0000
+    SongHeader $0, tempoTable_56, $0000, song_subCaves2_tone.alternateEntry, $0000, $0000
 
 ; $7C5B
 song_subCaves3_noIntro_header:
-    SongHeader $0, $40DF, song_subCaves3_toneSweep.alternateEntry, song_subCaves3_tone.alternateEntry, song_subCaves3_wave.alternateEntry, $0000
+    SongHeader $0, tempoTable_75, song_subCaves3_toneSweep.alternateEntry, song_subCaves3_tone.alternateEntry, song_subCaves3_wave.alternateEntry, $0000
 
 ; $7C66
 song_subCaves4_noIntro_header:
-    SongHeader $0, $40C5, $0000, song_subCaves4_tone.alternateEntry, $0000, $0000
+    SongHeader $0, tempoTable_112, $0000, song_subCaves4_tone.alternateEntry, $0000, $0000
 
 ; $7C71
 song_metroidHive_withIntro_header:
-    SongHeader $1, $40B8, song_metroidHive_withIntro_toneSweep, song_metroidHive_withIntro_tone, song_metroidHive_withIntro_wave, song_metroidHive_withIntro_noise
+    SongHeader $1, tempoTable_149, song_metroidHive_withIntro_toneSweep, song_metroidHive_withIntro_tone, song_metroidHive_withIntro_wave, song_metroidHive_withIntro_noise
 
 ; $7C7C
 song_metroidHive_withIntro_toneSweep:
@@ -13632,7 +13645,7 @@ song_metroidHive_withIntro_toneSweep_section0:
         DescendingEnvelopeOptions 7, $8
         AscendingSweepOptions 7, 1
         LengthDutyOptions $6, 0
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNote "Gb2"
     SongEnd
 ;}
@@ -13644,7 +13657,7 @@ song_metroidHive_withIntro_toneSweep_section2:
         AscendingEnvelopeOptions 5, $0
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNote "C6"
     SongOptions
         DescendingEnvelopeOptions 7, $C
@@ -13660,7 +13673,7 @@ song_metroidHive_withIntro_toneSweep_section4:
         DescendingEnvelopeOptions 5, $F
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNote "F6"
     SongEnd
 ;}
@@ -13672,12 +13685,12 @@ song_metroidHive_withIntro_tone_section0:
         DescendingEnvelopeOptions 7, $8
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "D4"
     SongNote "D3"
     SongNote "Ab4"
     SongNote "Ab3"
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongNote "D5"
     SongEnd
 ;}
@@ -13689,7 +13702,7 @@ song_metroidHive_withIntro_tone_section1:
         AscendingEnvelopeOptions 5, $0
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNote "B5"
     SongOptions
         DescendingEnvelopeOptions 7, $C
@@ -13705,7 +13718,7 @@ song_metroidHive_withIntro_tone_section3:
         DescendingEnvelopeOptions 5, $F
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongNote "E6"
     SongEnd
 ;}
@@ -13715,12 +13728,12 @@ song_metroidHive_withIntro_wave_section0:
 ;{
     SongOptions
         WaveOptions $417B, 2, $0
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "D5"
     SongNote "D3"
     SongNote "Ab5"
     SongNote "Ab3"
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "D6"
     Echo1
     SongRest
@@ -13732,11 +13745,11 @@ song_metroidHive_withIntro_wave_section1:
 ;{
     SongOptions
         WaveOptions $416B, 2, $0
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "C2"
     Echo1
     SongRepeatSetup $A
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "C2"
         Echo1
     SongRepeat
@@ -13746,12 +13759,12 @@ song_metroidHive_withIntro_wave_section1:
 ; $7CF9
 song_metroidHive_withIntro_noise_section0:
 ;{
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNoiseNote $7
     SongNoiseNote $6
     SongNoiseNote $7
     SongNoiseNote $6
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongNoiseNote $7
     SongEnd
 ;}
@@ -13759,19 +13772,19 @@ song_metroidHive_withIntro_noise_section0:
 ; $7D01
 song_metroidHive_withIntro_noise_section1:
 ;{
-    SongNoteLength_Semibreve
-    SongRest
-    SongRest
     SongNoteLength_Minum
     SongRest
-    SongNoteLength_Quaver
+    SongRest
+    SongNoteLength_Crochet
+    SongRest
+    SongNoteLength_Semiquaver
     SongRest
     SongEnd
 ;}
 
 ; $7D09
 song_missilePickup_header:
-    SongHeader $1, $40DF, song_missilePickup_toneSweep, song_missilePickup_tone, song_missilePickup_wave, song_missilePickup_noise
+    SongHeader $1, tempoTable_75, song_missilePickup_toneSweep, song_missilePickup_tone, song_missilePickup_wave, song_missilePickup_noise
 
 ; $7D14
 song_missilePickup_tone:
@@ -13802,7 +13815,7 @@ song_missilePickup_toneSweep_section0:
         DescendingEnvelopeOptions 2, $F
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 2
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "G3"
     SongNote "A3"
     SongNote "Bb3"
@@ -13810,7 +13823,7 @@ song_missilePickup_toneSweep_section0:
         DescendingEnvelopeOptions 5, $F
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 2
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongNote "F4"
     SongEnd
 ;}
@@ -13820,11 +13833,11 @@ song_missilePickup_wave_section0:
 ;{
     SongOptions
         WaveOptions $417B, 2, $0
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNote "Bb4"
     Echo1
     SongNote "C5"
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C4"
     Echo2
     Echo1
@@ -13834,7 +13847,7 @@ song_missilePickup_wave_section0:
 ; $7D3C
 song_missilePickup_noise_section0:
 ;{
-    SongNoteLength_Semiquaver
+    SongNoteLength_Demisemiquaver
     SongNoiseNote $5
     SongNoiseNote $5
     SongNoiseNote $5
@@ -13854,8 +13867,8 @@ song_babyMetroid_toneSweep_section3:
 ;}
 
 ; $7D47
-song_babyMetroid_toneSweep_section5:
 song_babyMetroid_tone_section5:
+song_babyMetroid_toneSweep_section5:
 ;{
     SongOptions
         DescendingEnvelopeOptions 5, $3
@@ -13865,8 +13878,8 @@ song_babyMetroid_tone_section5:
 ;}
 
 ; $7D4C
-song_babyMetroid_toneSweep_section7:
 song_babyMetroid_tone_section7:
+song_babyMetroid_toneSweep_section7:
 ;{
     SongOptions
         DescendingEnvelopeOptions 5, $6
@@ -13924,7 +13937,7 @@ song_metroidQueenBattle_toneSweep_section13:
 song_metroidQueenBattle_toneSweep_section19:
 song_metroidQueenBattle_toneSweep_section16:
 ;{
-    SongTempo $409E
+    SongTempo tempoTable_448
     SongEnd
 ;}
 
@@ -13932,15 +13945,15 @@ song_metroidQueenBattle_toneSweep_section16:
 song_metroidQueenBattle_toneSweep_section10:
 song_metroidQueenBattle_toneSweep_section1C:
 ;{
-    SongTempo $40AB
+    SongTempo tempoTable_224
     SongEnd
 ;}
 
 ; $7D72
-song_metroidQueenBattle_toneSweep_section1F:
 song_metroidQueenBattle_toneSweep_sectionD:
+song_metroidQueenBattle_toneSweep_section1F:
 ;{
-    SongTempo $40B8
+    SongTempo tempoTable_149
     SongEnd
 ;}
 
@@ -13948,36 +13961,36 @@ song_metroidQueenBattle_toneSweep_sectionD:
 song_metroidQueenBattle_toneSweep_sectionA:
 song_metroidQueenBattle_toneSweep_section22:
 ;{
-    SongTempo $40C5
+    SongTempo tempoTable_112
     SongEnd
 ;}
 
 ; $7D7A
 song_metroidQueenBattle_toneSweep_section8:
-song_killedMetroid_toneSweep_section1:
 song_title_toneSweep_sectionA:
+song_killedMetroid_toneSweep_section1:
 ;{
-    SongTempo $40D2
+    SongTempo tempoTable_90
     SongEnd
 ;}
 
 ; $7D7E
-song_metroidBattle_toneSweep_section1:
-song_metroidQueenBattle_toneSweep_section25:
-song_subCaves4_toneSweep_section1:
 song_metroidQueenBattle_toneSweep_section6:
-song_subCaves3_toneSweep_section1:
-song_metroidHive_withIntro_toneSweep_section1:
+song_metroidBattle_toneSweep_section1:
+song_subCaves4_toneSweep_section1:
 song_title_toneSweep_section6:
+song_metroidQueenBattle_toneSweep_section25:
+song_metroidHive_withIntro_toneSweep_section1:
+song_subCaves3_toneSweep_section1:
 ;{
-    SongTempo $40DF
+    SongTempo tempoTable_75
     SongEnd
 ;}
 
 ; $7D82
 song_metroidQueenBattle_toneSweep_section4:
 ;{
-    SongTempo $40EC
+    SongTempo tempoTable_64
     SongEnd
 ;}
 
@@ -13985,14 +13998,14 @@ song_metroidQueenBattle_toneSweep_section4:
 song_metroidQueenBattle_toneSweep_section2:
 song_subCaves1_toneSweep_section1:
 ;{
-    SongTempo $40F9
+    SongTempo tempoTable_56
     SongEnd
 ;}
 
 ; $7D8A
 song_subCaves2_toneSweep_section1:
 ;{
-    SongTempo $4106
+    SongTempo tempoTable_50
     SongEnd
 ;}
 
@@ -14004,8 +14017,8 @@ song_metroidQueenBattle_toneSweep_section26:
 ;}
 
 ; $7D91
-song_metroidQueenBattle_toneSweep_sectionB:
 song_metroidQueenBattle_toneSweep_section23:
+song_metroidQueenBattle_toneSweep_sectionB:
 ;{
     SongTranspose $2
     SongEnd
@@ -14020,8 +14033,8 @@ song_metroidQueenBattle_toneSweep_section20:
 ;}
 
 ; $7D97
-song_metroidQueenBattle_toneSweep_section11:
 song_metroidQueenBattle_toneSweep_section1D:
+song_metroidQueenBattle_toneSweep_section11:
 ;{
     SongTranspose $8
     SongEnd
@@ -14043,16 +14056,16 @@ song_metroidQueenBattle_toneSweep_section17:
 ;}
 
 ; $7DA0
-song_subCaves4_toneSweep_section0:
-song_subCaves3_toneSweep_section0:
-song_subCaves1_toneSweep_section0:
 song_subCaves2_toneSweep_section0:
+song_subCaves1_toneSweep_section0:
+song_subCaves3_toneSweep_section0:
+song_subCaves4_toneSweep_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 4, $A
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "C4"
     Echo1
     SongNote "C4"
@@ -14061,48 +14074,48 @@ song_subCaves2_toneSweep_section0:
         DescendingEnvelopeOptions 4, $8
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "C4"
     SongOptions
         DescendingEnvelopeOptions 4, $6
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "C4"
     SongOptions
         DescendingEnvelopeOptions 4, $4
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "C4"
     SongOptions
         DescendingEnvelopeOptions 4, $2
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "C4"
     SongOptions
         DescendingEnvelopeOptions 4, $1
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongNote "C4"
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongRest
     SongEnd
 ;}
 
 ; $7DCA
-song_subCaves4_tone_section0:
-song_subCaves1_tone_section0:
 song_subCaves3_tone_section0:
 song_subCaves2_tone_section0:
+song_subCaves1_tone_section0:
+song_subCaves4_tone_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 3, $B
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Quaver
+    SongNoteLength_Semiquaver
     SongNote "F2"
     Echo1
     SongNote "F2"
@@ -14111,33 +14124,33 @@ song_subCaves2_tone_section0:
         DescendingEnvelopeOptions 3, $9
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "F2"
     SongOptions
         DescendingEnvelopeOptions 3, $7
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "F2"
     SongOptions
         DescendingEnvelopeOptions 3, $5
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "F2"
     SongOptions
         DescendingEnvelopeOptions 3, $3
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_Crochet
+    SongNoteLength_Quaver
     SongNote "F2"
     SongOptions
         DescendingEnvelopeOptions 3, $2
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 1
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongNote "F2"
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongRest
     SongEnd
 ;}
@@ -14151,25 +14164,25 @@ song_subCaves4_wave_section0:
     SongOptions
         WaveOptions $417B, 2, $0
     SongRepeatSetup $2
-        SongNoteLength_Quaver
+        SongNoteLength_Semiquaver
         SongNote "C4"
         Echo1
     SongRepeat
-    SongNoteLength_DottedMinum
+    SongNoteLength_DottedCrochet
     SongRest
     SongRest
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongRest
     SongEnd
 ;}
 
 ; $7E04
+song_subCaves1_noise_section0:
 song_subCaves2_noise_section0:
 song_subCaves3_noise_section0:
-song_subCaves1_noise_section0:
 song_subCaves4_noise_section0:
 ;{
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongRest
     SongRest
     SongRest
@@ -14177,26 +14190,26 @@ song_subCaves4_noise_section0:
 ;}
 
 ; $7E09
-song_title_toneSweep_section0:
-song_babyMetroid_toneSweep_section2:
 song_babyMetroid_tone_section2:
+song_babyMetroid_toneSweep_section2:
+song_title_toneSweep_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 1, $1
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongRest
     SongEnd
 ;}
 
 ; $7E10
-song_babyMetroid_wave_section2:
 song_title_wave_section0:
+song_babyMetroid_wave_section2:
 ;{
     SongOptions
         WaveOptions $416B, 3, $0
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongRest
     SongEnd
 ;}
@@ -14205,22 +14218,22 @@ song_title_wave_section0:
 song_title_noise_section0:
 song_babyMetroid_noise_section2:
 ;{
-    SongNoteLength_Minum
+    SongNoteLength_Crochet
     SongRest
     SongEnd
 ;}
 
 ; $7E1A
-song_babyMetroid_tone_section0:
-song_babyMetroid_toneSweep_section0:
 song_babyMetroid_toneSweep_section1:
 song_babyMetroid_tone_section1:
+song_babyMetroid_tone_section0:
+song_babyMetroid_toneSweep_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 1, $1
         AscendingSweepOptions 0, 0
         LengthDutyOptions $0, 0
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongRest
     SongEnd
 ;}
@@ -14231,7 +14244,7 @@ song_babyMetroid_wave_section1:
 ;{
     SongOptions
         WaveOptions $416B, 3, $0
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongRest
     SongEnd
 ;}
@@ -14240,7 +14253,7 @@ song_babyMetroid_wave_section1:
 song_babyMetroid_noise_section0:
 song_babyMetroid_noise_section1:
 ;{
-    SongNoteLength_Semibreve
+    SongNoteLength_Minum
     SongRest
     SongEnd
 ;}

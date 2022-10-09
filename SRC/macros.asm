@@ -184,19 +184,19 @@ macro SongNoteLength ; [note length index]
     db \1 | $A0
 endm
 
-def SongNoteLength_Demisemiquaver     equs "SongNoteLength 0"
-def SongNoteLength_Semiquaver         equs "SongNoteLength 1"
-def SongNoteLength_Quaver             equs "SongNoteLength 2"
-def SongNoteLength_Crochet            equs "SongNoteLength 3"
-def SongNoteLength_Minum              equs "SongNoteLength 4"
-def SongNoteLength_Semibreve          equs "SongNoteLength 5"
-def SongNoteLength_DottedQuaver       equs "SongNoteLength 6"
-def SongNoteLength_DottedCrochet      equs "SongNoteLength 7"
-def SongNoteLength_DottedMinum        equs "SongNoteLength 8"
-def SongNoteLength_TripletQuaver      equs "SongNoteLength 9"
-def SongNoteLength_TripletCrochet     equs "SongNoteLength $A"
-def SongNoteLength_Hemidemisemiquaver equs "SongNoteLength $B"
-def SongNoteLength_Breve              equs "SongNoteLength $C"
+def SongNoteLength_Hemidemisemiquaver     equs "SongNoteLength 0"
+def SongNoteLength_Demisemiquaver         equs "SongNoteLength 1"
+def SongNoteLength_Semiquaver             equs "SongNoteLength 2"
+def SongNoteLength_Quaver                 equs "SongNoteLength 3"
+def SongNoteLength_Crochet                equs "SongNoteLength 4"
+def SongNoteLength_Minum                  equs "SongNoteLength 5"
+def SongNoteLength_DottedSemiquaver       equs "SongNoteLength 6"
+def SongNoteLength_DottedQuaver           equs "SongNoteLength 7"
+def SongNoteLength_DottedCrochet          equs "SongNoteLength 8"
+def SongNoteLength_TripletSemiquaver      equs "SongNoteLength 9"
+def SongNoteLength_TripletQuaver          equs "SongNoteLength $A"
+def SongNoteLength_Semihemidemisemiquaver equs "SongNoteLength $B"
+def SongNoteLength_Semibreve              equs "SongNoteLength $C"
 
 macro SongOptions
     db $F1
