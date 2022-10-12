@@ -540,12 +540,12 @@ def songPlaying = $CEDD ; Song playing
     def song_metroidHive_withIntro     equ $1F ; Metroid hive with intro
     def song_missilePickup             equ $20 ; Missile pickup
 ;}
-def isolatedSoundEffectToPlay equ $CEDE ; Isolated sound effect request
+def isolatedSoundEffectRequest equ $CEDE ; Isolated sound effect request
 def isolatedSoundEffectPlaying equ $CEDF ; Isolated sound effect playing
 ;{
     def isolatedSoundEffect_itemGet       equ 1 ; Play item-get music
     def isolatedSoundEffect_end_playing   equ 2 ; End isolated sound effect
-    def isolatedSoundEffect_end_toPlay    equ 3 ; End isolated sound effect
+    def isolatedSoundEffect_end_request    equ 3 ; End isolated sound effect
     def isolatedSoundEffect_missilePickup equ 5 ; Play missile pickup music
     def isolatedSoundEffect_fadeOutMusic  equ 8 ; Fade out music
     def isolatedSoundEffect_earthquake    equ song_earthquake ; Play earthquake music
@@ -704,8 +704,8 @@ def toneSweepChannelSweepBackup equ $CFC9 ; Backup of tone/sweep channel sweep (
 def variableToneSweepChannelFrequency equ $CFD1 ; Variable tone/sweep channel frequency. Only the lower byte. Used by metroid cry
 
 def ramCFE3 equ $CFE3 ; Set to wave pattern data pointer by song instruction F1h. Never read
-def lowHealthBeepSoundEffectToPlay equ $CFE5 ; Low health beep / wave channel sound effect request
-def waveChannelSoundEffectToPlay equ $CFE5 ; Low health beep / wave channel sound effect request
+def lowHealthBeepSoundEffectRequest equ $CFE5 ; Low health beep / wave channel sound effect request
+def waveChannelSoundEffectRequest equ $CFE5 ; Low health beep / wave channel sound effect request
 def lowHealthBeepSoundEffectPlaying equ $CFE6 ; Low health beep / wave channel sound effect playing
 def waveChannelSoundEffectPlaying equ $CFE6 ; Low health beep / wave channel sound effect playing
 ;    {

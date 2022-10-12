@@ -44,20 +44,21 @@ musicNotes:
 ; One of these pointers will be loaded by an F2 pppp song instruction, then subsequent Ax instructions will set the next instruction timer
 ; Essentially, this means that the F2 pppp song instruction controls the tempo of the song
 
-;                   _____________________________________________________________ 0: 1/32. Demisemiquaver
-;                  |     ________________________________________________________ 1: 1/16. Semiquaver
-;                  |    |     ___________________________________________________ 2: 1/8. Quaver
-;                  |    |    |     ______________________________________________ 3: 1/4. Crochet
-;                  |    |    |    |     _________________________________________ 4: 1/2. Minum
-;                  |    |    |    |    |     ____________________________________ 5: 1. Semibreve
-;                  |    |    |    |    |    |     _______________________________ 6: 3/16. Dotted quaver
-;                  |    |    |    |    |    |    |     __________________________ 7: 3/8. Dotted crochet
-;                  |    |    |    |    |    |    |    |     _____________________ 8: 3/4. Dotted minum
-;                  |    |    |    |    |    |    |    |    |     ________________ 9: 1/12. Triplet quaver
-;                  |    |    |    |    |    |    |    |    |    |     ___________ Ah: 1/6. Triplet crochet
-;                  |    |    |    |    |    |    |    |    |    |    |     ______ Bh: 1/64. Hemidemisemiquaver
-;                  |    |    |    |    |    |    |    |    |    |    |    |     _ Ch: 2. Breve
-;                  |    |    |    |    |    |    |    |    |    |    |    |    |
+;           _____________________________________________________________________ BPM (in decimal)
+;          |        _____________________________________________________________ 0: 1/32. Demisemiquaver
+;          |       |     ________________________________________________________ 1: 1/16. Semiquaver
+;          |       |    |     ___________________________________________________ 2: 1/8. Quaver
+;          |       |    |    |     ______________________________________________ 3: 1/4. Crochet
+;          |       |    |    |    |     _________________________________________ 4: 1/2. Minum
+;          |       |    |    |    |    |     ____________________________________ 5: 1. Semibreve
+;          |       |    |    |    |    |    |     _______________________________ 6: 3/16. Dotted quaver
+;          |       |    |    |    |    |    |    |     __________________________ 7: 3/8. Dotted crochet
+;          |       |    |    |    |    |    |    |    |     _____________________ 8: 3/4. Dotted minum
+;          |       |    |    |    |    |    |    |    |    |     ________________ 9: 1/12. Triplet quaver
+;          |       |    |    |    |    |    |    |    |    |    |     ___________ Ah: 1/6. Triplet crochet
+;          |       |    |    |    |    |    |    |    |    |    |    |     ______ Bh: 1/64. Hemidemisemiquaver
+;          |       |    |    |    |    |    |    |    |    |    |    |    |     _ Ch: 2. Breve
+;          |       |    |    |    |    |    |    |    |    |    |    |    |    |
 tempoTable_448: db $01, $01, $02, $04, $08, $10, $03, $06, $0c, $01, $03, $01, $20
 tempoTable_224: db $01, $02, $04, $08, $10, $20, $06, $0c, $18, $02, $05, $01, $40
 tempoTable_149: db $02, $03, $06, $0c, $18, $30, $09, $12, $24, $04, $08, $01, $60
@@ -205,16 +206,16 @@ handleAudio:
         jp nz, handleAudio_paused
 ;}
 
-handleAudio_handleIsolatedSoundEffectToPlay:
+handleAudio_handleIsolatedSoundEffectRequest:
 ;{
-    ld a, [isolatedSoundEffectToPlay]
+    ld a, [isolatedSoundEffectRequest]
     and a
         jr z, handleAudio_handleIsolatedSoundEffectPlaying
 
     cp isolatedSoundEffect_itemGet
         jr z, playIsolatedSoundEffect_itemGet
 
-    cp isolatedSoundEffect_end_toPlay
+    cp isolatedSoundEffect_end_request
         jp z, startEndingIsolatedSoundEffect
 
     cp isolatedSoundEffect_missilePickup
@@ -258,8 +259,8 @@ handleSongAndSoundEffects:
     ld [sfxRequest_square1], a
     ld [sfxRequest_square2], a
     ld [sfxRequest_fakeWave], a
-    ld [isolatedSoundEffectToPlay], a
-    ld [lowHealthBeepSoundEffectToPlay], a
+    ld [isolatedSoundEffectRequest], a
+    ld [lowHealthBeepSoundEffectRequest], a
     ld [audioPauseControl], a
 ret
 ;}
@@ -267,7 +268,7 @@ ret
 clearIsolatedSoundEffect:
 ;{
     xor a
-    ld [isolatedSoundEffectToPlay], a
+    ld [isolatedSoundEffectRequest], a
     ld [isolatedSoundEffectPlaying], a
 ret
 ;}
@@ -298,7 +299,7 @@ playIsolatedSoundEffect:
 ;{
     ld a, [songPlaying]
     ld [songPlayingBackup], a
-    ld a, [isolatedSoundEffectToPlay]
+    ld a, [isolatedSoundEffectRequest]
     cp isolatedSoundEffect_earthquake
     jr z, .endIf_notEarthquake
         ld a, [lowHealthBeepSoundEffectPlaying]
@@ -327,7 +328,7 @@ playIsolatedSoundEffect:
     jr nz, .copyLoop
 
     call muteSoundChannels
-    ld [isolatedSoundEffectToPlay], a
+    ld [isolatedSoundEffectRequest], a
     ld [sfxRequest_square1], a
     ld [toneSweepChannelSoundEffectPlaying], a
     ld [sfxRequest_noise], a
@@ -366,7 +367,7 @@ startEndingIsolatedSoundEffect:
     jr nz, .copyOptionsLoop
 
     xor a
-    ld [isolatedSoundEffectToPlay], a
+    ld [isolatedSoundEffectRequest], a
     ld a, $ff
     ld [sfxRequest_square1], a
     ld [sfxRequest_square2], a
@@ -602,7 +603,7 @@ handleNoiseChannelSoundEffect:
 
 handleWaveChannelSoundEffect:
 ;{
-    ld a, [waveChannelSoundEffectToPlay]
+    ld a, [waveChannelSoundEffectRequest]
     and a
         jr z, .soundEffect0
 
@@ -612,7 +613,7 @@ handleWaveChannelSoundEffect:
     cp $06
     ret nc
 
-    ld a, [waveChannelSoundEffectToPlay]
+    ld a, [waveChannelSoundEffectRequest]
     ld [waveChannelSoundEffectIsPlayingFlag], a
     ld [waveChannelSoundEffectPlaying], a
     ld hl, waveChannelSoundEffectInitialisationFunctionPointers
@@ -645,7 +646,7 @@ handleWaveChannelSoundEffect:
     call writeToWavePatternRam
     xor a
     ld [waveChannelSoundEffectIsPlayingFlag], a
-    ld [waveChannelSoundEffectToPlay], a
+    ld [waveChannelSoundEffectRequest], a
     ld [waveChannelSoundEffectPlaying], a
     ld a, [songPlaying]
     cp song_earthquake
@@ -1060,9 +1061,9 @@ silenceAudio:
     ld [songRequest], a
     ld [songPlaying], a
     xor a
-    ld [isolatedSoundEffectToPlay], a
+    ld [isolatedSoundEffectRequest], a
     ld [isolatedSoundEffectPlaying], a
-    ld [waveChannelSoundEffectToPlay], a
+    ld [waveChannelSoundEffectRequest], a
     ld [waveChannelSoundEffectPlaying], a
     ld [audioPauseSoundEffectTimer], a
     ld [audioPauseControl], a
@@ -1214,7 +1215,7 @@ audioUnpause:
     ld [audioPauseSoundEffectTimer], a
     ld a, toneSweepSoundEffect_unpaused
     ld [sfxRequest_square1], a
-    jp handleAudio_handleIsolatedSoundEffectToPlay
+    jp handleAudio_handleIsolatedSoundEffectRequest
 ;}
 
 handleAudio_paused:
