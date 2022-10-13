@@ -1251,13 +1251,13 @@ handleProjectiles: ; 01:500D
     ; Load projectile type
     ld a, [hl+]
     ldh [$b9], a
-    ld [$d08d], a
+    ld [weaponType], a
     cp $ff
         jp z, .nextProjectile
     ; Load direction
     ld a, [hl+]
     ldh [$98], a
-    ld [$d012], a
+    ld [weaponDirection], a
     ld a, [hl+]
     ldh [$99], a
     ld a, [hl+]

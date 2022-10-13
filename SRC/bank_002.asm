@@ -22,18 +22,18 @@ enemyHandler: ;{ 02:4000
         ld [larva_bombState], a
         ld [larva_latchState], a
         ld [justStartedTransition], a
-        ; Clear stuff
+        ; Clear enemy collision variables
         ld a, $ff
-        ld hl, $c466
+        ld hl, enCollision_weaponType
         ld [hl+], a
         ld [hl+], a
         ld [hl], a
-        ; Clear collision stuff
-        ld hl, $d05d
-        ld [hl+], a
-        ld [hl+], a
-        ld [hl+], a
-        ld [hl], a
+        ; Clear more enemy collision variables
+        ld hl, collision_weaponType
+        ld [hl+], a ; collision_weaponType
+        ld [hl+], a ; collision_pEnemyLow
+        ld [hl+], a ; collision_pEnemyHigh
+        ld [hl], a  ; collision_weaponDir
     .endIf_A:
 
 ; Handle restoring music after a metroid fight
@@ -265,10 +265,10 @@ inGame_loadEnemySaveFlags: ;{ 02:412F
     ld [enemy_sameEnemyFrameFlag], a
     ; Clear sprite collision stuff
     ld a, $ff
-    ld [$c466], a
-    ld [$c467], a
-    ld [$c468], a
-    ld [$c46d], a
+    ld [enCollision_weaponType], a
+    ld [enCollision_pEnemyLow], a
+    ld [enCollision_pEnemyHigh], a
+    ld [enemy_weaponType], a
     ; Clear scroll history
     ld hl, scrollHistory_B.y2
     ld a, [scrollY]
@@ -369,9 +369,9 @@ inGame_saveAndLoadEnemySaveFlags: ;{ 02:418C
     ld [enemy_pFirstEnemyHigh], a
     ; Clear collision variables
     ld a, $ff
-    ld [$c466], a
-    ld [$c467], a
-    ld [$c468], a
+    ld [enCollision_weaponType], a
+    ld [enCollision_pEnemyLow], a
+    ld [enCollision_pEnemyHigh], a
     ; Clear scroll history
     ld hl, scrollHistory_B.y2
     ld a, [scrollY]
@@ -421,7 +421,7 @@ ret
 ; Handles logic related to hurting enemies and collecting enemy drops
 enemy_getDamagedOrGiveDrop: ;{ 02:4239
     ; Check if a collision was made and exit if not (?)
-    ld hl, $d05d
+    ld hl, collision_weaponType
     ld a, [hl+]
     cp $ff
         ret z
@@ -435,7 +435,7 @@ enemy_getDamagedOrGiveDrop: ;{ 02:4239
 
     ldh a, [hEnemy.explosionFlag]
     and a
-        jp nz, Jump_002_438f ; Exit
+        jp nz, .transferCollisionResults ; Exit
     ; If not a drop, attempt to apply damage
     ldh a, [hEnemy.dropType]
     and a
@@ -447,7 +447,7 @@ enemy_getDamagedOrGiveDrop: ;{ 02:4239
     dec hl
     ld a, [hl]
     cp $10
-        jp c, Jump_002_438f ; Exit
+        jp c, .transferCollisionResults ; Exit
 
     ldh a, [hEnemy.dropType]
     dec a ; Case 1 - Small Health
@@ -497,8 +497,8 @@ enemy_getDamagedOrGiveDrop: ;{ 02:4239
     ld a, $02
     ldh [hEnemy.spawnFlag], a
     ; Clear stuff
-    call Call_002_438f
-    ld hl, $c466
+    call .transferCollisionResults
+    ld hl, enCollision_weaponType
     ld a, $ff
     ld [hl+], a
     ld [hl+], a
@@ -552,7 +552,7 @@ jr .deleteDrop
     cp METROID_SPRITES_START ;$a0
     jr c, .endIf_C
         cp METROID_SPRITES_END + 1 ;$d0
-        jp c, Jump_002_438f ; Exit
+        jp c, .transferCollisionResults ; Exit
     .endIf_C:
 
     ; Check if hit by Screw Attack
@@ -561,7 +561,7 @@ jr .deleteDrop
     ld a, [hl]
     cp $10
         jr z, .screwAttack 
-        jp nc, Jump_002_438f ; Exit
+        jp nc, .transferCollisionResults ; Exit
     ; Check if not ice
     cp $01
         jr nz, .applyBeamDamage
@@ -591,7 +591,7 @@ jr .deleteDrop
     ld [hl], $10
     ld hl, hEnemy.iceCounter
     ld [hl], $01
-jp Jump_002_438f ; Exit
+jp .transferCollisionResults ; Exit
 
 .freezeInvulnerable:
     ; Play plink sound
@@ -617,7 +617,7 @@ jp Jump_002_438f ; Exit
     ldh [hEnemy.health], a
     ld a, $01
     ld [sfxRequest_noise], a
-    call Call_002_438f ; Clear stuff
+    call .transferCollisionResults ; Clear stuff
     ld a, $11
     ldh [hEnemy.stunCounter], a
 ; Override return
@@ -636,7 +636,7 @@ jp processEnemies.doneProcessingEnemy ; Next enemy
 .plink:
     ld a, $0f
     ld [sfxRequest_square1], a
-jr jr_002_438f ; Exit
+jr .transferCollisionResults ; Exit
 
 ; Small explosion if killed by beam or missile
 .smallExplosion:
@@ -682,7 +682,7 @@ jr jr_002_438f ; Exit
     ld a, $02
     ld [sfxRequest_noise], a
 .unusedJump:
-    call Call_002_438f ; Clear stuff
+    call .transferCollisionResults ; Clear stuff
 pop af
 jp processEnemies.doneProcessingEnemy ; Skip to next enemy
 
@@ -693,19 +693,20 @@ jp processEnemies.doneProcessingEnemy ; Skip to next enemy
     jr .unusedJump
 ; }
 
-; Collision results related?
-Call_002_438f:
-Jump_002_438f:
-jr_002_438f:
-    ld hl, $d05d
+; Common exit for this function (called as a function by a couple exits)
+.transferCollisionResults:
+    ; Transfer enemy collision information from collision routine copies
+    ;  to generic-enemy routine copies
+    ld hl, collision_weaponType
     ld a, [hl+]
-    ld [$c466], a
+    ld [enCollision_weaponType], a
     ld a, [hl+]
-    ld [$c467], a
+    ld [enCollision_pEnemyLow], a
     ld a, [hl+]
-    ld [$c468], a
+    ld [enCollision_pEnemyHigh], a
     ld a, [hl]
-    ld [$c469], a
+    ld [enCollision_weaponDir], a
+    ; Clear collision routine copies of the enemy collision information
     ld a, $ff
     ld [hl-], a
     ld [hl-], a
@@ -717,7 +718,7 @@ ret
 ; Checks if an enemy is invulnerable from a certain direction
 enemy_checkDirectionalShields: ;{ 02:43A9
     ; Exit if weapon is Wave Beam
-    ld a, [$d05d]
+    ld a, [collision_weaponType]
     cp $02
         ret z
     ld c, a
@@ -729,7 +730,7 @@ enemy_checkDirectionalShields: ;{ 02:43A9
     swap a
     ld b, a
     ; Load direction of projectile into A
-    ld a, [$d060]
+    ld a, [collision_weaponDir]
     ; Shift both variables right until we run into the direction bit of the projectile
     .loop:
         rrc b ; bit 0 loops back to bit 7
@@ -944,7 +945,7 @@ deleteOffscreenEnemy: ;{ 02:4464
     inc l
     dec [hl]
     ; Clear collision variables if these addresses are equal
-    ld hl, $c468
+    ld hl, enCollision_pEnemyHigh
     ld de, hEnemyWramAddrHigh
     ld a, [de]
     cp [hl]
@@ -2361,7 +2362,7 @@ enAI_itemOrb: ;{ 02:4DD3
 
     call enemy_getSamusCollisionResults
     ; Exit if no collision
-    ld a, [$c46d]
+    ld a, [enemy_weaponType]
     cp $ff
         ret z
     ld b, a ; Save collision type to B
@@ -2828,7 +2829,7 @@ enAI_arachnus: ;{ 02:5109
     ldh [hEnemy.health], a
     ; Check if hit
     call enemy_getSamusCollisionResults
-    ld a, [$c46d]
+    ld a, [enemy_weaponType]
     cp $ff ; Exit if touching
         ret z
     cp $09 ; Exit if not hit with bombs or a beam
@@ -2980,7 +2981,7 @@ ret
 
 .state_5: ; 02:51FB - State 5 - Attacking/Vulnerable
     call enemy_getSamusCollisionResults
-    ld a, [$c46d]
+    ld a, [enemy_weaponType]
     cp $ff ; Skip ahead if nothing
     jr z, .endIf_G
         cp $09 ; Check if bomb
@@ -3912,7 +3913,7 @@ enemy_metroidExplosion: ;{ 02:5732
     ;.case_4:
         ; Clear collision variables
         ld a, $ff
-        ld hl, $c466
+        ld hl, enCollision_weaponType
         ld [hl+], a
         ld [hl+], a
         ld [hl], a
@@ -6029,7 +6030,7 @@ enAI_wallfire: ;{ 02:62B4
     cp SPRITE_WALLFIRE_DEAD ; $4C
         ret z
     ; Check if damaged
-    ld a, [$c46d]
+    ld a, [enemy_weaponType]
     cp $20 ; Touch
         jr nc, .normalAction
     ; Become destroyed
@@ -6738,7 +6739,7 @@ enAI_missileBlock: ;{ 02:6622
 
 ; Case 0 (default state)
     ; Exit if not hit by a projectile
-    ld a, [$c46d]
+    ld a, [enemy_weaponType]
     cp $20
         ret nc
     ld b, a
@@ -6757,7 +6758,7 @@ enAI_missileBlock: ;{ 02:6622
     ld a, $08
     ld [sfxRequest_noise], a
     ; Check direction block was hit from
-    ld a, [$c46e]
+    ld a, [enemy_weaponDir]
     bit 0, a
     jr nz, .endIf_A
         ; Set directional flag
@@ -7189,7 +7190,7 @@ enAI_septogg: ;{ 02:6841
     call enemy_flipSpriteId_2Bits.twoFrame
     call enemy_getSamusCollisionResults ; Get sprite collision results
     ; Check if shot
-    ld a, [$c46d]
+    ld a, [enemy_weaponType]
     cp $20
         jr nz, .goBackUp
     
@@ -7362,7 +7363,7 @@ enAI_flittMoving: ;{ 02:68FC
             ld hl, hEnemy.xPos
             inc [hl]
             ; Check if Samus is touching and standing on sprite
-            ld a, [$c46d]
+            ld a, [enemy_weaponType]
             cp $20
                 ret nz
             ld a, [samus_onSolidSprite]
@@ -7394,7 +7395,7 @@ enAI_flittMoving: ;{ 02:68FC
             ld hl, hEnemy.xPos
             dec [hl]
             ; Check if Samus is touching and standing on sprite
-            ld a, [$c46d]
+            ld a, [enemy_weaponType]
             cp $20
                 ret nz
             ld a, [samus_onSolidSprite]
@@ -7600,7 +7601,7 @@ enAI_missileDoor: ;{ 02:6A14
         jr nz, .exploding
 
     ; Exit if not hit with a projectile
-    ld a, [$c46d]
+    ld a, [enemy_weaponType]
     cp $20
         ret nc
 
@@ -7642,7 +7643,7 @@ enAI_missileDoor: ;{ 02:6A14
     ld [sfxRequest_square1], a
     
     ; Check which direction the door was hit from, to adjust the position of the explosion
-    ld a, [$c46e]
+    ld a, [enemy_weaponDir]
     bit 1, a
         jr nz, .rightSide
 
@@ -7946,7 +7947,7 @@ enAI_hatchingAlpha: ;{ 02:6BB2
             ; Stunned case
             call metroid_missileKnockback ; Knockback
             call enemy_toggleVisibility ; Blink
-            ld a, [$c46d]
+            ld a, [enemy_weaponType]
             cp $10
                 ret nc
             ld a, $0f
@@ -8071,7 +8072,7 @@ enAI_alphaMetroid: ;{ 02:6C44
 jr .standardAction
 
 .checkIfHurt: ; Shot reactions
-    ld a, [$c46d]
+    ld a, [enemy_weaponType]
     cp $20 ; Not shot
         jp nc, .standardAction
     cp $10
@@ -8162,7 +8163,7 @@ ret
     ld hl, hEnemy.directionFlags
     ld [hl], $00
     ; Check direction and handle knockback
-    ld a, [$c46e]
+    ld a, [enemy_weaponDir]
     ld b, a
     bit 0, b ; Right
         jr nz, .case_setKnockbackRight
@@ -8616,7 +8617,7 @@ enAI_gammaMetroid: ;{ 02:6F60
     call metroid_missileKnockback ; Knockback
     call enemy_toggleVisibility ; Blink
     ; When stunned, only process screw attack collision
-    ld a, [$c46d]
+    ld a, [enemy_weaponType]
     cp $10
         ret nc
     ld a, $0f
@@ -8737,14 +8738,14 @@ ret
     and $0f
     jr nz, .else_D
         call .projectileCode
-        ld a, [$c46d]
+        ld a, [enemy_weaponType]
         cp $10
             ret nc
         ld a, $0f
         ld [sfxRequest_square1], a
         ret
     .else_D:
-        ld a, [$c46d]
+        ld a, [enemy_weaponType]
         cp $20
             jp nc, .standardAction ; Standard action if not hit with projectile
         cp $10
@@ -8776,7 +8777,7 @@ ret
     ld hl, hEnemy.directionFlags
     ld [hl], $00
     ; Prep knockback based on hit direction
-    ld a, [$c46e]
+    ld a, [enemy_weaponDir]
     ld b, a
     bit 0, b ; Right
         jr nz, .case_setKnockbackRight
@@ -9154,7 +9155,7 @@ enAI_zetaMetroid: ;{ 02:7276
     ; Stunned case
     call .animateHurt
     ; When stunned, only process screw touch reaction
-    ld a, [$c46d]
+    ld a, [enemy_weaponType]
     cp $10
         ret nc
     ld a, $0f
@@ -9350,7 +9351,7 @@ jr .standardAction
 ret
 
 .checkIfHurt:
-    ld a, [$c46d]
+    ld a, [enemy_weaponType]
     cp $20
         jp nc, .standardAction
     cp $10
@@ -9370,7 +9371,7 @@ ret
 
 .hurtReaction:
     ; Invulnerable to upwards shots
-    ld a, [$c46e]
+    ld a, [enemy_weaponDir]
     ld b, a
     bit 2, b
         jr nz, .plink
@@ -9815,7 +9816,7 @@ enAI_omegaMetroid: ;{ 02:7631
         ret nz
     call enemy_flipSpriteId.now
     ; While stunned, only hit reaction is screw attack
-    ld a, [$c46d]
+    ld a, [enemy_weaponType]
     cp $10
         ret nc
     ld a, $0f
@@ -9833,7 +9834,7 @@ ret
     and a
         jp z, .tryStartingFight
     ; Check for hit reactions
-    ld a, [$c46d]
+    ld a, [enemy_weaponType]
     cp $20 ; Standard action
         jp nc, .standardAction
     cp $10 ; Screw
@@ -9853,7 +9854,7 @@ ret
 
 .hurtReaction:
     ; Ignore vertical shots
-    ld a, [$c46e]
+    ld a, [enemy_weaponDir]
     ld b, a
     ld a, b
     and $03
@@ -10552,7 +10553,7 @@ enAI_normalMetroid: ;{ 02:7A4F
 ; State 2
     call .stayAttached
     ; Unlatch if bombed
-    ld a, [$c46d]
+    ld a, [enemy_weaponType]
     cp $09
         ret nz
     ld hl, larva_latchState
@@ -10632,7 +10633,7 @@ ret
         jr z, .unfreeze
 
     ; Frozen shot reactions
-    ld a, [$c46d]
+    ld a, [enemy_weaponType]
     cp $20 ; Touch
         ret nc
     cp $08 ; Missiles
@@ -10707,7 +10708,7 @@ ret
 
 .unfrozenActions: ; Normal shot reactions
     call .animate
-    ld a, [$c46d]
+    ld a, [enemy_weaponType]
     cp $ff ; Not hit
         jp z, .standardAction
     cp $20 ; Touch
@@ -11128,7 +11129,7 @@ ret
 ;}
 
 ; Verify that enemy was hit by Samus, and copy the results to a working variable
-;  Return values ($C46D)
+;  Return values (enemy_weaponType, enemy_weaponDir)
 ; $00 - Power beam
 ; $01 - Ice
 ; $02 - Wave
@@ -11141,11 +11142,10 @@ ret
 enemy_getSamusCollisionResults: ;{ 02:7DA0
     ; Save null result first
     ld a, $ff
-    ld [$c46d], a
+    ld [enemy_weaponType], a
     ld c, a
-    ; if the pointers at $C467 and $FFFC are different, then exit
-    ; - these both appears to be the pointers to the enemy data in WRAM ($C600 region)
-    ld hl, $c468
+    ; Check if enCollision_pEnemy is equal to the current enemy pointer in HRAM
+    ld hl, enCollision_pEnemyHigh
     ld de, hEnemyWramAddrHigh
     ld a, [de]
     cp [hl]
@@ -11155,20 +11155,20 @@ enemy_getSamusCollisionResults: ;{ 02:7DA0
     ld a, [de]
     cp [hl]
         ret nz
-    ; A collision has occurred
+    ; A collision with the currently processed enemy has occurred
     dec l
-    ld c, [hl] ; Read $C466
+    ld c, [hl] ; Read enCollision_weaponType
     ld a, $ff
-    ld [hl+], a ; Clear $C466
-    ld [hl+], a ; Clear $C467
-    ld [hl+], a ; Clear $C468
-    ld b, [hl]  ; Read $C469
+    ld [hl+], a ; Clear enCollision_weaponType
+    ld [hl+], a ; Clear enCollision_pEnemyLow
+    ld [hl+], a ; Clear enCollision_pEnemyHigh
+    ld b, [hl]  ; Read enCollision_weaponDir
     ld [hl], a
     ; Save results
     ld a, c
-    ld [$c46d], a ; Collision type
+    ld [enemy_weaponType], a ; Collision type
     ld a, b
-    ld [$c46e], a ; Direction hit from
+    ld [enemy_weaponDir], a ; Direction hit from
 ret
 ;}
 

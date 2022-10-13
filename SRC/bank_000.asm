@@ -584,7 +584,7 @@ gameMode_LoadA: ;{ 00:03B5
     ld a, $01
     ld [queen_roomFlag], a
     ld a, $ff
-    ld [$d05d], a
+    ld [collision_weaponType], a
     
     ; Clear respawning block table
     ld hl, respawningBlockArray
@@ -5144,11 +5144,11 @@ collision_samusBottom: ;{ 00:1F0F
         ld a, $01
         ld [samus_onSolidSprite], a
         ld a, l
-        ld [$d05e], a
+        ld [collision_pEnemyLow], a
         ld a, h
-        ld [$d05f], a
+        ld [collision_pEnemyHigh], a
         ld a, $20
-        ld [$d05d], a
+        ld [collision_weaponType], a
         jp .exit
     .endIf_A:
 
@@ -7708,10 +7708,12 @@ VBlank_deathSequence: ; 00:2FE1
             ldh [gameMode], a
     .endIf:
 
+    ; Set scroll values
     ld a, [scrollY]
     ldh [rSCY], a
     ld a, [scrollX]
     ldh [rSCX], a
+    ; DMA sprites
     call OAM_DMA
 
     ; Queen vblank handler if necessary
@@ -7721,11 +7723,11 @@ VBlank_deathSequence: ; 00:2FE1
     cp $11
         call z, VBlank_drawQueen
 
+    ; Return from interrupt
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
     ld a, $01
     ldh [hVBlankDoneFlag], a
-    ; Return from interrupt
     pop hl
     pop de
     pop bc
@@ -7740,54 +7742,70 @@ deathAnimationTable:: ; 00:3042
 ;  which is impossible
 ; Possibly not intended as a death animation
 unusedDeathAnimation: ;{ 00:3062
+    ; Animate every other frame
     ldh a, [frameCounter]
     and $01
     jr nz, .endIf_A
+        ; Get pointer for starting offset
         ld a, [pDeathAltAnimBaseLow]
         ld l, a
         ld a, [pDeathAltAnimBaseHigh]
         ld h, a
+        
+        ; Set increment value for loop
         ld de, $0010
-    
         .eraseLoop:
+            ; Clear byte
             xor a
             ld [hl], a
+            ; Iterate to next byte
             add hl, de
+            ; Exit loop once $xx0x is reached
             ld a, l
             and $f0
         jr nz, .eraseLoop
-    
+        ; Iterate to next row of pixels to clear        
+        ; HL-$00FF (to get to the next byte of the starting tile)
         ld a, l
         sub $ff
         ld l, a
         ld a, h
         sbc $00
         ld h, a
+        ; If HL points to the second tile in a row
         ld a, l
         cp $10
         jr nz, .endIf_B
+            ; Then add $F0 to HL so it points to the first tile of the next row
             add $f0
             ld l, a
             ld a, h
             adc $00
             ld h, a
         .endIf_B:
-    
+        ; Save the pointer
         ld a, l
         ld [pDeathAltAnimBaseLow], a
         ld a, h
         ld [pDeathAltAnimBaseHigh], a
+        ; Stop animating once 5 rows have been cleared
         cp $85
         jr nz, .endIf_A
+            ; Clear timer
             xor a
             ld [deathAnimTimer], a
+            ; Note: This does not set deathFlag
+            ;  or gameMode like it should.
     .endIf_A:
 
+    ; Set scroll values
     ld a, [scrollY]
     ldh [rSCY], a
     ld a, [scrollX]
     ldh [rSCX], a
+    ; DMA sprites
     call OAM_DMA
+    ; Return from interrupt
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
     ld a, $01
@@ -7938,12 +7956,12 @@ Call_000_30ea:
         jr nc, .exit_noHit
 ; A collision happened
     ld a, $09
-    ld [$d05d], a
+    ld [collision_weaponType], a
     pop hl
     ld a, l
-    ld [$d05e], a
+    ld [collision_pEnemyLow], a
     ld a, h
-    ld [$d05f], a
+    ld [collision_pEnemyHigh], a
     
     ld a, [queen_eatingState]
     cp $03
@@ -8117,16 +8135,16 @@ Call_000_31f1:
     sub b
     cp c
         jr nc, jr_000_32a7
-    ld a, [$d08d]
-    ld [$d05d], a
+    ld a, [weaponType]
+    ld [collision_weaponType], a
     pop hl
     ld a, l
-    ld [$d05e], a
+    ld [collision_pEnemyLow], a
     ld a, h
-    ld [$d05f], a
-    ld a, [$d012]
-    ld [$d060], a
-    ld a, [$d08d]
+    ld [collision_pEnemyHigh], a
+    ld a, [weaponDirection]
+    ld [collision_weaponDir], a
+    ld a, [weaponType]
     cp $08
     jr nz, jr_000_32a5
         ldh a, [$b9]
@@ -8383,11 +8401,11 @@ jr_000_33ff:
     ld [samus_damageValue], a
     pop hl
     ld a, $10
-    ld [$d05d], a
+    ld [collision_weaponType], a
     ld a, l
-    ld [$d05e], a
+    ld [collision_pEnemyLow], a
     ld a, h
-    ld [$d05f], a
+    ld [collision_pEnemyHigh], a
     scf
     ccf
     ret
@@ -8439,11 +8457,11 @@ jr_000_3448:
     ld [samus_hurtFlag], a
     pop hl
     ld a, l
-    ld [$d05e], a
+    ld [collision_pEnemyLow], a
     ld a, h
-    ld [$d05f], a
+    ld [collision_pEnemyHigh], a
     ld a, $20
-    ld [$d05d], a
+    ld [collision_weaponType], a
     scf
 ret
 
@@ -8454,11 +8472,11 @@ jr_000_3475:
 jr_000_3478:
     pop hl
     ld a, l
-    ld [$d05e], a
+    ld [collision_pEnemyLow], a
     ld a, h
-    ld [$d05f], a
+    ld [collision_pEnemyHigh], a
     ld a, $20
-    ld [$d05d], a
+    ld [collision_weaponType], a
     scf
     ccf
 ret
@@ -8725,11 +8743,11 @@ jr_000_35fe:
     ld [samus_damageValue], a
     pop hl
     ld a, $10
-    ld [$d05d], a
+    ld [collision_weaponType], a
     ld a, l
-    ld [$d05e], a
+    ld [collision_pEnemyLow], a
     ld a, h
-    ld [$d05f], a
+    ld [collision_pEnemyHigh], a
     scf
     ccf
     ret
@@ -8785,11 +8803,11 @@ jr_000_3650:
     ld [samus_hurtFlag], a
     pop hl
     ld a, l
-    ld [$d05e], a
+    ld [collision_pEnemyLow], a
     ld a, h
-    ld [$d05f], a
+    ld [collision_pEnemyHigh], a
     ld a, $20
-    ld [$d05d], a
+    ld [collision_weaponType], a
     scf
     ret
 
@@ -8800,11 +8818,11 @@ jr_000_3680:
 jr_000_3683:
     pop hl
     ld a, l
-    ld [$d05e], a
+    ld [collision_pEnemyLow], a
     ld a, h
-    ld [$d05f], a
+    ld [collision_pEnemyHigh], a
     ld a, $20
-    ld [$d05d], a
+    ld [collision_weaponType], a
     scf
     ccf
     ret
@@ -9354,11 +9372,11 @@ handleItemPickup_end: ;{ 00:3A01
     
     ; Set collision variables
     ld a, [itemOrb_collisionType]
-    ld [$c466], a
+    ld [enCollision_weaponType], a
     ld a, [itemOrb_pEnemyWramLow]
-    ld [$c467], a
+    ld [enCollision_pEnemyLow], a
     ld a, [itemOrb_pEnemyWramHigh]
-    ld [$c468], a
+    ld [enCollision_pEnemyHigh], a
 
     .waitLoop_B:
         ; Perform common functions during this wait loop
@@ -9918,57 +9936,72 @@ loadScreenSpritePriorityBit: ;{ 00:3ED5
 ret
 ;}
 
-; 00:3F07
-; unused (duplicate of the routine at 00:3062)
+; Unused (duplicate of the routine at 00:3062)
 unusedDeathAnimation_copy: ;{ 00:3F07
+    ; Animate every other frame
     ldh a, [frameCounter]
     and $01
     jr nz, .endIf_A
+        ; Get pointer for starting offset
         ld a, [pDeathAltAnimBaseLow]
         ld l, a
         ld a, [pDeathAltAnimBaseHigh]
         ld h, a
+        
+        ; Set increment value for loop
         ld de, $0010
-    
         .eraseLoop:
+            ; Clear byte
             xor a
             ld [hl], a
+            ; Iterate to next byte
             add hl, de
+            ; Exit loop once $xx0x is reached
             ld a, l
             and $f0
         jr nz, .eraseLoop
-    
+        ; Iterate to next row of pixels to clear        
+        ; HL-$00FF (to get to the next byte of the starting tile)
         ld a, l
         sub $ff
         ld l, a
         ld a, h
         sbc $00
         ld h, a
+        ; If HL points to the second tile in a row
         ld a, l
         cp $10
         jr nz, .endIf_B
+            ; Then add $F0 to HL so it points to the first tile of the next row
             add $f0
             ld l, a
             ld a, h
             adc $00
             ld h, a
         .endIf_B:
-    
+        ; Save the pointer
         ld a, l
         ld [pDeathAltAnimBaseLow], a
         ld a, h
         ld [pDeathAltAnimBaseHigh], a
+        ; Stop animating once 5 rows have been cleared
         cp $85
         jr nz, .endIf_A
+            ; Clear timer
             xor a
             ld [deathAnimTimer], a
+            ; Note: This does not set deathFlag
+            ;  or gameMode like it should.
     .endIf_A:
 
+    ; Set scroll values
     ld a, [scrollY]
     ldh [rSCY], a
     ld a, [scrollX]
     ldh [rSCX], a
+    ; DMA sprites
     call OAM_DMA
+    ; Return from interrupt
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
     ld a, $01
@@ -9977,7 +10010,6 @@ unusedDeathAnimation_copy: ;{ 00:3F07
     pop de
     pop bc
     pop af
-reti
-;}
+reti ;}
 
 ; Freespace - 00:3F60 (filled with $00)

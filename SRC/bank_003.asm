@@ -734,19 +734,19 @@ enemy_deleteSelf: ;{ 03:6AE7
     dec [hl]
     inc l
     dec [hl]
-    ; Check if $C468 = $FFFD
-    ld hl, $c468
+    ; Check if [enCollision_pEnemyHigh] = [$FFFD]
+    ld hl, enCollision_pEnemyHigh
     ld de, hEnemyWramAddrHigh
     ld a, [de]
     cp [hl]
         ret nz
-    ; Check if $C467 = $FFFE
+    ; Check if [enCollision_pEnemyLow] = [$FFFE]
     dec e
     dec l
     ld a, [de]
     cp [hl]
         ret nz
-    ; Clear $C466, $C467, $C468, $C469
+    ; Clear enCollision_weaponType, etc. ($ C466, $ C467, $ C468, $ C469)
     dec l
     ld a, $ff
     ld [hl+], a
@@ -1268,20 +1268,20 @@ Call_003_6ea7: ;{ 03:6EA7
             call Call_003_7812
     jr_003_6eba:
 
-    ld a, [$d05d]
+    ld a, [collision_weaponType]
     ld b, a
     ld a, $ff
-    ld [$d05d], a
+    ld [collision_weaponType], a
     ld a, b
     cp $ff
         ret z
     cp $08
         ret nz
-    ld a, [$d05f]
+    ld a, [collision_pEnemyHigh]
     cp $c6
         ret nz
     ld h, a
-    ld a, [$d05e]
+    ld a, [collision_pEnemyLow]
     cp $20
         jr nz, jr_003_6efe
     ld l, $23
@@ -2367,7 +2367,7 @@ func_03_757B: ;{ 03:757B - Queen State $15: Projectiles out
     jr_003_758c:
 
     call Call_003_7658
-    ld a, [$d05d]
+    ld a, [collision_weaponType]
     cp $ff
     jr z, jr_003_75b4
 
@@ -2381,12 +2381,12 @@ func_03_757B: ;{ 03:757B - Queen State $15: Projectiles out
     jr nz, jr_003_75b4
 
 jr_003_75a2:
-    ld a, [$d05f]
+    ld a, [collision_pEnemyHigh]
     cp $c7
     jr nz, jr_003_75b4
 
     ld h, a
-    ld a, [$d05e]
+    ld a, [collision_pEnemyLow]
     cp $40
     jr c, jr_003_75b4
 
@@ -2395,7 +2395,7 @@ jr_003_75a2:
 
 jr_003_75b4:
     ld a, $ff
-    ld [$d05d], a
+    ld [collision_weaponType], a
     ld de, $0020
     ld hl, $c740
     ld b, $03
