@@ -899,7 +899,7 @@ def deathFlag = $D063 ; Dying flag
 ;    FFh: Dead
 ;}
 samusTopOamOffset = $D064 ; Last OAM offset used by Samus, HUD, etc. Used in by door transition routine ($239C) to erase enemies
-;$D065: VRAM tiles update source bank (see $FFB1..B6, $2BA3)
+vramTransfer_srcBank = $D065 ; VRAM tiles update source bank (see $FFB1..B6, $2BA3)
 countdownTimerLow = $D066;  ; Generic countdown timer used for
 countdownTimerHigh = $D067; ;  various events
 ;{
@@ -978,7 +978,7 @@ def saveMessageCooldownTimer = $D088 ; Cooldown timer for game save message (for
 def metroidCountReal = $D089 ; Real number of metroids remaining (BCD)
 def beamSolidityIndex = $D08A ; Projectile solid block threshold
 def queen_roomFlag = $D08B ; 11h: In Metroid Queen's room (set by screen transition command 8), other values less than 10h: not in Queen's room
-;$D08C: Flag for doing the varia-collection-style VRAM update (pixel-row by pixel-row)
+def variaAnimationFlag = $D08C ; Flag for doing the varia-collection-style VRAM update (pixel-row by pixel-row) -- $00: off, $FF: on
 def weaponType = $D08D ; Type of projectile currently being processed
 def doorIndexLow  = $D08E ; Index of screen transition command set. Set to [$4300 + ([screen Y position high] * 10h + [screen X position high]) * 2] & ~800h by set up door transition
 def doorIndexHigh = $D08F
@@ -1105,7 +1105,9 @@ respawningBlockArray:: ds $100
 ;}
 
 tiletableArray:: ds $200 ;$DA00..DBFF: Metatile definitions
+.end::
 collisionArray:: ds $100 ;$DC00..FF: Tile properties. Indexed by tilemap value. Note that tilemap value < 4 is a respawning shot block
+.end::
 ;{  mask - bitnum
 ;    01h : 0 Water (also causes morph ball sound effect glitch)
 ;    02h : 1 Half-solid floor (can jump through)
