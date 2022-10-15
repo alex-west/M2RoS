@@ -5435,7 +5435,7 @@ waveSfx_init_2:
     ld [loudLowHealthBeepTimer], a
     ld a, $0e
     ld de, optionSets_wave.healthUnder20_0
-    jp Jump_004_5f27
+    jp playWaveSfx
 ;}
 
 waveSfx_playback_1:
@@ -5499,7 +5499,7 @@ waveSfx_init_3:
     ld [loudLowHealthBeepTimer], a
     ld a, $13
     ld de, optionSets_wave.healthUnder30_0
-    jp Jump_004_5f27
+    jp playWaveSfx
 ;}
 
 waveSfx_playback_3:
@@ -5562,7 +5562,7 @@ waveSfx_init_4:
     ld [loudLowHealthBeepTimer], a
     ld a, $16
     ld de, optionSets_wave.healthUnder40_0
-    jp Jump_004_5f27
+    jp playWaveSfx
 ;}
 
 waveSfx_playback_4:
@@ -5625,7 +5625,7 @@ waveSfx_init_5:
     ld [loudLowHealthBeepTimer], a
     ld a, $18
     ld de, optionSets_wave.healthUnder50_0
-    jp Jump_004_5f27
+    jp playWaveSfx
 ;}
 
 waveSfx_playback_5:
@@ -5713,7 +5713,7 @@ endm
     WaveOptionSet 2, $4A3
 ;}
 
-Jump_004_5f27:
+playWaveSfx:
 ;{
     ld [sfxTimer_wave], a
     ld [sfxLength_wave], a
