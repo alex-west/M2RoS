@@ -584,7 +584,7 @@ gameMode_LoadA: ;{ 00:03B5
     ld a, $01
     ld [queen_roomFlag], a
     ld a, $ff
-    ld [$d05d], a
+    ld [collision_weaponType], a
     
     ; Clear respawning block table
     ld hl, respawningBlockArray
@@ -5144,11 +5144,11 @@ collision_samusBottom: ;{ 00:1F0F
         ld a, $01
         ld [samus_onSolidSprite], a
         ld a, l
-        ld [$d05e], a
+        ld [collision_pEnemyLow], a
         ld a, h
-        ld [$d05f], a
+        ld [collision_pEnemyHigh], a
         ld a, $20
-        ld [$d05d], a
+        ld [collision_weaponType], a
         jp .exit
     .endIf_A:
 
@@ -5537,7 +5537,7 @@ toggleMissiles: ; 00:2212
         ld a, [samusBeam]
         ld [samusActiveWeapon], a
         ld hl, gfxInfo_cannonBeam
-        call Call_000_2753
+        call loadGraphics
         ; Play sound effect
         ld a, $15
         ld [sfxRequest_square1], a
@@ -5550,7 +5550,7 @@ toggleMissiles: ; 00:2212
         ld a, $08
         ld [samusActiveWeapon], a
         ld hl, gfxInfo_cannonMissile
-        call Call_000_2753
+        call loadGraphics
         ; Play sound effect
         ld a, $15
         ld [sfxRequest_square1], a
@@ -5829,7 +5829,7 @@ ret
 
 ;------------------------------------------------------------------------------
 ; Screen Transition decoder
-executeDoorScript: ; 00:239C
+executeDoorScript: ;{ 00:239C
     ; Check if a door script is queued up
     ld a, [doorIndexLow]
     ld b, a
@@ -5986,8 +5986,8 @@ executeDoorScript: ; 00:239C
         ldh [hVramTransfer.sizeHigh], a
         
         ld a, $05
-        ld [$d065], a
-        call Call_000_27ba
+        ld [vramTransfer_srcBank], a
+        call beginGraphicsTransfer
         xor a
         ld [loadSpawnFlagsRequest], a
         jp .nextToken
@@ -6035,8 +6035,8 @@ executeDoorScript: ; 00:239C
             ldh [hVramTransfer.sizeHigh], a
             
             ld a, $05
-            ld [$d065], a
-            call Call_000_27ba
+            ld [vramTransfer_srcBank], a
+            call beginGraphicsTransfer
         pop hl
         jp .nextToken
 
@@ -6055,7 +6055,7 @@ executeDoorScript: ; 00:239C
         pop hl
         call waitOneFrame
         call OAM_DMA
-        call Call_000_2887
+        call door_queen
         ld a, $01
         ld [doorExitStatus], a
         ld a, $11
@@ -6188,7 +6188,7 @@ executeDoorScript: ; 00:239C
         ; Load item graphics
         ld a, BANK(gfx_items)
         ld [bankRegMirror], a
-        ld [$d065], a
+        ld [vramTransfer_srcBank], a
         ld [rMBC_BANK_REG], a
         ld a, [hl]
         push hl
@@ -6217,7 +6217,7 @@ executeDoorScript: ; 00:239C
         ldh [hVramTransfer.sizeLow], a
         ld a, $00
         ldh [hVramTransfer.sizeHigh], a
-        call Call_000_27ba
+        call beginGraphicsTransfer
         ; Load item orb
         ld a, LOW(gfx_itemOrb)
         ldh [hVramTransfer.srcAddrLow], a
@@ -6231,11 +6231,11 @@ executeDoorScript: ; 00:239C
         ldh [hVramTransfer.sizeLow], a
         ld a, $00
         ldh [hVramTransfer.sizeHigh], a
-        call Call_000_27ba
+        call beginGraphicsTransfer
         ; Load item font text
         ld a, BANK(gfx_itemFont)
         ld [bankRegMirror], a
-        ld [$d065], a
+        ld [vramTransfer_srcBank], a
         ld [rMBC_BANK_REG], a
         ld a, LOW(gfx_itemFont) ;$34
         ldh [hVramTransfer.srcAddrLow], a
@@ -6251,12 +6251,12 @@ executeDoorScript: ; 00:239C
         ldh [hVramTransfer.sizeLow], a
         ld a, $02
         ldh [hVramTransfer.sizeHigh], a
-        call Call_000_27ba
+        call beginGraphicsTransfer
     
         pop hl
         ld a, BANK(itemTextPointerTable)
         ld [bankRegMirror], a
-        ld [$d065], a
+        ld [vramTransfer_srcBank], a
         ld [rMBC_BANK_REG], a
         ld a, [hl+]
         push hl
@@ -6286,7 +6286,7 @@ executeDoorScript: ; 00:239C
         ldh [hVramTransfer.sizeLow], a
         ld a, $00
         ldh [hVramTransfer.sizeHigh], a
-        call Call_000_27ba
+        call beginGraphicsTransfer
         pop hl
         jr .nextToken
 
@@ -6302,165 +6302,182 @@ executeDoorScript: ; 00:239C
     ld [doorIndexHigh], a
     ld [doorExitStatus], a
     ld [$d0a8], a
-ret
+ret ;}
 
-
-door_loadGraphics: ; door script load graphics routine
+; Door script load graphics routine
+door_loadGraphics: ;{ 00:26EB
+    ; Read lower nybble of token to determine if loading enemy or BG graphics
     ld a, [hl+]
     and $0f
     ld b, a
     cp $01
-    jr z, jr_000_271c
+    jr z, .else
+        ; Load enemy graphics source bank
         ld a, [hl+]
         ld [bankRegMirror], a
-        ld [$d065], a
+        ld [vramTransfer_srcBank], a
         ld [rMBC_BANK_REG], a
-        
+        ; Load source address (and save result to save buffer as enemy graphics)
         ld a, [hl+]
         ldh [hVramTransfer.srcAddrLow], a
         ld [saveBuf_enGfxSrcLow], a
-        
         ld a, [hl+]
         ldh [hVramTransfer.srcAddrHigh], a
         ld [saveBuf_enGfxSrcHigh], a
-        
+        ; Set destination address (constant)
         ld a, LOW(vramDest_enemies)
         ldh [hVramTransfer.destAddrLow], a
         ld a, HIGH(vramDest_enemies)
         ldh [hVramTransfer.destAddrHigh], a
-
+        ; Set transfer size (constant)
         ld a, $00
         ldh [hVramTransfer.sizeLow], a
         ld a, $04
         ldh [hVramTransfer.sizeHigh], a
-    jp Jump_000_27ba
-
-    jr_000_271c:
+        jp beginGraphicsTransfer
+    .else:
+        ; Load source bank (and save result to save buffer as background graphics)
         ld a, [hl+]
         ld [bankRegMirror], a
-        ld [$d065], a
+        ld [vramTransfer_srcBank], a
         ld [saveBuf_bgGfxSrcBank], a
         ld [rMBC_BANK_REG], a
-        
+        ; Load source address (and save result to save buffer as background graphics)
         ld a, [hl+]
         ldh [hVramTransfer.srcAddrLow], a
         ld [saveBuf_bgGfxSrcLow], a
         ld a, [hl+]
         ldh [hVramTransfer.srcAddrHigh], a
         ld [saveBuf_bgGfxSrcHigh], a
-        
+        ; Set destination address (constant)
         ld a, LOW(vramDest_bgTiles)
         ldh [hVramTransfer.destAddrLow], a
         ld a, HIGH(vramDest_bgTiles)
         ldh [hVramTransfer.destAddrHigh], a
-        
+        ; Set transfer size (contant)
         ld a, $00
         ldh [hVramTransfer.sizeLow], a
         ld a, $08
         ldh [hVramTransfer.sizeHigh], a
-    jr jr_000_27ba
+        jr beginGraphicsTransfer
+;}
 
-door_copyData: ; door script copy data routine
+; Door script copy data routine
+door_copyData: ;{ 00:2747
     ld a, [hl+]
     and $0f
     ld b, a
-    cp $01
-    jr z, jr_000_2771
+    cp $01 ; BG gfx case
+        jr z, loadGraphics.background
+    cp $02 ; Enemy gfx case
+        jr z, loadGraphics.enemy
+;} Fallthrough to default case
 
-    cp $02
-    jr z, jr_000_2798
-
-Call_000_2753:
+loadGraphics: ;{ 00:2753
+    ; Load source bank
     ld a, [hl+]
     ld [bankRegMirror], a
-    ld [$d065], a
+    ld [vramTransfer_srcBank], a
     ld [rMBC_BANK_REG], a
-    
+    ; Load source address
     ld a, [hl+]
     ldh [hVramTransfer.srcAddrLow], a
     ld a, [hl+]
     ldh [hVramTransfer.srcAddrHigh], a
-    
+    ; Load destination address
     ld a, [hl+]
     ldh [hVramTransfer.destAddrLow], a
     ld a, [hl+]
     ldh [hVramTransfer.destAddrHigh], a
-    
+    ; Load block size
     ld a, [hl+]
     ldh [hVramTransfer.sizeLow], a
     ld a, [hl+]
     ldh [hVramTransfer.sizeHigh], a
-    jr jr_000_27ba
+jr beginGraphicsTransfer
 
-jr_000_2771:
+; Case from door_copyData
+.background: ;{ 00:2771
+    ; Load source bank
     ld a, [hl+]
     ld [bankRegMirror], a
-    ld [$d065], a
-    ld [saveBuf_bgGfxSrcBank], a
+    ld [vramTransfer_srcBank], a
+    ld [saveBuf_bgGfxSrcBank], a ; Save bank as BG graphics source
     ld [rMBC_BANK_REG], a
+    ; Load source address (and save it as the BG graphics source)
     ld a, [hl+]
     ldh [hVramTransfer.srcAddrLow], a
     ld [saveBuf_bgGfxSrcLow], a
     ld a, [hl+]
     ldh [hVramTransfer.srcAddrHigh], a
     ld [saveBuf_bgGfxSrcHigh], a
+    ; Load destination address
     ld a, [hl+]
     ldh [hVramTransfer.destAddrLow], a
     ld a, [hl+]
     ldh [hVramTransfer.destAddrHigh], a
+    ; Load block size
     ld a, [hl+]
     ldh [hVramTransfer.sizeLow], a
     ld a, [hl+]
     ldh [hVramTransfer.sizeHigh], a
-    jr jr_000_27ba
+jr beginGraphicsTransfer ;}
 
-jr_000_2798:
+; Case from door_copyData
+.enemy: ;{ 00:2798
+    ; Load source bank
     ld a, [hl+]
     ld [bankRegMirror], a
-    ld [$d065], a
+    ld [vramTransfer_srcBank], a
     ld [rMBC_BANK_REG], a
+    ; Load source address (and save address as enemy graphics source)
     ld a, [hl+]
     ldh [hVramTransfer.srcAddrLow], a
     ld [saveBuf_enGfxSrcLow], a
     ld a, [hl+]
     ldh [hVramTransfer.srcAddrHigh], a
     ld [saveBuf_enGfxSrcHigh], a
+    ; Load destination address
     ld a, [hl+]
     ldh [hVramTransfer.destAddrLow], a
     ld a, [hl+]
     ldh [hVramTransfer.destAddrHigh], a
+    ; Load block size
     ld a, [hl+]
     ldh [hVramTransfer.sizeLow], a
     ld a, [hl+]
     ldh [hVramTransfer.sizeHigh], a
+;} Fallthrough to next function
+;}
 
-Call_000_27ba:
-Jump_000_27ba:
-jr_000_27ba:
+beginGraphicsTransfer: ;{ 00:27BA
+    ; Set VRAM transfer flag
     ld a, $ff
     ld [vramTransferFlag], a
 
-    jr_000_27bf:
-        ld a, [$d08c]
+    .loop:
+        ; Skip some common routines during the Varia animation
+        ld a, [variaAnimationFlag]
         and a
-        jr z, jr_000_27d9
+        jr z, .endIf
             call drawSamus_longJump
             call handleEnemiesOrQueen
             callFar drawHudMetroid
             call clearUnusedOamSlots_longJump
-        jr_000_27d9:
+        .endIf:
         ; Wait until WRAM transfer is done
         call waitOneFrame
         ld a, [vramTransferFlag]
         and a
-    jr nz, jr_000_27bf
-ret
+    jr nz, .loop
+ret ;}
 
 ; Used for animating the Varia Suit collection
-Call_000_27e3: ; 00:27E3
+animateGettingVaria: ;{ 00:27E3
+    ; Load VRAM update list (presumably for Varia)
     ld a, [hl+]
     ld [bankRegMirror], a
-    ld [$d065], a
+    ld [vramTransfer_srcBank], a
     ld [rMBC_BANK_REG], a
     ld a, [hl+]
     ldh [hVramTransfer.srcAddrLow], a
@@ -6474,59 +6491,69 @@ Call_000_27e3: ; 00:27E3
     ldh [hVramTransfer.sizeLow], a
     ld a, [hl+]
     ldh [hVramTransfer.sizeHigh], a
+    ; Enable VRAM transfer
     ld a, $ff
     ld [vramTransferFlag], a
 
-    jr_000_2804:
+    .loop:
+        ; Set window height (higher position)
         ld a, $80
         ldh [rWY], a
+        ; Do common tasks
         call drawSamus_longJump
         call handleEnemiesOrQueen
         callFar drawHudMetroid
         call clearUnusedOamSlots_longJump
+        ; Wait for next frame
         call waitOneFrame
+        ; Loop until 5 rows have been transfered
         ldh a, [hVramTransfer.destAddrHigh]
         cp $85
-    jr c, jr_000_2804
-
+    jr c, .loop
+    ; Clear animation flag
     xor a
-    ld [$d08c], a
-    ret
+    ld [variaAnimationFlag], a
+ret ;}
 
-
-door_loadTiletable:
+door_loadTiletable: ;{ 00:282A
+    ; Load bank that the metatiles are in
     switchBank metatilePointerTable
+    ; Use lower nybble of token to index into the table
     ld a, [hl+]
     push hl
-    and $0f
-    sla a
-    ld e, a
-    ld d, $00
-    ld hl, metatilePointerTable
-    add hl, de
-    ld a, [hl+]
-    ld [saveBuf_tiletableSrcLow], a
-    ld b, a
-    ld a, [hl+]
-    ld [saveBuf_tiletableSrcHigh], a
-    ld h, a
-    ld a, b
-    ld l, a
-    ld de, tiletableArray
-
-    .loop:
+        and $0f
+        sla a
+        ld e, a
+        ld d, $00
+        ld hl, metatilePointerTable
+        add hl, de
+        ; Save pointer to save buffer
         ld a, [hl+]
-        ld [de], a
-        inc de
-        ld a, d
-        cp $dc
-    jr nz, .loop
+        ld [saveBuf_tiletableSrcLow], a
+        ld b, a
+        ld a, [hl+]
+        ld [saveBuf_tiletableSrcHigh], a
+        ; Load pointer to HL
+        ld h, a
+        ld a, b
+        ld l, a
+        ; Copy to fill range $DA00-$DBFF
+        ld de, tiletableArray
+        .loop:
+            ld a, [hl+]
+            ld [de], a
+            inc de
+            ld a, d
+            cp HIGH(tiletableArray.end) ;$DC
+        jr nz, .loop
+    ; Jump target will pop HL eventually
+    ; Rerender screen ahead of camera
+jp Jump_000_2918 ;}
 
-    jp Jump_000_2918
-
-
-door_loadCollision:
+door_loadCollision: ;{ 00:2859
+    ; Load bank that the collision data is in
     switchBank collisionPointerTable
+    ; Use the lower nybble of the token to index into the pointer table
     ld a, [hl+]
     push hl
         and $0f
@@ -6535,65 +6562,75 @@ door_loadCollision:
         ld d, $00
         ld hl, collisionPointerTable
         add hl, de
+        ; Save pointer to save buffer
         ld a, [hl+]
         ld [saveBuf_collisionSrcLow], a
         ld b, a
         ld a, [hl+]
         ld [saveBuf_collisionSrcHigh], a
+        ; Load pointer to HL
         ld h, a
         ld a, b
         ld l, a
+        ; Copy to fill range $DC00-$DCFF
         ld de, collisionArray
-    
         .loop:
             ld a, [hl+]
             ld [de], a
             inc de
             ld a, d
-            cp $dd
+            cp HIGH(collisionArray.end) ; $DD
         jr nz, .loop
     pop hl
-ret
+ret ;}
 
 ; Only called from the ENTER_QUEEN
-Call_000_2887: ; 00:2887
+door_queen: ;{ 00:2887
+    ; Load destination map bank from lower nybble of token
     ld a, [hl+]
     and $0f
     ld [currentLevelBank], a
     ld [saveBuf_currentLevelBank], a
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-    
+    ; Load camera y position (pixel/screen)
     ld a, [hl+]
     ldh [hCameraYPixel], a
     sub $48
     ld [scrollY], a
     ld a, [hl+]
     ldh [hCameraYScreen], a
+    ; Load camera X position (pixel/screen)
     ld a, [hl+]
     ldh [hCameraXPixel], a
     sub $50
     ld [scrollX], a
     ld a, [hl+]
     ldh [hCameraXScreen], a
+    ; Load Samus y position (pixel, screen)
     ld a, [hl+]
     ldh [hSamusYPixel], a
     ld a, [hl+]
     ldh [hSamusYScreen], a
+    ; Load Samus x position (pixel, screen)
     ld a, [hl+]
     ldh [hSamusXPixel], a
     ld a, [hl+]
     ldh [hSamusXScreen], a
     push hl
+        ; Render queen's room
         call disableLCD
         call queen_renderRoom
+        ; Initialize the variables for the queen fight
         callFar queen_initialize
+        ; Initialize Samus's onscreen x position
         ldh a, [hCameraXPixel]
         ld b, a
         ldh a, [hSamusXPixel]
         sub b
         add $60
         ld [samus_onscreenXPos], a
+        ; Initialize Samus's onscreen y position
         ldh a, [hCameraYPixel]
         ld b, a
         ldh a, [hSamusYPixel]
@@ -6602,18 +6639,20 @@ Call_000_2887: ; 00:2887
         ld [samus_onscreenYPos], a
         ld a, $e3
         ldh [rLCDC], a
+        ; Clear variables
         xor a
         ld [doorScrollDirection], a
         ld [scrollY], a
         ldh [rSCY], a
+        ; Activate fade-in if necessary
         ld a, [bg_palette]
         cp $93
-        jr z, jr_000_28f9
+        jr z, .endIf
             ld a, $2f
             ld [fadeInTimer], a
-        jr_000_28f9:
+        .endIf:
     pop hl
-ret
+ret ;}
 
 
 door_warp:
@@ -6926,13 +6965,14 @@ Jump_000_2b8f:
     call VBlank_updateMap
 jr VBlank_vramDataTransfer.exit
 
-VBlank_vramDataTransfer: ; 00:2BA3
-    ld a, [$d08c]
+VBlank_vramDataTransfer: ;{ 00:2BA3
+    ; Check if varia suit is being collected
+    ld a, [variaAnimationFlag]
     and a
-        jp nz, Jump_000_2bf4
+        jp nz, VBlank_variaAnimation
 
     ; Load transfer parameters
-    ld a, [$d065]
+    ld a, [vramTransfer_srcBank]
     ld [rMBC_BANK_REG], a
     ldh a, [hVramTransfer.sizeLow]
     ld c, a
@@ -6977,6 +7017,8 @@ VBlank_vramDataTransfer: ; 00:2BA3
         ld [vramTransferFlag], a
     .endIf:
 .exit:
+    ; Exit vblank
+    ; Interesting that OAM_DMA is not called
     ld a, $01
     ldh [hVBlankDoneFlag], a
     ld a, [bankRegMirror]
@@ -6985,67 +7027,76 @@ VBlank_vramDataTransfer: ; 00:2BA3
     pop de
     pop bc
     pop af
-reti
+reti ;}
 
 ; Varia animation case
-Jump_000_2bf4: ; 00:2BF4
+VBlank_variaAnimation: ;{ 00:2BF4
+    ; Animate every other frame
     ldh a, [frameCounter]
     and $01
-    jr nz, jr_000_2c42
-
-    ld a, [$d065]
-    ld [rMBC_BANK_REG], a
-    ldh a, [hVramTransfer.destAddrLow] ; ??
-    ld l, a
-    ldh a, [hVramTransfer.destAddrHigh] ; ??
-    ld h, a
-    ld de, $0010
-
-    jr_000_2c09:
-        push hl
-        ld de, $ce20
-        add hl, de
-        ld e, l
-        ld d, h
-        pop hl
-        ld a, [de]
-        ld [hl], a
+    jr nz, .endIf_A
+        ; Set HL to the source byte of the data transfer
+        ld a, [vramTransfer_srcBank]
+        ld [rMBC_BANK_REG], a
+        ldh a, [hVramTransfer.destAddrLow]
+        ld l, a
+        ldh a, [hVramTransfer.destAddrHigh]
+        ld h, a
+        ; Unused line since DE is immediately overwritten
+        ld de, $0010
+        .loop:
+            ; Update DE
+            push hl
+                ld de, gfx_samusVariaSuit - vramDest_samus ; $CE20 = ($4E20 - $8000)
+                add hl, de
+                ld e, l
+                ld d, h
+            pop hl
+            ; Load GFX from ROM to VRAM
+            ld a, [de]
+            ld [hl], a
+            ; Increment to same row in next tile
+            ld a, l
+            add $10
+            ld l, a
+            ld a, h
+            adc $00
+            ld h, a
+            ; Exit loop if L = $0x (row is complete
+            ld a, l
+            and $F0
+        jr nz, .loop
+        ; HL = HL - $00FF (get first byte of next pixel row)
         ld a, l
-        add $10
+        sub $ff
         ld l, a
         ld a, h
-        adc $00
+        sbc $00
         ld h, a
+        ; Check if we passed the last pixel row of a tile
         ld a, l
-        and $f0
-    jr nz, jr_000_2c09
-
-    ld a, l
-    sub $ff
-    ld l, a
-    ld a, h
-    sbc $00
-    ld h, a
-    ld a, l
-    cp $10
-    jr nz, jr_000_2c34
-        add $f0
-        ld l, a
+        cp $10
+        jr nz, .endIf_B
+            ; If so, HL = HL + $00F0 (move to first pixel row of the next tile row)
+            add $f0
+            ld l, a
+            ld a, h
+            adc $00
+            ld h, a
+        .endIf_B:
+        ; Save VRAM transfer parameters
+        ld a, l
+        ldh [hVramTransfer.destAddrLow], a
         ld a, h
-        adc $00
-        ld h, a
-    jr_000_2c34:
-
-    ld a, l
-    ldh [hVramTransfer.destAddrLow], a
-    ld a, h
-    ldh [hVramTransfer.destAddrHigh], a
-    cp $85
-    jr nz, jr_000_2c42
-        xor a
-        ld [deathAnimTimer], a
-    jr_000_2c42:
-    
+        ldh [hVramTransfer.destAddrHigh], a
+        ; Clear variable if we've transfered all 5 rows
+        cp $85
+        jr nz, .endIf_C
+            xor a
+            ld [deathAnimTimer], a
+        .endIf_C:
+    .endIf_A:
+    ; Exit VBlank
     ld a, [scrollY]
     ldh [rSCY], a
     ld a, [scrollX]
@@ -7059,31 +7110,32 @@ Jump_000_2bf4: ; 00:2BF4
     pop de
     pop bc
     pop af
-reti
+reti ;}
 
-
-waitOneFrame: ; 00:2C5E
+waitOneFrame: ;{ 00:2C5E
+    ; Handle audio
     push hl
     call handleAudio_longJump
     pop hl
     db $76 ; halt
-
+    ; Wait for VBlank to finish
     .vBlankNotDone:
         ldh a, [hVBlankDoneFlag]
         and a
     jr z, .vBlankNotDone
-
+    ; Increment frame counter
     ldh a, [frameCounter]
     inc a
     ldh [frameCounter], a
+    ; Clear VBlank flag
     xor a
     ldh [hVBlankDoneFlag], a
+    ; Reset OAM buffer index
     ld a, $c0
-    ldh [hUnusedFlag_1], a
+    ldh [hUnusedFlag_1], a ; Likely the unused high-byte of the OAM buffer index/pointer
     xor a
     ldh [hOamBufferIndex], a
-ret
-
+ret ;}
 
 tryPausing: ;{ 00:2C79
     ; Don't try pausing unless start is pressed
@@ -7663,7 +7715,7 @@ prepUnusedDeathAnimation: ;{ 00:2FC8 - Unused
 ret ;}
 
 ; Vblank routine for death
-VBlank_deathSequence: ; 00:2FE1
+VBlank_deathSequence: ;{ 00:2FE1
     ld a, [deathFlag]
     and a
         jr z, unusedDeathAnimation
@@ -7708,10 +7760,12 @@ VBlank_deathSequence: ; 00:2FE1
             ldh [gameMode], a
     .endIf:
 
+    ; Set scroll values
     ld a, [scrollY]
     ldh [rSCY], a
     ld a, [scrollX]
     ldh [rSCX], a
+    ; DMA sprites
     call OAM_DMA
 
     ; Queen vblank handler if necessary
@@ -7721,16 +7775,16 @@ VBlank_deathSequence: ; 00:2FE1
     cp $11
         call z, VBlank_drawQueen
 
+    ; Return from interrupt
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
     ld a, $01
     ldh [hVBlankDoneFlag], a
-    ; Return from interrupt
     pop hl
     pop de
     pop bc
     pop af
-reti
+reti ;}
 
 deathAnimationTable:: ; 00:3042
     db $00, $04, $08, $0c, $10, $14, $18, $1c, $01, $05, $09, $0d, $11, $15, $19, $1d
@@ -7740,54 +7794,70 @@ deathAnimationTable:: ; 00:3042
 ;  which is impossible
 ; Possibly not intended as a death animation
 unusedDeathAnimation: ;{ 00:3062
+    ; Animate every other frame
     ldh a, [frameCounter]
     and $01
     jr nz, .endIf_A
+        ; Get pointer for starting offset
         ld a, [pDeathAltAnimBaseLow]
         ld l, a
         ld a, [pDeathAltAnimBaseHigh]
         ld h, a
+        
+        ; Set increment value for loop
         ld de, $0010
-    
         .eraseLoop:
+            ; Clear byte
             xor a
             ld [hl], a
+            ; Iterate to next byte
             add hl, de
+            ; Exit loop once $xx0x is reached
             ld a, l
             and $f0
         jr nz, .eraseLoop
-    
+        ; Iterate to next row of pixels to clear        
+        ; HL-$00FF (to get to the next byte of the starting tile)
         ld a, l
         sub $ff
         ld l, a
         ld a, h
         sbc $00
         ld h, a
+        ; If HL points to the second tile in a row
         ld a, l
         cp $10
         jr nz, .endIf_B
+            ; Then add $F0 to HL so it points to the first tile of the next row
             add $f0
             ld l, a
             ld a, h
             adc $00
             ld h, a
         .endIf_B:
-    
+        ; Save the pointer
         ld a, l
         ld [pDeathAltAnimBaseLow], a
         ld a, h
         ld [pDeathAltAnimBaseHigh], a
+        ; Stop animating once 5 rows have been cleared
         cp $85
         jr nz, .endIf_A
+            ; Clear timer
             xor a
             ld [deathAnimTimer], a
+            ; Note: This does not set deathFlag
+            ;  or gameMode like it should.
     .endIf_A:
 
+    ; Set scroll values
     ld a, [scrollY]
     ldh [rSCY], a
     ld a, [scrollX]
     ldh [rSCX], a
+    ; DMA sprites
     call OAM_DMA
+    ; Return from interrupt
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
     ld a, $01
@@ -7938,12 +8008,12 @@ Call_000_30ea:
         jr nc, .exit_noHit
 ; A collision happened
     ld a, $09
-    ld [$d05d], a
+    ld [collision_weaponType], a
     pop hl
     ld a, l
-    ld [$d05e], a
+    ld [collision_pEnemyLow], a
     ld a, h
-    ld [$d05f], a
+    ld [collision_pEnemyHigh], a
     
     ld a, [queen_eatingState]
     cp $03
@@ -8117,16 +8187,16 @@ Call_000_31f1:
     sub b
     cp c
         jr nc, jr_000_32a7
-    ld a, [$d08d]
-    ld [$d05d], a
+    ld a, [weaponType]
+    ld [collision_weaponType], a
     pop hl
     ld a, l
-    ld [$d05e], a
+    ld [collision_pEnemyLow], a
     ld a, h
-    ld [$d05f], a
-    ld a, [$d012]
-    ld [$d060], a
-    ld a, [$d08d]
+    ld [collision_pEnemyHigh], a
+    ld a, [weaponDirection]
+    ld [collision_weaponDir], a
+    ld a, [weaponType]
     cp $08
     jr nz, jr_000_32a5
         ldh a, [$b9]
@@ -8383,11 +8453,11 @@ jr_000_33ff:
     ld [samus_damageValue], a
     pop hl
     ld a, $10
-    ld [$d05d], a
+    ld [collision_weaponType], a
     ld a, l
-    ld [$d05e], a
+    ld [collision_pEnemyLow], a
     ld a, h
-    ld [$d05f], a
+    ld [collision_pEnemyHigh], a
     scf
     ccf
     ret
@@ -8439,11 +8509,11 @@ jr_000_3448:
     ld [samus_hurtFlag], a
     pop hl
     ld a, l
-    ld [$d05e], a
+    ld [collision_pEnemyLow], a
     ld a, h
-    ld [$d05f], a
+    ld [collision_pEnemyHigh], a
     ld a, $20
-    ld [$d05d], a
+    ld [collision_weaponType], a
     scf
 ret
 
@@ -8454,11 +8524,11 @@ jr_000_3475:
 jr_000_3478:
     pop hl
     ld a, l
-    ld [$d05e], a
+    ld [collision_pEnemyLow], a
     ld a, h
-    ld [$d05f], a
+    ld [collision_pEnemyHigh], a
     ld a, $20
-    ld [$d05d], a
+    ld [collision_weaponType], a
     scf
     ccf
 ret
@@ -8725,11 +8795,11 @@ jr_000_35fe:
     ld [samus_damageValue], a
     pop hl
     ld a, $10
-    ld [$d05d], a
+    ld [collision_weaponType], a
     ld a, l
-    ld [$d05e], a
+    ld [collision_pEnemyLow], a
     ld a, h
-    ld [$d05f], a
+    ld [collision_pEnemyHigh], a
     scf
     ccf
     ret
@@ -8785,11 +8855,11 @@ jr_000_3650:
     ld [samus_hurtFlag], a
     pop hl
     ld a, l
-    ld [$d05e], a
+    ld [collision_pEnemyLow], a
     ld a, h
-    ld [$d05f], a
+    ld [collision_pEnemyHigh], a
     ld a, $20
-    ld [$d05d], a
+    ld [collision_weaponType], a
     scf
     ret
 
@@ -8800,11 +8870,11 @@ jr_000_3680:
 jr_000_3683:
     pop hl
     ld a, l
-    ld [$d05e], a
+    ld [collision_pEnemyLow], a
     ld a, h
-    ld [$d05f], a
+    ld [collision_pEnemyHigh], a
     ld a, $20
-    ld [$d05d], a
+    ld [collision_weaponType], a
     scf
     ccf
     ret
@@ -8999,7 +9069,7 @@ pickup_plasmaBeam: ;{
     ld [samusBeam], a
     ; Load graphics
     ld hl, gfxInfo_plasma
-    call Call_000_2753
+    call loadGraphics
     ; Set to active weapon if missiles aren't active
     ld a, [samusActiveWeapon]
     cp $08
@@ -9019,7 +9089,7 @@ pickup_iceBeam: ;{
     ld [samusBeam], a
     ; Load graphics
     ld hl, gfxInfo_ice
-    call Call_000_2753
+    call loadGraphics
     ; Set to active weapon if missiles aren't active
     ld a, [samusActiveWeapon]
     cp $08
@@ -9038,7 +9108,7 @@ pickup_waveBeam: ;{
     ld [samusBeam], a
     ; Load graphics
     ld hl, gfxInfo_wave
-    call Call_000_2753
+    call loadGraphics
     ; Set to active weapon if missiles aren't active
     ld a, [samusActiveWeapon]
     cp $08
@@ -9057,7 +9127,7 @@ pickup_spazer: ;{
     ld [samusBeam], a
     ; Load graphics
     ld hl, gfxInfo_spazer ;gfxInfo_plasma
-    call Call_000_2753
+    call loadGraphics
     ; Set to active weapon if missiles aren't active
     ld a, [samusActiveWeapon]
     cp $08
@@ -9084,16 +9154,16 @@ pickup_screwAttack: ;{
     jr nz, .else
         ; No space jump
         ld hl, gfxInfo_spinScrewTop
-        call Call_000_2753
+        call loadGraphics
         ld hl, gfxInfo_spinScrewBottom
-        call Call_000_2753
+        call loadGraphics
         jp handleItemPickup_end
     .else:
         ; With space jump
         ld hl, gfxInfo_spinSpaceScrewTop
-        call Call_000_2753
+        call loadGraphics
         ld hl, gfxInfo_spinSpaceScrewBottom
-        call Call_000_2753
+        call loadGraphics
         jp handleItemPickup_end
 ;} end case
 
@@ -9156,21 +9226,21 @@ pickup_variaSuit: ;{
     ld [sfxRequest_square1], a
     ; Set flag for updating tiles varia-collection-style
     ld a, $ff
-    ld [$d08c], a
+    ld [variaAnimationFlag], a
     ; Fancy loading animation (only loads first 5 rows)
     ld hl, gfxInfo_variaSuit
-    call Call_000_27e3
+    call animateGettingVaria
     ; Clear flag
     xor a
-    ld [$d08c], a
+    ld [variaAnimationFlag], a
     ; Load all the varia graphics
     ld hl, gfxInfo_variaSuit
-    call Call_000_2753
+    call loadGraphics
     ; Load cannon graphics if missiles are active
     ld hl, gfxInfo_cannonMissile
     ld a, [samusActiveWeapon]
     cp $08
-        call z, Call_000_2753
+        call z, loadGraphics
     ; Load all the other patched-in graphics
     call varia_loadExtraGraphics
 jp handleItemPickup_end ;}
@@ -9192,16 +9262,16 @@ pickup_spaceJump: ;{
     jr nz, .else
         ; No screw attack
         ld hl, gfxInfo_spinSpaceTop
-        call Call_000_2753
+        call loadGraphics
         ld hl, gfxInfo_spinSpaceBottom
-        call Call_000_2753
+        call loadGraphics
         jp handleItemPickup_end
     .else:
         ; With screw attack
         ld hl, gfxInfo_spinSpaceScrewTop
-        call Call_000_2753
+        call loadGraphics
         ld hl, gfxInfo_spinSpaceScrewBottom
-        call Call_000_2753
+        call loadGraphics
         jp handleItemPickup_end
 ;} end case
 
@@ -9219,9 +9289,9 @@ pickup_springBall: ;{
     ld [samusItems], a
     ; Load graphics
     ld hl, gfxInfo_springBallTop
-    call Call_000_2753
+    call loadGraphics
     ld hl, gfxInfo_springBallBottom
-    call Call_000_2753
+    call loadGraphics
 jp handleItemPickup_end ;}
 
 pickup_energyTank: ;{
@@ -9354,11 +9424,11 @@ handleItemPickup_end: ;{ 00:3A01
     
     ; Set collision variables
     ld a, [itemOrb_collisionType]
-    ld [$c466], a
+    ld [enCollision_weaponType], a
     ld a, [itemOrb_pEnemyWramLow]
-    ld [$c467], a
+    ld [enCollision_pEnemyLow], a
     ld a, [itemOrb_pEnemyWramHigh]
-    ld [$c468], a
+    ld [enCollision_pEnemyHigh], a
 
     .waitLoop_B:
         ; Perform common functions during this wait loop
@@ -9382,9 +9452,9 @@ varia_loadExtraGraphics: ;{ 00:3A84
     bit itemBit_spring, a
     jr z, .endIf_spring
         ld hl, gfxInfo_springBallTop
-        call Call_000_2753
+        call loadGraphics
         ld hl, gfxInfo_springBallBottom
-        call Call_000_2753
+        call loadGraphics
     .endIf_spring:
 
     ; Load appropriate spin-jump graphics
@@ -9395,9 +9465,9 @@ varia_loadExtraGraphics: ;{ 00:3A84
     jr nz, .endIf_spinBoth
         ; Both space jump and screw attack
         ld hl, gfxInfo_spinSpaceScrewTop
-        call Call_000_2753
+        call loadGraphics
         ld hl, gfxInfo_spinSpaceScrewBottom
-        call Call_000_2753
+        call loadGraphics
         ret
     .endIf_spinBoth:
 
@@ -9405,9 +9475,9 @@ varia_loadExtraGraphics: ;{ 00:3A84
     jr nz, .endIf_space
         ; Only space jump
         ld hl, gfxInfo_spinSpaceTop
-        call Call_000_2753
+        call loadGraphics
         ld hl, gfxInfo_spinSpaceBottom
-        call Call_000_2753
+        call loadGraphics
         ret
     .endIf_space:
     
@@ -9415,9 +9485,9 @@ varia_loadExtraGraphics: ;{ 00:3A84
         ret nz
     ; Only screw attack
     ld hl, gfxInfo_spinScrewTop
-    call Call_000_2753
+    call loadGraphics
     ld hl, gfxInfo_spinScrewBottom
-    call Call_000_2753
+    call loadGraphics
 ret ;}
 
 ; Game modes $0A and $0F
@@ -9652,7 +9722,7 @@ loadGame_copyItemToVram: ;{ 00:3C3F
     ; Read source bank of transfer
     ld a, [hl+]
     ld [bankRegMirror], a
-    ld [$d065], a
+    ld [vramTransfer_srcBank], a
     ld [rMBC_BANK_REG], a
     ; Read source address of transfer to temp
     ld a, [hl+]
@@ -9918,57 +9988,72 @@ loadScreenSpritePriorityBit: ;{ 00:3ED5
 ret
 ;}
 
-; 00:3F07
-; unused (duplicate of the routine at 00:3062)
+; Unused (duplicate of the routine at 00:3062)
 unusedDeathAnimation_copy: ;{ 00:3F07
+    ; Animate every other frame
     ldh a, [frameCounter]
     and $01
     jr nz, .endIf_A
+        ; Get pointer for starting offset
         ld a, [pDeathAltAnimBaseLow]
         ld l, a
         ld a, [pDeathAltAnimBaseHigh]
         ld h, a
+        
+        ; Set increment value for loop
         ld de, $0010
-    
         .eraseLoop:
+            ; Clear byte
             xor a
             ld [hl], a
+            ; Iterate to next byte
             add hl, de
+            ; Exit loop once $xx0x is reached
             ld a, l
             and $f0
         jr nz, .eraseLoop
-    
+        ; Iterate to next row of pixels to clear        
+        ; HL-$00FF (to get to the next byte of the starting tile)
         ld a, l
         sub $ff
         ld l, a
         ld a, h
         sbc $00
         ld h, a
+        ; If HL points to the second tile in a row
         ld a, l
         cp $10
         jr nz, .endIf_B
+            ; Then add $F0 to HL so it points to the first tile of the next row
             add $f0
             ld l, a
             ld a, h
             adc $00
             ld h, a
         .endIf_B:
-    
+        ; Save the pointer
         ld a, l
         ld [pDeathAltAnimBaseLow], a
         ld a, h
         ld [pDeathAltAnimBaseHigh], a
+        ; Stop animating once 5 rows have been cleared
         cp $85
         jr nz, .endIf_A
+            ; Clear timer
             xor a
             ld [deathAnimTimer], a
+            ; Note: This does not set deathFlag
+            ;  or gameMode like it should.
     .endIf_A:
 
+    ; Set scroll values
     ld a, [scrollY]
     ldh [rSCY], a
     ld a, [scrollX]
     ldh [rSCX], a
+    ; DMA sprites
     call OAM_DMA
+    ; Return from interrupt
     ld a, [bankRegMirror]
     ld [rMBC_BANK_REG], a
     ld a, $01
@@ -9977,7 +10062,6 @@ unusedDeathAnimation_copy: ;{ 00:3F07
     pop de
     pop bc
     pop af
-reti
-;}
+reti ;}
 
 ; Freespace - 00:3F60 (filled with $00)

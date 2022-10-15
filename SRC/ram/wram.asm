@@ -276,12 +276,19 @@ def cutsceneActive = $C463 ; Set to 1 if a cutscene is active (e.g. Metroid is a
 def alpha_stunCounter = $C464 ; Alpha Metroid stun counter
 def metroid_fightActive = $C465 ; 0 = no fight, 1 = fight active, 2 = metroid exploding
 ; Checked and cleared in $2:4000, cleared in $2:412F
-;$C466..69: Set to [$D05D..60] in $2:438F
+
+;$C466..69: Copied from [$D05D..60] if collision happened
+enCollision_weaponType = $C466 ; Projectile type - Copied to [$C46D] if a collision occurred
+enCollision_pEnemyLow  = $C467 ; Enemy data pointer of target enemy (if collision happens)
+enCollision_pEnemyHigh = $C468
+enCollision_weaponDir  = $C469 ; Projectile direction - Copied to [$C46E] if a collision occurred
+
 ;$C468 is a pointer compared against in $2:7DA0
 def gamma_stunCounter = $C46A ; Gamma Metroid stun counter
 
 def zeta_stunCounter = $C46C ; Zeta Metroid stun counter
-;$C46D: Set to FFh in $2:412F. Value for $D06F in $2:4DD3
+
+enemy_weaponType = $C46D ; Set to FFh in $2:412F. Value for $D06F in $2:4DD3
 ;  Enemy-Samus/Beam collision results
 ; $00 - Power beam
 ; $01 - Ice
@@ -292,7 +299,7 @@ def zeta_stunCounter = $C46C ; Zeta Metroid stun counter
 ; $10 - Screw
 ; $20 - Touch
 ; $FF - Nothing
-;$C46E: Enemy-Beam collision direction results
+enemy_weaponDir = $C46E ; Enemy-Beam collision direction results
 
 def omega_waitCounter = $C46F ; Omega Metroid waiting counter of some sort
 def omega_samusPrevHealth = $C470 ; Samus's previous health value (low byte only)
@@ -755,7 +762,7 @@ def samusAirDirection = $D00F ; Direction Samus is moving in air, used for spin-
 ;}
 def samus_jumpStartCounter = $D010 ; Counter for the beginning of Samus's jump state (used in the jumpStart pose)
 def unused_D011 = $D011 ; Nothing. Only cleared
-;$D012: Value for $D060 in $31F1. Projectile direction in $1:500D
+def weaponDirection = $D012 ; Direction of the projectile currently being processed
 ;
 def samusPose = $D020 ; Samus' pose
 ;{
@@ -920,12 +927,13 @@ def deathAnimTimer = $D059 ; Death sequence timer
 def pDeathAltAnimBaseLow  = $D05A ; Base address of pixels to clear in Samus' VRAM tiles (for unused animation)
 def pDeathAltAnimBaseHigh = $D05B
 ;$D05C: $32AB acknowledgement flag. $32AB acknowledges this when it executes, cleared every in-game frame. $32AB is called by in-game and item pickup sequence. Collision related?
-;$D05D..60: Values for $C466..69 in $2:438F. Guess: generic collision information
-;{
-;    $D05D: Projectile type - Set to 9 if enemy bombed. Set to [$D08D] if shot. Set to FFh in $03B5
-;    $D05E: Set to enemy data pointer if enemy bombed
-;    $D060: Projectile direction - Set to [$D012] if shot
-;}
+
+;$D05D..60: Collision information
+; - Copied to $C466..69 by a generic enemy routine if the enemy pointer matches
+collision_weaponType = $D05D ; Projectile type - Set to [$D08D] or an appropriate constant
+collision_pEnemyLow  = $D05E ; Enemy data pointer of target enemy (if collision happens)
+collision_pEnemyHigh = $D05F
+collision_weaponDir  = $D060 ; Projectile direction - Set to [$D012] if shot
 ;
 def acidContactFlag = $D062 ; Flag set every frame if Samus is touching acid.
 def deathFlag = $D063 ; Dying flag
@@ -935,7 +943,7 @@ def deathFlag = $D063 ; Dying flag
 ;    FFh: Dead
 ;}
 samusTopOamOffset = $D064 ; Last OAM offset used by Samus, HUD, etc. Used in by door transition routine ($239C) to erase enemies
-;$D065: VRAM tiles update source bank (see $FFB1..B6, $2BA3)
+vramTransfer_srcBank = $D065 ; VRAM tiles update source bank (see $FFB1..B6, $2BA3)
 countdownTimerLow = $D066;  ; Generic countdown timer used for
 countdownTimerHigh = $D067; ;  various events
 ;{
@@ -1014,8 +1022,8 @@ def saveMessageCooldownTimer = $D088 ; Cooldown timer for game save message (for
 def metroidCountReal = $D089 ; Real number of metroids remaining (BCD)
 def beamSolidityIndex = $D08A ; Projectile solid block threshold
 def queen_roomFlag = $D08B ; 11h: In Metroid Queen's room (set by screen transition command 8), other values less than 10h: not in Queen's room
-;$D08C: Flag for doing the varia-collection-style VRAM update (pixel-row by pixel-row)
-;$D08D: Value for $D05D in $31F1. Projectile type in $1:500D
+def variaAnimationFlag = $D08C ; Flag for doing the varia-collection-style VRAM update (pixel-row by pixel-row) -- $00: off, $FF: on
+def weaponType = $D08D ; Type of projectile currently being processed
 def doorIndexLow  = $D08E ; Index of screen transition command set. Set to [$4300 + ([screen Y position high] * 10h + [screen X position high]) * 2] & ~800h by set up door transition
 def doorIndexHigh = $D08F
 def queen_eatingState = $D090 ; Metroid Queen eating pose
@@ -1141,7 +1149,9 @@ respawningBlockArray:: ds $100
 ;}
 
 tiletableArray:: ds $200 ;$DA00..DBFF: Metatile definitions
+.end::
 collisionArray:: ds $100 ;$DC00..FF: Tile properties. Indexed by tilemap value. Note that tilemap value < 4 is a respawning shot block
+.end::
 ;{  mask - bitnum
 ;    01h : 0 Water (also causes morph ball sound effect glitch)
 ;    02h : 1 Half-solid floor (can jump through)
