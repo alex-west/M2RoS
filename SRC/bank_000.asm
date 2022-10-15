@@ -6548,7 +6548,7 @@ door_loadTiletable: ;{ 00:282A
         jr nz, .loop
     ; Jump target will pop HL eventually
     ; Rerender screen ahead of camera
-jp Jump_000_2918 ;}
+jp door_warp.rerender ;}
 
 door_loadCollision: ;{ 00:2859
     ; Load bank that the collision data is in
@@ -6654,49 +6654,50 @@ door_queen: ;{ 00:2887
     pop hl
 ret ;}
 
-
-door_warp:
+door_warp: ;{ 00:28FB
+    ; Load destination bank from lower nybble of token
     ld a, [hl+]
     and $0f
     ld [currentLevelBank], a
     ld [saveBuf_currentLevelBank], a
-    
+    ; Load y screen from upper nybble of next byte
     ld a, [hl]
     swap a
     and $0f
     ldh [hCameraYScreen], a
     ldh [hSamusYScreen], a
-    
+    ; Load x screen from lower nybble of byte
     ld a, [hl+]
     and $0f
     ldh [hCameraXScreen], a
     ldh [hSamusXScreen], a
+    ; Save HL (for subsequent door script tokens)
     push hl
+    ; Wait a frame
     call waitOneFrame
 
-Jump_000_2918: ; Rerender screen ahead of Samus
+.rerender: ; Rerender screen ahead of Samus
     ; Right
     ld a, [doorScrollDirection]
     cp $01
-        jr z, jr_000_2939
+        jr z, .right
     ; Left
     ld a, [doorScrollDirection]
     cp $02
-        jp z, Jump_000_29c4
+        jp z, .left
     ; Up
     ld a, [doorScrollDirection]
     cp $04
-        jp z, Jump_000_2b04
+        jp z, .up
     ; Down
     ld a, [doorScrollDirection]
     cp $08
-        jp z, Jump_000_2a4f
+        jp z, .down
     ; None
     pop hl
 ret
 
-
-jr_000_2939:
+.right: ;{ 00:2939
     switchBankVar [currentLevelBank]
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
@@ -6754,10 +6755,9 @@ jr_000_2939:
     ldh [hMapSource.xScreen], a
     call prepMapUpdate.column
     pop hl
-ret
+ret ;}
 
-
-Jump_000_29c4:
+.left: ;{ 00:29C4
     switchBankVar [currentLevelBank]
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
@@ -6815,10 +6815,9 @@ Jump_000_29c4:
     ldh [hMapSource.xScreen], a
     call prepMapUpdate.column
     pop hl
-ret
+ret ;}
 
-
-Jump_000_2a4f:
+.down: ;{ 00:2A4F
     switchBankVar [currentLevelBank]
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
@@ -6893,10 +6892,9 @@ Jump_000_2a4f:
     ldh [hMapSource.yScreen], a
     call prepMapUpdate.row
     pop hl
-ret
+ret ;}
 
-
-Jump_000_2b04:
+.up: ;{ 00:2B04
     switchBankVar [currentLevelBank]
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
@@ -6954,8 +6952,8 @@ Jump_000_2b04:
     ldh [hMapSource.yScreen], a
     call prepMapUpdate.row
     pop hl
-ret
-
+ret ;}
+;}
 
 Jump_000_2b8f:
     ld a, [mapUpdateFlag]
