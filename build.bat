@@ -2,7 +2,7 @@
 if not exist out mkdir out
 
 echo. Running scripts
-.\scripts\enemy_csv2asm.py -i .\SRC\data\enemies.csv -o .\SRC\data
+python .\scripts\enemy_csv2asm.py -i .\SRC\data\enemies.csv -o .\SRC\data
 if errorlevel 1 goto errorSCRIPT
 echo.  Success
 echo.
