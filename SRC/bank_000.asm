@@ -118,7 +118,7 @@ VBlankHandler: ;{ 00:0154
     ; Handle map updates during door transitions
     ld a, [doorIndexLow]
     and a
-        jp nz, Jump_000_2b8f
+        jp nz, VBlank_updateMapDuringTransition
     ; Branch for queen fight
     ld a, [queen_roomFlag]
     cp $11
@@ -6698,13 +6698,16 @@ door_warp: ;{ 00:28FB
 ret
 
 .right: ;{ 00:2939
+    ; Get level bank
     switchBankVar [currentLevelBank]
+    ; Init mapUpdateBuffer
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [mapUpdate_unusedVar], a
+    ; Get the x coordinate of the column to be rendered
     ldh a, [hCameraXPixel]
     add $50
     ldh [hMapSource.xPixel], a
@@ -6712,6 +6715,7 @@ ret
     adc $00
     and $0f
     ldh [hMapSource.xScreen], a
+    ; Get y coordinate of the top of the column to be rendered
     ldh a, [hCameraYPixel]
     sub $74
     ldh [hMapSource.yPixel], a
@@ -6719,16 +6723,20 @@ ret
     sbc $00
     and $0f
     ldh [hMapSource.yScreen], a
+    ; Render map column
     call prepMapUpdate.column
     call waitOneFrame
     
+    ; Get level bank
     switchBankVar [currentLevelBank]
+    ; Init mapUpdateBuffer
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [mapUpdate_unusedVar], a
+    ; Get the x coordinate of the next column to be rendered
     ldh a, [hCameraXPixel]
     add $60
     ldh [hMapSource.xPixel], a
@@ -6736,16 +6744,20 @@ ret
     adc $00
     and $0f
     ldh [hMapSource.xScreen], a
+    ; Render map column
     call prepMapUpdate.column
     call waitOneFrame
     
+    ; Get level bank
     switchBankVar [currentLevelBank]
+    ; Init mapUpdateBuffer
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [mapUpdate_unusedVar], a
+    ; Get the x coordinate of the next column to be rendered
     ldh a, [hCameraXPixel]
     add $70
     ldh [hMapSource.xPixel], a
@@ -6753,18 +6765,23 @@ ret
     adc $00
     and $0f
     ldh [hMapSource.xScreen], a
+    ; Render map column
     call prepMapUpdate.column
+    ; Get back the working pointer for the door script
     pop hl
 ret ;}
 
 .left: ;{ 00:29C4
+    ; Get level bank
     switchBankVar [currentLevelBank]
+    ; Init mapUpdateBuffer
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [mapUpdate_unusedVar], a
+    ; Get the x coordinate of the column to be rendered
     ldh a, [hCameraXPixel]
     sub $60
     ldh [hMapSource.xPixel], a
@@ -6772,6 +6789,7 @@ ret ;}
     sbc $00
     and $0f
     ldh [hMapSource.xScreen], a
+    ; Get y coordinate of the top of the column to be rendered
     ldh a, [hCameraYPixel]
     sub $74
     ldh [hMapSource.yPixel], a
@@ -6779,16 +6797,20 @@ ret ;}
     sbc $00
     and $0f
     ldh [hMapSource.yScreen], a
+    ; Render map column
     call prepMapUpdate.column
     call waitOneFrame
     
+    ; Get level bank
     switchBankVar [currentLevelBank]
+    ; Init mapUpdateBuffer
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [mapUpdate_unusedVar], a
+    ; Get the x coordinate of the next column to be rendered
     ldh a, [hCameraXPixel]
     sub $70
     ldh [hMapSource.xPixel], a
@@ -6796,16 +6818,20 @@ ret ;}
     sbc $00
     and $0f
     ldh [hMapSource.xScreen], a
+    ; Render map column
     call prepMapUpdate.column
     call waitOneFrame
     
+    ; Get level bank
     switchBankVar [currentLevelBank]
+    ; Init mapUpdateBuffer
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [mapUpdate_unusedVar], a
+    ; Get the x coordinate of the next column to be rendered
     ldh a, [hCameraXPixel]
     sub $80
     ldh [hMapSource.xPixel], a
@@ -6813,18 +6839,23 @@ ret ;}
     sbc $00
     and $0f
     ldh [hMapSource.xScreen], a
+    ; Render map column
     call prepMapUpdate.column
+    ; Get back the working pointer for the door script
     pop hl
 ret ;}
 
-.down: ;{ 00:2A4F
+.down: ;{ 00:2A4F - This case renders 4 rows instead of 3. Odd.
+    ; Get level bank
     switchBankVar [currentLevelBank]
+    ; Init mapUpdateBuffer
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [mapUpdate_unusedVar], a
+    ; Get x coordinate of the left of the row to be rendered
     ldh a, [hCameraXPixel]
     sub $80
     ldh [hMapSource.xPixel], a
@@ -6832,6 +6863,7 @@ ret ;}
     sbc $00
     and $0f
     ldh [hMapSource.xScreen], a
+    ; Get the y coordinate of the row to be rendered
     ldh a, [hCameraYPixel]
     add $78
     ldh [hMapSource.yPixel], a
@@ -6839,16 +6871,20 @@ ret ;}
     adc $00
     and $0f
     ldh [hMapSource.yScreen], a
+    ; Render map row
     call prepMapUpdate.row
     call waitOneFrame
     
+    ; Get level bank
     switchBankVar [currentLevelBank]
+    ; Init mapUpdateBuffer
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [mapUpdate_unusedVar], a
+    ; Get the y coordinate of the next row to be rendered
     ldh a, [hCameraYPixel]
     add $68
     ldh [hMapSource.yPixel], a
@@ -6856,16 +6892,20 @@ ret ;}
     adc $00
     and $0f
     ldh [hMapSource.yScreen], a
+    ; Render map row
     call prepMapUpdate.row
     call waitOneFrame
     
+    ; Get level bank
     switchBankVar [currentLevelBank]
+    ; Init mapUpdateBuffer
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [mapUpdate_unusedVar], a
+    ; Get the y coordinate of the next row to be rendered
     ldh a, [hCameraYPixel]
     add $58
     ldh [hMapSource.yPixel], a
@@ -6873,16 +6913,20 @@ ret ;}
     adc $00
     and $0f
     ldh [hMapSource.yScreen], a
+    ; Render map row
     call prepMapUpdate.row
     call waitOneFrame
     
+    ; Get level bank
     switchBankVar [currentLevelBank]
+    ; Init mapUpdateBuffer
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [mapUpdate_unusedVar], a
+    ; Get the y coordinate of the next row to be rendered
     ldh a, [hCameraYPixel]
     add $48
     ldh [hMapSource.yPixel], a
@@ -6890,18 +6934,23 @@ ret ;}
     adc $00
     and $0f
     ldh [hMapSource.yScreen], a
+    ; Render map row
     call prepMapUpdate.row
+    ; Get back the working pointer for the door script
     pop hl
 ret ;}
 
 .up: ;{ 00:2B04
+    ; Get level bank
     switchBankVar [currentLevelBank]
+    ; Init mapUpdateBuffer
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [mapUpdate_unusedVar], a
+    ; Get x coordinate of the left of the row to be rendered
     ldh a, [hCameraXPixel]
     sub $80
     ldh [hMapSource.xPixel], a
@@ -6909,6 +6958,7 @@ ret ;}
     sbc $00
     and $0f
     ldh [hMapSource.xScreen], a
+    ; Get the y coordinate of the row to be rendered
     ldh a, [hCameraYPixel]
     sub $78
     ldh [hMapSource.yPixel], a
@@ -6916,16 +6966,20 @@ ret ;}
     sbc $00
     and $0f
     ldh [hMapSource.yScreen], a
+    ; Render map row
     call prepMapUpdate.row
     call waitOneFrame
     
+    ; Get level bank
     switchBankVar [currentLevelBank]
+    ; Init mapUpdateBuffer
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [mapUpdate_unusedVar], a
+    ; Get the y coordinate of the next row to be rendered
     ldh a, [hCameraYPixel]
     sub $68
     ldh [hMapSource.yPixel], a
@@ -6933,16 +6987,20 @@ ret ;}
     sbc $00
     and $0f
     ldh [hMapSource.yScreen], a
+    ; Render map row
     call prepMapUpdate.row
     call waitOneFrame
     
+    ; Get level bank
     switchBankVar [currentLevelBank]
+    ; Init mapUpdateBuffer
     ld a, LOW(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrLow], a
     ld a, HIGH(mapUpdateBuffer)
     ldh [hMapUpdate.buffPtrHigh], a
     ld a, $ff
     ld [mapUpdate_unusedVar], a
+    ; Get the y coordinate of the next row to be rendered
     ldh a, [hCameraYPixel]
     sub $58
     ldh [hMapSource.yPixel], a
@@ -6950,18 +7008,24 @@ ret ;}
     sbc $00
     and $0f
     ldh [hMapSource.yScreen], a
+    ; Render map row
     call prepMapUpdate.row
+    ; Get back the working pointer for the door script
     pop hl
 ret ;}
 ;}
 
-Jump_000_2b8f:
+; Called if doorIndexLow is non-zero
+VBlank_updateMapDuringTransition: ;{ 00:2B8F
+    ; Exit if no map update pending
     ld a, [mapUpdateFlag]
     and a
         jr z, VBlank_vramDataTransfer.exit
+    ; Pretty sure this bankswitch is not needed
     switchBankVar [currentLevelBank]
+    ; Update map
     call VBlank_updateMap
-jr VBlank_vramDataTransfer.exit
+jr VBlank_vramDataTransfer.exit ;}
 
 VBlank_vramDataTransfer: ;{ 00:2BA3
     ; Check if varia suit is being collected
@@ -7867,7 +7931,7 @@ unusedDeathAnimation: ;{ 00:3062
 reti ;}
 
 ; 00:30BB - Bomb-enemy collision detection
-Call_000_30bb: ; 00:30BB
+Call_000_30bb: ;{ 00:30BB
     ldh a, [hSpriteYPixel]
     ldh [$98], a
     ldh a, [hSpriteXPixel]
@@ -7894,10 +7958,10 @@ Call_000_30bb: ; 00:30BB
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-ret
+ret ;}
 
-
-Call_000_30ea:
+; Bomb-enemy single collision
+Call_000_30ea: ;{ 00:30EA
     push hl
     ; Load enemy Y
     inc hl
@@ -8043,9 +8107,9 @@ ret
     pop hl
     scf
     ccf
-ret
+ret ;}
 
-Call_000_31b6: ; 00:31B6 - Projectile/enemy collision function
+Call_000_31b6: ;{ 00:31B6 - Projectile/enemy collision function
     ld a, [scrollY]
     ld b, a
     ld a, [tileY]
@@ -8079,10 +8143,10 @@ Call_000_31b6: ; 00:31B6 - Projectile/enemy collision function
     ld a, $01
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
-ret
+ret ;}
 
-
-Call_000_31f1:
+; Projectile-enemy single collision
+Call_000_31f1: ;{ 00:31F1
     push hl
     inc hl
     ; Ignore collision if X or Y position is too high?
@@ -8213,10 +8277,10 @@ jr_000_32a7:
     pop hl
     scf
     ccf
-ret
+ret ;}
 
-
-Call_000_32ab: ; Samus enemy collision detection ?
+; Note: Function has two entry points
+Call_000_32ab: ;{ Samus enemy collision detection ?
     ; Conditions for exiting early early
     ld a, [samusPose]
     cp pose_beingEaten ; $18
@@ -8235,23 +8299,19 @@ Call_000_32ab: ; Samus enemy collision detection ?
     ldh [$99], a
     jr jr_000_32f7
 
-Call_000_32cf:
+Call_000_32cf: ; Samus horizontal collision
     ld a, [samusPose]
     cp pose_beingEaten ; $18
-    jp nc, Jump_000_3698
-
+        jp nc, Jump_000_3698
     ld a, [deathFlag]
     and a
-    jp nz, Jump_000_3698
-
+        jp nz, Jump_000_3698
     ld a, [deathAnimTimer]
     and a
-    jp nz, Jump_000_3698
-
+        jp nz, Jump_000_3698
     ld a, [samusInvulnerableTimer]
     and a
-    jp nz, Jump_000_3698
-
+        jp nz, Jump_000_3698
     ldh a, [hCameraXPixel]
     ld b, a
     ld a, [tileX]
@@ -8286,10 +8346,10 @@ jr_000_32f7:
         ld a, h
         cp $c8
     jr nz, jr_000_3311
-ret
+ret ;}
 
 ; Samus vs. Single Enemy Collision
-Call_000_3324:
+Call_000_3324: ;{ 00:3324
     push hl
     inc hl
     ld a, [hl+]
@@ -8536,10 +8596,10 @@ Jump_000_3489:
     pop hl
     scf
     ccf
-ret
+ret ;}
 
-; Samus standing on sprite collision loop?
-Call_000_348d:
+; Samus-sprite downward collision loop
+Call_000_348d: ;{ 00:348D
     ld a, [samusPose]
     cp pose_beingEaten ; $18
         jp nc, Jump_000_3698
@@ -8594,10 +8654,10 @@ Call_000_348d:
         ld a, h
         cp $c8
     jr nz, jr_000_34c3
-ret
+ret ;}
 
-; A Samus-sprite routine
-Call_000_34ef:
+; A Samus-sprite upward collision loop
+Call_000_34ef: ;{ 00:34EF
     ld a, [samusPose]
     cp pose_beingEaten ; $18
         jp nc, Jump_000_3698
@@ -8645,10 +8705,10 @@ Call_000_34ef:
         ld a, h
         cp $c8
     jr nz, jr_000_3532
-ret
+ret ;}
 
-; Another Samus-sprite routine
-Call_000_3545:
+; Samus-sprite vertical collision detection
+Call_000_3545: ;{
     push hl
     inc hl
     ld a, [hl+]
@@ -8876,7 +8936,7 @@ jr_000_3683:
     scf
     ccf
     ret
-
+;}
 
 ; Common exits for collision routines that clear the carry flag (indicating no collision happened)
 Jump_000_3694:
