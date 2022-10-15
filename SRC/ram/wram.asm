@@ -598,10 +598,10 @@ def songPolynomialCounter_noise equ $CF22 ; Noise channel polynomial counter
 def songCounterControl_noise equ $CF23 ; Noise channel counter control
 ;        }
 ;
-def songToneSweepChannelInstructionPointer equ $CF26 ; Song tone/sweep channel instruction pointer
-def songToneChannelInstructionPointer equ $CF28 ; Song tone channel instruction pointer
-def songWaveChannelInstructionPointer equ $CF2A ; Song wave channel instruction pointer
-def songNoiseChannelInstructionPointer equ $CF2C ; Song noise channel instruction pointer
+def songChannelInstructionPointer_square1 equ $CF26 ; Song tone/sweep channel instruction pointer
+def songChannelInstructionPointer_square2 equ $CF28 ; Song tone channel instruction pointer
+def songChannelInstructionPointer_wave equ $CF2A ; Song wave channel instruction pointer
+def songChannelInstructionPointer_noise equ $CF2C ; Song noise channel instruction pointer
 ;        {
 ;            Instruction format:
 ;                00:          End of instruction list

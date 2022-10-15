@@ -249,10 +249,10 @@ handleAudio_handleSongInterruptionPlaying:
 handleSongAndSoundEffects:
 ;{
     call handleSong
-    call handleNoiseChannelSoundEffect
-    call handleToneSweepChannelSoundEffect
-    call handleToneChannelSoundEffect
-    call handleWaveChannelSoundEffect
+    call handleChannelSoundEffect_noise
+    call handleChannelSoundEffect_square1
+    call handleChannelSoundEffect_square2
+    call handleChannelSoundEffect_wave
     xor a
     ld [songRequest], a
     ld [sfxRequest_noise], a
@@ -477,14 +477,14 @@ handleAudio_handleFadingOutMusic:
     jp disableSoundChannels
 ;}
 
-handleToneSweepChannelSoundEffect:
+handleChannelSoundEffect_square1:
 ;{
     ld a, [sfxRequest_square1]
     and a
         jr z, .endif_sfxRequested
 
     cp $ff
-        jp z, gotoClearToneSweepChannelSoundEffect
+        jp z, gotoClearChannelSoundEffect_square1
 
     cp $1f
         jr nc, .endif_sfxRequested
@@ -497,7 +497,7 @@ handleToneSweepChannelSoundEffect:
         jr z, .endif_sfxRequested
 
         ld a, [sfxRequest_square1]
-        ld hl, toneSweepSfx_initPointers
+        ld hl, square1Sfx_initPointers
         call loadPointerFromTable
         jp hl
     .endif_sfxRequested
@@ -509,7 +509,7 @@ handleToneSweepChannelSoundEffect:
 
     cp $1f
     jr nc, .endif_sfxPlaying
-        ld hl, toneSweepSfx_playbackPointers
+        ld hl, square1Sfx_playbackPointers
         call loadPointerFromTable
         jp hl
     .endif_sfxPlaying
@@ -519,14 +519,14 @@ handleToneSweepChannelSoundEffect:
 ret
 ;}
 
-handleToneChannelSoundEffect:
+handleChannelSoundEffect_square2:
 ;{
     ld a, [sfxRequest_square2]
     and a
         jr z, .endif_sfxRequested
 
     cp $ff
-        jp z, gotoClearToneChannelSoundEffect
+        jp z, gotoClearChannelSoundEffect_square2
 
     cp $08
         jr nc, .endif_sfxRequested
@@ -552,14 +552,14 @@ handleToneChannelSoundEffect:
 ret
 ;}
 
-handleNoiseChannelSoundEffect:
+handleChannelSoundEffect_noise:
 ;{
     ld a, [sfxRequest_noise]
     and a
         jr z, .endif_sfxRequested
 
     cp $ff
-        jp z, gotoClearNoiseChannelSoundEffect
+        jp z, gotoClearChannelSoundEffect_noise
 
     cp $1b
         jr nc, .endif_sfxRequested
@@ -601,7 +601,7 @@ handleNoiseChannelSoundEffect:
     ret
 ;}
 
-handleWaveChannelSoundEffect:
+handleChannelSoundEffect_wave:
 ;{
     ld a, [sfxRequest_wave]
     and a
@@ -676,8 +676,8 @@ handleSong:
 
     cp song_killedMetroid
     jr nz, .endIf
-        call clearToneSweepChannelSoundEffect
-        call clearNoiseChannelSoundEffect
+        call clearChannelSoundEffect_square1
+        call clearChannelSoundEffect_noise
         ld a, [songRequest]
     .endIf
 
@@ -706,10 +706,10 @@ disableSoundChannels:
     ld [songChannelEnable_square2], a
     ld [songChannelEnable_wave], a
     ld [songChannelEnable_noise], a
-    call disableToneSweepChannel
-    call disableToneChannel
-    call disableWaveChannel
-    jp disableNoiseChannel
+    call disableChannel_square1
+    call disableChannel_square2
+    call disableChannel_wave
+    jp disableChannel_noise
 ;}
 
 clearSongPlaying:
@@ -732,25 +732,25 @@ handleSongPlaying:
     ld [songOptionsSetFlag_working], a
     ld a, [songChannelEnable_square1]
     and a
-        jr z, .endToneSweep
+        jr z, .endSquare1
 
     ld a, $01
     ld [workingSoundChannel], a
     ld a, [songInstructionTimer_square1]
     ld [songInstructionTimer_working], a
     cp $01
-        jp z, handleSong_loadNextToneSweepChannelSound
+        jp z, handleSong_loadNextChannelSound_square1
 
     dec a
     ld [songInstructionTimer_square1], a
     ld a, [sfxActive_square1]
     and a
-        jr nz, .endToneSweep
+        jr nz, .endSquare1
 
     ld a, [songEffectIndex_square1]
     ld [songEffectIndex_working], a
     and a
-        jr z, .endToneSweep
+        jr z, .endSquare1
 
     ld a, [songFrequency_square1]
     ld c, a
@@ -761,31 +761,31 @@ handleSongPlaying:
     ldh [rAUD1LOW], a
     ld a, [songFrequency_working+1]
     ldh [rAUD1HIGH], a
-    .endToneSweep
+    .endSquare1
 
     xor a
     ld [songOptionsSetFlag_working], a
     ld a, [songChannelEnable_square2]
     and a
-        jr z, .endTone
+        jr z, .endSquare2
 
     ld a, $02
     ld [workingSoundChannel], a
     ld a, [songInstructionTimer_square2]
     ld [songInstructionTimer_working], a
     cp $01
-        jp z, handleSong_loadNextToneChannelSound
+        jp z, handleSong_loadNextChannelSound_square2
 
     dec a
     ld [songInstructionTimer_square2], a
     ld a, [sfxActive_square2]
     and a
-        jr nz, .endTone
+        jr nz, .endSquare2
 
     ld a, [songEffectIndex_square2]
     ld [songEffectIndex_working], a
     and a
-        jr z, .endTone
+        jr z, .endSquare2
 
     ld a, [songFrequency_square2]
     ld c, a
@@ -796,7 +796,7 @@ handleSongPlaying:
     ldh [rAUD2LOW], a
     ld a, [songFrequency_working+1]
     ldh [rAUD2HIGH], a
-    .endTone
+    .endSquare2
 
     xor a
     ld [songOptionsSetFlag_working], a
@@ -809,7 +809,7 @@ handleSongPlaying:
     ld a, [songInstructionTimer_wave]
     ld [songInstructionTimer_working], a
     cp $01
-        jp z, handleSong_loadNextWaveChannelSound
+        jp z, handleSong_loadNextChannelSound_wave
 
     dec a
     ld [songInstructionTimer_wave], a
@@ -845,7 +845,7 @@ handleSongPlaying:
     ld a, [songInstructionTimer_noise]
     ld [songInstructionTimer_working], a
     cp $01
-        jp z, handleSong_loadNextNoiseChannelSound
+        jp z, handleSong_loadNextChannelSound_noise
 
     dec a
     ld [songInstructionTimer_noise], a
@@ -890,52 +890,52 @@ loadPointerFromTable:
     ret
 ;}
 
-decrementToneSweepChannelSoundEffectTimer:
+decrementChannelSoundEffectTimer_square1:
 ;{
     ld a, [sfxTimer_square1]
     and a
-        jr z, gotoClearToneSweepChannelSoundEffect
+        jr z, gotoClearChannelSoundEffect_square1
 
     dec a
     ld [sfxTimer_square1], a
     ret
 ;}
 
-gotoClearToneSweepChannelSoundEffect:
+gotoClearChannelSoundEffect_square1:
 ;{
-    jr clearToneSweepChannelSoundEffect
+    jr clearChannelSoundEffect_square1
 ;}
 
-decrementToneChannelSoundEffectTimer:
+decrementChannelSoundEffectTimer_square2:
 ;{
     ld a, [sfxTimer_square2]
     and a
-        jr z, gotoClearToneChannelSoundEffect
+        jr z, gotoClearChannelSoundEffect_square2
 
     dec a
     ld [sfxTimer_square2], a
     ret
 ;}
 
-gotoClearToneChannelSoundEffect:
+gotoClearChannelSoundEffect_square2:
 ;{
-    jr clearToneChannelSoundEffect
+    jr clearChannelSoundEffect_square2
 ;}
 
-decrementNoiseChannelSoundEffectTimer:
+decrementChannelSoundEffectTimer_noise:
 ;{
     ld a, [sfxTimer_noise]
     and a
-        jr z, gotoClearNoiseChannelSoundEffect
+        jr z, gotoClearChannelSoundEffect_noise
 
     dec a
     ld [sfxTimer_noise], a
     ret
 ;}
 
-gotoClearNoiseChannelSoundEffect:
+gotoClearChannelSoundEffect_noise:
 ;{
-    jr clearNoiseChannelSoundEffect
+    jr clearChannelSoundEffect_noise
 ;}
 
 ; Dead code
@@ -947,14 +947,14 @@ gotoClearNoiseChannelSoundEffect:
     ret
 ;}
 
-clearToneSweepChannelSoundEffect:
+clearChannelSoundEffect_square1:
 ;{
     xor a
     ld [sfxPlaying_square1], a
     ld [sfxActive_square1], a
 ;}
 
-disableToneSweepChannel:
+disableChannel_square1:
 ;{
     ld a, $08
     ldh [rAUD1ENV], a
@@ -964,14 +964,14 @@ disableToneSweepChannel:
     ret
 ;}
 
-clearToneChannelSoundEffect:
+clearChannelSoundEffect_square2:
 ;{
     xor a
     ld [sfxPlaying_square2], a
     ld [sfxActive_square2], a
 ;}
 
-disableToneChannel:
+disableChannel_square2:
 ;{
     ld a, $08
     ldh [rAUD2ENV], a
@@ -981,13 +981,13 @@ disableToneChannel:
     ret
 ;}
 
-clearWaveChannelSoundEffect:
+clearChannelSoundEffect_wave:
 ;{
     xor a
     ld [sfxActive_wave], a
 ;}
 
-disableWaveChannel:
+disableChannel_wave:
 ;{
     xor a
     ldh [rAUD3ENA], a
@@ -995,14 +995,14 @@ disableWaveChannel:
     ret
 ;}
 
-clearNoiseChannelSoundEffect:
+clearChannelSoundEffect_noise:
 ;{
     xor a
     ld [sfxPlaying_noise], a
     ld [sfxActive_noise], a
 ;}
 
-disableNoiseChannel:
+disableChannel_noise:
 ;{
     ld a, $08
     ldh [rNR42], a
@@ -1107,13 +1107,13 @@ writeToWavePatternRam:
 
 setChannelOptionSet:
 ;{
-.toneSweep
+.square1
     push hl
     ld hl, $ff10
     ld b, $05
     jr .merge
 
-.tone
+.square2
     push hl
     ld hl, $ff16
     ld b, $04
@@ -1185,28 +1185,28 @@ handleAudio_paused_frame3F:
     ld de, $4884
 ;}
 
-handleAudio_paused_toneSweepSfx:
+handleAudio_paused_square1Sfx:
 ;{
-    call setChannelOptionSet.toneSweep
+    call setChannelOptionSet.square1
     jp clearNonWaveSoundEffectRequests
 ;}
 
 handleAudio_paused_frame3A:
 ;{
     ld de, $4889
-    jr handleAudio_paused_toneSweepSfx
+    jr handleAudio_paused_square1Sfx
 ;}
 
 handleAudio_paused_frame2F:
 ;{
     ld de, $4892
-    jr handleAudio_paused_toneSweepSfx
+    jr handleAudio_paused_square1Sfx
 ;}
 
 handleAudio_paused_frame24:
 ;{
     ld de, $489b
-    jr handleAudio_paused_toneSweepSfx
+    jr handleAudio_paused_square1Sfx
 ;}
 
 audioUnpause:
@@ -1335,22 +1335,22 @@ loadSongHeader:
     ld l, a
     ld a, l
     or h
-    jr nz, .else_toneSweep
+    jr nz, .else_square1
         xor a
         ld [songChannelEnable_square1], a
         ld a, $08
         ldh [rAUD1ENV], a
         ld a, $80
         ldh [rAUD1HIGH], a
-        jr .endIf_toneSweep
-    .else_toneSweep
+        jr .endIf_square1
+    .else_square1
         ld a, $01
         ld [songChannelEnable_square1], a
         ld a, [hl+]
-        ld [songToneSweepChannelInstructionPointer+1], a
+        ld [songChannelInstructionPointer_square1+1], a
         ld a, [hl]
-        ld [songToneSweepChannelInstructionPointer], a
-    .endIf_toneSweep
+        ld [songChannelInstructionPointer_square1], a
+    .endIf_square1
 
     ld a, [songSectionPointer_square2]
     ld h, a
@@ -1358,22 +1358,22 @@ loadSongHeader:
     ld l, a
     ld a, l
     or h
-    jr nz, .else_tone
+    jr nz, .else_square2
         xor a
         ld [songChannelEnable_square2], a
         ld a, $08
         ldh [rAUD2ENV], a
         ld a, $80
         ldh [rAUD2HIGH], a
-        jr .endIf_tone
-    .else_tone
+        jr .endIf_square2
+    .else_square2
         ld a, $02
         ld [songChannelEnable_square2], a
         ld a, [hl+]
-        ld [songToneChannelInstructionPointer+1], a
+        ld [songChannelInstructionPointer_square2+1], a
         ld a, [hl]
-        ld [songToneChannelInstructionPointer], a
-    .endIf_tone
+        ld [songChannelInstructionPointer_square2], a
+    .endIf_square2
 
     ld a, [songSectionPointer_wave]
     ld h, a
@@ -1391,9 +1391,9 @@ loadSongHeader:
         ld a, $03
         ld [songChannelEnable_wave], a
         ld a, [hl+]
-        ld [songWaveChannelInstructionPointer+1], a
+        ld [songChannelInstructionPointer_wave+1], a
         ld a, [hl]
-        ld [songWaveChannelInstructionPointer], a
+        ld [songChannelInstructionPointer_wave], a
     .endIf_wave
 
     ld a, [songSectionPointer_noise]
@@ -1410,9 +1410,9 @@ loadSongHeader:
         ld a, $04
         ld [songChannelEnable_noise], a
         ld a, [hl+]
-        ld [songNoiseChannelInstructionPointer+1], a
+        ld [songChannelInstructionPointer_noise+1], a
         ld a, [hl]
-        ld [songNoiseChannelInstructionPointer], a
+        ld [songChannelInstructionPointer_noise], a
     .endIf_noise
 
     ld a, $01
@@ -1423,26 +1423,26 @@ loadSongHeader:
     ret
 ;}
 
-handleSong_loadNextToneSweepChannelSound:
+handleSong_loadNextChannelSound_square1:
 ;{
     ld de, songChannelSongProcessingState_square1
     ld hl, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
-    ld a, [songToneSweepChannelInstructionPointer]
+    ld a, [songChannelInstructionPointer_square1]
     ld h, a
-    ld a, [songToneSweepChannelInstructionPointer+1]
+    ld a, [songChannelInstructionPointer_square1+1]
     ld l, a
     ld a, $01
     call loadNextSound
     ld a, [workingSoundChannel]
     ld [songChannelEnable_square1], a
     and a
-        jp z, resetToneSweepChannelOptions
+        jp z, resetChannelOptions_square1
 
     ld a, h
-    ld [songToneSweepChannelInstructionPointer], a
+    ld [songChannelInstructionPointer_square1], a
     ld a, l
-    ld [songToneSweepChannelInstructionPointer+1], a
+    ld [songChannelInstructionPointer_square1+1], a
     ld hl, songChannelSongProcessingState_square1
     ld de, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
@@ -1463,7 +1463,7 @@ handleSong_loadNextToneSweepChannelSound:
     ld [songFrequency_square1+1], a
     ld a, [sfxActive_square1]
     and a
-        jp nz, handleSongPlaying.endToneSweep
+        jp nz, handleSongPlaying.endSquare1
 
     ld a, [songSweep_square1]
     ldh [rNR10], a
@@ -1475,29 +1475,29 @@ handleSong_loadNextToneSweepChannelSound:
     ldh [rAUD1LOW], a
     ld a, [songFrequency_square1+1]
     ldh [rAUD1HIGH], a
-    jp handleSongPlaying.endToneSweep
+    jp handleSongPlaying.endSquare1
 ;}
 
-handleSong_loadNextToneChannelSound:
+handleSong_loadNextChannelSound_square2:
 ;{
     ld de, songChannelSongProcessingState_square2
     ld hl, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
-    ld a, [songToneChannelInstructionPointer]
+    ld a, [songChannelInstructionPointer_square2]
     ld h, a
-    ld a, [songToneChannelInstructionPointer+1]
+    ld a, [songChannelInstructionPointer_square2+1]
     ld l, a
     ld a, $02
     call loadNextSound
     ld a, [workingSoundChannel]
     ld [songChannelEnable_square2], a
     and a
-        jp z, resetToneChannelOptions
+        jp z, resetChannelOptions_square2
 
     ld a, h
-    ld [songToneChannelInstructionPointer], a
+    ld [songChannelInstructionPointer_square2], a
     ld a, l
-    ld [songToneChannelInstructionPointer+1], a
+    ld [songChannelInstructionPointer_square2+1], a
     ld hl, songChannelSongProcessingState_square2
     ld de, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
@@ -1516,7 +1516,7 @@ handleSong_loadNextToneChannelSound:
     ld [songFrequency_square2+1], a
     ld a, [sfxActive_square2]
     and a
-        jp nz, handleSongPlaying.endTone
+        jp nz, handleSongPlaying.endSquare2
 
     ld a, [songSoundLength_square2]
     ldh [rNR21], a
@@ -1548,29 +1548,29 @@ handleSong_loadNextToneChannelSound:
     ldh [rAUD2LOW], a
     ld a, [songFrequency_square2+1]
     ldh [rAUD2HIGH], a
-    jp handleSongPlaying.endTone
+    jp handleSongPlaying.endSquare2
 ;}
 
-handleSong_loadNextWaveChannelSound:
+handleSong_loadNextChannelSound_wave:
 ;{
     ld de, songChannelSongProcessingState_wave
     ld hl, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
-    ld a, [songWaveChannelInstructionPointer]
+    ld a, [songChannelInstructionPointer_wave]
     ld h, a
-    ld a, [songWaveChannelInstructionPointer+1]
+    ld a, [songChannelInstructionPointer_wave+1]
     ld l, a
     ld a, $03
     call loadNextSound
     ld a, [workingSoundChannel]
     ld [songChannelEnable_wave], a
     and a
-        jp z, resetWaveChannelOptions
+        jp z, resetChannelOptions_wave
 
     ld a, h
-    ld [songWaveChannelInstructionPointer], a
+    ld [songChannelInstructionPointer_wave], a
     ld a, l
-    ld [songWaveChannelInstructionPointer+1], a
+    ld [songChannelInstructionPointer_wave+1], a
     ld hl, songChannelSongProcessingState_wave
     ld de, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
@@ -1603,26 +1603,26 @@ handleSong_loadNextWaveChannelSound:
     jp handleSongPlaying.endWave
 ;}
 
-handleSong_loadNextNoiseChannelSound:
+handleSong_loadNextChannelSound_noise:
 ;{
     ld de, songChannelSongProcessingState_noise
     ld hl, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
-    ld a, [songNoiseChannelInstructionPointer]
+    ld a, [songChannelInstructionPointer_noise]
     ld h, a
-    ld a, [songNoiseChannelInstructionPointer+1]
+    ld a, [songChannelInstructionPointer_noise+1]
     ld l, a
     ld a, $04
     call loadNextSound
     ld a, [workingSoundChannel]
     ld [songChannelEnable_noise], a
     and a
-        jp z, resetNoiseChannelOptions
+        jp z, resetChannelOptions_noise
 
     ld a, h
-    ld [songNoiseChannelInstructionPointer], a
+    ld [songChannelInstructionPointer_noise], a
     ld a, l
-    ld [songNoiseChannelInstructionPointer+1], a
+    ld [songChannelInstructionPointer_noise+1], a
     ld hl, songChannelSongProcessingState_noise
     ld de, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
@@ -1843,21 +1843,21 @@ loadNextSound:
 
     ld a, [workingSoundChannel]
     cp $01
-        jr z, .setFrequency_toneSweep
+        jr z, .setFrequency_square1
     cp $02
-        jr z, .setFrequency_tone
+        jr z, .setFrequency_square2
     cp $03
         jr z, .setFrequency_wave
     ret
 
-.setFrequency_toneSweep
+.setFrequency_square1
     ld a, [songFrequency_square1]
     ld [songFrequency_working], a
     ld a, [songFrequency_square1+1]
     ld [songFrequency_working+1], a
     ret
 
-.setFrequency_tone
+.setFrequency_square2
     ld a, [songFrequency_square2]
     ld [songFrequency_working], a
     ld a, [songFrequency_square2+1]
@@ -2119,22 +2119,22 @@ handleSongSoundChannelEffect:
 .setFrequency
     ld a, [workingSoundChannel]
     cp $01
-    jr nz, .endIf_toneSweep
+    jr nz, .endIf_square1
         ld a, [songFrequency_working]
         ld [songFrequency_square1], a
         ld a, [songFrequency_working+1]
         ld [songFrequency_square1+1], a
         ret
-    .endIf_toneSweep
+    .endIf_square1
 
     cp $02
-    jr nz, .endIf_tone
+    jr nz, .endIf_square2
         ld a, [songFrequency_working]
         ld [songFrequency_square2], a
         ld a, [songFrequency_working+1]
         ld [songFrequency_square2+1], a
         ret
-    .endIf_tone
+    .endIf_square2
 
     cp $03
         ret nz
@@ -2172,7 +2172,7 @@ handleSongSoundChannelEffect:
     jr .setFrequency
 ;}
 
-resetToneSweepChannelOptions:
+resetChannelOptions_square1:
 ;{
     xor a
     ld [songChannelEnable_square1], a
@@ -2182,10 +2182,10 @@ resetToneSweepChannelOptions:
     ld a, $80
     ldh [rAUD1HIGH], a
     ld [songFrequency_square1+1], a
-    jp handleSongPlaying.endToneSweep
+    jp handleSongPlaying.endSquare1
 ;}
 
-resetToneChannelOptions:
+resetChannelOptions_square2:
 ;{
     xor a
     ld [songChannelEnable_square2], a
@@ -2195,10 +2195,10 @@ resetToneChannelOptions:
     ld a, $80
     ldh [rAUD2HIGH], a
     ld [songFrequency_square2+1], a
-    jp handleSongPlaying.endTone
+    jp handleSongPlaying.endSquare2
 ;}
 
-resetWaveChannelOptions:
+resetChannelOptions_wave:
 ;{
     xor a
     ld [songChannelEnable_wave], a
@@ -2208,7 +2208,7 @@ resetWaveChannelOptions:
     jp handleSongPlaying.endWave
 ;}
 
-resetNoiseChannelOptions:
+resetChannelOptions_noise:
 ;{
     xor a
     ld [songChannelEnable_noise], a
@@ -2258,99 +2258,99 @@ resetSongSoundChannelOptions:
 
 ; Tone/sweep channel sound effects
 ;{
-toneSweepSfx_initPointers:
+square1Sfx_initPointers:
 ;{
-    dw toneSweepSfx_init_1 ; 1: Jumping
-    dw toneSweepSfx_init_2 ; 2: Hi-jumping
-    dw toneSweepSfx_init_3 ; 3: Screw attacking
-    dw toneSweepSfx_init_4 ; 4: Uncrouching / turning around / landing
-    dw toneSweepSfx_init_5 ; 5: Crouching / unmorphing
-    dw toneSweepSfx_init_6 ; 6: Morphing
-    dw toneSweepSfx_init_7 ; 7: Shooting beam
-    dw toneSweepSfx_init_8 ; 8: Shooting missile
-    dw toneSweepSfx_init_9 ; 9: Shooting ice beam
-    dw toneSweepSfx_init_A ; Ah: Shooting plasma beam
-    dw toneSweepSfx_init_B ; Bh: Shooting spazer beam
-    dw toneSweepSfx_init_C ; Ch: Picked up missile drop
-    dw toneSweepSfx_init_D ; Dh: Spider ball
-    dw toneSweepSfx_init_E ; Eh: Picked up energy drop
-    dw toneSweepSfx_init_F ; Fh: Shot missile door with beam
-    dw toneSweepSfx_init_10 ; 10h
+    dw square1Sfx_init_1 ; 1: Jumping
+    dw square1Sfx_init_2 ; 2: Hi-jumping
+    dw square1Sfx_init_3 ; 3: Screw attacking
+    dw square1Sfx_init_4 ; 4: Uncrouching / turning around / landing
+    dw square1Sfx_init_5 ; 5: Crouching / unmorphing
+    dw square1Sfx_init_6 ; 6: Morphing
+    dw square1Sfx_init_7 ; 7: Shooting beam
+    dw square1Sfx_init_8 ; 8: Shooting missile
+    dw square1Sfx_init_9 ; 9: Shooting ice beam
+    dw square1Sfx_init_A ; Ah: Shooting plasma beam
+    dw square1Sfx_init_B ; Bh: Shooting spazer beam
+    dw square1Sfx_init_C ; Ch: Picked up missile drop
+    dw square1Sfx_init_D ; Dh: Spider ball
+    dw square1Sfx_init_E ; Eh: Picked up energy drop
+    dw square1Sfx_init_F ; Fh: Shot missile door with beam
+    dw square1Sfx_init_10 ; 10h
     dw initializeAudio.ret ; 11h: ret
-    dw toneSweepSfx_init_12 ; 12h
-    dw toneSweepSfx_init_13 ; 13h: Bomb laid
-    dw toneSweepSfx_init_14 ; 14h
-    dw toneSweepSfx_init_15 ; 15h: Option select / missile select
-    dw toneSweepSfx_init_16 ; 16h: Shooting wave beam
-    dw toneSweepSfx_init_17 ; 17h
-    dw toneSweepSfx_init_18 ; 18h: Samus' health changed
-    dw toneSweepSfx_init_19 ; 19h: No missile dud shot
-    dw toneSweepSfx_init_1A ; 1Ah
-    dw toneSweepSfx_init_1B ; 1Bh: Metroid cry
-    dw toneSweepSfx_init_1C ; 1Ch: Saved
-    dw toneSweepSfx_init_1D ; 1Dh
-    dw toneSweepSfx_init_1E ; 1Eh: Unpaused
+    dw square1Sfx_init_12 ; 12h
+    dw square1Sfx_init_13 ; 13h: Bomb laid
+    dw square1Sfx_init_14 ; 14h
+    dw square1Sfx_init_15 ; 15h: Option select / missile select
+    dw square1Sfx_init_16 ; 16h: Shooting wave beam
+    dw square1Sfx_init_17 ; 17h
+    dw square1Sfx_init_18 ; 18h: Samus' health changed
+    dw square1Sfx_init_19 ; 19h: No missile dud shot
+    dw square1Sfx_init_1A ; 1Ah
+    dw square1Sfx_init_1B ; 1Bh: Metroid cry
+    dw square1Sfx_init_1C ; 1Ch: Saved
+    dw square1Sfx_init_1D ; 1Dh
+    dw square1Sfx_init_1E ; 1Eh: Unpaused
 ;}
 
-toneSweepSfx_playbackPointers:
+square1Sfx_playbackPointers:
 ;{
-    dw toneSweepSfx_playback_1 ; 1: Jumping
-    dw toneSweepSfx_playback_2 ; 2: Hi-jumping
-    dw toneSweepSfx_playback_3 ; 3: Screw attacking
-    dw toneSweepSfx_playback_4 ; 4: Uncrouching / turning around / landing
-    dw toneSweepSfx_playback_5 ; 5: Crouching / unmorphing
-    dw toneSweepSfx_playback_6 ; 6: Morphing
-    dw toneSweepSfx_playback_7 ; 7: Shooting beam
-    dw toneSweepSfx_playback_8 ; 8: Shooting missile
-    dw toneSweepSfx_playback_9 ; 9: Shooting ice beam
-    dw toneSweepSfx_playback_A ; Ah: Shooting plasma beam
-    dw toneSweepSfx_playback_B ; Bh: Shooting spazer beam
-    dw toneSweepSfx_playback_C ; Ch: Picked up missile drop
-    dw toneSweepSfx_playback_D ; Dh: Spider ball
-    dw toneSweepSfx_playback_E ; Eh: Picked up energy drop
-    dw toneSweepSfx_playback_F ; Fh: Shot missile door with beam
-    dw toneSweepSfx_playback_10 ; 10h
+    dw square1Sfx_playback_1 ; 1: Jumping
+    dw square1Sfx_playback_2 ; 2: Hi-jumping
+    dw square1Sfx_playback_3 ; 3: Screw attacking
+    dw square1Sfx_playback_4 ; 4: Uncrouching / turning around / landing
+    dw square1Sfx_playback_5 ; 5: Crouching / unmorphing
+    dw square1Sfx_playback_6 ; 6: Morphing
+    dw square1Sfx_playback_7 ; 7: Shooting beam
+    dw square1Sfx_playback_8 ; 8: Shooting missile
+    dw square1Sfx_playback_9 ; 9: Shooting ice beam
+    dw square1Sfx_playback_A ; Ah: Shooting plasma beam
+    dw square1Sfx_playback_B ; Bh: Shooting spazer beam
+    dw square1Sfx_playback_C ; Ch: Picked up missile drop
+    dw square1Sfx_playback_D ; Dh: Spider ball
+    dw square1Sfx_playback_E ; Eh: Picked up energy drop
+    dw square1Sfx_playback_F ; Fh: Shot missile door with beam
+    dw square1Sfx_playback_10 ; 10h
     dw initializeAudio.ret ; 11h: ret
-    dw decrementToneSweepChannelSoundEffectTimer ; 12h
-    dw decrementToneSweepChannelSoundEffectTimer ; 13h: Bomb laid
-    dw toneSweepSfx_playback_14 ; 14h
-    dw toneSweepSfx_playback_15 ; 15h: Option select / missile select
-    dw toneSweepSfx_playback_16 ; 16h: Shooting wave beam
-    dw toneSweepSfx_playback_17 ; 17h
-    dw decrementToneSweepChannelSoundEffectTimer ; 18h: Samus' health changed
-    dw toneSweepSfx_playback_19 ; 19h: No missile dud shot
-    dw toneSweepSfx_playback_1A ; 1Ah
-    dw toneSweepSfx_playback_1B ; 1Bh: Metroid cry
-    dw toneSweepSfx_playback_1C ; 1Ch: Saved
-    dw toneSweepSfx_playback_1D ; 1Dh
-    dw toneSweepSfx_playback_1E ; 1Eh: Unpaused
+    dw decrementChannelSoundEffectTimer_square1 ; 12h
+    dw decrementChannelSoundEffectTimer_square1 ; 13h: Bomb laid
+    dw square1Sfx_playback_14 ; 14h
+    dw square1Sfx_playback_15 ; 15h: Option select / missile select
+    dw square1Sfx_playback_16 ; 16h: Shooting wave beam
+    dw square1Sfx_playback_17 ; 17h
+    dw decrementChannelSoundEffectTimer_square1 ; 18h: Samus' health changed
+    dw square1Sfx_playback_19 ; 19h: No missile dud shot
+    dw square1Sfx_playback_1A ; 1Ah
+    dw square1Sfx_playback_1B ; 1Bh: Metroid cry
+    dw square1Sfx_playback_1C ; 1Ch: Saved
+    dw square1Sfx_playback_1D ; 1Dh
+    dw square1Sfx_playback_1E ; 1Eh: Unpaused
 ;}
 
 playShortJumpSound:
 ;{
     ld a, $0b
-    ld de, toneSweepOptionSets.jumping_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.jumping_0
+    jp playSquare1Sfx
 ;}
 
 playingShortJumpSound:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $09
-        jr z, toneSweepSfx_playback_1.set1
+        jr z, square1Sfx_playback_1.set1
     ret
 ;}
 
-toneSweepSfx_init_1:
+square1Sfx_init_1:
 ;{
     ld a, [sfxPlaying_square1]
     cp sfx_square1_shootingWaveBeam
-        jp z, handleToneSweepChannelSoundEffect.playing
+        jp z, handleChannelSoundEffect_square1.playing
 
     cp sfx_square1_shootingBeam
     jr c, .endIf
         cp sfx_square1_shootingSpazerBeam
-            jp c, handleToneSweepChannelSoundEffect.playing
+            jp c, handleChannelSoundEffect_square1.playing
     .endIf
 
     ld a, [songPlaying]
@@ -2358,17 +2358,17 @@ toneSweepSfx_init_1:
         jr z, playShortJumpSound
 
     ld a, $32
-    ld de, toneSweepOptionSets.jumping_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.jumping_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_1:
+square1Sfx_playback_1:
 ;{
     ld a, [songPlaying]
     cp song_chozoRuins
         jr z, playingShortJumpSound
 
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $2d
         jr z, .set1
     cp $1e
@@ -2382,52 +2382,52 @@ toneSweepSfx_playback_1:
     ret
 
 .set1
-    ld de, toneSweepOptionSets.jumping_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.jumping_1
+    jp setChannelOptionSet.square1
 
 .set2
-    ld de, toneSweepOptionSets.jumping_2
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.jumping_2
+    jp setChannelOptionSet.square1
 
 .set3
-    ld de, toneSweepOptionSets.jumping_3
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.jumping_3
+    jp setChannelOptionSet.square1
 
 .set4
-    ld de, toneSweepOptionSets.jumping_4
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.jumping_4
+    jp setChannelOptionSet.square1
 
 .set5
-    ld de, toneSweepOptionSets.jumping_5
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.jumping_5
+    jp setChannelOptionSet.square1
 ;}
 
 playShortHiJumpSound:
 ;{
     ld a, $09
-    ld de, toneSweepOptionSets.hijumping_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.hijumping_0
+    jp playSquare1Sfx
 ;}
 
 playingShortHiJumpSound:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $08
-        jr z, toneSweepSfx_playback_2.set1
+        jr z, square1Sfx_playback_2.set1
 
     ret
 ;}
 
-toneSweepSfx_init_2:
+square1Sfx_init_2:
 ;{
     ld a, [sfxPlaying_square1]
     cp sfx_square1_shootingWaveBeam
-        jp z, handleToneSweepChannelSoundEffect.playing
+        jp z, handleChannelSoundEffect_square1.playing
 
     cp sfx_square1_shootingBeam
     jr c, .endIf
         cp sfx_square1_shootingSpazerBeam
-            jp c, handleToneSweepChannelSoundEffect.playing
+            jp c, handleChannelSoundEffect_square1.playing
     .endIf
 
     ld a, [songPlaying]
@@ -2435,17 +2435,17 @@ toneSweepSfx_init_2:
         jr z, playShortHiJumpSound
 
     ld a, $43
-    ld de, toneSweepOptionSets.hijumping_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.hijumping_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_2:
+square1Sfx_playback_2:
 ;{
     ld a, [songPlaying]
     cp song_chozoRuins
         jr z, playingShortHiJumpSound
 
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $41
         jr z, .set1
     cp $2d
@@ -2463,46 +2463,46 @@ toneSweepSfx_playback_2:
     ret
 
 .set0
-    ld de, toneSweepOptionSets.hijumping_0
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.hijumping_0
+    jp setChannelOptionSet.square1
 
 .set1
-    ld de, toneSweepOptionSets.hijumping_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.hijumping_1
+    jp setChannelOptionSet.square1
 
 .set2
-    ld de, toneSweepOptionSets.hijumping_2
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.hijumping_2
+    jp setChannelOptionSet.square1
 
 .set3
-    ld de, toneSweepOptionSets.hijumping_3
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.hijumping_3
+    jp setChannelOptionSet.square1
 
 .set4
-    ld de, toneSweepOptionSets.hijumping_4
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.hijumping_4
+    jp setChannelOptionSet.square1
 
 .set5
-    ld de, toneSweepOptionSets.hijumping_5
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.hijumping_5
+    jp setChannelOptionSet.square1
 
 .set6
-    ld de, toneSweepOptionSets.hijumping_6
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.hijumping_6
+    jp setChannelOptionSet.square1
 
 .set7
-    ld de, toneSweepOptionSets.hijumping_7
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.hijumping_7
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_3:
+square1Sfx_init_3:
 ;{
     ld a, $3f
-    ld de, toneSweepOptionSets.screwAttacking_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.screwAttacking_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_3:
+square1Sfx_playback_3:
 ;{
     ld a, [sfxTimer_square1]
     and a
@@ -2545,76 +2545,76 @@ toneSweepSfx_playback_3:
     ret
 
 .set1
-    ld de, toneSweepOptionSets.screwAttacking_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.screwAttacking_1
+    jp setChannelOptionSet.square1
 
 .set2
-    ld de, toneSweepOptionSets.screwAttacking_2
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.screwAttacking_2
+    jp setChannelOptionSet.square1
 
 .set3
-    ld de, toneSweepOptionSets.screwAttacking_3
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.screwAttacking_3
+    jp setChannelOptionSet.square1
 
 .set4
-    ld de, toneSweepOptionSets.screwAttacking_4
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.screwAttacking_4
+    jp setChannelOptionSet.square1
 
 .set5
-    ld de, toneSweepOptionSets.screwAttacking_5
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.screwAttacking_5
+    jp setChannelOptionSet.square1
 
 .set6
-    ld de, toneSweepOptionSets.screwAttacking_6
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.screwAttacking_6
+    jp setChannelOptionSet.square1
 
 .set7
-    ld de, toneSweepOptionSets.screwAttacking_7
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.screwAttacking_7
+    jp setChannelOptionSet.square1
 
 .set8
-    ld de, toneSweepOptionSets.screwAttacking_8
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.screwAttacking_8
+    jp setChannelOptionSet.square1
 
 .set9
-    ld de, toneSweepOptionSets.screwAttacking_9
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.screwAttacking_9
+    jp setChannelOptionSet.square1
 
 .setA
-    ld de, toneSweepOptionSets.screwAttacking_A
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.screwAttacking_A
+    jp setChannelOptionSet.square1
 
 .setB
-    ld de, toneSweepOptionSets.screwAttacking_B
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.screwAttacking_B
+    jp setChannelOptionSet.square1
 
 .setC
-    ld de, toneSweepOptionSets.screwAttacking_C
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.screwAttacking_C
+    jp setChannelOptionSet.square1
 
 .setD
-    ld de, toneSweepOptionSets.screwAttacking_D
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.screwAttacking_D
+    jp setChannelOptionSet.square1
 
 .getTimerResetValue
     ld a, $10
     ret
 ;}
 
-toneSweepSfx_init_4:
+square1Sfx_init_4:
 ;{
     ld a, [sfxPlaying_square1]
     cp $04
-        jp nc, handleToneSweepChannelSoundEffect.playing
+        jp nc, handleChannelSoundEffect_square1.playing
 
     ld a, $0a
-    ld de, toneSweepOptionSets.standingTransition_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.standingTransition_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_4:
+square1Sfx_playback_4:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $06
         jr z, .set1
     cp $02
@@ -2622,24 +2622,24 @@ toneSweepSfx_playback_4:
     ret
 
 .set1
-    ld de, toneSweepOptionSets.standingTransition_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.standingTransition_1
+    jp setChannelOptionSet.square1
 
 .set2
-    ld de, toneSweepOptionSets.standingTransition_2
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.standingTransition_2
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_5:
+square1Sfx_init_5:
 ;{
     ld a, $0a
-    ld de, toneSweepOptionSets.crouchingTransition_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.crouchingTransition_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_5:
+square1Sfx_playback_5:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $06
         jr z, .set1
     cp $02
@@ -2647,24 +2647,24 @@ toneSweepSfx_playback_5:
     ret
 
 .set1
-    ld de, toneSweepOptionSets.crouchingTransition_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.crouchingTransition_1
+    jp setChannelOptionSet.square1
 
 .set2
-    ld de, toneSweepOptionSets.crouchingTransition_2
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.crouchingTransition_2
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_6:
+square1Sfx_init_6:
 ;{
     ld a, $0e
-    ld de, toneSweepOptionSets.morphing_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.morphing_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_6:
+square1Sfx_playback_6:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $0b
         jr z, .set0
     cp $08
@@ -2674,28 +2674,28 @@ toneSweepSfx_playback_6:
     ret
 
 .set0
-    ld de, toneSweepOptionSets.morphing_0
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.morphing_0
+    jp setChannelOptionSet.square1
 
 .set1
-    ld de, toneSweepOptionSets.morphing_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.morphing_1
+    jp setChannelOptionSet.square1
 
 .set2
-    ld de, toneSweepOptionSets.morphing_2
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.morphing_2
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_7:
+square1Sfx_init_7:
 ;{
     ld a, $0f
-    ld de, toneSweepOptionSets.shootingBeam_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.shootingBeam_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_7:
+square1Sfx_playback_7:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $0d
         jr z, .set1
     cp $0b
@@ -2713,32 +2713,32 @@ toneSweepSfx_playback_7:
     ret
 
 .set1
-    ld de, toneSweepOptionSets.shootingBeam_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shootingBeam_1
+    jp setChannelOptionSet.square1
 
 .set2
-    ld de, toneSweepOptionSets.shootingBeam_2
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shootingBeam_2
+    jp setChannelOptionSet.square1
 
 .set3
-    ld de, toneSweepOptionSets.shootingBeam_3
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shootingBeam_3
+    jp setChannelOptionSet.square1
 
 .set4
-    ld de, toneSweepOptionSets.shootingBeam_4
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shootingBeam_4
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_8:
+square1Sfx_init_8:
 ;{
     ld a, $31
-    ld de, toneSweepOptionSets.shootingMissile_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.shootingMissile_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_8:
+square1Sfx_playback_8:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $2d
         jr z, .set1
     cp $25
@@ -2760,106 +2760,106 @@ toneSweepSfx_playback_8:
     ret
 
 .set1
-    ld de, toneSweepOptionSets.shootingMissile_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shootingMissile_1
+    jp setChannelOptionSet.square1
 
 .set2
-    ld de, toneSweepOptionSets.shootingMissile_2
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shootingMissile_2
+    jp setChannelOptionSet.square1
 
 .set3
-    ld de, toneSweepOptionSets.shootingMissile_3
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shootingMissile_3
+    jp setChannelOptionSet.square1
 
 .set4
-    ld de, toneSweepOptionSets.shootingMissile_4
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shootingMissile_4
+    jp setChannelOptionSet.square1
 
 .set5
-    ld de, toneSweepOptionSets.shootingMissile_5
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shootingMissile_5
+    jp setChannelOptionSet.square1
 
 .set6
-    ld de, toneSweepOptionSets.shootingMissile_6
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shootingMissile_6
+    jp setChannelOptionSet.square1
 
 .set7
-    ld de, toneSweepOptionSets.shootingMissile_7
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shootingMissile_7
+    jp setChannelOptionSet.square1
 
 .set8
-    ld de, toneSweepOptionSets.shootingMissile_8
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shootingMissile_8
+    jp setChannelOptionSet.square1
 
 .set9
-    ld de, toneSweepOptionSets.shootingMissile_9
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shootingMissile_9
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_9:
+square1Sfx_init_9:
 ;{
     ld a, $d0
     ld [sfxVariableFrequency_square1], a
     ld a, $14
-    ld de, toneSweepOptionSets.shootingIceBeam
-    jp playToneSweepSfx
+    ld de, optionSets_square1.shootingIceBeam
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_9:
+square1Sfx_playback_9:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     ld a, [sfxVariableFrequency_square1]
     ldh [rAUD1LOW], a
     ld [sfxVariableFrequency_square1], a
     ret
 ;}
 
-toneSweepSfx_init_A:
+square1Sfx_init_A:
 ;{
     ld a, $d0
     ld [sfxVariableFrequency_square1], a
     ld a, $14
-    ld de, toneSweepOptionSets.shootingPlasmaBeam
-    jp playToneSweepSfx
+    ld de, optionSets_square1.shootingPlasmaBeam
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_A:
+square1Sfx_playback_A:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     ld a, [sfxVariableFrequency_square1]
     ldh [rAUD1LOW], a
     ld [sfxVariableFrequency_square1], a
     ret
 ;}
 
-toneSweepSfx_init_B:
+square1Sfx_init_B:
 ;{
     ld a, $d0
     ld [sfxVariableFrequency_square1], a
     ld a, $14
-    ld de, toneSweepOptionSets.shootingSpazerBeam
-    jp playToneSweepSfx
+    ld de, optionSets_square1.shootingSpazerBeam
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_B:
+square1Sfx_playback_B:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     ld a, [sfxVariableFrequency_square1]
     ldh [rAUD1LOW], a
     ld [sfxVariableFrequency_square1], a
     ret
 ;}
 
-toneSweepSfx_init_C:
+square1Sfx_init_C:
 ;{
     ld a, $14
-    ld de, toneSweepOptionSets.pickingUpMissileDrop_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.pickingUpMissileDrop_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_C:
+square1Sfx_playback_C:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $0d
         jr z, .set1
     cp $0b
@@ -2873,50 +2873,50 @@ toneSweepSfx_playback_C:
     ret
 
 .set1
-    ld de, toneSweepOptionSets.pickingUpMissileDrop_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.pickingUpMissileDrop_1
+    jp setChannelOptionSet.square1
 
 .set2
-    ld de, toneSweepOptionSets.pickingUpMissileDrop_2
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.pickingUpMissileDrop_2
+    jp setChannelOptionSet.square1
 
 .set3
-    ld de, toneSweepOptionSets.pickingUpMissileDrop_3
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.pickingUpMissileDrop_3
+    jp setChannelOptionSet.square1
 
 .set4
-    ld de, toneSweepOptionSets.pickingUpMissileDrop_4
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.pickingUpMissileDrop_4
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_D:
+square1Sfx_init_D:
 ;{
     ld a, $0d
-    ld de, toneSweepOptionSets.spiderBall_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.spiderBall_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_D:
+square1Sfx_playback_D:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $03
         ret nz
 
-    ld de, toneSweepOptionSets.spiderBall_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.spiderBall_1
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_E:
+square1Sfx_init_E:
 ;{
     call rememberIfScrewAttackingSfxIsPlaying
     ld a, $0a
-    ld de, toneSweepOptionSets.pickedUpEnergyDrop_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.pickedUpEnergyDrop_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_E:
+square1Sfx_playback_E:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $01
         jp z, maybeResumeScrewAttackingSfx
     cp $08
@@ -2928,49 +2928,49 @@ toneSweepSfx_playback_E:
     ret
 
 .set1
-    ld de, toneSweepOptionSets.pickedUpEnergyDrop_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.pickedUpEnergyDrop_1
+    jp setChannelOptionSet.square1
 
 .set2
-    ld de, toneSweepOptionSets.pickedUpEnergyDrop_2
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.pickedUpEnergyDrop_2
+    jp setChannelOptionSet.square1
 ;}
 
 setPickedUpDropEndOptionSet:
 ;{
-    ld de, toneSweepOptionSets.pickedUpDropEnd
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.pickedUpDropEnd
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_F:
+square1Sfx_init_F:
 ;{
     ld a, $05
-    ld de, toneSweepOptionSets.shotMissileDoorWithBeam_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.shotMissileDoorWithBeam_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_F:
+square1Sfx_playback_F:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $02
         jr z, .set1
     ret
 
 .set1
-    ld de, toneSweepOptionSets.shotMissileDoorWithBeam_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shotMissileDoorWithBeam_1
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_10:
+square1Sfx_init_10:
 ;{
     ld a, $16
-    ld de, toneSweepOptionSets.unknown10_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.unknown10_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_10:
+square1Sfx_playback_10:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $14
         jr z, .set1
     cp $12
@@ -2994,108 +2994,108 @@ toneSweepSfx_playback_10:
     ret
 
 .set1
-    ld de, toneSweepOptionSets.unknown10_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unknown10_1
+    jp setChannelOptionSet.square1
 
 .set2
-    ld de, toneSweepOptionSets.unknown10_2
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unknown10_2
+    jp setChannelOptionSet.square1
 
 .set3
-    ld de, toneSweepOptionSets.unknown10_3
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unknown10_3
+    jp setChannelOptionSet.square1
 
 .set4
-    ld de, toneSweepOptionSets.unknown10_4
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unknown10_4
+    jp setChannelOptionSet.square1
 
 .set5
-    ld de, toneSweepOptionSets.unknown10_5
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unknown10_5
+    jp setChannelOptionSet.square1
 
 .set6
-    ld de, toneSweepOptionSets.unknown10_6
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unknown10_6
+    jp setChannelOptionSet.square1
 
 .set7
-    ld de, toneSweepOptionSets.unknown10_7
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unknown10_7
+    jp setChannelOptionSet.square1
 
 .set8
-    ld de, toneSweepOptionSets.unknown10_8
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unknown10_8
+    jp setChannelOptionSet.square1
 
 .set9
-    ld de, toneSweepOptionSets.unknown10_9
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unknown10_9
+    jp setChannelOptionSet.square1
 
 .setA
-    ld de, toneSweepOptionSets.unknown10_A
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unknown10_A
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_12:
+square1Sfx_init_12:
 ;{
     xor a
-    ld de, toneSweepOptionSets.unused12
-    jp playToneSweepSfx
+    ld de, optionSets_square1.unused12
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_init_13:
+square1Sfx_init_13:
 ;{
     ld a, $02
-    ld de, toneSweepOptionSets.bombLaid
-    jp playToneSweepSfx
+    ld de, optionSets_square1.bombLaid
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_init_14:
+square1Sfx_init_14:
 ;{
     ld a, $0e
-    ld de, toneSweepOptionSets.unused14_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.unused14_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_14:
+square1Sfx_playback_14:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $06
         jr z, .set1
     ret
 
 .set1
-    ld de, toneSweepOptionSets.unused14_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unused14_1
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_15:
+square1Sfx_init_15:
 ;{
     ld a, $04
-    ld de, toneSweepOptionSets.optionMissileSelect_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.optionMissileSelect_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_15:
+square1Sfx_playback_15:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $02
         jr z, .set1
     ret
 
 .set1
-    ld de, toneSweepOptionSets.optionMissileSelect_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.optionMissileSelect_1
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_16:
+square1Sfx_init_16:
 ;{
     ld a, $1d
-    ld de, toneSweepOptionSets.shootingWaveBeam_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.shootingWaveBeam_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_16:
+square1Sfx_playback_16:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $1a
         jr z, .set1
     cp $15
@@ -3113,33 +3113,33 @@ toneSweepSfx_playback_16:
     ret
 
 .set1
-    ld de, toneSweepOptionSets.shootingWaveBeam_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shootingWaveBeam_1
+    jp setChannelOptionSet.square1
 
 .set2
-    ld de, toneSweepOptionSets.shootingWaveBeam_2
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shootingWaveBeam_2
+    jp setChannelOptionSet.square1
 
 .set3
-    ld de, toneSweepOptionSets.shootingWaveBeam_3
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shootingWaveBeam_3
+    jp setChannelOptionSet.square1
 
 .set4
-    ld de, toneSweepOptionSets.shootingWaveBeam_4
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.shootingWaveBeam_4
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_17:
+square1Sfx_init_17:
 ;{
     call rememberIfScrewAttackingSfxIsPlaying
     ld a, $10
-    ld de, toneSweepOptionSets.largeEnergyDrop_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.largeEnergyDrop_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_17:
+square1Sfx_playback_17:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $01
         jp z, maybeResumeScrewAttackingSfx
     cp $0d
@@ -3155,23 +3155,23 @@ toneSweepSfx_playback_17:
     ret
 
 .set1
-    ld de, toneSweepOptionSets.largeEnergyDrop_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.largeEnergyDrop_1
+    jp setChannelOptionSet.square1
 
 .set2
-    ld de, toneSweepOptionSets.largeEnergyDrop_2
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.largeEnergyDrop_2
+    jp setChannelOptionSet.square1
 
 .set3
-    ld de, toneSweepOptionSets.largeEnergyDrop_3
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.largeEnergyDrop_3
+    jp setChannelOptionSet.square1
 
 .set4
-    ld de, toneSweepOptionSets.largeEnergyDrop_4
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.largeEnergyDrop_4
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_18:
+square1Sfx_init_18:
 ;{
     ld a, [samusHealthChangedOptionSetIndex]
     and a
@@ -3193,46 +3193,46 @@ toneSweepSfx_init_18:
     dec a
     ld [samusHealthChangedOptionSetIndex], a
     ld a, $02
-    ld de, toneSweepOptionSets.samusHealthChanged_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.samusHealthChanged_0
+    jp playSquare1Sfx
 
 .set1
     dec a
     ld [samusHealthChangedOptionSetIndex], a
     ld a, $02
-    ld de, toneSweepOptionSets.samusHealthChanged_1
-    jp playToneSweepSfx
+    ld de, optionSets_square1.samusHealthChanged_1
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_init_19:
+square1Sfx_init_19:
 ;{
     ld a, $04
-    ld de, toneSweepOptionSets.noMissileDudShot_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.noMissileDudShot_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_19:
+square1Sfx_playback_19:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $02
         jr z, .set1
     ret
 
 .set1
-    ld de, toneSweepOptionSets.noMissileDudShot_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.noMissileDudShot_1
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_1A:
+square1Sfx_init_1A:
 ;{
     ld a, $16
-    ld de, toneSweepOptionSets.unknown1A_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.unknown1A_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_1A:
+square1Sfx_playback_1A:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $14
         jr z, .set1
     cp $12
@@ -3256,31 +3256,31 @@ toneSweepSfx_playback_1A:
     ret
 
 .set1
-    ld de, toneSweepOptionSets.unknown1A_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unknown1A_1
+    jp setChannelOptionSet.square1
 
 .set2
-    ld de, toneSweepOptionSets.unknown1A_2
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unknown1A_2
+    jp setChannelOptionSet.square1
 
 .set3
-    ld de, toneSweepOptionSets.unknown1A_3
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unknown1A_3
+    jp setChannelOptionSet.square1
 
 .set4
-    ld de, toneSweepOptionSets.unknown1A_4
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unknown1A_4
+    jp setChannelOptionSet.square1
 
 .set5
-    ld de, toneSweepOptionSets.unknown1A_5
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unknown1A_5
+    jp setChannelOptionSet.square1
 
 .set6
-    ld de, toneSweepOptionSets.unknown1A_6
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unknown1A_6
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_1B:
+square1Sfx_init_1B:
 ;{
     ldh a, [rDIV]
     swap a
@@ -3290,13 +3290,13 @@ toneSweepSfx_init_1B:
     res 1, a
     ld [sfxVariableFrequency_square1], a
     ld a, $30
-    ld de, toneSweepOptionSets.metroidCry
-    jp playToneSweepSfx
+    ld de, optionSets_square1.metroidCry
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_1B:
+square1Sfx_playback_1B:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $20
         jr c, .endIf
         ld a, [sfxVariableFrequency_square1]
@@ -3318,16 +3318,16 @@ toneSweepSfx_playback_1B:
     ret
 ;}
 
-toneSweepSfx_init_1C:
+square1Sfx_init_1C:
 ;{
     ld a, $0f
-    ld de, toneSweepOptionSets.saved0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.saved0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_1C:
+square1Sfx_playback_1C:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $0a
         jr z, .set1
     cp $03
@@ -3335,24 +3335,24 @@ toneSweepSfx_playback_1C:
     ret
 
 .set1
-    ld de, toneSweepOptionSets.saved1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.saved1
+    jp setChannelOptionSet.square1
 
 .set2
-    ld de, toneSweepOptionSets.saved2
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.saved2
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_1D:
+square1Sfx_init_1D:
 ;{
     ld a, $90
-    ld de, toneSweepOptionSets.variaSuitTransformation
-    jp playToneSweepSfx
+    ld de, optionSets_square1.variaSuitTransformation
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_1D:
+square1Sfx_playback_1D:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $7e
         jr z, .set
     cp $6e
@@ -3370,20 +3370,20 @@ toneSweepSfx_playback_1D:
     ret
 
 .set
-    ld de, toneSweepOptionSets.variaSuitTransformation
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.variaSuitTransformation
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_1E:
+square1Sfx_init_1E:
 ;{
     ld a, $0e
-    ld de, toneSweepOptionSets.unpaused_0
-    jp playToneSweepSfx
+    ld de, optionSets_square1.unpaused_0
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_1E:
+square1Sfx_playback_1E:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $0a
         jr z, .set1
     cp $03
@@ -3391,68 +3391,68 @@ toneSweepSfx_playback_1E:
     ret
 
 .set1
-    ld de, toneSweepOptionSets.unpaused_1
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unpaused_1
+    jp setChannelOptionSet.square1
 
 .set2
-    ld de, toneSweepOptionSets.unpaused_2
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.unpaused_2
+    jp setChannelOptionSet.square1
 ;}
 
 
 ; All these following "examples" are completely unused
-toneSweepSfx_init_exampleA:
+square1Sfx_init_exampleA:
 ;{
     ld a, $50
-    ld de, toneSweepOptionSets.exampleA
-    jp playToneSweepSfx
+    ld de, optionSets_square1.exampleA
+    jp playSquare1Sfx
 ;}
 
-toneSweepSfx_playback_exampleA:
+square1Sfx_playback_exampleA:
 ;{
-    ld de, toneSweepOptionSets.exampleA
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.exampleA
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_exampleB:
+square1Sfx_init_exampleB:
 ;{
     ld a, $50
-    ld de, toneSweepOptionSets.exampleB
-    jp playToneSweepSfx
+    ld de, optionSets_square1.exampleB
+    jp playSquare1Sfx
 ;}
 
 setOptionSet_exampleB:
 ;{
-    ld de, toneSweepOptionSets.exampleB
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.exampleB
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_playback_exampleB:
+square1Sfx_playback_exampleB:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $40
         ret nz
 
-    ld de, toneSweepOptionSets.exampleB
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.exampleB
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_init_exampleC:
+square1Sfx_init_exampleC:
 ;{
     ld a, $50
-    ld de, toneSweepOptionSets.exampleC
-    jp playToneSweepSfx
+    ld de, optionSets_square1.exampleC
+    jp playSquare1Sfx
 ;}
 
 setOptionSet_exampleC:
 ;{
-    ld de, toneSweepOptionSets.exampleC
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.exampleC
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_playback_exampleC:
+square1Sfx_playback_exampleC:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $40
         jr z, setOptionSet_exampleC
     cp $30
@@ -3460,22 +3460,22 @@ toneSweepSfx_playback_exampleC:
     ret
 ;}
 
-toneSweepSfx_init_exampleD:
+square1Sfx_init_exampleD:
 ;{
     ld a, $50
-    ld de, toneSweepOptionSets.exampleD
-    jp playToneSweepSfx
+    ld de, optionSets_square1.exampleD
+    jp playSquare1Sfx
 ;}
 
 setOptionSet_exampleD:
 ;{
-    ld de, toneSweepOptionSets.exampleD
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.exampleD
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_playback_exampleD:
+square1Sfx_playback_exampleD:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $40
         jr z, setOptionSet_exampleD
     cp $30
@@ -3485,22 +3485,22 @@ toneSweepSfx_playback_exampleD:
     ret
 ;}
 
-toneSweepSfx_init_exampleE:
+square1Sfx_init_exampleE:
 ;{
     ld a, $50
-    ld de, toneSweepOptionSets.exampleE
-    jp playToneSweepSfx
+    ld de, optionSets_square1.exampleE
+    jp playSquare1Sfx
 ;}
 
 setOptionSet_exampleE:
 ;{
-    ld de, toneSweepOptionSets.exampleE
-    jp setChannelOptionSet.toneSweep
+    ld de, optionSets_square1.exampleE
+    jp setChannelOptionSet.square1
 ;}
 
-toneSweepSfx_playback_exampleE:
+square1Sfx_playback_exampleE:
 ;{
-    call decrementToneSweepChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square1
     cp $40
         jr z, setOptionSet_exampleE
     cp $30
@@ -3544,13 +3544,13 @@ maybeResumeScrewAttackingSfx:
     ret
 ;}
 
-playToneSweepSfx:
+playSquare1Sfx:
 ;{
     ld [sfxTimer_square1], a
     ld a, [sfxRequest_square1]
     ld [sfxPlaying_square1], a
     ld [sfxActive_square1], a
-    jp setChannelOptionSet.toneSweep
+    jp setChannelOptionSet.square1
 ;}
 ;}
 
@@ -3560,25 +3560,25 @@ songSoundEffectInitialisationFunctionPointers_square2:
 ;{
     dw initializeAudio.ret ; 1: ret
     dw initializeAudio.ret ; 2: ret
-    dw toneSfx_init_3 ; 3: Metroid Queen cry
-    dw toneSfx_init_4 ; 4: Baby Metroid hatched / clearing blocks
-    dw toneSfx_init_5 ; 5: Baby Metroid cry
-    dw toneSfx_init_6 ; 6: Metroid Queen hurt cry
-    dw toneSfx_init_7 ; 7: unknown
+    dw square2Sfx_init_3 ; 3: Metroid Queen cry
+    dw square2Sfx_init_4 ; 4: Baby Metroid hatched / clearing blocks
+    dw square2Sfx_init_5 ; 5: Baby Metroid cry
+    dw square2Sfx_init_6 ; 6: Metroid Queen hurt cry
+    dw square2Sfx_init_7 ; 7: unknown
 ;}
 
 songSoundEffectPlaybackFunctionPointers_square2:
 ;{
     dw initializeAudio.ret ; 1: ret
     dw initializeAudio.ret ; 2: ret
-    dw toneSfx_playback_3 ; 3: Metroid Queen cry
-    dw toneSfx_playback_4 ; 4: Baby Metroid hatched / clearing blocks
-    dw toneSfx_playback_5 ; 5: Baby Metroid cry
-    dw toneSfx_playback_6 ; 6: Metroid Queen hurt cry
-    dw decrementToneChannelSoundEffectTimer ; 7: unknown
+    dw square2Sfx_playback_3 ; 3: Metroid Queen cry
+    dw square2Sfx_playback_4 ; 4: Baby Metroid hatched / clearing blocks
+    dw square2Sfx_playback_5 ; 5: Baby Metroid cry
+    dw square2Sfx_playback_6 ; 6: Metroid Queen hurt cry
+    dw decrementChannelSoundEffectTimer_square2 ; 7: unknown
 ;}
 
-toneSfx_init_3:
+square2Sfx_init_3:
 ;{
     ldh a, [rDIV]
     swap a
@@ -3587,15 +3587,15 @@ toneSfx_init_3:
     res 5, a
     ld [square2_variableFrequency], a
     ld a, $30
-    ld de, toneOptionSets.metroidQueenCry
-    jp playToneSfx
+    ld de, optionSets_square2.metroidQueenCry
+    jp playSquare2Sfx
 ;}
 
-toneSfx_playback_3:
-toneSfx_playback_5:
-toneSfx_playback_6:
+square2Sfx_playback_3:
+square2Sfx_playback_5:
+square2Sfx_playback_6:
 ;{
-    call decrementToneChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square2
     bit 0, a
         jr z, .even
 
@@ -3628,20 +3628,20 @@ toneSfx_playback_6:
     ret
 ;}
 
-toneSfx_init_4:
+square2Sfx_init_4:
 ;{
     ldh a, [rDIV]
     set 7, a
     res 6, a
     ld [square2_variableFrequency], a
     ld a, $1c
-    ld de, toneOptionSets.babyMetroidClearingBlock
-    jp playToneSfx
+    ld de, optionSets_square2.babyMetroidClearingBlock
+    jp playSquare2Sfx
 ;}
 
-toneSfx_playback_4:
+square2Sfx_playback_4:
 ;{
-    call decrementToneChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_square2
     cp $13
         jr z, .part2
     cp $0c
@@ -3665,7 +3665,7 @@ toneSfx_playback_4:
     ret
 ;}
 
-toneSfx_init_5:
+square2Sfx_init_5:
 ;{
     ldh a, [rDIV]
     swap a
@@ -3675,11 +3675,11 @@ toneSfx_init_5:
     res 2, a
     ld [square2_variableFrequency], a
     ld a, $30
-    ld de, toneOptionSets.babyMetroidCry
-    jp playToneSfx
+    ld de, optionSets_square2.babyMetroidCry
+    jp playSquare2Sfx
 ;}
 
-toneSfx_init_6:
+square2Sfx_init_6:
 ;{
     ldh a, [rDIV]
     swap a
@@ -3687,24 +3687,24 @@ toneSfx_init_6:
     set 6, a
     ld [square2_variableFrequency], a
     ld a, $30
-    ld de, toneOptionSets.metroidQueenHurtCry
-    jp playToneSfx
+    ld de, optionSets_square2.metroidQueenHurtCry
+    jp playSquare2Sfx
 ;}
 
-toneSfx_init_7:
+square2Sfx_init_7:
 ;{
     ld a, $01
-    ld de, toneOptionSets.unknown7
-    jp playToneSfx
+    ld de, optionSets_square2.unknown7
+    jp playSquare2Sfx
 ;}
 
-playToneSfx:
+playSquare2Sfx:
 ;{
     ld [sfxTimer_square2], a
     ld a, [sfxRequest_square2]
     ld [sfxPlaying_square2], a
     ld [sfxActive_square2], a
-    jp setChannelOptionSet.tone
+    jp setChannelOptionSet.square2
 ;}
 ;}
 
@@ -3742,10 +3742,10 @@ songSoundEffectInitialisationFunctionPointers_noise:
 
 songSoundEffectPlaybackFunctionPointers_noise:
 ;{
-    dw decrementNoiseChannelSoundEffectTimer ; 1: Enemy shot
+    dw decrementChannelSoundEffectTimer_noise ; 1: Enemy shot
     dw noiseSfx_playback_2 ; 2: Enemy killed
-    dw decrementNoiseChannelSoundEffectTimer ; 3:
-    dw decrementNoiseChannelSoundEffectTimer ; 4: Shot block destroyed
+    dw decrementChannelSoundEffectTimer_noise ; 3:
+    dw decrementChannelSoundEffectTimer_noise ; 4: Shot block destroyed
     dw noiseSfx_playback_5 ; 5: Metroid hurt
     dw noiseSfx_playback_6 ; 6: Samus hurt
     dw noiseSfx_playback_7 ; 7: Acid damage
@@ -3763,50 +3763,50 @@ songSoundEffectPlaybackFunctionPointers_noise:
     dw noiseSfx_playback_13 ; 13h: Unused
     dw noiseSfx_playback_14 ; 14h:
     dw noiseSfx_playback_15 ; 15h:
-    dw decrementNoiseChannelSoundEffectTimer ; 16h: Baby Metroid hatched / clearing blocks
-    dw decrementNoiseChannelSoundEffectTimer ; 17h: Baby Metroid cry
+    dw decrementChannelSoundEffectTimer_noise ; 16h: Baby Metroid hatched / clearing blocks
+    dw decrementChannelSoundEffectTimer_noise ; 17h: Baby Metroid cry
     dw noiseSfx_playback_18 ; 18h:
-    dw decrementNoiseChannelSoundEffectTimer ; 19h: Unused
-    dw decrementNoiseChannelSoundEffectTimer ; 1Ah:
+    dw decrementChannelSoundEffectTimer_noise ; 19h: Unused
+    dw decrementChannelSoundEffectTimer_noise ; 1Ah:
 ;}
 
 noiseSfx_init_1:
 ;{
     ld a, $0d
-    ld de, noiseOptionSets.enemyShot
+    ld de, optionSets_noise.enemyShot
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_init_2:
 ;{
     ld a, $19
-    ld de, noiseOptionSets.enemyKilled_0
+    ld de, optionSets_noise.enemyKilled_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_playback_2:
 ;{
-    call decrementNoiseChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_noise
     cp $0d
         jr z, .set1
     ret
 
 .set1
-    ld de, noiseOptionSets.enemyKilled_1
+    ld de, optionSets_noise.enemyKilled_1
     jp setChannelOptionSet.noise
 ;}
 
 noiseSfx_init_3:
 ;{
     ld a, $1d
-    ld de, noiseOptionSets.unknown3
+    ld de, optionSets_noise.unknown3
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_init_4:
 ;{
     ld a, $08
-    ld de, noiseOptionSets.shotBlockDestroyed
+    ld de, optionSets_noise.shotBlockDestroyed
     jp playNoiseSweepSfx
 ;}
 
@@ -3815,32 +3815,32 @@ noiseSfx_init_5:
     ld a, sfx_square1_metroidCry
     ld [sfxRequest_square1], a
     ld a, $40
-    ld de, noiseOptionSets.metroidHurt_0
+    ld de, optionSets_noise.metroidHurt_0
     call playNoiseSweepSfx ; call instead of jp...?
 ;}
 
 noiseSfx_playback_5:
 ;{
-    call decrementNoiseChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_noise
     cp $38
         jr z, .set1
     ret
 
 .set1
-    ld de, noiseOptionSets.metroidHurt_1
+    ld de, optionSets_noise.metroidHurt_1
     jp setChannelOptionSet.noise
 ;}
 
 noiseSfx_init_6:
 ;{
     ld a, $14
-    ld de, noiseOptionSets.SamusHurt_0
+    ld de, optionSets_noise.SamusHurt_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_playback_6:
 ;{
-    call decrementNoiseChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_noise
     cp $10
         jr z, .set1
     cp $0c
@@ -3850,24 +3850,24 @@ noiseSfx_playback_6:
     ret
 
 .set0
-    ld de, noiseOptionSets.SamusHurt_0
+    ld de, optionSets_noise.SamusHurt_0
     jp setChannelOptionSet.noise
 
 .set1
-    ld de, noiseOptionSets.SamusHurt_1
+    ld de, optionSets_noise.SamusHurt_1
     jp setChannelOptionSet.noise
 ;}
 
 noiseSfx_init_7:
 ;{
     ld a, $08
-    ld de, noiseOptionSets.acidDamage_0
+    ld de, optionSets_noise.acidDamage_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_playback_7:
 ;{
-    call decrementNoiseChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_noise
     cp $05
         jr z, noiseSfx_playback_6.set1
     ret
@@ -3876,19 +3876,19 @@ noiseSfx_playback_7:
 noiseSfx_init_8:
 ;{
     ld a, $08
-    ld de, noiseOptionSets.shotMissileDoor_0
+    ld de, optionSets_noise.shotMissileDoor_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_playback_8:
 ;{
-    call decrementNoiseChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_noise
     cp $05
         jr z, .set1
     ret
 
 .set1
-    ld de, noiseOptionSets.shotMissileDoor_1
+    ld de, optionSets_noise.shotMissileDoor_1
     jp setChannelOptionSet.noise
 ;}
 
@@ -3897,19 +3897,19 @@ noiseSfx_init_9:
     ld a, sfx_square2_metroidQueenCry
     ld [sfxRequest_square2], a
     ld a, $40
-    ld de, noiseOptionSets.metroidQueenCry_0
+    ld de, optionSets_noise.metroidQueenCry_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_playback_9:
 ;{
-    call decrementNoiseChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_noise
     cp $38
         jr z, .set1
     ret
 
 .set1
-    ld de, noiseOptionSets.metroidQueenCry_1
+    ld de, optionSets_noise.metroidQueenCry_1
     jp setChannelOptionSet.noise
 ;}
 
@@ -3918,32 +3918,32 @@ noiseSfx_init_A:
     ld a, sfx_square2_metroidQueenHurtCry
     ld [sfxRequest_square2], a
     ld a, $40
-    ld de, noiseOptionSets.metroidQueenHurtCry_0
+    ld de, optionSets_noise.metroidQueenHurtCry_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_playback_A:
 ;{
-    call decrementNoiseChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_noise
     cp $38
         jr z, .set1
     ret
 
 .set1
-    ld de, noiseOptionSets.metroidQueenHurtCry_1
+    ld de, optionSets_noise.metroidQueenHurtCry_1
     jp setChannelOptionSet.noise
 ;}
 
 noiseSfx_init_B:
 ;{
     ld a, $b0
-    ld de, noiseOptionSets.samusKilled_0
+    ld de, optionSets_noise.samusKilled_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_playback_B:
 ;{
-    call decrementNoiseChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_noise
     cp $9f
         jr z, .set1
     cp $70
@@ -3973,11 +3973,11 @@ noiseSfx_playback_B:
     ret
 
 .set1
-    ld de, noiseOptionSets.samusKilled_1
+    ld de, optionSets_noise.samusKilled_1
     jp setChannelOptionSet.noise
 
 .set2
-    ld de, noiseOptionSets.samusKilled_2
+    ld de, optionSets_noise.samusKilled_2
     jp setChannelOptionSet.noise
 ;}
 
@@ -4053,39 +4053,39 @@ setPolynomialCounter67:
 
 setOptionSetSamusKilled_3:
 ;{
-    ld de, noiseOptionSets.samusKilled_3
+    ld de, optionSets_noise.samusKilled_3
     jp setChannelOptionSet.noise
 ;}
 
 noiseSfx_init_C:
 ;{
     ld a, $14
-    ld de, noiseOptionSets.bombDetonated_0
+    ld de, optionSets_noise.bombDetonated_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_playback_C:
 ;{
-    call decrementNoiseChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_noise
     cp $0c
         jr z, .set1
     ret
 
 .set1
-    ld de, noiseOptionSets.bombDetonated_1
+    ld de, optionSets_noise.bombDetonated_1
     jp setChannelOptionSet.noise
 ;}
 
 noiseSfx_init_D:
 ;{
     ld a, $35
-    ld de, noiseOptionSets.metroidKilled_0
+    ld de, optionSets_noise.metroidKilled_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_playback_D:
 ;{
-    call decrementNoiseChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_noise
     cp $30
         jr z, setPolynomialCounter57
     cp $2c                        
@@ -4103,20 +4103,20 @@ noiseSfx_playback_D:
     ret
 
 .set1
-    ld de, noiseOptionSets.metroidKilled_1
+    ld de, optionSets_noise.metroidKilled_1
     jp setChannelOptionSet.noise
 ;}
 
 noiseSfx_init_E:
 ;{
     ld a, $4f
-    ld de, noiseOptionSets.unknownE_0
+    ld de, optionSets_noise.unknownE_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_playback_E:
 ;{
-    call decrementNoiseChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_noise
     cp $4d
         jr z, setPolynomialCounter65
     cp $4a                        
@@ -4142,20 +4142,20 @@ noiseSfx_playback_E:
     ret
 
 .set1
-    ld de, noiseOptionSets.unknownE_1
+    ld de, optionSets_noise.unknownE_1
     jp setChannelOptionSet.noise
 ;}
 
 noiseSfx_init_F:
 ;{
     ld a, $70
-    ld de, noiseOptionSets.clearedSaveFile_0
+    ld de, optionSets_noise.clearedSaveFile_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_playback_F:
 ;{
-    call decrementNoiseChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_noise
     cp $6d
         jp z, setPolynomialCounter67
     cp $6a                        
@@ -4181,7 +4181,7 @@ noiseSfx_playback_F:
     ret
 
 .set1
-    ld de, noiseOptionSets.clearedSaveFile_1
+    ld de, optionSets_noise.clearedSaveFile_1
     jp setChannelOptionSet.noise
 ;}
 
@@ -4189,33 +4189,33 @@ noiseSfx_init_10:
 ;{
     ld a, [sfxPlaying_noise]
     and a
-        jp nz, handleNoiseChannelSoundEffect.playing
+        jp nz, handleChannelSoundEffect_noise.playing
 
     ld a, [songChannelEnable_noise]
     and a
-        jp nz, handleNoiseChannelSoundEffect.playing
+        jp nz, handleChannelSoundEffect_noise.playing
 
     ld a, $02
-    ld de, noiseOptionSets.footsteps_0
+    ld de, optionSets_noise.footsteps_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_playback_10:
 ;{
-    call decrementNoiseChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_noise
     cp $01
         jp z, .set1
     ret
 
 .set1
-    ld de, noiseOptionSets.footsteps_1
+    ld de, optionSets_noise.footsteps_1
     jp setChannelOptionSet.noise
 ;}
 
 noiseSfx_init_11:
 ;{
     ld a, $10
-    ld de, noiseOptionSets.unknown11_0
+    ld de, optionSets_noise.unknown11_0
     jp playNoiseSweepSfx
 ;}
 
@@ -4223,40 +4223,40 @@ noiseSfx_playback_11:
 noiseSfx_playback_12:
 noiseSfx_playback_13:
 ;{
-    call decrementNoiseChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_noise
     cp $0c
         jr z, .set1
     ret
 
 .set1
-    ld de, noiseOptionSets.unknown_1
+    ld de, optionSets_noise.unknown_1
     jp setChannelOptionSet.noise
 ;}
 
 noiseSfx_init_12:
 ;{
     ld a, $10
-    ld de, noiseOptionSets.unknown12_0
+    ld de, optionSets_noise.unknown12_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_init_13:
 ;{
     ld a, $10
-    ld de, noiseOptionSets.unused13_0
+    ld de, optionSets_noise.unused13_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_init_14:
 ;{
     ld a, $18
-    ld de, noiseOptionSets.unknown14_0
+    ld de, optionSets_noise.unknown14_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_playback_14:
 ;{
-    call decrementNoiseChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_noise
     cp $10
         jr z, .set1
     cp $0c
@@ -4266,30 +4266,30 @@ noiseSfx_playback_14:
     ret
 
 .set1
-    ld de, noiseOptionSets.unknown14_1
+    ld de, optionSets_noise.unknown14_1
     jp setChannelOptionSet.noise
 
 .set0
-    ld de, noiseOptionSets.unknown14_0
+    ld de, optionSets_noise.unknown14_0
     jp setChannelOptionSet.noise
 ;}
 
 noiseSfx_init_15:
 ;{
     ld a, $30
-    ld de, noiseOptionSets.unknown15_0
+    ld de, optionSets_noise.unknown15_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_playback_15:
 ;{
-    call decrementNoiseChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_noise
     cp $20
         jr z, .set1
     ret
 
 .set1
-    ld de, noiseOptionSets.unknown15_1
+    ld de, optionSets_noise.unknown15_1
     jp setChannelOptionSet.noise
 ;}
 
@@ -4298,7 +4298,7 @@ noiseSfx_init_16:
     ld a, sfx_square2_babyMetroidClearingBlock
     ld [sfxRequest_square2], a
     ld a, $08
-    ld de, noiseOptionSets.babyMetroidClearingBlock
+    ld de, optionSets_noise.babyMetroidClearingBlock
     jp playNoiseSweepSfx
 ;}
 
@@ -4307,40 +4307,40 @@ noiseSfx_init_17:
     ld a, sfx_square2_babyMetroidCry
     ld [sfxRequest_square2], a
     ld a, $40
-    ld de, noiseOptionSets.babyMetroidCry
+    ld de, optionSets_noise.babyMetroidCry
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_init_18:
 ;{
     ld a, $0f
-    ld de, noiseOptionSets.unknown18_0
+    ld de, optionSets_noise.unknown18_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_playback_18:
 ;{
-    call decrementNoiseChannelSoundEffectTimer
+    call decrementChannelSoundEffectTimer_noise
     cp $0c
         jr z, .set1
     ret
 
 .set1
-    ld de, noiseOptionSets.unknown18_1
+    ld de, optionSets_noise.unknown18_1
     jp setChannelOptionSet.noise
 ;}
 
 noiseSfx_init_19:
 ;{
     ld a, $10
-    ld de, noiseOptionSets.unused19
+    ld de, optionSets_noise.unused19
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_init_1A:
 ;{
     ld a, $10
-    ld de, noiseOptionSets.unknown1A
+    ld de, optionSets_noise.unknown1A
     jp playNoiseSweepSfx
 ;}
 
@@ -4356,7 +4356,7 @@ playNoiseSweepSfx:
 
 ; Option sets
 ;{
-toneSweepOptionSets:
+optionSets_square1:
 ;{
 .jumping_0 ; $5A28
     AscendingSweepOptions 5, 1
@@ -5107,7 +5107,7 @@ toneSweepOptionSets:
     FrequencyOptions $790, 0
 ;}
 
-noiseOptionSets:
+optionSets_noise:
 ;{
 .enemyShot ; $5C7B
     LengthOptions $0
@@ -5375,7 +5375,7 @@ noiseOptionSets:
     CounterControlOptions 0
 ;}
 
-toneOptionSets:
+optionSets_square2:
 ;{
 .metroidQueenCry ; $5D2B
     LengthDutyOptions $0, 0
@@ -5434,7 +5434,7 @@ waveSfx_init_2:
     ld a, $0c
     ld [loudLowHealthBeepTimer], a
     ld a, $0e
-    ld de, waveOptionSets.healthUnder20_0
+    ld de, optionSets_wave.healthUnder20_0
     jp Jump_004_5f27
 ;}
 
@@ -5468,7 +5468,7 @@ waveSfx_playback_2:
         call writeToWavePatternRam
     .endIf1
 
-    ld de, waveOptionSets.healthUnder20_1
+    ld de, optionSets_wave.healthUnder20_1
     jp setChannelOptionSet.wave
 
 .set0
@@ -5485,7 +5485,7 @@ waveSfx_playback_2:
 
     ld a, [sfxLength_wave]
     ld [sfxTimer_wave], a
-    ld de, waveOptionSets.healthUnder20_0
+    ld de, optionSets_wave.healthUnder20_0
     jp setChannelOptionSet.wave
 ;}
 
@@ -5498,7 +5498,7 @@ waveSfx_init_3:
     ld a, $06
     ld [loudLowHealthBeepTimer], a
     ld a, $13
-    ld de, waveOptionSets.healthUnder30_0
+    ld de, optionSets_wave.healthUnder30_0
     jp Jump_004_5f27
 ;}
 
@@ -5531,7 +5531,7 @@ waveSfx_playback_3:
         call writeToWavePatternRam
     .endIf1
 
-    ld de, waveOptionSets.healthUnder30_1
+    ld de, optionSets_wave.healthUnder30_1
     jp setChannelOptionSet.wave
 
 .set0
@@ -5548,7 +5548,7 @@ waveSfx_playback_3:
 
     ld a, [sfxLength_wave]
     ld [sfxTimer_wave], a
-    ld de, waveOptionSets.healthUnder30_0
+    ld de, optionSets_wave.healthUnder30_0
     jp setChannelOptionSet.wave
 ;}
 
@@ -5561,7 +5561,7 @@ waveSfx_init_4:
     ld a, $06
     ld [loudLowHealthBeepTimer], a
     ld a, $16
-    ld de, waveOptionSets.healthUnder40_0
+    ld de, optionSets_wave.healthUnder40_0
     jp Jump_004_5f27
 ;}
 
@@ -5594,7 +5594,7 @@ waveSfx_playback_4:
         call writeToWavePatternRam
     .endIf1
 
-    ld de, waveOptionSets.healthUnder40_1
+    ld de, optionSets_wave.healthUnder40_1
     jp setChannelOptionSet.wave
 
 .set0
@@ -5611,7 +5611,7 @@ waveSfx_playback_4:
 
     ld a, [sfxLength_wave]
     ld [sfxTimer_wave], a
-    ld de, waveOptionSets.healthUnder40_0
+    ld de, optionSets_wave.healthUnder40_0
     jp setChannelOptionSet.wave
 ;}
 
@@ -5624,7 +5624,7 @@ waveSfx_init_5:
     ld a, $06
     ld [loudLowHealthBeepTimer], a
     ld a, $18
-    ld de, waveOptionSets.healthUnder50_0
+    ld de, optionSets_wave.healthUnder50_0
     jp Jump_004_5f27
 ;}
 
@@ -5657,7 +5657,7 @@ waveSfx_playback_5:
         call writeToWavePatternRam
     .endIf1
 
-    ld de, waveOptionSets.healthUnder50_1
+    ld de, optionSets_wave.healthUnder50_1
     jp setChannelOptionSet.wave
 
 .set0
@@ -5674,11 +5674,11 @@ waveSfx_playback_5:
 
     ld a, [sfxLength_wave]
     ld [sfxTimer_wave], a
-    ld de, waveOptionSets.healthUnder50_0
+    ld de, optionSets_wave.healthUnder50_0
     jp setChannelOptionSet.wave
 ;}
 
-waveOptionSets:
+optionSets_wave:
 ;{
 macro WaveOptionSet ; [volume], [frequency]
     static_assert \1 < 4, "Invalid volume"
@@ -5797,39 +5797,39 @@ songStereoFlags:
 
 ; $5F90
 song_babyMetroid_header:
-    SongHeader $1, tempoTable_50, song_babyMetroid_toneSweep, song_babyMetroid_tone, song_babyMetroid_wave, song_babyMetroid_noise
+    SongHeader $1, tempoTable_50, song_babyMetroid_square1, song_babyMetroid_square2, song_babyMetroid_wave, song_babyMetroid_noise
 
 ; $5F9B
-song_babyMetroid_toneSweep:
+song_babyMetroid_square1:
 ;{
-    dw song_babyMetroid_toneSweep_section0 ; $7E1A
-    dw song_babyMetroid_toneSweep_section1 ; $7E1A
-    dw song_babyMetroid_toneSweep_section2 ; $7E09
-    dw song_babyMetroid_toneSweep_section3 ; $7D42
-    dw song_babyMetroid_toneSweep_section4 ; $5FE7
-    dw song_babyMetroid_toneSweep_section5 ; $7D47
-    dw song_babyMetroid_toneSweep_section6 ; $5FF2
-    dw song_babyMetroid_toneSweep_section7 ; $7D4C
-    dw song_babyMetroid_toneSweep_section8 ; $6002
+    dw song_babyMetroid_square1_section0 ; $7E1A
+    dw song_babyMetroid_square1_section1 ; $7E1A
+    dw song_babyMetroid_square1_section2 ; $7E09
+    dw song_babyMetroid_square1_section3 ; $7D42
+    dw song_babyMetroid_square1_section4 ; $5FE7
+    dw song_babyMetroid_square1_section5 ; $7D47
+    dw song_babyMetroid_square1_section6 ; $5FF2
+    dw song_babyMetroid_square1_section7 ; $7D4C
+    dw song_babyMetroid_square1_section8 ; $6002
     .loop
-    dw song_babyMetroid_toneSweep_section9 ; $600A
+    dw song_babyMetroid_square1_section9 ; $600A
     dw $00F0, .loop
 ;}
 
 ; $5FB3
-song_babyMetroid_tone:
+song_babyMetroid_square2:
 ;{
-    dw song_babyMetroid_tone_section0 ; $7E1A
-    dw song_babyMetroid_tone_section1 ; $7E1A
-    dw song_babyMetroid_tone_section2 ; $7E09
-    dw song_babyMetroid_tone_section3 ; $7D42
-    dw song_babyMetroid_tone_section4 ; $6025
-    dw song_babyMetroid_tone_section5 ; $7D47
-    dw song_babyMetroid_tone_section6 ; $6030
-    dw song_babyMetroid_tone_section7 ; $7D4C
-    dw song_babyMetroid_tone_section8 ; $603E
+    dw song_babyMetroid_square2_section0 ; $7E1A
+    dw song_babyMetroid_square2_section1 ; $7E1A
+    dw song_babyMetroid_square2_section2 ; $7E09
+    dw song_babyMetroid_square2_section3 ; $7D42
+    dw song_babyMetroid_square2_section4 ; $6025
+    dw song_babyMetroid_square2_section5 ; $7D47
+    dw song_babyMetroid_square2_section6 ; $6030
+    dw song_babyMetroid_square2_section7 ; $7D4C
+    dw song_babyMetroid_square2_section8 ; $603E
     .loop
-    dw song_babyMetroid_tone_section9 ; $6046
+    dw song_babyMetroid_square2_section9 ; $6046
     dw $00F0, .loop
 ;}
 
@@ -5858,7 +5858,7 @@ song_babyMetroid_noise:
 ;}
 
 ; $5FE7
-song_babyMetroid_toneSweep_section4:
+song_babyMetroid_square1_section4:
 ;{
     SongRepeatSetup $2
         SongNoteLength_Semiquaver
@@ -5873,7 +5873,7 @@ song_babyMetroid_toneSweep_section4:
 ;}
 
 ; $5FF2
-song_babyMetroid_toneSweep_section6:
+song_babyMetroid_square1_section6:
 ;{
     SongRepeatSetup $2
         SongNoteLength_Semiquaver
@@ -5893,7 +5893,7 @@ song_babyMetroid_toneSweep_section6:
 ;}
 
 ; $6002
-song_babyMetroid_toneSweep_section8:
+song_babyMetroid_square1_section8:
 ;{
     SongRepeatSetup $3
         SongNote "C4"
@@ -5905,7 +5905,7 @@ song_babyMetroid_toneSweep_section8:
 ;}
 
 ; $600A
-song_babyMetroid_toneSweep_section9:
+song_babyMetroid_square1_section9:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $7
@@ -5935,7 +5935,7 @@ song_babyMetroid_toneSweep_section9:
 ;}
 
 ; $6025
-song_babyMetroid_tone_section4:
+song_babyMetroid_square2_section4:
 ;{
     SongRepeatSetup $3
         SongNoteLength_DottedSemiquaver
@@ -5950,7 +5950,7 @@ song_babyMetroid_tone_section4:
 ;}
 
 ; $6030
-song_babyMetroid_tone_section6:
+song_babyMetroid_square2_section6:
 ;{
     SongNote "C4"
     SongNote "F4"
@@ -5968,7 +5968,7 @@ song_babyMetroid_tone_section6:
 ;}
 
 ; $603E
-song_babyMetroid_tone_section8:
+song_babyMetroid_square2_section8:
 ;{
     SongRepeatSetup $2
         SongNote "C4"
@@ -5980,7 +5980,7 @@ song_babyMetroid_tone_section8:
 ;}
 
 ; $6046
-song_babyMetroid_tone_section9:
+song_babyMetroid_square2_section9:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $7
@@ -6063,62 +6063,62 @@ song_babyMetroid_noise_section3:
 
 ; $608A
 song_metroidQueenBattle_header:
-    SongHeader $1, tempoTable_50, song_metroidQueenBattle_toneSweep, song_metroidQueenBattle_tone, song_metroidQueenBattle_wave, song_metroidQueenBattle_noise
+    SongHeader $1, tempoTable_50, song_metroidQueenBattle_square1, song_metroidQueenBattle_square2, song_metroidQueenBattle_wave, song_metroidQueenBattle_noise
 
 ; $6095
-song_metroidQueenBattle_toneSweep:
+song_metroidQueenBattle_square1:
 ;{
-    dw song_metroidQueenBattle_toneSweep_section0 ; $6107
-    dw song_metroidQueenBattle_toneSweep_section1 ; $6112
-    dw song_metroidQueenBattle_toneSweep_section2 ; $7D86
-    dw song_metroidQueenBattle_toneSweep_section3 ; $6112
-    dw song_metroidQueenBattle_toneSweep_section4 ; $7D82
-    dw song_metroidQueenBattle_toneSweep_section5 ; $6112
-    dw song_metroidQueenBattle_toneSweep_section6 ; $7D7E
-    dw song_metroidQueenBattle_toneSweep_section7 ; $6112
-    dw song_metroidQueenBattle_toneSweep_section8 ; $7D7A
-    dw song_metroidQueenBattle_toneSweep_section9 ; $6112
-    dw song_metroidQueenBattle_toneSweep_sectionA ; $7D76
-    dw song_metroidQueenBattle_toneSweep_sectionB ; $7D91
-    dw song_metroidQueenBattle_toneSweep_sectionC ; $6112
-    dw song_metroidQueenBattle_toneSweep_sectionD ; $7D72
-    dw song_metroidQueenBattle_toneSweep_sectionE ; $7D94
-    dw song_metroidQueenBattle_toneSweep_sectionF ; $6112
-    dw song_metroidQueenBattle_toneSweep_section10 ; $7D6E
-    dw song_metroidQueenBattle_toneSweep_section11 ; $7D97
-    dw song_metroidQueenBattle_toneSweep_section12 ; $6112
-    dw song_metroidQueenBattle_toneSweep_section13 ; $7D6A
-    dw song_metroidQueenBattle_toneSweep_section14 ; $7D9A
-    dw song_metroidQueenBattle_toneSweep_section15 ; $6112
-    dw song_metroidQueenBattle_toneSweep_section16 ; $7D6A
-    dw song_metroidQueenBattle_toneSweep_section17 ; $7D9D
-    dw song_metroidQueenBattle_toneSweep_section18 ; $6112
-    dw song_metroidQueenBattle_toneSweep_section19 ; $7D6A
-    dw song_metroidQueenBattle_toneSweep_section1A ; $7D9A
-    dw song_metroidQueenBattle_toneSweep_section1B ; $610C
-    dw song_metroidQueenBattle_toneSweep_section1C ; $7D6E
-    dw song_metroidQueenBattle_toneSweep_section1D ; $7D97
-    dw song_metroidQueenBattle_toneSweep_section1E ; $610C
-    dw song_metroidQueenBattle_toneSweep_section1F ; $7D72
-    dw song_metroidQueenBattle_toneSweep_section20 ; $7D94
-    dw song_metroidQueenBattle_toneSweep_section21 ; $610C
-    dw song_metroidQueenBattle_toneSweep_section22 ; $7D76
-    dw song_metroidQueenBattle_toneSweep_section23 ; $7D91
-    dw song_metroidQueenBattle_toneSweep_section24 ; $610C
-    dw song_metroidQueenBattle_toneSweep_section25 ; $7D7E
-    dw song_metroidQueenBattle_toneSweep_section26 ; $7D8E
+    dw song_metroidQueenBattle_square1_section0 ; $6107
+    dw song_metroidQueenBattle_square1_section1 ; $6112
+    dw song_metroidQueenBattle_square1_section2 ; $7D86
+    dw song_metroidQueenBattle_square1_section3 ; $6112
+    dw song_metroidQueenBattle_square1_section4 ; $7D82
+    dw song_metroidQueenBattle_square1_section5 ; $6112
+    dw song_metroidQueenBattle_square1_section6 ; $7D7E
+    dw song_metroidQueenBattle_square1_section7 ; $6112
+    dw song_metroidQueenBattle_square1_section8 ; $7D7A
+    dw song_metroidQueenBattle_square1_section9 ; $6112
+    dw song_metroidQueenBattle_square1_sectionA ; $7D76
+    dw song_metroidQueenBattle_square1_sectionB ; $7D91
+    dw song_metroidQueenBattle_square1_sectionC ; $6112
+    dw song_metroidQueenBattle_square1_sectionD ; $7D72
+    dw song_metroidQueenBattle_square1_sectionE ; $7D94
+    dw song_metroidQueenBattle_square1_sectionF ; $6112
+    dw song_metroidQueenBattle_square1_section10 ; $7D6E
+    dw song_metroidQueenBattle_square1_section11 ; $7D97
+    dw song_metroidQueenBattle_square1_section12 ; $6112
+    dw song_metroidQueenBattle_square1_section13 ; $7D6A
+    dw song_metroidQueenBattle_square1_section14 ; $7D9A
+    dw song_metroidQueenBattle_square1_section15 ; $6112
+    dw song_metroidQueenBattle_square1_section16 ; $7D6A
+    dw song_metroidQueenBattle_square1_section17 ; $7D9D
+    dw song_metroidQueenBattle_square1_section18 ; $6112
+    dw song_metroidQueenBattle_square1_section19 ; $7D6A
+    dw song_metroidQueenBattle_square1_section1A ; $7D9A
+    dw song_metroidQueenBattle_square1_section1B ; $610C
+    dw song_metroidQueenBattle_square1_section1C ; $7D6E
+    dw song_metroidQueenBattle_square1_section1D ; $7D97
+    dw song_metroidQueenBattle_square1_section1E ; $610C
+    dw song_metroidQueenBattle_square1_section1F ; $7D72
+    dw song_metroidQueenBattle_square1_section20 ; $7D94
+    dw song_metroidQueenBattle_square1_section21 ; $610C
+    dw song_metroidQueenBattle_square1_section22 ; $7D76
+    dw song_metroidQueenBattle_square1_section23 ; $7D91
+    dw song_metroidQueenBattle_square1_section24 ; $610C
+    dw song_metroidQueenBattle_square1_section25 ; $7D7E
+    dw song_metroidQueenBattle_square1_section26 ; $7D8E
     .loop
-    dw song_metroidQueenBattle_toneSweep_section27 ; $6118
+    dw song_metroidQueenBattle_square1_section27 ; $6118
     dw $00F0, .loop
 ;}
 
 ; $60E9
-song_metroidQueenBattle_tone:
+song_metroidQueenBattle_square2:
 ;{
-    dw song_metroidQueenBattle_tone_section0 ; $6122
-    dw song_metroidQueenBattle_tone_section1 ; $612F
+    dw song_metroidQueenBattle_square2_section0 ; $6122
+    dw song_metroidQueenBattle_square2_section1 ; $612F
     .loop
-    dw song_metroidQueenBattle_tone_section2 ; $613C
+    dw song_metroidQueenBattle_square2_section2 ; $613C
     dw $00F0, .loop
 ;}
 
@@ -6143,7 +6143,7 @@ song_metroidQueenBattle_noise:
 ;}
 
 ; $6107
-song_metroidQueenBattle_toneSweep_section0:
+song_metroidQueenBattle_square1_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $C
@@ -6153,10 +6153,10 @@ song_metroidQueenBattle_toneSweep_section0:
 ;}
 
 ; $610C
-song_metroidQueenBattle_toneSweep_section1E:
-song_metroidQueenBattle_toneSweep_section1B:
-song_metroidQueenBattle_toneSweep_section21:
-song_metroidQueenBattle_toneSweep_section24:
+song_metroidQueenBattle_square1_section1E:
+song_metroidQueenBattle_square1_section1B:
+song_metroidQueenBattle_square1_section21:
+song_metroidQueenBattle_square1_section24:
 ;{
     SongNoteLength_Quaver
     SongNote "E3"
@@ -6167,16 +6167,16 @@ song_metroidQueenBattle_toneSweep_section24:
 ;}
 
 ; $6112
-song_metroidQueenBattle_toneSweep_section3:
-song_metroidQueenBattle_toneSweep_section9:
-song_metroidQueenBattle_toneSweep_sectionC:
-song_metroidQueenBattle_toneSweep_section12:
-song_metroidQueenBattle_toneSweep_sectionF:
-song_metroidQueenBattle_toneSweep_section15:
-song_metroidQueenBattle_toneSweep_section5:
-song_metroidQueenBattle_toneSweep_section18:
-song_metroidQueenBattle_toneSweep_section1:
-song_metroidQueenBattle_toneSweep_section7:
+song_metroidQueenBattle_square1_section3:
+song_metroidQueenBattle_square1_section9:
+song_metroidQueenBattle_square1_sectionC:
+song_metroidQueenBattle_square1_section12:
+song_metroidQueenBattle_square1_sectionF:
+song_metroidQueenBattle_square1_section15:
+song_metroidQueenBattle_square1_section5:
+song_metroidQueenBattle_square1_section18:
+song_metroidQueenBattle_square1_section1:
+song_metroidQueenBattle_square1_section7:
 ;{
     SongNoteLength_DottedQuaver
     SongNote "E3"
@@ -6187,7 +6187,7 @@ song_metroidQueenBattle_toneSweep_section7:
 ;}
 
 ; $6118
-song_metroidQueenBattle_toneSweep_section27:
+song_metroidQueenBattle_square1_section27:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $8
@@ -6202,7 +6202,7 @@ song_metroidQueenBattle_toneSweep_section27:
 ;}
 
 ; $6122
-song_metroidQueenBattle_tone_section0:
+song_metroidQueenBattle_square2_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $C
@@ -6219,7 +6219,7 @@ song_metroidQueenBattle_tone_section0:
 ;}
 
 ; $612F
-song_metroidQueenBattle_tone_section1:
+song_metroidQueenBattle_square2_section1:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $A
@@ -6236,7 +6236,7 @@ song_metroidQueenBattle_tone_section1:
 ;}
 
 ; $613C
-song_metroidQueenBattle_tone_section2:
+song_metroidQueenBattle_square2_section2:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $8
@@ -6417,37 +6417,37 @@ song_metroidQueenBattle_noise_section2:
 ; $61D4
 song_chozoRuins_header:
 song_chozoRuins_clone_header:
-    SongHeader $1, tempoTable_75, song_chozoRuins_toneSweep, song_chozoRuins_tone, song_chozoRuins_wave, $0000
+    SongHeader $1, tempoTable_75, song_chozoRuins_square1, song_chozoRuins_square2, song_chozoRuins_wave, $0000
 
 ; $61DF
-song_chozoRuins_clone_toneSweep:
-song_chozoRuins_toneSweep:
+song_chozoRuins_clone_square1:
+song_chozoRuins_square1:
 ;{
     .loop
-    dw song_chozoRuins_toneSweep_section0 ; $6219
-    dw song_chozoRuins_toneSweep_section1 ; $624C
-    dw song_chozoRuins_toneSweep_section2 ; $6264
-    dw song_chozoRuins_toneSweep_section3 ; $6297
-    dw song_chozoRuins_toneSweep_section4 ; $6219
-    dw song_chozoRuins_toneSweep_section5 ; $629D
-    dw song_chozoRuins_toneSweep_section6 ; $624C
-    dw song_chozoRuins_toneSweep_section7 ; $6264
-    dw song_chozoRuins_toneSweep_section8 ; $62A3
+    dw song_chozoRuins_square1_section0 ; $6219
+    dw song_chozoRuins_square1_section1 ; $624C
+    dw song_chozoRuins_square1_section2 ; $6264
+    dw song_chozoRuins_square1_section3 ; $6297
+    dw song_chozoRuins_square1_section4 ; $6219
+    dw song_chozoRuins_square1_section5 ; $629D
+    dw song_chozoRuins_square1_section6 ; $624C
+    dw song_chozoRuins_square1_section7 ; $6264
+    dw song_chozoRuins_square1_section8 ; $62A3
     dw $00F0, .loop
 ;}
 
 ; $61F5
-song_chozoRuins_clone_tone:
-song_chozoRuins_tone:
+song_chozoRuins_clone_square2:
+song_chozoRuins_square2:
 ;{
     .loop
-    dw song_chozoRuins_tone_section0 ; $62F6
-    dw song_chozoRuins_tone_section1 ; $6328
-    dw song_chozoRuins_tone_section2 ; $6349
-    dw song_chozoRuins_tone_section3 ; $62F6
-    dw song_chozoRuins_tone_section4 ; $6328
-    dw song_chozoRuins_tone_section5 ; $6349
-    dw song_chozoRuins_tone_section6 ; $637A
+    dw song_chozoRuins_square2_section0 ; $62F6
+    dw song_chozoRuins_square2_section1 ; $6328
+    dw song_chozoRuins_square2_section2 ; $6349
+    dw song_chozoRuins_square2_section3 ; $62F6
+    dw song_chozoRuins_square2_section4 ; $6328
+    dw song_chozoRuins_square2_section5 ; $6349
+    dw song_chozoRuins_square2_section6 ; $637A
     dw $00F0, .loop
 ;}
 
@@ -6467,8 +6467,8 @@ song_chozoRuins_wave:
 ;}
 
 ; $6219
-song_chozoRuins_toneSweep_section4:
-song_chozoRuins_toneSweep_section0:
+song_chozoRuins_square1_section4:
+song_chozoRuins_square1_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 0, $5
@@ -6524,8 +6524,8 @@ song_chozoRuins_toneSweep_section0:
 ;}
 
 ; $624C
-song_chozoRuins_toneSweep_section6:
-song_chozoRuins_toneSweep_section1:
+song_chozoRuins_square1_section6:
+song_chozoRuins_square1_section1:
 ;{
     SongNoteLength_Semiquaver
     SongNote "Eb3"
@@ -6553,8 +6553,8 @@ song_chozoRuins_toneSweep_section1:
 ;}
 
 ; $6264
-song_chozoRuins_toneSweep_section7:
-song_chozoRuins_toneSweep_section2:
+song_chozoRuins_square1_section7:
+song_chozoRuins_square1_section2:
 ;{
     SongNoteLength_Quaver
     SongNote "E4"
@@ -6610,7 +6610,7 @@ song_chozoRuins_toneSweep_section2:
 ;}
 
 ; $6297
-song_chozoRuins_toneSweep_section3:
+song_chozoRuins_square1_section3:
 ;{
     SongTranspose $FE
     SongTempo tempoTable_64
@@ -6618,7 +6618,7 @@ song_chozoRuins_toneSweep_section3:
 ;}
 
 ; $629D
-song_chozoRuins_toneSweep_section5:
+song_chozoRuins_square1_section5:
 ;{
     SongTranspose $0
     SongTempo tempoTable_75
@@ -6626,7 +6626,7 @@ song_chozoRuins_toneSweep_section5:
 ;}
 
 ; $62A3
-song_chozoRuins_toneSweep_section8:
+song_chozoRuins_square1_section8:
 ;{
     SongOptions
         DescendingEnvelopeOptions 2, $6
@@ -6713,8 +6713,8 @@ song_chozoRuins_toneSweep_section8:
 ;}
 
 ; $62F6
-song_chozoRuins_tone_section3:
-song_chozoRuins_tone_section0:
+song_chozoRuins_square2_section3:
+song_chozoRuins_square2_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 0, $5
@@ -6769,8 +6769,8 @@ song_chozoRuins_tone_section0:
 ;}
 
 ; $6328
-song_chozoRuins_tone_section4:
-song_chozoRuins_tone_section1:
+song_chozoRuins_square2_section4:
+song_chozoRuins_square2_section1:
 ;{
     SongNoteLength_Semiquaver
     SongNote "C4"
@@ -6808,8 +6808,8 @@ song_chozoRuins_tone_section1:
 ;}
 
 ; $6349
-song_chozoRuins_tone_section5:
-song_chozoRuins_tone_section2:
+song_chozoRuins_square2_section5:
+song_chozoRuins_square2_section2:
 ;{
     SongNoteLength_Semiquaver
     SongNote "G4"
@@ -6863,7 +6863,7 @@ song_chozoRuins_tone_section2:
 ;}
 
 ; $637A
-song_chozoRuins_tone_section6:
+song_chozoRuins_square2_section6:
 ;{
     SongOptions
         DescendingEnvelopeOptions 2, $6
@@ -7261,41 +7261,41 @@ song_chozoRuins_wave_section6:
 
 ; $64ED
 song_mainCaves_header:
-    SongHeader $0, tempoTable_112, song_mainCaves_toneSweep, song_mainCaves_tone, song_mainCaves_wave, song_mainCaves_noise
+    SongHeader $0, tempoTable_112, song_mainCaves_square1, song_mainCaves_square2, song_mainCaves_wave, song_mainCaves_noise
 
 ; $64F8
-song_mainCaves_toneSweep:
+song_mainCaves_square1:
 ;{
-    dw song_mainCaves_toneSweep_section0 ; $6542
+    dw song_mainCaves_square1_section0 ; $6542
     .alternateEntry
-    dw song_mainCaves_toneSweep_section1 ; $6672
+    dw song_mainCaves_square1_section1 ; $6672
     .loop
-    dw song_mainCaves_toneSweep_section2 ; $659C
-    dw song_mainCaves_toneSweep_section3 ; $659C
-    dw song_mainCaves_toneSweep_section4 ; $65EB
-    dw song_mainCaves_toneSweep_section5 ; $65EB
-    dw song_mainCaves_toneSweep_section6 ; $65EB
-    dw song_mainCaves_toneSweep_section7 ; $65EB
-    dw song_mainCaves_toneSweep_section8 ; $6550
-    dw song_mainCaves_toneSweep_section9 ; $659C
-    dw song_mainCaves_toneSweep_sectionA ; $659C
-    dw song_mainCaves_toneSweep_sectionB ; $6600
-    dw song_mainCaves_toneSweep_sectionC ; $6600
-    dw song_mainCaves_toneSweep_sectionD ; $6600
-    dw song_mainCaves_toneSweep_sectionE ; $6600
-    dw song_mainCaves_toneSweep_sectionF ; $6550
+    dw song_mainCaves_square1_section2 ; $659C
+    dw song_mainCaves_square1_section3 ; $659C
+    dw song_mainCaves_square1_section4 ; $65EB
+    dw song_mainCaves_square1_section5 ; $65EB
+    dw song_mainCaves_square1_section6 ; $65EB
+    dw song_mainCaves_square1_section7 ; $65EB
+    dw song_mainCaves_square1_section8 ; $6550
+    dw song_mainCaves_square1_section9 ; $659C
+    dw song_mainCaves_square1_sectionA ; $659C
+    dw song_mainCaves_square1_sectionB ; $6600
+    dw song_mainCaves_square1_sectionC ; $6600
+    dw song_mainCaves_square1_sectionD ; $6600
+    dw song_mainCaves_square1_sectionE ; $6600
+    dw song_mainCaves_square1_sectionF ; $6550
     dw $00F0, .loop
 ;}
 
 ; $651C
-song_mainCaves_tone:
+song_mainCaves_square2:
 ;{
-    dw song_mainCaves_tone_section0 ; $6615
+    dw song_mainCaves_square2_section0 ; $6615
     .alternateEntry
-    dw song_mainCaves_tone_section1 ; $6623
+    dw song_mainCaves_square2_section1 ; $6623
     .loop
-    dw song_mainCaves_tone_section2 ; $6631
-    dw song_mainCaves_tone_section3 ; $6672
+    dw song_mainCaves_square2_section2 ; $6631
+    dw song_mainCaves_square2_section3 ; $6672
     dw $00F0, .loop
 ;}
 
@@ -7325,7 +7325,7 @@ song_mainCaves_noise:
 ;}
 
 ; $6542
-song_mainCaves_toneSweep_section0:
+song_mainCaves_square1_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 5, $5
@@ -7344,8 +7344,8 @@ song_mainCaves_toneSweep_section0:
 ;}
 
 ; $6550
-song_mainCaves_toneSweep_section8:
-song_mainCaves_toneSweep_sectionF:
+song_mainCaves_square1_section8:
+song_mainCaves_square1_sectionF:
 ;{
     SongOptions
         DescendingEnvelopeOptions 6, $2
@@ -7426,10 +7426,10 @@ song_mainCaves_toneSweep_sectionF:
 ;}
 
 ; $659C
-song_mainCaves_toneSweep_section9:
-song_mainCaves_toneSweep_section2:
-song_mainCaves_toneSweep_section3:
-song_mainCaves_toneSweep_sectionA:
+song_mainCaves_square1_section9:
+song_mainCaves_square1_section2:
+song_mainCaves_square1_section3:
+song_mainCaves_square1_sectionA:
 ;{
     SongOptions
         DescendingEnvelopeOptions 1, $7
@@ -7512,10 +7512,10 @@ song_mainCaves_toneSweep_sectionA:
 ;}
 
 ; $65EB
-song_mainCaves_toneSweep_section6:
-song_mainCaves_toneSweep_section7:
-song_mainCaves_toneSweep_section4:
-song_mainCaves_toneSweep_section5:
+song_mainCaves_square1_section6:
+song_mainCaves_square1_section7:
+song_mainCaves_square1_section4:
+song_mainCaves_square1_section5:
 ;{
     SongOptions
         DescendingEnvelopeOptions 3, $6
@@ -7539,10 +7539,10 @@ song_mainCaves_toneSweep_section5:
 ;}
 
 ; $6600
-song_mainCaves_toneSweep_sectionC:
-song_mainCaves_toneSweep_sectionD:
-song_mainCaves_toneSweep_sectionE:
-song_mainCaves_toneSweep_sectionB:
+song_mainCaves_square1_sectionC:
+song_mainCaves_square1_sectionD:
+song_mainCaves_square1_sectionE:
+song_mainCaves_square1_sectionB:
 ;{
     SongOptions
         AscendingEnvelopeOptions 2, $0
@@ -7566,7 +7566,7 @@ song_mainCaves_toneSweep_sectionB:
 ;}
 
 ; $6615
-song_mainCaves_tone_section0:
+song_mainCaves_square2_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 5, $7
@@ -7585,7 +7585,7 @@ song_mainCaves_tone_section0:
 ;}
 
 ; $6623
-song_mainCaves_tone_section1:
+song_mainCaves_square2_section1:
 ;{
     SongOptions
         AscendingEnvelopeOptions 7, $0
@@ -7604,7 +7604,7 @@ song_mainCaves_tone_section1:
 ;}
 
 ; $6631
-song_mainCaves_tone_section2:
+song_mainCaves_square2_section2:
 ;{
     SongOptions
         DescendingEnvelopeOptions 3, $7
@@ -7672,8 +7672,8 @@ song_mainCaves_tone_section2:
 ;}
 
 ; $6672
-song_mainCaves_toneSweep_section1:
-song_mainCaves_tone_section3:
+song_mainCaves_square1_section1:
+song_mainCaves_square2_section3:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $4
@@ -8201,23 +8201,23 @@ song_mainCaves_noise_section4:
 
 ; $685F
 song_subCaves1_header:
-    SongHeader $0, tempoTable_112, song_subCaves1_toneSweep, song_subCaves1_tone, song_subCaves1_wave, song_subCaves1_noise
+    SongHeader $0, tempoTable_112, song_subCaves1_square1, song_subCaves1_square2, song_subCaves1_wave, song_subCaves1_noise
 
 ; $686A
-song_subCaves1_toneSweep:
+song_subCaves1_square1:
 ;{
-    dw song_subCaves1_toneSweep_section0 ; $7DA0
-    dw song_subCaves1_toneSweep_section1 ; $7D86
+    dw song_subCaves1_square1_section0 ; $7DA0
+    dw song_subCaves1_square1_section1 ; $7D86
     .loop
     .alternateEntry
-    dw song_subCaves1_toneSweep_section2 ; $6880
+    dw song_subCaves1_square1_section2 ; $6880
     dw $00F0, .loop
 ;}
 
 ; $6874
-song_subCaves1_tone:
+song_subCaves1_square2:
 ;{
-    dw song_subCaves1_tone_section0 ; $7DCA
+    dw song_subCaves1_square2_section0 ; $7DCA
     dw $0000
 ;}
 
@@ -8236,7 +8236,7 @@ song_subCaves1_noise:
 ;}
 
 ; $6880
-song_subCaves1_toneSweep_section2:
+song_subCaves1_square1_section2:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $3
@@ -8352,23 +8352,23 @@ song_subCaves1_toneSweep_section2:
 
 ; $68EE
 song_subCaves2_header:
-    SongHeader $0, tempoTable_112, song_subCaves2_toneSweep, song_subCaves2_tone, song_subCaves2_wave, song_subCaves2_noise
+    SongHeader $0, tempoTable_112, song_subCaves2_square1, song_subCaves2_square2, song_subCaves2_wave, song_subCaves2_noise
 
 ; $68F9
-song_subCaves2_toneSweep:
+song_subCaves2_square1:
 ;{
-    dw song_subCaves2_toneSweep_section0 ; $7DA0
-    dw song_subCaves2_toneSweep_section1 ; $7D8A
+    dw song_subCaves2_square1_section0 ; $7DA0
+    dw song_subCaves2_square1_section1 ; $7D8A
     dw $0000
 ;}
 
 ; $68FF
-song_subCaves2_tone:
+song_subCaves2_square2:
 ;{
-    dw song_subCaves2_tone_section0 ; $7DCA
+    dw song_subCaves2_square2_section0 ; $7DCA
     .loop
     .alternateEntry
-    dw song_subCaves2_tone_section1 ; $6911
+    dw song_subCaves2_square2_section1 ; $6911
     dw $00F0, .loop
     dw $0000
 ;}
@@ -8388,7 +8388,7 @@ song_subCaves2_noise:
 ;}
 
 ; $6911
-song_subCaves2_tone_section1:
+song_subCaves2_square2_section1:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $4
@@ -8513,26 +8513,26 @@ song_subCaves2_tone_section1:
 
 ; $6988
 song_subCaves3_header:
-    SongHeader $0, tempoTable_112, song_subCaves3_toneSweep, song_subCaves3_tone, song_subCaves3_wave, song_subCaves3_noise
+    SongHeader $0, tempoTable_112, song_subCaves3_square1, song_subCaves3_square2, song_subCaves3_wave, song_subCaves3_noise
 
 ; $6993
-song_subCaves3_toneSweep:
+song_subCaves3_square1:
 ;{
-    dw song_subCaves3_toneSweep_section0 ; $7DA0
-    dw song_subCaves3_toneSweep_section1 ; $7D7E
+    dw song_subCaves3_square1_section0 ; $7DA0
+    dw song_subCaves3_square1_section1 ; $7D7E
     .loop
     .alternateEntry
-    dw song_subCaves3_toneSweep_section2 ; $69B1
+    dw song_subCaves3_square1_section2 ; $69B1
     dw $00F0, .loop
 ;}
 
 ; $699D
-song_subCaves3_tone:
+song_subCaves3_square2:
 ;{
-    dw song_subCaves3_tone_section0 ; $7DCA
+    dw song_subCaves3_square2_section0 ; $7DCA
     .loop
     .alternateEntry
-    dw song_subCaves3_tone_section1 ; $69E2
+    dw song_subCaves3_square2_section1 ; $69E2
     dw $00F0, .loop
 ;}
 
@@ -8554,7 +8554,7 @@ song_subCaves3_noise:
 ;}
 
 ; $69B1
-song_subCaves3_toneSweep_section2:
+song_subCaves3_square1_section2:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $5
@@ -8605,7 +8605,7 @@ song_subCaves3_toneSweep_section2:
 ;}
 
 ; $69E2
-song_subCaves3_tone_section1:
+song_subCaves3_square2_section1:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $3
@@ -8852,23 +8852,23 @@ song_subCaves3_wave_section1:
 ; $6AE2
 song_finalCaves_header:
 song_finalCaves_clone_header:
-    SongHeader $1, tempoTable_149, song_finalCaves_toneSweep, song_finalCaves_tone, song_finalCaves_wave, song_finalCaves_noise
+    SongHeader $1, tempoTable_149, song_finalCaves_square1, song_finalCaves_square2, song_finalCaves_wave, song_finalCaves_noise
 
 ; $6AED
-song_finalCaves_clone_toneSweep:
-song_finalCaves_toneSweep:
+song_finalCaves_clone_square1:
+song_finalCaves_square1:
 ;{
     .loop
-    dw song_finalCaves_toneSweep_section0 ; $6B05
+    dw song_finalCaves_square1_section0 ; $6B05
     dw $00F0, .loop
 ;}
 
 ; $6AF3
-song_finalCaves_clone_tone:
-song_finalCaves_tone:
+song_finalCaves_clone_square2:
+song_finalCaves_square2:
 ;{
     .loop
-    dw song_finalCaves_tone_section0 ; $6B15
+    dw song_finalCaves_square2_section0 ; $6B15
     dw $00F0, .loop
 ;}
 
@@ -8891,7 +8891,7 @@ song_finalCaves_noise:
 ;}
 
 ; $6B05
-song_finalCaves_toneSweep_section0:
+song_finalCaves_square1_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 3, $C
@@ -8912,7 +8912,7 @@ song_finalCaves_toneSweep_section0:
 ;}
 
 ; $6B15
-song_finalCaves_tone_section0:
+song_finalCaves_square2_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 4, $C
@@ -9099,35 +9099,35 @@ song_finalCaves_noise_section0:
 ; $6BC3
 song_metroidHive_header:
 song_metroidHive_clone_header:
-    SongHeader $FE, tempoTable_75, $0000, song_metroidHive_tone, song_metroidHive_wave, song_metroidHive_noise
+    SongHeader $FE, tempoTable_75, $0000, song_metroidHive_square2, song_metroidHive_wave, song_metroidHive_noise
 
 ; $6BCE
-song_metroidHive_withIntro_toneSweep_loop:
+song_metroidHive_withIntro_square1_loop:
 ;{
     .loop
-    dw song_metroidHive_withIntro_toneSweep_loop_section0 ; $6C00
-    dw song_metroidHive_withIntro_toneSweep_loop_section1 ; $6C00
-    dw song_metroidHive_withIntro_toneSweep_loop_section2 ; $6C5F
-    dw song_metroidHive_withIntro_toneSweep_loop_section3 ; $6C00
-    dw song_metroidHive_withIntro_toneSweep_loop_section4 ; $6C5F
-    dw song_metroidHive_withIntro_toneSweep_loop_section5 ; $6C5F
-    dw song_metroidHive_withIntro_toneSweep_loop_section6 ; $6C00
+    dw song_metroidHive_withIntro_square1_loop_section0 ; $6C00
+    dw song_metroidHive_withIntro_square1_loop_section1 ; $6C00
+    dw song_metroidHive_withIntro_square1_loop_section2 ; $6C5F
+    dw song_metroidHive_withIntro_square1_loop_section3 ; $6C00
+    dw song_metroidHive_withIntro_square1_loop_section4 ; $6C5F
+    dw song_metroidHive_withIntro_square1_loop_section5 ; $6C5F
+    dw song_metroidHive_withIntro_square1_loop_section6 ; $6C00
     dw $00F0, .loop
 ;}
 
 ; $6BE0
-song_metroidHive_clone_tone:
-song_metroidHive_tone:
+song_metroidHive_clone_square2:
+song_metroidHive_square2:
 ;{
     .loop
-    dw song_metroidHive_tone_section0 ; $6C5A
-    dw song_metroidHive_tone_section1 ; $6C04
-    dw song_metroidHive_tone_section2 ; $6C04
-    dw song_metroidHive_tone_section3 ; $6C5F
-    dw song_metroidHive_tone_section4 ; $6C04
-    dw song_metroidHive_tone_section5 ; $6C5F
-    dw song_metroidHive_tone_section6 ; $6C5F
-    dw song_metroidHive_tone_section7 ; $6C04
+    dw song_metroidHive_square2_section0 ; $6C5A
+    dw song_metroidHive_square2_section1 ; $6C04
+    dw song_metroidHive_square2_section2 ; $6C04
+    dw song_metroidHive_square2_section3 ; $6C5F
+    dw song_metroidHive_square2_section4 ; $6C04
+    dw song_metroidHive_square2_section5 ; $6C5F
+    dw song_metroidHive_square2_section6 ; $6C5F
+    dw song_metroidHive_square2_section7 ; $6C04
     dw $00F0, .loop
 ;}
 
@@ -9150,10 +9150,10 @@ song_metroidHive_noise:
 ;}
 
 ; $6C00
-song_metroidHive_withIntro_toneSweep_loop_section6:
-song_metroidHive_withIntro_toneSweep_loop_section1:
-song_metroidHive_withIntro_toneSweep_loop_section3:
-song_metroidHive_withIntro_toneSweep_loop_section0:
+song_metroidHive_withIntro_square1_loop_section6:
+song_metroidHive_withIntro_square1_loop_section1:
+song_metroidHive_withIntro_square1_loop_section3:
+song_metroidHive_withIntro_square1_loop_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 1, $6
@@ -9162,10 +9162,10 @@ song_metroidHive_withIntro_toneSweep_loop_section0:
 ;}
 
 ; $6C04
-song_metroidHive_tone_section1:
-song_metroidHive_tone_section7:
-song_metroidHive_tone_section2:
-song_metroidHive_tone_section4:
+song_metroidHive_square2_section1:
+song_metroidHive_square2_section7:
+song_metroidHive_square2_section2:
+song_metroidHive_square2_section4:
 ;{
     SongRepeatSetup $2
         SongNoteLength_TripletSemiquaver
@@ -9252,7 +9252,7 @@ song_metroidHive_tone_section4:
 ;}
 
 ; $6C5A
-song_metroidHive_tone_section0:
+song_metroidHive_square2_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 1, $6
@@ -9262,12 +9262,12 @@ song_metroidHive_tone_section0:
 ;}
 
 ; $6C5F
-song_metroidHive_withIntro_toneSweep_loop_section5:
-song_metroidHive_tone_section3:
-song_metroidHive_withIntro_toneSweep_loop_section4:
-song_metroidHive_tone_section6:
-song_metroidHive_withIntro_toneSweep_loop_section2:
-song_metroidHive_tone_section5:
+song_metroidHive_withIntro_square1_loop_section5:
+song_metroidHive_square2_section3:
+song_metroidHive_withIntro_square1_loop_section4:
+song_metroidHive_square2_section6:
+song_metroidHive_withIntro_square1_loop_section2:
+song_metroidHive_square2_section5:
 ;{
     SongRepeatSetup $6
         SongNoteLength_Minum
@@ -9327,21 +9327,21 @@ song_metroidHive_noise_section0:
 ; $6C8E
 song_itemGet_header:
 song_itemGet_clone_header:
-    SongHeader $B, tempoTable_112, song_itemGet_toneSweep, song_itemGet_tone, song_itemGet_wave, song_itemGet_noise
+    SongHeader $B, tempoTable_112, song_itemGet_square1, song_itemGet_square2, song_itemGet_wave, song_itemGet_noise
 
 ; $6C99
-song_itemGet_clone_toneSweep:
-song_itemGet_toneSweep:
+song_itemGet_clone_square1:
+song_itemGet_square1:
 ;{
-    dw song_itemGet_toneSweep_section0 ; $6CA9
+    dw song_itemGet_square1_section0 ; $6CA9
     dw $0000
 ;}
 
 ; $6C9D
-song_itemGet_clone_tone:
-song_itemGet_tone:
+song_itemGet_clone_square2:
+song_itemGet_square2:
 ;{
-    dw song_itemGet_tone_section0 ; $6CEE
+    dw song_itemGet_square2_section0 ; $6CEE
     dw $0000
 ;}
 
@@ -9362,7 +9362,7 @@ song_itemGet_noise:
 ;}
 
 ; $6CA9
-song_itemGet_toneSweep_section0:
+song_itemGet_square1_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 1, $A
@@ -9434,7 +9434,7 @@ song_itemGet_toneSweep_section0:
 ;}
 
 ; $6CEE
-song_itemGet_tone_section0:
+song_itemGet_square2_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 0, $F
@@ -9548,17 +9548,17 @@ song_itemGet_noise_section0:
 ; $6D51
 song_metroidQueenHallway_header:
 song_metroidQueenHallway_clone_header:
-    SongHeader $1, tempoTable_90, song_metroidQueenHallway_toneSweep, song_metroidQueenHallway_tone, song_metroidQueenHallway_wave, song_metroidQueenHallway_noise
+    SongHeader $1, tempoTable_90, song_metroidQueenHallway_square1, song_metroidQueenHallway_square2, song_metroidQueenHallway_wave, song_metroidQueenHallway_noise
 
 ; $6D5C
-song_metroidQueenHallway_clone_tone:
-song_metroidQueenHallway_clone_toneSweep:
-song_metroidQueenHallway_tone:
-song_metroidQueenHallway_toneSweep:
+song_metroidQueenHallway_clone_square2:
+song_metroidQueenHallway_clone_square1:
+song_metroidQueenHallway_square2:
+song_metroidQueenHallway_square1:
 ;{
-    dw song_metroidQueenHallway_toneSweep_section0 ; $6D70
+    dw song_metroidQueenHallway_square1_section0 ; $6D70
     .loop
-    dw song_metroidQueenHallway_toneSweep_section1 ; $6D7B
+    dw song_metroidQueenHallway_square1_section1 ; $6D7B
     dw $00F0, .loop
 ;}
 
@@ -9581,7 +9581,7 @@ song_metroidQueenHallway_noise:
 ;}
 
 ; $6D70
-song_metroidQueenHallway_toneSweep_section0:
+song_metroidQueenHallway_square1_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 0, $9
@@ -9600,7 +9600,7 @@ song_metroidQueenHallway_wave_section0:
 ;}
 
 ; $6D7B
-song_metroidQueenHallway_toneSweep_section1:
+song_metroidQueenHallway_square1_section1:
 ;{
     SongRepeatSetup $3
         SongNoteLength_Quaver
@@ -9627,26 +9627,26 @@ song_metroidQueenHallway_noise_section0:
 ; $6D8B
 song_metroidBattle_header:
 song_metroidBattle_clone_header:
-    SongHeader $0, tempoTable_112, song_metroidBattle_toneSweep, song_metroidBattle_tone, song_metroidBattle_wave, song_metroidBattle_noise
+    SongHeader $0, tempoTable_112, song_metroidBattle_square1, song_metroidBattle_square2, song_metroidBattle_wave, song_metroidBattle_noise
 
 ; $6D96
-song_metroidBattle_clone_toneSweep:
-song_metroidBattle_toneSweep:
+song_metroidBattle_clone_square1:
+song_metroidBattle_square1:
 ;{
-    dw song_metroidBattle_toneSweep_section0 ; $6DB8
-    dw song_metroidBattle_toneSweep_section1 ; $7D7E
+    dw song_metroidBattle_square1_section0 ; $6DB8
+    dw song_metroidBattle_square1_section1 ; $7D7E
     .loop
-    dw song_metroidBattle_toneSweep_section2 ; $6DC6
+    dw song_metroidBattle_square1_section2 ; $6DC6
     dw $00F0, .loop
 ;}
 
 ; $6DA0
-song_metroidBattle_clone_tone:
-song_metroidBattle_tone:
+song_metroidBattle_clone_square2:
+song_metroidBattle_square2:
 ;{
-    dw song_metroidBattle_tone_section0 ; $6E0D
+    dw song_metroidBattle_square2_section0 ; $6E0D
     .loop
-    dw song_metroidBattle_tone_section1 ; $6E29
+    dw song_metroidBattle_square2_section1 ; $6E29
     dw $00F0, .loop
 ;}
 
@@ -9671,7 +9671,7 @@ song_metroidBattle_noise:
 ;}
 
 ; $6DB8
-song_metroidBattle_toneSweep_section0:
+song_metroidBattle_square1_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 0, $A
@@ -9690,7 +9690,7 @@ song_metroidBattle_toneSweep_section0:
 ;}
 
 ; $6DC6
-song_metroidBattle_toneSweep_section2:
+song_metroidBattle_square1_section2:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $8
@@ -9765,7 +9765,7 @@ song_metroidBattle_toneSweep_section2:
 ;}
 
 ; $6E0D
-song_metroidBattle_tone_section0:
+song_metroidBattle_square2_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 5, $A
@@ -9798,7 +9798,7 @@ song_metroidBattle_tone_section0:
 ;}
 
 ; $6E29
-song_metroidBattle_tone_section1:
+song_metroidBattle_square2_section1:
 ;{
     SongOptions
         DescendingEnvelopeOptions 3, $8
@@ -9987,23 +9987,23 @@ song_metroidBattle_noise_section1:
 
 ; $6ED5
 song_subCaves4_header:
-    SongHeader $0, tempoTable_112, song_subCaves4_toneSweep, song_subCaves4_tone, song_subCaves4_wave, song_subCaves4_noise
+    SongHeader $0, tempoTable_112, song_subCaves4_square1, song_subCaves4_square2, song_subCaves4_wave, song_subCaves4_noise
 
 ; $6EE0
-song_subCaves4_toneSweep:
+song_subCaves4_square1:
 ;{
-    dw song_subCaves4_toneSweep_section0 ; $7DA0
-    dw song_subCaves4_toneSweep_section1 ; $7D7E
+    dw song_subCaves4_square1_section0 ; $7DA0
+    dw song_subCaves4_square1_section1 ; $7D7E
     dw $0000
 ;}
 
 ; $6EE6
-song_subCaves4_tone:
+song_subCaves4_square2:
 ;{
-    dw song_subCaves4_tone_section0 ; $7DCA
+    dw song_subCaves4_square2_section0 ; $7DCA
     .loop
     .alternateEntry
-    dw song_subCaves4_tone_section1 ; $6EF6
+    dw song_subCaves4_square2_section1 ; $6EF6
     dw $00F0, .loop
 ;}
 
@@ -10022,7 +10022,7 @@ song_subCaves4_noise:
 ;}
 
 ; $6EF6
-song_subCaves4_tone_section1:
+song_subCaves4_square2_section1:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $1
@@ -10196,16 +10196,16 @@ song_earthquake_noise_section0:
 
 ; $6FA4
 song_killedMetroid_header:
-    SongHeader $D, tempoTable_56, song_killedMetroid_toneSweep, song_killedMetroid_tone, song_killedMetroid_wave, $0000
+    SongHeader $D, tempoTable_56, song_killedMetroid_square1, song_killedMetroid_square2, song_killedMetroid_wave, $0000
 
 ; $6FAF
-song_killedMetroid_tone:
-song_killedMetroid_toneSweep:
+song_killedMetroid_square2:
+song_killedMetroid_square1:
 ;{
-    dw song_killedMetroid_toneSweep_section0 ; $6FC5
-    dw song_killedMetroid_toneSweep_section1 ; $7D7A
-    dw song_killedMetroid_toneSweep_section2 ; $6FD2
-    dw song_killedMetroid_toneSweep_section3 ; $6FF6
+    dw song_killedMetroid_square1_section0 ; $6FC5
+    dw song_killedMetroid_square1_section1 ; $7D7A
+    dw song_killedMetroid_square1_section2 ; $6FD2
+    dw song_killedMetroid_square1_section3 ; $6FF6
     dw $0000
 ;}
 
@@ -10227,7 +10227,7 @@ song_killedMetroid_wave:
 
 ; $6FC5
 unused6FB9_section0:
-song_killedMetroid_toneSweep_section0:
+song_killedMetroid_square1_section0:
 ;{
     SongOptions
         AscendingEnvelopeOptions 1, $0
@@ -10246,7 +10246,7 @@ song_killedMetroid_toneSweep_section0:
 
 ; $6FD2
 unused6FB9_section1:
-song_killedMetroid_toneSweep_section2:
+song_killedMetroid_square1_section2:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $A
@@ -10255,8 +10255,8 @@ song_killedMetroid_toneSweep_section2:
 ;}
 
 ; $6FD6
-song_metroidHive_withIntro_tone_section2:
-song_metroidHive_withIntro_toneSweep_section3:
+song_metroidHive_withIntro_square2_section2:
+song_metroidHive_withIntro_square1_section3:
 ;{
     SongNoteLength_Semihemidemisemiquaver
     SongNote "C4"
@@ -10293,7 +10293,7 @@ song_metroidHive_withIntro_toneSweep_section3:
 ;}
 
 ; $6FF6
-song_killedMetroid_toneSweep_section3:
+song_killedMetroid_square1_section3:
 unused6FB9_section2:
 ;{
     SongOptions
@@ -10370,24 +10370,24 @@ song_killedMetroid_wave_section0:
 
 ; $703C
 song_title_header:
-    SongHeader $1, tempoTable_90, song_title_toneSweep, song_title_tone, song_title_wave, song_title_noise
+    SongHeader $1, tempoTable_90, song_title_square1, song_title_square2, song_title_wave, song_title_noise
 
 ; $7047
-song_title_tone:
-song_title_toneSweep:
+song_title_square2:
+song_title_square1:
 ;{
     .loop
-    dw song_title_toneSweep_section0 ; $7E09
-    dw song_title_toneSweep_section1 ; $708B
-    dw song_title_toneSweep_section2 ; $708B
-    dw song_title_toneSweep_section3 ; $708B
-    dw song_title_toneSweep_section4 ; $708B
-    dw song_title_toneSweep_section5 ; $708B
-    dw song_title_toneSweep_section6 ; $7D7E
-    dw song_title_toneSweep_section7 ; $7152
-    dw song_title_toneSweep_section8 ; $7187
-    dw song_title_toneSweep_section9 ; $71CC
-    dw song_title_toneSweep_sectionA ; $7D7A
+    dw song_title_square1_section0 ; $7E09
+    dw song_title_square1_section1 ; $708B
+    dw song_title_square1_section2 ; $708B
+    dw song_title_square1_section3 ; $708B
+    dw song_title_square1_section4 ; $708B
+    dw song_title_square1_section5 ; $708B
+    dw song_title_square1_section6 ; $7D7E
+    dw song_title_square1_section7 ; $7152
+    dw song_title_square1_section8 ; $7187
+    dw song_title_square1_section9 ; $71CC
+    dw song_title_square1_sectionA ; $7D7A
     dw $00F0, .loop
 ;}
 
@@ -10423,11 +10423,11 @@ song_title_noise:
 ;}
 
 ; $708B
-song_title_toneSweep_section2:
-song_title_toneSweep_section5:
-song_title_toneSweep_section1:
-song_title_toneSweep_section3:
-song_title_toneSweep_section4:
+song_title_square1_section2:
+song_title_square1_section5:
+song_title_square1_section1:
+song_title_square1_section3:
+song_title_square1_section4:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $D
@@ -10652,7 +10652,7 @@ song_title_noise_section4:
 ;}
 
 ; $7152
-song_title_toneSweep_section7:
+song_title_square1_section7:
 ;{
     SongOptions
         AscendingEnvelopeOptions 4, $0
@@ -10710,7 +10710,7 @@ song_title_toneSweep_section7:
 ;}
 
 ; $7187
-song_title_toneSweep_section8:
+song_title_square1_section8:
 ;{
     SongOptions
         AscendingEnvelopeOptions 7, $0
@@ -10784,7 +10784,7 @@ song_title_toneSweep_section8:
 ;}
 
 ; $71CC
-song_title_toneSweep_section9:
+song_title_square1_section9:
 ;{
     SongOptions
         DescendingEnvelopeOptions 3, $F
@@ -11401,13 +11401,13 @@ song_title_noise_section8:
 
 ; $7427
 song_samusFanfare_header:
-    SongHeader $1, tempoTable_75, song_samusFanfare_toneSweep, song_samusFanfare_tone, song_samusFanfare_wave, song_samusFanfare_noise
+    SongHeader $1, tempoTable_75, song_samusFanfare_square1, song_samusFanfare_square2, song_samusFanfare_wave, song_samusFanfare_noise
 
 ; $7432
-song_samusFanfare_tone:
-song_samusFanfare_toneSweep:
+song_samusFanfare_square2:
+song_samusFanfare_square1:
 ;{
-    dw song_samusFanfare_toneSweep_section0 ; $743E
+    dw song_samusFanfare_square1_section0 ; $743E
     dw $0000
 ;}
 
@@ -11426,7 +11426,7 @@ song_samusFanfare_noise:
 ;}
 
 ; $743E
-song_samusFanfare_toneSweep_section0:
+song_samusFanfare_square1_section0:
 ;{
     SongOptions
         AscendingEnvelopeOptions 3, $0
@@ -11516,41 +11516,41 @@ song_samusFanfare_noise_section0:
 
 ; $748A
 song_reachedTheGunship_header:
-    SongHeader $0, tempoTable_56, song_reachedTheGunship_toneSweep, song_reachedTheGunship_tone, song_reachedTheGunship_wave, song_reachedTheGunship_noise
+    SongHeader $0, tempoTable_56, song_reachedTheGunship_square1, song_reachedTheGunship_square2, song_reachedTheGunship_wave, song_reachedTheGunship_noise
 
 ; $7495
-song_reachedTheGunship_toneSweep:
+song_reachedTheGunship_square1:
 ;{
-    dw song_reachedTheGunship_toneSweep_section0 ; $74F1
-    dw song_reachedTheGunship_toneSweep_section1 ; $79CB
-    dw song_reachedTheGunship_toneSweep_section2 ; $74F9
-    dw song_reachedTheGunship_toneSweep_section3 ; $76BA
-    dw song_reachedTheGunship_toneSweep_section4 ; $74FE
-    dw song_reachedTheGunship_toneSweep_section5 ; $7523
-    dw song_reachedTheGunship_toneSweep_section6 ; $758C
-    dw song_reachedTheGunship_toneSweep_section7 ; $75C5
-    dw song_reachedTheGunship_toneSweep_section8 ; $75C5
-    dw song_reachedTheGunship_toneSweep_section9 ; $75C5
-    dw song_reachedTheGunship_toneSweep_sectionA ; $75C5
-    dw song_reachedTheGunship_toneSweep_sectionB ; $75EA
-    dw song_reachedTheGunship_toneSweep_sectionC ; $7613
-    dw song_reachedTheGunship_toneSweep_sectionD ; $762C
+    dw song_reachedTheGunship_square1_section0 ; $74F1
+    dw song_reachedTheGunship_square1_section1 ; $79CB
+    dw song_reachedTheGunship_square1_section2 ; $74F9
+    dw song_reachedTheGunship_square1_section3 ; $76BA
+    dw song_reachedTheGunship_square1_section4 ; $74FE
+    dw song_reachedTheGunship_square1_section5 ; $7523
+    dw song_reachedTheGunship_square1_section6 ; $758C
+    dw song_reachedTheGunship_square1_section7 ; $75C5
+    dw song_reachedTheGunship_square1_section8 ; $75C5
+    dw song_reachedTheGunship_square1_section9 ; $75C5
+    dw song_reachedTheGunship_square1_sectionA ; $75C5
+    dw song_reachedTheGunship_square1_sectionB ; $75EA
+    dw song_reachedTheGunship_square1_sectionC ; $7613
+    dw song_reachedTheGunship_square1_sectionD ; $762C
     dw $0000
 ;}
 
 ; $74B3
-song_reachedTheGunship_tone:
+song_reachedTheGunship_square2:
 ;{
-    dw song_reachedTheGunship_tone_section0 ; $76AE
-    dw song_reachedTheGunship_tone_section1 ; $79CB
-    dw song_reachedTheGunship_tone_section2 ; $76B6
-    dw song_reachedTheGunship_tone_section3 ; $7745
-    dw song_reachedTheGunship_tone_section4 ; $7759
-    dw song_reachedTheGunship_tone_section5 ; $77BE
-    dw song_reachedTheGunship_tone_section6 ; $7819
-    dw song_reachedTheGunship_tone_section7 ; $785B
-    dw song_reachedTheGunship_tone_section8 ; $7891
-    dw song_reachedTheGunship_tone_section9 ; $78E6
+    dw song_reachedTheGunship_square2_section0 ; $76AE
+    dw song_reachedTheGunship_square2_section1 ; $79CB
+    dw song_reachedTheGunship_square2_section2 ; $76B6
+    dw song_reachedTheGunship_square2_section3 ; $7745
+    dw song_reachedTheGunship_square2_section4 ; $7759
+    dw song_reachedTheGunship_square2_section5 ; $77BE
+    dw song_reachedTheGunship_square2_section6 ; $7819
+    dw song_reachedTheGunship_square2_section7 ; $785B
+    dw song_reachedTheGunship_square2_section8 ; $7891
+    dw song_reachedTheGunship_square2_section9 ; $78E6
     dw $0000
 ;}
 
@@ -11585,7 +11585,7 @@ song_reachedTheGunship_noise:
 ;}
 
 ; $74F1
-song_reachedTheGunship_toneSweep_section0:
+song_reachedTheGunship_square1_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 0, $6
@@ -11598,7 +11598,7 @@ song_reachedTheGunship_toneSweep_section0:
 ;}
 
 ; $74F9
-song_reachedTheGunship_toneSweep_section2:
+song_reachedTheGunship_square1_section2:
 ;{
     SongOptions
         DescendingEnvelopeOptions 0, $B
@@ -11608,7 +11608,7 @@ song_reachedTheGunship_toneSweep_section2:
 ;}
 
 ; $74FE
-song_reachedTheGunship_toneSweep_section4:
+song_reachedTheGunship_square1_section4:
 ;{
     SongOptions
         DescendingEnvelopeOptions 2, $5
@@ -11646,7 +11646,7 @@ song_reachedTheGunship_toneSweep_section4:
 ;}
 
 ; $7523
-song_reachedTheGunship_toneSweep_section5:
+song_reachedTheGunship_square1_section5:
 ;{
     SongOptions
         DescendingEnvelopeOptions 1, $5
@@ -11747,7 +11747,7 @@ song_reachedTheGunship_toneSweep_section5:
 ;}
 
 ; $758C
-song_reachedTheGunship_toneSweep_section6:
+song_reachedTheGunship_square1_section6:
 ;{
     SongOptions
         DescendingEnvelopeOptions 1, $8
@@ -11804,10 +11804,10 @@ song_reachedTheGunship_toneSweep_section6:
 ;}
 
 ; $75C5
-song_reachedTheGunship_toneSweep_section7:
-song_reachedTheGunship_toneSweep_section8:
-song_reachedTheGunship_toneSweep_section9:
-song_reachedTheGunship_toneSweep_sectionA:
+song_reachedTheGunship_square1_section7:
+song_reachedTheGunship_square1_section8:
+song_reachedTheGunship_square1_section9:
+song_reachedTheGunship_square1_sectionA:
 ;{
     SongOptions
         DescendingEnvelopeOptions 1, $6
@@ -11845,7 +11845,7 @@ song_reachedTheGunship_toneSweep_sectionA:
 ;}
 
 ; $75EA
-song_reachedTheGunship_toneSweep_sectionB:
+song_reachedTheGunship_square1_sectionB:
 ;{
     SongOptions
         DescendingEnvelopeOptions 3, $4
@@ -11890,7 +11890,7 @@ song_reachedTheGunship_toneSweep_sectionB:
 ;}
 
 ; $7613
-song_reachedTheGunship_toneSweep_sectionC:
+song_reachedTheGunship_square1_sectionC:
 ;{
     SongOptions
         DescendingEnvelopeOptions 2, $7
@@ -11919,7 +11919,7 @@ song_reachedTheGunship_toneSweep_sectionC:
 ;}
 
 ; $762C
-song_reachedTheGunship_toneSweep_sectionD:
+song_reachedTheGunship_square1_sectionD:
 ;{
     SongOptions
         DescendingEnvelopeOptions 2, $8
@@ -12051,7 +12051,7 @@ song_reachedTheGunship_toneSweep_sectionD:
 ;}
 
 ; $76AE
-song_reachedTheGunship_tone_section0:
+song_reachedTheGunship_square2_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 0, $6
@@ -12064,7 +12064,7 @@ song_reachedTheGunship_tone_section0:
 ;}
 
 ; $76B6
-song_reachedTheGunship_tone_section2:
+song_reachedTheGunship_square2_section2:
 ;{
     SongOptions
         DescendingEnvelopeOptions 0, $B
@@ -12073,7 +12073,7 @@ song_reachedTheGunship_tone_section2:
 ;}
 
 ; $76BA
-song_reachedTheGunship_toneSweep_section3:
+song_reachedTheGunship_square1_section3:
 ;{
     SongNoteLength_Quaver
     SongNote "E5"
@@ -12217,7 +12217,7 @@ song_reachedTheGunship_toneSweep_section3:
 ;}
 
 ; $7745
-song_reachedTheGunship_tone_section3:
+song_reachedTheGunship_square2_section3:
 ;{
     SongOptions
         DescendingEnvelopeOptions 0, $A
@@ -12242,7 +12242,7 @@ song_reachedTheGunship_tone_section3:
 ;}
 
 ; $7759
-song_reachedTheGunship_tone_section4:
+song_reachedTheGunship_square2_section4:
 ;{
     SongOptions
         DescendingEnvelopeOptions 0, $C
@@ -12348,7 +12348,7 @@ song_reachedTheGunship_tone_section4:
 ;}
 
 ; $77BE
-song_reachedTheGunship_tone_section5:
+song_reachedTheGunship_square2_section5:
 ;{
     SongOptions
         DescendingEnvelopeOptions 0, $B
@@ -12444,7 +12444,7 @@ song_reachedTheGunship_tone_section5:
 ;}
 
 ; $7819
-song_reachedTheGunship_tone_section6:
+song_reachedTheGunship_square2_section6:
 ;{
     SongOptions
         DescendingEnvelopeOptions 0, $D
@@ -12514,7 +12514,7 @@ song_reachedTheGunship_tone_section6:
 ;}
 
 ; $785B
-song_reachedTheGunship_tone_section7:
+song_reachedTheGunship_square2_section7:
 ;{
     SongOptions
         DescendingEnvelopeOptions 0, $A
@@ -12572,7 +12572,7 @@ song_reachedTheGunship_tone_section7:
 ;}
 
 ; $7891
-song_reachedTheGunship_tone_section8:
+song_reachedTheGunship_square2_section8:
 ;{
     SongOptions
         DescendingEnvelopeOptions 0, $D
@@ -12662,7 +12662,7 @@ song_reachedTheGunship_tone_section8:
 ;}
 
 ; $78E6
-song_reachedTheGunship_tone_section9:
+song_reachedTheGunship_square2_section9:
 ;{
     SongOptions
         DescendingEnvelopeOptions 0, $B
@@ -12898,8 +12898,8 @@ song_reachedTheGunship_wave_section0:
 ;}
 
 ; $79CB
-song_reachedTheGunship_tone_section1:
-song_reachedTheGunship_toneSweep_section1:
+song_reachedTheGunship_square2_section1:
+song_reachedTheGunship_square1_section1:
 ;{
     SongNoteLength_Hemidemisemiquaver
     SongNote "C3"
@@ -13577,47 +13577,47 @@ song_reachedTheGunship_noise_section8:
 
 ; $7C3A
 song_mainCaves_noIntro_header:
-    SongHeader $0, tempoTable_112, song_mainCaves_toneSweep.alternateEntry, song_mainCaves_tone.alternateEntry, song_mainCaves_wave.alternateEntry, song_mainCaves_noise.alternateEntry
+    SongHeader $0, tempoTable_112, song_mainCaves_square1.alternateEntry, song_mainCaves_square2.alternateEntry, song_mainCaves_wave.alternateEntry, song_mainCaves_noise.alternateEntry
 
 ; $7C45
 song_subCaves1_noIntro_header:
-    SongHeader $0, tempoTable_56, song_subCaves1_toneSweep.alternateEntry, $0000, $0000, $0000
+    SongHeader $0, tempoTable_56, song_subCaves1_square1.alternateEntry, $0000, $0000, $0000
 
 ; $7C50
 song_subCaves2_noIntro_header:
-    SongHeader $0, tempoTable_56, $0000, song_subCaves2_tone.alternateEntry, $0000, $0000
+    SongHeader $0, tempoTable_56, $0000, song_subCaves2_square2.alternateEntry, $0000, $0000
 
 ; $7C5B
 song_subCaves3_noIntro_header:
-    SongHeader $0, tempoTable_75, song_subCaves3_toneSweep.alternateEntry, song_subCaves3_tone.alternateEntry, song_subCaves3_wave.alternateEntry, $0000
+    SongHeader $0, tempoTable_75, song_subCaves3_square1.alternateEntry, song_subCaves3_square2.alternateEntry, song_subCaves3_wave.alternateEntry, $0000
 
 ; $7C66
 song_subCaves4_noIntro_header:
-    SongHeader $0, tempoTable_112, $0000, song_subCaves4_tone.alternateEntry, $0000, $0000
+    SongHeader $0, tempoTable_112, $0000, song_subCaves4_square2.alternateEntry, $0000, $0000
 
 ; $7C71
 song_metroidHive_withIntro_header:
-    SongHeader $1, tempoTable_149, song_metroidHive_withIntro_toneSweep, song_metroidHive_withIntro_tone, song_metroidHive_withIntro_wave, song_metroidHive_withIntro_noise
+    SongHeader $1, tempoTable_149, song_metroidHive_withIntro_square1, song_metroidHive_withIntro_square2, song_metroidHive_withIntro_wave, song_metroidHive_withIntro_noise
 
 ; $7C7C
-song_metroidHive_withIntro_toneSweep:
+song_metroidHive_withIntro_square1:
 ;{
-    dw song_metroidHive_withIntro_toneSweep_section0 ; $7CA6
-    dw song_metroidHive_withIntro_toneSweep_section1 ; $7D7E
-    dw song_metroidHive_withIntro_toneSweep_section2 ; $7CAD
-    dw song_metroidHive_withIntro_toneSweep_section3 ; $6FD6
-    dw song_metroidHive_withIntro_toneSweep_section4 ; $7CB8
-    dw $00F0, song_metroidHive_withIntro_toneSweep_loop
+    dw song_metroidHive_withIntro_square1_section0 ; $7CA6
+    dw song_metroidHive_withIntro_square1_section1 ; $7D7E
+    dw song_metroidHive_withIntro_square1_section2 ; $7CAD
+    dw song_metroidHive_withIntro_square1_section3 ; $6FD6
+    dw song_metroidHive_withIntro_square1_section4 ; $7CB8
+    dw $00F0, song_metroidHive_withIntro_square1_loop
 ;}
 
 ; $7C8A
-song_metroidHive_withIntro_tone:
+song_metroidHive_withIntro_square2:
 ;{
-    dw song_metroidHive_withIntro_tone_section0 ; $7CBF
-    dw song_metroidHive_withIntro_tone_section1 ; $7CCB
-    dw song_metroidHive_withIntro_tone_section2 ; $6FD6
-    dw song_metroidHive_withIntro_tone_section3 ; $7CD6
-    dw $00F0, song_metroidHive_tone.loop
+    dw song_metroidHive_withIntro_square2_section0 ; $7CBF
+    dw song_metroidHive_withIntro_square2_section1 ; $7CCB
+    dw song_metroidHive_withIntro_square2_section2 ; $6FD6
+    dw song_metroidHive_withIntro_square2_section3 ; $7CD6
+    dw $00F0, song_metroidHive_square2.loop
 ;}
 
 ; $7C96
@@ -13637,7 +13637,7 @@ song_metroidHive_withIntro_noise:
 ;}
 
 ; $7CA6
-song_metroidHive_withIntro_toneSweep_section0:
+song_metroidHive_withIntro_square1_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $8
@@ -13649,7 +13649,7 @@ song_metroidHive_withIntro_toneSweep_section0:
 ;}
 
 ; $7CAD
-song_metroidHive_withIntro_toneSweep_section2:
+song_metroidHive_withIntro_square1_section2:
 ;{
     SongOptions
         AscendingEnvelopeOptions 5, $0
@@ -13665,7 +13665,7 @@ song_metroidHive_withIntro_toneSweep_section2:
 ;}
 
 ; $7CB8
-song_metroidHive_withIntro_toneSweep_section4:
+song_metroidHive_withIntro_square1_section4:
 ;{
     SongOptions
         DescendingEnvelopeOptions 5, $F
@@ -13677,7 +13677,7 @@ song_metroidHive_withIntro_toneSweep_section4:
 ;}
 
 ; $7CBF
-song_metroidHive_withIntro_tone_section0:
+song_metroidHive_withIntro_square2_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 7, $8
@@ -13694,7 +13694,7 @@ song_metroidHive_withIntro_tone_section0:
 ;}
 
 ; $7CCB
-song_metroidHive_withIntro_tone_section1:
+song_metroidHive_withIntro_square2_section1:
 ;{
     SongOptions
         AscendingEnvelopeOptions 5, $0
@@ -13710,7 +13710,7 @@ song_metroidHive_withIntro_tone_section1:
 ;}
 
 ; $7CD6
-song_metroidHive_withIntro_tone_section3:
+song_metroidHive_withIntro_square2_section3:
 ;{
     SongOptions
         DescendingEnvelopeOptions 5, $F
@@ -13782,13 +13782,13 @@ song_metroidHive_withIntro_noise_section1:
 
 ; $7D09
 song_missilePickup_header:
-    SongHeader $1, tempoTable_75, song_missilePickup_toneSweep, song_missilePickup_tone, song_missilePickup_wave, song_missilePickup_noise
+    SongHeader $1, tempoTable_75, song_missilePickup_square1, song_missilePickup_square2, song_missilePickup_wave, song_missilePickup_noise
 
 ; $7D14
-song_missilePickup_tone:
-song_missilePickup_toneSweep:
+song_missilePickup_square2:
+song_missilePickup_square1:
 ;{
-    dw song_missilePickup_toneSweep_section0 ; $7D20
+    dw song_missilePickup_square1_section0 ; $7D20
     dw $0000
 ;}
 
@@ -13807,7 +13807,7 @@ song_missilePickup_noise:
 ;}
 
 ; $7D20
-song_missilePickup_toneSweep_section0:
+song_missilePickup_square1_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 2, $F
@@ -13854,8 +13854,8 @@ song_missilePickup_noise_section0:
 ;}
 
 ; $7D42
-song_babyMetroid_tone_section3:
-song_babyMetroid_toneSweep_section3:
+song_babyMetroid_square2_section3:
+song_babyMetroid_square1_section3:
 ;{
     SongOptions
         DescendingEnvelopeOptions 5, $1
@@ -13865,8 +13865,8 @@ song_babyMetroid_toneSweep_section3:
 ;}
 
 ; $7D47
-song_babyMetroid_tone_section5:
-song_babyMetroid_toneSweep_section5:
+song_babyMetroid_square2_section5:
+song_babyMetroid_square1_section5:
 ;{
     SongOptions
         DescendingEnvelopeOptions 5, $3
@@ -13876,8 +13876,8 @@ song_babyMetroid_toneSweep_section5:
 ;}
 
 ; $7D4C
-song_babyMetroid_tone_section7:
-song_babyMetroid_toneSweep_section7:
+song_babyMetroid_square2_section7:
+song_babyMetroid_square1_section7:
 ;{
     SongOptions
         DescendingEnvelopeOptions 5, $6
@@ -13931,133 +13931,133 @@ unused7D65_section0:
 ;}
 
 ; $7D6A
-song_metroidQueenBattle_toneSweep_section13:
-song_metroidQueenBattle_toneSweep_section19:
-song_metroidQueenBattle_toneSweep_section16:
+song_metroidQueenBattle_square1_section13:
+song_metroidQueenBattle_square1_section19:
+song_metroidQueenBattle_square1_section16:
 ;{
     SongTempo tempoTable_448
     SongEnd
 ;}
 
 ; $7D6E
-song_metroidQueenBattle_toneSweep_section10:
-song_metroidQueenBattle_toneSweep_section1C:
+song_metroidQueenBattle_square1_section10:
+song_metroidQueenBattle_square1_section1C:
 ;{
     SongTempo tempoTable_224
     SongEnd
 ;}
 
 ; $7D72
-song_metroidQueenBattle_toneSweep_sectionD:
-song_metroidQueenBattle_toneSweep_section1F:
+song_metroidQueenBattle_square1_sectionD:
+song_metroidQueenBattle_square1_section1F:
 ;{
     SongTempo tempoTable_149
     SongEnd
 ;}
 
 ; $7D76
-song_metroidQueenBattle_toneSweep_sectionA:
-song_metroidQueenBattle_toneSweep_section22:
+song_metroidQueenBattle_square1_sectionA:
+song_metroidQueenBattle_square1_section22:
 ;{
     SongTempo tempoTable_112
     SongEnd
 ;}
 
 ; $7D7A
-song_metroidQueenBattle_toneSweep_section8:
-song_title_toneSweep_sectionA:
-song_killedMetroid_toneSweep_section1:
+song_metroidQueenBattle_square1_section8:
+song_title_square1_sectionA:
+song_killedMetroid_square1_section1:
 ;{
     SongTempo tempoTable_90
     SongEnd
 ;}
 
 ; $7D7E
-song_metroidQueenBattle_toneSweep_section6:
-song_metroidBattle_toneSweep_section1:
-song_subCaves4_toneSweep_section1:
-song_title_toneSweep_section6:
-song_metroidQueenBattle_toneSweep_section25:
-song_metroidHive_withIntro_toneSweep_section1:
-song_subCaves3_toneSweep_section1:
+song_metroidQueenBattle_square1_section6:
+song_metroidBattle_square1_section1:
+song_subCaves4_square1_section1:
+song_title_square1_section6:
+song_metroidQueenBattle_square1_section25:
+song_metroidHive_withIntro_square1_section1:
+song_subCaves3_square1_section1:
 ;{
     SongTempo tempoTable_75
     SongEnd
 ;}
 
 ; $7D82
-song_metroidQueenBattle_toneSweep_section4:
+song_metroidQueenBattle_square1_section4:
 ;{
     SongTempo tempoTable_64
     SongEnd
 ;}
 
 ; $7D86
-song_metroidQueenBattle_toneSweep_section2:
-song_subCaves1_toneSweep_section1:
+song_metroidQueenBattle_square1_section2:
+song_subCaves1_square1_section1:
 ;{
     SongTempo tempoTable_56
     SongEnd
 ;}
 
 ; $7D8A
-song_subCaves2_toneSweep_section1:
+song_subCaves2_square1_section1:
 ;{
     SongTempo tempoTable_50
     SongEnd
 ;}
 
 ; $7D8E
-song_metroidQueenBattle_toneSweep_section26:
+song_metroidQueenBattle_square1_section26:
 ;{
     SongTranspose $0
     SongEnd
 ;}
 
 ; $7D91
-song_metroidQueenBattle_toneSweep_section23:
-song_metroidQueenBattle_toneSweep_sectionB:
+song_metroidQueenBattle_square1_section23:
+song_metroidQueenBattle_square1_sectionB:
 ;{
     SongTranspose $2
     SongEnd
 ;}
 
 ; $7D94
-song_metroidQueenBattle_toneSweep_sectionE:
-song_metroidQueenBattle_toneSweep_section20:
+song_metroidQueenBattle_square1_sectionE:
+song_metroidQueenBattle_square1_section20:
 ;{
     SongTranspose $4
     SongEnd
 ;}
 
 ; $7D97
-song_metroidQueenBattle_toneSweep_section1D:
-song_metroidQueenBattle_toneSweep_section11:
+song_metroidQueenBattle_square1_section1D:
+song_metroidQueenBattle_square1_section11:
 ;{
     SongTranspose $8
     SongEnd
 ;}
 
 ; $7D9A
-song_metroidQueenBattle_toneSweep_section14:
-song_metroidQueenBattle_toneSweep_section1A:
+song_metroidQueenBattle_square1_section14:
+song_metroidQueenBattle_square1_section1A:
 ;{
     SongTranspose $C
     SongEnd
 ;}
 
 ; $7D9D
-song_metroidQueenBattle_toneSweep_section17:
+song_metroidQueenBattle_square1_section17:
 ;{
     SongTranspose $10
     SongEnd
 ;}
 
 ; $7DA0
-song_subCaves2_toneSweep_section0:
-song_subCaves1_toneSweep_section0:
-song_subCaves3_toneSweep_section0:
-song_subCaves4_toneSweep_section0:
+song_subCaves2_square1_section0:
+song_subCaves1_square1_section0:
+song_subCaves3_square1_section0:
+song_subCaves4_square1_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 4, $A
@@ -14104,10 +14104,10 @@ song_subCaves4_toneSweep_section0:
 ;}
 
 ; $7DCA
-song_subCaves3_tone_section0:
-song_subCaves2_tone_section0:
-song_subCaves1_tone_section0:
-song_subCaves4_tone_section0:
+song_subCaves3_square2_section0:
+song_subCaves2_square2_section0:
+song_subCaves1_square2_section0:
+song_subCaves4_square2_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 3, $B
@@ -14188,9 +14188,9 @@ song_subCaves4_noise_section0:
 ;}
 
 ; $7E09
-song_babyMetroid_tone_section2:
-song_babyMetroid_toneSweep_section2:
-song_title_toneSweep_section0:
+song_babyMetroid_square2_section2:
+song_babyMetroid_square1_section2:
+song_title_square1_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 1, $1
@@ -14222,10 +14222,10 @@ song_babyMetroid_noise_section2:
 ;}
 
 ; $7E1A
-song_babyMetroid_toneSweep_section1:
-song_babyMetroid_tone_section1:
-song_babyMetroid_tone_section0:
-song_babyMetroid_toneSweep_section0:
+song_babyMetroid_square1_section1:
+song_babyMetroid_square2_section1:
+song_babyMetroid_square2_section0:
+song_babyMetroid_square1_section0:
 ;{
     SongOptions
         DescendingEnvelopeOptions 1, $1
