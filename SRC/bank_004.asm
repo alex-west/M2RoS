@@ -206,43 +206,43 @@ handleAudio:
         jp nz, handleAudio_paused
 ;}
 
-handleAudio_handleIsolatedSoundEffectRequest:
+handleAudio_handleSongInterruptionRequest:
 ;{
-    ld a, [isolatedSoundEffectRequest]
+    ld a, [songInterruptionRequest]
     and a
-        jr z, handleAudio_handleIsolatedSoundEffectPlaying
+        jr z, handleAudio_handleSongInterruptionPlaying
 
-    cp isolatedSoundEffect_itemGet
-        jr z, playIsolatedSoundEffect_itemGet
+    cp songInterruption_itemGet
+        jr z, playSongInterruption_itemGet
 
-    cp isolatedSoundEffect_end_request
-        jp z, startEndingIsolatedSoundEffect
+    cp songInterruption_end_request
+        jp z, startEndingSongInterruption
 
-    cp isolatedSoundEffect_missilePickup
-        jr z, playIsolatedSoundEffect_missilePickup
+    cp songInterruption_missilePickup
+        jr z, playSongInterruption_missilePickup
 
-    cp isolatedSoundEffect_fadeOutMusic
+    cp songInterruption_fadeOutMusic
         jp z, handleAudio_initiateFadingOutMusic
 
-    cp isolatedSoundEffect_earthquake
-        jr z, playIsolatedSoundEffect_earthquake
+    cp songInterruption_earthquake
+        jr z, playSongInterruption_earthquake
 
-    cp isolatedSoundEffect_clear
-        call z, clearIsolatedSoundEffect
+    cp songInterruption_clear
+        call z, clearSongInterruption
 
     jr handleSongAndSoundEffects
 ;}
 
-handleAudio_handleIsolatedSoundEffectPlaying:
+handleAudio_handleSongInterruptionPlaying:
 ;{
-    ld a, [isolatedSoundEffectPlaying]
+    ld a, [songInterruptionPlaying]
     and a
         jr z, handleSongAndSoundEffects
 
-    cp isolatedSoundEffect_end_playing
-        jp z, finishEndingIsolatedSoundEffect
+    cp songInterruption_end_playing
+        jp z, finishEndingSongInterruption
 
-    cp isolatedSoundEffect_fadeOutMusic
+    cp songInterruption_fadeOutMusic
         jp z, handleAudio_handleFadingOutMusic
 ;}
 
@@ -259,59 +259,59 @@ handleSongAndSoundEffects:
     ld [sfxRequest_square1], a
     ld [sfxRequest_square2], a
     ld [sfxRequest_fakeWave], a
-    ld [isolatedSoundEffectRequest], a
-    ld [lowHealthBeepSoundEffectRequest], a
+    ld [songInterruptionRequest], a
+    ld [sfxRequest_lowHealthBeep], a
     ld [audioPauseControl], a
 ret
 ;}
 
-clearIsolatedSoundEffect:
+clearSongInterruption:
 ;{
     xor a
-    ld [isolatedSoundEffectRequest], a
-    ld [isolatedSoundEffectPlaying], a
+    ld [songInterruptionRequest], a
+    ld [songInterruptionPlaying], a
 ret
 ;}
 
-playIsolatedSoundEffect_itemGet:
+playSongInterruption_itemGet:
 ;{
-    ld [isolatedSoundEffectPlaying], a
+    ld [songInterruptionPlaying], a
     ld a, song_itemGet
     ld [songRequest], a
-    jr playIsolatedSoundEffect
+    jr playSongInterruption
 ;}
 
-playIsolatedSoundEffect_missilePickup:
+playSongInterruption_missilePickup:
 ;{
-    ld [isolatedSoundEffectPlaying], a
+    ld [songInterruptionPlaying], a
     ld a, song_missilePickup
     ld [songRequest], a
-    jr playIsolatedSoundEffect
+    jr playSongInterruption
 ;}
 
-playIsolatedSoundEffect_earthquake:
+playSongInterruption_earthquake:
 ;{
-    ld [isolatedSoundEffectPlaying], a
+    ld [songInterruptionPlaying], a
     ld [songRequest], a
 ;}
 
-playIsolatedSoundEffect:
+playSongInterruption:
 ;{
     ld a, [songPlaying]
     ld [songPlayingBackup], a
-    ld a, [isolatedSoundEffectRequest]
-    cp isolatedSoundEffect_earthquake
+    ld a, [songInterruptionRequest]
+    cp songInterruption_earthquake
     jr z, .endIf_notEarthquake
-        ld a, [lowHealthBeepSoundEffectPlaying]
-        ld [lowHealthBeepSoundEffectPlayingBackup], a
+        ld a, [sfxPlaying_lowHealthBeep]
+        ld [sfxPlayingBackup_lowHealthBeep], a
         xor a
-        ld [lowHealthBeepSoundEffectPlaying], a
+        ld [sfxPlaying_lowHealthBeep], a
         .endIf_notEarthquake
 
     ld a, [audioChannelOutputStereoFlags]
     ld [audioChannelOutputStereoFlagsBackup], a
-    ld a, [toneSweepChannelSweep]
-    ld [toneSweepChannelSweepBackup], a
+    ld a, [songSweep_square1]
+    ld [songSweepBackup_square1], a
 
     ld hl, songProcessingStateBackup
     ld de, songProcessingState
@@ -328,19 +328,19 @@ playIsolatedSoundEffect:
     jr nz, .copyLoop
 
     call muteSoundChannels
-    ld [isolatedSoundEffectRequest], a
+    ld [songInterruptionRequest], a
     ld [sfxRequest_square1], a
-    ld [toneSweepChannelSoundEffectPlaying], a
+    ld [sfxPlaying_square1], a
     ld [sfxRequest_noise], a
-    ld [noiseChannelSoundEffectPlaying], a
-    ld [noiseChannelSoundEffectIsPlayingFlag], a
+    ld [sfxPlaying_noise], a
+    ld [sfxActive_noise], a
 ret
 ;}
 
-startEndingIsolatedSoundEffect:
+startEndingSongInterruption:
 ;{
     dec a
-    ld [isolatedSoundEffectPlaying], a
+    ld [songInterruptionPlaying], a
     ld hl, songProcessingState
     ld de, songProcessingStateBackup
     ld a, [songProcessingStateSize]
@@ -367,7 +367,7 @@ startEndingIsolatedSoundEffect:
     jr nz, .copyOptionsLoop
 
     xor a
-    ld [isolatedSoundEffectRequest], a
+    ld [songInterruptionRequest], a
     ld a, $ff
     ld [sfxRequest_square1], a
     ld [sfxRequest_square2], a
@@ -375,11 +375,11 @@ startEndingIsolatedSoundEffect:
 ret
 ;}
 
-finishEndingIsolatedSoundEffect:
+finishEndingSongInterruption:
 ;{
-    ld a, [wavePatternDataPointer]
+    ld a, [songWavePatternDataPointer]
     ld e, a
-    ld a, [wavePatternDataPointer+1]
+    ld a, [songWavePatternDataPointer+1]
     ld d, a
     xor a
     ldh [rAUD3ENA], a
@@ -388,17 +388,17 @@ finishEndingIsolatedSoundEffect:
     ld a, [songPlaying]
     cp song_earthquake
     jr z, .endIf
-        ld a, [lowHealthBeepSoundEffectPlayingBackup]
-        ld [lowHealthBeepSoundEffectPlaying], a
+        ld a, [sfxPlayingBackup_lowHealthBeep]
+        ld [sfxPlaying_lowHealthBeep], a
         .endIf
 
     ld a, [audioChannelOutputStereoFlagsBackup]
     ld [audioChannelOutputStereoFlags], a
     ldh [rAUDTERM], a
-    ld a, [toneSweepChannelSweepBackup]
-    ld [toneSweepChannelSweep], a
+    ld a, [songSweepBackup_square1]
+    ld [songSweep_square1], a
     xor a
-    ld [isolatedSoundEffectPlaying], a
+    ld [songInterruptionPlaying], a
     ld [ramCFEB], a
     ld a, [songPlayingBackup]
     ld [songPlaying], a
@@ -407,14 +407,14 @@ ret
 
 handleAudio_initiateFadingOutMusic:
 ;{
-    ld [isolatedSoundEffectPlaying], a
+    ld [songInterruptionPlaying], a
     ld a, $d0
     ld [songFadeoutTimer], a
-    ld a, [toneSweepSoundEnvelope]
+    ld a, [songNoteEnvelope_square1]
     ld [ramCF5D], a
-    ld a, [toneSoundEnvelope]
+    ld a, [songNoteEnvelope_square2]
     ld [ramCF5E], a
-    ld a, [waveVolume]
+    ld a, [songNoteVolume_wave]
     ld [ramCF5F], a
     jp handleSongAndSoundEffects
 
@@ -448,9 +448,9 @@ handleAudio_handleFadingOutMusic:
 
 .timer70
     xor a
-    ld [songNoiseChannelEnable], a
+    ld [songChannelEnable_noise], a
     ld a, $60
-    ld [waveVolume], a
+    ld [songNoteVolume_wave], a
     ld [ramCF5F], a
     ld a, $45
     jr .merge
@@ -463,9 +463,9 @@ handleAudio_handleFadingOutMusic:
     ld a, $13
 
 .merge
-    ld [toneSweepSoundEnvelope], a
-    ld [toneSoundEnvelope], a
-    ld [noiseSoundEnvelope], a
+    ld [songNoteEnvelope_square1], a
+    ld [songNoteEnvelope_square2], a
+    ld [songNoteEnvelope_noise], a
     ld [ramCF5D], a
     ld [ramCF5E], a
     jp handleSongAndSoundEffects
@@ -473,7 +473,7 @@ handleAudio_handleFadingOutMusic:
 .timer0
     xor a
     ld [songPlaying], a
-    ld [isolatedSoundEffectPlaying], a
+    ld [songInterruptionPlaying], a
     jp disableSoundChannels
 ;}
 
@@ -489,11 +489,11 @@ handleToneSweepChannelSoundEffect:
     cp $1f
         jr nc, .endif_sfxRequested
 
-    ld a, [toneSweepChannelSoundEffectPlaying]
-    cp toneSweepSoundEffect_pickedUpMissileDrop
+    ld a, [sfxPlaying_square1]
+    cp sfx_square1_pickedUpMissileDrop
         jr z, .endif_sfxRequested
 
-    cp toneSweepSoundEffect_samusHealthChange
+    cp sfx_square1_samusHealthChange
         jr z, .endif_sfxRequested
 
         ld a, [sfxRequest_square1]
@@ -503,7 +503,7 @@ handleToneSweepChannelSoundEffect:
     .endif_sfxRequested
 
 .playing
-    ld a, [toneSweepChannelSoundEffectPlaying]
+    ld a, [sfxPlaying_square1]
     and a
     ret z
 
@@ -515,7 +515,7 @@ handleToneSweepChannelSoundEffect:
     .endif_sfxPlaying
 
     xor a
-    ld [toneSweepChannelSoundEffectPlaying], a
+    ld [sfxPlaying_square1], a
 ret
 ;}
 
@@ -531,24 +531,24 @@ handleToneChannelSoundEffect:
     cp $08
         jr nc, .endif_sfxRequested
 
-    ld hl, toneChannelSoundEffectInitialisationFunctionPointers
+    ld hl, songSoundEffectInitialisationFunctionPointers_square2
     call loadPointerFromTable
     jp hl
     .endif_sfxRequested
 
-    ld a, [toneChannelSoundEffectPlaying]
+    ld a, [sfxPlaying_square2]
     and a
     ret z
 
     cp $08
     jr nc, .endif_sfxPlaying
-        ld hl, toneChannelSoundEffectPlaybackFunctionPointers
+        ld hl, songSoundEffectPlaybackFunctionPointers_square2
         call loadPointerFromTable
         jp hl
     .endif_sfxPlaying
 
     xor a
-    ld [toneChannelSoundEffectPlaying], a
+    ld [sfxPlaying_square2], a
 ret
 ;}
 
@@ -568,7 +568,7 @@ handleNoiseChannelSoundEffect:
     cp song_earthquake
     ret z
 
-    ld a, [noiseChannelSoundEffectPlaying]
+    ld a, [sfxPlaying_noise]
     cp $0d
         jr z, .endif_sfxRequested
 
@@ -579,31 +579,31 @@ handleNoiseChannelSoundEffect:
         jr z, .endif_sfxRequested
 
         ld a, [sfxRequest_noise]
-        ld hl, noiseChannelSoundEffectInitialisationFunctionPointers
+        ld hl, songSoundEffectInitialisationFunctionPointers_noise
         call loadPointerFromTable
         jp hl
     .endif_sfxRequested
 
 .playing
-    ld a, [noiseChannelSoundEffectPlaying]
+    ld a, [sfxPlaying_noise]
     and a
     ret z
 
     cp $1b
     jr nc, .endif_sfxPlaying
-        ld hl, noiseChannelSoundEffectPlaybackFunctionPointers
+        ld hl, songSoundEffectPlaybackFunctionPointers_noise
         call loadPointerFromTable
         jp hl
     .endif_sfxPlaying
 
     xor a
-    ld [.playing], a ; Bug, should be noiseChannelSoundEffectPlaying. This branch is never taken anyway though
+    ld [.playing], a ; Bug, should be sfxPlaying_noise. This branch is never taken anyway though
     ret
 ;}
 
 handleWaveChannelSoundEffect:
 ;{
-    ld a, [waveChannelSoundEffectRequest]
+    ld a, [sfxRequest_wave]
     and a
         jr z, .soundEffect0
 
@@ -613,54 +613,54 @@ handleWaveChannelSoundEffect:
     cp $06
     ret nc
 
-    ld a, [waveChannelSoundEffectRequest]
-    ld [waveChannelSoundEffectIsPlayingFlag], a
-    ld [waveChannelSoundEffectPlaying], a
-    ld hl, waveChannelSoundEffectInitialisationFunctionPointers
+    ld a, [sfxRequest_wave]
+    ld [sfxActive_wave], a
+    ld [sfxPlaying_wave], a
+    ld hl, songSoundEffectInitialisationFunctionPointers_wave
     call loadPointerFromTable
     jp hl
 
 .soundEffect0
-    ld a, [waveChannelSoundEffectPlaying]
+    ld a, [sfxPlaying_wave]
     and a
     ret z
 
     cp $06
     jr nc, .endif_sfxPlaying
-        ld hl, waveChannelSoundEffectPlaybackFunctionPointers
+        ld hl, songSoundEffectPlaybackFunctionPointers_wave
         call loadPointerFromTable
         jp hl
     .endif_sfxPlaying
 
     xor a
-    ld [waveChannelSoundEffectPlaying], a
+    ld [sfxPlaying_wave], a
     ret
 
 .soundEffectFF
     xor a
     ldh [rAUD3ENA], a
-    ld a, [wavePatternDataPointer]
+    ld a, [songWavePatternDataPointer]
     ld e, a
-    ld a, [wavePatternDataPointer+1]
+    ld a, [songWavePatternDataPointer+1]
     ld d, a
     call writeToWavePatternRam
     xor a
-    ld [waveChannelSoundEffectIsPlayingFlag], a
-    ld [waveChannelSoundEffectRequest], a
-    ld [waveChannelSoundEffectPlaying], a
+    ld [sfxActive_wave], a
+    ld [sfxRequest_wave], a
+    ld [sfxPlaying_wave], a
     ld a, [songPlaying]
     cp song_earthquake
     ret z
 
-    ld a, [waveChannelEnableOption]
+    ld a, [songEnableOption_wave]
     ldh [rAUD3ENA], a
-    ld a, [waveChannelSoundLength]
+    ld a, [songSoundLength_wave]
     ldh [rAUD3LEN], a
-    ld a, [waveChannelVolume]
+    ld a, [songVolume_wave]
     ldh [rAUD3LEVEL], a
-    ld a, [waveChannelFrequency]
+    ld a, [songFrequency_wave]
     ldh [rAUD3LOW], a
-    ld a, [waveChannelFrequency+1]
+    ld a, [songFrequency_wave+1]
     ldh [rAUD3HIGH], a
     ret
 ;}
@@ -702,10 +702,10 @@ handleSong:
 disableSoundChannels:
 ;{
     xor a
-    ld [songToneSweepChannelEnable], a
-    ld [songToneChannelEnable], a
-    ld [songWaveChannelEnable], a
-    ld [songNoiseChannelEnable], a
+    ld [songChannelEnable_square1], a
+    ld [songChannelEnable_square2], a
+    ld [songChannelEnable_wave], a
+    ld [songChannelEnable_noise], a
     call disableToneSweepChannel
     call disableToneChannel
     call disableWaveChannel
@@ -729,148 +729,148 @@ handleSongPlaying:
         jr nc, clearSongPlaying
 
     xor a
-    ld [workingSoundChannelOptionsSetFlag], a
-    ld a, [songToneSweepChannelEnable]
+    ld [songOptionsSetFlag_working], a
+    ld a, [songChannelEnable_square1]
     and a
         jr z, .endToneSweep
 
     ld a, $01
     ld [workingSoundChannel], a
-    ld a, [toneSweepInstructionTimer]
-    ld [workingInstructionTimer], a
+    ld a, [songInstructionTimer_square1]
+    ld [songInstructionTimer_working], a
     cp $01
         jp z, handleSong_loadNextToneSweepChannelSound
 
     dec a
-    ld [toneSweepInstructionTimer], a
-    ld a, [toneSweepChannelSoundEffectIsPlayingFlag]
+    ld [songInstructionTimer_square1], a
+    ld a, [sfxActive_square1]
     and a
         jr nz, .endToneSweep
 
-    ld a, [toneSweepEffectIndex]
-    ld [workingEffectIndex], a
+    ld a, [songEffectIndex_square1]
+    ld [songEffectIndex_working], a
     and a
         jr z, .endToneSweep
 
-    ld a, [toneSweepChannelFrequency]
+    ld a, [songFrequency_square1]
     ld c, a
-    ld a, [toneSweepChannelFrequency+1]
+    ld a, [songFrequency_square1+1]
     ld b, a
     call handleSongSoundChannelEffect
-    ld a, [workingSoundChannelFrequency]
+    ld a, [songFrequency_working]
     ldh [rAUD1LOW], a
-    ld a, [workingSoundChannelFrequency+1]
+    ld a, [songFrequency_working+1]
     ldh [rAUD1HIGH], a
     .endToneSweep
 
     xor a
-    ld [workingSoundChannelOptionsSetFlag], a
-    ld a, [songToneChannelEnable]
+    ld [songOptionsSetFlag_working], a
+    ld a, [songChannelEnable_square2]
     and a
         jr z, .endTone
 
     ld a, $02
     ld [workingSoundChannel], a
-    ld a, [toneInstructionTimer]
-    ld [workingInstructionTimer], a
+    ld a, [songInstructionTimer_square2]
+    ld [songInstructionTimer_working], a
     cp $01
         jp z, handleSong_loadNextToneChannelSound
 
     dec a
-    ld [toneInstructionTimer], a
-    ld a, [toneChannelSoundEffectIsPlayingFlag]
+    ld [songInstructionTimer_square2], a
+    ld a, [sfxActive_square2]
     and a
         jr nz, .endTone
 
-    ld a, [toneEffectIndex]
-    ld [workingEffectIndex], a
+    ld a, [songEffectIndex_square2]
+    ld [songEffectIndex_working], a
     and a
         jr z, .endTone
 
-    ld a, [toneChannelFrequency]
+    ld a, [songFrequency_square2]
     ld c, a
-    ld a, [toneChannelFrequency+1]
+    ld a, [songFrequency_square2+1]
     ld b, a
     call handleSongSoundChannelEffect
-    ld a, [workingSoundChannelFrequency]
+    ld a, [songFrequency_working]
     ldh [rAUD2LOW], a
-    ld a, [workingSoundChannelFrequency+1]
+    ld a, [songFrequency_working+1]
     ldh [rAUD2HIGH], a
     .endTone
 
     xor a
-    ld [workingSoundChannelOptionsSetFlag], a
-    ld a, [songWaveChannelEnable]
+    ld [songOptionsSetFlag_working], a
+    ld a, [songChannelEnable_wave]
     and a
         jr z, .endWave
 
     ld a, $03
     ld [workingSoundChannel], a
-    ld a, [waveInstructionTimer]
-    ld [workingInstructionTimer], a
+    ld a, [songInstructionTimer_wave]
+    ld [songInstructionTimer_working], a
     cp $01
         jp z, handleSong_loadNextWaveChannelSound
 
     dec a
-    ld [waveInstructionTimer], a
-    ld a, [waveChannelSoundEffectIsPlayingFlag]
+    ld [songInstructionTimer_wave], a
+    ld a, [sfxActive_wave]
     and a
         jr nz, .endWave
 
-    ld a, [waveEffectIndex]
-    ld [workingEffectIndex], a
+    ld a, [songEffectIndex_wave]
+    ld [songEffectIndex_working], a
     and a
         jr z, .endWave
 
-    ld a, [waveChannelFrequency]
+    ld a, [songFrequency_wave]
     ld c, a
-    ld a, [waveChannelFrequency+1]
+    ld a, [songFrequency_wave+1]
     ld b, a
     call handleSongSoundChannelEffect
-    ld a, [workingSoundChannelFrequency]
+    ld a, [songFrequency_working]
     ldh [rNR33], a
-    ld a, [workingSoundChannelFrequency+1]
+    ld a, [songFrequency_working+1]
     res 7, a
     ldh [rNR34], a
     .endWave
 
     xor a
-    ld [workingSoundChannelOptionsSetFlag], a
-    ld a, [songNoiseChannelEnable]
+    ld [songOptionsSetFlag_working], a
+    ld a, [songChannelEnable_noise]
     and a
         jr z, .endNoise
 
     ld a, $04
     ld [workingSoundChannel], a
-    ld a, [noiseInstructionTimer]
-    ld [workingInstructionTimer], a
+    ld a, [songInstructionTimer_noise]
+    ld [songInstructionTimer_working], a
     cp $01
         jp z, handleSong_loadNextNoiseChannelSound
 
     dec a
-    ld [noiseInstructionTimer], a
+    ld [songInstructionTimer_noise], a
     ret
     .endNoise
 
-    ld a, [songToneSweepChannelEnable]
+    ld a, [songChannelEnable_square1]
     and a
     ret nz
 
-    ld a, [songToneChannelEnable]
+    ld a, [songChannelEnable_square2]
     and a
     ret nz
 
-    ld a, [songWaveChannelEnable]
+    ld a, [songChannelEnable_wave]
     and a
     ret nz
 
-    ld a, [songNoiseChannelEnable]
+    ld a, [songChannelEnable_noise]
     and a
     ret nz
 
     xor a
     ld [songPlaying], a
-    ld [isolatedSoundEffectPlaying], a
+    ld [songInterruptionPlaying], a
     ret
 ;}
 
@@ -892,12 +892,12 @@ loadPointerFromTable:
 
 decrementToneSweepChannelSoundEffectTimer:
 ;{
-    ld a, [toneSweepChannelSoundEffectTimer]
+    ld a, [sfxTimer_square1]
     and a
         jr z, gotoClearToneSweepChannelSoundEffect
 
     dec a
-    ld [toneSweepChannelSoundEffectTimer], a
+    ld [sfxTimer_square1], a
     ret
 ;}
 
@@ -908,12 +908,12 @@ gotoClearToneSweepChannelSoundEffect:
 
 decrementToneChannelSoundEffectTimer:
 ;{
-    ld a, [toneChannelSoundEffectTimer]
+    ld a, [sfxTimer_square2]
     and a
         jr z, gotoClearToneChannelSoundEffect
 
     dec a
-    ld [toneChannelSoundEffectTimer], a
+    ld [sfxTimer_square2], a
     ret
 ;}
 
@@ -924,12 +924,12 @@ gotoClearToneChannelSoundEffect:
 
 decrementNoiseChannelSoundEffectTimer:
 ;{
-    ld a, [noiseChannelSoundEffectTimer]
+    ld a, [sfxTimer_noise]
     and a
         jr z, gotoClearNoiseChannelSoundEffect
 
     dec a
-    ld [noiseChannelSoundEffectTimer], a
+    ld [sfxTimer_noise], a
     ret
 ;}
 
@@ -950,8 +950,8 @@ gotoClearNoiseChannelSoundEffect:
 clearToneSweepChannelSoundEffect:
 ;{
     xor a
-    ld [toneSweepChannelSoundEffectPlaying], a
-    ld [toneSweepChannelSoundEffectIsPlayingFlag], a
+    ld [sfxPlaying_square1], a
+    ld [sfxActive_square1], a
 ;}
 
 disableToneSweepChannel:
@@ -967,8 +967,8 @@ disableToneSweepChannel:
 clearToneChannelSoundEffect:
 ;{
     xor a
-    ld [toneChannelSoundEffectPlaying], a
-    ld [toneChannelSoundEffectIsPlayingFlag], a
+    ld [sfxPlaying_square2], a
+    ld [sfxActive_square2], a
 ;}
 
 disableToneChannel:
@@ -984,7 +984,7 @@ disableToneChannel:
 clearWaveChannelSoundEffect:
 ;{
     xor a
-    ld [waveChannelSoundEffectIsPlayingFlag], a
+    ld [sfxActive_wave], a
 ;}
 
 disableWaveChannel:
@@ -998,8 +998,8 @@ disableWaveChannel:
 clearNoiseChannelSoundEffect:
 ;{
     xor a
-    ld [noiseChannelSoundEffectPlaying], a
-    ld [noiseChannelSoundEffectIsPlayingFlag], a
+    ld [sfxPlaying_noise], a
+    ld [sfxActive_noise], a
 ;}
 
 disableNoiseChannel:
@@ -1053,18 +1053,18 @@ silenceAudio:
     ld [sfxRequest_square2], a
     ld [sfxRequest_fakeWave], a
     ld [sfxRequest_noise], a
-    ld [toneSweepChannelSoundEffectPlaying], a
-    ld [toneChannelSoundEffectPlaying], a
+    ld [sfxPlaying_square1], a
+    ld [sfxPlaying_square2], a
     ld [sfxPlaying_fakeWave], a
-    ld [noiseChannelSoundEffectPlaying], a
+    ld [sfxPlaying_noise], a
     ld a, $ff
     ld [songRequest], a
     ld [songPlaying], a
     xor a
-    ld [isolatedSoundEffectRequest], a
-    ld [isolatedSoundEffectPlaying], a
-    ld [waveChannelSoundEffectRequest], a
-    ld [waveChannelSoundEffectPlaying], a
+    ld [songInterruptionRequest], a
+    ld [songInterruptionPlaying], a
+    ld [sfxRequest_wave], a
+    ld [sfxPlaying_wave], a
     ld [audioPauseSoundEffectTimer], a
     ld [audioPauseControl], a
 ;}
@@ -1147,10 +1147,10 @@ audioPause:
 ;{
     call muteSoundChannels
     xor a
-    ld [toneSweepChannelSoundEffectPlaying], a
-    ld [toneChannelSoundEffectPlaying], a
+    ld [sfxPlaying_square1], a
+    ld [sfxPlaying_square2], a
     ld [sfxPlaying_fakeWave], a
-    ld [noiseChannelSoundEffectPlaying], a
+    ld [sfxPlaying_noise], a
     ld a, $40
     ld [audioPauseSoundEffectTimer], a
     ld de, $487c
@@ -1213,9 +1213,9 @@ audioUnpause:
 ;{
     xor a
     ld [audioPauseSoundEffectTimer], a
-    ld a, toneSweepSoundEffect_unpaused
+    ld a, sfx_square1_unpaused
     ld [sfxRequest_square1], a
-    jp handleAudio_handleIsolatedSoundEffectRequest
+    jp handleAudio_handleSongInterruptionRequest
 ;}
 
 handleAudio_paused:
@@ -1303,7 +1303,7 @@ loadSongHeader:
     jr z, .endIf_frequencyTweak
         push af
         ld a, $01
-        ld [toneChannelFrequencyTweak], a
+        ld [songFrequencyTweak_square2], a
         pop af
     .endIf_frequencyTweak
 
@@ -1314,30 +1314,30 @@ loadSongHeader:
     ld a, [hl+]
     ld [songInstructionTimerArrayPointer], a
     ld a, [hl+]
-    ld [toneSweepInstructionPointer+1], a
+    ld [songSectionPointer_square1+1], a
     ld a, [hl+]
-    ld [toneSweepInstructionPointer], a
+    ld [songSectionPointer_square1], a
     ld a, [hl+]
-    ld [toneInstructionPointer+1], a
+    ld [songSectionPointer_square2+1], a
     ld a, [hl+]
-    ld [toneInstructionPointer], a
+    ld [songSectionPointer_square2], a
     ld a, [hl+]
-    ld [waveInstructionPointer+1], a
+    ld [songSectionPointer_wave+1], a
     ld a, [hl+]
-    ld [waveInstructionPointer], a
+    ld [songSectionPointer_wave], a
     ld a, [hl+]
-    ld [noiseInstructionPointer+1], a
+    ld [songSectionPointer_noise+1], a
     ld a, [hl]
-    ld [noiseInstructionPointer], a
-    ld a, [toneSweepInstructionPointer]
+    ld [songSectionPointer_noise], a
+    ld a, [songSectionPointer_square1]
     ld h, a
-    ld a, [toneSweepInstructionPointer+1]
+    ld a, [songSectionPointer_square1+1]
     ld l, a
     ld a, l
     or h
     jr nz, .else_toneSweep
         xor a
-        ld [songToneSweepChannelEnable], a
+        ld [songChannelEnable_square1], a
         ld a, $08
         ldh [rAUD1ENV], a
         ld a, $80
@@ -1345,22 +1345,22 @@ loadSongHeader:
         jr .endIf_toneSweep
     .else_toneSweep
         ld a, $01
-        ld [songToneSweepChannelEnable], a
+        ld [songChannelEnable_square1], a
         ld a, [hl+]
         ld [songToneSweepChannelInstructionPointer+1], a
         ld a, [hl]
         ld [songToneSweepChannelInstructionPointer], a
     .endIf_toneSweep
 
-    ld a, [toneInstructionPointer]
+    ld a, [songSectionPointer_square2]
     ld h, a
-    ld a, [toneInstructionPointer+1]
+    ld a, [songSectionPointer_square2+1]
     ld l, a
     ld a, l
     or h
     jr nz, .else_tone
         xor a
-        ld [songToneChannelEnable], a
+        ld [songChannelEnable_square2], a
         ld a, $08
         ldh [rAUD2ENV], a
         ld a, $80
@@ -1368,47 +1368,47 @@ loadSongHeader:
         jr .endIf_tone
     .else_tone
         ld a, $02
-        ld [songToneChannelEnable], a
+        ld [songChannelEnable_square2], a
         ld a, [hl+]
         ld [songToneChannelInstructionPointer+1], a
         ld a, [hl]
         ld [songToneChannelInstructionPointer], a
     .endIf_tone
 
-    ld a, [waveInstructionPointer]
+    ld a, [songSectionPointer_wave]
     ld h, a
-    ld a, [waveInstructionPointer+1]
+    ld a, [songSectionPointer_wave+1]
     ld l, a
     ld a, l
     or h
     jr nz, .else_wave
         xor a
-        ld [songWaveChannelEnable], a
+        ld [songChannelEnable_wave], a
         xor a
         ldh [rAUD3ENA], a
         jr .endIf_wave
     .else_wave
         ld a, $03
-        ld [songWaveChannelEnable], a
+        ld [songChannelEnable_wave], a
         ld a, [hl+]
         ld [songWaveChannelInstructionPointer+1], a
         ld a, [hl]
         ld [songWaveChannelInstructionPointer], a
     .endIf_wave
 
-    ld a, [noiseInstructionPointer]
+    ld a, [songSectionPointer_noise]
     ld h, a
-    ld a, [noiseInstructionPointer+1]
+    ld a, [songSectionPointer_noise+1]
     ld l, a
     ld a, l
     or h
     jr nz, .else_noise
         xor a
-        ld [songNoiseChannelEnable], a
+        ld [songChannelEnable_noise], a
         jr .endIf_noise
     .else_noise
         ld a, $04
-        ld [songNoiseChannelEnable], a
+        ld [songChannelEnable_noise], a
         ld a, [hl+]
         ld [songNoiseChannelInstructionPointer+1], a
         ld a, [hl]
@@ -1416,17 +1416,17 @@ loadSongHeader:
     .endIf_noise
 
     ld a, $01
-    ld [toneSweepInstructionTimer], a
-    ld [toneInstructionTimer], a
-    ld [waveInstructionTimer], a
-    ld [noiseInstructionTimer], a
+    ld [songInstructionTimer_square1], a
+    ld [songInstructionTimer_square2], a
+    ld [songInstructionTimer_wave], a
+    ld [songInstructionTimer_noise], a
     ret
 ;}
 
 handleSong_loadNextToneSweepChannelSound:
 ;{
-    ld de, toneSweepChannelSongProcessingState
-    ld hl, workingChannelSongProcessingState
+    ld de, songChannelSongProcessingState_square1
+    ld hl, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
     ld a, [songToneSweepChannelInstructionPointer]
     ld h, a
@@ -1435,7 +1435,7 @@ handleSong_loadNextToneSweepChannelSound:
     ld a, $01
     call loadNextSound
     ld a, [workingSoundChannel]
-    ld [songToneSweepChannelEnable], a
+    ld [songChannelEnable_square1], a
     and a
         jp z, resetToneSweepChannelOptions
 
@@ -1443,45 +1443,45 @@ handleSong_loadNextToneSweepChannelSound:
     ld [songToneSweepChannelInstructionPointer], a
     ld a, l
     ld [songToneSweepChannelInstructionPointer+1], a
-    ld hl, toneSweepChannelSongProcessingState
-    ld de, workingChannelSongProcessingState
+    ld hl, songChannelSongProcessingState_square1
+    ld de, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
-    ld a, [workingSoundChannelOptionsSetFlag]
+    ld a, [songOptionsSetFlag_working]
     cp $01
     jr nz, .endIf
-        ld a, [workingSoundChannelSweep]
-        ld [toneSweepChannelSweep], a
-        ld a, [workingSoundChannelSoundLength]
-        ld [toneSweepChannelSoundLength], a
+        ld a, [songSweep_working]
+        ld [songSweep_square1], a
+        ld a, [songSoundLength_working]
+        ld [songSoundLength_square1], a
     .endIf
 
-    ld a, [workingSoundChannelEnvelope]
-    ld [toneSweepChannelEnvelope], a
-    ld a, [workingSoundChannelFrequency]
-    ld [toneSweepChannelFrequency], a
-    ld a, [workingSoundChannelFrequency+1]
-    ld [toneSweepChannelFrequency+1], a
-    ld a, [toneSweepChannelSoundEffectIsPlayingFlag]
+    ld a, [songEnvelope_working]
+    ld [songEnvelope_square1], a
+    ld a, [songFrequency_working]
+    ld [songFrequency_square1], a
+    ld a, [songFrequency_working+1]
+    ld [songFrequency_square1+1], a
+    ld a, [sfxActive_square1]
     and a
         jp nz, handleSongPlaying.endToneSweep
 
-    ld a, [toneSweepChannelSweep]
+    ld a, [songSweep_square1]
     ldh [rNR10], a
-    ld a, [toneSweepChannelSoundLength]
+    ld a, [songSoundLength_square1]
     ldh [rNR11], a
-    ld a, [toneSweepChannelEnvelope]
+    ld a, [songEnvelope_square1]
     ldh [rAUD1ENV], a
-    ld a, [toneSweepChannelFrequency]
+    ld a, [songFrequency_square1]
     ldh [rAUD1LOW], a
-    ld a, [toneSweepChannelFrequency+1]
+    ld a, [songFrequency_square1+1]
     ldh [rAUD1HIGH], a
     jp handleSongPlaying.endToneSweep
 ;}
 
 handleSong_loadNextToneChannelSound:
 ;{
-    ld de, toneChannelSongProcessingState
-    ld hl, workingChannelSongProcessingState
+    ld de, songChannelSongProcessingState_square2
+    ld hl, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
     ld a, [songToneChannelInstructionPointer]
     ld h, a
@@ -1490,7 +1490,7 @@ handleSong_loadNextToneChannelSound:
     ld a, $02
     call loadNextSound
     ld a, [workingSoundChannel]
-    ld [songToneChannelEnable], a
+    ld [songChannelEnable_square2], a
     and a
         jp z, resetToneChannelOptions
 
@@ -1498,34 +1498,34 @@ handleSong_loadNextToneChannelSound:
     ld [songToneChannelInstructionPointer], a
     ld a, l
     ld [songToneChannelInstructionPointer+1], a
-    ld hl, toneChannelSongProcessingState
-    ld de, workingChannelSongProcessingState
+    ld hl, songChannelSongProcessingState_square2
+    ld de, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
-    ld a, [workingSoundChannelOptionsSetFlag]
+    ld a, [songOptionsSetFlag_working]
     cp $02
     jr nz, .endIf_setSoundLength
-        ld a, [workingSoundChannelSoundLength]
-        ld [toneChannelSoundLength], a
+        ld a, [songSoundLength_working]
+        ld [songSoundLength_square2], a
     .endIf_setSoundLength
 
-    ld a, [workingSoundChannelEnvelope]
-    ld [toneChannelEnvelope], a
-    ld a, [workingSoundChannelFrequency]
-    ld [toneChannelFrequency], a
-    ld a, [workingSoundChannelFrequency+1]
-    ld [toneChannelFrequency+1], a
-    ld a, [toneChannelSoundEffectIsPlayingFlag]
+    ld a, [songEnvelope_working]
+    ld [songEnvelope_square2], a
+    ld a, [songFrequency_working]
+    ld [songFrequency_square2], a
+    ld a, [songFrequency_working+1]
+    ld [songFrequency_square2+1], a
+    ld a, [sfxActive_square2]
     and a
         jp nz, handleSongPlaying.endTone
 
-    ld a, [toneChannelSoundLength]
+    ld a, [songSoundLength_square2]
     ldh [rNR21], a
-    ld a, [toneChannelFrequencyTweak]
+    ld a, [songFrequencyTweak_square2]
     cp $01
     jr nz, .endIf_tweakFrequency
-        ld a, [toneChannelFrequency]
+        ld a, [songFrequency_square2]
         ld l, a
-        ld a, [toneChannelFrequency+1]
+        ld a, [songFrequency_square2+1]
         ld h, a
         cp $87
         jr nc, .else
@@ -1537,24 +1537,24 @@ handleSong_loadNextToneChannelSound:
         .endIf
 
         ld a, l
-        ld [toneChannelFrequency], a
+        ld [songFrequency_square2], a
         ld a, h
-        ld [toneChannelFrequency+1], a
+        ld [songFrequency_square2+1], a
     .endIf_tweakFrequency
 
-    ld a, [toneChannelEnvelope]
+    ld a, [songEnvelope_square2]
     ldh [rAUD2ENV], a
-    ld a, [toneChannelFrequency]
+    ld a, [songFrequency_square2]
     ldh [rAUD2LOW], a
-    ld a, [toneChannelFrequency+1]
+    ld a, [songFrequency_square2+1]
     ldh [rAUD2HIGH], a
     jp handleSongPlaying.endTone
 ;}
 
 handleSong_loadNextWaveChannelSound:
 ;{
-    ld de, waveChannelSongProcessingState
-    ld hl, workingChannelSongProcessingState
+    ld de, songChannelSongProcessingState_wave
+    ld hl, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
     ld a, [songWaveChannelInstructionPointer]
     ld h, a
@@ -1563,7 +1563,7 @@ handleSong_loadNextWaveChannelSound:
     ld a, $03
     call loadNextSound
     ld a, [workingSoundChannel]
-    ld [songWaveChannelEnable], a
+    ld [songChannelEnable_wave], a
     and a
         jp z, resetWaveChannelOptions
 
@@ -1571,42 +1571,42 @@ handleSong_loadNextWaveChannelSound:
     ld [songWaveChannelInstructionPointer], a
     ld a, l
     ld [songWaveChannelInstructionPointer+1], a
-    ld hl, waveChannelSongProcessingState
-    ld de, workingChannelSongProcessingState
+    ld hl, songChannelSongProcessingState_wave
+    ld de, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
-    ld a, [workingSoundChannelEnable]
-    ld [waveChannelEnableOption], a
-    ld a, [workingSoundChannelSoundLength]
-    ld [waveChannelSoundLength], a
-    ld a, [workingSoundChannelVolume]
-    ld [waveChannelVolume], a
-    ld a, [workingSoundChannelFrequency]
-    ld [waveChannelFrequency], a
-    ld a, [workingSoundChannelFrequency+1]
-    ld [waveChannelFrequency+1], a
-    ld a, [waveChannelSoundEffectIsPlayingFlag]
+    ld a, [songEnable_working]
+    ld [songEnableOption_wave], a
+    ld a, [songSoundLength_working]
+    ld [songSoundLength_wave], a
+    ld a, [songVolume_working]
+    ld [songVolume_wave], a
+    ld a, [songFrequency_working]
+    ld [songFrequency_wave], a
+    ld a, [songFrequency_working+1]
+    ld [songFrequency_wave+1], a
+    ld a, [sfxActive_wave]
     and a
         jp nz, handleSongPlaying.endWave
 
     xor a
     ldh [rAUD3ENA], a
-    ld a, [waveChannelEnableOption]
+    ld a, [songEnableOption_wave]
     ldh [rAUD3ENA], a
-    ld a, [waveChannelSoundLength]
+    ld a, [songSoundLength_wave]
     ldh [rNR31], a
-    ld a, [waveChannelVolume]
+    ld a, [songVolume_wave]
     ldh [rNR32], a
-    ld a, [waveChannelFrequency]
+    ld a, [songFrequency_wave]
     ldh [rNR33], a
-    ld a, [waveChannelFrequency+1]
+    ld a, [songFrequency_wave+1]
     ldh [rNR34], a
     jp handleSongPlaying.endWave
 ;}
 
 handleSong_loadNextNoiseChannelSound:
 ;{
-    ld de, noiseChannelSongProcessingState
-    ld hl, workingChannelSongProcessingState
+    ld de, songChannelSongProcessingState_noise
+    ld hl, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
     ld a, [songNoiseChannelInstructionPointer]
     ld h, a
@@ -1615,7 +1615,7 @@ handleSong_loadNextNoiseChannelSound:
     ld a, $04
     call loadNextSound
     ld a, [workingSoundChannel]
-    ld [songNoiseChannelEnable], a
+    ld [songChannelEnable_noise], a
     and a
         jp z, resetNoiseChannelOptions
 
@@ -1623,23 +1623,23 @@ handleSong_loadNextNoiseChannelSound:
     ld [songNoiseChannelInstructionPointer], a
     ld a, l
     ld [songNoiseChannelInstructionPointer+1], a
-    ld hl, noiseChannelSongProcessingState
-    ld de, workingChannelSongProcessingState
+    ld hl, songChannelSongProcessingState_noise
+    ld de, songChannelSongProcessingState_working
     call copyChannelSongProcessingState
-    ld a, [noiseChannelSoundEffectIsPlayingFlag]
+    ld a, [sfxActive_noise]
     and a
         ret nz
 
-    ld a, [workingSoundChannelSoundLength]
+    ld a, [songSoundLength_working]
     ldh [rNR41], a
-    ld a, [workingSoundChannelEnvelope]
+    ld a, [songEnvelope_working]
     ldh [rNR42], a
-    ld a, [workingSoundChannelPolynomialCounter]
+    ld a, [songPolynomialCounter_working]
     ldh [rAUD4POLY], a
-    ld [noiseChannelPolynomialCounter], a
-    ld a, [workingSoundChannelCounterControl]
+    ld [songPolynomialCounter_noise], a
+    ld a, [songCounterControl_working]
     ldh [rNR44], a
-    ld [noiseChannelCounterControl], a
+    ld [songCounterControl_noise], a
     ret
 ;}
 
@@ -1657,16 +1657,16 @@ loadNextSound:
         jp nz, .loop
 
 .nextInstructionList
-    ld a, [workingInstructionPointer]
+    ld a, [songSectionPointer_working]
     ld h, a
-    ld a, [workingInstructionPointer+1]
+    ld a, [songSectionPointer_working+1]
     ld l, a
     inc hl
     inc hl
     ld a, h
-    ld [workingInstructionPointer], a
+    ld [songSectionPointer_working], a
     ld a, l
-    ld [workingInstructionPointer+1], a
+    ld [songSectionPointer_working+1], a
     ld a, [hl]
     and a
     jr nz, .endif_endOfInstructionLists
@@ -1730,13 +1730,13 @@ loadNextSound:
         add hl, bc
         ld a, [hl]
         pop hl
-        ld [workingInstructionTimer], a
-        ld [workingInstructionLength], a
+        ld [songInstructionTimer_working], a
+        ld [songInstructionLength_working], a
         inc hl
     .endIf_instructionLength
 
-    ld a, [workingInstructionLength]
-    ld [workingInstructionTimer], a
+    ld a, [songInstructionLength_working]
+    ld [songInstructionTimer_working], a
     ld a, [workingSoundChannel]
     cp $04
         jp z, .noise
@@ -1753,7 +1753,7 @@ loadNextSound:
     ld a, [workingSoundChannel]
     cp $03
     jr nz, .endIf_wave
-        ld a, [waveChannelSoundEffectIsPlayingFlag]
+        ld a, [sfxActive_wave]
         and a
             jr nz, .endIf_wave
 
@@ -1761,7 +1761,7 @@ loadNextSound:
         set 6, [hl]
         set 2, [hl]
         ld a, $80
-        ld [workingSoundChannelEnable], a
+        ld [songEnable_working], a
     .endIf_wave
 
     pop af
@@ -1777,12 +1777,12 @@ loadNextSound:
     ld b, $00
     ld hl, musicNotes
     add hl, bc
-    ld a, [workingSoundEnvelope]
-    ld [workingSoundChannelEnvelope], a
+    ld a, [songNoteEnvelope_working]
+    ld [songEnvelope_working], a
     ld a, [hl+]
-    ld [workingSoundChannelFrequency], a
+    ld [songFrequency_working], a
     ld a, [hl]
-    ld [workingSoundChannelFrequency+1], a
+    ld [songFrequency_working+1], a
     pop hl
     ret
 
@@ -1791,15 +1791,15 @@ loadNextSound:
     cp $03
     jr z, .endIf_restartChannel
         ld a, $08
-        ld [workingSoundChannelEnvelope], a
+        ld [songEnvelope_working], a
         ld a, $80
-        ld [workingSoundChannelCounterControl], a
+        ld [songCounterControl_working], a
         ret
     .endIf_restartChannel
 
     xor a
-    ld [workingSoundChannelEnable], a
-    ld [workingSoundChannelVolume], a
+    ld [songEnable_working], a
+    ld [songVolume_working], a
     ret
 
 .noise:
@@ -1813,32 +1813,32 @@ loadNextSound:
     ld hl, songNoiseChannelOptionSets
     add hl, bc
     ld a, [hl+]
-    ld [workingSoundChannelSoundLength], a
+    ld [songSoundLength_working], a
     ld a, [hl+]
-    ld [workingSoundChannelEnvelope], a
+    ld [songEnvelope_working], a
     ld a, [hl+]
-    ld [workingSoundChannelPolynomialCounter], a
+    ld [songPolynomialCounter_working], a
     ld a, [hl]
-    ld [workingSoundChannelCounterControl], a
+    ld [songCounterControl_working], a
     pop hl
     ret
 
 .songInstruction3:
     ld a, $66
-    ld [workingSoundChannelEnvelope], a
+    ld [songEnvelope_working], a
     jr .merge
 
 .songInstruction5:
     ld a, $46
-    ld [workingSoundChannelEnvelope], a
+    ld [songEnvelope_working], a
     jr .merge
 
 .merge
-    ld a, [isolatedSoundEffectPlaying]
-    cp isolatedSoundEffect_fadeOutMusic
+    ld a, [songInterruptionPlaying]
+    cp songInterruption_fadeOutMusic
     jr nz, .endIf_fadeOut
-        ld a, isolatedSoundEffect_fadeOutMusic
-        ld [workingSoundChannelEnvelope], a
+        ld a, songInterruption_fadeOutMusic
+        ld [songEnvelope_working], a
     .endIf_fadeOut
 
     ld a, [workingSoundChannel]
@@ -1851,30 +1851,30 @@ loadNextSound:
     ret
 
 .setFrequency_toneSweep
-    ld a, [toneSweepChannelFrequency]
-    ld [workingSoundChannelFrequency], a
-    ld a, [toneSweepChannelFrequency+1]
-    ld [workingSoundChannelFrequency+1], a
+    ld a, [songFrequency_square1]
+    ld [songFrequency_working], a
+    ld a, [songFrequency_square1+1]
+    ld [songFrequency_working+1], a
     ret
 
 .setFrequency_tone
-    ld a, [toneChannelFrequency]
-    ld [workingSoundChannelFrequency], a
-    ld a, [toneChannelFrequency+1]
-    ld [workingSoundChannelFrequency+1], a
+    ld a, [songFrequency_square2]
+    ld [songFrequency_working], a
+    ld a, [songFrequency_square2+1]
+    ld [songFrequency_working+1], a
     ret
 
 .setFrequency_wave
-    ld a, [waveChannelSoundEffectIsPlayingFlag]
+    ld a, [sfxActive_wave]
     and a
         ret nz
 
     ld a, $80
-    ld [workingSoundChannelEnable], a
-    ld a, [waveChannelFrequency]
-    ld [workingSoundChannelFrequency], a
-    ld a, [waveChannelFrequency+1]
-    ld [workingSoundChannelFrequency+1], a
+    ld [songEnable_working], a
+    ld a, [songFrequency_wave]
+    ld [songFrequency_working], a
+    ld a, [songFrequency_wave+1]
+    ld [songFrequency_working+1], a
     ret
 ;}
 
@@ -1882,26 +1882,26 @@ songInstruction_setWorkingSoundChannelOptions:
 ;{
     inc hl
     ld a, [workingSoundChannel]
-    ld [workingSoundChannelOptionsSetFlag], a
+    ld [songOptionsSetFlag_working], a
     cp $03
         jr z, songInstruction_setWorkingSoundChannelOptions_wave
 
-    ld a, [isolatedSoundEffectPlaying]
-    cp isolatedSoundEffect_fadeOutMusic
+    ld a, [songInterruptionPlaying]
+    cp songInterruption_fadeOutMusic
     jr nz, .else_fadeOut
         ld a, [hl+]
-        ld [workingSoundChannelEnvelope], a
+        ld [songEnvelope_working], a
         jr .endIf_fadeOut
     .else_fadeOut
         ld a, [hl+]
-        ld [workingSoundChannelEnvelope], a
-        ld [workingSoundEnvelope], a
+        ld [songEnvelope_working], a
+        ld [songNoteEnvelope_working], a
     .endIf_fadeOut
     
     ld a, [hl+]
-    ld [workingSoundChannelSweep], a
+    ld [songSweep_working], a
     ld a, [hl]
-    ld [workingSoundChannelSoundLength], a
+    ld [songSoundLength_working], a
     res 6, a
     res 7, a
 
@@ -1911,7 +1911,7 @@ songInstruction_setWorkingSoundChannelOptions:
         xor a
     .endIf_badCode
 
-    ld [workingEffectIndex], a
+    ld [songEffectIndex_working], a
 ;}
 
 endSongInstructionWithParameter:
@@ -1928,26 +1928,26 @@ endSongInstruction:
 songInstruction_setWorkingSoundChannelOptions_wave:
 ;{
     ld a, [hl+]
-    ld [wavePatternDataPointer], a
+    ld [songWavePatternDataPointer], a
     ld [ramCFE3], a
     ld e, a
     ld a, [hl+]
-    ld [wavePatternDataPointer+1], a
+    ld [songWavePatternDataPointer+1], a
     ld [ramCFE3+1], a
     ld d, a
-    ld a, [isolatedSoundEffectPlaying]
-    cp isolatedSoundEffect_fadeOutMusic
+    ld a, [songInterruptionPlaying]
+    cp songInterruption_fadeOutMusic
     jr nz, .else_fadeOut
         ld a, [hl]
-        ld [workingSoundChannelVolume], a
+        ld [songVolume_working], a
         jr .endIf_fadeOut
     .else_fadeOut
         ld a, [hl]
-        ld [workingSoundChannelVolume], a
-        ld [workingVolume], a
+        ld [songVolume_working], a
+        ld [songNoteVolume_working], a
     .endIf_fadeOut
 
-    ld a, [waveChannelSoundEffectIsPlayingFlag]
+    ld a, [sfxActive_wave]
     and a
     jr nz, .endIf_disableWave
         xor a
@@ -1955,7 +1955,7 @@ songInstruction_setWorkingSoundChannelOptions_wave:
         call writeToWavePatternRam
     .endIf_disableWave
 
-    ld a, [workingSoundChannelVolume]
+    ld a, [songVolume_working]
     res 5, a
     res 6, a
     jr songInstruction_setWorkingSoundChannelOptions.effectIndex
@@ -1984,10 +1984,10 @@ songInstruction_goto:
     inc hl
     inc hl
     ld a, [hl+]
-    ld [workingInstructionPointer+1], a
+    ld [songSectionPointer_working+1], a
     ld b, a
     ld a, [hl]
-    ld [workingInstructionPointer], a
+    ld [songSectionPointer_working], a
     ld h, a
     ld l, b
     ret
@@ -1997,25 +1997,25 @@ songInstruction_markRepeatPoint:
 ;{
     inc hl
     ld a, [hl+]
-    ld [workingRepeatPoint], a
+    ld [songRepeatPoint_working], a
     ld a, h
-    ld [workingRepeatCount], a
+    ld [songRepeatCount_working], a
     ld a, l
-    ld [workingRepeatCount+1], a
+    ld [songRepeatCount_working+1], a
     jr endSongInstruction
 ;}
 
 songInstruction_repeat:
 ;{
-    ld a, [workingRepeatPoint]
+    ld a, [songRepeatPoint_working]
     dec a
-    ld [workingRepeatPoint], a
+    ld [songRepeatPoint_working], a
     and a
         jr z, endSongInstructionWithParameter
 
-    ld a, [workingRepeatCount]
+    ld a, [songRepeatCount_working]
     ld h, a
-    ld a, [workingRepeatCount+1]
+    ld a, [songRepeatCount_working+1]
     ld l, a
     jr endSongInstruction
 ;}
@@ -2039,7 +2039,7 @@ copyChannelSongProcessingState:
 
 handleSongSoundChannelEffect:
 ;{
-    ld a, [workingEffectIndex]
+    ld a, [songEffectIndex_working]
     cp $02
         jr z, .effectIndex2
     cp $03
@@ -2080,11 +2080,11 @@ handleSongSoundChannelEffect:
     ld h, a
     add hl, de
     ld a, l
-    ld [workingSoundChannelFrequency], a
+    ld [songFrequency_working], a
     ld a, h
     res 7, a
     res 6, a
-    ld [workingSoundChannelFrequency+1], a
+    ld [songFrequency_working+1], a
     ret
 
 .effectIndex2:
@@ -2110,40 +2110,40 @@ handleSongSoundChannelEffect:
 .effectIndex6:
     inc bc
     ld a, c
-    ld [workingSoundChannelFrequency], a
+    ld [songFrequency_working], a
     ld a, b
     res 7, a
     res 6, a
-    ld [workingSoundChannelFrequency+1], a
+    ld [songFrequency_working+1], a
 
 .setFrequency
     ld a, [workingSoundChannel]
     cp $01
     jr nz, .endIf_toneSweep
-        ld a, [workingSoundChannelFrequency]
-        ld [toneSweepChannelFrequency], a
-        ld a, [workingSoundChannelFrequency+1]
-        ld [toneSweepChannelFrequency+1], a
+        ld a, [songFrequency_working]
+        ld [songFrequency_square1], a
+        ld a, [songFrequency_working+1]
+        ld [songFrequency_square1+1], a
         ret
     .endIf_toneSweep
 
     cp $02
     jr nz, .endIf_tone
-        ld a, [workingSoundChannelFrequency]
-        ld [toneChannelFrequency], a
-        ld a, [workingSoundChannelFrequency+1]
-        ld [toneChannelFrequency+1], a
+        ld a, [songFrequency_working]
+        ld [songFrequency_square2], a
+        ld a, [songFrequency_working+1]
+        ld [songFrequency_square2+1], a
         ret
     .endIf_tone
 
     cp $03
         ret nz
 
-    ld a, [workingSoundChannelFrequency]
-    ld [waveChannelFrequency], a
-    ld a, [workingSoundChannelFrequency+1]
+    ld a, [songFrequency_working]
+    ld [songFrequency_wave], a
+    ld a, [songFrequency_working+1]
     res 7, a
-    ld [waveChannelFrequency+1], a
+    ld [songFrequency_wave+1], a
     ret
 
 .effectIndex7:
@@ -2152,11 +2152,11 @@ handleSongSoundChannelEffect:
     inc bc
     inc bc
     ld a, c
-    ld [workingSoundChannelFrequency], a
+    ld [songFrequency_working], a
     ld a, b
     res 7, a
     res 6, a
-    ld [workingSoundChannelFrequency+1], a
+    ld [songFrequency_working+1], a
     jr .setFrequency
 
 .effectIndex8:
@@ -2164,60 +2164,60 @@ handleSongSoundChannelEffect:
     dec bc
     dec bc
     ld a, c
-    ld [workingSoundChannelFrequency], a
+    ld [songFrequency_working], a
     ld a, b
     res 7, a
     res 6, a
-    ld [workingSoundChannelFrequency+1], a
+    ld [songFrequency_working+1], a
     jr .setFrequency
 ;}
 
 resetToneSweepChannelOptions:
 ;{
     xor a
-    ld [songToneSweepChannelEnable], a
+    ld [songChannelEnable_square1], a
     ld a, $08
     ldh [rAUD1ENV], a
-    ld [toneSweepChannelEnvelope], a
+    ld [songEnvelope_square1], a
     ld a, $80
     ldh [rAUD1HIGH], a
-    ld [toneSweepChannelFrequency+1], a
+    ld [songFrequency_square1+1], a
     jp handleSongPlaying.endToneSweep
 ;}
 
 resetToneChannelOptions:
 ;{
     xor a
-    ld [songToneChannelEnable], a
+    ld [songChannelEnable_square2], a
     ld a, $08
     ldh [rAUD2ENV], a
-    ld [toneChannelEnvelope], a
+    ld [songEnvelope_square2], a
     ld a, $80
     ldh [rAUD2HIGH], a
-    ld [toneChannelFrequency+1], a
+    ld [songFrequency_square2+1], a
     jp handleSongPlaying.endTone
 ;}
 
 resetWaveChannelOptions:
 ;{
     xor a
-    ld [songWaveChannelEnable], a
+    ld [songChannelEnable_wave], a
     xor a
     ldh [rAUD3ENA], a
-    ld [waveChannelEnableOption], a
+    ld [songEnableOption_wave], a
     jp handleSongPlaying.endWave
 ;}
 
 resetNoiseChannelOptions:
 ;{
     xor a
-    ld [songNoiseChannelEnable], a
+    ld [songChannelEnable_noise], a
     ld a, $08
     ldh [rNR42], a
-    ld [noiseChannelEnvelope], a
+    ld [songEnvelope_noise], a
     ld a, $80
     ldh [rNR44], a
-    ld [noiseChannelCounterControl], a
+    ld [songCounterControl_noise], a
     ret
 ;}
 
@@ -2238,11 +2238,11 @@ resetSongSoundChannelOptions:
 
     pop hl
     xor a
-    ld [toneSweepChannelSoundEffectIsPlayingFlag], a
-    ld [toneChannelSoundEffectIsPlayingFlag], a
-    ld [waveChannelSoundEffectIsPlayingFlag], a
-    ld [noiseChannelSoundEffectIsPlayingFlag], a
-    ld [toneChannelFrequencyTweak], a
+    ld [sfxActive_square1], a
+    ld [sfxActive_square2], a
+    ld [sfxActive_wave], a
+    ld [sfxActive_noise], a
+    ld [songFrequencyTweak_square2], a
     ldh [rNR10], a
     ldh [rAUD3ENA], a
     ld a, $08
@@ -2343,13 +2343,13 @@ playingShortJumpSound:
 
 toneSweepSfx_init_1:
 ;{
-    ld a, [toneSweepChannelSoundEffectPlaying]
-    cp toneSweepSoundEffect_shootingWaveBeam
+    ld a, [sfxPlaying_square1]
+    cp sfx_square1_shootingWaveBeam
         jp z, handleToneSweepChannelSoundEffect.playing
 
-    cp toneSweepSoundEffect_shootingBeam
+    cp sfx_square1_shootingBeam
     jr c, .endIf
-        cp toneSweepSoundEffect_shootingSpazerBeam
+        cp sfx_square1_shootingSpazerBeam
             jp c, handleToneSweepChannelSoundEffect.playing
     .endIf
 
@@ -2420,13 +2420,13 @@ playingShortHiJumpSound:
 
 toneSweepSfx_init_2:
 ;{
-    ld a, [toneSweepChannelSoundEffectPlaying]
-    cp toneSweepSoundEffect_shootingWaveBeam
+    ld a, [sfxPlaying_square1]
+    cp sfx_square1_shootingWaveBeam
         jp z, handleToneSweepChannelSoundEffect.playing
 
-    cp toneSweepSoundEffect_shootingBeam
+    cp sfx_square1_shootingBeam
     jr c, .endIf
-        cp toneSweepSoundEffect_shootingSpazerBeam
+        cp sfx_square1_shootingSpazerBeam
             jp c, handleToneSweepChannelSoundEffect.playing
     .endIf
 
@@ -2504,12 +2504,12 @@ toneSweepSfx_init_3:
 
 toneSweepSfx_playback_3:
 ;{
-    ld a, [toneSweepChannelSoundEffectTimer]
+    ld a, [sfxTimer_square1]
     and a
         call z, .getTimerResetValue
         
     dec a
-    ld [toneSweepChannelSoundEffectTimer], a
+    ld [sfxTimer_square1], a
     cp $3b
         jr z, .set1
     cp $37
@@ -2603,7 +2603,7 @@ toneSweepSfx_playback_3:
 
 toneSweepSfx_init_4:
 ;{
-    ld a, [toneSweepChannelSoundEffectPlaying]
+    ld a, [sfxPlaying_square1]
     cp $04
         jp nc, handleToneSweepChannelSoundEffect.playing
 
@@ -2799,7 +2799,7 @@ toneSweepSfx_playback_8:
 toneSweepSfx_init_9:
 ;{
     ld a, $d0
-    ld [variableToneSweepChannelFrequency], a
+    ld [sfxVariableFrequency_square1], a
     ld a, $14
     ld de, toneSweepOptionSets.shootingIceBeam
     jp playToneSweepSfx
@@ -2808,16 +2808,16 @@ toneSweepSfx_init_9:
 toneSweepSfx_playback_9:
 ;{
     call decrementToneSweepChannelSoundEffectTimer
-    ld a, [variableToneSweepChannelFrequency]
+    ld a, [sfxVariableFrequency_square1]
     ldh [rAUD1LOW], a
-    ld [variableToneSweepChannelFrequency], a
+    ld [sfxVariableFrequency_square1], a
     ret
 ;}
 
 toneSweepSfx_init_A:
 ;{
     ld a, $d0
-    ld [variableToneSweepChannelFrequency], a
+    ld [sfxVariableFrequency_square1], a
     ld a, $14
     ld de, toneSweepOptionSets.shootingPlasmaBeam
     jp playToneSweepSfx
@@ -2826,16 +2826,16 @@ toneSweepSfx_init_A:
 toneSweepSfx_playback_A:
 ;{
     call decrementToneSweepChannelSoundEffectTimer
-    ld a, [variableToneSweepChannelFrequency]
+    ld a, [sfxVariableFrequency_square1]
     ldh [rAUD1LOW], a
-    ld [variableToneSweepChannelFrequency], a
+    ld [sfxVariableFrequency_square1], a
     ret
 ;}
 
 toneSweepSfx_init_B:
 ;{
     ld a, $d0
-    ld [variableToneSweepChannelFrequency], a
+    ld [sfxVariableFrequency_square1], a
     ld a, $14
     ld de, toneSweepOptionSets.shootingSpazerBeam
     jp playToneSweepSfx
@@ -2844,9 +2844,9 @@ toneSweepSfx_init_B:
 toneSweepSfx_playback_B:
 ;{
     call decrementToneSweepChannelSoundEffectTimer
-    ld a, [variableToneSweepChannelFrequency]
+    ld a, [sfxVariableFrequency_square1]
     ldh [rAUD1LOW], a
-    ld [variableToneSweepChannelFrequency], a
+    ld [sfxVariableFrequency_square1], a
     ret
 ;}
 
@@ -3288,7 +3288,7 @@ toneSweepSfx_init_1B:
     set 6, a
     set 5, a
     res 1, a
-    ld [variableToneSweepChannelFrequency], a
+    ld [sfxVariableFrequency_square1], a
     ld a, $30
     ld de, toneSweepOptionSets.metroidCry
     jp playToneSweepSfx
@@ -3299,7 +3299,7 @@ toneSweepSfx_playback_1B:
     call decrementToneSweepChannelSoundEffectTimer
     cp $20
         jr c, .endIf
-        ld a, [variableToneSweepChannelFrequency]
+        ld a, [sfxVariableFrequency_square1]
         inc a
         inc a
         inc a
@@ -3307,14 +3307,14 @@ toneSweepSfx_playback_1B:
         inc a
         inc a
         ldh [rAUD1LOW], a
-        ld [variableToneSweepChannelFrequency], a
+        ld [sfxVariableFrequency_square1], a
         ret
     .endIf
 
-    ld a, [variableToneSweepChannelFrequency]
+    ld a, [sfxVariableFrequency_square1]
     dec a
     ldh [rAUD1LOW], a
-    ld [variableToneSweepChannelFrequency], a
+    ld [sfxVariableFrequency_square1], a
     ret
 ;}
 
@@ -3515,8 +3515,8 @@ toneSweepSfx_playback_exampleE:
 
 rememberIfScrewAttackingSfxIsPlaying:
 ;{
-    ld a, [toneSweepChannelSoundEffectPlaying]
-    cp toneSweepSoundEffect_screwAttacking
+    ld a, [sfxPlaying_square1]
+    cp sfx_square1_screwAttacking
         ret nz
 
     ld [resumeScrewAttackSoundEffectFlag], a
@@ -3537,8 +3537,8 @@ maybeResumeScrewAttackingSfx:
     bit itemBit_screw, a
         ret z
 
-    ld a, toneSweepSoundEffect_screwAttacking
-    ld [toneSweepChannelSoundEffectPlaying], a
+    ld a, sfx_square1_screwAttacking
+    ld [sfxPlaying_square1], a
     xor a
     ld [resumeScrewAttackSoundEffectFlag], a
     ret
@@ -3546,17 +3546,17 @@ maybeResumeScrewAttackingSfx:
 
 playToneSweepSfx:
 ;{
-    ld [toneSweepChannelSoundEffectTimer], a
+    ld [sfxTimer_square1], a
     ld a, [sfxRequest_square1]
-    ld [toneSweepChannelSoundEffectPlaying], a
-    ld [toneSweepChannelSoundEffectIsPlayingFlag], a
+    ld [sfxPlaying_square1], a
+    ld [sfxActive_square1], a
     jp setChannelOptionSet.toneSweep
 ;}
 ;}
 
 ; Tone channel sound effects
 ;{
-toneChannelSoundEffectInitialisationFunctionPointers:
+songSoundEffectInitialisationFunctionPointers_square2:
 ;{
     dw initializeAudio.ret ; 1: ret
     dw initializeAudio.ret ; 2: ret
@@ -3567,7 +3567,7 @@ toneChannelSoundEffectInitialisationFunctionPointers:
     dw toneSfx_init_7 ; 7: unknown
 ;}
 
-toneChannelSoundEffectPlaybackFunctionPointers:
+songSoundEffectPlaybackFunctionPointers_square2:
 ;{
     dw initializeAudio.ret ; 1: ret
     dw initializeAudio.ret ; 2: ret
@@ -3585,7 +3585,7 @@ toneSfx_init_3:
     res 7, a
     res 6, a
     res 5, a
-    ld [variableToneChannelFrequency], a
+    ld [square2_variableFrequency], a
     ld a, $30
     ld de, toneOptionSets.metroidQueenCry
     jp playToneSfx
@@ -3599,32 +3599,32 @@ toneSfx_playback_6:
     bit 0, a
         jr z, .even
 
-    ld a, [variableToneChannelFrequency]
+    ld a, [square2_variableFrequency]
     set 4, a
-    ld [variableToneChannelFrequency], a
+    ld [square2_variableFrequency], a
 
 .merge
-    ld a, [toneChannelSoundEffectTimer]
+    ld a, [sfxTimer_square2]
     cp $20
         jr c, .part2
 
-    ld a, [variableToneChannelFrequency]
+    ld a, [square2_variableFrequency]
     add $03
     ldh [rAUD2LOW], a
-    ld [variableToneChannelFrequency], a
+    ld [square2_variableFrequency], a
     ret
 
 .even
-    ld a, [variableToneChannelFrequency]
+    ld a, [square2_variableFrequency]
     res 4, a
-    ld [variableToneChannelFrequency], a
+    ld [square2_variableFrequency], a
     jr .merge
 
 .part2
-    ld a, [variableToneChannelFrequency]
+    ld a, [square2_variableFrequency]
     dec a
     ldh [rAUD2LOW], a
-    ld [variableToneChannelFrequency], a
+    ld [square2_variableFrequency], a
     ret
 ;}
 
@@ -3633,7 +3633,7 @@ toneSfx_init_4:
     ldh a, [rDIV]
     set 7, a
     res 6, a
-    ld [variableToneChannelFrequency], a
+    ld [square2_variableFrequency], a
     ld a, $1c
     ld de, toneOptionSets.babyMetroidClearingBlock
     jp playToneSfx
@@ -3647,21 +3647,21 @@ toneSfx_playback_4:
     cp $0c
         jr z, .part3
 
-    ld a, [variableToneChannelFrequency]
+    ld a, [square2_variableFrequency]
     inc a
     inc a
-    ld [variableToneChannelFrequency], a
+    ld [square2_variableFrequency], a
     ldh [rAUD2LOW], a
     ret
 
 .part2
     ld a, $a0
-    ld [variableToneChannelFrequency], a
+    ld [square2_variableFrequency], a
     ret
 
 .part3
     ld a, $90
-    ld [variableToneChannelFrequency], a
+    ld [square2_variableFrequency], a
     ret
 ;}
 
@@ -3673,7 +3673,7 @@ toneSfx_init_5:
     set 6, a
     res 4, a
     res 2, a
-    ld [variableToneChannelFrequency], a
+    ld [square2_variableFrequency], a
     ld a, $30
     ld de, toneOptionSets.babyMetroidCry
     jp playToneSfx
@@ -3685,7 +3685,7 @@ toneSfx_init_6:
     swap a
     res 7, a
     set 6, a
-    ld [variableToneChannelFrequency], a
+    ld [square2_variableFrequency], a
     ld a, $30
     ld de, toneOptionSets.metroidQueenHurtCry
     jp playToneSfx
@@ -3700,17 +3700,17 @@ toneSfx_init_7:
 
 playToneSfx:
 ;{
-    ld [toneChannelSoundEffectTimer], a
+    ld [sfxTimer_square2], a
     ld a, [sfxRequest_square2]
-    ld [toneChannelSoundEffectPlaying], a
-    ld [toneChannelSoundEffectIsPlayingFlag], a
+    ld [sfxPlaying_square2], a
+    ld [sfxActive_square2], a
     jp setChannelOptionSet.tone
 ;}
 ;}
 
 ; Noise channel sound effects
 ;{
-noiseChannelSoundEffectInitialisationFunctionPointers:
+songSoundEffectInitialisationFunctionPointers_noise:
 ;{
     dw noiseSfx_init_1 ; 1: Enemy shot
     dw noiseSfx_init_2 ; 2: Enemy killed
@@ -3740,7 +3740,7 @@ noiseChannelSoundEffectInitialisationFunctionPointers:
     dw noiseSfx_init_1A ; 1Ah:
 ;}
 
-noiseChannelSoundEffectPlaybackFunctionPointers:
+songSoundEffectPlaybackFunctionPointers_noise:
 ;{
     dw decrementNoiseChannelSoundEffectTimer ; 1: Enemy shot
     dw noiseSfx_playback_2 ; 2: Enemy killed
@@ -3812,7 +3812,7 @@ noiseSfx_init_4:
 
 noiseSfx_init_5:
 ;{
-    ld a, toneSweepSoundEffect_metroidCry
+    ld a, sfx_square1_metroidCry
     ld [sfxRequest_square1], a
     ld a, $40
     ld de, noiseOptionSets.metroidHurt_0
@@ -3894,7 +3894,7 @@ noiseSfx_playback_8:
 
 noiseSfx_init_9:
 ;{
-    ld a, toneSoundEffect_metroidQueenCry
+    ld a, sfx_square2_metroidQueenCry
     ld [sfxRequest_square2], a
     ld a, $40
     ld de, noiseOptionSets.metroidQueenCry_0
@@ -3915,7 +3915,7 @@ noiseSfx_playback_9:
 
 noiseSfx_init_A:
 ;{
-    ld a, toneSoundEffect_metroidQueenHurtCry
+    ld a, sfx_square2_metroidQueenHurtCry
     ld [sfxRequest_square2], a
     ld a, $40
     ld de, noiseOptionSets.metroidQueenHurtCry_0
@@ -4187,11 +4187,11 @@ noiseSfx_playback_F:
 
 noiseSfx_init_10:
 ;{
-    ld a, [noiseChannelSoundEffectPlaying]
+    ld a, [sfxPlaying_noise]
     and a
         jp nz, handleNoiseChannelSoundEffect.playing
 
-    ld a, [songNoiseChannelEnable]
+    ld a, [songChannelEnable_noise]
     and a
         jp nz, handleNoiseChannelSoundEffect.playing
 
@@ -4295,7 +4295,7 @@ noiseSfx_playback_15:
 
 noiseSfx_init_16:
 ;{
-    ld a, toneSoundEffect_babyMetroidClearingBlock
+    ld a, sfx_square2_babyMetroidClearingBlock
     ld [sfxRequest_square2], a
     ld a, $08
     ld de, noiseOptionSets.babyMetroidClearingBlock
@@ -4304,7 +4304,7 @@ noiseSfx_init_16:
 
 noiseSfx_init_17:
 ;{
-    ld a, toneSoundEffect_babyMetroidCry
+    ld a, sfx_square2_babyMetroidCry
     ld [sfxRequest_square2], a
     ld a, $40
     ld de, noiseOptionSets.babyMetroidCry
@@ -4346,10 +4346,10 @@ noiseSfx_init_1A:
 
 playNoiseSweepSfx:
 ;{
-    ld [noiseChannelSoundEffectTimer], a
+    ld [sfxTimer_noise], a
     ld a, [sfxRequest_noise]
-    ld [noiseChannelSoundEffectPlaying], a
-    ld [noiseChannelSoundEffectIsPlayingFlag], a
+    ld [sfxPlaying_noise], a
+    ld [sfxActive_noise], a
     jp setChannelOptionSet.noise
 ;}
 ;}
@@ -5406,7 +5406,7 @@ toneOptionSets:
 
 ; Wave channel sound effects
 ;{
-waveChannelSoundEffectInitialisationFunctionPointers:
+songSoundEffectInitialisationFunctionPointers_wave:
 ;{
     dw waveSfx_init_1 ; 1: Samus' health < 10
     dw waveSfx_init_2 ; 2: Samus' health < 20
@@ -5415,7 +5415,7 @@ waveChannelSoundEffectInitialisationFunctionPointers:
     dw waveSfx_init_5 ; 5: Samus' health < 50
 ;}
 
-waveChannelSoundEffectPlaybackFunctionPointers:
+songSoundEffectPlaybackFunctionPointers_wave:
 ;{
     dw waveSfx_playback_1 ; 1: Samus' health < 10
     dw waveSfx_playback_2 ; 2: Samus' health < 20
@@ -5442,10 +5442,10 @@ waveSfx_playback_1:
 waveSfx_playback_2:
 ;{
     ld a, $01
-    ld [waveChannelSoundEffectIsPlayingFlag], a
-    ld a, [waveChannelSoundEffectTimer]
+    ld [sfxActive_wave], a
+    ld a, [sfxTimer_wave]
     dec a
-    ld [waveChannelSoundEffectTimer], a
+    ld [sfxTimer_wave], a
     cp $0a
         jr z, .set1
     and a
@@ -5483,8 +5483,8 @@ waveSfx_playback_2:
         call writeToWavePatternRam
     .endIf0
 
-    ld a, [waveChannelSoundEffectLength]
-    ld [waveChannelSoundEffectTimer], a
+    ld a, [sfxLength_wave]
+    ld [sfxTimer_wave], a
     ld de, waveOptionSets.healthUnder20_0
     jp setChannelOptionSet.wave
 ;}
@@ -5505,10 +5505,10 @@ waveSfx_init_3:
 waveSfx_playback_3:
 ;{
     ld a, $02
-    ld [waveChannelSoundEffectIsPlayingFlag], a
-    ld a, [waveChannelSoundEffectTimer]
+    ld [sfxActive_wave], a
+    ld a, [sfxTimer_wave]
     dec a
-    ld [waveChannelSoundEffectTimer], a
+    ld [sfxTimer_wave], a
     cp $09
         jr z, .set1
     and a
@@ -5546,8 +5546,8 @@ waveSfx_playback_3:
         call writeToWavePatternRam
     .endIf0
 
-    ld a, [waveChannelSoundEffectLength]
-    ld [waveChannelSoundEffectTimer], a
+    ld a, [sfxLength_wave]
+    ld [sfxTimer_wave], a
     ld de, waveOptionSets.healthUnder30_0
     jp setChannelOptionSet.wave
 ;}
@@ -5568,10 +5568,10 @@ waveSfx_init_4:
 waveSfx_playback_4:
 ;{
     ld a, $03
-    ld [waveChannelSoundEffectIsPlayingFlag], a
-    ld a, [waveChannelSoundEffectTimer]
+    ld [sfxActive_wave], a
+    ld a, [sfxTimer_wave]
     dec a
-    ld [waveChannelSoundEffectTimer], a
+    ld [sfxTimer_wave], a
     cp $09
         jr z, .set1
     and a
@@ -5609,8 +5609,8 @@ waveSfx_playback_4:
         call writeToWavePatternRam
     .endIf0
 
-    ld a, [waveChannelSoundEffectLength]
-    ld [waveChannelSoundEffectTimer], a
+    ld a, [sfxLength_wave]
+    ld [sfxTimer_wave], a
     ld de, waveOptionSets.healthUnder40_0
     jp setChannelOptionSet.wave
 ;}
@@ -5631,10 +5631,10 @@ waveSfx_init_5:
 waveSfx_playback_5:
 ;{
     ld a, $04
-    ld [waveChannelSoundEffectIsPlayingFlag], a
-    ld a, [waveChannelSoundEffectTimer]
+    ld [sfxActive_wave], a
+    ld a, [sfxTimer_wave]
     dec a
-    ld [waveChannelSoundEffectTimer], a
+    ld [sfxTimer_wave], a
     cp $0b
         jr z, .set1
     and a
@@ -5672,8 +5672,8 @@ waveSfx_playback_5:
         call writeToWavePatternRam
     .endIf0
 
-    ld a, [waveChannelSoundEffectLength]
-    ld [waveChannelSoundEffectTimer], a
+    ld a, [sfxLength_wave]
+    ld [sfxTimer_wave], a
     ld de, waveOptionSets.healthUnder50_0
     jp setChannelOptionSet.wave
 ;}
@@ -5715,8 +5715,8 @@ endm
 
 Jump_004_5f27:
 ;{
-    ld [waveChannelSoundEffectTimer], a
-    ld [waveChannelSoundEffectLength], a
+    ld [sfxTimer_wave], a
+    ld [sfxLength_wave], a
     jp setChannelOptionSet.wave
 ;}
 ;}

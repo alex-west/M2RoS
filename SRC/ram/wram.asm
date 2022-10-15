@@ -396,43 +396,43 @@ saveBuf_enemySaveFlags = $C900 ;$C900..CABF: Copied to/from SRAM ($B000 + [save 
 ;    $CEC0: Tone/sweep channel sound effect
 ;    {
 def sfxRequest_square1 = $CEC0 ; Tone/sweep channel sound effect request
-def toneSweepChannelSoundEffectPlaying equ $CEC1 ; Tone/sweep channel sound effect playing
+def sfxPlaying_square1 equ $CEC1 ; Tone/sweep channel sound effect playing
 ; {
-    def toneSweepSoundEffect_nothing                  equ $0 ; Nothing
-    def toneSweepSoundEffect_jumping                  equ $1 ; Jumping
-    def toneSweepSoundEffect_hijumping                equ $2 ; Hi-jumping
-    def toneSweepSoundEffect_screwAttacking           equ $3 ; Screw attacking
-    def toneSweepSoundEffect_standingTransition       equ $4 ; Uncrouching / turning around / landing / hurt by spike
-    def toneSweepSoundEffect_crouchingTransition      equ $5 ; Crouching / unmorphing
-    def toneSweepSoundEffect_morphingTransition       equ $6 ; Morphing
-    def toneSweepSoundEffect_shootingBeam             equ $7 ; Shooting beam
-    def toneSweepSoundEffect_shootingMissile          equ $8 ; Shooting missile
-    def toneSweepSoundEffect_shootingIceBeam          equ $9 ; Shooting ice beam
-    def toneSweepSoundEffect_shootingPlasmaBeam       equ $A ; Shooting plasma beam
-    def toneSweepSoundEffect_shootingSpazerBeam       equ $B ; Shooting spazer beam
-    def toneSweepSoundEffect_pickedUpMissileDrop      equ $C ; Picked up missile drop
-    def toneSweepSoundEffect_spiderBall               equ $D ; Spider ball
-    def toneSweepSoundEffect_pickedUpSmallEnergyDrop  equ $E ; Picked up small energy drop
-    def toneSweepSoundEffect_beamDink                 equ $F ; Shot missile door with beam (maybe certain enemies too?)
-    def toneSweepSoundEffect_10                       equ $10 ; (set in $2:6A14)
-    def toneSweepSoundEffect_11                       equ $11 ; Unused
-    def toneSweepSoundEffect_12                       equ $12 ; Unused
-    def toneSweepSoundEffect_bombLaid                 equ $13 ; Bomb laid
-    def toneSweepSoundEffect_14                       equ $14 ; Unused
-    def toneSweepSoundEffect_select                   equ $15 ; Option select / missile select
-    def toneSweepSoundEffect_shootingWaveBeam         equ $16 ; Shooting wave beam
-    def toneSweepSoundEffect_pickedUpLargeEnergyDrop  equ $17 ; Picked up large energy drop
-    def toneSweepSoundEffect_samusHealthChange        equ $18 ; Samus' health changed
-    def toneSweepSoundEffect_noMissileDudShot         equ $19 ; No missile dud shot
-    def toneSweepSoundEffect_1A                       equ $1A ; (set in $2:6BB2 and other places in bank 2)
-    def toneSweepSoundEffect_metroidCry               equ $1B ; Metroid cry
-    def toneSweepSoundEffect_saved                    equ $1C ; Saved
-    def toneSweepSoundEffect_variaSuitTransformation  equ $1D ; Varia suit transformation
-    def toneSweepSoundEffect_unpaused                 equ $1E ; Unpaused
-    def toneSweepSoundEffect_2D                       equ $2D ; Set in $2:79A8 (might be a hack to use 0Fh's sound effect playing routine by overflowing jump table in bank 4)
+    def sfx_square1_nothing                  equ $0 ; Nothing
+    def sfx_square1_jumping                  equ $1 ; Jumping
+    def sfx_square1_hijumping                equ $2 ; Hi-jumping
+    def sfx_square1_screwAttacking           equ $3 ; Screw attacking
+    def sfx_square1_standingTransition       equ $4 ; Uncrouching / turning around / landing / hurt by spike
+    def sfx_square1_crouchingTransition      equ $5 ; Crouching / unmorphing
+    def sfx_square1_morphingTransition       equ $6 ; Morphing
+    def sfx_square1_shootingBeam             equ $7 ; Shooting beam
+    def sfx_square1_shootingMissile          equ $8 ; Shooting missile
+    def sfx_square1_shootingIceBeam          equ $9 ; Shooting ice beam
+    def sfx_square1_shootingPlasmaBeam       equ $A ; Shooting plasma beam
+    def sfx_square1_shootingSpazerBeam       equ $B ; Shooting spazer beam
+    def sfx_square1_pickedUpMissileDrop      equ $C ; Picked up missile drop
+    def sfx_square1_spiderBall               equ $D ; Spider ball
+    def sfx_square1_pickedUpSmallEnergyDrop  equ $E ; Picked up small energy drop
+    def sfx_square1_beamDink                 equ $F ; Shot missile door with beam (maybe certain enemies too?)
+    def sfx_square1_10                       equ $10 ; (set in $2:6A14)
+    def sfx_square1_11                       equ $11 ; Unused
+    def sfx_square1_12                       equ $12 ; Unused
+    def sfx_square1_bombLaid                 equ $13 ; Bomb laid
+    def sfx_square1_14                       equ $14 ; Unused
+    def sfx_square1_select                   equ $15 ; Option select / missile select
+    def sfx_square1_shootingWaveBeam         equ $16 ; Shooting wave beam
+    def sfx_square1_pickedUpLargeEnergyDrop  equ $17 ; Picked up large energy drop
+    def sfx_square1_samusHealthChange        equ $18 ; Samus' health changed
+    def sfx_square1_noMissileDudShot         equ $19 ; No missile dud shot
+    def sfx_square1_1A                       equ $1A ; (set in $2:6BB2 and other places in bank 2)
+    def sfx_square1_metroidCry               equ $1B ; Metroid cry
+    def sfx_square1_saved                    equ $1C ; Saved
+    def sfx_square1_variaSuitTransformation  equ $1D ; Varia suit transformation
+    def sfx_square1_unpaused                 equ $1E ; Unpaused
+    def sfx_square1_2D                       equ $2D ; Set in $2:79A8 (might be a hack to use 0Fh's sound effect playing routine by overflowing jump table in bank 4)
 ; }
 ;
-def toneSweepChannelSoundEffectTimer equ $CEC3 ; Tone/sweep channel sound effect timer
+def sfxTimer_square1 equ $CEC3 ; Tone/sweep channel sound effect timer
 def samusHealthChangedOptionSetIndex equ $CEC4 ; Samus' health changed option set index. Only 2 is (meaningfully) used due to a bug (see $4:53F7)
 ;        {
 ;            0: No change
@@ -444,21 +444,21 @@ def samusHealthChangedOptionSetIndex equ $CEC4 ; Samus' health changed option se
 ;    $CEC7: Tone channel sound effect
 ;    {
 def sfxRequest_square2 = $CEC7 ; Tone channel sound effect request
-def toneChannelSoundEffectPlaying equ $CEC8 ; Tone channel sound effect playing
+def sfxPlaying_square2 equ $CEC8 ; Tone channel sound effect playing
 ; {
-    def toneSoundEffect_0                        equ 0 ; Nothing
-    def toneSoundEffect_1                        equ 1 ; Nothing
-    def toneSoundEffect_2                        equ 2 ; Nothing
-    def toneSoundEffect_metroidQueenCry          equ 3 ; Metroid Queen cry
-    def toneSoundEffect_babyMetroidClearingBlock equ 4 ; Baby Metroid hatched / clearing blocks
-    def toneSoundEffect_babyMetroidCry           equ 5 ; Baby Metroid cry
-    def toneSoundEffect_metroidQueenHurtCry      equ 6 ; Metroid Queen hurt cry
-    def toneSoundEffect_7                        equ 7 ; Set in $2:6540 when $FFEF % 10h = 0
+    def sfx_square2_0                        equ 0 ; Nothing
+    def sfx_square2_1                        equ 1 ; Nothing
+    def sfx_square2_2                        equ 2 ; Nothing
+    def sfx_square2_metroidQueenCry          equ 3 ; Metroid Queen cry
+    def sfx_square2_babyMetroidClearingBlock equ 4 ; Baby Metroid hatched / clearing blocks
+    def sfx_square2_babyMetroidCry           equ 5 ; Baby Metroid cry
+    def sfx_square2_metroidQueenHurtCry      equ 6 ; Metroid Queen hurt cry
+    def sfx_square2_7                        equ 7 ; Set in $2:6540 when $FFEF % 10h = 0
 ; }
 ;
-def toneChannelSoundEffectTimer equ $CECA ; Tone channel sound effect timer
+def sfxTimer_square2 equ $CECA ; Tone channel sound effect timer
 
-def variableToneChannelFrequency equ $CECC ; Variable tone channel frequency. Only the lower byte
+def square2_variableFrequency equ $CECC ; Variable tone channel frequency. Only the lower byte
 ;    }
 ;
 ;    $CECE..CED4: Would be the wave channel sound effect, but is unused (only cleared) and $CEE6/$CFE5 is used instead.
@@ -468,7 +468,7 @@ def sfxPlaying_fakeWave equ $CECF
 ;    $CED5: Noise channel sound effect
 ;    {
 def sfxRequest_noise = $CED5 ; Noise channel sound effect request
-def noiseChannelSoundEffectPlaying equ $CED6 ; Noise channel sound effect playing
+def sfxPlaying_noise equ $CED6 ; Noise channel sound effect playing
 ;        {
 ;            FFh: Clear sound effect and disable noise channel
 ;            0: Nothing
@@ -500,7 +500,7 @@ def noiseChannelSoundEffectPlaying equ $CED6 ; Noise channel sound effect playin
 ;            1Ah: Set in bank 2
 ;        }
 ;
-def noiseChannelSoundEffectTimer equ $CED8 ; Noise channel sound effect timer
+def sfxTimer_noise equ $CED8 ; Noise channel sound effect timer
 ;    }
 ;
 def songRequest = $CEDC ; Song request
@@ -540,22 +540,22 @@ def songPlaying = $CEDD ; Song playing
     def song_metroidHive_withIntro     equ $1F ; Metroid hive with intro
     def song_missilePickup             equ $20 ; Missile pickup
 ;}
-def isolatedSoundEffectRequest equ $CEDE ; Isolated sound effect request
-def isolatedSoundEffectPlaying equ $CEDF ; Isolated sound effect playing
+def songInterruptionRequest equ $CEDE ; Song interruption request
+def songInterruptionPlaying equ $CEDF ; Song interruption playing
 ;{
-    def isolatedSoundEffect_itemGet       equ 1 ; Play item-get music
-    def isolatedSoundEffect_end_playing   equ 2 ; End isolated sound effect
-    def isolatedSoundEffect_end_request    equ 3 ; End isolated sound effect
-    def isolatedSoundEffect_missilePickup equ 5 ; Play missile pickup music
-    def isolatedSoundEffect_fadeOutMusic  equ 8 ; Fade out music
-    def isolatedSoundEffect_earthquake    equ song_earthquake ; Play earthquake music
-    def isolatedSoundEffect_clear         equ $FF ; Clear isolated sound effect
+    def songInterruption_itemGet       equ 1 ; Play item-get music
+    def songInterruption_end_playing   equ 2 ; End song interruption
+    def songInterruption_end_request   equ 3 ; End song interruption
+    def songInterruption_missilePickup equ 5 ; Play missile pickup music
+    def songInterruption_fadeOutMusic  equ 8 ; Fade out music
+    def songInterruption_earthquake    equ song_earthquake ; Play earthquake music
+    def songInterruption_clear         equ $FF ; Clear song interruption
 ;}
 
-def toneSweepChannelSoundEffectIsPlayingFlag equ $CEE4 ; Tone/sweep channel sound effect is playing flag (checked by song handler)
-def toneChannelSoundEffectIsPlayingFlag equ $CEE5 ; Tone channel sound effect is playing flag (checked by song handler)
-def waveChannelSoundEffectIsPlayingFlag equ $CEE6 ; Wave channel sound effect is playing flag (checked by song handler)
-def noiseChannelSoundEffectIsPlayingFlag equ $CEE7 ; Noise channel sound effect is playing flag (checked by song handler)
+def sfxActive_square1 equ $CEE4 ; Tone/sweep channel sound effect is playing flag (checked by song handler)
+def sfxActive_square2 equ $CEE5 ; Tone channel sound effect is playing flag (checked by song handler)
+def sfxActive_wave equ $CEE6 ; Wave channel sound effect is playing flag (checked by song handler)
+def sfxActive_noise equ $CEE7 ; Noise channel sound effect is playing flag (checked by song handler)
 def resumeScrewAttackSoundEffectFlag equ $CEE8 ; Resume screw attack sound effect flag
 
 def songProcessingState equ $CF00 ; $CF00..60: Song processing state
@@ -563,79 +563,79 @@ def songProcessingState equ $CF00 ; $CF00..60: Song processing state
 def songTranspose equ $CF00 ; Transpose
 def songInstructionTimerArrayPointer equ $CF01 ; Instruction timer array pointer
 def workingSoundChannel equ $CF03 ; Working sound channel (1/2/3/4)
-def songToneSweepChannelEnable equ $CF04 ; Song tone/sweep channel enable. Set to 1 if [$CF38] != 0 in $48A0
-def songToneChannelEnable equ $CF05 ; Song tone channel enable. Set to 2 if [$CF41] != 0 in $48A0
-def songWaveChannelEnable equ $CF06 ; Song wave channel enable. Set to 3 if [$CF4A] != 0 in $48A0
-def songNoiseChannelEnable equ $CF07 ; Song noise channel enable. Set to 4 if [$CF53] != 0 in $48A0
-def workingSoundChannelOptionsSetFlag equ $CF08 ; Working sound channel options set flag. Set by song instruction F1h. Checked to update channel sweep and sound length / wave pattern duty for tone(/sweep0 channels
-def wavePatternDataPointer equ $CF09 ; Pointer to wave pattern data, 10h bytes
-def workingSoundChannelSweep equ $CF0B ; Working sound channel sweep / enable
-def workingSoundChannelEnable equ $CF0B ; Working sound channel sweep / enable
-def workingSoundChannelSoundLength equ $CF0C ; Working sound channel sound length / wave pattern duty
-def workingSoundChannelEnvelope equ $CF0D ; Working sound channel envelope / volume
-def workingSoundChannelVolume equ $CF0D ; Working sound channel envelope / volume
-def workingSoundChannelFrequency equ $CF0E ; Working sound channel frequency / noise channel polynomial counter
-def workingSoundChannelPolynomialCounter equ $CF0E ; Working sound channel frequency / noise channel polynomial counter
-def workingSoundChannelCounterControl equ $CF0F ; Working noise channel counter control (upper byte of working sound channel frequency)
+def songChannelEnable_square1 equ $CF04 ; Song tone/sweep channel enable. Set to 1 if [$CF38] != 0 in $48A0
+def songChannelEnable_square2 equ $CF05 ; Song tone channel enable. Set to 2 if [$CF41] != 0 in $48A0
+def songChannelEnable_wave equ $CF06 ; Song wave channel enable. Set to 3 if [$CF4A] != 0 in $48A0
+def songChannelEnable_noise equ $CF07 ; Song noise channel enable. Set to 4 if [$CF53] != 0 in $48A0
+def songOptionsSetFlag_working equ $CF08 ; Working sound channel options set flag. Set by song instruction F1h. Checked to update channel sweep and sound length / wave pattern duty for tone(/sweep) channels
+def songWavePatternDataPointer equ $CF09 ; Song wave pattern data pointer. 10h bytes
+def songSweep_working equ $CF0B ; Working sound channel sweep / enable
+def songEnable_working equ $CF0B ; Working sound channel sweep / enable
+def songSoundLength_working equ $CF0C ; Working sound channel sound length / wave pattern duty
+def songEnvelope_working equ $CF0D ; Working sound channel envelope / volume
+def songVolume_working equ $CF0D ; Working sound channel envelope / volume
+def songFrequency_working equ $CF0E ; Working sound channel frequency / noise channel polynomial counter
+def songPolynomialCounter_working equ $CF0E ; Working sound channel frequency / noise channel polynomial counter
+def songCounterControl_working equ $CF0F ; Working noise channel counter control (upper byte of working sound channel frequency)
 def audioChannelOptions equ $CF10 ; $CF10..23: Audio channel options (low bytes correspond with $FF10..23, and code exploits this fact)
 ;        {
-def toneSweepChannelSweep equ $CF10 ; Tone/sweep channel sweep
-def toneSweepChannelSoundLength equ $CF11 ; Tone/sweep channel sound length / wave pattern duty
-def toneSweepChannelEnvelope equ $CF12 ; Tone/sweep channel envelope
-def toneSweepChannelFrequency equ $CF13 ; Tone/sweep channel frequency
+def songSweep_square1 equ $CF10 ; Tone/sweep channel sweep
+def songSoundLength_square1 equ $CF11 ; Tone/sweep channel sound length / wave pattern duty
+def songEnvelope_square1 equ $CF12 ; Tone/sweep channel envelope
+def songFrequency_square1 equ $CF13 ; Tone/sweep channel frequency
 ;            $CF15: Unused
-def toneChannelSoundLength equ $CF16 ; Tone channel sound length / wave pattern duty
-def toneChannelEnvelope equ $CF17 ; Tone channel envelope
-def toneChannelFrequency equ $CF18 ; Tone channel frequency
-def waveChannelEnableOption equ $CF1A ; Wave channel enable
-def waveChannelSoundLength equ $CF1B ; Wave channel sound length
-def waveChannelVolume equ $CF1C ; Wave channel volume (0 = mute, 20h = 100%, 40h = 50%, 60h = 25%)
-def waveChannelFrequency equ $CF1D ; Wave channel frequency
+def songSoundLength_square2 equ $CF16 ; Tone channel sound length / wave pattern duty
+def songEnvelope_square2 equ $CF17 ; Tone channel envelope
+def songFrequency_square2 equ $CF18 ; Tone channel frequency
+def songEnableOption_wave equ $CF1A ; Wave channel enable
+def songSoundLength_wave equ $CF1B ; Wave channel sound length
+def songVolume_wave equ $CF1C ; Wave channel volume (0 = mute, 20h = 100%, 40h = 50%, 60h = 25%)
+def songFrequency_wave equ $CF1D ; Wave channel frequency
 ;            $CF1F: Unused
-def noiseChannelSoundLength equ $CF20 ; Noise channel sound length
-def noiseChannelEnvelope equ $CF21 ; Noise channel envelope
-def noiseChannelPolynomialCounter equ $CF22 ; Noise channel polynomial counter
-def noiseChannelCounterControl equ $CF23 ; Noise channel counter control
+def songSoundLength_noise equ $CF20 ; Noise channel sound length
+def songEnvelope_noise equ $CF21 ; Noise channel envelope
+def songPolynomialCounter_noise equ $CF22 ; Noise channel polynomial counter
+def songCounterControl_noise equ $CF23 ; Noise channel counter control
 ;        }
 ;
 def songToneSweepChannelInstructionPointer equ $CF26 ; Song tone/sweep channel instruction pointer
 def songToneChannelInstructionPointer equ $CF28 ; Song tone channel instruction pointer
 def songWaveChannelInstructionPointer equ $CF2A ; Song wave channel instruction pointer
 def songNoiseChannelInstructionPointer equ $CF2C ; Song noise channel instruction pointer
+;        {
+;            Instruction format:
+;                00:          End of instruction list
+;                ii:          For 9Fh <= ii <= F0h (only A0h..ACh is usable). Instruction timer = [[$CF01] + (ii & ~A0h)]
+;                F1 ee ss ll: For non-wave channels.
+;                                 Working sound channel envelope = ee
+;                                 Working sound channel sweep = ss
+;                                 Working sound channel wave pattern duty = ll & C0h
+;                                 Working sound channel effect index / sound length = ll & ~C0h
+;                F1 pppp vv:  For the wave channel.
+;                                 Pointer to wave pattern data = pppp
+;                                 Working sound channel volume = vv & 60h
+;                                 Working sound channel effect index = vv & ~60h
+;                F2 pppp:     Set tempo: $CF01 = pppp
+;                F3 oo:       Set transpose: $CF00 = oo. (Add oo to any played music notes)
+;                F4 nn:       Repeat from after this instruction nn times |: (sets $CF31/$CF33)
+;                F5:          Repeat :| (decrements $CF31)
+;                ii:          For ii >= F6h. Clear sound effects and song
+;                ii:          For 00 < ii < 9Fh:
+;                    01:      Rest. Mute working sound channel
+;                    03:      Echo note. For non-noise channels. If fading out music: working sound channel envelope / volume = 8, else working sound channel envelope / volume = 66h. Set working sound channel frequency
+;                    05:      Echo note. For non-noise channels. If fading out music: working sound channel envelope / volume = 8, else working sound channel envelope / volume = 46h. Set working sound channel frequency
+;                    ii:      Otherwise. For non-noise channels. Working sound channel frequency = [music notes + [ii]], working sound channel envelope = [$CF35]
+;                    ii:      Otherwise. For the noise channel:
+;                                 Working sound channel sound length       = [$41BB + ii]
+;                                 Working sound channel envelope           = [$41BB + ii + 1]
+;                                 Working sound channel polynomial counter = [$41BB + ii + 2]
+;                                 Working sound channel counter control    = [$41BB + ii + 3]
+;        }
 def songSoundChannelEffectTimer equ $CF2E ; Song sound channel effect timer. 11h frame timer (bug?) for indexing table at $4263/$4273/$4283. Shared across all sound channels(!)
 
 def songProcessingStates equ $CF2F
 ;        {
-;            $CF2F: Instruction pointer list. Big endian(!). An 'instruction pointer' of 00F0 followed by pppp means to go to pppp, 0000 means end of list.
-;            {
-;                Instruction format:
-;                    00:          End of instruction list
-;                    ii:          For 9Fh <= ii <= F0h (only A0h..ACh is usable). Instruction timer = [[$CF01] + (ii & ~A0h)]
-;                    F1 ee ss ll: For non-wave channels.
-;                                     Working sound channel envelope = ee
-;                                     Working sound channel sweep = ss
-;                                     Working sound channel wave pattern duty = ll & C0h
-;                                     Working sound channel effect index / sound length = ll & ~C0h
-;                    F1 pppp vv:  For the wave channel.
-;                                     Pointer to wave pattern data = pppp
-;                                     Working sound channel volume = vv & 60h
-;                                     Working sound channel effect index = vv & ~60h
-;                    F2 pppp:     Set tempo: $CF01 = pppp
-;                    F3 oo:       Set transpose: $CF00 = oo. (Add oo to any played music notes)
-;                    F4 nn:       Repeat from after this instruction nn times |: (sets $CF31/$CF33)
-;                    F5:          Repeat :| (decrements $CF31)
-;                    ii:          For ii >= F6h. Clear sound effects and song
-;                    ii:          For 00 < ii < 9Fh:
-;                        01:      Rest. Mute working sound channel
-;                        03:      Echo note. For non-noise channels. If fading out music: working sound channel envelope / volume = 8, else working sound channel envelope / volume = 66h. Set working sound channel frequency
-;                        05:      Echo note. For non-noise channels. If fading out music: working sound channel envelope / volume = 8, else working sound channel envelope / volume = 46h. Set working sound channel frequency
-;                        ii:      Otherwise. For non-noise channels. Working sound channel frequency = [music notes + [ii]], working sound channel envelope = [$CF35]
-;                        ii:      Otherwise. For the noise channel:
-;                                     Working sound channel sound length       = [$41BB + ii]
-;                                     Working sound channel envelope           = [$41BB + ii + 1]
-;                                     Working sound channel polynomial counter = [$41BB + ii + 2]
-;                                     Working sound channel counter control    = [$41BB + ii + 3]
-;            }
+;            $CF2F: Section pointer. Big endian(!). A 'section pointer' of 00F0 followed by pppp means to go to pppp, 0000 means end of list
 ;            $CF31: Repeat count
 ;            $CF33: Repeat point
 ;            $CF34: Instruction length
@@ -659,26 +659,25 @@ def songProcessingStates equ $CF2F
 ;        $CF4A..52: Wave channel song processing state
 ;        $CF53..5B: Noise channel song processing state
 macro makeChannelSongProcessingState ; [label prefix], [base address]
-    def \1ChannelSongProcessingState equ \2
-    def \1InstructionPointer equ \2
-    def \1RepeatCount equ \2+2
-    def \1RepeatPoint equ \2+4
-    def \1InstructionLength equ \2+5
-    def \1SoundEnvelope equ \2+6
-    def \1Volume equ \2+6
-    def \1InstructionTimer equ \2+7
-    def \1EffectIndex equ \2+8
-    def \1SoundLength equ \2+8
+    def songChannelSongProcessingState_\1 equ \2
+    def songSectionPointer_\1 equ \2
+    def songRepeatCount_\1 equ \2+2
+    def songRepeatPoint_\1 equ \2+4
+    def songInstructionLength_\1 equ \2+5
+    def songNoteEnvelope_\1 equ \2+6
+    def songNoteVolume_\1 equ \2+6
+    def songInstructionTimer_\1 equ \2+7
+    def songEffectIndex_\1 equ \2+8
 endm
     makeChannelSongProcessingState working,$CF2F
-    makeChannelSongProcessingState toneSweep,$CF38
-    makeChannelSongProcessingState tone,$CF41
+    makeChannelSongProcessingState square1,$CF38
+    makeChannelSongProcessingState square2,$CF41
     makeChannelSongProcessingState wave,$CF4A
     makeChannelSongProcessingState noise,$CF53
 
 def songFadeoutTimer equ $CF5C ; Song fadeout timer. Set to D0h when initiating fading out music
 ;        {
-;            0: Song play = isolated sound effect request = 0, disable sound channels
+;            0: Song play = song interruption request = 0, disable sound channels
 ;            10h: Sound envelope / volume = 13h
 ;            30h: Sound envelope / volume = 25h
 ;            70h: Sound envelope / volume = 45h. Disable noise channel. Wave channel volume = 60h
@@ -687,11 +686,11 @@ def songFadeoutTimer equ $CF5C ; Song fadeout timer. Set to D0h when initiating 
 def ramCF5D equ $CF5D ; Set to tone/sweep sound envelope when fading out music. Never read
 def ramCF5E equ $CF5E ; Set to tone sound envelope when fading out music. Never read
 def ramCF5F equ $CF5F ; Set to wave volume when fading out music. Never read
-def toneChannelFrequencyTweak equ $CF60 ; Tone channel frequency tweak. Set to 1 if [$5F30 + ([song request] - 1) * 2] & 1 in $48A0
+def songFrequencyTweak_square2 equ $CF60 ; Tone channel frequency tweak. Set to 1 if [$5F30 + ([song request] - 1) * 2] & 1 in $48A0
 ;    }
-def songProcessingStateBackup equ $CF61 ; $CF61..C1: Backup of song processing state (during isolated sound effect)
+def songProcessingStateBackup equ $CF61 ; $CF61..C1: Backup of song processing state (during song interruption)
 
-def songPlayingBackup equ $CFC5 ; Backup of song playing (during isolated sound effect)
+def songPlayingBackup equ $CFC5 ; Backup of song playing (during song interruption)
 
 def audioPauseControl equ $CFC7 ; Audio pause control
 ;{
@@ -699,15 +698,15 @@ def audioPauseControl equ $CFC7 ; Audio pause control
     def audioPauseControl_unpause equ 2 ; Unpause (play unpause sound effect)
 ;}
 def audioPauseSoundEffectTimer equ $CFC8 ; Audio pause sound effect timer
-def toneSweepChannelSweepBackup equ $CFC9 ; Backup of tone/sweep channel sweep (during isolated sound effect)
+def songSweepBackup_square1 equ $CFC9 ; Backup of tone/sweep channel sweep (during song interruption)
 
-def variableToneSweepChannelFrequency equ $CFD1 ; Variable tone/sweep channel frequency. Only the lower byte. Used by metroid cry
+def sfxVariableFrequency_square1 equ $CFD1 ; Variable tone/sweep channel frequency. Only the lower byte. Used by metroid cry
 
 def ramCFE3 equ $CFE3 ; Set to wave pattern data pointer by song instruction F1h. Never read
-def lowHealthBeepSoundEffectRequest equ $CFE5 ; Low health beep / wave channel sound effect request
-def waveChannelSoundEffectRequest equ $CFE5 ; Low health beep / wave channel sound effect request
-def lowHealthBeepSoundEffectPlaying equ $CFE6 ; Low health beep / wave channel sound effect playing
-def waveChannelSoundEffectPlaying equ $CFE6 ; Low health beep / wave channel sound effect playing
+def sfxRequest_lowHealthBeep equ $CFE5 ; Low health beep / wave channel sound effect request
+def sfxRequest_wave equ $CFE5 ; Low health beep / wave channel sound effect request
+def sfxPlaying_lowHealthBeep equ $CFE6 ; Low health beep / wave channel sound effect playing
+def sfxPlaying_wave equ $CFE6 ; Low health beep / wave channel sound effect playing
 ;    {
 ;        0: Samus' health >= 50
 ;        1: Samus' health < 10
@@ -716,13 +715,13 @@ def waveChannelSoundEffectPlaying equ $CFE6 ; Low health beep / wave channel sou
 ;        4: Samus' health < 40
 ;        5: Samus' health < 50
 ;    }
-def lowHealthBeepSoundEffectPlayingBackup equ $CFE7 ; Backup of low health beep sound effect playing (during isolated sound effect)
-def waveChannelSoundEffectTimer equ $CFE8 ; Wave channel sound effect timer
-def waveChannelSoundEffectLength equ $CFE9 ; Wave channel sound effect length
+def sfxPlayingBackup_lowHealthBeep equ $CFE7 ; Backup of low health beep sound effect playing (during song interruption)
+def sfxTimer_wave equ $CFE8 ; Wave channel sound effect timer
+def sfxLength_wave equ $CFE9 ; Wave channel sound effect length
 ;    $CFEA: Unused
 def ramCFEB equ $CFEB ; Cleared by $43C4, otherwise unused
 def audioChannelOutputStereoFlags equ $CFEC ; Audio channel output stereo flags
-def audioChannelOutputStereoFlagsBackup equ $CFED ; Backup of audio channel output stereo flags (during isolated sound effect)
+def audioChannelOutputStereoFlagsBackup equ $CFED ; Backup of audio channel output stereo flags (during song interruption)
 def loudLowHealthBeepTimer equ $CFEE ; Loud low health beep timer
 ;}
 ;}
