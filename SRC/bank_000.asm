@@ -7954,11 +7954,12 @@ collision_bombEnemies: ;{ 00:30BB
         ; Iterate to next enemy
         ld de, $0020
         add hl, de
-        ; Exit loop if at end
+        ; Exit loop if at end of enemy slots
         ld a, h
         cp HIGH(enemyDataSlots_end)
     jr nz, .loop
     .break:
+    
     ; Switch to bank of caller function
     switchBank Call_001_540e
 ret ;}
@@ -7967,9 +7968,8 @@ ret ;}
 collision_bombOneEnemy: ;{ 00:30EA
     ; push the enemy base address on the stack
     push hl
-
+    inc hl ; Iterate past status byte
     ; Load enemy Y
-    inc hl
     ld a, [hl+]
     ; Skip collision if offscreen vertically
     cp $e0
@@ -8010,7 +8010,7 @@ collision_bombOneEnemy: ;{ 00:30EA
     ld b, a
     ; Check if vertically flipped
     ldh a, [hCollision_enAttr]
-    bit 6, a
+    bit OAMB_YFLIP, a
     jr nz, .else_A
         ; Normal case
         ; hCollision_enTop = (top+Y) - $10
@@ -8026,13 +8026,13 @@ collision_bombOneEnemy: ;{ 00:30EA
         jr .endIf_A
     .else_A:
         ; Vertically flipped case
-        ; hCollision_enBottom = (bootom-Y) + $10
+        ; hCollision_enBottom = -(bottom-Y) + $10
         ld a, [hl+]
         sub b
         cpl
         add $10
         ldh [hCollision_enBottom], a
-        ; hCollision_enTop = (bottom-Y) - $10
+        ; hCollision_enTop = -(bottom-Y) - $10
         ld a, [hl+]
         sub b
         cpl
@@ -8045,7 +8045,7 @@ collision_bombOneEnemy: ;{ 00:30EA
     ld b, a
     ; Check if horizontally flipped
     ldh a, [hCollision_enAttr]
-    bit 5, a
+    bit OAMB_XFLIP, a
     jr nz, .else_B
         ; Normal case
         ; hCollision_enLeft = (left+X) - $10
@@ -8060,13 +8060,13 @@ collision_bombOneEnemy: ;{ 00:30EA
         ldh [hCollision_enRight], a
         jr .endIf_B
     .else_B:
-        ; hCollision_enRight = (left-X) + $10
+        ; hCollision_enRight = -(left-X) + $10
         ld a, [hl+]
         sub b
         cpl
         add $10
         ldh [hCollision_enRight], a
-        ; hCollision_enLeft = (right-X) - $10
+        ; hCollision_enLeft = -(right-X) - $10
         ld a, [hl+]
         sub b
         cpl
@@ -8113,6 +8113,7 @@ collision_bombOneEnemy: ;{ 00:30EA
     ld [collision_pEnemyLow], a
     ld a, h
     ld [collision_pEnemyHigh], a
+    ; This code appears to rely on other code defaulting the weapon direction to $FF by default
 
 ; Special Queen logic {
     ; If the Queen's mouth is closed with Samus inside
@@ -8155,61 +8156,76 @@ ret
     ccf
 ret ;}
 
-Call_000_31b6: ;{ 00:31B6 - Projectile/enemy collision function
+; Beams/missiles
+collision_projectileEnemies: ;{ 00:31B6 - Projectile/enemy collision function
+    ; Convert projectile coordinates to camera-space
+    ; beamY-scrollY
     ld a, [scrollY]
     ld b, a
     ld a, [tileY]
     sub b
     ldh [$98], a
+    ; beamX-scrollX
     ld a, [scrollX]
     ld b, a
     ld a, [tileX]
     sub b
     ldh [$99], a
-    ld a, $03
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    ld hl, $c600
 
-    jr_000_31d5:
+    ; Switch bank for callee's sake
+    switchBank enemyHitboxPointers ; and enemyDamageTable
+
+    ; Iterate through enemy slots
+    ld hl, enemyDataSlots ;$c600
+    .loop:
+        ; Check if enemy is active ($x0 status value)
         ld a, [hl]
         and $0f
-        jr nz, jr_000_31df
-            call Call_000_31f1
-                jr c, jr_000_31e8
-        jr_000_31df:
+        jr nz, .endIf
+            ; If so, check collision
+            call collision_projectileOneEnemy
+            ; Exit if a collision occurred
+            jr c, .break
+        .endIf:
+        ; Iterate to next enemy
         ld de, $0020
         add hl, de
+        ; Exit loop if at end of enemy slots
         ld a, h
-        cp $c8
-    jr nz, jr_000_31d5
-
-    jr_000_31e8:
-
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+        cp HIGH(enemyDataSlots_end) ;$c8
+    jr nz, .loop
+    .break:
+    
+    ; Switch to bank of caller function
+    switchBank handleProjectiles
 ret ;}
 
-; Projectile-enemy single collision
-Call_000_31f1: ;{ 00:31F1
+; Projectile-enemy single collision (beams/missile)
+collision_projectileOneEnemy: ;{ 00:31F1
+    ; push the enemy base address on the stack
     push hl
-    inc hl
-    ; Ignore collision if X or Y position is too high?
+    inc hl ; Iterate HL past enemy status byte
+    
+    ; Load enemy Y, and skip collision if offscreen
     ld a, [hl+]
     cp $e0
-        jp nc, Jump_000_32a7
+        jp nc, .exit_noHit
     ldh [hCollision_enY], a
+    ; Load enemy X, and skip collision if offscreen
     ld a, [hl+]
     cp $e0
-        jp nc, Jump_000_32a7
-
+        jp nc, .exit_noHit
     ldh [hCollision_enX], a
+    
+    ; Load enemy sprite type
     ld a, [hl+]
     ldh [hCollision_enSprite], a
+    ; Load enemy attributes
     inc hl
     ld a, [hl]
     ldh [hCollision_enAttr], a
+
+    ; Exit if enemy damage is zero
     ldh a, [hCollision_enSprite]
     ld e, a
     ld d, $00
@@ -8217,8 +8233,9 @@ Call_000_31f1: ;{ 00:31F1
     add hl, de
     ld a, [hl]
     and a
-        jp z, Jump_000_32a7
+        jp z, .exit_noHit
 
+    ; Load hitbox pointer of enemy
     ldh a, [hCollision_enSprite]
     sla a
     ld e, a
@@ -8226,107 +8243,143 @@ Call_000_31f1: ;{ 00:31F1
     rl d
     ld hl, enemyHitboxPointers
     add hl, de
+    ; Load pointer to HL
     ld a, [hl+]
     ld e, a
     ld a, [hl]
     ld h, a
     ld l, e
+    
+    ; Save enY to B
     ldh a, [hCollision_enY]
     ld b, a
+    ; Check if vertically flipped
     ldh a, [hCollision_enAttr]
-    bit 6, a
-    jr nz, jr_000_323d
+    bit OAMB_YFLIP, a
+    jr nz, .else_A
+        ; Normal case
+        ; hCollision_enTop = top+Y
         ld a, [hl+]
         add b
         ldh [hCollision_enTop], a
+        ; hCollision_enBottom = bottom+Y
         ld a, [hl+]
         add b
         ldh [hCollision_enBottom], a
-        jr jr_000_3247
-    jr_000_323d:
+        jr .endIf_A
+    .else_A:
+        ; Vertically flipped case
+        ; hCollision_enBottom = -(top-Y)
         ld a, [hl+]
         sub b
         cpl
         ldh [hCollision_enBottom], a
+        ; hCollision_enTop = -(bottom-Y)
         ld a, [hl+]
         sub b
         cpl
         ldh [hCollision_enTop], a
-    jr_000_3247:
+    .endIf_A:
 
+    ; Save enX to B
     ldh a, [hCollision_enX]
     ld b, a
+    ; Check if horizontally flipped
     ldh a, [hCollision_enAttr]
-    bit 5, a
-    jr nz, jr_000_325a
+    bit OAMB_XFLIP, a
+    jr nz, .else_B
+        ; Normal case
+        ; hCollision_enLeft = left+X
         ld a, [hl+]
         add b
         ldh [hCollision_enLeft], a
+        ; hCollision_enRight = right+X
         ld a, [hl+]
         add b
         ldh [hCollision_enRight], a
-        jr jr_000_3264
-    jr_000_325a:
+        jr .endIf_B
+    .else_B:
+        ; Horizontally flipped case
+        ; hCollision_enRight = -(left-X)
         ld a, [hl+]
         sub b
         cpl
         ldh [hCollision_enRight], a
+        ; hCollision_enLeft = -(right-X)
         ld a, [hl+]
         sub b
         cpl
         ldh [hCollision_enLeft], a
-    jr_000_3264:
+    .endIf_B:
 
+    ; Bottom - Top
     ldh a, [hCollision_enTop]
     ld b, a
     ldh a, [hCollision_enBottom]
     sub b
     ld c, a
-    ldh a, [$98]
+    ; beamY - Top
+    ldh a, [$98] ; beamY
     sub b
+    ; exit if (Bottom - Top) <= (Y - Top)
     cp c
-        jr nc, jr_000_32a7
+        jr nc, .exit_noHit
+    ; Right - Left
     ldh a, [hCollision_enLeft]
     ld b, a
     ldh a, [hCollision_enRight]
     sub b
     ld c, a
-    ldh a, [$99]
+    ; beamX - Left
+    ldh a, [$99] ; beamX
     sub b
+    ; exit if (Right - Left) <= (X - Left)
     cp c
-        jr nc, jr_000_32a7
+        jr nc, .exit_noHit
+        
+; A collision happened
+    ; Save weapon type
     ld a, [weaponType]
     ld [collision_weaponType], a
+    ; pop the enemy base address off the stack
     pop hl
+    ; Save base address of enemy
     ld a, l
     ld [collision_pEnemyLow], a
     ld a, h
     ld [collision_pEnemyHigh], a
+    ; Save weapon direction
     ld a, [weaponDirection]
     ld [collision_weaponDir], a
+
+; Special Queen Logic {
+    ; If the weapon was missiles
     ld a, [weaponType]
     cp $08
-    jr nz, jr_000_32a5
+    jr nz, .endIf_C
+        ; And if we hit the Queen's open mouth
         ldh a, [hCollision_enSprite]
         cp $f6
-        jr nz, jr_000_32a5
+        jr nz, .endIf_C
+            ; Then paralyze the Queen
             ld a, $10
             ld [queen_eatingState], a
-    jr_000_32a5:
-    ; A collision happened
+    .endIf_C: ;}
+    
+    ; A collision happened -- set the carry flag
     scf
 ret
 
-
-Jump_000_32a7:
-jr_000_32a7:
+.exit_noHit:
+    ; pop the enemy base address off the stack
     pop hl
+    ; Clear the carry flag
     scf
     ccf
 ret ;}
 
 ; Note: Function has two entry points
-Call_000_32ab: ;{ Samus enemy collision detection ?
+Call_000_32ab: ;{ Samus enemy collision detection loop
     ; Conditions for exiting early early
     ld a, [samusPose]
     cp pose_beingEaten ; $18

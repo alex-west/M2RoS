@@ -1717,7 +1717,7 @@ jp .commonBranch
             jr .endIf_Q
     .else_Q:
     .checkEnemies: ; Enemy processing
-        call Call_000_31b6 ; Projectile-enemy collision routine
+        call collision_projectileEnemies ; Projectile-enemy collision routine
         jr nc, .endIf_Q
             ; Delete projectile
             ld a, $dd
