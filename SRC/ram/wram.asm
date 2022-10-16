@@ -390,6 +390,7 @@ def enemyDataSlots = $C600;..C7FF ; Enemy data. 20h byte slots
 ; $C760 - $F2 - Queen Projectile
 ; $C780 - $F2 - Queen Projectile
 ; Sprite ID $F4 is unused?
+def enemyDataSlots_end = enemyDataSlots + $200
 
 saveBuf_enemySaveFlags = $C900 ;$C900..CABF: Copied to/from SRAM ($B000 + [save slot] * 200h). 40h byte slots, one for each level data bank
 

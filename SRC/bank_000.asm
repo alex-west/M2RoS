@@ -7931,180 +7931,226 @@ unusedDeathAnimation: ;{ 00:3062
 reti ;}
 
 ; 00:30BB - Bomb-enemy collision detection
-Call_000_30bb: ;{ 00:30BB
+collision_bombEnemies: ;{ 00:30BB
+    ; Set temp variables to bomb coordinates
     ldh a, [hSpriteYPixel]
     ldh [$98], a
     ldh a, [hSpriteXPixel]
     ldh [$99], a
-    ld a, $03
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
-    ld hl, $c600
-
+    ; Switch to bank with enemy hitboxes
+    switchBank enemyHitboxPointers
+    ; Iterate through all enemy slots
+    ld hl, enemyDataSlots
     .loop:
+        ; Check if enemy is active ($x0 status value)
         ld a, [hl]
         and $0f
         jr nz, .endIf
-            call Call_000_30ea
-                jr c, .break
+            ; If so, check collision
+            call collision_bombOneEnemy
+            ; Exit if a collision occurred
+            jr c, .break
         .endIf:
+        ; Iterate to next enemy
         ld de, $0020
         add hl, de
+        ; Exit loop if at end
         ld a, h
-        cp $c8
+        cp HIGH(enemyDataSlots_end)
     jr nz, .loop
     .break:
-    
-    ld a, $01
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    ; Switch to bank of caller function
+    switchBank Call_001_540e
 ret ;}
 
 ; Bomb-enemy single collision
-Call_000_30ea: ;{ 00:30EA
+collision_bombOneEnemy: ;{ 00:30EA
+    ; push the enemy base address on the stack
     push hl
+
     ; Load enemy Y
     inc hl
     ld a, [hl+]
+    ; Skip collision if offscreen vertically
     cp $e0
         jp nc, .exit_noHit
-    ldh [$b7], a
+    ldh [hCollision_enY], a
+
     ; Load enemy X
     ld a, [hl+]
+    ; Skip collision if offscreen horizontally
     cp $e0
         jp nc, .exit_noHit
-    ldh [$b8], a
+    ldh [hCollision_enX], a
+
     ; Load enemy sprite type
     ld a, [hl+]
-    ldh [$b9], a
+    ldh [hCollision_enSprite], a
     ; Load enemy attributes
     inc hl
     ld a, [hl+]
-    ldh [$bf], a
+    ldh [hCollision_enAttr], a
+
     ; Load hitbox pointer of enemy
-    ldh a, [$b9]
+    ldh a, [hCollision_enSprite]
     sla a
     ld e, a
     ld d, $00
     rl d
     ld hl, enemyHitboxPointers
     add hl, de
+    ; Load pointer to HL
     ld a, [hl+]
     ld e, a
     ld a, [hl]
     ld h, a
     ld l, e
-    ; Save en Y to B
-    ldh a, [$b7]
+    ; Save enY to B
+    ldh a, [hCollision_enY]
     ld b, a
-    ldh a, [$bf]
+    ; Check if vertically flipped
+    ldh a, [hCollision_enAttr]
     bit 6, a
     jr nz, .else_A
+        ; Normal case
+        ; hCollision_enTop = (top+Y) - $10
         ld a, [hl+]
         add b
         sub $10
-        ldh [$ba], a
+        ldh [hCollision_enTop], a
+        ; hCollision_enBottom = (bootom+Y) + $10
         ld a, [hl+]
         add b
         add $10
-        ldh [$bb], a
+        ldh [hCollision_enBottom], a
         jr .endIf_A
     .else_A:
+        ; Vertically flipped case
+        ; hCollision_enBottom = (bootom-Y) + $10
         ld a, [hl+]
         sub b
         cpl
         add $10
-        ldh [$bb], a
+        ldh [hCollision_enBottom], a
+        ; hCollision_enTop = (bottom-Y) - $10
         ld a, [hl+]
         sub b
         cpl
         sub $10
-        ldh [$ba], a
+        ldh [hCollision_enTop], a
     .endIf_A:
 
-    ldh a, [$b8]
+    ; Save enX to B
+    ldh a, [hCollision_enX]
     ld b, a
-    ldh a, [$bf]
+    ; Check if horizontally flipped
+    ldh a, [hCollision_enAttr]
     bit 5, a
     jr nz, .else_B
+        ; Normal case
+        ; hCollision_enLeft = (left+X) - $10
         ld a, [hl+]
         add b
         sub $10
-        ldh [$bc], a
+        ldh [hCollision_enLeft], a
+        ; hCollision_enRight = (right+X) + $10
         ld a, [hl+]
         add b
         add $10
-        ldh [$bd], a
+        ldh [hCollision_enRight], a
         jr .endIf_B
     .else_B:
+        ; hCollision_enRight = (left-X) + $10
         ld a, [hl+]
         sub b
         cpl
         add $10
-        ldh [$bd], a
+        ldh [hCollision_enRight], a
+        ; hCollision_enLeft = (right-X) - $10
         ld a, [hl+]
         sub b
         cpl
         sub $10
-        ldh [$bc], a
+        ldh [hCollision_enLeft], a
     .endIf_B:
+    ; Note: By this point, the enemy's hitbox will be extended
+    ;  by 16 pixels in all 4 directions
 
-    ldh a, [$ba]
+    ; Bottom - Top
+    ldh a, [hCollision_enTop]
     ld b, a
-    ldh a, [$bb]
+    ldh a, [hCollision_enBottom]
     sub b
     ld c, a
-    ldh a, [$98]
+    ; Y - Top
+    ldh a, [$98] ; bombY
     sub b
+    ; exit if (Bottom - Top) <= (Y - Top)
     cp c
         jr nc, .exit_noHit
 
-    ldh a, [$bc]
+    ; Left - Right
+    ldh a, [hCollision_enLeft]
     ld b, a
-    ldh a, [$bd]
+    ldh a, [hCollision_enRight]
     sub b
     ld c, a
-    ldh a, [$99]
+    ; X - Left
+    ldh a, [$99] ; bombX
     sub b
+    ; exit if (Left - Right) <= (X - Left)
     cp c
         jr nc, .exit_noHit
+
 ; A collision happened
+    ; Save the weapon type
     ld a, $09
     ld [collision_weaponType], a
+    ; pop the enemy base address off the stack
     pop hl
+    ; Save the base address of the hit enemy
     ld a, l
     ld [collision_pEnemyLow], a
     ld a, h
     ld [collision_pEnemyHigh], a
-    
+
+; Special Queen logic {
+    ; If the Queen's mouth is closed with Samus inside
     ld a, [queen_eatingState]
     cp $03
     jr nz, .endIf_C
-        ldh a, [$b9]
+        ; and if the left half of her head just got bombed
+        ldh a, [hCollision_enSprite]
         cp $f1
         jr nz, .endIf_C
+            ; Release Samus from the mouth
             ld a, $04
             ld [queen_eatingState], a
     .endIf_C:
 
+    ; If Samus is swallowed by the Queen
     ld a, [queen_eatingState]
     cp $06
     jr nz, .endIf_D
-        ldh a, [$b9]
+        ; And her main body (stomach) just got bombed
+        ldh a, [hCollision_enSprite]
         cp $f3
         jr nz, .endIf_D
+            ; Then eject Samus from the Queen
             ld a, $07
             ld [queen_eatingState], a
             ld a, pose_outStomach ; $1C
             ld [samusPose], a
-    .endIf_D:
-    ; A collision happened
+    .endIf_D: ;}
+    
+    ; A collision happened - set the carry flag
     scf
 ret
 
 .exit_noHit:
-;.exit_noHit:
+    ; pop the enemy base address off the stack
     pop hl
+    ; Clear the carry flag
     scf
     ccf
 ret ;}
@@ -8153,18 +8199,18 @@ Call_000_31f1: ;{ 00:31F1
     ld a, [hl+]
     cp $e0
         jp nc, Jump_000_32a7
-    ldh [$b7], a
+    ldh [hCollision_enY], a
     ld a, [hl+]
     cp $e0
         jp nc, Jump_000_32a7
 
-    ldh [$b8], a
+    ldh [hCollision_enX], a
     ld a, [hl+]
-    ldh [$b9], a
+    ldh [hCollision_enSprite], a
     inc hl
     ld a, [hl]
-    ldh [$bf], a
-    ldh a, [$b9]
+    ldh [hCollision_enAttr], a
+    ldh a, [hCollision_enSprite]
     ld e, a
     ld d, $00
     ld hl, enemyDamageTable
@@ -8173,7 +8219,7 @@ Call_000_31f1: ;{ 00:31F1
     and a
         jp z, Jump_000_32a7
 
-    ldh a, [$b9]
+    ldh a, [hCollision_enSprite]
     sla a
     ld e, a
     ld d, $00
@@ -8185,64 +8231,64 @@ Call_000_31f1: ;{ 00:31F1
     ld a, [hl]
     ld h, a
     ld l, e
-    ldh a, [$b7]
+    ldh a, [hCollision_enY]
     ld b, a
-    ldh a, [$bf]
+    ldh a, [hCollision_enAttr]
     bit 6, a
     jr nz, jr_000_323d
         ld a, [hl+]
         add b
-        ldh [$ba], a
+        ldh [hCollision_enTop], a
         ld a, [hl+]
         add b
-        ldh [$bb], a
+        ldh [hCollision_enBottom], a
         jr jr_000_3247
     jr_000_323d:
         ld a, [hl+]
         sub b
         cpl
-        ldh [$bb], a
+        ldh [hCollision_enBottom], a
         ld a, [hl+]
         sub b
         cpl
-        ldh [$ba], a
+        ldh [hCollision_enTop], a
     jr_000_3247:
 
-    ldh a, [$b8]
+    ldh a, [hCollision_enX]
     ld b, a
-    ldh a, [$bf]
+    ldh a, [hCollision_enAttr]
     bit 5, a
     jr nz, jr_000_325a
         ld a, [hl+]
         add b
-        ldh [$bc], a
+        ldh [hCollision_enLeft], a
         ld a, [hl+]
         add b
-        ldh [$bd], a
+        ldh [hCollision_enRight], a
         jr jr_000_3264
     jr_000_325a:
         ld a, [hl+]
         sub b
         cpl
-        ldh [$bd], a
+        ldh [hCollision_enRight], a
         ld a, [hl+]
         sub b
         cpl
-        ldh [$bc], a
+        ldh [hCollision_enLeft], a
     jr_000_3264:
 
-    ldh a, [$ba]
+    ldh a, [hCollision_enTop]
     ld b, a
-    ldh a, [$bb]
+    ldh a, [hCollision_enBottom]
     sub b
     ld c, a
     ldh a, [$98]
     sub b
     cp c
         jr nc, jr_000_32a7
-    ldh a, [$bc]
+    ldh a, [hCollision_enLeft]
     ld b, a
-    ldh a, [$bd]
+    ldh a, [hCollision_enRight]
     sub b
     ld c, a
     ldh a, [$99]
@@ -8261,7 +8307,7 @@ Call_000_31f1: ;{ 00:31F1
     ld a, [weaponType]
     cp $08
     jr nz, jr_000_32a5
-        ldh a, [$b9]
+        ldh a, [hCollision_enSprite]
         cp $f6
         jr nz, jr_000_32a5
             ld a, $10
@@ -8355,25 +8401,25 @@ Call_000_3324: ;{ 00:3324
     ld a, [hl+]
     cp $e0
         jp nc, Jump_000_3489
-    ldh [$b7], a
+    ldh [hCollision_enY], a
     ld a, [hl+]
     cp $e0
         jp nc, Jump_000_3489
 
-    ldh [$b8], a
+    ldh [hCollision_enX], a
     ld a, [hl+]
-    ldh [$b9], a
+    ldh [hCollision_enSprite], a
     inc hl
     ld a, [hl+]
-    ldh [$bf], a
+    ldh [hCollision_enAttr], a
     inc hl
     inc hl
     inc hl
     inc hl
     inc hl
     ld a, [hl]
-    ldh [$be], a
-    ldh a, [$b9]
+    ldh [hCollision_enIce], a
+    ldh a, [hCollision_enSprite]
     sla a
     ld e, a
     ld d, $00
@@ -8385,58 +8431,58 @@ Call_000_3324: ;{ 00:3324
     ld a, [hl]
     ld h, a
     ld l, e
-    ldh a, [$b7]
+    ldh a, [hCollision_enY]
     ld b, a
-    ldh a, [$bf]
+    ldh a, [hCollision_enAttr]
     bit 6, a
     jr nz, jr_000_336e
         ld a, [hl+]
         add b
         sub $11
-        ldh [$ba], a
+        ldh [hCollision_enTop], a
         ld a, [hl+]
         add b
         sub $04
-        ldh [$bb], a
+        ldh [hCollision_enBottom], a
         jr jr_000_337c
     jr_000_336e:
         ld a, [hl+]
         sub b
         cpl
         sub $04
-        ldh [$bb], a
+        ldh [hCollision_enBottom], a
         ld a, [hl+]
         sub b
         cpl
         sub $11
-        ldh [$ba], a
+        ldh [hCollision_enTop], a
     jr_000_337c:
 
-    ldh a, [$b8]
+    ldh a, [hCollision_enX]
     ld b, a
-    ldh a, [$bf]
+    ldh a, [hCollision_enAttr]
     bit 5, a
     jr nz, jr_000_3393
         ld a, [hl+]
         add b
         sub $05
-        ldh [$bc], a
+        ldh [hCollision_enLeft], a
         ld a, [hl+]
         add b
         add $05
-        ldh [$bd], a
+        ldh [hCollision_enRight], a
         jr jr_000_33a1
     jr_000_3393:
         ld a, [hl+]
         sub b
         cpl
         add $05
-        ldh [$bd], a
+        ldh [hCollision_enRight], a
         ld a, [hl+]
         sub b
         cpl
         sub $05
-        ldh [$bc], a
+        ldh [hCollision_enLeft], a
     jr_000_33a1:
 
     ld a, [samusPose]
@@ -8447,12 +8493,12 @@ Call_000_3324: ;{ 00:3324
     add hl, de
     ld a, [hl+]
     ld b, a
-    ldh a, [$bb]
+    ldh a, [hCollision_enBottom]
     sub b
-    ldh [$bb], a
-    ldh a, [$ba]
+    ldh [hCollision_enBottom], a
+    ldh a, [hCollision_enTop]
     ld b, a
-    ldh a, [$bb]
+    ldh a, [hCollision_enBottom]
     sub b
     ld c, a
     ldh a, [$98]
@@ -8461,12 +8507,12 @@ Call_000_3324: ;{ 00:3324
         jp nc, Jump_000_3489
     ld a, $01
     ld [$c423], a
-    ldh a, [$bc]
+    ldh a, [hCollision_enLeft]
     ld b, a
     ldh a, [$99]
     sub b
     ld c, a
-    ldh a, [$bd]
+    ldh a, [hCollision_enRight]
     sub b
     ld d, a
     srl d
@@ -8491,7 +8537,7 @@ Call_000_3324: ;{ 00:3324
         jr nz, jr_000_3421
 
 jr_000_33f6:
-    ldh a, [$be]
+    ldh a, [hCollision_enIce]
     and a
     jr z, jr_000_33ff
 
@@ -8499,7 +8545,7 @@ jr_000_33f6:
     jr z, jr_000_3426
 
 jr_000_33ff:
-    ldh a, [$b9]
+    ldh a, [hCollision_enSprite]
     ld e, a
     ld d, $00
     ld hl, enemyDamageTable
@@ -8522,13 +8568,13 @@ jr_000_33ff:
 
 
 jr_000_3421:
-    ldh a, [$be]
+    ldh a, [hCollision_enIce]
     and a
     jr z, jr_000_3448
 
 jr_000_3426:
     pop hl
-    ldh a, [$b9]
+    ldh a, [hCollision_enSprite]
     cp $f7
     jr nz, jr_000_3446
         ld a, [samusPose]
@@ -8550,7 +8596,7 @@ ret
 
 
 jr_000_3448:
-    ldh a, [$b9]
+    ldh a, [hCollision_enSprite]
     ld e, a
     ld d, $00
     ld hl, enemyDamageTable
@@ -8714,25 +8760,25 @@ Call_000_3545: ;{
     ld a, [hl+]
     cp $e0
         jp nc, Jump_000_3694
-    ldh [$b7], a
+    ldh [hCollision_enY], a
     ld a, [hl+]
     cp $e0
         jp nc, Jump_000_3694
 
-    ldh [$b8], a
+    ldh [hCollision_enX], a
     ld a, [hl+]
-    ldh [$b9], a
+    ldh [hCollision_enSprite], a
     inc hl
     ld a, [hl+]
-    ldh [$bf], a
+    ldh [hCollision_enAttr], a
     inc hl
     inc hl
     inc hl
     inc hl
     inc hl
     ld a, [hl]
-    ldh [$be], a
-    ldh a, [$b9]
+    ldh [hCollision_enIce], a
+    ldh a, [hCollision_enSprite]
     sla a
     ld e, a
     ld d, $00
@@ -8744,59 +8790,59 @@ Call_000_3545: ;{
     ld a, [hl]
     ld h, a
     ld l, e
-    ldh a, [$b7]
+    ldh a, [hCollision_enY]
     ld b, a
-    ldh a, [$bf]
+    ldh a, [hCollision_enAttr]
     bit 6, a
     jr nz, jr_000_358b
         ld a, [hl+]
         add b
-        ldh [$ba], a
+        ldh [hCollision_enTop], a
         ld a, [hl+]
         add b
-        ldh [$bb], a
+        ldh [hCollision_enBottom], a
         jr jr_000_3595
     jr_000_358b:
         ld a, [hl+]
         sub b
         cpl
-        ldh [$bb], a
+        ldh [hCollision_enBottom], a
         ld a, [hl+]
         sub b
         cpl
-        ldh [$ba], a
+        ldh [hCollision_enTop], a
     jr_000_3595:
 
-    ldh a, [$b8]
+    ldh a, [hCollision_enX]
     ld b, a
-    ldh a, [$bf]
+    ldh a, [hCollision_enAttr]
     bit 5, a
     jr nz, jr_000_35ac
         ld a, [hl+]
         add b
         sub $05
-        ldh [$bc], a
+        ldh [hCollision_enLeft], a
         ld a, [hl+]
         add b
         add $05
-        ldh [$bd], a
+        ldh [hCollision_enRight], a
         jr jr_000_35ba
     jr_000_35ac:
         ld a, [hl+]
         sub b
         cpl
         add $05
-        ldh [$bd], a
+        ldh [hCollision_enRight], a
         ld a, [hl+]
         sub b
         cpl
         sub $05
-        ldh [$bc], a
+        ldh [hCollision_enLeft], a
     jr_000_35ba:
 
-    ldh a, [$ba]
+    ldh a, [hCollision_enTop]
     ld b, a
-    ldh a, [$bb]
+    ldh a, [hCollision_enBottom]
     sub b
     ld c, a
     ldh a, [$98]
@@ -8806,12 +8852,12 @@ Call_000_3545: ;{
         jp nc, Jump_000_3694
     ld a, $01
     ld [$c423], a
-    ldh a, [$bc]
+    ldh a, [hCollision_enLeft]
     ld b, a
     ldh a, [$99]
     sub b
     ld c, a
-    ldh a, [$bd]
+    ldh a, [hCollision_enRight]
     sub b
     ld d, a
     srl d
@@ -8835,14 +8881,14 @@ Call_000_3545: ;{
         jr nz, jr_000_3629
 
 jr_000_35fe:
-    ldh a, [$be]
+    ldh a, [hCollision_enIce]
     and a
     jr z, jr_000_3607
         bit 0, a
         jr z, jr_000_362e
     jr_000_3607:
 
-    ldh a, [$b9]
+    ldh a, [hCollision_enSprite]
     ld e, a
     ld d, $00
     ld hl, enemyDamageTable
@@ -8864,13 +8910,13 @@ jr_000_35fe:
 
 
 jr_000_3629:
-    ldh a, [$be]
+    ldh a, [hCollision_enIce]
     and a
     jr z, jr_000_3650
 
 jr_000_362e:
     pop hl
-    ldh a, [$b9]
+    ldh a, [hCollision_enSprite]
     cp $f7
     jr nz, jr_000_364e
         ld a, [samusPose]
@@ -8892,7 +8938,7 @@ ret
 
 
 jr_000_3650:
-    ldh a, [$b9]
+    ldh a, [hCollision_enSprite]
     and a
     jr z, jr_000_362e
 

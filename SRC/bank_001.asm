@@ -23,7 +23,7 @@ VBlank_updateStatusBar:
         ret nz
 
     ; Prep energy tank graphics
-    ld hl, $ffb7
+    ld hl, hHUD_tank1
     ; Fill buffer with blank spaces
     ld a, $af ; Blank space
     ld [hl+], a
@@ -38,7 +38,7 @@ VBlank_updateStatusBar:
     jr z, .else_A
         ; Pre-fill buffer with empty tanks
         ld b, a
-        ld hl, $ffb7
+        ld hl, hHUD_tank1
         ld a, $9c ; Empty tank
     
         .loop_A: ; Loop for max tanks
@@ -51,7 +51,7 @@ VBlank_updateStatusBar:
         jr z, .endIf_A
             ; Fill buffer with full tanks
             ld b, a
-            ld hl, $ffb7
+            ld hl, hHUD_tank1
             ld a, $9d ; Filled tank
         
             .loop_B: ; Loop for full tanks
@@ -63,7 +63,7 @@ VBlank_updateStatusBar:
     .else_A:
         ; Draw E
         ld a, $aa ; E
-        ldh [$b7], a
+        ldh [hHUD_tank1], a
     .endIf_A:
 
     ; Adjust draw destination depending on if in the Queen fight or not
@@ -78,15 +78,15 @@ VBlank_updateStatusBar:
     .endIf_B:
 
     ; Draw enery tanks
-    ldh a, [$bb]
+    ldh a, [hHUD_tank5]
     ld [hl+], a
-    ldh a, [$ba]
+    ldh a, [hHUD_tank4]
     ld [hl+], a
-    ldh a, [$b9]
+    ldh a, [hHUD_tank3]
     ld [hl+], a
-    ldh a, [$b8]
+    ldh a, [hHUD_tank2]
     ld [hl+], a
-    ldh a, [$b7]
+    ldh a, [hHUD_tank1]
     ld [hl+], a
     ld a, $9e ; Dash
     ld [hl+], a
@@ -2006,7 +2006,7 @@ Call_001_540e:
                         add $31
                         ldh [hSpriteId], a
                         call drawSamusSprite
-                        call Call_000_30bb
+                        call collision_bombEnemies
                         ld a, $0c
                         ld [sfxRequest_noise], a
                         jr jr_001_5490

@@ -16,7 +16,7 @@ hInputRisingEdge:: ds 1 ;$FF81: New input
 hVBlankDoneFlag:: ds 1 ;$FF82: V-blank handled flag
 
 hUnusedHRAM_1::   ds 9 ; $FF83-$FF8B - 9 unused bytes!?
-hUnusedFlag_1::   ds 1 ; $FF8C: Set to C0h by update in-game timer and wait a frame. Otherwise unused
+hUnusedFlag_1::   ds 1 ; $FF8C: Set to C0h by update in-game timer and wait a frame. Otherwise unused. (Likely meant to be the high byte of the OAM index.)
 
 hOamBufferIndex:: ds 1 ; FF8D: OAM buffer index
 
@@ -97,18 +97,30 @@ hVramTransfer:
 .sizeHigh:     ds 1 ; $FFB6:
 
 ;$FFB7..BB: Energy tank graphics, other stuff too though
+; $FFB7: Working projectile pointer (low byte)
+hHUD_tank1: ; $FFB7 - Energy tank 1 (or E graphic)
+hCollision_enY:      ds 1 ;$FFB7: Working enemy Y position         in $30EA/$31F1. Two byte address of projectile slot in $1:500D.
 
-;$FFB7: Working enemy Y position         in $30EA/$31F1. Two byte address of projectile slot in $1:500D.
-;$FFB8: Working enemy X position         in $30EA/$31F1.
-;$FFB9: Working enemy sprite ID position in $30EA/$31F1. Working projectile type in $1:500D.
-;$FFBA: Working enemy top boundary       in $30EA/$31F1. Working projectile wave index in $1:500D
-;$FFBB: Working enemy bottom boundary    in $30EA/$31F1. Working projectile frame counter in $1:500D
-;$FFBC: Working enemy left boundary      in $30EA/$31F1.
-;$FFBD: Working enemy right boundary     in $30EA/$31F1.
-;
-;$FFBF: Working enemy flip flags         in $30EA/$31F1
+; $FFB8: Working projectile pointer (high byte)
+hHUD_tank2: ; $FFB8 - Energy tank 2
+hCollision_enX:      ds 1 ;$FFB8: Working enemy X position         in $30EA/$31F1.
 
-section "HRAM part 2", HRAM[$ffc0]
+; $FFB9: Working projectile type
+hHUD_tank3: ; $FFB9 - Energy tank 3
+hCollision_enSprite: ds 1 ;$FFB9: Working enemy sprite ID position in $30EA/$31F1. Working projectile type in $1:500D.
+
+; $FFBA: Working projectile wave index
+hHUD_tank4: ; $FFBA - Energy tank 4
+hCollision_enTop:    ds 1 ;$FFBA: Working enemy top boundary       in $30EA/$31F1. Working projectile wave index in $1:500D
+
+; $FFBB: Working projectile frame counter
+hHUD_tank5: ; $FFBB - Energy tank 5
+hCollision_enBottom: ds 1 ;$FFBB: Working enemy bottom boundary    in $30EA/$31F1. Working projectile frame counter in $1:500D
+hCollision_enLeft:   ds 1 ;$FFBC: Working enemy left boundary      in $30EA/$31F1.
+hCollision_enRight:  ds 1 ;$FFBD: Working enemy right boundary     in $30EA/$31F1.
+hCollision_enIce:    ds 1 ;$FFBE: Working enemy ice counter
+hCollision_enAttr:   ds 1 ;$FFBF: Working enemy flip flags         in $30EA/$31F1
+
 
 hSamusYPixel::  ds 1 ;$FFC0: Samus' Y position (pixel)
 hSamusYScreen:: ds 1 ;$FFC1: Samus' Y position (screen)
