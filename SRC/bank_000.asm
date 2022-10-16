@@ -714,7 +714,7 @@ gameMode_Main: ;{ 00:04DF
         ; Only allow toggling missiles as input
         ldh a, [hInputRisingEdge]
         bit PADB_SELECT, a
-            call nz, toggleMissiles
+            call nz, samus_tryShooting.toggleMissiles
         jr .endIf_A
     .else_A:
         ; Check if in a door transition
@@ -727,8 +727,8 @@ gameMode_Main: ;{ 00:04DF
             ld [$d05c], a
             call hurtSamus ; Damage Samus
             call samus_handlePose ; Samus pose handler
-            call Call_000_32ab ; ? Samus/enemy collision logic
-            call Call_000_21fb ; Handle shooting or toggling cannon
+            call collision_samusEnemies.standard ; ? Samus/enemy collision logic
+            call samus_tryShooting ; Handle shooting or toggling cannon
             call handleProjectiles_longJump ; Handle projectiles
             call Call_000_3d99 ; Handle bombs
     .endIf_A:
@@ -787,8 +787,8 @@ ret
     ld [$d05c], a
     ; Do various common things
     call samus_handlePose
-    call Call_000_32ab
-    call Call_000_21fb
+    call collision_samusEnemies.standard
+    call samus_tryShooting
     call handleProjectiles_longJump
     call Call_000_3d99
     call prepMapUpdate
@@ -4484,7 +4484,7 @@ collision_checkSpiderSet: ;{ 00:1A42
         ld [spiderContactState], a
         jr .endIf_D
     .else_D:
-        call Call_000_348d ; Sprite collision for bottom?
+        call collision_samusEnemiesDown ; Sprite collision for bottom?
         jr nc, .endIf_D
             ld a, [spiderContactState]
             or %1010
@@ -4575,8 +4575,7 @@ samus_groundUnmorph_cont: ;{ 00:1B6B - Unmorph on ground, continued
     ; Clear vertical speed
     xor a
     ld [samus_speedDown], a
-ret
-;}
+ret ;}
 
 samus_morphOnGround: ;{ 00:1BA4
     ; Set pose
@@ -4588,10 +4587,11 @@ samus_morphOnGround: ;{ 00:1BA4
     ; Play morphing sound
     ld a, $06
     ld [sfxRequest_square1], a
-ret
-;}
+ret ;}
 
 samus_unmorphInAir: ;{ 00:1BB3
+; Check top row of tiles
+    ; Check upper-left tile
     ldh a, [hSamusYPixel]
     add $08
     ld [tileY], a
@@ -4602,7 +4602,7 @@ samus_unmorphInAir: ;{ 00:1BB3
     ld hl, samusSolidityIndex
     cp [hl]
         jr c, .exit
-
+    ; Check upper-right tile
     ldh a, [hSamusXPixel]
     add $14
     ld [tileX], a
@@ -4610,7 +4610,8 @@ samus_unmorphInAir: ;{ 00:1BB3
     ld hl, samusSolidityIndex
     cp [hl]
         jr c, .exit
-
+; Check lower row of tiles
+    ; Check lower-left tile
     ldh a, [hSamusYPixel]
     add $18
     ld [tileY], a
@@ -4621,7 +4622,7 @@ samus_unmorphInAir: ;{ 00:1BB3
     ld hl, samusSolidityIndex
     cp [hl]
         jr c, .exit
-
+    ; Check lower-right tile
     ldh a, [hSamusXPixel]
     add $14
     ld [tileX], a
@@ -4630,36 +4631,45 @@ samus_unmorphInAir: ;{ 00:1BB3
     cp [hl]
         jr c, .exit
 
+    ; Set pose
     ld a, pose_fall
     ld [samusPose], a
+    ; Fall
     ld a, $04
     ld [sfxRequest_square1], a
 ret
     .exit:
-ret
-;}
+ret ;}
 
 ; Samus movement functions {
 ; Move right (walking)
 samus_walkRight: ;{ 00:1C0D
+    ; Set facing direction
     ld a, $01
     ld [samusFacingDirection], a
+; Set speed
+    ; Water walking speed
     ld b, $01
+    ; Check if touching water
     ld a, [waterContactFlag]
     and a
     jr nz, .endIf
+        ; If not, then check equipment
         ld a, [samusItems]
         bit itemBit_varia, a
         jr z, .else
+            ; Varia walking speed
             ld b, $02
             jr .endIf
         .else:
+            ; Normal walking speed (1.5 px/f)
             ldh a, [frameCounter]
             and $01
             add $01
             ld b, a
     .endIf:
-
+    
+    ; Move Samus right
     ldh a, [hSamusXPixel]
     add b
     ldh [hSamusXPixel], a
@@ -4667,39 +4677,53 @@ samus_walkRight: ;{ 00:1C0D
     adc $00
     and $0f
     ldh [hSamusXScreen], a
+    ; Unnecessary write to this variable (since the collision function immediately overwrites it)
     ld [tileX], a
+
+    ; Perform collision test
     call collision_samusHorizontal.right
     jr nc, .keepResults
+        ; Revert to previous X position if we hit something
         ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
         ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
     .keepResults:
+        ; Keep results
+        ; Set camera speed
         ld a, b
         ld [camera_speedRight], a
         ret
 ;} end proc
 
 samus_walkLeft: ;{ 00:1C51
+    ; Set facing direction
     xor a
     ld [samusFacingDirection], a
+; Set speed
+    ; Water speed
     ld b, $01
+    ; Check if touching water
     ld a, [waterContactFlag]
     and a
     jr nz, .endIf
+        ; If not, then check equipment
         ld a, [samusItems]
         bit itemBit_varia, a
         jr z, .else
+            ; Varia walking speed
             ld b, $02
             jr .endIf
         .else:
+            ; Normal walking speed (1.5 px/f)
             ldh a, [frameCounter]
             and $01
             add $01
             ld b, a
     .endIf:
 
+    ; Move Samus left
     ldh a, [hSamusXPixel]
     sub b
     ldh [hSamusXPixel], a
@@ -4707,15 +4731,21 @@ samus_walkLeft: ;{ 00:1C51
     sbc $00
     and $0f
     ldh [hSamusXScreen], a
+    ; Unnecessary write to this variable (since the collision function immediately overwrites it)
     ld [tileX], a
+    
+    ; Perform collision test
     call collision_samusHorizontal.left
     jr nc, .keepResults
+        ; Revert to previous X position if we hit something
         ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
         ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
     .keepResults:
+        ; Keep results
+        ; Set camera speed
         ld a, b
         ld [camera_speedLeft], a
         ret
@@ -4728,9 +4758,13 @@ samus_rollRight: ;{
     .morph: ; 00:1C98 - Entry point for morph
         ld a, $02
 .start:
+    ; Set speed
     ld b, a
+    ; Set facing direction
     ld a, $01
     ld [samusFacingDirection], a
+    
+    ; Move right
     ldh a, [hSamusXPixel]
     add b
     ldh [hSamusXPixel], a
@@ -4738,16 +4772,21 @@ samus_rollRight: ;{
     adc $00
     and $0f
     ldh [hSamusXScreen], a
+    ; Unnecessary write to this variable (since the collision function immediately overwrites it)
     ld [tileX], a
+    
+    ; Perform collision test
     call collision_samusHorizontal.right
     jr nc, .keepResults
-        ; Revert to previous position
+        ; Revert to previous X position if we hit something
         ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
         ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
     .keepResults:
+        ; Keep results
+        ; Set camera speed
         ld a, b
         ld [camera_speedRight], a
         ret
@@ -4760,28 +4799,35 @@ samus_rollLeft: ;{
     .morph: ; 00:1CC9 - Entry point for morph
         ld a, $02
 .start:
+    ; Set speed
     ld b, a
+    ; Set facing direction
     xor a
     ld [samusFacingDirection], a
-
+    
+    ; Move left
     ldh a, [hSamusXPixel]
     sub b
     ldh [hSamusXPixel], a
-    
     ldh a, [hSamusXScreen]
     sbc $00
     and $0f
     ldh [hSamusXScreen], a
-    
+    ; Unnecessary write to this variable (since the collision function immediately overwrites it)
     ld [tileX], a
+    
+    ; Perform collision test
     call collision_samusHorizontal.left
-    jr nc, jr_000_1cf0
+    jr nc, .keepResults
+        ; Revert to previous X position if we hit something
         ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
         ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
-    jr_000_1cf0:
+    .keepResults:
+        ; Keep results
+        ; Set camera speed
         ld a, b
         ld [camera_speedLeft], a
         ret
@@ -4789,11 +4835,15 @@ samus_rollLeft: ;{
 
 samus_moveRightInAir: ;{ 00:1CF5
 .turn:
+    ; Set facing direction
     ld a, $01
     ld [samusFacingDirection], a
 .noTurn: ; 00:1CFA Alternate entry
+    ; Set speed
     ld a, $01
     ld b, a
+    
+    ; Move right
     ldh a, [hSamusXPixel]
     add b
     ldh [hSamusXPixel], a
@@ -4801,16 +4851,21 @@ samus_moveRightInAir: ;{ 00:1CF5
     adc $00
     and $0f
     ldh [hSamusXScreen], a    
+    ; Unnecessary write to this variable (since the collision function immediately overwrites it)
     ld [tileX], a
+    
+    ; Perform collision test
     call collision_samusHorizontal.right
     jr nc, .keepResults
-        ; Revert to previous position
+        ; Revert to previous X position if we hit something
         ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
         ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
     .keepResults:
+        ; Keep results
+        ; Set camera speed
         ld a, b
         ld [camera_speedRight], a
         ret
@@ -4818,11 +4873,15 @@ samus_moveRightInAir: ;{ 00:1CF5
 
 samus_moveLeftInAir: ;{ 00:1D22
 .turn:
+    ; Set facing direction
     xor a
     ld [samusFacingDirection], a
 .noTurn: ; 00:1D26 - Alternate entry
+    ; Set speed
     ld a, $01
     ld b, a
+    
+    ; Move left
     ldh a, [hSamusXPixel]
     sub b
     ldh [hSamusXPixel], a
@@ -4830,29 +4889,38 @@ samus_moveLeftInAir: ;{ 00:1D22
     sbc $00
     and $0f
     ldh [hSamusXScreen], a
+    ; Unnecessary write to this variable (since the collision function immediately overwrites it)
     ld [tileX], a
+    
+    ; Perform collision test
     call collision_samusHorizontal.left
     jr nc, .keepResults
-        ; Revert to previous position
+        ; Revert to previous X position if we hit something
         ld a, [prevSamusXPixel]
         ldh [hSamusXPixel], a
         ld a, [prevSamusXScreen]
         ldh [hSamusXScreen], a
         ret
     .keepResults:
+        ; Keep results
+        ; Set camera speed
         ld a, b
         ld [camera_speedLeft], a
         ret
 ;}
 
+; Note: The caller might provide the speed in A
 samus_moveVertical: ;{ 00:1D4E - move down
     ; Move up if negative
     bit 7, a
         jr nz, .moveUp
     ; else, move down
+    ; Set speed
     ld b, a
     ld a, b
     ld [samus_speedDownTemp], a
+    
+    ; Move down
     ldh a, [hSamusYPixel]
     add b
     ldh [hSamusYPixel], a
@@ -4860,19 +4928,26 @@ samus_moveVertical: ;{ 00:1D4E - move down
     adc $00
     and $0f
     ldh [hSamusYScreen], a
+    ; Loading speed to A for no apparent reason
     ld a, b
+    
+    ; Perform collision test
     call collision_samusBottom
     jr nc, .keepResults
+        ; Revert to previous X position if we hit something
         ld a, [prevSamusYPixel]
         ldh [hSamusYPixel], a
         ld a, [prevSamusYScreen]
         ldh [hSamusYScreen], a
+        ; Set carry so the caller knows we hit something
         scf
         ret
     .keepResults:
+        ; Check if we're touching water
         ld a, [waterContactFlag]
         and a
         jr z, .endIf
+            ; If so, halve the speed
             srl b
             ld a, [prevSamusYPixel]
             add b
@@ -4881,19 +4956,25 @@ samus_moveVertical: ;{ 00:1D4E - move down
             adc $00
             ldh [hSamusYScreen], a
         .endIf:
+        ; Set camera speed
         ld a, b
         ld [camera_speedDown], a
+        ; Set downwards speed for later use (e.g. morph bouncing)
         ld a, [samus_speedDownTemp]
         ld [samus_speedDown], a
         ret
 
 .moveUp:
+    ; Negate speed value so it's positive
     cpl
     inc a
 ;} Fall-through to move up routine
     
 samus_moveUp: ;{ 00:1D98 - Move up (only directly called by spider ball)
+    ; Set speed
     ld b, a
+
+    ; Move up
     ldh a, [hSamusYPixel]
     sub b
     ldh [hSamusYPixel], a
@@ -4901,10 +4982,15 @@ samus_moveUp: ;{ 00:1D98 - Move up (only directly called by spider ball)
     sbc $00
     and $0f
     ldh [hSamusYScreen], a
+    ; Loading speed to A for no apparent reason
     ld a, b
+    
+    ; Perform collision test
     call collision_samusTop
     jr nc, .keepResults
+        ; Bonk head on ceiling if we hit something
         ld a, samus_jumpArrayBaseOffset + $16 ;$56
+        ; Revert to previous X position
         ld [samus_jumpArcCounter], a
         ld a, [prevSamusYPixel]
         ldh [hSamusYPixel], a
@@ -4912,9 +4998,11 @@ samus_moveUp: ;{ 00:1D98 - Move up (only directly called by spider ball)
         ldh [hSamusYScreen], a
         ret
     .keepResults:
+        ; Check if touching water
         ld a, [waterContactFlag]
         and a
         jr z, .endIf
+            ; Halve speed if so
             srl b
             ld a, [prevSamusYPixel]
             sub b
@@ -4923,6 +5011,7 @@ samus_moveUp: ;{ 00:1D98 - Move up (only directly called by spider ball)
             sbc $00
             ldh [hSamusYScreen], a
         .endIf:
+        ; Set camera speed
         ld a, b
         ld [camera_speedUp], a
         ret
@@ -4948,7 +5037,7 @@ collision_samusHorizontal: ;{ Has two entry points (left and right)
         add $14
         ld [tileX], a
 .start: ; Start
-    call Call_000_32cf ; Sprite collision?
+    call collision_samusEnemies.horizontal ; Sprite collision?
         jp c, .exit
 
     ld hl, table_20FF
@@ -5043,7 +5132,7 @@ collision_samusTop: ;{ 00:1E88
     push hl
     push de
     push bc
-    call Call_000_34ef ; Sprite collision?
+    call collision_samusEnemiesUp ; Sprite collision?
         jp c, .exit
 
 ; Top left side
@@ -5139,7 +5228,7 @@ collision_samusBottom: ;{ 00:1F0F
     push hl
     push de
     push bc
-    call Call_000_348d ; Sprite collision?
+    call collision_samusEnemiesDown ; Sprite collision?
     jr nc, .endIf_A
         ld a, $01
         ld [samus_onSolidSprite], a
@@ -5446,26 +5535,26 @@ spiderDirectionTable:
 ;}
 
 table_20E9: ;{ 00:20E9 - Samus pose related (y pixel offsets?)
-    db $08
-    db $14
-    db $1A
-    db $08
-    db $10
-    db $20
-    db $20
-    db $10
-    db $20
-    db $10
-    db $10
-    db $20
-    db $20
-    db $20
-    db $20
-    db $10
-    db $20
-    db $10
-    db $20
-    db $08
+    db $08 ; $00 Standing
+    db $14 ; $01 Jumping
+    db $1A ; $02 Spin-jumping
+    db $08 ; $03 Running (set to 83h when turning)
+    db $10 ; $04 Crouching
+    db $20 ; $05 Morphball
+    db $20 ; $06 Morphball jumping
+    db $10 ; $07 Falling
+    db $20 ; $08 Morphball falling
+    db $10 ; $09 Starting to jump
+    db $10 ; $0A Starting to spin-jump
+    db $20 ; $0B Spider ball rolling
+    db $20 ; $0C Spider ball falling
+    db $20 ; $0D Spider ball jumping
+    db $20 ; $0E Spider ball
+    db $10 ; $0F Knockback
+    db $20 ; $10 Morphball knockback
+    db $10 ; $11 Standing bombed
+    db $20 ; $12 Morphball bombed
+    db $08 ; $13 Facing screen
     db $20
     db $20
 ;}
@@ -5516,19 +5605,22 @@ clearProjectileArray: ;{ 00:21EF
 ret
 ;}
 
-Call_000_21fb:
+; Procedure has two entry points
+samus_tryShooting: ;{ 00:21FB
+    ; Don't allow toggling missiles if facing the screen
     ld a, [samusPose]
     cp pose_faceScreen
         jp z, samusShoot_longJump
+    ; Don't allow toggling missiles if the queen is dying
     ld a, [queen_eatingState]
     cp $22
         jp z, samusShoot_longJump
+    ; Toggle missiles if select is pressed
     ldh a, [hInputRisingEdge]
     bit PADB_SELECT, a
         jp z, samusShoot_longJump
-
 ; Switch between missiles and beams
-toggleMissiles: ; 00:2212
+.toggleMissiles: ; 00:2212
     ; Check if missiles are active
     ld a, [samusActiveWeapon]
     cp $08
@@ -5555,6 +5647,7 @@ toggleMissiles: ; 00:2212
         ld a, $15
         ld [sfxRequest_square1], a
         ret
+;}
 
 ; 00:2242
 gfxInfo_cannonMissile: db BANK(gfx_cannonMissile)
@@ -5564,21 +5657,26 @@ gfxInfo_cannonBeam: db BANK(gfx_cannonBeam)
     dw gfx_cannonBeam, vramDest_cannon, $0020
 
 ; Function returns the tile number for a particular x-y tile on the tilemap
-enemy_getTileIndex: ; 00:2250 - Called by enemy routines
+;  Function has two entry points
+getTileIndex: ;{ 00:2250 - Called by enemy routines
+    .enemy:
     ; Adjust enemy coordinates (in camera-space) to map-space coordinates
+    ; tileY = scrollY + enemyY
     ld a, [scrollY]
     ld b, a
     ld a, [enemy_testPointYPos]
     add b
     ld [tileY], a
+    ; tileX = scrollX + enemyX
     ld a, [scrollX]
     ld b, a
     ld a, [enemy_testPointXPos]
     add b
     ld [tileX], a
-    
-beam_getTileIndex: ; 00:2266 - Entry point for beam routines
+.projectile: ; 00:2266 - Entry point for beam routines
+    ; Get address of tile
     call getTilemapAddress
+    ; Adjust address based on which tilemap is active (unused functionality?)
     ld a, [gameOver_LCDC_copy]
     and $08
     jr z, .endIf
@@ -5588,21 +5686,23 @@ beam_getTileIndex: ; 00:2266 - Entry point for beam routines
         ld [pTilemapDestHigh], a
     .endIf
 
+    ; Wait for HBlank and read once
     .waitLoop_A:
         ldh a, [rSTAT]
         and $03
     jr nz, .waitLoop_A
-
     ld b, [hl]
 
+    ; Wait for HBlank and try reading again
     .waitLoop_B:
         ldh a, [rSTAT]
         and $03
     jr nz, .waitLoop_B
-
     ld a, [hl]
+
+    ; Combine results of the two read attempts
     and b
-ret
+ret ;}
 
 main_readInput: ;{ 00:2287
     ; Select d-pad to read
@@ -7930,6 +8030,8 @@ unusedDeathAnimation: ;{ 00:3062
     pop af
 reti ;}
 
+; Sprite collision routines 
+
 ; 00:30BB - Bomb-enemy collision detection
 collision_bombEnemies: ;{ 00:30BB
     ; Set temp variables to bomb coordinates
@@ -8379,51 +8481,49 @@ ret
 ret ;}
 
 ; Note: Function has two entry points
-Call_000_32ab: ;{ Samus enemy collision detection loop
-    ; Conditions for exiting early early
-    ld a, [samusPose]
-    cp pose_beingEaten ; $18
-        jp nc, Jump_000_3698
-    ld a, [deathFlag]
-    and a
-        jp nz, Jump_000_3698
-    ld a, [samusInvulnerableTimer]
-    and a
-        jp nz, Jump_000_3698
-    ld a, [$d05c]
-    and a
-        jp nz, Jump_000_3698
-
-    ld a, [samus_onscreenXPos]
-    ldh [$99], a
-    jr jr_000_32f7
-
-Call_000_32cf: ; Samus horizontal collision
-    ld a, [samusPose]
-    cp pose_beingEaten ; $18
-        jp nc, Jump_000_3698
-    ld a, [deathFlag]
-    and a
-        jp nz, Jump_000_3698
-    ld a, [deathAnimTimer]
-    and a
-        jp nz, Jump_000_3698
-    ld a, [samusInvulnerableTimer]
-    and a
-        jp nz, Jump_000_3698
-    ldh a, [hCameraXPixel]
-    ld b, a
-    ld a, [tileX]
-    sub b
-    add $50
-    ldh [$99], a
-
-jr_000_32f7:
+collision_samusEnemies: ;{ 00:32AB - Samus enemy collision detection loop
+    .standard: 
+        ; Conditions for exiting early early
+        ld a, [samusPose]
+        cp pose_beingEaten ; $18
+            jp nc, Jump_000_3698
+        ld a, [deathFlag]
+        and a
+            jp nz, Jump_000_3698
+        ld a, [samusInvulnerableTimer]
+        and a
+            jp nz, Jump_000_3698
+        ld a, [$d05c]
+        and a
+            jp nz, Jump_000_3698
+        ld a, [samus_onscreenXPos]
+        ldh [$99], a
+        jr .start
+    .horizontal: ; 00:32CF - Samus horizontal collision
+        ld a, [samusPose]
+        cp pose_beingEaten ; $18
+            jp nc, Jump_000_3698
+        ld a, [deathFlag]
+        and a
+            jp nz, Jump_000_3698
+        ld a, [deathAnimTimer]
+        and a
+            jp nz, Jump_000_3698
+        ld a, [samusInvulnerableTimer]
+        and a
+            jp nz, Jump_000_3698
+        ldh a, [hCameraXPixel]
+        ld b, a
+        ld a, [tileX]
+        sub b
+        add $50
+        ldh [$99], a
+.start:
     ldh a, [hCameraYPixel]
     ld b, a
     ldh a, [hSamusYPixel]
     sub b
-    add $62
+    add $48 + $1A ; $62
     ldh [$98], a
     ld a, $03 ; Bank with enemy data
     ld [bankRegMirror], a
@@ -8432,23 +8532,23 @@ jr_000_32f7:
     ld [$d05c], a
     ld hl, $c600
 
-    jr_000_3311:
+    .loop:
         ld a, [hl]
         and $0f
-        jr nz, jr_000_331a
-            call Call_000_3324
+        jr nz, .endIf
+            call collision_samusOneEnemy
             ret c
-        jr_000_331a:
+        .endIf:
     
         ld de, $0020
         add hl, de
         ld a, h
         cp $c8
-    jr nz, jr_000_3311
+    jr nz, .loop
 ret ;}
 
 ; Samus vs. Single Enemy Collision
-Call_000_3324: ;{ 00:3324
+collision_samusOneEnemy: ;{ 00:3324
     push hl
     inc hl
     ld a, [hl+]
@@ -8488,7 +8588,7 @@ Call_000_3324: ;{ 00:3324
     ld b, a
     ldh a, [hCollision_enAttr]
     bit 6, a
-    jr nz, jr_000_336e
+    jr nz, .else_A
         ld a, [hl+]
         add b
         sub $11
@@ -8497,8 +8597,8 @@ Call_000_3324: ;{ 00:3324
         add b
         sub $04
         ldh [hCollision_enBottom], a
-        jr jr_000_337c
-    jr_000_336e:
+        jr .endIf_A
+    .else_A:
         ld a, [hl+]
         sub b
         cpl
@@ -8509,13 +8609,13 @@ Call_000_3324: ;{ 00:3324
         cpl
         sub $11
         ldh [hCollision_enTop], a
-    jr_000_337c:
+    .endIf_A:
 
     ldh a, [hCollision_enX]
     ld b, a
     ldh a, [hCollision_enAttr]
     bit 5, a
-    jr nz, jr_000_3393
+    jr nz, .else_B
         ld a, [hl+]
         add b
         sub $05
@@ -8524,8 +8624,8 @@ Call_000_3324: ;{ 00:3324
         add b
         add $05
         ldh [hCollision_enRight], a
-        jr jr_000_33a1
-    jr_000_3393:
+        jr .endIf_B
+    .else_B:
         ld a, [hl+]
         sub b
         cpl
@@ -8536,13 +8636,13 @@ Call_000_3324: ;{ 00:3324
         cpl
         sub $05
         ldh [hCollision_enLeft], a
-    jr_000_33a1:
+    .endIf_B:
 
     ld a, [samusPose]
     and $7f
     ld e, a
     ld d, $00
-    ld hl, table_369B
+    ld hl, collision_samusHitboxTopTable
     add hl, de
     ld a, [hl+]
     ld b, a
@@ -8571,13 +8671,13 @@ Call_000_3324: ;{ 00:3324
     srl d
     sub c
         jp c, Jump_000_3489
-
+; A collision has happened
     ld a, d
     cp c
-    jr c, jr_000_33e1
+    jr c, .endIf_C
         ld a, $ff
         ld [$c423], a
-    jr_000_33e1:
+    .endIf_C:
 
     ld a, [samusItems]
     bit itemBit_screw, a
@@ -8592,12 +8692,11 @@ Call_000_3324: ;{ 00:3324
 jr_000_33f6:
     ldh a, [hCollision_enIce]
     and a
-    jr z, jr_000_33ff
+    jr z, .endIf_D
+        bit 0, a
+        jr z, jr_000_3426
+    .endIf_D:
 
-    bit 0, a
-    jr z, jr_000_3426
-
-jr_000_33ff:
     ldh a, [hCollision_enSprite]
     ld e, a
     ld d, $00
@@ -8605,8 +8704,7 @@ jr_000_33ff:
     add hl, de
     ld a, [hl]
     cp $ff
-    jr z, jr_000_3426
-
+        jr z, jr_000_3426
     ld [samus_damageValue], a
     pop hl
     ld a, $10
@@ -8617,7 +8715,7 @@ jr_000_33ff:
     ld [collision_pEnemyHigh], a
     scf
     ccf
-    ret
+ret
 
 
 jr_000_3421:
@@ -8658,9 +8756,9 @@ jr_000_3448:
     cp $ff
         jr z, jr_000_3426
     cp $fe
-        jr z, jr_000_3475
+        jr z, .healthDrain
     and a
-        jr z, jr_000_3478
+        jr z, .touchNoDamage
     ld [samus_damageValue], a
     ld a, $01
     ld [samus_hurtFlag], a
@@ -8674,11 +8772,9 @@ jr_000_3448:
     scf
 ret
 
-
-jr_000_3475:
+.healthDrain:
     call applyDamage.larvaMetroid
-
-jr_000_3478:
+.touchNoDamage:
     pop hl
     ld a, l
     ld [collision_pEnemyLow], a
@@ -8698,7 +8794,7 @@ Jump_000_3489:
 ret ;}
 
 ; Samus-sprite downward collision loop
-Call_000_348d: ;{ 00:348D
+collision_samusEnemiesDown: ;{ 00:348D
     ld a, [samusPose]
     cp pose_beingEaten ; $18
         jp nc, Jump_000_3698
@@ -8725,38 +8821,38 @@ Call_000_348d: ;{ 00:348D
     ld [rMBC_BANK_REG], a
     ld hl, $c600
 
-    jr_000_34c3:
+    .loop:
         ld a, [hl]
         and $0f
-            jr nz, jr_000_34e5
-        call Call_000_3545
-        jr nc, jr_000_34e5
-            ld a, [samus_damageValue]
-            dec a
-            cp $fe
-            jr c, jr_000_34e3
-                ldh a, [$9a]
-                ld b, a
-                ldh a, [hSamusYPixel]
-                sub b
-                ldh [hSamusYPixel], a
-                ldh a, [hSamusYScreen]
-                sbc $00
-                ldh [hSamusYScreen], a
-            jr_000_34e3:
-            scf
-            ret
-        jr_000_34e5:
+        jr nz, .endIf_A
+            call collision_samusOneEnemyVertical
+            jr nc, .endIf_A
+                ld a, [samus_damageValue]
+                dec a
+                cp $fe
+                jr c, .endIf_B
+                    ldh a, [$9a]
+                    ld b, a
+                    ldh a, [hSamusYPixel]
+                    sub b
+                    ldh [hSamusYPixel], a
+                    ldh a, [hSamusYScreen]
+                    sbc $00
+                    ldh [hSamusYScreen], a
+                .endIf_B:
+                scf
+                ret
+        .endIf_A:
         
         ld de, $0020
         add hl, de
         ld a, h
         cp $c8
-    jr nz, jr_000_34c3
+    jr nz, .loop
 ret ;}
 
 ; A Samus-sprite upward collision loop
-Call_000_34ef: ;{ 00:34EF
+collision_samusEnemiesUp: ;{ 00:34EF
     ld a, [samusPose]
     cp pose_beingEaten ; $18
         jp nc, Jump_000_3698
@@ -8771,7 +8867,7 @@ Call_000_34ef: ;{ 00:34EF
     and $7f
     ld e, a
     ld d, $00
-    ld hl, table_369B
+    ld hl, collision_samusHitboxTopTable
     add hl, de
     ld a, [hl+]
     ld b, a
@@ -8791,23 +8887,23 @@ Call_000_34ef: ;{ 00:34EF
     ld [rMBC_BANK_REG], a
     ld hl, $c600
 
-    jr_000_3532:
+    .loop:
         ld a, [hl]
         and $0f
-        jr nz, jr_000_353b
-            call Call_000_3545
+        jr nz, .endIf
+            call collision_samusOneEnemyVertical
             ret c
-        jr_000_353b:
+        .endIf:
         
         ld de, $0020
         add hl, de
         ld a, h
         cp $c8
-    jr nz, jr_000_3532
+    jr nz, .loop
 ret ;}
 
 ; Samus-sprite vertical collision detection
-Call_000_3545: ;{
+collision_samusOneEnemyVertical: ;{
     push hl
     inc hl
     ld a, [hl+]
@@ -8847,15 +8943,15 @@ Call_000_3545: ;{
     ld b, a
     ldh a, [hCollision_enAttr]
     bit 6, a
-    jr nz, jr_000_358b
+    jr nz, .else_A
         ld a, [hl+]
         add b
         ldh [hCollision_enTop], a
         ld a, [hl+]
         add b
         ldh [hCollision_enBottom], a
-        jr jr_000_3595
-    jr_000_358b:
+        jr .endIf_A
+    .else_A:
         ld a, [hl+]
         sub b
         cpl
@@ -8864,13 +8960,13 @@ Call_000_3545: ;{
         sub b
         cpl
         ldh [hCollision_enTop], a
-    jr_000_3595:
+    .endIf_A:
 
     ldh a, [hCollision_enX]
     ld b, a
     ldh a, [hCollision_enAttr]
     bit 5, a
-    jr nz, jr_000_35ac
+    jr nz, .else_B
         ld a, [hl+]
         add b
         sub $05
@@ -8879,8 +8975,8 @@ Call_000_3545: ;{
         add b
         add $05
         ldh [hCollision_enRight], a
-        jr jr_000_35ba
-    jr_000_35ac:
+        jr .endIf_B
+    .else_B:
         ld a, [hl+]
         sub b
         cpl
@@ -8891,7 +8987,7 @@ Call_000_3545: ;{
         cpl
         sub $05
         ldh [hCollision_enLeft], a
-    jr_000_35ba:
+    .endIf_B:
 
     ldh a, [hCollision_enTop]
     ld b, a
@@ -8918,10 +9014,10 @@ Call_000_3545: ;{
         jp c, Jump_000_3694
     ld a, d
     cp c
-    jr c, jr_000_35e9
+    jr c, .endIf_C
         ld a, $ff
         ld [$c423], a
-    jr_000_35e9:
+    .endIf_C:
 
     ld a, [samusItems]
     bit itemBit_screw, a
@@ -8936,10 +9032,10 @@ Call_000_3545: ;{
 jr_000_35fe:
     ldh a, [hCollision_enIce]
     and a
-    jr z, jr_000_3607
+    jr z, .endIf_D
         bit 0, a
         jr z, jr_000_362e
-    jr_000_3607:
+    .endIf_D:
 
     ldh a, [hCollision_enSprite]
     ld e, a
@@ -8986,7 +9082,6 @@ jr_000_362e:
                 ld [samusPose], a
     jr_000_364e:
     scf
-
 ret
 
 
@@ -9003,9 +9098,9 @@ jr_000_3650:
     cp $ff
         jr z, jr_000_362e
     cp $fe
-        jr z, jr_000_3680
+        jr z, .healthDrain
     and a
-        jr z, jr_000_3683
+        jr z, .touchNoDamage
 
     ld [samus_damageValue], a
     ld a, $01
@@ -9018,13 +9113,11 @@ jr_000_3650:
     ld a, $20
     ld [collision_weaponType], a
     scf
-    ret
+ret
 
-
-jr_000_3680:
+.healthDrain:
     call applyDamage.larvaMetroid
-
-jr_000_3683:
+.touchNoDamage:
     pop hl
     ld a, l
     ld [collision_pEnemyLow], a
@@ -9034,8 +9127,7 @@ jr_000_3683:
     ld [collision_weaponType], a
     scf
     ccf
-    ret
-;}
+ret ;}
 
 ; Common exits for collision routines that clear the carry flag (indicating no collision happened)
 Jump_000_3694:
@@ -9049,9 +9141,29 @@ Jump_000_3698:
     ccf
     ret
 
-table_369B: ; 00:369B - Collision/pose related table
-    db $ec, $f4, $fc, $ec, $f6, $04, $04, $ec, $04, $ec, $ec, $04, $04, $04, $04, $ec
-    db $04, $ec, $04, $ec, $04
+collision_samusHitboxTopTable: ;{ 00:369B - Offset for the top of Samus's hitbox per pose
+    db $EC ; $00 - Standing
+    db $F4 ; $01 - Jumping
+    db $FC ; $02 - Spin-jumping
+    db $EC ; $03 - Running
+    db $F6 ; $04 - Crouching
+    db $04 ; $05 - Morphball
+    db $04 ; $06 - Morphball jumping
+    db $EC ; $07 - Falling
+    db $04 ; $08 - Morphball falling
+    db $EC ; $09 - Starting to jump
+    db $EC ; $0A - Starting to spin-jump
+    db $04 ; $0B - Spider ball rolling
+    db $04 ; $0C - Spider ball falling
+    db $04 ; $0D - Spider ball jumping
+    db $04 ; $0E - Spider ball
+    db $EC ; $0F - Knockback
+    db $04 ; $10 - Morphball knockback
+    db $EC ; $11 - Standing bombed
+    db $04 ; $12 - Morphball bombed
+    db $EC ; $13 - Facing screen
+    db $04
+;}
 
 gameMode_dead: ;{ 00:36B0
     ; Wait until the death sound ends
@@ -9591,7 +9703,7 @@ handleItemPickup_end: ;{ 00:3A01
         ; Perform common functions during this wait loop
         call drawSamus_longJump
         call drawHudMetroid_longJump
-        call Call_000_32ab
+        call collision_samusEnemies.standard
         callFar enemyHandler
         call handleAudio_longJump
         call clearUnusedOamSlots_longJump

@@ -1267,14 +1267,14 @@ enCollision_right: ;{ 02:4608
     ldh a, [hEnemy.xPos]
     add $03
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $06
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1291,14 +1291,14 @@ enCollision_right: ;{ 02:4608
     ldh a, [hEnemy.xPos]
     add $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $06
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1316,7 +1316,7 @@ enCollision_right: ;{ 02:4608
     ldh a, [hEnemy.xPos]
     add $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -1324,7 +1324,7 @@ enCollision_right: ;{ 02:4608
     ld a, [enemy_testPointYPos]
     add $06
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -1332,7 +1332,7 @@ enCollision_right: ;{ 02:4608
     ld a, [enemy_testPointYPos]
     add $06
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -1355,21 +1355,21 @@ enCollision_right: ;{ 02:4608
     ldh a, [hEnemy.xPos]
     add $0b
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $07
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $07
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1388,28 +1388,28 @@ enCollision_right: ;{ 02:4608
     ldh a, [hEnemy.xPos]
     add $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $08
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $06
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $08
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1428,28 +1428,28 @@ enCollision_right: ;{ 02:4608
     ldh a, [hEnemy.xPos]
     add $0b
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $08
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $06
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $08
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1466,14 +1466,14 @@ enCollision_right: ;{ 02:4608
     ldh a, [hEnemy.xPos]
     add $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $0f
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1494,14 +1494,14 @@ enCollision_right: ;{ 02:4608
     ldh a, [hEnemy.xPos]
     add $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $0f
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1522,14 +1522,14 @@ enCollision_left: ;{ 02:47E1
     ldh a, [hEnemy.xPos]
     sub $03
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $06
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1546,14 +1546,14 @@ enCollision_left: ;{ 02:47E1
     ldh a, [hEnemy.xPos]
     sub $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $06
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1571,7 +1571,7 @@ enCollision_left: ;{ 02:47E1
     ldh a, [hEnemy.xPos]
     sub $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -1579,7 +1579,7 @@ enCollision_left: ;{ 02:47E1
     ld a, [enemy_testPointYPos]
     add $06
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -1587,7 +1587,7 @@ enCollision_left: ;{ 02:47E1
     ld a, [enemy_testPointYPos]
     add $06
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -1610,21 +1610,21 @@ enCollision_left: ;{ 02:47E1
     ldh a, [hEnemy.xPos]
     sub $0b
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $07
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $07
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1643,28 +1643,28 @@ enCollision_left: ;{ 02:47E1
     ldh a, [hEnemy.xPos]
     sub $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $08
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $06
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $08
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1683,28 +1683,28 @@ enCollision_left: ;{ 02:47E1
     ldh a, [hEnemy.xPos]
     sub $0b
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $08
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $06
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $08
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1721,14 +1721,14 @@ enCollision_left: ;{ 02:47E1
     ldh a, [hEnemy.xPos]
     sub $09
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $0f
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1749,14 +1749,14 @@ enCollision_left: ;{ 02:47E1
     ldh a, [hEnemy.xPos]
     sub $09
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointYPos]
     add $0f
     ld [enemy_testPointYPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1777,14 +1777,14 @@ enCollision_down: ;{ 02:49BA
     ldh a, [hEnemy.xPos]
     sub $03
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $06
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1802,21 +1802,21 @@ enCollision_down: ;{ 02:49BA
     ldh a, [hEnemy.xPos]
     sub $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1838,7 +1838,7 @@ ret
     ldh a, [hEnemy.xPos]
     sub $06
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -1846,7 +1846,7 @@ ret
     ld a, [enemy_testPointXPos]
     add $06
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -1854,7 +1854,7 @@ ret
     ld a, [enemy_testPointXPos]
     add $06
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -1874,28 +1874,28 @@ ret
     ldh a, [hEnemy.xPos]
     sub $0b
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $08
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $06
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $08
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1910,7 +1910,7 @@ ret
     ld [enemy_testPointYPos], a
     ldh a, [hEnemy.xPos]
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1928,21 +1928,21 @@ ret
     ldh a, [hEnemy.xPos]
     sub $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1965,28 +1965,28 @@ ret
     ldh a, [hEnemy.xPos]
     sub $0b
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $08
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $06
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $08
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -2003,14 +2003,14 @@ ret
     ldh a, [hEnemy.xPos]
     sub $08
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $0f
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -2027,14 +2027,14 @@ ret
     ldh a, [hEnemy.xPos]
     sub $09
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $0f
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -2059,14 +2059,14 @@ enCollision_up: ;{ 02:4BC2
     ldh a, [hEnemy.xPos]
     sub $03
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $06
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -2084,21 +2084,21 @@ enCollision_up: ;{ 02:4BC2
     ldh a, [hEnemy.xPos]
     sub $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -2120,7 +2120,7 @@ enCollision_up: ;{ 02:4BC2
     ldh a, [hEnemy.xPos]
     sub $06
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -2128,7 +2128,7 @@ enCollision_up: ;{ 02:4BC2
     ld a, [enemy_testPointXPos]
     add $06
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -2136,7 +2136,7 @@ enCollision_up: ;{ 02:4BC2
     ld a, [enemy_testPointXPos]
     add $06
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld [$c417], a
     ld hl, enemySolidityIndex
     cp [hl]
@@ -2156,28 +2156,28 @@ enCollision_up: ;{ 02:4BC2
     ldh a, [hEnemy.xPos]
     sub $0b
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $08
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $06
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $08
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -2195,21 +2195,21 @@ enCollision_up: ;{ 02:4BC2
     ldh a, [hEnemy.xPos]
     sub $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $07
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -2232,28 +2232,28 @@ enCollision_up: ;{ 02:4BC2
     ldh a, [hEnemy.xPos]
     sub $0b
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $08
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $06
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $08
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -2270,14 +2270,14 @@ enCollision_up: ;{ 02:4BC2
     ld a, [enemy_xPosMirror]
     sub $09
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $0f
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -2294,14 +2294,14 @@ enCollision_up: ;{ 02:4BC2
     ld a, [enemy_xPosMirror]
     sub $08
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
     ld a, [enemy_testPointXPos]
     add $0f
     ld [enemy_testPointXPos], a
-    call enemy_getTileIndex
+    call getTileIndex.enemy
     ld hl, enemySolidityIndex
     cp [hl]
         ret c

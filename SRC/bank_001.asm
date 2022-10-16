@@ -1483,7 +1483,7 @@ jp .commonBranch
     ldh a, [frameCounter]
     and $01
         jp z, .checkEnemies
-    call beam_getTileIndex
+    call getTileIndex.projectile
     ld hl, beamSolidityIndex
     cp [hl]
         jp nc, .checkEnemies ; Block not destroyed
@@ -1679,7 +1679,7 @@ jp .commonBranch
     and $01
     jr z, .else_Q
     
-        call beam_getTileIndex
+        call getTileIndex.projectile
         ld hl, beamSolidityIndex
         cp [hl]
         jr nc, .else_Q
@@ -2128,7 +2128,7 @@ Call_001_54d7: ; 01:54D7
     ld [tileY], a
     ld a, [$d04b]
     ld [tileX], a
-    call beam_getTileIndex
+    call getTileIndex.projectile
     cp $04
     jr nc, jr_001_553f
         call destroyRespawningBlock
@@ -2146,7 +2146,7 @@ Call_001_54d7: ; 01:54D7
 
     ld a, [$d04a]
     ld [tileY], a
-    call beam_getTileIndex
+    call getTileIndex.projectile
     cp $04
     jr nc, jr_001_555f
         call destroyRespawningBlock
@@ -2165,7 +2165,7 @@ Call_001_54d7: ; 01:54D7
     ld a, [$d04a]
     add $10
     ld [tileY], a
-    call beam_getTileIndex
+    call getTileIndex.projectile
     cp $04
     jr nc, jr_001_5581
         call destroyRespawningBlock
@@ -2186,7 +2186,7 @@ Call_001_54d7: ; 01:54D7
     ld a, [$d04b]
     add $10
     ld [tileX], a
-    call beam_getTileIndex
+    call getTileIndex.projectile
     cp $04
     jr nc, jr_001_55a9
         call destroyRespawningBlock
@@ -2205,7 +2205,7 @@ Call_001_54d7: ; 01:54D7
     ld a, [$d04b]
     sub $10
     ld [tileX], a
-    call beam_getTileIndex
+    call getTileIndex.projectile
     cp $04
     jr nc, jr_001_55cb
         call destroyRespawningBlock
