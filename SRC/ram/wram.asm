@@ -1069,10 +1069,10 @@ def debugFlag = $D0A0 ; Activates debug pause menu and other stuff
 def gameTimeSeconds = $D0A2 ; 256-frames long (~1/14 of a minute), not 60 frames long. In-game time, but not saved
 def activeSaveSlot = $D0A3 ; Save slot
 def title_showClearOption = $D0A4 ; Show clear save slot option flag
-;$D0A5: Song to play after earthquake
-;$D0A6: Enable Baby Metroid cry
+def songRequest_afterEarthquake = $D0A5 ; Song to play after earthquake
+def sound_playQueenRoar = $D0A6 ; Enable Queen's distant roar as a sound effect
 def metroidLCounterDisp = $D0A7 ; L Counter value to display (Metroids remaining in area)
-;$D0A8: Set to 0 by $239C
+def wramUnknown_D0A8 = $D0A8 ; Set to 0 by $239C
 ;
 ;$D0F9: Used in title
 ;

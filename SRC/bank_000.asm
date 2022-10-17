@@ -1941,7 +1941,7 @@ loadDoorIndex: ;{ 00:0C37
     res 3, a ; Remove sprite priority bit from door index in ROM
     ld [doorIndexHigh], a
     
-    ; Set status
+    ; Set status (to indicate that enemy spawn flags need to be refreshed
     ld a, $02
     ld [doorExitStatus], a
     xor a
@@ -6034,7 +6034,7 @@ executeDoorScript: ;{ 00:239C
     call waitOneFrame
     call OAM_DMA
 	
-	; From the door index, get the pointer and load the script
+; From the door index, get the pointer and load the script
     switchBank doorPointerTable
     ; Get index to door script pointer
     ld a, [doorIndexLow]
@@ -6052,7 +6052,7 @@ executeDoorScript: ;{ 00:239C
     ld h, a
     ld a, e
     ld l, a
-	; Load door script into buffer
+    ; Load door script into buffer
     ld b, doorScriptBufferSize
     ld de, doorScriptBuffer
     .loadDoor:
@@ -6061,58 +6061,75 @@ executeDoorScript: ;{ 00:239C
         inc de
         dec b
     jr nz, .loadDoor
-
+    
+    ; Read tokens starting from the beginning of the script
     ld hl, doorScriptBuffer
 
-.readOneToken:
+.readOneToken: ;{ Main loop for door script interpreter
+    ; Read token (note this does not use [HL+])
     ld a, [hl]
-    cp $ff ; END_DOOR
+    cp $ff ; END_DOOR {
     jp nz, .doorToken_load
-        inc hl
-        jp .endDoorScript
+        ; Technically unnecessary (since the script is finished)
+        ;  but good practice because each token's code is expected
+        ;  to increment HL to the next token
+        inc hl 
+    jp .endDoorScript ;}
 
     .doorToken_load:
+    ; Each token type from this point on is defined by the upper nybble
     and $f0
-    cp $b0 ; LOAD_BG/LOAD_SPR
+    cp $b0 ; LOAD_BG/LOAD_SPR {
     jr nz, .doorToken_copy
+        ; Clear save flags (to suppress save message)
         xor a
         ld [saveMessageCooldownTimer], a
         ld [saveContactFlag], a
+        ; Set window to lower position
         ld a, $88
         ldh [rWY], a
+        ; Load graphics (reads lower nybble of token and three more bytes)
         call door_loadGraphics
-        jp .nextToken
+    jp .nextToken ;}
         
     .doorToken_copy:
-    cp $00 ; COPY_DATA/COPY_BG/COPY_SPR
+    cp $00 ; COPY_DATA/COPY_BG/COPY_SPR {
     jr nz, .doorToken_tiletable
+        ; Clear save flags (to suppress save message)
         xor a
         ld [saveMessageCooldownTimer], a
         ld [saveContactFlag], a
+        ; Set window to lower position
         ld a, $88
         ldh [rWY], a
+        ; Load graphics (reads lower nybble of token and seven more bytes)
         call door_copyData
-        jp .nextToken
+    jp .nextToken ;}
 
     .doorToken_tiletable:
-    cp $10 ; TILETABLE
+    cp $10 ; TILETABLE {
     jr nz, .doorToken_collision
+        ; Load metatile table (uses lower nybble of token)
         call door_loadTiletable
-        jp .nextToken
+    jp .nextToken ;}
 
     .doorToken_collision:
-    cp $20 ; COLLISION
+    cp $20 ; COLLISION {
     jr nz, .doorToken_solidity
+        ; Load collision table (uses lower nybble of token)
         call door_loadCollision
-        jp .nextToken
+    jp .nextToken ;}
 
     .doorToken_solidity:
-    cp $30 ; SOLIDITY
+    cp $30 ; SOLIDITY {
     jr nz, .doorToken_warp
+        ; Re-read token (why?)
         ld a, [hl+]
         push hl
-            ; Extract table index from token and get the base address in the solidity table
+            ; Extract table index from token
             and $0f
+            ; Get base address in solidity table
+            ; HL = table + index*4
             ld e, a
             ld d, $00
             sla e
@@ -6130,27 +6147,35 @@ executeDoorScript: ;{ 00:239C
             ld a, [hl+]
             ld [beamSolidityIndex], a
             ld [saveBuf_beamSolidityIndex], a
+            ; Note the solidity table has an unused 4th column
         pop hl
-        jp .nextToken
+    jp .nextToken ;}
 
     .doorToken_warp:
-    cp $40 ; WARP
+    cp $40 ; WARP {
     jr nz, .doorToken_escapeQueen
         call door_warp
+        ; Set exit status to indicate that enemy spawn flags should be refreshed
+        ;  (although loadDoorIndex does that already so this might be unnecessary)
         ld a, $01
         ld [doorExitStatus], a
+        ; Deactivate queen fight ($11 means active)
         ld a, [queen_roomFlag]
         and $0f
         ld [queen_roomFlag], a
-        jp .nextToken
+    jp .nextToken ;}
 
     .doorToken_escapeQueen:
-    cp $50 ; ESCAPE QUEEN
+    cp $50 ; ESCAPE QUEEN {
     jr nz, .doorToken_damage
+        ; Increment HL to next token
+        ; This token takes no arguments
         inc hl
+        ; Disable VBlank
         ldh a, [rIE]
         res 1, a
         ldh [rIE], a
+        ; Set Samus and camera to a particular YX position
         ld a, $d7
         ldh [hSamusYPixel], a
         ld a, $78
@@ -6159,6 +6184,7 @@ executeDoorScript: ;{ 00:239C
         ldh [hCameraYPixel], a
         ld a, $80
         ldh [hCameraXPixel], a
+        ; Redraw the HUD tilemap
         ; Source
         ld a, LOW(hudBaseTilemap) ; bank 5
         ldh [hVramTransfer.srcAddrLow], a
@@ -6174,324 +6200,412 @@ executeDoorScript: ;{ 00:239C
         ldh [hVramTransfer.sizeLow], a
         ld a, $00
         ldh [hVramTransfer.sizeHigh], a
-        
-        ld a, $05
+        ; Source bank
+        ld a, BANK(hudBaseTilemap)
         ld [vramTransfer_srcBank], a
+        ; Transfer graphics
         call beginGraphicsTransfer
+        ; Set the loadSpawnFlagsRequest flag (why does zero == true for this variable?)
         xor a
         ld [loadSpawnFlagsRequest], a
-        jp .nextToken
+    jp .nextToken ;}
 
     .doorToken_damage:
-    cp $60 ; DAMAGE
+    cp $60 ; DAMAGE {
     jr nz, .doorToken_exitQueen
+        ; Increment HL to arguments
         inc hl
+        ; Set acid damage
         ld a, [hl+]
         ld [acidDamageValue], a
         ld [saveBuf_acidDamageValue], a
+        ; Set spike damage
         ld a, [hl+]
         ld [spikeDamageValue], a
         ld [saveBuf_spikeDamageValue], a
-        jp .nextToken
+    jp .nextToken ;}
 
     .doorToken_exitQueen:
-    cp $70 ; EXIT_QUEEN
+    cp $70 ; EXIT_QUEEN {
     jr nz, .doorToken_enterQueen
+        ; Increment HL to next token
+        ; This token takes no arguments
         inc hl
         push hl
+            ; Clear Queen room flag
             xor a
             ld [queen_roomFlag], a
+            ; Set window position to default (one row, left side)
             ld a, $88
             ldh [rWY], a
             ld a, $07
             ldh [rWX], a
+            ; Disable VBlank
             ldh a, [rIE]
             res 1, a
             ldh [rIE], a
-            
-            ld a, LOW(hudBaseTilemap) ; bank 5
+            ; Redraw the HUD tilemap
+            ; Source address
+            ld a, LOW(hudBaseTilemap)
             ldh [hVramTransfer.srcAddrLow], a
             ld a, HIGH(hudBaseTilemap)
             ldh [hVramTransfer.srcAddrHigh], a
-            
+            ; Destination address
             ld a, LOW(vramDest_statusBar)
             ldh [hVramTransfer.destAddrLow], a
             ld a, HIGH(vramDest_statusBar)
             ldh [hVramTransfer.destAddrHigh], a
-            
+            ; Size
             ld a, $14
             ldh [hVramTransfer.sizeLow], a
             ld a, $00
             ldh [hVramTransfer.sizeHigh], a
-            
-            ld a, $05
+            ; Source bank
+            ld a, BANK(hudBaseTilemap) ; bank $05
             ld [vramTransfer_srcBank], a
+            ; Transfer graphics
             call beginGraphicsTransfer
         pop hl
-        jp .nextToken
+    jp .nextToken ;}
 
     .doorToken_enterQueen:
-    cp $80 ; ENTER_QUEEN
+    cp $80 ; ENTER_QUEEN {
     jr nz, .doorToken_compare
+        ; Clear variables
         xor a
         ld [samus_onscreenYPos], a
         ld [samus_onscreenXPos], a
         ldh [hOamBufferIndex], a
-        ld [$d0a6], a
-        ld a, $02
+        ld [sound_playQueenRoar], a
+        ; Set song
+        ld a, song_metroidQueenBattle ; $02
         ld [songRequest], a
+        ; Clear sprites
         push hl
-        call clearAllOam_longJump
+            call clearAllOam_longJump
         pop hl
         call waitOneFrame
+        ; Update OAM
         call OAM_DMA
+        ; Prep queen fight (reads lower nybble of token and 8 more bytes)
         call door_queen
+        ; Set exit status to indicate that enemy spawn flags should be refreshed
+        ;  (although loadDoorIndex does that already so this might be unnecessary)
         ld a, $01
         ld [doorExitStatus], a
+        ; Activate queen fight
         ld a, $11
         ld [queen_roomFlag], a
+        ; Enable VBlank
         ldh a, [rIE]
         set 1, a
         ldh [rIE], a
-        jp .nextToken
+    jp .nextToken ;}
 
     .doorToken_compare:
-    cp $90 ; IF_MET_LESS - comparison operator
+    cp $90 ; IF_MET_LESS - comparison operator {
     jr nz, .doorToken_fadeout
+        ; Incrment HL to argument
         inc hl
         ; Compare metroid count to operand
         ld a, [metroidCountReal]
         ld b, a
         ld a, [hl+]
+        ; if (metroids <= arg) then load new script
         cp b
         jr nc, .loadNewScript
+            ; Skip door ID and load next token
             inc hl
             inc hl
             jp .nextToken
-    
         .loadNewScript:
-        ld a, [hl+]
-        ld [doorIndexLow], a
-        ld a, [hl]
-        ld [doorIndexHigh], a
-        jp executeDoorScript
+            ; Load door index
+            ld a, [hl+]
+            ld [doorIndexLow], a
+            ld a, [hl]
+            ld [doorIndexHigh], a
+            ; Execute it
+            jp executeDoorScript
+    ;}
 
     .doorToken_fadeout:
-    cp $a0 ; FADEOUT
+    cp $a0 ; FADEOUT {
     jr nz, .doorToken_song
-
+        ; Incrment HL for next token (this token takes no arguments)
         inc hl
         push hl
+        ; Wait a few frames
         call waitOneFrame
         call waitOneFrame
         call waitOneFrame
         call waitOneFrame
+        ; Set countdown timer
         ld a, $2f
-        ld [countdownTimerLow], a
-    
+        ld [countdownTimerLow], a    
         .fadeLoop:
             ld hl, .fadePaletteTable
+            ; Use upper nybble of timer to index into .fadePaletteTable
             ld a, [countdownTimerLow]
             and $f0
             swap a
             ld e, a
             ld d, $00
             add hl, de
+            ; Load palette
             ld a, [hl]
             ld [bg_palette], a
             ld [ob_palette0], a
+            ; Wait a frame
             call waitOneFrame
+            ; Exit loop once we've decremented past $0E
             ld a, [countdownTimerLow]
             cp $0e
         jr nc, .fadeLoop
     
         pop hl
+        ; Clear timer
         xor a
         ld [countdownTimerLow], a
-        jp .nextToken
+    jp .nextToken ;}
     
     .fadePaletteTable: db $ff, $fb, $e7 ; 00:259B
 
     .doorToken_song:
-    cp $c0 ; SONG
+    cp $c0 ; SONG {
     jr nz, .doorToken_item
+        ; Very convoluted logic. Unsure if semantics are 100% accurate
         ; Check if earthquake noise is playing
-        ld a, [$cedf]
-        cp $0e
+        ld a, [songInterruptionPlaying]
+        cp song_earthquake ;$0E
         jr z, .song_else_A
-            ; If the earthquake noise is not playing
+            ; If the earthquake noise is not playing {
+            ; Read lower nybble of token
             ld a, [hl+]
             and $0f
+            ; Check if argument is $A
             cp $0a
             jr z, .song_else_B    
+                ; Argument was not $A, so just request the song properly
                 ld [songRequest], a
                 ld [currentRoomSong], a
+                ; Check if the argument was $B
                 cp $0b
                 jr nz, .song_else_C
+                    ; If so, play the Queen's distant roar
                     ld a, $ff
-                    ld [$d0a6], a
+                    ld [sound_playQueenRoar], a
+                    ; Clear variable
                     xor a
-                    ld [$d0a5], a
+                    ld [songRequest_afterEarthquake], a
                     jp .nextToken
                 .song_else_C:
+                    ; Clear variable
                     xor a
-                    ld [$d0a5], a
-                    ld [$d0a6], a
+                    ld [songRequest_afterEarthquake], a
+                    ; Silence the Queen's distant roar
+                    ld [sound_playQueenRoar], a
                     jp .nextToken
             .song_else_B:
+                ; Special case if argument is $A
+                ; Disable sound channels (uncertain)
                 ld a, $ff
                 ld [songRequest], a
                 ld [currentRoomSong], a
+                ; Play silence after earthquake?
                 xor a
-                ld [$d0a5], a
+                ld [songRequest_afterEarthquake], a
+                ; Play Queen's roar
                 ld a, $ff
-                ld [$d0a6], a
+                ld [sound_playQueenRoar], a
                 jp .nextToken
-    
+            ;}
         .song_else_A:
-            ; If the earthquake noise is playing
+            ; If the earthquake noise is playing {
+            ; then read lower nybble of token
             ld a, [hl+]
             and $0f
+            ; Check if argument is $A
             cp $0a
             jr z, .song_else_D
-                ld [$d0a5], a
+                ; Argument was not $A, so just request the song properly
+                ;  for after the earthquake
+                ld [songRequest_afterEarthquake], a
+                ; Check if the argument was $B
                 cp $0b
                 jr nz, .song_else_E
+                    ; If it was $B, play the Queen's distant roar
                     ld a, $ff
-                    ld [$d0a6], a
+                    ld [sound_playQueenRoar], a
                     jp .nextToken
                 .song_else_E:
+                    ; If it was not $B, silence the Queen's roar
                     xor a
-                    ld [$d0a6], a
+                    ld [sound_playQueenRoar], a
                     jp .nextToken
             .song_else_D:
+                ; If argument is $A
+                ; Disable sound channels after earthquake
                 ld a, $ff
-                ld [$d0a5], a
-                ld [$d0a6], a
+                ld [songRequest_afterEarthquake], a
+                ; Play Queen's distant roar
+                ld [sound_playQueenRoar], a
                 jp .nextToken
-
+            ;}
+    ;}
+    
     .unreferencedTable: db $04, $05, $06, $07, $08, $09, $10, $12 ; 00:260C
 
     .doorToken_item:
-    cp $d0 ; ITEM
+    cp $d0 ; ITEM {
     jp nz, .nextToken
         ; Load item graphics
+        ; Set source bank
         ld a, BANK(gfx_items)
         ld [bankRegMirror], a
         ld [vramTransfer_srcBank], a
         ld [rMBC_BANK_REG], a
-        ld a, [hl]
+        ; Load lower nybble of token (minus 1)
+        ld a, [hl] ; Note: this is not [HL+]
         push hl
-        dec a
-        and $0f
-        swap a
-        ld e, a
-        ld d, $00
-        sla e
-        rl d
-        sla e
-        rl d
-        ld hl, gfx_items
-        add hl, de
-        ld a, l
-        ldh [hVramTransfer.srcAddrLow], a
-        ld a, h
-        ldh [hVramTransfer.srcAddrHigh], a
-
-        ld a, LOW(vramDest_item)
-        ldh [hVramTransfer.destAddrLow], a
-        ld a, HIGH(vramDest_item)
-
-        ldh [hVramTransfer.destAddrHigh], a
-        ld a, $40
-        ldh [hVramTransfer.sizeLow], a
-        ld a, $00
-        ldh [hVramTransfer.sizeHigh], a
-        call beginGraphicsTransfer
-        ; Load item orb
-        ld a, LOW(gfx_itemOrb)
-        ldh [hVramTransfer.srcAddrLow], a
-        ld a, HIGH(gfx_itemOrb)
-        ldh [hVramTransfer.srcAddrHigh], a
-        ld a, $00
-        ldh [hVramTransfer.destAddrLow], a
-        ld a, $8b
-        ldh [hVramTransfer.destAddrHigh], a
-        ld a, $40
-        ldh [hVramTransfer.sizeLow], a
-        ld a, $00
-        ldh [hVramTransfer.sizeHigh], a
-        call beginGraphicsTransfer
-        ; Load item font text
-        ld a, BANK(gfx_itemFont)
-        ld [bankRegMirror], a
-        ld [vramTransfer_srcBank], a
-        ld [rMBC_BANK_REG], a
-        ld a, LOW(gfx_itemFont) ;$34
-        ldh [hVramTransfer.srcAddrLow], a
-        ld a, HIGH(gfx_itemFont) ;$6c
-        ldh [hVramTransfer.srcAddrHigh], a
-        ; VRAM Dest
-        ld a, LOW(vramDest_itemFont)
-        ldh [hVramTransfer.destAddrLow], a
-        ld a, HIGH(vramDest_itemFont)
-        ldh [hVramTransfer.destAddrHigh], a
-        ; Write length
-        ld a, $30
-        ldh [hVramTransfer.sizeLow], a
-        ld a, $02
-        ldh [hVramTransfer.sizeHigh], a
-        call beginGraphicsTransfer
-    
+            dec a
+            and $0f
+            ; Multiply by $40 to get offset for sprite graphics
+            swap a
+            ld e, a
+            ld d, $00
+            sla e
+            rl d
+            sla e
+            rl d
+            ld hl, gfx_items
+            add hl, de
+            ; Set source address for item sprite graphics
+            ld a, l
+            ldh [hVramTransfer.srcAddrLow], a
+            ld a, h
+            ldh [hVramTransfer.srcAddrHigh], a
+            
+            ; Set destination address
+            ld a, LOW(vramDest_item)
+            ldh [hVramTransfer.destAddrLow], a
+            ld a, HIGH(vramDest_item)    
+            ldh [hVramTransfer.destAddrHigh], a
+            
+            ; Set transfer size (4 tiles)
+            ld a, $40
+            ldh [hVramTransfer.sizeLow], a
+            ld a, $00
+            ldh [hVramTransfer.sizeHigh], a
+            ; Transfer graphics
+            call beginGraphicsTransfer
+            
+        ; Load item orb {
+            ; Set source address
+            ld a, LOW(gfx_itemOrb)
+            ldh [hVramTransfer.srcAddrLow], a
+            ld a, HIGH(gfx_itemOrb)
+            ldh [hVramTransfer.srcAddrHigh], a
+            ; Set destination address
+            ld a, $00
+            ldh [hVramTransfer.destAddrLow], a
+            ld a, $8b
+            ldh [hVramTransfer.destAddrHigh], a
+            ; Set transfer length (4 tiles)
+            ld a, $40
+            ldh [hVramTransfer.sizeLow], a
+            ld a, $00
+            ldh [hVramTransfer.sizeHigh], a
+            ; Transfer graphics
+            call beginGraphicsTransfer
+        ;}
+            
+        ; Load item font text {
+            ; Set source bank
+            ld a, BANK(gfx_itemFont)
+            ld [bankRegMirror], a
+            ld [vramTransfer_srcBank], a
+            ld [rMBC_BANK_REG], a
+            ; Set source address
+            ld a, LOW(gfx_itemFont) ;$34
+            ldh [hVramTransfer.srcAddrLow], a
+            ld a, HIGH(gfx_itemFont) ;$6c
+            ldh [hVramTransfer.srcAddrHigh], a
+            ; Set destination address
+            ld a, LOW(vramDest_itemFont)
+            ldh [hVramTransfer.destAddrLow], a
+            ld a, HIGH(vramDest_itemFont)
+            ldh [hVramTransfer.destAddrHigh], a
+            ; Set transfer length ($23 tiles)
+            ld a, $30
+            ldh [hVramTransfer.sizeLow], a
+            ld a, $02
+            ldh [hVramTransfer.sizeHigh], a
+            ; Transfer graphics
+            call beginGraphicsTransfer
+        ;}
         pop hl
+        
+        ; Load item text {
+        ; Set source bank
         ld a, BANK(itemTextPointerTable)
         ld [bankRegMirror], a
         ld [vramTransfer_srcBank], a
         ld [rMBC_BANK_REG], a
+        ; Read lower nybble of token
         ld a, [hl+]
         push hl
-        and $0f
-        ld e, a
-        ld d, $00
-        sla e
-        rl d
-        ld hl, itemTextPointerTable
-        add hl, de
-        ld a, [hl+]
-        ld e, a
-        ld a, [hl]
-        ld h, a
-        ld a, e
-        ld l, a
-        ld a, l
-        ldh [hVramTransfer.srcAddrLow], a
-        ld a, h
-        ldh [hVramTransfer.srcAddrHigh], a
-        
-        ld a, LOW(vramDest_itemText)
-        ldh [hVramTransfer.destAddrLow], a
-        ld a, HIGH(vramDest_itemText)
-        ldh [hVramTransfer.destAddrHigh], a
-        ld a, $10
-        ldh [hVramTransfer.sizeLow], a
-        ld a, $00
-        ldh [hVramTransfer.sizeHigh], a
-        call beginGraphicsTransfer
-        pop hl
-        jr .nextToken
+            and $0f
+            ; Index into text pointer table
+            ld e, a
+            ld d, $00
+            sla e
+            rl d
+            ld hl, itemTextPointerTable
+            add hl, de
+            ; Load pointer to HL
+            ld a, [hl+]
+            ld e, a
+            ld a, [hl]
+            ld h, a
+            ld a, e
+            ld l, a
+            ; Set source address of text
+            ld a, l
+            ldh [hVramTransfer.srcAddrLow], a
+            ld a, h
+            ldh [hVramTransfer.srcAddrHigh], a
+            ; Set destination address of text
+            ld a, LOW(vramDest_itemText)
+            ldh [hVramTransfer.destAddrLow], a
+            ld a, HIGH(vramDest_itemText)
+            ldh [hVramTransfer.destAddrHigh], a
+            ; Set length of string (16 letters)
+            ld a, $10
+            ldh [hVramTransfer.sizeLow], a
+            ld a, $00
+            ldh [hVramTransfer.sizeHigh], a
+            ; Transfer graphics
+            call beginGraphicsTransfer
+        pop hl ;}
+    jr .nextToken ;}
 
 .nextToken:
+    ; Wait a frame before reading another token
     call waitOneFrame
-    jp .readOneToken
+    jp .readOneToken ;}
 
 .endDoorScript:
+    ; Refresh the enemy spawn flags
     ld a, [doorExitStatus]
     ld [saveLoadSpawnFlagsRequest], a
+    
+    ; Clear variables
     xor a
     ld [doorIndexLow], a
     ld [doorIndexHigh], a
     ld [doorExitStatus], a
-    ld [$d0a8], a
+    ; Otherwise unused variable
+    ld [wramUnknown_D0A8], a
 ret ;}
 
 ; Door script load graphics routine
@@ -9356,7 +9470,7 @@ handleItemPickup: ;{ 00:372F
     ld [sfxRequest_square1], a
     ; Play item get jingle
     ld a, $01
-    ld [$cede], a
+    ld [songInterruptionRequest], a
     ; Set timer for duration of item get jingle
     ld a, $01
     ld [countdownTimerHigh], a
@@ -9369,7 +9483,7 @@ handleItemPickup: ;{ 00:372F
         jr nc, .else_B
             ; Play missile get jingle
             ld a, $05
-            ld [$cede], a
+            ld [songInterruptionRequest], a
             ; Set shorter timer
             xor a
             ld [countdownTimerHigh], a
@@ -9380,7 +9494,7 @@ handleItemPickup: ;{ 00:372F
             ; Refill branch
             ; Do not play jingle
             ld a, $00
-            ld [$cede], a
+            ld [songInterruptionRequest], a
             ; No delay
             ld [countdownTimerHigh], a
             ld [countdownTimerLow], a
@@ -9393,11 +9507,11 @@ handleItemPickup: ;{ 00:372F
     .endIf_A:
 
     ; Do not play jingle if earthquake sound is playing
-    ld a, [$cedf]
+    ld a, [songInterruptionPlaying]
     cp $0e
     jr nz, .endIf_C
         ld a, $00
-        ld [$cede], a
+        ld [songInterruptionRequest], a
     .endIf_C:
 
     ; Jump to pick-up specific routine
@@ -9686,7 +9800,7 @@ pickup_missileRefill: ;{
         ld [countdownTimerLow], a
         ; Play sound
         ld a, $08
-        ld [$cede], a
+        ld [songInterruptionRequest], a
         ; Set game mode to prep credits
         ld a, $12
         ldh [gameMode], a
@@ -9768,11 +9882,11 @@ handleItemPickup_end: ;{ 00:3A01
     cp $0e
     jr nc, .endIf_B
         ; End isolated sound effect (as long as it's not the earthquake)
-        ld a, [$cedf]
+        ld a, [songInterruptionPlaying]
         cp $0e
         jr z, .endIf_B
             ld a, $03
-            ld [$cede], a
+            ld [songInterruptionRequest], a
     .endIf_B:
     ; Clear flag
     xor a

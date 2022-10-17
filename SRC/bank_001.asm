@@ -2779,7 +2779,7 @@ miscIngameTasks: ;{ 01:57F2
                 ld a, $ff
                 ld [earthquakeTimer], a
                 ld a, $0e
-                ld [$cede], a
+                ld [songInterruptionRequest], a
                 ; Special case for last metroid (Queen)
                 ld a, [metroidCountReal]
                 cp $01
@@ -2835,7 +2835,7 @@ miscIngameTasks: ;{ 01:57F2
         call nz, fadeIn
 
 ; Handle Queen's roar
-    ld a, [$d0a6]
+    ld a, [sound_playQueenRoar]
     and a
     jr z, .else_J
         ; Only roar every 128 frames
@@ -3641,24 +3641,26 @@ earthquake_adjustScroll: ;{ 01:79EF: Handle earthquake (called from bank 0)
 ; Actions once earthquake is finished
     ; Clear earthquake sound
     xor a
-    ld [$cedf], a
+    ld [songInterruptionPlaying], a
     
+    ; Check if in Queen fight
     ld a, [queen_roomFlag]
     cp $10
     jr nc, .else_A
-        ld a, [$d0a5]
+        ; If not in Queen fight, check if a song is queued-up to restart
+        ld a, [songRequest_afterEarthquake]
         and a
         jr z, .else_B
             ; Restore music
             ld [songRequest], a
             ld [currentRoomSong], a
             xor a
-            ld [$d0a5], a
+            ld [songRequest_afterEarthquake], a
             ret
         .else_B:
             ; End isolated sound effect
             ld a, $03
-            ld [$cede], a
+            ld [songInterruptionRequest], a
             ret
     .else_A:
         ; If in Queen's room, start playing the baby metroid music
