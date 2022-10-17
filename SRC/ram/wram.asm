@@ -202,7 +202,7 @@ def enemy_yPosMirror = $C41E ; Initial y position for the current working enemy 
 def enemy_xPosMirror = $C41F ; Initial x position for the current working enemy for the current frame
 ;
 def samus_hurtFlag = $C422 ; Samus damage flag
-;$C423: Damage boost direction
+def samus_damageBoostDirection = $C423 ; Damage boost direction
 ;{
 ;    0: Up
 ;    1: Up-right
@@ -808,7 +808,7 @@ def camera_scrollDirection = $D023 ; Direction of screen movement
 ;    80: Down
 ;}
 def samus_fallArcCounter = $D024 ; Index into falling velocity arrays. Max value is $16
-;
+; $D025 - Unused?
 def samus_jumpArcCounter = $D026 ; Index into jump velocity arrays. Values below $40 use a linear velocity case instead. Subtract by $40 before indexing an array with this.
 prevSamusXPixel  = $D027 ; $D027: Samus' previous X position
 prevSamusXScreen = $D028
@@ -820,8 +820,14 @@ def samusFacingDirection = $D02B ; Direction Samus is facing. Saved to SRAM, mir
 ;    1: Right
 ;}
 def samus_turnAnimTimer = $D02C ; Timer for turnaround animation (facing the screen). Used and decremented when MSB of samusPose is set.
-;
-;$D031: Unused?
+
+; $D02D..30: Vertical offsets to test for Samus's horizontal collision
+def collision_samusYOffset_A = $D02D
+def collision_samusYOffset_B = $D02E
+def collision_samusYOffset_C = $D02F
+def collision_samusYOffset_D = $D030
+; $D031: Unused. Was likely intended for as a RAM value for the 5th horizontal test point.
+
 def projectileIndex = $D032 ; Index of working projectile
 def samus_speedDown = $D033 ; Set by samus_moveVertical. Cleared by morph
 def samus_speedDownTemp = $D034 ; Temp variable used by samus_moveVertical

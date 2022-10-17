@@ -5019,12 +5019,13 @@ samus_moveUp: ;{ 00:1D98 - Move up (only directly called by spider ball)
 ;}
 
 ;------------------------------------------------------------------------------
-; BG collision functions {
+; Samus's BG collision functions {
 collision_samusHorizontal: ;{ Has two entry points (left and right)
     .left: ; 00:1DD6 - Entry point for left-side collision
         push hl
         push de
         push bc
+        ; Get offset for left side
         ldh a, [hSamusXPixel]
         add $0b
         ld [tileX], a
@@ -5033,14 +5034,18 @@ collision_samusHorizontal: ;{ Has two entry points (left and right)
         push hl
         push de
         push bc
+        ; Get offset for right side
         ldh a, [hSamusXPixel]
         add $14
         ld [tileX], a
 .start: ; Start
-    call collision_samusEnemies.horizontal ; Sprite collision?
+    ; Do sprite collision
+    call collision_samusEnemies.horizontal
         jp c, .exit
-
-    ld hl, table_20FF
+    
+    ; Get base address to the first entry for the pose's y offset list
+    ; HL = list + pose*8
+    ld hl, collision_samusHorizontalYOffsetLists
     ld a, [samusPose]
     sla a
     sla a
@@ -5048,25 +5053,33 @@ collision_samusHorizontal: ;{ Has two entry points (left and right)
     ld e, a
     ld d, $00
     add hl, de
+    
+    ; Read each entry in the list, skipping ahead to collision if it is $80
+    ; Read 1st entry
     ld a, [hl+]
     cp $80
     jp z, .endIf_A
-        ld [$d02d], a
+        ld [collision_samusYOffset_A], a
+        ; Read 2nd entry
         ld a, [hl+]
         cp $80
         jr z, .endIf_B
-            ld [$d02e], a
+            ld [collision_samusYOffset_B], a
+            ; Read 3rd entry
             ld a, [hl+]
             cp $80
             jr z, .endIf_C
-                ld [$d02f], a
+                ld [collision_samusYOffset_C], a
+                ; Read 4th entry
                 ld a, [hl+]
                 cp $80
                 jr z, .endIf_D
-                    ld [$d030], a
+                    ld [collision_samusYOffset_D], a
+                    ; Read 5th entry
                     ld a, [hl]
                     cp $80
                     jr z, .endIf_E
+                        ; Test 5th pointh
                         ld b, a
                         ldh a, [hSamusYPixel]
                         add b
@@ -5076,7 +5089,8 @@ collision_samusHorizontal: ;{ Has two entry points (left and right)
                         cp [hl]
                             jr c, .exit
                     .endIf_E:
-                    ld a, [$d030]
+                    ; Test 4th point
+                    ld a, [collision_samusYOffset_D]
                     ld b, a
                     ldh a, [hSamusYPixel]
                     add b
@@ -5086,8 +5100,8 @@ collision_samusHorizontal: ;{ Has two entry points (left and right)
                     cp [hl]
                         jr c, .exit
                 .endIf_D:
-                
-                ld a, [$d02f]
+                ; Test 3rd point
+                ld a, [collision_samusYOffset_C]
                 ld b, a
                 ldh a, [hSamusYPixel]
                 add b
@@ -5097,8 +5111,8 @@ collision_samusHorizontal: ;{ Has two entry points (left and right)
                 cp [hl]
                     jr c, .exit
             .endIf_C:
-            
-            ld a, [$d02e]
+            ; Test 2nd point
+            ld a, [collision_samusYOffset_B]
             ld b, a
             ldh a, [hSamusYPixel]
             add b
@@ -5108,8 +5122,8 @@ collision_samusHorizontal: ;{ Has two entry points (left and right)
             cp [hl]
                 jr c, .exit
         .endIf_B:
-        
-        ld a, [$d02d]
+        ; Test 1st point
+        ld a, [collision_samusYOffset_A]
         ld b, a
         ldh a, [hSamusYPixel]
         add b
@@ -5119,7 +5133,7 @@ collision_samusHorizontal: ;{ Has two entry points (left and right)
         cp [hl]
             jr c, .exit
     .endIf_A:
-
+    ; Done testing points (or: no points tested)
 .exit:
     pop bc
     pop de
@@ -5132,30 +5146,40 @@ collision_samusTop: ;{ 00:1E88
     push hl
     push de
     push bc
-    call collision_samusEnemiesUp ; Sprite collision?
+    ; Check sprite collision
+    call collision_samusEnemiesUp
         jp c, .exit
 
 ; Top left side
+    ; Set x offset for left side
     ldh a, [hSamusXPixel]
     add $0c
     ld [tileX], a
-    ld hl, table_20E9
+    ; Load y offset for top from table
+    ld hl, collision_samusBGHitboxTopTable
     ld a, [samusPose]
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
+    ; Set offset for top
     ld b, a
     ldh a, [hSamusYPixel]
     add b
     ld [tileY], a
+    ; Perform collision check
     call samus_getTileIndex
 
+    ; Perform compare operation to set the carry flag if applicable
     ld hl, samusSolidityIndex
     cp [hl]
+    
+    ; Load collision properties from table
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
+    
+    ; Set waterContactFlag if tile is water
     bit blockType_water, a
     jr z, .endIf_A
         ld a, $ff
@@ -5163,35 +5187,47 @@ collision_samusTop: ;{ 00:1E88
         ld a, [hl]
     .endIf_A:
 
+    ; Invert the solidity if tile is an up-block
     bit blockType_up, a
     jr z, .endIf_B
-        ; Invert the solidity
-        ccf
+        ccf ; Invert the solidity
     .endIf_B:
 
+    ; Check if tile is acid
     ld a, [hl]
     bit blockType_acid, a
     jr z, .endIf_C
-        ld a, $40
+        ; Set acidContactFlag
+        ld a, $40 ; This is supposed to be a jump table index (behavior is unused)
         ld [acidContactFlag], a
+        ; Damage Samus
         push af
         ld a, [acidDamageValue]
         call applyDamage.acid
         pop af
     .endIf_C:
-
+    
+    ; Exit if the carry flag is set (i.e. if the tile is solid)
     jr c, .exit
 
 ; Top right side
+    ; Get x offset for right side
     ldh a, [hSamusXPixel]
     add $14
     ld [tileX], a
+    ; Perform collision check
     call samus_getTileIndex
+    
+    ; Perform compare operation to set the carry flag if applicable
     ld hl, samusSolidityIndex
     cp [hl]
+    
+    ; Load collision properties from table
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
+    
+    ; Set waterContactFlag if tile is water
     bit blockType_water, a
     jr z, .endIf_D
         ld a, $ff
@@ -5199,17 +5235,20 @@ collision_samusTop: ;{ 00:1E88
         ld a, [hl]
     .endIf_D:
     
+    ; Invert the solidity if tile is an up-block
     bit blockType_up, a
     jr z, .endIf_E
-        ; Invert the solidity
-        ccf
+        ccf ; Invert the solidity
     .endIf_E:
 
+    ; Check if tile is acid
     ld a, [hl]
     bit blockType_acid, a
     jr z, .endIf_F
-        ld a, $40
+        ; Set acidContactFlag
+        ld a, $40 ; This is supposed to be a jump table index (behavior is unused)
         ld [acidContactFlag], a
+        ; Damage Samus
         push af
         ld a, [acidDamageValue]
         call applyDamage.acid
@@ -5220,47 +5259,61 @@ collision_samusTop: ;{ 00:1E88
     pop bc
     pop de
     pop hl
-ret
-;}
+ret ;}
 
 ; Samus downwards BG collision detection
 collision_samusBottom: ;{ 00:1F0F
     push hl
     push de
     push bc
-    call collision_samusEnemiesDown ; Sprite collision?
+    ; Check sprite collision
+    call collision_samusEnemiesDown
     jr nc, .endIf_A
+        ; Set flag for a sprite being touched
         ld a, $01
         ld [samus_onSolidSprite], a
+        ; Save pointer to enemy
         ld a, l
         ld [collision_pEnemyLow], a
         ld a, h
         ld [collision_pEnemyHigh], a
+        ; Save weapon type as "touch"
         ld a, $20
         ld [collision_weaponType], a
+        ; Exit
         jp .exit
     .endIf_A:
 
 ; Bottom left side
+    ; Set x offset for left side
     ldh a, [hSamusXPixel]
     add $0c
     ld [tileX], a
+    ; Set y offset for bottom
     ldh a, [hSamusYPixel]
     add $2c
     ld [tileY], a
+    
+    ; Perform collision check 
     call samus_getTileIndex
+    
+    ; Perform compare operation to set the carry flag if applicable
     ld hl, samusSolidityIndex
     cp [hl]
-    ; Carry set means a collision happened - carry clear means it didn't
+    
+    ; Load collision properties from table
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
+
+    ; Set waterContactFlag if tile is water
     bit blockType_water, a
     jr z, .endIf_B
         ld a, $31 ; Set to $FF in every other circumstance (why?)
         ld [waterContactFlag], a
     .endIf_B:
 
+    ; Set saveContactFlag if tile is a save point
     ld a, [hl]
     bit blockType_save, a
     jr z, .endIf_C
@@ -5268,45 +5321,59 @@ collision_samusBottom: ;{ 00:1F0F
         ld [saveContactFlag], a
     .endIf_C:
 
+    ; Check if tile is a fall-through tile
     ld a, [hl]
     bit blockType_down, a
     jr z, .endIf_D
-        ld a, [samusPose] ; ?
+        ld a, [samusPose] ; Pointless operation
         ; Clear carry flag
         scf
         ccf
     .endIf_D:
 
+    ; Check if tile is acid
     ld a, [hl]
     bit blockType_acid, a
     jr z, .endIf_E
-        ld a, $40
+        ; Set acidContactFlag
+        ld a, $40 ; This is supposed to be a jump table index (behavior is unused)
         ld [acidContactFlag], a
+        ; Damage Samus
         push af
         ld a, [acidDamageValue]
         call applyDamage.acid
         pop af
     .endIf_E:
 
+    ; Exit if the carry flag is set (i.e. if the tile is solid)
     jr c, .exit
 
 ; Bottom right side
+    ; Set x offset for right side
     ldh a, [hSamusXPixel]
     add $14
     ld [tileX], a
+    
+    ; Perform collision check 
     call samus_getTileIndex
-
+    
+    ; Perform compare operation to set the carry flag if applicable
     ld hl, samusSolidityIndex
     cp [hl]
+    
+    ; Load collision properties from table
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
+    
+    ; Set waterContactFlag if tile is water
     bit blockType_water, a
     jr z, .endIf_F
         ld a, $ff
         ld [waterContactFlag], a
     .endIf_F:
 
+    ; Set saveContactFlag if tile is a save point
     ld a, [hl]
     bit blockType_save, a
     jr z, .endIf_G
@@ -5314,6 +5381,7 @@ collision_samusBottom: ;{ 00:1F0F
         ld [saveContactFlag], a
     .endIf_G:
 
+    ; Check if tile is a fall-through tile
     ld a, [hl]
     bit blockType_down, a
     jr z, .endIf_H
@@ -5321,78 +5389,90 @@ collision_samusBottom: ;{ 00:1F0F
         scf
         ccf
     .endIf_H:
-
+    
+    ; Check if tile is acid
     ld a, [hl]
     bit blockType_acid, a
     jr z, .endIf_I
-        ld a, $40
+        ; Set acidContactFlag
+        ld a, $40 ; This is supposed to be a jump table index (behavior is unused)
         ld [acidContactFlag], a
+        ; Damage Samus
         push af
         ld a, [acidDamageValue]
         call applyDamage.acid
         pop af
     .endIf_I:
 
-    jr nc, .exit
-
-    ld a, $00
-    ld [samus_unmorphJumpTimer], a
+    ; Clear unmorph jump timer if Samus touched a solid tile
+    jr nc, .endIf_J
+        ld a, $00
+        ld [samus_unmorphJumpTimer], a
+    .endIf_J:
 
 .exit:
     pop bc
     pop de
     pop hl
-ret
-;}
+ret ;}
 
-;------------------------------------------------------------------------------
-; Used by Spider Ball collision function
+; Used by main Spider Ball collision function
 collision_checkSpiderPoint: ;{ 00:1FBF
+    ; Perform collision check on tile specied by the caller
     call samus_getTileIndex
+    
+    ; Go to noHit branch if not solid
     ld hl, samusSolidityIndex
     cp [hl]
         jr nc, .noHit
 
-    ; Check if touching acid
+; Collision occurred
+    ; Load collision properties from table
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
+    
+    ; Check if tile is acid
     bit blockType_acid, a
     jr z, .endIf
-        ld a, $40
+        ; Set acidContactFlag
+        ld a, $40 ; This is supposed to be a jump table index (behavior is unused)
         ld [acidContactFlag], a
         ld a, [acidDamageValue]
+        ; Damage Samus
         call applyDamage.acid
     .endIf:
 ;exitWithHit
-    ; Set carry
+    ; Set carry flag (to indicate a collision occurred)
     scf
 ret
 
 .exitNoHit:
-    ; Clear carry
+    ; Clear carry flag (to indicate no collision occurred)
     scf
     ccf
 ret
 
 .noHit:
-    ; Check if touching acid
+    ; Load collision properties from table
     ld h, HIGH(collisionArray)
     ld l, a
     ld a, [hl]
+    
+    ; Check if tile is acid
     bit blockType_acid, a
     jr z, .exitNoHit
-        ld a, $40
+        ld a, $40 ; This is supposed to be a jump table index (behavior is unused)
         ld [acidContactFlag], a
         ld a, [acidDamageValue]
+        ; Damage Samus
         call applyDamage.acid
     jr .exitNoHit
 ;}
-;}
-
-; end of BG collision functions
+;} end of Samus BG collision functions
 
 samus_getTileIndex: ;{ 00:1FF5
+    ; Get tilemap address based on coordinates provided by the caller
     call getTilemapAddress
 
     ; Adjust base address for collision depending on the tilemap being used
@@ -5405,31 +5485,36 @@ samus_getTileIndex: ;{ 00:1FF5
         ld [pTilemapDestHigh], a
     .endIf_A
 
-    .waitLoop_A: ; Wait for h-blank
+    ; Wait for HBlank and read once
+    .waitLoop_A:
         ldh a, [rSTAT]
         and $03
     jr nz, .waitLoop_A
-
     ld b, [hl]
 
+    ; Wait for HBlank and read again
     .waitLoop_B: ; Wait for h-blank
         ldh a, [rSTAT]
         and $03
     jr nz, .waitLoop_B
-
     ld a, [hl]
+    
+    ; Combine results of the two read attempts
     and b
     ld b, a
 
-    ; Check for spike collision
-    ;  I presume this is done here because spike collision pertains to every moment direction and every state (?)
+; Check for spike collision (presumably done here because spikes pertain to every moment direction and state)
+    ; Check if Samus is invulnerable
     ld a, [samusInvulnerableTimer]
     and a
     jr nz, .endIf_B
+        ; Load collision properties from table
         ld h, HIGH(collisionArray)
         ld a, b
         ld l, a
         ld a, [hl]
+        
+        ; Check if tile is a spike
         bit blockType_spike, a
         jr z, .endIf_B
             ; Play sfx
@@ -5440,12 +5525,12 @@ samus_getTileIndex: ;{ 00:1FF5
             ld [samus_hurtFlag], a
             ; Damage boost up
             xor a
-            ld [$c423], a
+            ld [samus_damageBoostDirection], a
             ; Samus damage
             ld a, [spikeDamageValue]
             ld [samus_damageValue], a
     .endIf_B:
-
+    ; Reload tile index back to A
     ld a, b
 ret
 ;}
@@ -5534,7 +5619,7 @@ spiderDirectionTable:
 ; - If the spider ball could not move in the direction given in try1, it tries going in the direction given by try2.
 ;}
 
-table_20E9: ;{ 00:20E9 - Samus pose related (y pixel offsets?)
+collision_samusBGHitboxTopTable: ;{ 00:20E9 - Vertical offset for the top of Samus's hitbox, per pose, for BG collisions
     db $08 ; $00 Standing
     db $14 ; $01 Jumping
     db $1A ; $02 Spin-jumping
@@ -5559,7 +5644,9 @@ table_20E9: ;{ 00:20E9 - Samus pose related (y pixel offsets?)
     db $20
 ;}
 
-table_20FF: ;{ 00:20FF - Y-Offset collision lists per pose ($80 terminated)
+collision_samusHorizontalYOffsetLists: ;{ 00:20FF - Y-Offset collision lists per pose ($80 terminated)
+; Note: Due to limitations of the function that read this
+;  despite each row being 8 bytes long, only 5 offsets are supported
     db $10, $18, $20, $28, $2A, $80, 0, 0 ; $00 Standing
     db $14, $18, $20, $28, $2A, $80, 0, 0 ; $01 Jumping
     db $1A, $20, $28, $2A, $80, 0, 0, 0   ; $02 Spin-jumping
@@ -5594,11 +5681,13 @@ table_20FF: ;{ 00:20FF - Y-Offset collision lists per pose ($80 terminated)
 
 ; Clear Projectile RAM
 clearProjectileArray: ;{ 00:21EF
+    ; Fill array with $FF
     ld h, HIGH(projectileArray)
     ld l, LOW(projectileArray)
     .loop:
         ld a, $ff
         ld [hl+], a
+        ; Continue until we reach address $xx00
         ld a, l
         and a
     jr nz, .loop
@@ -5716,6 +5805,7 @@ main_readInput: ;{ 00:2287
     and $0f
     swap a
     ld b, a
+    
     ; Select buttons to read
     ld a, $10
     ldh [rP1], a
@@ -5935,7 +6025,7 @@ executeDoorScript: ;{ 00:239C
     ld b, a
     ld a, [doorIndexHigh]
     or b
-    jp z, .endDoorScript
+        jp z, .endDoorScript
 
     ; Clear non-Samus/HUD OAM entries
     ld a, [samusTopOamOffset]
@@ -7737,12 +7827,12 @@ hurtSamus: ;{ 00:2EE3
     ld a, [hl]
     ld [samusPose], a
     ; Set travel direction to damage boost direction
-    ld a, [$c423]
+    ld a, [samus_damageBoostDirection]
     ld [samusAirDirection], a
+    ; Force damage boost to right if in Queen's room
     ld a, [queen_roomFlag]
     cp $11
     jr nz, .endIf
-        ; Force damage boost to right if in Queen's room
         ld a, $01
         ld [samusAirDirection], a
     .endIf:
@@ -8642,7 +8732,7 @@ collision_samusOneEnemy: ;{ 00:3324
     and $7f
     ld e, a
     ld d, $00
-    ld hl, collision_samusHitboxTopTable
+    ld hl, collision_samusSpriteHitboxTopTable
     add hl, de
     ld a, [hl+]
     ld b, a
@@ -8659,7 +8749,7 @@ collision_samusOneEnemy: ;{ 00:3324
     cp c
         jp nc, Jump_000_3489
     ld a, $01
-    ld [$c423], a
+    ld [samus_damageBoostDirection], a
     ldh a, [hCollision_enLeft]
     ld b, a
     ldh a, [$99]
@@ -8676,7 +8766,7 @@ collision_samusOneEnemy: ;{ 00:3324
     cp c
     jr c, .endIf_C
         ld a, $ff
-        ld [$c423], a
+        ld [samus_damageBoostDirection], a
     .endIf_C:
 
     ld a, [samusItems]
@@ -8867,7 +8957,7 @@ collision_samusEnemiesUp: ;{ 00:34EF
     and $7f
     ld e, a
     ld d, $00
-    ld hl, collision_samusHitboxTopTable
+    ld hl, collision_samusSpriteHitboxTopTable
     add hl, de
     ld a, [hl+]
     ld b, a
@@ -9000,7 +9090,7 @@ collision_samusOneEnemyVertical: ;{
     cp c
         jp nc, Jump_000_3694
     ld a, $01
-    ld [$c423], a
+    ld [samus_damageBoostDirection], a
     ldh a, [hCollision_enLeft]
     ld b, a
     ldh a, [$99]
@@ -9016,7 +9106,7 @@ collision_samusOneEnemyVertical: ;{
     cp c
     jr c, .endIf_C
         ld a, $ff
-        ld [$c423], a
+        ld [samus_damageBoostDirection], a
     .endIf_C:
 
     ld a, [samusItems]
@@ -9141,7 +9231,7 @@ Jump_000_3698:
     ccf
     ret
 
-collision_samusHitboxTopTable: ;{ 00:369B - Offset for the top of Samus's hitbox per pose
+collision_samusSpriteHitboxTopTable: ;{ 00:369B - Offset for the top of Samus's hitbox per pose (for sprite collisions)
     db $EC ; $00 - Standing
     db $F4 ; $01 - Jumping
     db $FC ; $02 - Spin-jumping

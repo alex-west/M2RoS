@@ -2636,11 +2636,11 @@ ret
     cp $0c
     jr nc, .else
         ld a, $ff ; Left
-        ld [$c423], a
+        ld [samus_damageBoostDirection], a
         jr .endIf
     .else:
         ld a, $01 ; Right
-        ld [$c423], a
+        ld [samus_damageBoostDirection], a
     .endIf:
     ; Hurt samus
     ld a, $01
