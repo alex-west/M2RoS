@@ -239,14 +239,14 @@
     db $00 ; Big energy drop
     db $00 ; Missile drop
     db $00 ; Missile drop
-    db $40 ; Metroid Queen (no graphics)
-    db $40 ; Metroid Queen (no graphics)
-    db $20 ; Metroid Queen projectile (no graphics)
-    db $40 ; Metroid Queen (no graphics)
+    db $40 ; Metroid Queen neck (no graphics)
+    db $40 ; Metroid Queen head left half (no graphics)
+    db $20 ; Metroid Queen projectile/head right half (no graphics)
+    db $40 ; Metroid Queen body (no graphics)
     db $00 ; (no graphics)
-    db $40 ; Metroid Queen (no graphics)
-    db $40 ; Metroid Queen (no graphics)
-    db $FF ; Metroid Queen (no graphics)
+    db $40 ; Metroid Queen mouth closed (no graphics)
+    db $40 ; Metroid Queen mouth open (no graphics)
+    db $FF ; Metroid Queen mouth stunned (no graphics)
     db $FF ; Missile door
     db $FF ; (no graphics)
     db $FF ; (no graphics)

@@ -239,14 +239,14 @@
     dw enSprite_bigHealth_frame2 ; Big energy drop
     dw enSprite_missileDrop_frame1 ; Missile drop
     dw enSprite_missileDrop_frame2 ; Missile drop
-    dw enSprite_none ; Metroid Queen (no graphics)
-    dw enSprite_none ; Metroid Queen (no graphics)
-    dw enSprite_none ; Metroid Queen projectile (no graphics)
-    dw enSprite_none ; Metroid Queen (no graphics)
+    dw enSprite_none ; Metroid Queen neck (no graphics)
+    dw enSprite_none ; Metroid Queen head left half (no graphics)
+    dw enSprite_none ; Metroid Queen projectile/head right half (no graphics)
+    dw enSprite_none ; Metroid Queen body (no graphics)
     dw enSprite_none ; (no graphics)
-    dw enSprite_none ; Metroid Queen (no graphics)
-    dw enSprite_none ; Metroid Queen (no graphics)
-    dw enSprite_none ; Metroid Queen (no graphics)
+    dw enSprite_none ; Metroid Queen mouth closed (no graphics)
+    dw enSprite_none ; Metroid Queen mouth open (no graphics)
+    dw enSprite_none ; Metroid Queen mouth stunned (no graphics)
     dw enSprite_missileDoor ; Missile door
     dw enSprite_none ; (no graphics)
     dw enSprite_none ; (no graphics)

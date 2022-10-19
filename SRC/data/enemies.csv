@@ -238,14 +238,14 @@ enSprite_bigHealth_frame1,enHead_NULL,hitbox_block,$00,SPRITE_BIG_HEALTH,Big ene
 enSprite_bigHealth_frame2,enHead_NULL,hitbox_block,$00,,Big energy drop,$ED
 enSprite_missileDrop_frame1,enHead_NULL,hitbox_tile,$00,SPRITE_MISSILE_DROP,Missile drop,$EE
 enSprite_missileDrop_frame2,enHead_NULL,hitbox_tile,$00,,Missile drop,$EF
-enSprite_none,enHead_NULL,hitbox6A8B,$40,,Metroid Queen (no graphics),$F0
-enSprite_none,enHead_NULL,hitbox6AD7,$40,,Metroid Queen (no graphics),$F1
-enSprite_none,enHead_NULL,hitbox6AAB,$20,,Metroid Queen projectile (no graphics),$F2
-enSprite_none,enHead_NULL,hitbox6AE3,$40,,Metroid Queen (no graphics),$F3
+enSprite_none,enHead_NULL,hitbox6A8B,$40,,Metroid Queen neck (no graphics),$F0
+enSprite_none,enHead_NULL,hitbox6AD7,$40,,Metroid Queen head left half (no graphics),$F1
+enSprite_none,enHead_NULL,hitbox6AAB,$20,,Metroid Queen projectile/head right half (no graphics),$F2
+enSprite_none,enHead_NULL,hitbox6AE3,$40,,Metroid Queen body (no graphics),$F3
 enSprite_none,enHead_NULL,hitbox_point,$00,,(no graphics),$F4
-enSprite_none,enHead_NULL,hitbox6AD7,$40,,Metroid Queen (no graphics),$F5
-enSprite_none,enHead_NULL,hitbox6ACB,$40,,Metroid Queen (no graphics),$F6
-enSprite_none,enHead_NULL,hitbox6ACB,$FF,,Metroid Queen (no graphics),$F7
+enSprite_none,enHead_NULL,hitbox6AD7,$40,,Metroid Queen mouth closed (no graphics),$F5
+enSprite_none,enHead_NULL,hitbox6ACB,$40,,Metroid Queen mouth open (no graphics),$F6
+enSprite_none,enHead_NULL,hitbox6ACB,$FF,,Metroid Queen mouth stunned (no graphics),$F7
 enSprite_missileDoor,enHead_missileDoor,hitbox_missileDoor,$FF,SPRITE_MISSILE_DOOR,Missile door,$F8
 enSprite_none,enHead_NULL,hitbox_missileDoor,$FF,,(no graphics),$F9
 enSprite_none,enHead_NULL,hitbox_missileDoor,$FF,,(no graphics),$FA

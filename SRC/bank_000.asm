@@ -724,7 +724,7 @@ gameMode_Main: ;{ 00:04DF
         jr nz, .endIf_A
             ; Do various common things
             xor a
-            ld [$d05c], a
+            ld [samusSpriteCollisionProcessedFlag], a
             call hurtSamus ; Damage Samus
             call samus_handlePose ; Samus pose handler
             call collision_samusEnemies.standard ; ? Samus/enemy collision logic
@@ -784,7 +784,7 @@ ret
     ldh a, [hSamusXScreen]
     ld [prevSamusXScreen], a
     xor a
-    ld [$d05c], a
+    ld [samusSpriteCollisionProcessedFlag], a
     ; Do various common things
     call samus_handlePose
     call collision_samusEnemies.standard
@@ -7593,9 +7593,9 @@ tryPausing: ;{ 00:2C79
     ld [hl], a
 
 .exit:
-    ; Play sound
+    ; Play pause sound and stop music
     ld a, $01
-    ld [$cfc7], a
+    ld [audioPauseControl], a
     ; Set game mode
     ld a, $08
     ldh [gameMode], a
@@ -7627,9 +7627,9 @@ gameMode_Paused: ;{ 00:2CED
     ld a, $93
     ld [bg_palette], a
     ld [ob_palette0], a
-    ; Play sound
+    ; Play unpausing sound
     ld a, $02
-    ld [$cfc7], a
+    ld [audioPauseControl], a
     ; Switch game mode
     ld a, $04
     ldh [gameMode], a
@@ -7642,12 +7642,16 @@ ret
         jr nz, debugPauseMenu
 
     ; Return to main game mode if start is pressed
+    ; Reset palette
     ld a, $93
     ld [bg_palette], a
     ld [ob_palette0], a
+    ; Clear sprites
     call clearUnusedOamSlots_longJump
+    ; Play unpause sound effect
     ld a, $02
-    ld [$cfc7], a
+    ld [audioPauseControl], a
+    ; Set game mode
     ld a, $04
     ldh [gameMode], a
 ret ;}
@@ -7921,16 +7925,19 @@ hurtSamus: ;{ 00:2EE3
     ; Clear hurt flag
     xor a
     ld [samus_hurtFlag], a
+
     ; Exit if i-frames are active
     ld a, [samusInvulnerableTimer]
     and a
         ret nz
+
     ; Apply damage value to Samus
     ld a, [samus_damageValue]
     call applyDamage.enemySpike
     ; Give Samus i-frames
     ld a, $33
     ld [samusInvulnerableTimer], a
+
     ; Use table to force Samus into the appropriate knockback pose
     ld a, [samusPose]
     res 7, a ; Force Samus out of turnaround animation
@@ -7940,6 +7947,7 @@ hurtSamus: ;{ 00:2EE3
     add hl, de
     ld a, [hl]
     ld [samusPose], a
+
     ; Set travel direction to damage boost direction
     ld a, [samus_damageBoostDirection]
     ld [samusAirDirection], a
@@ -7950,6 +7958,7 @@ hurtSamus: ;{ 00:2EE3
         ld a, $01
         ld [samusAirDirection], a
     .endIf:
+
     ; Set jump arc counter to base
     ld a, samus_jumpArrayBaseOffset
     ld [samus_jumpArcCounter], a
@@ -7960,45 +7969,60 @@ ret ;}
 applyDamage: ;{ This procedure has multiple entry points
     .queenStomach: ; 00:2F29
         ; Apply queen stomach damage
+        ; Make noise once every 8 frames
         ldh a, [frameCounter]
         and $07
             ret nz
         ld a, $07
         ld [sfxRequest_noise], a
+        ; Damage once every 16 frames
         ldh a, [frameCounter]
         and $0f
             ret nz
+        ; Set damage to 2
         ld b, $02
         jr .apply
+        
     .larvaMetroid: ; 00:2F3C
         ; Any enemies with a damage value of $FE inflicts continuous contact damage.
         ; In the game, this only applies to the larva metroids.
+        ; Set damage to 3
         ld b, $03
+        ; Damage once every 8 frames
         ldh a, [frameCounter]
         and $07
             ret nz
+        ; Make noise
         ld a, $07
         ld [sfxRequest_noise], a
         jr .apply
+        
     .acid: ; 00:2F4A
+        ; Damage is set by caller
         ld b, a
+        ; Damage once every 16 frames
         ldh a, [frameCounter]
         and $0f
             ret nz
+        ; Make noise
         ld a, $07
         ld [sfxRequest_noise], a
         jr .apply
+        
     .enemySpike: ; 00:2F57
         ; Apply damage from enemies, spikes, and respawning blocks
         ld b, a
-        ; Arbitrarily limit damage to 96 units
+        ; Arbitrarily limit damage to 60 units (remember Samus' health is BCD)
         cp $60
             ret nc
         ; Play sound
         ld a, $06
         ld [sfxRequest_noise], a
+        ; Fallthrough to .apply
+        
 .apply: ; Apply damage
     ; Half damage with varia
+    ; (note this results in unintuitive results for higher damage values thanks to health being BCD)
     ld a, [samusItems]
     bit itemBit_varia, a
     jr z, .endIf_A
@@ -8324,7 +8348,7 @@ collision_bombOneEnemy: ;{ 00:30EA
         add b
         sub $10
         ldh [hCollision_enTop], a
-        ; hCollision_enBottom = (bootom+Y) + $10
+        ; hCollision_enBottom = (bottom+Y) + $10
         ld a, [hl+]
         add b
         add $10
@@ -8366,6 +8390,7 @@ collision_bombOneEnemy: ;{ 00:30EA
         ldh [hCollision_enRight], a
         jr .endIf_B
     .else_B:
+        ; Horizontally flipped case
         ; hCollision_enRight = -(left-X) + $10
         ld a, [hl+]
         sub b
@@ -8395,7 +8420,7 @@ collision_bombOneEnemy: ;{ 00:30EA
     cp c
         jr nc, .exit_noHit
 
-    ; Left - Right
+    ; Right - Left
     ldh a, [hCollision_enLeft]
     ld b, a
     ldh a, [hCollision_enRight]
@@ -8404,7 +8429,7 @@ collision_bombOneEnemy: ;{ 00:30EA
     ; X - Left
     ldh a, [$99] ; bombX
     sub b
-    ; exit if (Left - Right) <= (X - Left)
+    ; exit if (Right - Left) <= (X - Left)
     cp c
         jr nc, .exit_noHit
 
@@ -8687,35 +8712,50 @@ ret ;}
 ; Note: Function has two entry points
 collision_samusEnemies: ;{ 00:32AB - Samus enemy collision detection loop
     .standard: 
-        ; Conditions for exiting early early
+        ; Conditions for skipping collision processing
+        ; Exit if being eaten
         ld a, [samusPose]
         cp pose_beingEaten ; $18
-            jp nc, Jump_000_3698
+            jp nc, temp_collision_exit_noHit
+        ; Exit if dying
         ld a, [deathFlag]
         and a
-            jp nz, Jump_000_3698
+            jp nz, temp_collision_exit_noHit
+        ; Exit if in i-frames
         ld a, [samusInvulnerableTimer]
         and a
-            jp nz, Jump_000_3698
-        ld a, [$d05c]
+            jp nz, temp_collision_exit_noHit
+        ; Exit if this function has already been called this frame
+        ld a, [samusSpriteCollisionProcessedFlag]
         and a
-            jp nz, Jump_000_3698
+            jp nz, temp_collision_exit_noHit
+        
+        ; Set tempX to samus onscreen x position
         ld a, [samus_onscreenXPos]
         ldh [$99], a
         jr .start
+        
     .horizontal: ; 00:32CF - Samus horizontal collision
+        ; Conditions for skipping collision processing
+        ; Exit if being eaten
         ld a, [samusPose]
         cp pose_beingEaten ; $18
-            jp nc, Jump_000_3698
+            jp nc, temp_collision_exit_noHit
+        ; Exit if dying
         ld a, [deathFlag]
         and a
-            jp nz, Jump_000_3698
+            jp nz, temp_collision_exit_noHit
+        ; Exit if dying
         ld a, [deathAnimTimer]
         and a
-            jp nz, Jump_000_3698
+            jp nz, temp_collision_exit_noHit
+        ; Exit if in i-frames
         ld a, [samusInvulnerableTimer]
         and a
-            jp nz, Jump_000_3698
+            jp nz, temp_collision_exit_noHit
+        ; Note: This entry point does not check samusSpriteCollisionProcessedFlag
+        
+        ; Set tempX to Samus' postion in camera-space
         ldh a, [hCameraXPixel]
         ld b, a
         ld a, [tileX]
@@ -8723,52 +8763,67 @@ collision_samusEnemies: ;{ 00:32AB - Samus enemy collision detection loop
         add $50
         ldh [$99], a
 .start:
+    ; Set tempY to Samus' postion in camera-space
     ldh a, [hCameraYPixel]
     ld b, a
     ldh a, [hSamusYPixel]
     sub b
-    add $48 + $1A ; $62
+    add $48 + $1A ; $62 - This breakdown doesn't seem quite right
     ldh [$98], a
-    ld a, $03 ; Bank with enemy data
-    ld [bankRegMirror], a
-    ld [rMBC_BANK_REG], a
+    
+    ; Switch to bank with enemy hitboxes
+    switchBank enemyHitboxPointers ; $03
+    
+    ; Set flag to indicate this function has been entered
     ld a, $ff
-    ld [$d05c], a
-    ld hl, $c600
-
+    ld [samusSpriteCollisionProcessedFlag], a
+    
+    ; Iterate through all enemy slots
+    ld hl, enemyDataSlots ;$C600
     .loop:
+        ; Check if enemy is active ($x0 status value)
         ld a, [hl]
         and $0f
         jr nz, .endIf
+            ; Exit if we made a collision
             call collision_samusOneEnemy
             ret c
         .endIf:
-    
+        ; Iterate to next enemy
         ld de, $0020
         add hl, de
+        ; Exit if we finished all enemies
         ld a, h
-        cp $c8
+        cp HIGH(enemyDataSlots_end) ; $C8
     jr nz, .loop
 ret ;}
 
 ; Samus vs. Single Enemy Collision
 collision_samusOneEnemy: ;{ 00:3324
+    ; push the enemy base address on the stack
     push hl
+    ; Load enemy Y, exit if offscreen
     inc hl
     ld a, [hl+]
     cp $e0
-        jp nc, Jump_000_3489
+        jp nc, .exit_noHit
     ldh [hCollision_enY], a
+    ; Load enemy X, exit if offscreen
     ld a, [hl+]
     cp $e0
-        jp nc, Jump_000_3489
-
+        jp nc, .exit_noHit
     ldh [hCollision_enX], a
+    
+    ; Load enemy sprite type
     ld a, [hl+]
     ldh [hCollision_enSprite], a
+    
+    ; Load enemy attributes
     inc hl
     ld a, [hl+]
     ldh [hCollision_enAttr], a
+    
+    ; Load enemy ice counter
     inc hl
     inc hl
     inc hl
@@ -8776,6 +8831,8 @@ collision_samusOneEnemy: ;{ 00:3324
     inc hl
     ld a, [hl]
     ldh [hCollision_enIce], a
+    
+    ; Get hitbox pointer of enemy
     ldh a, [hCollision_enSprite]
     sla a
     ld e, a
@@ -8783,58 +8840,76 @@ collision_samusOneEnemy: ;{ 00:3324
     rl d
     ld hl, enemyHitboxPointers
     add hl, de
+    ; Load pointer to HL
     ld a, [hl+]
     ld e, a
     ld a, [hl]
     ld h, a
     ld l, e
+    
+    ; Save enY to B
     ldh a, [hCollision_enY]
     ld b, a
+    ; Check if vertically flipped
     ldh a, [hCollision_enAttr]
-    bit 6, a
+    bit OAMB_YFLIP, a
     jr nz, .else_A
+        ; Normal case
+        ; hCollision_enTop = (top+Y) - $11
         ld a, [hl+]
         add b
         sub $11
         ldh [hCollision_enTop], a
+        ; hCollision_enBottom = (bottom+Y) - $04
         ld a, [hl+]
         add b
         sub $04
         ldh [hCollision_enBottom], a
         jr .endIf_A
     .else_A:
+        ; Vertically flipped case
+        ; hCollision_enBottom = -(bottom-Y) + $04
         ld a, [hl+]
         sub b
         cpl
         sub $04
         ldh [hCollision_enBottom], a
+        ; hCollision_enTop = -(bottom-Y) - $11
         ld a, [hl+]
         sub b
         cpl
         sub $11
         ldh [hCollision_enTop], a
     .endIf_A:
-
+    
+    ; Save enX to B
     ldh a, [hCollision_enX]
     ld b, a
+    ; Check if horizontally flipped
     ldh a, [hCollision_enAttr]
-    bit 5, a
+    bit OAMB_XFLIP, a
     jr nz, .else_B
+        ; Normal case
+        ; hCollision_enLeft = (left+X) - $05
         ld a, [hl+]
         add b
         sub $05
         ldh [hCollision_enLeft], a
+        ; hCollision_enRight = (right+X) + $05
         ld a, [hl+]
         add b
         add $05
         ldh [hCollision_enRight], a
         jr .endIf_B
     .else_B:
+        ; Horizontally flipped case
+        ; hCollision_enRight = -(left-X) + $05
         ld a, [hl+]
         sub b
         cpl
         add $05
         ldh [hCollision_enRight], a
+        ; hCollision_enLeft = -(right-X) - $05
         ld a, [hl+]
         sub b
         cpl
@@ -8842,6 +8917,7 @@ collision_samusOneEnemy: ;{ 00:3324
         ldh [hCollision_enLeft], a
     .endIf_B:
 
+    ; Load top offset for Samus' hitbox
     ld a, [samusPose]
     and $7f
     ld e, a
@@ -8849,150 +8925,209 @@ collision_samusOneEnemy: ;{ 00:3324
     ld hl, collision_samusSpriteHitboxTopTable
     add hl, de
     ld a, [hl+]
+    ; Bottom = Bottom - Samus' Top
     ld b, a
     ldh a, [hCollision_enBottom]
     sub b
     ldh [hCollision_enBottom], a
+    ; Bottom - Top
     ldh a, [hCollision_enTop]
     ld b, a
     ldh a, [hCollision_enBottom]
     sub b
     ld c, a
+    ; Samus Y - Top
     ldh a, [$98]
     sub b
+    ; exit if (Bottom - Top) <= (Y - Top)
     cp c
-        jp nc, Jump_000_3489
+        jp nc, .exit_noHit
+    
+    ; Set default damage boost direction (right)
     ld a, $01
     ld [samus_damageBoostDirection], a
+    
+    ; Samus X - Left
     ldh a, [hCollision_enLeft]
     ld b, a
     ldh a, [$99]
     sub b
     ld c, a
+    ; Right - Left
     ldh a, [hCollision_enRight]
     sub b
     ld d, a
+    ; D = (R - L)/2 (center of the hitbox)
     srl d
+    ; exit if (Right - Left) <= (X - Left)
     sub c
-        jp c, Jump_000_3489
+        jp c, .exit_noHit
+    
 ; A collision has happened
+    ; If Samus was on the left side of the enemy
+    ; (checks if (Samus X - Left < half the width of the hitbox)
     ld a, d
     cp c
     jr c, .endIf_C
+        ; If so, change the damage boost value to the left
         ld a, $ff
         ld [samus_damageBoostDirection], a
     .endIf_C:
 
+    ; Check if screw attack is active
     ld a, [samusItems]
     bit itemBit_screw, a
-        jr z, jr_000_3421
+        jr z, .iceCase
     ld a, [samusPose]
     cp pose_spinJump
-        jr z, jr_000_33f6
+        jr z, .screwCase
     ld a, [samusPose]
     cp pose_spinStart
-        jr nz, jr_000_3421
+        jr nz, .iceCase
 
-jr_000_33f6:
+.screwCase: ; Screw is active
+    ; Don't screw if ice counter is greater than zero and even
     ldh a, [hCollision_enIce]
     and a
     jr z, .endIf_D
         bit 0, a
-        jr z, jr_000_3426
+        jr z, .solidCase
     .endIf_D:
 
+    ; Load enemy's damage from table
     ldh a, [hCollision_enSprite]
     ld e, a
     ld d, $00
     ld hl, enemyDamageTable
     add hl, de
     ld a, [hl]
+    
+    ; Don't screw if damage is $FF (enemy is solid)
     cp $ff
-        jr z, jr_000_3426
+        jr z, .solidCase
+    
+    ; Screw attack the enemy
+    ; Save the damage value (unnecessary)
     ld [samus_damageValue], a
+    ; Hurt flag is not set here, so Samus will not be damaged by this
+    
+    ; pop the enemy base address off the stack
     pop hl
+    
+    ; Save weapon type to Screw Attack
     ld a, $10
     ld [collision_weaponType], a
+    ; Save enemy base pointer
     ld a, l
     ld [collision_pEnemyLow], a
     ld a, h
     ld [collision_pEnemyHigh], a
+    
+    ; Clear carry flag (no solid collision occurred)
     scf
     ccf
 ret
 
-
-jr_000_3421:
+.iceCase:
+    ; Assume enemy is not solid if not frozen (ice == 0)
     ldh a, [hCollision_enIce]
     and a
-    jr z, jr_000_3448
-
-jr_000_3426:
+        jr z, .hurtCase
+.solidCase:
+    ; pop the enemy base address off the stack
     pop hl
+    ; Note: the caller is expected to save the enemy address, etc. in this case (why?)
+    
+    ; Special Queen logic {
+    ; Check if touching the queen's stunned mouth
     ldh a, [hCollision_enSprite]
     cp $f7
-    jr nz, jr_000_3446
+    jr nz, .endIf_E
+        ; Check if Samus' pose is (morph OR morphJump OR morphFall)
         ld a, [samusPose]
         cp pose_morph
-        jr z, jr_000_343c
-            cp pose_morphJump
-            jr z, jr_000_343c
-                cp pose_morphFall
-                    jr nz, jr_000_3446
-            jr_000_343c:
-                ld a, $01
-                ld [queen_eatingState], a
-                ld a, pose_beingEaten ; $18
-                ld [samusPose], a
-    jr_000_3446:
-    ; A collision happened
+            jr z, .then
+        cp pose_morphJump
+            jr z, .then
+        cp pose_morphFall
+            jr nz, .endIf_E
+        .then:
+            ; Set state to Samus entering the Queen's mouth
+            ld a, $01
+            ld [queen_eatingState], a
+            ; Set pose
+            ld a, pose_beingEaten ; $18
+            ld [samusPose], a
+    .endIf_E: ;}
+    ; Set carry flag (to indicate a solid collision)
     scf
 ret
 
-
-jr_000_3448:
+.hurtCase:
+    ; Load damage value for sprite
     ldh a, [hCollision_enSprite]
     ld e, a
     ld d, $00
     ld hl, enemyDamageTable
     add hl, de
     ld a, [hl]
+    
+    ; Check if enemy is solid
     cp $ff
-        jr z, jr_000_3426
+        jr z, .solidCase
+    ; Check if enemy drains health
     cp $fe
         jr z, .healthDrain
+    ; Check if enemy is intangible (damage == 0)
     and a
         jr z, .touchNoDamage
+    
+    ; Save damage value
     ld [samus_damageValue], a
+    ; Actually hurt Samus
     ld a, $01
     ld [samus_hurtFlag], a
+    
+    ; pop the enemy base address off the stack
     pop hl
+    
+    ; Save the enemy base address
     ld a, l
     ld [collision_pEnemyLow], a
     ld a, h
     ld [collision_pEnemyHigh], a
+    ; Set "weapon" type to touch
     ld a, $20
     ld [collision_weaponType], a
+    
+    ; Set the carry flag (a solid collision occurred)
     scf
 ret
 
 .healthDrain:
+    ; Drain health
     call applyDamage.larvaMetroid
 .touchNoDamage:
+    ; pop the enemy base address off the stack
     pop hl
+    ; Save the enemy base address
     ld a, l
     ld [collision_pEnemyLow], a
     ld a, h
     ld [collision_pEnemyHigh], a
+    ; Set "weapon" type to touch
     ld a, $20
     ld [collision_weaponType], a
+    ; Clear carry flag (no solid collision occurred)
     scf
     ccf
 ret
 
 ; Exit that clears the carry flag (indicates no collision happened)
-Jump_000_3489:
+.exit_noHit:
+    ; pop the enemy base address off the stack
     pop hl
+    ; Clear carry flag (no solid collision occurred)
     scf
     ccf
 ret ;}
@@ -9001,13 +9136,13 @@ ret ;}
 collision_samusEnemiesDown: ;{ 00:348D
     ld a, [samusPose]
     cp pose_beingEaten ; $18
-        jp nc, Jump_000_3698
+        jp nc, temp_collision_exit_noHit
     ld a, [deathFlag]
     and a
-        jp nz, Jump_000_3698
+        jp nz, temp_collision_exit_noHit
     ld a, [samusInvulnerableTimer]
     and a
-        jp nz, Jump_000_3698
+        jp nz, temp_collision_exit_noHit
 
     ld a, [samus_onscreenYPos]
     add $12
@@ -9059,13 +9194,13 @@ ret ;}
 collision_samusEnemiesUp: ;{ 00:34EF
     ld a, [samusPose]
     cp pose_beingEaten ; $18
-        jp nc, Jump_000_3698
+        jp nc, temp_collision_exit_noHit
     ld a, [deathFlag]
     and a
-        jp nz, Jump_000_3698
+        jp nz, temp_collision_exit_noHit
     ld a, [samusInvulnerableTimer]
     and a
-        jp nz, Jump_000_3698
+        jp nz, temp_collision_exit_noHit
 
     ld a, [samusPose]
     and $7f
@@ -9340,7 +9475,7 @@ Jump_000_3694:
     ccf
     ret
 
-Jump_000_3698:
+temp_collision_exit_noHit:
     scf
     ccf
     ret

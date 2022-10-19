@@ -239,14 +239,14 @@
     dw hitbox_block ; Big energy drop
     dw hitbox_tile ; Missile drop
     dw hitbox_tile ; Missile drop
-    dw hitbox6A8B ; Metroid Queen (no graphics)
-    dw hitbox6AD7 ; Metroid Queen (no graphics)
-    dw hitbox6AAB ; Metroid Queen projectile (no graphics)
-    dw hitbox6AE3 ; Metroid Queen (no graphics)
+    dw hitbox6A8B ; Metroid Queen neck (no graphics)
+    dw hitbox6AD7 ; Metroid Queen head left half (no graphics)
+    dw hitbox6AAB ; Metroid Queen projectile/head right half (no graphics)
+    dw hitbox6AE3 ; Metroid Queen body (no graphics)
     dw hitbox_point ; (no graphics)
-    dw hitbox6AD7 ; Metroid Queen (no graphics)
-    dw hitbox6ACB ; Metroid Queen (no graphics)
-    dw hitbox6ACB ; Metroid Queen (no graphics)
+    dw hitbox6AD7 ; Metroid Queen mouth closed (no graphics)
+    dw hitbox6ACB ; Metroid Queen mouth open (no graphics)
+    dw hitbox6ACB ; Metroid Queen mouth stunned (no graphics)
     dw hitbox_missileDoor ; Missile door
     dw hitbox_missileDoor ; (no graphics)
     dw hitbox_missileDoor ; (no graphics)

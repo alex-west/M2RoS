@@ -98,6 +98,8 @@ Note: $FFE9 and $FFEA might have currently undocumented purposes in the enemy he
 #### Ice Counter
 Used by the ice beam to determine how frozen an enemy is. A value of 0 indicates the enemy is unfrozen.
 
+Odd values result in frozen enemies vulnerable to screw attack (normal behavior), while (non-zero) even values result in enemies invulnerable to screw attack (possibly unused).
+
 #### Health
 
 The enemy's health. The values $FD, $FE, and $FF are special cases.

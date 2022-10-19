@@ -933,7 +933,7 @@ def currentLevelBank = $D058 ; Bank for current room
 def deathAnimTimer = $D059 ; Death sequence timer
 def pDeathAltAnimBaseLow  = $D05A ; Base address of pixels to clear in Samus' VRAM tiles (for unused animation)
 def pDeathAltAnimBaseHigh = $D05B
-;$D05C: $32AB acknowledgement flag. $32AB acknowledges this when it executes, cleared every in-game frame. $32AB is called by in-game and item pickup sequence. Collision related?
+def samusSpriteCollisionProcessedFlag = $D05C ; Flag set when collision_samusEnemies ($32AB) is executed to prevent it from being executed unnecessarily
 
 ;$D05D..60: Collision information
 ; - Copied to $C466..69 by a generic enemy routine if the enemy pointer matches
