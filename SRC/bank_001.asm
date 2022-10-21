@@ -3061,7 +3061,7 @@ alpha_getAngleFromTable: ; 01:70FE
     .endIf_A:
 
     ld [metroid_angleTableIndex], a
-    call Call_001_7170 ; Do some arithmetic
+    call metroid_getSlopeToSamus ; Do some arithmetic
     call alpha_adjustAngle ; Adjust the angle index
 
 .getAngleFromTable:
@@ -3108,26 +3108,30 @@ alpha_angleTable: ; 01:7158
     ; $13 - Top left quadrant
     db $01, $0D, $0E, $0F, $03
 
-Call_001_7170:
+; Returns (100*dY)/dX
+metroid_getSlopeToSamus: ; { 01:7170
+    ; Multiply Y distance by $64 (100 in decimal)
     ld b, $64
     ld a, [metroid_absSamusDistY]
     ld e, a
-    call Call_001_73b9
+    call math_multiply_B_E_to_HL
+    ; Divide that result by the X distance
     ld a, [metroid_absSamusDistX]
     ld c, a
-    call Call_001_73cc
+    call math_divide_HL_by_C
+    ; Save result in HL to
     ld a, l
-    ld [$c45f], a
+    ld [metroid_slopeToSamusLow], a
     ld a, h
-    ld [$c460], a
-ret
+    ld [metroid_slopeToSamusHigh], a
+ret ;}
 
 ; Adjusts the travel angle of the Alpha Metroid from one of the cardinal angles
 alpha_adjustAngle: ; 01:7189
-    ld a, [$c460]
+    ld a, [metroid_slopeToSamusHigh]
     and a
     jr nz, .else_A
-        ld a, [$c45f]
+        ld a, [metroid_slopeToSamusLow]
         cp $14
             jr c, .add_0
         cp $3c
@@ -3141,7 +3145,7 @@ alpha_adjustAngle: ; 01:7189
             jr nc, .add_4
             jr .add_3
         .else_B:
-            ld a, [$c45f]
+            ld a, [metroid_slopeToSamusLow]
             cp $58
                 jr nc, .add_4
             jr .add_3
@@ -3273,7 +3277,7 @@ gamma_getAngleFromTable: ; 01:7242
     .endIf_A:
 
     ld [metroid_angleTableIndex], a
-    call Call_001_7170 ; Do some arithmetic
+    call metroid_getSlopeToSamus ; Do some arithmetic
     call gamma_adjustAngle
 
 .getAngleFromTable:
@@ -3321,10 +3325,10 @@ gamma_angleTable: ; 01:729C - Gamma angle table
     db $01, $13, $14, $15, $16, $17, $03
 
 gamma_adjustAngle:
-    ld a, [$c460]
+    ld a, [metroid_slopeToSamusHigh]
     and a
     jr nz, .else_A
-        ld a, [$c45f]
+        ld a, [metroid_slopeToSamusLow]
         cp $0c
             jr c, .add_0
         cp $26
@@ -3343,13 +3347,13 @@ gamma_adjustAngle:
             jr nc, .add_5
             jr .add_4
         .else_B:
-            ld a, [$c45f]
+            ld a, [metroid_slopeToSamusLow]
             cp $20
                 jr nc, .add_6
             jr .add_5
 
         .else_C: ; Odd jump
-            ld a, [$c45f]
+            ld a, [metroid_slopeToSamusLow]
             cp $2c
                 jr nc, .add_5
             jr .add_4
@@ -3474,44 +3478,77 @@ func_73B1: ld bc, $8482
 func_73B5: ld bc, $8481
     ret
 
-; A cursory look at these two functions seems to indicate that they use
-;  some sort of CORDIC-related algorithm
-Call_001_73b9: ; 01:73B9
+; HL = B * E
+math_multiply_B_E_to_HL: ; { 01:73B9
     ; B is set to $64 before entry
     ; E is metroid_absSamusDistY
+    
+    ; Init result
     ld hl, $0000
+    ; Init 
     ld c, l
+    
+    ; This multiplication loop is roughly equivalent to this pseudo-code (thanks PJ):
+    ; hl = 0
+    ; if [e] & 80h:
+    ;     hl += [b] * 80h
+    ; if [e] & 40h:
+    ;     hl += [b] * 40h
+    ; if [e] & 20h:
+    ;     hl += [b] * 20h
+    ; ...
+    
+    ; Loop 8 times for each bit of the operands
     ld a, $08
-
     .loop:
+        ; Divide BC by 2
         srl b
         rr c
+        
+        ; Add BC to HL if the corresponding bit in E is set
         sla e
         jr nc, .endIf
             add hl, bc
         .endIf:
+        
+        ; Decrement loop counter
         dec a
     jr nz, .loop
-ret
+ret ;}
 
-Call_001_73cc: ; 01:73CC
-    ; C is metroid_absSamusDistX
+; division 
+; HL = HL / C
+; DE = (HL % C) * 2 (remainder)
+math_divide_HL_by_C: ; { 01:73CC
+    ; C is metroid_absSamusDistX entering this
+    
+    ; Exit if HL = 0
     ld a, h
     or l
         ret z
+
+    ; Init upper bytes of DEHL
     ld de, $0000
+    ; Loop counter
     ld b, $10
+    
+    ; This loop here is equivalent to doing long division in binary.
+    ; Proving this equivalence is an exercise left to the reader.
+    ; NOTE: Dividing by zero will result in a value of 0xFFFF
+    
+    ; DEHL * 2
     sla l
     rl h
     rl e
     rl d
-
     .loop:
+        ; Check if DE - C >= 0
         ld a, e
         sub c
         ld a, d
         sbc $00
         jr c, .endIf
+            ; If so, then DE = DE - C
             ld a, e
             sub c
             ld e, a
@@ -3519,14 +3556,16 @@ Call_001_73cc: ; 01:73CC
             sbc $00
             ld d, a
         .endIf:
-        ccf
+        ccf ; Invert the carry flag
+        ; If (DE >= C) then (DEHL << 1) & 1
+        ;  else (DEHL << 1)
         rl l
         rl h
         rl e
         rl d
         dec b
     jr nz, .loop
-ret
+ret ;}
 
 ;------------------------------------------------------------------------------
 ; Draws sprites for title and credits
