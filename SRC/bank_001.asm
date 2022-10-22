@@ -8,8 +8,7 @@ SECTION "ROM Bank $001", ROMX[$4000], BANK[$1]
 ; 01:4000
 include "data/sprites_samus.asm"
 
-; 01:493E: Update status bar
-VBlank_updateStatusBar:
+VBlank_updateStatusBar: ;{ 01:493E
     ; Exit if the queen's head is being animated (vblank time optimization?)
     ld a, [queen_headFrameNext]
     and a
@@ -22,6 +21,7 @@ VBlank_updateStatusBar:
     and a
         ret nz
 
+; Draw energy tanks {
     ; Prep energy tank graphics
     ld hl, hHUD_tank1
     ; Fill buffer with blank spaces
@@ -90,7 +90,8 @@ VBlank_updateStatusBar:
     ld [hl+], a
     ld a, $9e ; Dash
     ld [hl+], a
-    
+;}
+
     ; Draw Samus' health (tens digit)
     ld a, [samusDispHealthLow]
     and $f0
@@ -131,7 +132,7 @@ VBlank_updateStatusBar:
     inc hl
     inc hl
 
-    ; Draw Metroid counter in corner
+; Draw Metroid counter in corner {
     ; Check if paused
     ldh a, [gameMode]
     cp $08
@@ -194,9 +195,10 @@ VBlank_updateStatusBar:
             ld [hl+], a
             ld [hl], a
             ret
+;}
+;} end proc
 
-;------------------------------------------------------------------------------
-adjustHudValues:: ; 01:4A2B - Adjusts displayed health and missiles
+adjustHudValues:: ;{ 01:4A2B - Adjusts displayed health and missiles
     ; Clamp ones digit of health to decimal range
     ld a, [samusCurHealthLow]
     and $0f
@@ -219,35 +221,40 @@ adjustHudValues:: ; 01:4A2B - Adjusts displayed health and missiles
         ld [samusCurHealthLow], a
     .endIf_B:
 
-    ; Check health high byte
+; Adjust health {
+    ; Check health high byte 
     ld a, [samusCurHealthHigh]
     ld b, a
     ld a, [samusDispHealthHigh]
     cp b
-    jr z, .checkHealthLowByte
-    jr nc, .decrementDisplayedHealth
+        jr z, .checkHealthLowByte
+        jr nc, .decrementDisplayedHealth
     jr .incrementDisplayedHealth
 
-.checkHealthLowByte: ; Check health low byte
+.checkHealthLowByte:
+    ; Check health low byte
     ld a, [samusCurHealthLow]
     ld b, a
     ld a, [samusDispHealthLow]
     cp b
-    jr z, .checkMissileHighByte
-    jr nc, .decrementDisplayedHealth
+        jr z, .checkMissileHighByte
+        jr nc, .decrementDisplayedHealth
+    ; Fallthrough to .incrementDisplayedHealth
 
 .incrementDisplayedHealth: ; Increment displayed health
+    ; Increment low byte
     ld a, [samusDispHealthLow]
     add $01
     daa
     ld [samusDispHealthLow], a
-    
+    ; Carry
     ld a, [samusDispHealthHigh]
     adc $00
     daa
     ld [samusDispHealthHigh], a
+    
     ; Check if no sound effect is playing
-    ld a, [$cec1]
+    ld a, [sfxPlaying_square1]
     and a
     jr nz, .checkMissileHighByte
         ; Play sound every 4 frames
@@ -256,20 +263,22 @@ adjustHudValues:: ; 01:4A2B - Adjusts displayed health and missiles
         jr nz, .checkMissileHighByte
             ld a, $18
             ld [sfxRequest_square1], a
-        jr .checkMissileHighByte
+    jr .checkMissileHighByte
 
 .decrementDisplayedHealth: ; Decrement displayed health
+    ; Decrement low byte
     ld a, [samusDispHealthLow]
     sub $01
     daa
     ld [samusDispHealthLow], a
-    
+    ; Carry
     ld a, [samusDispHealthHigh]
     sbc $00
     daa
     ld [samusDispHealthHigh], a
+    
     ; Check if no sound effect is playing
-    ld a, [$cec1]
+    ld a, [sfxPlaying_square1]
     and a
     jr nz, .checkMissileHighByte
         ; Play sound every 4 frames
@@ -278,16 +287,18 @@ adjustHudValues:: ; 01:4A2B - Adjusts displayed health and missiles
         jr nz, .checkMissileHighByte
             ld a, $18
             ld [sfxRequest_square1], a
+    ; Fallthrough to .checkMissileHighByte
+;}
 
-.checkMissileHighByte: ; Check missile high byte
+ ; Adjust missiles {
+.checkMissileHighByte: 
+    ; Check missile high byte
     ld a, [samusCurMissilesHigh]
     ld b, a
     ld a, [samusDispMissilesHigh]
     cp b
-    jr z, .checkMissileLowByte
-
-    jr nc, .decrementDisplayedMissiles
-
+        jr z, .checkMissileLowByte
+        jr nc, .decrementDisplayedMissiles
     jr .incrementDisplayedMissiles
 
 .checkMissileLowByte: ; Check missile low byte
@@ -295,15 +306,17 @@ adjustHudValues:: ; 01:4A2B - Adjusts displayed health and missiles
     ld b, a
     ld a, [samusDispMissilesLow]
     cp b
-    ret z
+        ret z
         jr nc, .decrementDisplayedMissiles
+    ; Fallthrough to .incrementDisplayedMissiles
 
 .incrementDisplayedMissiles: ; Increment displayed missile count
+    ; Increment low byte
     ld a, [samusDispMissilesLow]
     add $01
     daa
     ld [samusDispMissilesLow], a
-    
+    ; Carry
     ld a, [samusDispMissilesHigh]
     adc $00
     daa
@@ -318,21 +331,23 @@ adjustHudValues:: ; 01:4A2B - Adjusts displayed health and missiles
 ret
 
 .decrementDisplayedMissiles: ; Decrement displayed missile count
+    ; Decrement low byte
     ld a, [samusDispMissilesLow]
     sub $01
     daa
     ld [samusDispMissilesLow], a
-    
+    ; Carry
     ld a, [samusDispMissilesHigh]
     sbc $00
     daa
     ld [samusDispMissilesHigh], a
 ret
+;}
+;} end proc
 
-;------------------------------------------------------------------------------
-; Debug Menu drawing routines
-debug_drawNumber: ; 01:4AFC - Display a two-sprite number
-.twoDigit:
+; Debug Menu drawing routine (note this procedure has two entrances
+debug_drawNumber: ;{ 01:4AFC 
+.twoDigit: ; Display a two-sprite number
     ldh [$99], a
     swap a
     and $0f
@@ -348,18 +363,22 @@ ret
 .drawSprite: ; 01:4B11
     ; Save sprite tile to temp
     ldh [$98], a
+
     ; Load WRAM address to HL
-    ld h, $c0
+    ld h, HIGH(wram_oamBuffer) ; $C0
     ldh a, [hOamBufferIndex]
     ld l, a
+
     ; Write Y and X positions
     ldh a, [hSpriteYPixel]
     ld [hl+], a
     ldh a, [hSpriteXPixel]
     ld [hl+], a
+
     ; Update x position for next sprite
     add $08
     ldh [hSpriteXPixel], a
+
     ; Write tile number and sprite attributes
     ldh a, [$98]
     ld [hl+], a
@@ -368,38 +387,43 @@ ret
     ; Save OAM buffer value
     ld a, l
     ldh [hOamBufferIndex], a
-ret
+ret ;}
 
-;------------------------------------------------------------------------------
-; 01:4B2C - Render Metroid sprite on the HUD
-drawHudMetroid::
+; Render Metroid sprite on the HUD
+drawHudMetroid:: ;{ 01:4B2C
+    ; Set sprite to default HUD Y position
     ld a, $98
     ldh [hSpriteYPixel], a
-    ; Check if in queen fight
+
+    ; Logic for raising the Y position
+    ; Don't raise the HUD metroid if in the Queen fight
     ld a, [queen_roomFlag]
     cp $11
-    jr z, .endIf_A
-        ; If standing on save point
+    jr z, .endIf
+        ; Do raise the the HUD metroid
+        ; ...if standing on save point
         ld a, [saveContactFlag]
         and a
-        jr nz, .endIf_B
-            ; or if a major item is being collected
-            ld a, [itemCollected_copy]
-            and a
-            jr z, .endIf_A
-                cp $0b
-                jr nc, .endIf_A
-        .endIf_B:
+            jr nz, .then
+        ; ...or if a major item is being collected
+        ld a, [itemCollected_copy]
+        and a
+        jr z, .endIf
+            cp $0b ; Threshold between major items and refills
+            jr nc, .endIf
+        .then:
             ; Then render the metroid counter 8 pixels up
             ld a, $90
             ldh [hSpriteYPixel], a
-    .endIf_A:
+    .endIf:
 
+    ; Set x position
     ld a, $80
     ldh [hSpriteXPixel], a
     ld a, $01
     ld [samus_screenSpritePriority], a
-    ; Animate the counter
+    
+    ; Animate the metroid every 16 frames
     ldh a, [frameCounter]
     and $10
     swap a
@@ -407,12 +431,13 @@ drawHudMetroid::
     ldh [hSpriteId], a
     ; Draw the sprite
     call drawSamusSprite
-ret
+ret ;}
 
 ; Draws a sprite from Samus's sprite bank
-drawSamusSprite: ; 01:4B62
-    ; This routine was originally in bank 0
+drawSamusSprite: ;{ 01:4B62
+    ; Unnecessary bank switch (indicates this routine was originally in bank 0)
     switchBank samusSpritePointerTable
+    
     ; Index into sprite pointer table
     ldh a, [hSpriteId]
     ld d, $00
@@ -426,9 +451,11 @@ drawSamusSprite: ; 01:4B62
     ld e, a
     ld a, [hl]
     ld d, a
+    
     ; Prep HL
-    ld h, $c0
+    ld h, HIGH(wram_oamBuffer) ; $C0
     ldh a, [hOamBufferIndex]
+    
     ; Store x and y offsets of sprite in B and C
     ld l, a
     ldh a, [hSpriteYPixel]
@@ -440,22 +467,24 @@ drawSamusSprite: ; 01:4B62
         ; No sprite flipping logic here
         ; Load y coordinate
         ld a, [de]
-        cp METASPRITE_END
+        cp METASPRITE_END ; Exit if at the end of the sprite
             jr z, .exit
-        
         add b
         ld [hl+], a
+        
         ; Load x coordinate
         inc de        
         ld a, [de]
         add c
         ld [hl+], a
+        
         ; Load tile number
         inc de
         ld a, [de]
         ld [hl+], a
         ; Load sprite attribute byte
         inc de
+        
         ; Set PAL1 bit or leave it alone
         ldh a, [hSpriteAttr]
         and a
@@ -466,6 +495,7 @@ drawSamusSprite: ; 01:4B62
         .else_A:
             ld a, [de]
         .endIf_A:
+        
         ; Adjust priority depending on screen
         ld [hl], a
         ld a, [samus_screenSpritePriority]
@@ -475,25 +505,26 @@ drawSamusSprite: ; 01:4B62
             set OAMB_PRI, a
             ld [hl], a
         .endIf_B:
+        
         ; Adjust indeces for next loop iteration
         inc hl
         ld a, l
         ldh [hOamBufferIndex], a
         inc de
     jr .spriteLoop
-
     .exit:
-ret
+ret ;}
 
-
-clearUnusedOamSlots: ; 01:4BB3
+clearUnusedOamSlots: ;{ 01:4BB3
+    ; Compare max index of previous and current frames
     ldh a, [hOamBufferIndex]
     ld b, a
     ld a, [maxOamPrevFrame]
     ld c, a
     cp b
-    ; Jump ahead if we used more sprites on the previous frame
+    ; Jump ahead if we used more sprites on the current frame
     jr c, .endIf
+        ; If the previous frame used more sprites, then clear those sprites out
         ld h, HIGH(wram_oamBuffer)
         ldh a, [hOamBufferIndex]
         ld l, a
@@ -508,9 +539,10 @@ clearUnusedOamSlots: ; 01:4BB3
     ; Update max index
     ldh a, [hOamBufferIndex]
     ld [maxOamPrevFrame], a
-ret
+ret ;}
 
-clearAllOam: ; 00:4BCE
+clearAllOam: ;{ 00:4BCE
+    ; Write 0 to all OAM data
     ld hl, wram_oamBuffer
     .clearLoop:
         xor a
@@ -518,11 +550,14 @@ clearAllOam: ; 00:4BCE
         ld a, l
         cp OAM_MAX
     jr c, .clearLoop
-ret
+ret ;}
 
-;------------------------------------------------------------------------------
-drawSamus: ; 01:4BD9: Draw Samus
+; Draw Samus function and sub-routines {
+
+; Function has two entry points (one ignores invulnerability frame blinking)
+drawSamus: ;{ 01:4BD9 Draw Samus
 ; Entry point 1
+    ; Check if damage frames are active
     ld a, [samusInvulnerableTimer]
     and a
     jr z, .endIf_A
@@ -531,16 +566,17 @@ drawSamus: ; 01:4BD9: Draw Samus
         ; 4 frames on, 4 frames off
         ldh a, [frameCounter]
         bit 2, a
-        ret z
+            ret z
     .endIf_A:
     
+    ; Check if touching acid
     ld a, [acidContactFlag]
     and a
     jr z, .endIf_B
         ; 4 frames on, 4 frames off
         ldh a, [frameCounter]
         bit 2, a
-        ret z
+            ret z
     .endIf_B:
 
 .ignoreDamageFrames ; 01:4BF3 - Entry point 2
@@ -549,11 +585,12 @@ drawSamus: ; 01:4BD9: Draw Samus
         jp nz, drawSamus_faceScreen
 
     ; Convert facing direction into a dummy input
-    ld b, $01
+    ; (Note: nybbles are swapped for array-indexing purposes)
+    ld b, $01 ; Right
     ld a, [samusFacingDirection]
     and a
     jr nz, .endIf_C
-        ld b, $02
+        ld b, $02 ; Left
     .endIf_C:
 
     ; Check if cutsence is active (e.g. a metroid is transforming)
@@ -568,12 +605,13 @@ drawSamus: ; 01:4BD9: Draw Samus
         ; Load input into temp variable
         ldh a, [hInputPressed]
         and PADF_DOWN | PADF_UP | PADF_LEFT | PADF_RIGHT ;$f0
-        swap a
+        swap a ; Swap nybbles for array-indexing purposes
         ; OR the dummy input into the temp variable as well
         or b
         ldh [$98], a
     .endIf_D:
-
+    
+    ; Jump to the appropriate draw routine
     ld a, [samusPose]
     rst $28
         dw drawSamus_standing   ; $00 - Standing
@@ -606,8 +644,9 @@ drawSamus: ; 01:4BD9: Draw Samus
         dw drawSamus_morph      ; $1B - In Metroid Queen's stomach
         dw drawSamus_morph      ; $1C - Escaping Metroid Queen
         dw drawSamus_morph      ; $1D - Escaped Metroid Queen
+;}
 
-drawSamus_knockback: ; 01:4C59 - $0F, $11: Knockback
+drawSamus_knockback: ;{ 01:4C59 - $0F, $11: Knockback
     ; Index = facing direction
     ld d, $00
     ld a, [samusFacingDirection]
@@ -621,8 +660,9 @@ jp drawSamus_common
 
 .knockbackTable: ; 02:4C69
     db $16, $09
+;}
 
-drawSamus_spider: ; 01:4C6B - $0B-$0E: Spider Ball
+drawSamus_spider: ;{ 01:4C6B - $0B-$0E: Spider Ball
     ; Multiply facing direction by 4
     ld a, [samusFacingDirection]
     and $01
@@ -648,8 +688,9 @@ jp drawSamus_common
 .spiderTable: ; 02:4C8C
     db $37, $38, $39, $3a ; Left
     db $3b, $3c, $3d, $3e ; Right
+;}
 
-drawSamus_morph: ; 01:4C94 - Morph poses
+drawSamus_morph: ;{ 01:4C94 - Morph poses
     ; Get sub-table depending on facing direction
     ld a, [samusFacingDirection]
     and $01
@@ -674,8 +715,9 @@ jp drawSamus_common
 .morphTable: ; 01:4CB5
     db $1e, $1f, $20, $21 ; Left
     db $26, $27, $28, $29 ; Right
+;}
 
-drawSamus_jump: ; 01:4CBD - $01, $07: Jumping and falling
+drawSamus_jump: ;{ 01:4CBD - $01, $07: Jumping and falling
     ; Index into table using input + facing direction
     ld d, $00
     ldh a, [$98]
@@ -685,9 +727,9 @@ drawSamus_jump: ; 01:4CBD - $01, $07: Jumping and falling
     ; Get sprite ID
     ld a, [hl]
     ldh [hSpriteId], a
-jp drawSamus_common
+jp drawSamus_common ;}
 
-drawSamus_jumpStart: ; 01:4CCC - $09, $0A: Jump Start
+drawSamus_jumpStart: ;{ 01:4CCC - $09, $0A: Jump Start
     ld a, $03 ; Right
     ldh [hSpriteId], a
     ld a, [samusFacingDirection]
@@ -695,8 +737,7 @@ drawSamus_jumpStart: ; 01:4CCC - $09, $0A: Jump Start
         jp nz, drawSamus_common
     ld a, $10 ; Left
     ldh [hSpriteId], a
-        jp drawSamus_common
-; end proc
+jp drawSamus_common ;}
 
 jumpSpriteTable: ; 01:4CDE
 ; Value read is based on input and facing direction
@@ -704,7 +745,7 @@ jumpSpriteTable: ; 01:4CDE
 ;       x    R    L    x    U    R    L    x    D    R    L    x    x    x    x    x
     db $00, $09, $16, $00, $00, $0a, $17, $00, $00, $0c, $19, $00, $00, $00, $00, $00
 
-drawSamus_spinJump: ; 01:4CEE - $02: Spin jump
+drawSamus_spinJump: ;{ 01:4CEE - $02: Spin jump
     ld a, [samusFacingDirection]
     and a
     jp z, .else
@@ -714,6 +755,7 @@ drawSamus_spinJump: ; 01:4CEE - $02: Spin jump
         ld hl, .spinLeftTable
     .endIf:
 
+    ; Spin fast if we have either space jump or screw attack
     ld a, [samusItems]
     and itemMask_space | itemMask_screw
     jr nz, .spinFast
@@ -743,19 +785,20 @@ drawSamus_spinJump: ; 01:4CEE - $02: Spin jump
         ld a, [hl]
         ldh [hSpriteId], a
         jp drawSamus_common
-; end proc
 
 ; Spin tables
 .spinRightTable: ; 01:4D2B
     db $1A, $1B, $1C, $1D ; Right
 .spinLeftTable: ; 01:4D2F
     db $22, $23, $24, $25 ; Left
+;}
 
-drawSamus_faceScreen: ; 00:4D33 - $13-$17: Facing the screen
+drawSamus_faceScreen: ;{ 00:4D33 - $13-$17: Facing the screen
     ; Fade-in logic
     ld a, [countdownTimerLow]
     and a
     jr z, .endIf
+        ; Skip rendering 1 out of 4 frames
         ldh a, [frameCounter]
         and $03
         ret z
@@ -763,9 +806,9 @@ drawSamus_faceScreen: ; 00:4D33 - $13-$17: Facing the screen
     ; Load sprite ID
     ld a, $00
     ldh [hSpriteId], a
-jp drawSamus_common
+jp drawSamus_common ;}
 
-drawSamus_standing: ; $00: Standing
+drawSamus_standing: ;{ $00: Standing
     ; Index into table using input + facing direction
     ld d, $00
     ldh a, [$98]
@@ -782,8 +825,9 @@ jp drawSamus_common
 ;                                U    U              D    D
 ;       x    R    L    x    U    R    L    x    D    R    L    x    x    x    x    x
     db $00, $01, $0e, $00, $00, $02, $0f, $00, $00, $01, $0e, $00, $00, $00, $00, $00, $00
+;}
 
-drawSamus_crouch: ; $04 - Crouching
+drawSamus_crouch: ;{ $04 - Crouching
     ld a, $0b ; Right
     ldh [hSpriteId], a
     ld a, [samusFacingDirection]
@@ -791,10 +835,9 @@ drawSamus_crouch: ; $04 - Crouching
         jp nz, drawSamus_common
     ld a, $18 ; Left
     ldh [hSpriteId], a
-        jp drawSamus_common
-; end proc
+jp drawSamus_common ;}
 
-drawSamus_run: ; 01:4D77 - $03: Running
+drawSamus_run: ;{ 01:4D77 - $03: Running
     ; Clamp run animation counter so it never equals or exceeds $30
     ld a, [samus_animationTimer]
     cp $30
@@ -860,10 +903,13 @@ jp drawSamus_common
 .runningTableAimingUp: ; 01:4DD7 - Aiming up
     db $2e, $2f, $30, $00 ; Left
     db $2b, $2c, $2d, $00 ; Right
+;}
 
 ; All the above drawSamus procedures jump here
-drawSamus_common: ; 01:4DDF
+drawSamus_common: ;{ 01:4DDF
+    ; Load sprite priority bit
     call loadScreenSpritePriorityBit
+
     ; Set x pos
     ldh a, [hCameraXPixel]
     ld b, a
@@ -880,9 +926,11 @@ drawSamus_common: ; 01:4DDF
     add $62
     ldh [hSpriteYPixel], a
     ld [samus_onscreenYPos], a
+
     ; Set the sprite attribute
     xor a
     ldh [hSpriteAttr], a
+
     ; If in contact with acid or being hurt, set attribute byte to non-zero
     ld a, [acidContactFlag]
     and a
@@ -894,37 +942,47 @@ drawSamus_common: ; 01:4DDF
         ld a, $01
         ldh [hSpriteAttr], a
     .endIf:
-
-    call drawSamus_earthquakeAdjustment ; Adjust y position
+    
+    ; Adjust y position
+    call drawSamus_earthquakeAdjustment
+    ; Draw Samus herself
     call drawSamusSprite
+    
+    ; Clear variables
     xor a
     ldh [hSpriteAttr], a
     ld [samus_screenSpritePriority], a
-ret
+ret ;}
+;}
 
 ;------------------------------------------------------------------------------
 ; New game
 ; - Transfers initial savegame from ROM to save buffer in WRAM
-createNewSave: ; 01:4E1C
+createNewSave: ;{ 01:4E1C
+    ; Clear flag
     xor a
     ld [loadingFromFile], a
+    
+    ; Copy initial save file to save buffer
     ld hl, initialSaveFile
     ld de, saveBuffer
     ld b, $26
-
     .loadLoop:
         ld a, [hl+]
         ld [de], a
         inc de
         dec b
     jr nz, .loadLoop
-
+    
+    ; Set game mode
     ld a, $02 ; "gameMode_LoadA"
     ldh [gameMode], a
-ret
+ret ;}
 
 ; Copies savegame from SRAM to save buffer in WRAM
-loadSaveFile: ; 01:4E33
+loadSaveFile: ;{ 01:4E33
+    ; Double check to make sure we're loading from a file
+    ;  (this is supposed to be set if we're here)
     ld a, [loadingFromFile]
     and a
         jr z, createNewSave
@@ -932,6 +990,8 @@ loadSaveFile: ; 01:4E33
     ; Enable SRAM
     ld a, $0a
     ld [$0000], a
+    
+    ; HL = saveData_baseAddr + activeSaveSlot*64
     ld a, [activeSaveSlot]
     sla a
     sla a
@@ -939,9 +999,10 @@ loadSaveFile: ; 01:4E33
     add $08
     ld l, a
     ld h, HIGH(saveData_baseAddr)
+    
+    ; Copy save file to save buffer
     ld de, saveBuffer
     ld b, $26
-
     .loadLoop:
         ld a, [hl+]
         ld [de], a
@@ -953,10 +1014,12 @@ loadSaveFile: ; 01:4E33
     ld a, $00
     ld [$0000], a
     
+    ; Load the save flags for enemies
     call loadEnemySaveFlags_longJump ; Indirect call to 01:7AB9 (in this same bank!)
+    
     ld a, $02 ; for "gameMode_LoadA"
     ldh [gameMode], a
-ret
+ret ;}
 
 ;------------------------------------------------------------------------------
 ; Initial savegame
@@ -2883,7 +2946,7 @@ ret
 
 ; Render enemy sprite
 drawEnemySprite: ; 01:5A3F
-    call Call_001_5a9a
+    call drawEnemySprite_getInfo
     ld a, [$c430]
     ld d, $00
     ld e, a
@@ -2956,7 +3019,7 @@ drawEnemySprite: ; 01:5A3F
 ret
 
 ; Get base information for enemy sprite to render
-Call_001_5a9a:
+drawEnemySprite_getInfo: ; 01:5A9A
     inc l
     ; y pos
     ld a, [hl+]
@@ -2968,10 +3031,10 @@ Call_001_5a9a:
     ld a, [hl+]
     ld [$c430], a
     ; Attributes
-    ld a, [hl+]
-    xor [hl]
+    ld a, [hl+] ; Base attributes
+    xor [hl] ; Normal attributes
     inc l
-    xor [hl]
+    xor [hl] ; Stun counter
     and $f0
     ld [$c431], a
 ret
