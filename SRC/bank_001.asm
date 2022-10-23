@@ -2685,6 +2685,7 @@ handleRespawningBlocks: ;{ 01:5692
             ; Increment frame counter
             inc a
             ld [hl+], a
+            
             ; Compare scroll y and tile y
             ld a, [scrollY]
             ld b, a
@@ -2704,7 +2705,8 @@ handleRespawningBlocks: ;{ 01:5692
             and $f0
             cp $d0 ; Remove from table if offscreen
                 jr z, .removeBlock
-        
+            
+            ; Check timer
             dec hl
             dec hl
             ld a, [hl]
@@ -2732,30 +2734,34 @@ handleRespawningBlocks: ;{ 01:5692
             ld [hl], a
     
     .nextBlock:
+        ; Iterate to next block
         ld a, l
         and $f0
         add $10
         ld l, a
+        ; Exit if HL is $xx00
         and a
     jr nz, .loop
 ret ;}
 
-destroyBlock: ; 01:56E9
-.empty: ; Destroy block (frame 3 - empty)
+destroyBlock: ;{ 01:56E9
+.empty: ; Destroy block (frame 3 - empty) {
+    ; Get address of tile
     call getTilemapAddress
     ; Load return arg into HL
     ld a, [pTilemapDestLow]
-    and $de ; Bit-fiddling to ensure it's the top-left corner of the tile?
+    and %11011110 ; Bit-fiddling to ensure it's the top-left corner of the tile
     ld l, a
     ld a, [pTilemapDestHigh]
     ld h, a
+    
     ld de, $001f ; Distance in memory between top-right and bottom-left tile
 
+    ; Wait for HBlank twice to ensure sync
     .waitLoop_A:
         ldh a, [rSTAT]
         and $03
     jr nz, .waitLoop_A
-
     .waitLoop_B:
         ldh a, [rSTAT]
         and $03
@@ -2768,32 +2774,39 @@ destroyBlock: ; 01:56E9
     add hl, de
     ld [hl+], a
     ld [hl], a
+    
     ; Play sound
     ld a, $04
     ld [sfxRequest_noise], a
-ret
+ret ;}
 
-.reform: ; 01:5712 - Fully restore block (frame 6)
+.reform: ; 01:5712 - Fully restore block (frame 6) {
+    ; Clear block timer
     xor a
     ld [hl], a
+    
+    ; Get address of tile
     call getTilemapAddress
+    ; Load return arg into HL
     ld a, [pTilemapDestLow]
-    and $de
+    and %11011110 ; Bit-fiddling to ensure it's the top-left corner of the tile
     ld l, a
     ld a, [pTilemapDestHigh]
     ld h, a
-    ld de, $001f
-
+    
+    ld de, $001f ; Distance in memory between top-right and bottom-left tile
+    
+    ; Wait for HBlank twice to ensure sync
     .waitLoop_C:
         ldh a, [rSTAT]
         and $03
     jr nz, .waitLoop_C
-
     .waitLoop_D:
         ldh a, [rSTAT]
         and $03
     jr nz, .waitLoop_D
 
+    ; Set to tiles $00-$03
     xor a
     ld [hl+], a
     inc a
@@ -2803,32 +2816,37 @@ ret
     ld [hl+], a
     inc a
     ld [hl], a
-    ; Hurt Samus if applicable
+    
+    ; Attempt to hurt Samus if applicable
     ld a, [samusInvulnerableTimer]
     and a
         ret nz
     call .hurtSamus
-ret
+ret ;}
 
-.frame_A: ; Destroy block (frames 1, 5)
+.frame_A: ; Destroy block (frames 1, 5) {
+    ; Get address of tile
     call getTilemapAddress
+    ; Load return arg into HL
     ld a, [pTilemapDestLow]
-    and $de
+    and %11011110 ; Bit-fiddling to ensure it's the top-left corner of the tile
     ld l, a
     ld a, [pTilemapDestHigh]
     ld h, a
-    ld de, $001f
-
+    
+    ld de, $001f ; Distance in memory between top-right and bottom-left tile
+    
+    ; Wait for HBlank twice to ensure sync
     .waitLoop_E:
         ldh a, [rSTAT]
         and $03
     jr nz, .waitLoop_E
-
     .waitLoop_F:
         ldh a, [rSTAT]
         and $03
     jr nz, .waitLoop_F
-
+    
+    ; Set to tiles $04-$07
     ld a, $04
     ld [hl+], a
     inc a
@@ -2838,27 +2856,31 @@ ret
     ld [hl+], a
     inc a
     ld [hl], a
-ret
+ret ;}
 
-.frame_B: ; Destroy block (frames 2, 4)
+.frame_B: ; Destroy block (frames 2, 4) {
+    ; Get address of tile
     call getTilemapAddress
+    ; Load return arg into HL
     ld a, [pTilemapDestLow]
-    and $de
+    and %11011110 ; Bit-fiddling to ensure it's the top-left corner of the tile
     ld l, a
     ld a, [pTilemapDestHigh]
     ld h, a
-    ld de, $001f
-
+    
+    ld de, $001f ; Distance in memory between top-right and bottom-left tile
+    
+    ; Wait for HBlank twice to ensure sync
     .waitLoop_G:
         ldh a, [rSTAT]
         and $03
     jr nz, .waitLoop_G
-
     .waitLoop_H:
         ldh a, [rSTAT]
         and $03
     jr nz, .waitLoop_H
-
+    
+    ; Set to tiles $08-$0B
     ld a, $08
     ld [hl+], a
     inc a
@@ -2868,9 +2890,9 @@ ret
     ld [hl+], a
     inc a
     ld [hl], a
-ret
+ret ;}
 
-.hurtSamus: ; 01:5790
+.hurtSamus: ;{ 01:5790
     ; Index into height table using Samus' pose
     ld hl, .samusHeightTable
     ld a, [samusPose]
@@ -2886,23 +2908,25 @@ ret
     sub $10
     and $f0
     ld c, a
-    ldh [hTemp.a], a
+    ldh [hTemp.a], a ; Not sure why this is being save to temp
     ldh a, [hSamusYPixel]
     add $18
     sub c
     cp b
         jr nc, .exit
+    
     ; Bounds checking for x position
     ld a, [tileX]
     sub $08
     and $f0
     ld b, a
-    ldh [hTemp.b], a
+    ldh [hTemp.b], a ; Not sure why this is being save to temp
     ldh a, [hSamusXPixel]
     add $0c
     sub b
     cp $18
         jr nc, .exit
+    
     ; Set damage boosting direction depending of x position
     cp $0c
     jr nc, .else
@@ -2913,11 +2937,14 @@ ret
         ld a, $01 ; Right
         ld [samus_damageBoostDirection], a
     .endIf:
+    
     ; Hurt samus
     ld a, $01
     ld [samus_hurtFlag], a
     ld a, $02
     ld [samus_damageValue], a
+    
+    ; Re-destroy block (to avoid being trapped)
     call destroyRespawningBlock
 
     .exit:
@@ -2943,6 +2970,9 @@ ret
     db $10 ; $10 - Morphball knockback
     db $20 ; $11 - Standing bombed
     db $10 ; $12 - Morphball bombed
+;}
+
+;} end destroy block code
 
 ;------------------------------------------------------------------------------
 ; Handle window height, save text, earthquake, low heath beep, fade in, and Metroid Queen cry
@@ -2960,10 +2990,12 @@ miscIngameTasks: ;{ 01:57F2
     ld a, [queen_roomFlag]
     cp $11
     jr z, .endIf_B
+        ; Check if window is active
         ldh a, [rLCDC]
         bit 5, a
         jr nz, .endIf_C
-            set 5, a ; Enable window display
+            ; If not active, re-enable window
+            set 5, a
             ldh [rLCDC], a
         .endIf_C:
         
