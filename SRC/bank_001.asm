@@ -1026,6 +1026,7 @@ ret ;}
 initialSaveFile: ; 01:4E64
 include "data/initialSave.asm"
 
+; Samus projectile and bomb functions/tables {
 
 samusShoot: ;{ 01:4E8A
     ; Fire if the B button was just pressed
@@ -2047,18 +2048,21 @@ ret
 ; Bomb stuff
 
 ; Bomb beam code
-bombBeam_layBomb: ; 01:53AF
+bombBeam_layBomb: ;{ 01:53AF
     ; Find first open bomb slot (if available)
     ld hl, bombArray
     .loop:
+        ; Exit loop successfully if slot in inactive
         ld a, [hl]
         cp $ff
             jr z, .break
+        ; Iterate to next slot
         ld de, $0010
         add hl, de
+        ; Exit without laying a bomb if we're past the last slot
         ld a, l
         swap a
-        cp $06
+        cp bombArray.end >> 4 & $0F ; $06
     jr nz, .loop
         ret
     .break:
@@ -2080,23 +2084,30 @@ bombBeam_layBomb: ; 01:53AF
     ; Play sound
     ld a, $13
     ld [sfxRequest_square1], a
-ret
+ret ;}
 
-samus_layBomb: ; 01:53D9 - Lay bombs
+samus_layBomb: ;{ 01:53D9 - Lay bombs
+    ; Exit if Samus doesn't have bombs
     ld a, [samusItems]
     bit itemBit_bomb, a
         ret z
+    
+    ; Exit if B was not just pressed
     ldh a, [hInputRisingEdge]
     bit PADB_B, a
         ret z
+    
     ; Find first open bomb slot (if available)
     ld hl, bombArray
     .loop:
+        ; Exit loop successfully if slot in inactive
         ld a, [hl]
         cp $ff
             jr z, .break
+        ; Iterate to next slot
         ld de, $0010
         add hl, de
+        ; Exit without laying a bomb if we're past the last slot
         ld a, l
         swap a
         cp $06
@@ -2121,175 +2132,229 @@ samus_layBomb: ; 01:53D9 - Lay bombs
     ; Play sound
     ld a, $13
     ld [sfxRequest_square1], a
-ret
+ret ;}
 
-; Draw bombs
-Call_001_540e:
+; Draw bombs and call collision functions upon explosion
+drawBombs: ;{ 01:540E
+    ; Init projectile index
     xor a
     ld [projectileIndex], a
 
-    Jump_001_5412:
+    .bombLoop:
+        ; Get address for current bomb
         ld hl, bombArray ; $dd30
         ld a, [projectileIndex]
         swap a
         add l
         ld l, a
+        
+        ; Load bomb type (skip ahead if inactive)
         ld a, [hl+]
         ldh [hTemp.a], a
         cp $ff
-        jr z, jr_001_5490
+        jr z, .nextBomb
+            ; Load timer to C
             ld a, [hl+]
             ld c, a
+            
+            ; Load bomb y pos and adjust to map space
             ld a, [scrollY]
             ld b, a
             ld a, [hl+]
-            ld [$d04a], a
+            ld [bomb_mapYPixel], a
             sub b
             ldh [hSpriteYPixel], a
+            
+            ; Load bomb y pos and adjust to map space
             ld a, [scrollX]
             ld b, a
             ld a, [hl]
-            ld [$d04b], a
+            ld [bomb_mapXPixel], a
             sub b
             ldh [hSpriteXPixel], a
+            
+            ; Check if horizontally onscreen
             ldh a, [hSpriteXPixel]
             cp $b0
-            jr nc, jr_001_548a
+            jr nc, .else_A
+                ; Check if vertically onscreen
                 ldh a, [hSpriteYPixel]
                 cp $b0
-                jr nc, jr_001_548a
+                jr nc, .else_A
+                    ; Check if a bomb or explosion
                     ldh a, [hTemp.a]
                     cp $01
-                    jr nz, jr_001_545d
+                    jr nz, .else_B
+                        ; Bomb case
+                        ; Flicker between $35 and $36 every 8 frames
                         ld a, c
                         and $08
                         sla a
                         swap a
                         add $35
                         ldh [hSpriteId], a
+                        ; Draw sprite
                         call drawSamusSprite
-                        jr jr_001_5490
-                    jr_001_545d:
-                    
-                    ld a, c
-                    cp $08
-                    jr nz, jr_001_547e
-                        ld a, [samusPose]
-                        cp pose_beingEaten ; $18
-                            call c, Call_001_54d7
+                        jr .nextBomb
+                    .else_B:
+                        ; Explosion case
                         ld a, c
-                        srl a
-                        add $31
-                        ldh [hSpriteId], a
-                        call drawSamusSprite
-                        call collision_bombEnemies
-                        ld a, $0c
-                        ld [sfxRequest_noise], a
-                        jr jr_001_5490
-                    jr_001_547e:
-                        ld a, c
-                        srl a
-                        add $31
-                        ldh [hSpriteId], a
-                        call drawSamusSprite
-                        jr jr_001_5490
+                        cp $08
+                        jr nz, .else_C
+                            ; Fresh explosion
+                            ; Try destroying blocks if not being eaten
+                            ld a, [samusPose]
+                            cp pose_beingEaten ; $18
+                                call c, bombs_samusAndBGCollision
+                            
+                            ; SpriteId = Timer/2 + $31
+                            ld a, c
+                            srl a
+                            add $31
+                            ldh [hSpriteId], a
+                            ; Draw sprite
+                            call drawSamusSprite
+                            
+                            ; Do enemy collision
+                            call collision_bombEnemies
+                            
+                            ; Play explosion sound
+                            ld a, $0c
+                            ld [sfxRequest_noise], a
+                            jr .nextBomb
+                        .else_C:
+                            ; Not-fresh explosion
+                            ; SpriteId = Timer/2 + $31
+                            ld a, c
+                            srl a
+                            add $31
+                            ldh [hSpriteId], a
+                            ; Draw sprite
+                            call drawSamusSprite
+                            jr .nextBomb
             
-            jr_001_548a:
+            .else_A:
+                ; Delete bomb
                 dec hl
                 dec hl
                 dec hl
                 ld a, $ff
-                ld [hl], a
+                ld [hl], a        
+        .nextBomb:
         
-        jr_001_5490:
+        ; Iterate to next bomb
         ld a, [projectileIndex]
         inc a
         ld [projectileIndex], a
+        ; Exit if all bombs have been processed
         cp $03
-    jp nz, Jump_001_5412
-ret
+    jp nz, .bombLoop
+ret ;}
 
-; Bomb related
-Call_001_549d: ; 00:549D
+; Process timers and call other functions for bombs
+handleBombs: ;{ 00:549D
+    ; Init projectile index
     xor a
     ld [projectileIndex], a
 
-    jr_001_54a1:
+    .bombLoop:
         ld hl, bombArray
         ld a, [projectileIndex]
         swap a
         add l
         ld l, a
+        
+        ; Load bomb type
         ld a, [hl+]
         ld b, a
+        ; Skip to next bomb if inactive
         cp $ff
-        jr z, jr_001_54c8
+        jr z, .nextBomb
+            ; Decrement timer
             ld a, [hl]
             dec a
             ld [hl], a
-            jr nz, jr_001_54c8
+            ; Check if timer has reached zero
+            jr nz, .nextBomb
+                ; If so, check if it's a bomb or an explosion
                 ld a, b
                 cp $01
-                jr z, jr_001_54c1
+                jr z, .else
+                    ; If it's an explosion, set it to inactive
                     dec hl
                     ld a, $ff
                     ld [hl], a
-                    jr jr_001_54c8
-                jr_001_54c1:
+                    jr .nextBomb
+                .else:
+                    ; If it's a bomb, turn it into an explosion
+                    dec hl
+                    ld a, $02
+                    ld [hl+], a
+                    ld a, $08
+                    ld [hl], a
+        .nextBomb:
         
-                dec hl
-                ld a, $02
-                ld [hl+], a
-                ld a, $08
-                ld [hl], a
-        jr_001_54c8:
-        
+        ; Iterate to next bomb
         ld a, [projectileIndex]
         inc a
         ld [projectileIndex], a
+        ; Exit if all bombs have been processed
         cp $03
-    jr nz, jr_001_54a1
+    jr nz, .bombLoop
 
-    call Call_001_540e
-ret
+    call drawBombs
+ret ;}
 
 ; Bombs - Destroy blocks
-Call_001_54d7: ; 01:54D7
+bombs_samusAndBGCollision: ;{ 01:54D7
+    ; Save registers
     push bc
     push de
     push hl
+    
+    ; Check if Samus is in vertical range of bomb
     ldh a, [hSpriteYPixel]
     ld b, a
     ld a, [samus_onscreenYPos]
     sub $20
     cp b
-    jr nc, jr_001_5525
+    jr nc, .endIf_A
         ld a, [samus_onscreenYPos]
         add $20
         cp b
-        jr c, jr_001_5525
+        jr c, .endIf_A
+            ; Check if Samus in horizontal range of bomb
             ldh a, [hSpriteXPixel]
             ld b, a
             ld a, [samus_onscreenXPos]
             sub $10
             cp b
-            jr nc, jr_001_5525
+            jr nc, .endIf_A
                 ld a, [samus_onscreenXPos]
                 add $10
                 cp b
-                jr c, jr_001_5525
+                jr c, .endIf_A
+                    ; Set damage boost direction
+                    ; Default to left
                     ld c, $ff
+                    ; Compare positions
                     ld a, [samus_onscreenXPos]
                     sub b
-                    jr c, jr_001_550e
+                    jr c, .endIf_B
+                        ; Set to straight up
                         ld c, $00
-                        jr z, jr_001_550e
+                        jr z, .endIf_B
+                            ; Set to right
                             ld c, $01
-                    jr_001_550e:
+                    .endIf_B:
                     ld a, c
                     ld [samusAirDirection], a
+                    
+                    ; Set jump counter
                     ld a, $40
                     ld [samus_jumpArcCounter], a
+                    
+                    ; Set pose from table
                     ld a, [samusPose]
                     ld e, a
                     ld d, $00
@@ -2297,110 +2362,127 @@ Call_001_54d7: ; 01:54D7
                     add hl, de
                     ld a, [hl]
                     ld [samusPose], a
-    jr_001_5525:
+    .endIf_A:
 
-    ld a, [$d04a]
+    ; Set coordinates for top tile above
+    ld a, [bomb_mapYPixel]
     sub $10
     ld [tileY], a
-    ld a, [$d04b]
+    ld a, [bomb_mapXPixel]
     ld [tileX], a
+    ; Perform collision check
     call getTileIndex.projectile
     cp $04
-    jr nc, jr_001_553f
+    jr nc, .else_C
+        ; Note: Tiles $00-$03 default to respawning blocks
         call destroyRespawningBlock
-        jr jr_001_554d
-    jr_001_553f:
+        jr .endIf_C
+    .else_C:
+        ; Check if tile type is bombable
         ld h, HIGH(collisionArray)
         ld l, a
         ld a, [hl]
         bit blockType_bomb, a
-        jp z, Jump_001_554d
-            ld a, $ff
+        jp z, .endIf_D
+            ld a, $ff ; Unnecessarily setting the tile to write
             call destroyBlock
-        Jump_001_554d:
-    jr_001_554d:
+        .endIf_D:
+    .endIf_C:
 
-    ld a, [$d04a]
+    ; Set coordinates for center tile
+    ld a, [bomb_mapYPixel]
     ld [tileY], a
+    ; Perform collision check
     call getTileIndex.projectile
     cp $04
-    jr nc, jr_001_555f
+    jr nc, .else_E
         call destroyRespawningBlock
-        jr jr_001_556d
-    jr_001_555f:
+        jr .endIf_E
+    .else_E:
+        ; Check if tile type is bombable
         ld h, HIGH(collisionArray)
         ld l, a
         ld a, [hl]
         bit blockType_bomb, a
-        jp z, Jump_001_556d
+        jp z, .endIf_F
             ld a, $ff
             call destroyBlock
-        Jump_001_556d:
-    jr_001_556d:
+        .endIf_F:
+    .endIf_E:
 
-    ld a, [$d04a]
+    ; Set coordinates for bottom tile
+    ld a, [bomb_mapYPixel]
     add $10
     ld [tileY], a
+    ; Perform collision check
     call getTileIndex.projectile
     cp $04
-    jr nc, jr_001_5581
+    jr nc, .else_G
         call destroyRespawningBlock
-        jr jr_001_558f
-    jr_001_5581:
+        jr .endIf_G
+    .else_G:
+        ; Check if tile type is bombable
         ld h, HIGH(collisionArray)
         ld l, a
         ld a, [hl]
         bit blockType_bomb, a
-        jp z, Jump_001_558f
+        jp z, .endIf_H
             ld a, $ff
             call destroyBlock
-        Jump_001_558f:
-    jr_001_558f:
+        .endIf_H:
+    .endIf_G:
 
-    ld a, [$d04a]
+    ; Set coordinates for right tile
+    ld a, [bomb_mapYPixel]
     ld [tileY], a
-    ld a, [$d04b]
+    ld a, [bomb_mapXPixel]
     add $10
     ld [tileX], a
+    ; Perform collision check
     call getTileIndex.projectile
     cp $04
-    jr nc, jr_001_55a9
+    jr nc, .else_I
         call destroyRespawningBlock
-        jr jr_001_55b7
-    jr_001_55a9:
+        jr .endIf_I
+    .else_I:
+        ; Check if tile type is bombable
         ld h, HIGH(collisionArray)
         ld l, a
         ld a, [hl]
         bit blockType_bomb, a
-        jp z, Jump_001_55b7
+        jp z, .endIf_J
             ld a, $ff
             call destroyBlock
-        Jump_001_55b7:
-    jr_001_55b7:
+        .endIf_J:
+    .endIf_I:
 
-    ld a, [$d04b]
+    ; Set coordinates for left tile
+    ld a, [bomb_mapXPixel]
     sub $10
     ld [tileX], a
+    ; Perform collision check
     call getTileIndex.projectile
     cp $04
-    jr nc, jr_001_55cb
+    jr nc, .else_K
         call destroyRespawningBlock
-        jr jr_001_55d9
-    jr_001_55cb:
+        jr .endIf_K
+    .else_K:
+        ; Check if tile type is bombable
         ld h, HIGH(collisionArray)
         ld l, a
         ld a, [hl]
         bit blockType_bomb, a
-        jp z, Jump_001_55d9
+        jp z, .endIf_L
             ld a, $ff
             call destroyBlock
-        Jump_001_55d9:
-    jr_001_55d9:
-
+        .endIf_L:
+    .endIf_K:
+    
+    ; Restore registers
     pop hl
     pop de
     pop bc
-ret
+ret ;}
 
 samus_bombPoseTable: ;{ 01:55DD - Samus-bombed pose transition table
     db $11 ; $00 - Standing
@@ -2558,12 +2640,14 @@ samus_possibleShotDirections: ;{ 01:5653
     db $80 ; $1D - Escaped Metroid Queen
 ;}
 
+;} end of Samus' projectile and bomb functions
+
 ;------------------------------------------------------------------------------
 
-destroyRespawningBlock: ; 01:5671
+destroyRespawningBlock: ;{ 01:5671
     ld hl, respawningBlockArray
     .findLoop:
-        ; Exit loop if frame counter is zero
+        ; Exit successfully loop if frame counter is zero (slot is inactive)
         ld a, [hl]
         and a
             jr z, .break
@@ -2589,9 +2673,9 @@ destroyRespawningBlock: ; 01:5671
     ; Request sound effect
     ld a, $04
     ld [sfxRequest_noise], a
-ret
+ret ;}
 
-handleRespawningBlocks: ; 01:5692
+handleRespawningBlocks: ;{ 01:5692
     ld hl, respawningBlockArray
     .loop:
         ; Skip block if timer is zero
@@ -2654,7 +2738,7 @@ handleRespawningBlocks: ; 01:5692
         ld l, a
         and a
     jr nz, .loop
-ret
+ret ;}
 
 destroyBlock: ; 01:56E9
 .empty: ; Destroy block (frame 3 - empty)

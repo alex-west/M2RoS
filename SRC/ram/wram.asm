@@ -894,7 +894,8 @@ def debugItemIndex = $D046 ; Debug screen selector index
 def vramTransferFlag = $D047 ; VRAM tiles update flag (see $FFB1..B6, $2BA3, $27BA)
 def waterContactFlag = $D048 ; Flag to tell if Samus is touching water
 def samus_unmorphJumpTimer = $D049 ; Timer for allowing an unmorph jump. Decremented every frame. Written to in several places.
-;
+def bomb_mapYPixel = $D04A ; Bomb Y position in map-space (for BG collision)
+def bomb_mapXPixel = $D04B ; Bomb X position in map-space (for BG collision)
 def mapUpdate_unusedVar = $D04C ; Cleared by prepMapUpdate, set to FFh in prepMapUpdate or during screen transition when rendering a row/column of blocks. Never read
 def samusActiveWeapon = $D04D ; Weapon equipped.  See also $D055
 ;{

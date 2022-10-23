@@ -730,7 +730,7 @@ gameMode_Main: ;{ 00:04DF
             call collision_samusEnemies.standard ; ? Samus/enemy collision logic
             call samus_tryShooting ; Handle shooting or toggling cannon
             call handleProjectiles_longJump ; Handle projectiles
-            call Call_000_3d99 ; Handle bombs
+            call handleBombs_longJump ; Handle bombs
     .endIf_A:
 
     call prepMapUpdate ; Handle loading blocks from scrolling
@@ -790,7 +790,7 @@ ret
     call collision_samusEnemies.standard
     call samus_tryShooting
     call handleProjectiles_longJump
-    call Call_000_3d99
+    call handleBombs_longJump
     call prepMapUpdate
     call handleCamera
     call convertCameraToScroll
@@ -8291,7 +8291,7 @@ collision_bombEnemies: ;{ 00:30BB
     .break:
     
     ; Switch to bank of caller function
-    switchBank Call_001_540e
+    switchBank drawBombs
 ret ;}
 
 ; Bomb-enemy single collision
@@ -10615,8 +10615,8 @@ handleRespawningBlocks_longJump: ; 00:3D83
 handleProjectiles_longJump: ; 00:3D8E
     jpLong handleProjectiles
 
-Call_000_3d99: ; 00:3D99
-    jpLong Call_001_549d ; $549d
+handleBombs_longJump: ; 00:3D99
+    jpLong handleBombs ; $549d
 
 drawProjectiles_longJump: ; 00:3DA4
     jpLong drawProjectiles
