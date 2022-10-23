@@ -488,7 +488,7 @@ TimerOverflowInterruptStub: ; 00:039B
 disableLCD: ;{ 00:039C
     ; Save interrupt status
     ldh a, [rIE]
-    ldh [$99], a
+    ldh [hTemp.b], a
     res 0, a
     ldh [rIE], a
     ; Wait for VBlank
@@ -501,7 +501,7 @@ disableLCD: ;{ 00:039C
     and $7f
     ldh [rLCDC], a
     ; Restore interrupt status
-    ldh a, [$99]
+    ldh a, [hTemp.b]
     ldh [rIE], a
 ret
 ;}
@@ -1338,10 +1338,10 @@ handleCamera: ;{ 00:08FE
     ld hl, map_scrollData ;$4200
     add hl, de
     ld a, [hl]
-    ldh [$98], a
+    ldh [hTemp.a], a
     
     ; Rightward camera checks {
-    ldh a, [$98]
+    ldh a, [hTemp.a]
     bit 0, a ; Check if screen blocks scrolling to the right
     jr z, .endIf_A
         ; Check if the camera is on the right edge of the screen
@@ -1425,7 +1425,7 @@ handleCamera: ;{ 00:08FE
     .endRightCase: ;}
 
     ; Leftward camera checks {
-    ldh a, [$98]
+    ldh a, [hTemp.a]
     bit 1, a ; Check if screen blocks scrolling to the left
     jr z, .endIf_E
         ; Check if camera is on the left edge of the screen
@@ -1529,7 +1529,7 @@ handleCamera: ;{ 00:08FE
     ldh a, [hSamusYPixel]
     sub b
     add $60 ; Adjusts math to be relative to the edge, not center, of the screen
-    ldh [$99], a
+    ldh [hTemp.b], a
     
     ; deltaY = y - yPrev
     ld a, [samusPrevYPixel]
@@ -1551,7 +1551,7 @@ handleCamera: ;{ 00:08FE
         ld [camera_scrollDirection], a
         
         ; Check if screen blocks scrolling downwards
-        ldh a, [$98]
+        ldh a, [hTemp.a]
         bit 3, a ; Check down
         jr z, .else_J
             ; Different behaviors for queen room/otherwise
@@ -1595,7 +1595,7 @@ handleCamera: ;{ 00:08FE
             .else_L:
                 ; (Screen does block downward scrolling)
                 ; Check if Samus is below a certain threshold
-                ldh a, [$99]
+                ldh a, [hTemp.b]
                 cp $40
                 jp c, .exit
                     ; If so, move the camera down
@@ -1611,7 +1611,7 @@ handleCamera: ;{ 00:08FE
         .else_J:
             ; (Screen does no block downward scrolling)
             ; Check if Samus is below a certain threshold
-            ldh a, [$99]
+            ldh a, [hTemp.b]
             cp $50
             jp c, .exit
                 ; If so, move the camera down
@@ -1637,7 +1637,7 @@ handleCamera: ;{ 00:08FE
     ld [camera_scrollDirection], a
     
     ; Check if screen stops scrolling upwards
-    ldh a, [$98]
+    ldh a, [hTemp.a]
     bit 2, a ; Check up
     jr z, .else_M
         ; (Screen blocks scrolling upwards)
@@ -1677,7 +1677,7 @@ handleCamera: ;{ 00:08FE
             .else_O:
                 ; If camera is below threshold
                 ; Check if Samus is below threshold
-                ldh a, [$99]
+                ldh a, [hTemp.b]
                 cp $3e
                 jr nc, .endIf_M
                     ; If so, scroll upwards
@@ -1693,7 +1693,7 @@ handleCamera: ;{ 00:08FE
     .else_M:
         ; (Screen does not block scrolling upwards)
         ; Check if Samus is below threshold
-        ldh a, [$99]
+        ldh a, [hTemp.b]
         cp $4e
         jr nc, .endIf_M
             ; If so, scroll upwards
@@ -8264,9 +8264,9 @@ reti ;}
 collision_bombEnemies: ;{ 00:30BB
     ; Set temp variables to bomb coordinates
     ldh a, [hSpriteYPixel]
-    ldh [$98], a
+    ldh [hTemp.a], a
     ldh a, [hSpriteXPixel]
-    ldh [$99], a
+    ldh [hTemp.b], a
     ; Switch to bank with enemy hitboxes
     switchBank enemyHitboxPointers
     ; Iterate through all enemy slots
@@ -8414,7 +8414,7 @@ collision_bombOneEnemy: ;{ 00:30EA
     sub b
     ld c, a
     ; Y - Top
-    ldh a, [$98] ; bombY
+    ldh a, [hTemp.a] ; bombY
     sub b
     ; exit if (Bottom - Top) <= (Y - Top)
     cp c
@@ -8427,7 +8427,7 @@ collision_bombOneEnemy: ;{ 00:30EA
     sub b
     ld c, a
     ; X - Left
-    ldh a, [$99] ; bombX
+    ldh a, [hTemp.b] ; bombX
     sub b
     ; exit if (Right - Left) <= (X - Left)
     cp c
@@ -8495,13 +8495,13 @@ collision_projectileEnemies: ;{ 00:31B6 - Projectile/enemy collision function
     ld b, a
     ld a, [tileY]
     sub b
-    ldh [$98], a
+    ldh [hTemp.a], a
     ; beamX-scrollX
     ld a, [scrollX]
     ld b, a
     ld a, [tileX]
     sub b
-    ldh [$99], a
+    ldh [hTemp.b], a
 
     ; Switch bank for callee's sake
     switchBank enemyHitboxPointers ; and enemyDamageTable
@@ -8650,7 +8650,7 @@ collision_projectileOneEnemy: ;{ 00:31F1
     sub b
     ld c, a
     ; beamY - Top
-    ldh a, [$98] ; beamY
+    ldh a, [hTemp.a] ; beamY
     sub b
     ; exit if (Bottom - Top) <= (Y - Top)
     cp c
@@ -8662,7 +8662,7 @@ collision_projectileOneEnemy: ;{ 00:31F1
     sub b
     ld c, a
     ; beamX - Left
-    ldh a, [$99] ; beamX
+    ldh a, [hTemp.b] ; beamX
     sub b
     ; exit if (Right - Left) <= (X - Left)
     cp c
@@ -8732,7 +8732,7 @@ collision_samusEnemies: ;{ 00:32AB - Samus enemy collision detection loop
         
         ; Set tempX to Samus' onscreen X position
         ld a, [samus_onscreenXPos]
-        ldh [$99], a
+        ldh [hTemp.b], a
         jr .start
         
     .horizontal: ; 00:32CF - Samus horizontal collision
@@ -8761,7 +8761,7 @@ collision_samusEnemies: ;{ 00:32AB - Samus enemy collision detection loop
         ld a, [tileX]
         sub b
         add $50
-        ldh [$99], a
+        ldh [hTemp.b], a
 .start:
     ; Set tempY to Samus' postion in camera-space
     ldh a, [hCameraYPixel]
@@ -8769,7 +8769,7 @@ collision_samusEnemies: ;{ 00:32AB - Samus enemy collision detection loop
     ldh a, [hSamusYPixel]
     sub b
     add $48 + $1A ; $62 - This breakdown doesn't seem quite right
-    ldh [$98], a
+    ldh [hTemp.a], a
     
     ; Switch to bank with enemy hitboxes
     switchBank enemyHitboxPointers ; $03
@@ -8937,7 +8937,7 @@ collision_samusOneEnemy: ;{ 00:3324
     sub b
     ld c, a
     ; Samus Y - Top
-    ldh a, [$98]
+    ldh a, [hTemp.a]
     sub b
     ; exit if (Bottom - Top) <= (Y - Top)
     cp c
@@ -8950,7 +8950,7 @@ collision_samusOneEnemy: ;{ 00:3324
     ; Samus X - Left
     ldh a, [hCollision_enLeft]
     ld b, a
-    ldh a, [$99]
+    ldh a, [hTemp.b]
     sub b
     ld c, a
     ; Right - Left
@@ -9151,7 +9151,7 @@ collision_samusEnemiesDown: ;{ 00:348D
     ; Set tempY based on Samus' onscreen Y position
     ld a, [samus_onscreenYPos]
     add $12
-    ldh [$98], a
+    ldh [hTemp.a], a
     
     ; Clear flag
     xor a
@@ -9163,7 +9163,7 @@ collision_samusEnemiesDown: ;{ 00:348D
     ldh a, [hSamusXPixel]
     sub b
     add $60
-    ldh [$99], a
+    ldh [hTemp.b], a
     
     ; Switch to bank with enemy hitboxes
     switchBank enemyHitboxPointers ; $03
@@ -9185,7 +9185,7 @@ collision_samusEnemiesDown: ;{ 00:348D
                 jr c, .endIf_B
                     ; Subtract vertical distance between enemy's top and Samus
                     ;  from Samus's Y position
-                    ldh a, [$9a]
+                    ldh a, [hTemp.c]
                     ld b, a
                     ldh a, [hSamusYPixel]
                     sub b
@@ -9238,7 +9238,7 @@ collision_samusEnemiesUp: ;{ 00:34EF
     ld b, a
     ld a, [samus_onscreenYPos]
     add b
-    ldh [$98], a
+    ldh [hTemp.a], a
     
     ; Clear flag
     xor a
@@ -9250,7 +9250,7 @@ collision_samusEnemiesUp: ;{ 00:34EF
     ldh a, [hSamusXPixel]
     sub b
     add $60
-    ldh [$99], a
+    ldh [hTemp.b], a
     
     ; Switch to bank with enemy hitboxes
     switchBank enemyHitboxPointers ; $03
@@ -9398,9 +9398,9 @@ collision_samusOneEnemyVertical: ;{ 00:3545
     sub b
     ld c, a
     ; Samus Y - Top
-    ldh a, [$98]
+    ldh a, [hTemp.a]
     sub b
-    ldh [$9a], a ; Save vertical distance
+    ldh [hTemp.c], a ; Save vertical distance
     ; exit if (Bottom - Top) <= (Y - Top)
     cp c
         jp nc, .exit_noHit
@@ -9412,7 +9412,7 @@ collision_samusOneEnemyVertical: ;{ 00:3545
     ; Samus X - Left
     ldh a, [hCollision_enLeft]
     ld b, a
-    ldh a, [$99]
+    ldh a, [hTemp.b]
     sub b
     ld c, a
     ; Right - Left

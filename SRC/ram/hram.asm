@@ -97,24 +97,24 @@ hVramTransfer:
 .sizeHigh:     ds 1 ; $FFB6:
 
 ;$FFB7..BB: Energy tank graphics, other stuff too though
-; $FFB7: Working projectile pointer (low byte)
-hHUD_tank1: ; $FFB7 - Energy tank 1 (or E graphic)
-hCollision_enY:      ds 1 ;$FFB7: Working enemy Y position         in $30EA/$31F1. Two byte address of projectile slot in $1:500D.
+hBeam_pLow: ; $FFB7: Working projectile pointer (low byte)
+hHUD_tank1: ; $FFB7: Energy tank 1 (or E graphic)
+hCollision_enY: ds 1 ;$FFB7: Working enemy Y position         in $30EA/$31F1. Two byte address of projectile slot in $1:500D.
 
-; $FFB8: Working projectile pointer (high byte)
-hHUD_tank2: ; $FFB8 - Energy tank 2
-hCollision_enX:      ds 1 ;$FFB8: Working enemy X position         in $30EA/$31F1.
+hBeam_pHigh: ; $FFB8: Working projectile pointer (high byte)
+hHUD_tank2:  ; $FFB8: Energy tank 2
+hCollision_enX: ds 1 ;$FFB8: Working enemy X position         in $30EA/$31F1.
 
-; $FFB9: Working projectile type
-hHUD_tank3: ; $FFB9 - Energy tank 3
+hBeam_type: ; $FFB9: Working projectile type
+hHUD_tank3: ; $FFB9: Energy tank 3
 hCollision_enSprite: ds 1 ;$FFB9: Working enemy sprite ID position in $30EA/$31F1. Working projectile type in $1:500D.
 
-; $FFBA: Working projectile wave index
-hHUD_tank4: ; $FFBA - Energy tank 4
-hCollision_enTop:    ds 1 ;$FFBA: Working enemy top boundary       in $30EA/$31F1. Working projectile wave index in $1:500D
+hBeam_waveIndex:  ; $FFBA: Working projectile wave index
+hHUD_tank4:       ; $FFBA: Energy tank 4
+hCollision_enTop: ds 1 ;$FFBA: Working enemy top boundary       in $30EA/$31F1. Working projectile wave index in $1:500D
 
-; $FFBB: Working projectile frame counter
-hHUD_tank5: ; $FFBB - Energy tank 5
+hBeam_frameCouter: ; $FFBB: Working projectile frame counter
+hHUD_tank5:        ; $FFBB: Energy tank 5
 hCollision_enBottom: ds 1 ;$FFBB: Working enemy bottom boundary    in $30EA/$31F1. Working projectile frame counter in $1:500D
 hCollision_enLeft:   ds 1 ;$FFBC: Working enemy left boundary      in $30EA/$31F1.
 hCollision_enRight:  ds 1 ;$FFBD: Working enemy right boundary     in $30EA/$31F1.

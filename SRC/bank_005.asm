@@ -11,14 +11,14 @@ titleCreditsBank:
 ; Draw two digits of ending timer
 credits_drawTimerDigits: ;{ 05:4000
     ; Temp storage for timer number
-    ldh [$99], a
+    ldh [hTemp.b], a
     ; Extract the tens digit
     swap a
     and $0f
     add $f0 ; Adjust the value for display
     call credits_drawOneDigit
     ; Reload timer value from temp
-    ldh a, [$99]
+    ldh a, [hTemp.b]
     and $0f ; Isolate the ones digit
     add $f0 ; Adjust the value for display
     call credits_drawOneDigit
@@ -28,7 +28,7 @@ ret ;}
 ; Draw one digit of ending timer
 credits_drawOneDigit: ;{ 05:4015
     ; Temp storage for the digit to be displayed
-    ldh [$98], a
+    ldh [hTemp.a], a
     ; HL = oam buffer pointer
     ld h, HIGH(wram_oamBuffer)
     ldh a, [hOamBufferIndex]
@@ -43,7 +43,7 @@ credits_drawOneDigit: ;{ 05:4015
     add $08
     ldh [hSpriteXPixel], a
     ; Reload tile number from temp, write tile number
-    ldh a, [$98]
+    ldh a, [hTemp.a]
     ld [hl+], a
     ; Write sprite attribute
     ldh a, [hSpriteAttr]

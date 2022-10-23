@@ -348,12 +348,12 @@ ret
 ; Debug Menu drawing routine (note this procedure has two entrances
 debug_drawNumber: ;{ 01:4AFC 
 .twoDigit: ; Display a two-sprite number
-    ldh [$99], a
+    ldh [hTemp.b], a
     swap a
     and $0f
     add $a0 ; Adjust value for display
     call .drawSprite
-    ldh a, [$99]
+    ldh a, [hTemp.b]
 .oneDigit: ; 01:4B09 - Display a one-sprite number
     and $0f
     add $a0 ; Adjust value for display
@@ -362,7 +362,7 @@ ret
 
 .drawSprite: ; 01:4B11
     ; Save sprite tile to temp
-    ldh [$98], a
+    ldh [hTemp.a], a
 
     ; Load WRAM address to HL
     ld h, HIGH(wram_oamBuffer) ; $C0
@@ -380,7 +380,7 @@ ret
     ldh [hSpriteXPixel], a
 
     ; Write tile number and sprite attributes
-    ldh a, [$98]
+    ldh a, [hTemp.a]
     ld [hl+], a
     ldh a, [hSpriteAttr]
     ld [hl+], a
@@ -599,7 +599,7 @@ drawSamus: ;{ 01:4BD9 Draw Samus
     jr z, .else_D
         ; Load dummy input to temp
         ld a, b
-        ldh [$98], a
+        ldh [hTemp.a], a
         jr .endIf_D
     .else_D:
         ; Load input into temp variable
@@ -608,7 +608,7 @@ drawSamus: ;{ 01:4BD9 Draw Samus
         swap a ; Swap nybbles for array-indexing purposes
         ; OR the dummy input into the temp variable as well
         or b
-        ldh [$98], a
+        ldh [hTemp.a], a
     .endIf_D:
     
     ; Jump to the appropriate draw routine
@@ -720,7 +720,7 @@ jp drawSamus_common
 drawSamus_jump: ;{ 01:4CBD - $01, $07: Jumping and falling
     ; Index into table using input + facing direction
     ld d, $00
-    ldh a, [$98]
+    ldh a, [hTemp.a]
     ld e, a
     ld hl, jumpSpriteTable
     add hl, de
@@ -811,7 +811,7 @@ jp drawSamus_common ;}
 drawSamus_standing: ;{ $00: Standing
     ; Index into table using input + facing direction
     ld d, $00
-    ldh a, [$98]
+    ldh a, [hTemp.a]
     ld e, a
     ld hl, .standingTable
     add hl, de
@@ -1026,112 +1026,139 @@ ret ;}
 initialSaveFile: ; 01:4E64
 include "data/initialSave.asm"
 
-;------------------------------------------------------------------------------
 
-samusShoot: ; 01:4E8A
+samusShoot: ;{ 01:4E8A
+    ; Fire if the B button was just pressed
     ldh a, [hInputRisingEdge]
     bit PADB_B, a
     jr nz, .endIf_A
+        ; Or, check if the B button is being held
         ldh a, [hInputPressed]
         bit PADB_B, a
             ret z
+        ; Increment the cooldown counter
         ld a, [samusBeamCooldown]
         inc a
         ld [samusBeamCooldown], a
+        ; Exit if less than $10
         cp $10
             ret c
     .endIf_A:
 
-.spazerLoop:
+.spazerLoop: ; Loop point for firing all three spazer beams
+    ; Exit if in turnaround animation
     ld a, [samusPose]
     bit 7, a
         ret nz
-    ld hl, table_5653
+    
+    ; Load possible shot directions for the current pose
+    ld hl, samus_possibleShotDirections
     ld a, [samusPose]
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
-    and a ; Return if pose does not allow shooting
+    ; Exit if no shooting is permitted
+    and a
         ret z
-    cp $80 ; Check if it's a bomb-laying pose
+    ; Branch if it's a bomb-laying pose
+    cp $80
         jp z, samus_layBomb
-    ld b, a ; Save table entry to B
+    ; Save table entry to B
+    ld b, a
     
     ; Clear beam cooldown
     xor a
     ld [samusBeamCooldown], a
     
-    ; Determine beam firing direction
+; Determine beam firing direction
+    ; AND input bits with permitted direction
     ldh a, [hInputPressed]
     swap a
     and b
     jr nz, .else_B
-        ld c, $01
+        ; If no bits match, set firing direction to facing direction
+        ld c, $01 ; Right
         ld a, [samusFacingDirection]
         and a
         jr nz, .endIf_B
-            ld c, $02
+            ld c, $02 ; Left
             jr .endIf_B
     .else_B:
-        ld hl, table_5643
+        ; If bits match, get the direction based on this table
+        ld hl, samus_shotDirectionPriorityTable
         ld e, a
         ld d, $00
         add hl, de
         ld a, [hl]
         ld c, a
     .endIf_B:
-
+    ; Save firing direction to temp
     ld a, c
-    ldh [$99], a
-    
-    ; Load table value to B
-    ld hl, table_561D
+    ldh [hTemp.b], a
+
+; Get Y offset
+    ; Load the Y offset of Samus's cannon for her current pose
+    ld hl, samus_cannonYOffsetByPose
     ld a, [samusPose]
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
     ld b, a
-    
-    ld hl, table_5630
+    ; Load the Y offset of the cannon for her current aiming direction
+    ld hl, samus_cannonYOffsetByAimDirection
     ld a, c
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
+    ; Add the two Y offsets
     add b
+    ; Make adjustment
     sub $04
+    ; Save Y result to temp and the B register
     ld b, a
-    ldh [$9a], a
-    
-    ld hl, table_55FB
-    sla c
+    ldh [hTemp.c], a
+
+; Get X offset
+    ; samus_cannonXOffsetTable[firingDirection*2 + samusFacingDirection]
+    ld hl, samus_cannonXOffsetTable
+    sla c ; Multiply firing direction by 2
     ld a, [samusFacingDirection]
     add c
+    ; Restore firing direction to its unmultiplied value
     srl c
+    ; Load X offset
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
+    ; Make adjustment
     sub $04
-    ldh [$98], a
+    ; Save X result to temp
+    ldh [hTemp.a], a
     
+    ; Take a separate branch if using plasma
     ld a, [samusActiveWeapon]
     cp $04 ; Plasma
         jp z, .plasmaBranch
-
-    call getFirstEmptyProjectileSlot ; Projectile slot is returned in HL
-    ; Exit if projectile is 3
+    
+    ; Unsure why .spazerLoop: is not here
+    
+    ; Projectile slot is returned in HL
+    call getFirstEmptyProjectileSlot
+    ; Exit if past the last projectile slot
     ld a, l
     swap a
-    cp $03
+    cp (projectileArray.end >> 4) & $0F ; $03
         ret z
-
+    
+    ; Check if using missiles
     ld a, [samusActiveWeapon]
     cp $08 ; Missiles
     jr nz, .endIf_C
-        ; Check if we have any missiles
+        ; If so, check if we have any missiles
         ld a, [samusCurMissilesLow]
         ld b, a
         ld a, [samusCurMissilesHigh]
@@ -1152,20 +1179,22 @@ samusShoot: ; 01:4E8A
         daa
         ld [samusCurMissilesHigh], a
     .endIf_C:
+    
+; Save weapon
     ; Write weapon type
     ld a, [samusActiveWeapon]
     ld [hl+], a
     ; Write direction
-    ldh a, [$99]
+    ldh a, [hTemp.b]
     ld [hl+], a
     ; Write y position
-    ldh a, [$9a]
+    ldh a, [hTemp.c]
     ld b, a
     ldh a, [hSamusYPixel]
     add b
     ld [hl+], a
     ; Write x position
-    ldh a, [$98]
+    ldh a, [hTemp.a]
     ld b, a
     ldh a, [hSamusXPixel]
     add b
@@ -1178,15 +1207,18 @@ samusShoot: ; 01:4E8A
     ; Write frame counter
     xor a
     ld [hl], a
-
+    
+    ; Check if using Spazer
     ld a, [samusActiveWeapon]
     cp $03 ; Spazer
     jr nz, .endIf_E
+        ; If so, loop back around if not past the last projectile slot
         ld a, l
-        cp $20
+        cp LOW(projectileArray.slotC) ; $20
         jp c, .spazerLoop
     .endIf_E:
-
+    
+    ; Load beam sound from table
     ld hl, beamSoundTable
     ld a, [samusActiveWeapon]
     ld e, a
@@ -1196,76 +1228,95 @@ samusShoot: ; 01:4E8A
     ld [sfxRequest_square1], a
 ret
 
-.plasmaBranch: ; Plasma case
+.plasmaBranch: ;{ Plasma case
+    ; Exit if first slot is active
     ld hl, projectileArray
     ld a, [hl]
     cp $ff
-    ret nz
+        ret nz
 
     .plasmaLoop:
-        ldh a, [$99]
+        ; Check if direction is horizontal or vertical
+        ldh a, [hTemp.b]
         cp $04
         jr nc, .else_F
-            ldh a, [$98]
+            ; If horizontal, adjust x position
+            ; Subtract 8 from the x position
+            ldh a, [hTemp.a]
             sub $08
-            ldh [$98], a
+            ldh [hTemp.a], a
+            ; Add $10 to x position if this is the first slot
             ld a, l
             and a
             jr z, .endIf_F
-                ldh a, [$98]
+                ldh a, [hTemp.a]
                 add $10
-                ldh [$98], a
+                ldh [hTemp.a], a
                 jr .endIf_F
         .else_F:
-            ldh a, [$9a]
+            ; If vertical, adjust y position
+            ; Subtract 8 from the y position
+            ldh a, [hTemp.c]
             sub $08
-            ldh [$9a], a
+            ldh [hTemp.c], a
+            ; Add $10 to y position if this is the first slot
             ld a, l
             and a
             jr z, .endIf_F
-                ldh a, [$9a]
+                ldh a, [hTemp.c]
                 add $10
-                ldh [$9a], a
+                ldh [hTemp.c], a
         .endIf_F:
-    
+        
+    ; Save weapon
+        ; Save weapon type
         ld a, [samusActiveWeapon]
         ld [hl+], a
-        ldh a, [$99]
+        ; Save direction
+        ldh a, [hTemp.b]
         ld [hl+], a
-        ldh a, [$9a]
+        ; Save y position
+        ldh a, [hTemp.c]
         ld b, a
         ldh a, [hSamusYPixel]
         add b
         ld [hl+], a
-        ldh a, [$98]
+        ; Save x position
+        ldh a, [hTemp.a]
         ld b, a
         ldh a, [hSamusXPixel]
         add b
         ld [hl+], a
+        ; Save wave index (?)
         ldh a, [frameCounter]
         and $10
         srl a
         ld [hl+], a
+        ; Save frame counter
         xor a
         ld [hl], a
+        
+        ; Iterate to next beam slot
         ld a, l
         and $f0
         add $10
         ld l, a
+        ; Exit loop if past the last slot
         cp $30
     jp c, .plasmaLoop
-
-    ld hl, beamSoundTable ;$4fe5
+    
+    ; Load beam sound from table
+    ld hl, beamSoundTable
     ld a, [samusActiveWeapon]
     ld e, a
     ld d, $00
     add hl, de
     ld a, [hl]
     ld [sfxRequest_square1], a
-ret
-; end of samusShoot
+ret ;}
+;} end of samusShoot
 
-beamSoundTable: ; 01:4FE5 - Sound effect table
+beamSoundTable: ;{ 01:4FE5
     db $07 ; 0: Normal
     db $09 ; 1: Ice
     db $16 ; 2: Wave
@@ -1275,62 +1326,81 @@ beamSoundTable: ; 01:4FE5 - Sound effect table
     db $07 ; 6: x
     db $07 ; 7: x
     db $08 ; 8: Missile
+;}
 
-getFirstEmptyProjectileSlot: ; 01:4FEE
+getFirstEmptyProjectileSlot: ;{ 01:4FEE
+    ; Init HL
     ld hl, projectileArray
+    ; Missiles only use the last slot
     ld a, [samusActiveWeapon]
     cp $08
     jr nz, .endIf
-        ld a, $02
+        ld a, (projectileArray.slotC >> 4) & $0F ;$02
         swap a
         ld l, a
     .endIf
-
+    
+    ; Loop to find first open slot
     .loop:
+        ; Exit if slot is open
         ld a, [hl]
         cp $ff
             ret z
+        ; Iterate to next slot
         ld de, $0010
         add hl, de
+        ; Exit if at the end of the slots
         ld a, l
         swap a
-        cp $03
+        cp (projectileArray.end >> 4) & $0F ; $03
     jr nz, .loop
-ret
+ret ;}
 
 ;------------------------------------------------------------------------------
 ; Beam handler
-handleProjectiles: ; 01:500D
+handleProjectiles: ;{ 01:500D
+    ; Initialize the projectile index
     xor a
     ld [projectileIndex], a
-.bigLoop:
-    ld a, $dd
+
+.bigLoop: ; Loop back to here for each projectile
+    ; Get the address for the current projectile
+    ld a, HIGH(projectileArray) ; $DD
     ld h, a
-    ldh [$b8], a
+    ldh [hBeam_pHigh], a
     ld a, [projectileIndex]
     swap a
     ld l, a
-    ldh [$b7], a
+    ldh [hBeam_pLow], a
+    
     ; Load projectile type
     ld a, [hl+]
-    ldh [$b9], a
+    ldh [hBeam_type], a
     ld [weaponType], a
+    ; Skip to next projectile if beam is inactive
     cp $ff
         jp z, .nextProjectile
+        
     ; Load direction
     ld a, [hl+]
-    ldh [$98], a
+    ldh [hTemp.a], a
     ld [weaponDirection], a
+    ; Load y position
     ld a, [hl+]
-    ldh [$99], a
+    ldh [hTemp.b], a
+    ; Load x position
     ld a, [hl+]
-    ldh [$9a], a
+    ldh [hTemp.c], a
+    ; Load wave index
     ld a, [hl+]
-    ldh [$ba], a
+    ldh [hBeam_waveIndex], a
+    ; Load and increment frame counter
     ld a, [hl+]
     inc a
-    ldh [$bb], a
-    ldh a, [$b9]
+    ldh [hBeam_frameCouter], a
+    
+    ; Branch according to beam type
+    ldh a, [hBeam_type]
     cp $02 ; Wave
         jp z, .waveBranch
     cp $03 ; Spazer
@@ -1339,17 +1409,19 @@ handleProjectiles: ; 01:500D
         jp z, .missileBranch
     jp .defaultBranch ; Default projectile (ice, power, plasma)
 
-.spazerBranch: ; Spazer
-    ldh a, [$98]
+.spazerBranch: ;{ Spazer
+    ; Act based on direction
+    ldh a, [hTemp.a]
     ; Right
     bit 0, a
     jr z, .endIf_A
         call .spazer_splitVertically
-        ldh a, [$9a]
+        ; Move, adjusting for camera speed
+        ldh a, [hTemp.c]
         add $04
         ld hl, camera_speedRight
         add [hl]
-        ldh [$9a], a
+        ldh [hTemp.c], a
         jr .spazerEnd
     .endIf_A:
         
@@ -1357,11 +1429,12 @@ handleProjectiles: ; 01:500D
     bit 1, a
     jr z, .endIf_B
         call .spazer_splitVertically
-        ldh a, [$9a]
+        ; Move, adjusting for camera speed
+        ldh a, [hTemp.c]
         sub $04
         ld hl, camera_speedLeft
         sub [hl]
-        ldh [$9a], a
+        ldh [hTemp.c], a
         jr .spazerEnd
     .endIf_B:
 
@@ -1369,199 +1442,212 @@ handleProjectiles: ; 01:500D
     bit 2, a
     jr z, .endIf_C
         call .spazer_splitHorizontally
-        ldh a, [$99]
+        ; Move, adjusting for camera speed
+        ldh a, [hTemp.b]
         sub $04
         ld hl, camera_speedUp
         sub [hl]
-        ldh [$99], a
+        ldh [hTemp.b], a
         jr .spazerEnd
     .endIf_C:
 
     ; Down
     ; Default case (bit 3, a)
         call .spazer_splitHorizontally
-        ldh a, [$99]
+        ; Move, adjusting for camera speed
+        ldh a, [hTemp.b]
         add $04
         ld hl, camera_speedDown
         add [hl]
-        ldh [$99], a
+        ldh [hTemp.b], a
         
     .spazerEnd:
 jp .commonBranch
 
-.spazer_splitVertically:
+.spazer_splitVertically: ;{ Spazer subroutine
     ; Limit spread to first few frames
-    ldh a, [$bb]
+    ldh a, [hBeam_frameCouter]
     cp $05
         ret nc
     ; Middle beam doesn't move sideways
     ld a, l
     and $f0
-    cp $10
+    cp LOW(projectileArray.slotB) ; $10
         ret z
-    cp $00
+    ; Check if 1st or 3rd beam
+    cp LOW(projectileArray.slotA) ; $00
     jr nz, .else_D
         ; First beam moves up
-        ldh a, [$99]
+        ldh a, [hTemp.b]
         sub $02
-        ldh [$99], a
+        ldh [hTemp.b], a
         ret
     .else_D:
         ; Third beam moves down
-        ldh a, [$99]
+        ldh a, [hTemp.b]
         add $02
-        ldh [$99], a
+        ldh [hTemp.b], a
         ret
-; end proc
+;} end proc
 
-.spazer_splitHorizontally:
+.spazer_splitHorizontally: ;{ Spazer subroutine
     ; Limit spread to first few frames
-    ldh a, [$bb]
+    ldh a, [hBeam_frameCouter]
     cp $05
         ret nc
-    ; Middle beam doesn't
+    ; Middle beam doesn't move sideways
     ld a, l
     and $f0
-    cp $10
+    cp LOW(projectileArray.slotB) ; $10
         ret z
-    cp $00
+    ; Check if 1st or 3rd beam
+    cp LOW(projectileArray.slotA) ; $00
     jr nz, .else_E
         ; First beam moves left
-        ldh a, [$9a]
+        ldh a, [hTemp.c]
         sub $02
-        ldh [$9a], a
+        ldh [hTemp.c], a
         ret
     .else_E:
         ; Third beam moves right
-        ldh a, [$9a]
+        ldh a, [hTemp.c]
         add $02
-        ldh [$9a], a
+        ldh [hTemp.c], a
         ret
-; end proc
-; end Spazer case
+;} end proc
+;} end Spazer case
 
-.waveBranch: ; Wave
+.waveBranch: ;{ Wave
     ; Read from wave tranverse velocity table
     .waveLoop:
         ld hl, .waveSpeedTable
-        ldh a, [$ba]
+        ldh a, [hBeam_waveIndex]
         ld e, a
         ld d, $00
         add hl, de
         ld a, [hl]
+        ; Reset to beginning of table if value is $80
         cp $80
             jr nz, .break
         xor a
-        ldh [$ba], a
+        ldh [hBeam_waveIndex], a
     jr .waveLoop
     .break:
     ld b, a ; Save result from table
 
-    ldh a, [$98]
+    ; Check direction
+    ldh a, [hTemp.a]
     and %1100 ; $0C ; Check if moving vertically
     jr nz, .else_F
         ; Horizontal case
         ; Adjust vertical position of wave
-        ldh a, [$99]
+        ldh a, [hTemp.b]
         add b
-        ldh [$99], a
+        ldh [hTemp.b], a
         ; Increment wave index
-        ldh a, [$ba]
+        ldh a, [hBeam_waveIndex]
         inc a
-        ldh [$ba], a
+        ldh [hBeam_waveIndex], a
         ; Check direction
-        ldh a, [$98]
+        ldh a, [hTemp.a]
         bit 1, a
         jr nz, .else_G
             ; Move right
-            ldh a, [$9a]
+            ldh a, [hTemp.c]
             add $02
             ld hl, camera_speedRight ; Adjust for camera velocity
             add [hl]
-            ldh [$9a], a
+            ldh [hTemp.c], a
             jr .endIf_F
         .else_G:
             ; Move left
-            ldh a, [$9a]
+            ldh a, [hTemp.c]
             sub $02
             ld hl, camera_speedLeft ; Adjust for camera velocity
             sub [hl]
-            ldh [$9a], a
+            ldh [hTemp.c], a
             jr .endIf_F
     
     .else_F:
         ; Vertical case
         ; Adjust horizontal position of wave
-        ldh a, [$9a]
+        ldh a, [hTemp.c]
         add b
-        ldh [$9a], a
+        ldh [hTemp.c], a
         ; Increment wave index
-        ldh a, [$ba]
+        ldh a, [hBeam_waveIndex]
         inc a
-        ldh [$ba], a
+        ldh [hBeam_waveIndex], a
         ; Check direction
-        ldh a, [$98]
+        ldh a, [hTemp.a]
         bit 2, a
         jr nz, .else_H
             ; Move down
-            ldh a, [$99]
+            ldh a, [hTemp.b]
             add $02
             ld hl, camera_speedDown ; Adjust for camera velocity
             add [hl]
-            ldh [$99], a
+            ldh [hTemp.b], a
             jr .endIf_F
         .else_H:
             ; Move up
-            ldh a, [$99]
+            ldh a, [hTemp.b]
             sub $02
             ld hl, camera_speedUp ; Adjust for camera velocity
             sub [hl]
-            ldh [$99], a
+            ldh [hTemp.b], a
     .endIf_F:
 
     ; Save wave beam projectile to WRAM
     ; Get WRAM pointer for current projectile
-    ldh a, [$b7]
+    ldh a, [hBeam_pLow]
     ld l, a
-    ldh a, [$b8]
+    ldh a, [hBeam_pHigh]
     ld h, a
     inc hl
     inc hl
     ; Save Y position
-    ldh a, [$99]
+    ldh a, [hTemp.b]
     ld [hl+], a
     ; Adjust for collision
     add $04
     ld [tileY], a
     ; Save X position
-    ldh a, [$9a]
+    ldh a, [hTemp.c]
     ld [hl+], a
     ; Adjust for collision
     add $04
     ld [tileX], a
     ; Save wave index
-    ldh a, [$ba]
+    ldh a, [hBeam_waveIndex]
     ld [hl], a
-    ; Only collide every other frame
+    
+    ; Only check background collision every other frame
     ldh a, [frameCounter]
     and $01
         jp z, .checkEnemies
+    
+    ; Check background collision
     call getTileIndex.projectile
+    ; Check if solid to beams
     ld hl, beamSolidityIndex
     cp [hl]
-        jp nc, .checkEnemies ; Block not destroyed
-    ; Destroy a block
+        jp nc, .checkEnemies ; Block not solid to beams
+    
+    ; Check if block is destructible
+    ; Tiles $00-$03 are hardcoded as respawning blocks
     cp $04
     jr nc, .else_I
         call destroyRespawningBlock
         jp .nextProjectile
     .else_I:
+        ; Check if block type is shot
         ld h, HIGH(collisionArray)
         ld l, a
         ld a, [hl]
         bit blockType_shot, a
         jp z, .nextProjectile
-            ld a, $ff
+            ld a, $ff ; Unnecessarily setting the tile to write
             call destroyBlock
         jp .nextProjectile
 ; end case
@@ -1572,238 +1658,260 @@ jp .commonBranch
 
 .waveSpeedTable_alt: ; 01:5194 - Unused (alternate wave table -- motion blur makes it looks very spazer-like)
     db $0A, $F6, $F6, $0A, $0A, $F6, $F6, $0A, $0A, $F6, $F6, $0A, $80
+;}
 
 .missileSpeedTable: ; 01:51A1 - Missile speed table (first value in array is unused)
     db $00, $00, $01, $00, $00, $01, $00, $01, $00, $01, $00, $01, $01, $01, $01, $02
     db $01, $02, $01, $02, $02, $02, $02, $03, $02, $02, $03, $02, $03, $03, $03, $03
     db $04, $FF
+.missileSpeedTable_end:
 
-.missileBranch: ; Missile
+.missileBranch: ;{ Missile
     ; Use projectile frame counter as index into table
-    ldh a, [$bb]
+    ldh a, [hBeam_frameCouter]
     ld e, a
     ld d, $00
     ld hl, .missileSpeedTable
     add hl, de
     ld a, [hl]
+    ; Check if at the end of the table
     cp $ff
     jr nz, .endif_J
         ; Decrement value so it doesn't overflow on the next tick
-        ldh a, [$bb]
+        ldh a, [hBeam_frameCouter]
         dec a
-        ldh [$bb], a
+        ldh [hBeam_frameCouter], a
         ; Load second to last value from table
-        ld a, [.missileSpeedTable + $20]
+        ld a, [.missileSpeedTable_end - 2]
     .endif_J:
     ld b, a ; Save speed to B
     
     ; Handle directions
-    ldh a, [$98]
+    ldh a, [hTemp.a]
     bit 0, a
     jr z, .endif_K
         ; Go right
-        ldh a, [$9a]
+        ldh a, [hTemp.c]
         add b
         ld hl, camera_speedRight
         add [hl]
-        ldh [$9a], a
+        ldh [hTemp.c], a
         jp .commonBranch
     .endif_K:
     
     bit 1, a
     jr z, .endif_L
         ; Go left
-        ldh a, [$9a]
+        ldh a, [hTemp.c]
         sub b
         ld hl, camera_speedLeft
         sub [hl]
-        ldh [$9a], a
+        ldh [hTemp.c], a
         jp .commonBranch
     .endif_L:
     
     bit 2, a
     jr z, .endif_M
         ; Go up
-        ldh a, [$99]
+        ldh a, [hTemp.b]
         sub b
         ld hl, camera_speedUp
         sub [hl]
-        ldh [$99], a
+        ldh [hTemp.b], a
         jr .commonBranch
     .endif_M:
 
     ; bit 3, a
         ; Go down
-        ldh a, [$99]
+        ldh a, [hTemp.b]
         add b
         ld hl, camera_speedDown
         add [hl]
-        ldh [$99], a
+        ldh [hTemp.b], a
         jr .commonBranch
-; End case
+;} End missile case
 
-.defaultBranch: ; Default projectile
+.defaultBranch: ;{ Default projectile
     ; Handle directions
-    ldh a, [$98]
+    ldh a, [hTemp.a]
     bit 0, a
     jr z, .endIf_N
         ; Move right
-        ldh a, [$9a]
-        add $04
+        ldh a, [hTemp.c]
+        add $04 ; Plasma speed
         ld hl, camera_speedRight ; Adjust for camera
         add [hl]
-        ldh [$9a], a
-        ldh a, [$b9]
-        cp $04 ; Plasma speed
+        ldh [hTemp.c], a
+        ; Check if Plasma beam
+        ldh a, [hBeam_type]
+        cp $04
         jr nz, .commonBranch
-            ldh a, [$9a]
+            ldh a, [hTemp.c]
             add $02 ; Default speed
-            ldh [$9a], a
+            ldh [hTemp.c], a
             jr .commonBranch
     .endIf_N:
     
     bit 1, a
     jr z, .endIf_O
         ; Move left
-        ldh a, [$9a]
-        sub $04
+        ldh a, [hTemp.c]
+        sub $04 ; Plasma speed
         ld hl, camera_speedLeft
         sub [hl]
-        ldh [$9a], a
-        ldh a, [$b9]
+        ldh [hTemp.c], a
+        ; Check if Plasma beam
+        ldh a, [hBeam_type]
         cp $04
         jr nz, .commonBranch
-            ldh a, [$9a]
-            sub $02
-            ldh [$9a], a
+            ldh a, [hTemp.c]
+            sub $02 ; Default speed
+            ldh [hTemp.c], a
             jr .commonBranch
     .endIf_O:
         
     bit 2, a
     jr z, .endIf_P
         ; Move up
-        ldh a, [$99]
-        sub $04
+        ldh a, [hTemp.b]
+        sub $04 ; Plasma speed
         ld hl, camera_speedUp
         sub [hl]
-        ldh [$99], a
-        ldh a, [$b9]
+        ldh [hTemp.b], a
+        ; Check if Plasma beam
+        ldh a, [hBeam_type]
         cp $04
         jr nz, .commonBranch
-            ldh a, [$99]
-            sub $02
-            ldh [$99], a
+            ldh a, [hTemp.b]
+            sub $02 ; Default speed
+            ldh [hTemp.b], a
             jr .commonBranch
     .endIf_P:
     
     ; bit 3, a
         ; Move down
-        ldh a, [$99]
-        add $04
+        ldh a, [hTemp.b]
+        add $04 ; Plasma speed
         ld hl, camera_speedDown
         add [hl]
-        ldh [$99], a
-        ldh a, [$b9]
+        ldh [hTemp.b], a
+        ; Check if Plasma beam
+        ldh a, [hBeam_type]
         cp $04
         jr nz, .commonBranch
-            ldh a, [$99]
-            add $02
-            ldh [$99], a
-; end case
+            ldh a, [hTemp.b]
+            add $02 ; Default speed
+            ldh [hTemp.b], a
+    ; Fall through to .commonBranch
+;} end normal beam case
 
 .commonBranch: ; Common projectile code
     ; HL = WRAM address of working projectile
-    ldh a, [$b7]
+    ldh a, [hBeam_pLow]
     ld l, a
-    ldh a, [$b8]
+    ldh a, [hBeam_pHigh]
     ld h, a
     inc hl
     inc hl
+    
     ; Save Y
-    ldh a, [$99]
+    ldh a, [hTemp.b]
     ld [hl+], a
     ; Adjust for collision
     add $04
     ld [tileY], a
+    
     ; Save X
-    ldh a, [$9a]
+    ldh a, [hTemp.c]
     ld [hl+], a
     ; Adjust for collision
     add $04
     ld [tileX], a
+    
     ; Save wave index
-    ldh a, [$ba]
+    ldh a, [hBeam_waveIndex]
     ld [hl+], a
     ; Save projectile frame counter
-    ldh a, [$bb]
+    ldh a, [hBeam_frameCouter]
     ld [hl], a
     
+    ; Only check BG collision every other frame
     ldh a, [frameCounter]
     and $01
     jr z, .else_Q
-    
+        ; Perform BG collision
         call getTileIndex.projectile
+        ; Skip ahead if tile is intangible to beams
         ld hl, beamSolidityIndex
         cp [hl]
         jr nc, .else_Q
-    
+            ; Tiles $00-$03 are hardcoded as respawning blocks
             cp $04
             jr nc, .else_R
                 call c, destroyRespawningBlock
                 jr .endIf_R
             .else_R:
+                ; Check if block type is shot
                 ld h, HIGH(collisionArray)
                 ld l, a
                 ld a, [hl]
                 bit blockType_shot, a
                 jp z, .endIf_R
-                    ld a, $ff
+                    ld a, $ff ; Unnecessarily setting the tile to write
                     call destroyBlock
-;                Jump_001_52c6:
             .endIf_R:
-        
-            ldh a, [$b9]
+            
+            ; Special cases for different beam types
+            ldh a, [hBeam_type]
             cp $07 ; Bomb beam
                 call z, bombBeam_layBomb
+            
             ; This gives the spazer/plasma beam the wall-clip property
             cp $03 ; Spazer
                 jr z, .nextProjectile
             cp $04 ; Plasma
                 jr z, .nextProjectile
-            ; Delete projectile
-            ldh a, [$b7]
+            
+            ; Delete projectile (power, ice, missiles)
+            ldh a, [hBeam_pLow]
             ld l, a
-            ldh a, [$b8]
+            ldh a, [hBeam_pHigh]
             ld h, a
+            ; Set to inactive
             ld a, $ff
             ld [hl], a
             jr .endIf_Q
     .else_Q:
+    
+; Wave beam skips ahead to here
     .checkEnemies: ; Enemy processing
         call collision_projectileEnemies ; Projectile-enemy collision routine
         jr nc, .endIf_Q
             ; Delete projectile
-            ld a, $dd
+            ld a, HIGH(projectileArray) ; $DD
             ld h, a
-            ldh [$b8], a
+            ldh [hBeam_pHigh], a
             ld a, [projectileIndex]
             swap a
             ld l, a
+            ; Set to inactive
             ld a, $ff
             ld [hl], a
     .endIf_Q:
     
     .nextProjectile: ; Next projectile
-
+    ; Increment projectile index
     ld a, [projectileIndex]
     inc a
     ld [projectileIndex], a
-    cp $03
+    ; Exit if past the last projectile
+    cp projectileArray.end >> 4 & $0F ; $03
     jp c, .bigLoop
-ret
+ret ;}
 
 ; Draw projectiles
-drawProjectiles: ; 01:5300
+drawProjectiles: ;{ 01:5300
+    ; Init projectile index
     ld a, $00
     ld [projectileIndex], a
 
@@ -1815,12 +1923,13 @@ drawProjectiles: ; 01:5300
         ld e, a
         ld d, $00
         add hl, de
+        
         ; Load weapon type to D, check if slot is used
         ld a, [hl+]
         ld d, a
         cp $ff
         jp z, .nextProjectile
-            ; Load direction to C (for missiles)
+            ; Load direction to C
             ld a, [hl+]
             ld c, a
             ; Load Y pos, adjust for camera
@@ -1872,6 +1981,7 @@ drawProjectiles: ; 01:5300
                     ld a, $7f ; Vertical sprite
                     ldh [hSpriteId], a
             .endIf_A:
+            
             ; Check if sprite is offscreen
             ldh a, [hSpriteXPixel]
             cp $08
@@ -1901,7 +2011,7 @@ drawProjectiles: ; 01:5300
                             ; Update the OAM buffer index
                             ld a, l
                             ldh [hOamBufferIndex], a
-                            ; Clear this variable (why?)
+                            ; Clear working sprite attribute (why?)
                             xor a
                             ldh [hSpriteAttr], a
                             jr .endIf_B
@@ -1919,16 +2029,19 @@ drawProjectiles: ; 01:5300
         ld a, [projectileIndex]
         inc a
         ld [projectileIndex], a
-        cp $03
+        cp (projectileArray.end >> 4 & $0F) ; $03
     jp c, .projectileLoop
 ret
 
 ; 01:539D - Missile sprite table
 .missileSpriteTileTable:
+    ;        R    L         U                   D
     db $00, $98, $98, $00, $99, $00, $00, $00, $99
 ; 01:53A6 - Missile attribute table
 .missileSpriteAttributeTable:
+    ;        R    L         U                   D
     db $00, $00, $20, $00, $00, $00, $00, $00, $40
+;}
 
 ;------------------------------------------------------------------------------
 ; Bomb stuff
@@ -1957,11 +2070,11 @@ bombBeam_layBomb: ; 01:53AF
     ld a, $60
     ld [hl+], a
     ; Set y pos
-    ldh a, [$99]
+    ldh a, [hTemp.b]
     add $04
     ld [hl+], a
     ; Set x pos
-    ldh a, [$9a]
+    ldh a, [hTemp.c]
     add $04
     ld [hl+], a
     ; Play sound
@@ -2016,13 +2129,13 @@ Call_001_540e:
     ld [projectileIndex], a
 
     Jump_001_5412:
-        ld hl, $dd30
+        ld hl, bombArray ; $dd30
         ld a, [projectileIndex]
         swap a
         add l
         ld l, a
         ld a, [hl+]
-        ldh [$98], a
+        ldh [hTemp.a], a
         cp $ff
         jr z, jr_001_5490
             ld a, [hl+]
@@ -2045,7 +2158,7 @@ Call_001_540e:
                 ldh a, [hSpriteYPixel]
                 cp $b0
                 jr nc, jr_001_548a
-                    ldh a, [$98]
+                    ldh a, [hTemp.a]
                     cp $01
                     jr nz, jr_001_545d
                         ld a, c
@@ -2180,7 +2293,7 @@ Call_001_54d7: ; 01:54D7
                     ld a, [samusPose]
                     ld e, a
                     ld d, $00
-                    ld hl, table_55DD
+                    ld hl, samus_bombPoseTable
                     add hl, de
                     ld a, [hl]
                     ld [samusPose], a
@@ -2289,7 +2402,7 @@ Call_001_54d7: ; 01:54D7
     pop bc
 ret
 
-table_55DD: ; 01:55DD - Pose related
+samus_bombPoseTable: ;{ 01:55DD - Samus-bombed pose transition table
     db $11 ; $00 - Standing
     db $11 ; $01 - Jumping
     db $11 ; $02 - Spin-jumping
@@ -2320,13 +2433,15 @@ table_55DD: ; 01:55DD - Pose related
     db $1B ; $1B - In Metroid Queen's stomach
     db $1C ; $1C - Escaping Metroid Queen
     db $1D ; $1D - Escaped Metroid Queen
+;}
 
-table_55FB: ; 01:55FB - Projectile X offsets
+samus_cannonXOffsetTable: ;{ 01:55FB - Projectile X offsets
 ; Column index into table is based off of facing direction
-; Row index is based off of your facing direction of the table_5643
+; Row index is based off of your facing direction of the samus_shotDirectionPriorityTable
+    ;   L    R  <- Facing direction  v-- Aiming direction
     db $00, $00
-    db $18, $1C ; Right
-    db $04, $08 ; Left
+    db $18, $1C ; Right - The opposing L/R directions are used when
+    db $04, $08 ; Left  - firing backwards while damage boosting
     db $10, $10
     db $0E, $12 ; Up
     db $10, $10
@@ -2341,68 +2456,76 @@ table_55FB: ; 01:55FB - Projectile X offsets
     db $10, $10
     db $10, $10
     db $10, $10
+;}
 
-table_561D: ; 01:561D - Projectile y-offsets per pose
-    db $17 ; Standing
-    db $1F ; Jumping
-    db $00 ; Spin-jumping
-    db $14 ; Running (set to 83h when turning)
-    db $21 ; Crouching
-    db $00 ; Morphball
-    db $00 ; Morphball jumping
-    db $1D ; Falling
-    db $00 ; Morphball falling
-    db $15 ; Starting to jump
-    db $15 ; Starting to spin-jump
-    db $00 ; Spider ball rolling
-    db $00 ; Spider ball falling
-    db $00 ; Spider ball jumping
-    db $00 ; Spider ball
-    db $1F ; Knockback
-    db $00 ; Morphball knockback
-    db $1F ; Standing bombed
-    db $00 ; Morphball bombed
-    
-table_5630: ; 01:5630 - Projectile y offset due to firing direction
-    db $00 ; Standing
-    db $00 ; Jumping
-    db $00 ; Spin-jumping
-    db $00 ; Running (set to 83h when turning)
-    db $F0 ; Crouching
-    db $00 ; Morphball
-    db $00 ; Morphball jumping
-    db $00 ; Falling
-    db $08 ; Morphball falling
-    db $00 ; Starting to jump
-    db $00 ; Starting to spin-jump
-    db $00 ; Spider ball rolling
-    db $00 ; Spider ball falling
-    db $00 ; Spider ball jumping
-    db $00 ; Spider ball
-    db $00 ; Knockback
-    db $1F ; Morphball knockback
-    db $00 ; Standing bombed
-    db $00 ; Morphball bombed
+samus_cannonYOffsetByPose: ;{ 01:561D - Projectile y-offsets per pose
+    db $17 ; $00 - Standing
+    db $1F ; $01 - Jumping
+    db $00 ; $02 - Spin-jumping
+    db $14 ; $03 - Running (set to 83h when turning)
+    db $21 ; $04 - Crouching
+    db $00 ; $05 - Morphball
+    db $00 ; $06 - Morphball jumping
+    db $1D ; $07 - Falling
+    db $00 ; $08 - Morphball falling
+    db $15 ; $09 - Starting to jump
+    db $15 ; $0A - Starting to spin-jump
+    db $00 ; $0B - Spider ball rolling
+    db $00 ; $0C - Spider ball falling
+    db $00 ; $0D - Spider ball jumping
+    db $00 ; $0E - Spider ball
+    db $1F ; $0F - Knockback
+    db $00 ; $10 - Morphball knockback
+    db $1F ; $11 - Standing bombed
+    db $00 ; $12 - Morphball bombed
+;}
 
-table_5643: ; 01:5643 - Shot direction based on directional input
-    db $00
-    db $01
-    db $02
-    db $01
-    db $04
-    db $04
-    db $04
-    db $04
-    db $08
-    db $08
-    db $08
-    db $08
-    db $08
-    db $08
-    db $08
-    db $08
+samus_cannonYOffsetByAimDirection: ;{ 01:5630 - Projectile y offset due to firing direction
+    db $00 ; $00 
+    db $00 ; $01 - Right
+    db $00 ; $02 - Left
+    db $00 ; $03 
+    db $F0 ; $04 - Up
+    db $00 ; $05 
+    db $00 ; $06 
+    db $00 ; $07 
+    db $08 ; $08 - Down
+    db $00 ; $09 
+    db $00 ; $0A 
+    db $00 ; $0B 
+    db $00 ; $0C 
+    db $00 ; $0D 
+    db $00 ; $0E 
+    db $00 ; $0F 
+    db $1F ; $10 - ? Morph ?
+    db $00 ; $11 
+    db $00 ; $12 
+;}
 
-table_5653: ; 01:5653 - Possible shot directions
+samus_shotDirectionPriorityTable: ;{ 01:5643 - Shot direction based on directional input
+    db $00 ; ---- ; This entry shouldn't be referenced
+    db $01 ; ---r
+    db $02 ; --l-
+    db $01 ; --lr
+    db $04 ; -u--
+    db $04 ; -u-r
+    db $04 ; -ul-
+    db $04 ; -ulr
+    db $08 ; d---
+    db $08 ; d--r
+    db $08 ; d-l-
+    db $08 ; d-lr
+    db $08 ; du--
+    db $08 ; du-r
+    db $08 ; dul-
+    db $08 ; dulr
+;}
+
+samus_possibleShotDirections: ;{ 01:5653
+; $00 = Shots not permitted in this pose
+; $80 = Use bombs in this pose
+; %0000dulr - Set these bits to permit shooting in this direction
+
     db $07 ; $00 - Standing
     db $0F ; $01 - Jumping
     db $00 ; $02 - Spin-jumping
@@ -2433,6 +2556,7 @@ table_5653: ; 01:5653 - Possible shot directions
     db $80 ; $1B - In Metroid Queen's stomach
     db $00 ; $1C - Escaping Metroid Queen
     db $80 ; $1D - Escaped Metroid Queen
+;}
 
 ;------------------------------------------------------------------------------
 
@@ -2678,7 +2802,7 @@ ret
     sub $10
     and $f0
     ld c, a
-    ldh [$98], a
+    ldh [hTemp.a], a
     ldh a, [hSamusYPixel]
     add $18
     sub c
@@ -2689,7 +2813,7 @@ ret
     sub $08
     and $f0
     ld b, a
-    ldh [$99], a
+    ldh [hTemp.b], a
     ldh a, [hSamusXPixel]
     add $0c
     sub b
