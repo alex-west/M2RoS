@@ -4002,6 +4002,7 @@ drawNonGameSprite: ;{ 01:73F7
         ldh a, [hSpriteAttr]
         bit OAMB_YFLIP, a
         jr z, .else_A
+            ; Flip vertically
             ld a, [de]
             cpl
             sub $07
@@ -4018,6 +4019,7 @@ drawNonGameSprite: ;{ 01:73F7
         ldh a, [hSpriteAttr]
         bit OAMB_XFLIP, a
         jr z, .else_B
+            ; Flip horizontally
             ld a, [de]
             cpl
             sub $07
@@ -4025,9 +4027,10 @@ drawNonGameSprite: ;{ 01:73F7
         .else_B:
             ld a, [de]
         .endIf_B:
-    
+        ; Add x offset and store
         add c
         ld [hl+], a
+        
         ; Load tile number
         inc de
         ld a, [de]
@@ -4077,6 +4080,7 @@ earthquake_adjustScroll: ;{ 01:79EF: Handle earthquake (called from bank 0)
     dec a
     ld [earthquakeTimer], a
         ret nz
+
 ; Actions once earthquake is finished
     ; Clear earthquake sound
     xor a
@@ -4109,6 +4113,7 @@ earthquake_adjustScroll: ;{ 01:79EF: Handle earthquake (called from bank 0)
 ;}
 
 drawSamus_earthquakeAdjustment: ;{ 01:7A34
+    ; Exit if earthquake not active
     ld a, [earthquakeTimer]
     and a
         ret z
@@ -4151,7 +4156,10 @@ ret
     db $93, $e7, $fb
 ;}
 
-saveEnemyFlagsToSRAM: ; 01:7A6C
+saveEnemyFlagsToSRAM: ;{ 01:7A6C
+; Save active enemy save flags to save buffer {
+    ; Get base address of saved enemy flags in save buffer
+    ; HL = saveBuf + (bank-9)*64
     ld d, $00
     ld a, [previousLevelBank]
     sub $09
@@ -4162,44 +4170,55 @@ saveEnemyFlagsToSRAM: ; 01:7A6C
     rl d
     ld hl, saveBuf_enemySaveFlags
     add hl, de
+    
+    ; Load 
     ld de, enemySaveFlags
     ld b, $40
-
-    ; Save active enemy save flags to save buffer
     .bufferLoop:
         ld a, [de]
-        cp $02
-            jr z, .case_A
-        cp $fe
-            jr z, .case_A
-        cp $04
-            jr nz, .case_B
+        cp $02 ; Save $02 as $02 (Permanently dead)
+            jr z, .saveAsIs
+        cp $fe ; Save $FE as $FE (Seen before)
+            jr z, .saveAsIs
+        cp $04 ; Ignore everything else besides $04
+            jr nz, .ignore
+        ; Save $04 as $FE
         ld a, $fe
-    
-        .case_A:
+        .saveAsIs:
             ld [hl], a
-        .case_B:
+        .ignore:
+            ; Increment source and destination pointers
             inc l
             inc e
+            ; Decrement loop counter
             dec b
     jr nz, .bufferLoop
+;}
 
+; Copy saveBuffer to SRAM {
     ; Enable SRAM
     ld a, $0a
     ld [$0000], a
-
+    
+; Copy over 7 banks of save flags
+    ; Set destination pointer
+    ; DE = SRAM enemy flags + saveSlot*0x200
     ld de, saveData_objList_baseAddr
     ld a, [activeSaveSlot]
     add a
     add d
     ld d, a
+    
+    ; Set source pointer
     ld hl, saveBuf_enemySaveFlags
-    ld bc, $01c0
-
+    
+    ld bc, $40*7 ; $01C0
     .saveLoop:
+        ; Copy save buffer to SRAM
         ld a, [hl+]
         ld [de], a
         inc de
+        ; Decrement loop counter, exit loop if zero
         dec bc
         ld a, b
         or c
@@ -4208,57 +4227,79 @@ saveEnemyFlagsToSRAM: ; 01:7A6C
     ; Disable SRAM
     xor a
     ld [$0000], a
-ret
+;}
+ret ;}
 
 ; Loads enemy save flags from SRAM to a WRAM buffer.
-loadEnemySaveFlags: ; 01:7AB9
+loadEnemySaveFlags: ;{ 01:7AB9
+    ; Enable SRAM
     ld a, $0a
     ld [$0000], a
+    
+; Copy over 7 banks of save flags    
+    ; Set destination pointer
     ld de, saveBuf_enemySaveFlags
-    ld bc, $01c0
+    
+    ; Set loop counter
+    ld bc, $40*7 ; $01C0
+    
+    ; Set destination pointer
+    ; DE = SRAM enemy flags + saveSlot*0x200
     ld hl, saveData_objList_baseAddr
     ld a, [activeSaveSlot]
     add a
     add h
     ld h, a
-
+    
     .loadLoop:
+        ; Copy SRAM to save buffer
         ld a, [hl+]
         ld [de], a
         inc de
+        ; Decrement loop counter, exit loop if zero
         dec bc
         ld a, b
         or c
     jr nz, .loadLoop
-
+    
+    ; Disable SRAM
     ld a, $00
     ld [$0000], a
     
+    ; Clear flag
     xor a
     ld [loadSpawnFlagsRequest], a
-ret
+ret ;}
 
-saveFileToSRAM: ; 01:7ADF
+saveFileToSRAM: ;{ 01:7ADF
     ; Enable SRAM
     ld a, $0a
     ld [$0000], a
-
+    
+; Copy magic number to save file
+    ; Set source pointer
     ld hl, saveFile_magicNumber
+    ; Set destination pointer
+    ; DE = save base address + saveSlot*0x40
     ld a, [activeSaveSlot]
     sla a
     sla a
     swap a
     ld e, a
     ld d, HIGH(saveData_baseAddr)
+    ; Set loop counter
     ld b, $08
-
-    .loop_A: ; Copy magic number to save file
+    
+    .loop_A:
         ld a, [hl+]
         ld [de], a
         inc de
         dec b
     jr nz, .loop_A
-
+    
+; Save the save data
+    ; Get destination address
+    ; HL = save base address + saveSlot*0x40
     ld a, [activeSaveSlot]
     sla a
     sla a
@@ -4267,6 +4308,7 @@ saveFileToSRAM: ; 01:7ADF
     ld l, a
     ld h, HIGH(saveData_baseAddr)
     
+    ; Save Samus' position
     ldh a, [hSamusYPixel]
     ld [hl+], a
     ldh a, [hSamusYScreen]
@@ -4275,6 +4317,8 @@ saveFileToSRAM: ; 01:7ADF
     ld [hl+], a
     ldh a, [hSamusXScreen]
     ld [hl+], a
+    
+    ; Save camera position
     ldh a, [hCameraYPixel]
     ld [hl+], a
     ldh a, [hCameraYScreen]
@@ -4284,15 +4328,23 @@ saveFileToSRAM: ; 01:7ADF
     ldh a, [hCameraXScreen]
     ld [hl+], a
 
-    ld de, saveBuffer + $08
-    ld b, $0d
+    ; Loop to save the following variables:
+    ;  - enGfxSrcLow, enGfxSrcHigh 
+    ;  - bgGfxSrcBank, bgGfxSrcLow, bgGfxSrcHigh
+    ;  - tiletableSrcLow, tiletableSrcHigh
+    ;  - collisionSrcLow, collisionSrcHigh
+    ;  - currentLevelBank
+    ;  - samusSolidityIndex, enemySolidityIndex, beamSolidityIndex
+    ld de, saveBuf_enGfxSrcLow ; saveBuffer + $08
+    ld b, saveBuf_samusItems - saveBuf_enGfxSrcLow ; $0D
     .loop_B: ; Save graphics pointers and such
         ld a, [de]
         inc de
         ld [hl+], a
         dec b
     jr nz, .loop_B
-
+    
+    ; Save Samus's items/equipment
     ld a, [samusItems]
     ld [hl+], a
     ld a, [samusBeam]
@@ -4311,26 +4363,40 @@ saveFileToSRAM: ; 01:7ADF
     ld [hl+], a
     ld a, [samusCurMissilesHigh]
     ld [hl+], a
+    
+    ; Save facing direction
     ld a, [samusFacingDirection]
     ld [hl+], a
+    
+    ; Save damage values
     ld a, [acidDamageValue]
     ld [hl+], a
     ld a, [spikeDamageValue]
     ld [hl+], a
+    
+    ; Save real metroid count
     ld a, [metroidCountReal]
     ld [hl+], a
+    
+    ; Save current song
     ld a, [currentRoomSong]
     ld [hl+], a
+    
+    ; Save game time
     ld a, [gameTimeMinutes]
     ld [hl+], a
     ld a, [gameTimeHours]
     ld [hl+], a
+    
+    ; Save displayed metroid count
     ld a, [metroidCountDisplayed]
     ld [hl], a
+    
     ; Disable SRAM
     ld a, $00
     ld [$0000], a
 
+    ; Save enemy flags
     call saveEnemyFlagsToSRAM
     
     ; Play save sound effect
@@ -4339,9 +4405,10 @@ saveFileToSRAM: ; 01:7ADF
     ; But why write to this twice?
     ld a, $1c
     ld [sfxRequest_square1], a
+    
     ; Turn game mode back to main
     ld a, $04
     ldh [gameMode], a
-ret
+ret ;}
 
-; 1:7B87 - Freespace (filled with $00)
+bank1_freespace: ; 1:7B87 - Freespace (filled with $00)

@@ -322,9 +322,9 @@ inGame_saveAndLoadEnemySaveFlags: ;{ 02:418C
                 jr z, .saveAsIs
             cp $04 ; Save $04 as $FE
                 jr z, .saveAsFE
-            cp $05 ; Save $05 as $FE
+            cp $05 ; Ignore everything else besides $05
                 jr nz, .ignore
-            ; Ignore everything else            
+            ; Save $05 as $FE
             .saveAsFE:
                 ld a, $fe
             .saveAsIs:
@@ -11240,4 +11240,4 @@ enemy_toggleVisibility: ;{ 02:7DF8
 ret
 ;}
 
-; 02:7E05 - Freespace 
+bank2_freespace: ; 02:7E05 - Freespace 

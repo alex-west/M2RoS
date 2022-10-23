@@ -704,11 +704,11 @@ enemy_deleteSelf: ;{ 03:6AE7
         ; If 5, set to 4
         ; Do this so their projectile-firing status is not saved
         ld a, [hl]
-        cp $03 ; Deactivated because of child
+        cp $03 ; Has a child object
         jr z, .else_C
-            cp $05 ; ??
+            cp $05 ; Has been seen before and has a child object
                 jr nz, .endIf_A
-            ld a, $04 ; ??
+            ld a, $04 ; Has been seen before
             jr .endIf_C
         .else_C:
             ld a, $01 ; Active
