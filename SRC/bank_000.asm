@@ -10810,4 +10810,4 @@ unusedDeathAnimation_copy: ;{ 00:3F07
     pop af
 reti ;}
 
-; Freespace - 00:3F60 (filled with $00)
+bank0_freespace: ; Freespace - 00:3F60 (filled with $00)

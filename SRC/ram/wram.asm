@@ -44,6 +44,8 @@ def gameOver_LCDC_copy = $C219 ; LCD control mirror. Only set by death routine. 
 ;}
 ;
 def unknown_C227 = $C227
+
+
 def enSprite_blobThrower = $C300
 def spriteC300 = $C300 ;$C300..3D: Set to [$2:4FFE..503A] in $2:4DB1
 ;{
@@ -53,9 +55,11 @@ def spriteC300 = $C300 ;$C300..3D: Set to [$2:4FFE..503A] in $2:4DB1
 ;    $C322/2E: XOR'd with Dh in $2:4EA1
 ;    $C334: Set to E8h in $2:4EA1 if [$C382] = 0
 ;}
-;$C308..37: Metroid Queen neck OAM. Ch slots of 4 bytes (Y position, X position, tile number, attributes)
-; $C338 - Queen Wall OAM (body portion) - 7 slots
-; $C354 - Queen Wall OAM (head portion) - 5 slots
+def queen_objectOAM = $C308 ; $C308..37: Metroid Queen neck/spit OAM. Ch slots of 4 bytes (Y, X, tile, attr)
+
+def queen_wallOAM = $C338
+def queen_wallOAM_body = $C338 ; $C338 - Queen Wall OAM (body portion) - 7 slots
+def queen_wallOAM_head = $C354 ; $C354 - Queen Wall OAM (head portion) - 5 slots
 
 def hitboxC360 = $C360 ;-$C363: Set to [$2:503B..3E] in $2:4DB1
 ;
@@ -83,7 +87,7 @@ section "Queen Stuff 1", wram0[$C3A0]
 queen_bodyY: ds 1 ; $C3A0 - Y position of the Queen's body (used for the setting the raster split and setting the hitbox)
 queen_bodyXScroll: ds 1 ; $C3A1 - LCD interrupt handler scroll X (higher numbers -> body is more left)
 queen_bodyHeight: ds 1 ; $C3A2 - Queen body height? (used for timing the bottom of the raster split)
-queen_walkWaitTimer: ds 1 ; $C3A3 - If non-zero, decrements and pauses the Queen's walking animation
+queen_walkWaitTimer: ds 1 ; $C3A3 - If non-zero, decrements and pauses the Queen's walking animation (never written to?)
 queen_walkCounter: ds 1 ; $C3A4 - Index into the queen's walk speed table
 ds 1 ; $C3A5 - Unused? (perhaps the walk counter used to be a pointer?)
 queen_pNeckPatternLow:  ds 1 ; $C3A6 - Pointer to the current working byte of the current neck pattern
@@ -109,11 +113,12 @@ queen_interruptList: ds 9 ;$C3AD..B5: LCD interrupt data: Initial slot for a y p
 ; $C3B6 - Neck related counter
 ; $C3B7 - Neck related counter
 
-; $C3B8/$C3B9 - Pointer used in constructing the sprite at C600 ?
+queen_pOamScratchpadLow  = $C3B8 ; Pointer used in constructing the sprite at C608
+queen_pOamScratchpadHigh = $C3B9
 ; $C3BA
 queen_cameraDeltaX = $C3BB ; Change in camera X position from the last frame
 queen_cameraDeltaY = $C3BC ; Change in camera Y position from the last frame
-queen_walkControl  = $C3BD ; 0x00 = Don't walk, non-zero: start walking (used to activate walking behavior)
+queen_walkControl  = $C3BD ; 0x00 = Don't walk, 0x01: Walk forwards, 0x02: Walk backwards
 ; queen_ ??? = $C3BE ; alternates between 0x00 and 0x01 often
 queen_walkStatus = $C3BF ; 0x81 = "done walking forward", 0x82 = "done walking backward"
 

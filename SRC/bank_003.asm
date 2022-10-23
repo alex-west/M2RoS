@@ -1091,9 +1091,9 @@ queen_initialize: ;{ 03:6D4A
     ld [$c3b6], a
     ld hl, spriteC300
     ld a, l
-    ld [$c3b8], a
+    ld [queen_pOamScratchpadLow], a
     ld a, h
-    ld [$c3b9], a
+    ld [queen_pOamScratchpadHigh], a
     ; Initialize wall sprites
     ld hl, $c338
     ld b, $0c
@@ -1111,16 +1111,17 @@ queen_initialize: ;{ 03:6D4A
     jr nz, jr_003_6daa
 
     call queen_adjustWallSpriteToHead
-    ld hl, table_7484
+    ld hl, queen_stateList
     ld a, l
     ld [queen_pNextStateLow], a
     ld a, h
     ld [queen_pNextStateHigh], a
     ld a, $17 ; Init fight pt 1 (wait to scream)
     ld [queen_state], a
+    
+    ; Clear enemy slots
     ld hl, $c600
     ld bc, $01a0
-
     jr_003_6dd2:
         xor a
         ld [hl+], a
@@ -1132,6 +1133,7 @@ queen_initialize: ;{ 03:6D4A
     ld a, $96 ; Set initial health
     ld [queen_health], a
     call Call_003_6f07
+    ; Set sprite types
     ld hl, $c603
     ld [hl], $f3
     ld l, $23
@@ -1140,11 +1142,11 @@ queen_initialize: ;{ 03:6D4A
     ld [hl], $f1
     ld l, $63
     ld [hl], $f2
+    ; Set sprite types
     ld hl, $c683
     ld de, $0020
     ld b, $06
     ld a, $f0
-
     jr_003_6dfc:
         ld [hl], a
         add hl, de
@@ -1200,7 +1202,7 @@ queenHandler: ;{ 03:6E36
         ld [queen_footFrame], a
         ld [queen_headFrameNext], a
         ld [queen_deathBitmask], a
-        call Call_003_7140
+        call queen_writeOam
         ret
     .endIf_A:
 
@@ -1213,9 +1215,9 @@ queenHandler: ;{ 03:6E36
         jr z, .endIf_B
             xor $90
             ld [queen_bodyPalette], a
+            
             ld b, $0c
-            ld hl, $c308
-        
+            ld hl, queen_objectOAM ; $c308
             .loop:
                 inc l
                 inc l
@@ -1252,7 +1254,7 @@ queenHandler: ;{ 03:6E36
     call Call_003_71cf
     call Call_003_6f07 ; Set actor positions (for collision detection?)
     call queen_adjustWallSpriteToHead
-    call Call_003_7140 ; Copy sprites from C600 area to OAM buffer
+    call queen_writeOam ; Copy sprites from C600 area to OAM buffer
     call Call_003_6ea7
 ret ;}
 
@@ -1371,12 +1373,12 @@ Call_003_6f07: ;{
         ld a, [$c3e3]
         and a
             ret nz
-        ld a, [$c3b8]
+        ld a, [queen_pOamScratchpadLow]
         cp $00
             ret z
         inc a
         ld l, a
-        ld a, [$c3b9]
+        ld a, [queen_pOamScratchpadHigh]
         ld h, a
         ld de, $c683
         ld a, $f0
@@ -1407,7 +1409,7 @@ Call_003_6f07: ;{
         jr nz, jr_003_6f71
         ret
     jr_003_6f8d:
-        ld de, $c308
+        ld de, queen_objectOAM ; $c308
         ld hl, $c680
         ld [hl], $00
         inc l
@@ -1642,41 +1644,48 @@ queen_frontFootOffsets:
 ; No more code about the Queen's feet, please.
 
 ; Copy sprites to OAM buffer
-Call_003_7140: ;{ 03:7140
+queen_writeOam: ;{ 03:7140
     ; Copy the 6 segments of the neck (or the spit projectiles)
-    ld hl, $c308
+    ; Set source pointer
+    ld hl, queen_objectOAM ; $c308
+    ; Set destination pointer
     ld a, [hOamBufferIndex]
     ld e, a
     ld d, HIGH(wram_oamBuffer)
+    ; Load 6 pairs of sprites
     ld c, $06
-    jr_003_714b:
-        ld a, [$c3b8]
+    .loop_A:
+        ; Break if at the last sprite
+        ld a, [queen_pOamScratchpadLow]
         add $08
         cp l
-            jr z, jr_003_715e
+            jr z, .break
+        
+        ; Load a pair of sprites to the OAM buffer
         ld b, $08
-        jr_003_7155:
+        .loop_B:
             ld a, [hl+]
             ld [de], a
             inc de
             dec b
-        jr nz, jr_003_7155
-    
+        jr nz, .loop_B
+        
+        ; Decrement loop counter
         dec c
-    jr nz, jr_003_714b
-    
-    jr_003_715e:
+    jr nz, .loop_A
+    .break:
 
     ; Copy the wall segments
-    ld hl, $c338
-    ld b, $30
-    jr_003_7163:
+    ld hl, queen_wallOAM ; $C338
+    ld b, $0C*4 ;$30
+    .loop_C:
         ld a, [hl+]
         ld [de], a
         inc de
         dec b
-    jr nz, jr_003_7163
-
+    jr nz, .loop_C
+    
+    ; Update the OAM index
     ld a, e
     ld [hOamBufferIndex], a
 ret ;}
@@ -1752,12 +1761,12 @@ Call_003_71cf: ;{ 03:71CF
     ld b, a
     ld a, [queen_cameraDeltaY]
     ld c, a
-    ld a, [$c3b8]
+    ld a, [queen_pOamScratchpadLow]
     cp $00
     jr z, jr_003_7215
         add d
         ld l, a
-        ld a, [$c3b9]
+        ld a, [queen_pOamScratchpadHigh]
         ld h, a
     
         jr_003_71ee:
@@ -1821,9 +1830,9 @@ Call_003_7229: ;{
 ret ;}
 
 Call_003_7230: ;{ 03:7230
-    ld a, [$c3b8]
+    ld a, [queen_pOamScratchpadLow]
     ld l, a
-    ld a, [$c3b9]
+    ld a, [queen_pOamScratchpadHigh]
     ld h, a
     ld a, [$c3ba]
     and a
@@ -1882,9 +1891,9 @@ jr_003_724e:
 Jump_003_7288: ; Projectile related?
 jr_003_7288:
     ld a, l
-    ld [$c3b8], a
+    ld [queen_pOamScratchpadLow], a
     ld a, h
-    ld [$c3b9], a
+    ld [queen_pOamScratchpadHigh], a
     ret
 
 
@@ -2130,9 +2139,9 @@ Jump_003_73b1:
         ld [hl], $f5
         ld hl, spriteC300
         ld a, l
-        ld [$c3b8], a
+        ld [queen_pOamScratchpadLow], a
         ld a, h
-        ld [$c3b9], a
+        ld [queen_pOamScratchpadHigh], a
         ld a, $09
         ld [$c3b6], a
         ld [$c3b7], a
@@ -2197,39 +2206,45 @@ queen_setNeckBasePointer: ;{ 03:746F
 ret ;}
 
 ; Queen state table
-table_7484: ; 03:7484
+queen_stateList: ;{ 03:7484
     db $00, $02, $04, $02, $04, $06, $14, $ff
-; Walk forward, shove head forward twice, walk back, spit blobs, repeat
+; 0    - Walk forward
+; 2, 4 - Shove head forward and retract
+; 2, 4 - Shove head forward and retract
+; 6    - Walk back
+; $14  - Spit blobs
+; $FF  - Repeat
+;}
 
 queen_handleState: ; 03:748C
     ld a, [queen_state] ; Queen's state!
     rst $28
-        dw func_03_7821 ; $00 - 03:7821 - Prep forward walk
-        dw queenStateFunc_forwardWalk ; $01 - 03:783C - Walking forward
-        dw func_03_7864 ; $02 - 03:7864 - Prep neck extension
-        dw queenStateFunc_extendingNeck ; $03 - 03:78EE - Extending neck
-        dw func_03_78F7 ; $04 - 03:78F7 - Prep retraction
-        dw queenStateFunc_retractingNeck ; $05 - 03:7932 - Retracting neck
-        dw func_03_793B ; $06 - 03:793B - Prep backwards walking
-        dw queenStateFunc_backwardWalk ; $07 - 03:7954 - Walking backward
-        dw func_03_7970 ; $08 - 03:7970 - Stomach just bombed
-        dw func_03_79D0 ; $09 - 03:79D0 - Prep spitting Samus out of stomach
-        dw func_03_79E1 ; $0A - 03:79E1 - Spitting Samus out of stomach
-        dw func_03_7A1D ; $0B - 03:7A1D - Done spitting Samus out of stomach
-        dw queenStateFunc_pickNextState ; $0C - 03:7846 - Init fight pt 3 (choose next state)
-        dw func_03_772B ; $0D - 03:772B - Prep Samus in mouth
-        dw func_03_776F ; $0E - 03:776F - Samus in mouth (head retracting)
-        dw func_03_7785 ; $0F - 03:7785 - Samus in mouth/stomach (head retracted)
-        dw func_03_77DD ; $10 - 03:77DD - Spitting Samus out of mouth
-        dw queenStateFunc_prepDeath ; $11 - 03:7ABF - Prep death
-        dw queenStateFunc_disintegrate ; $12 - 03:7B05 - Dying pt 1 (disintegrating)
-        dw queenStateFunc_deleteBody ; $13 - 03:7B9D - Dying pt 2
-        dw func_03_7519 ; $14 - 03:7519 - Prepping blob spit
-        dw func_03_757B ; $15 - 03:757B - Blobs out
-        dw queenStateFunc_allDone ; $16 - 03:7BE7 - Dying pt 3
-        dw queenStateFunc_startA ; $17 - 03:74C4 - Start Fight A (wait to scream)
-        dw queenStateFunc_startB ; $18 - 03:74EA - Start Fight B (wait to move)
-        dw enAI_NULL ; $19 - Wrong bank, you silly programmer.
+        dw queenStateFunc_prepForwardWalk    ; $00 - 03:7821 - Prep forward walk
+        dw queenStateFunc_forwardWalk        ; $01 - 03:783C - Walking forward
+        dw queenStateFunc_prepExtendingNeck  ; $02 - 03:7864 - Prep neck extension
+        dw queenStateFunc_extendingNeck      ; $03 - 03:78EE - Extending neck
+        dw queenStateFunc_prepRetractingNeck ; $04 - 03:78F7 - Prep retraction
+        dw queenStateFunc_retractingNeck     ; $05 - 03:7932 - Retracting neck
+        dw queenStateFunc_prepBackwardWalk   ; $06 - 03:793B - Prep backwards walking
+        dw queenStateFunc_backwardWalk       ; $07 - 03:7954 - Walking backward
+        dw queenStateFunc_stomachBombed      ; $08 - 03:7970 - Stomach just bombed
+        dw queenStateFunc_prepVomitingSamus  ; $09 - 03:79D0 - Prep spitting Samus out of stomach
+        dw queenStateFunc_vomitingSamus      ; $0A - 03:79E1 - Spitting Samus out of stomach
+        dw queenStateFunc_doneVomitingSamus  ; $0B - 03:7A1D - Done spitting Samus out of stomach
+        dw queenStateFunc_pickNextState      ; $0C - 03:7846 - Init fight pt 3 (choose next state)
+        dw queenStateFunc_prepEatingSamus    ; $0D - 03:772B - Prep Samus in mouth
+        dw queenStateFunc_retractNeckEating  ; $0E - 03:776F - Samus in mouth (head retracting)
+        dw queenStateFunc_samusEaten         ; $0F - 03:7785 - Samus in mouth/stomach (head retracted)
+        dw queenStateFunc_vomitingOutMouth   ; $10 - 03:77DD - Spitting Samus out of mouth
+        dw queenStateFunc_prepDeath          ; $11 - 03:7ABF - Prep death
+        dw queenStateFunc_disintegrate       ; $12 - 03:7B05 - Dying pt 1 (disintegrating)
+        dw queenStateFunc_deleteBody         ; $13 - 03:7B9D - Dying pt 2
+        dw queenStateFunc_prepProjectiles    ; $14 - 03:7519 - Prepping blob spit
+        dw queenStateFunc_projectilesActive  ; $15 - 03:757B - Blobs out
+        dw queenStateFunc_allDone            ; $16 - 03:7BE7 - Dying pt 3
+        dw queenStateFunc_startA             ; $17 - 03:74C4 - Start Fight A (wait to scream)
+        dw queenStateFunc_startB             ; $18 - 03:74EA - Start Fight B (wait to move)
+        dw enAI_NULL ; $19 - Wrong bank, you silly programmer!
 
 queenStateFunc_startA: ;{ 03:74C4 - Queen State $17: Start Fight A (wait to scream)
     ; Wait until timer expires
@@ -2276,86 +2291,118 @@ ret ;}
 
 
 Call_003_74fb: ;{ 03:74FB
+    ; Set source pointer
     ld de, samus_onscreenYPos
+    ; Set destination pointer
     ld hl, $c3e6
+    
+    ; Samus Y
     ld a, [de]
     ld b, a
     ld [hl+], a
+    ; Samus X
     inc de
     ld a, [de]
     ld c, a
     ld [hl+], a
-    ld a, $f0
+    
+    ; Samus Y - $10
+    ld a, -$10 ; $F0
     add b
     ld [hl+], a
-    ld a, $f0
+    ; Samus X - $10
+    ld a, -$10 ; $F0
     add c
     ld [hl+], a
+    
+    ; Samus Y + $10
     ld a, $10
     add b
     ld [hl+], a
+    ; Samus X + $10
     ld a, $10
     add c
     ld [hl], a
 ret ;}
 
-func_03_7519: ;{ 03:7519 - Queen State $14: Prep spitting projectiles
+queenStateFunc_prepProjectiles: ;{ 03:7519 - Queen State $14: Prep spitting projectiles
     call Call_003_74fb
+    
+    ; Get Y offset for projectiles
     ld a, [queen_headY]
     add $20
     ld b, a
+    
+    ; Get X offset for projectiles
     ld a, [queen_headX]
     add $1c
     ld c, a
+    
+    ; Spawn first projectile
     ld hl, $c740
     ld d, $20
-    call Call_003_756c
+    call queen_spawnOneProjectile
+    ; Spawn second projectile
     ld l, $60
     ld d, $20
-    call Call_003_756c
+    call queen_spawnOneProjectile
+    ; Spawn third projectile
     ld l, $80
     ld d, $21
-    call Call_003_756c
-    ld hl, $c308
+    call queen_spawnOneProjectile
+    
+    
+    ld hl, queen_objectOAM ; $c308
     ld de, $c740
     ld b, $03
     call Call_003_75fa
     ld a, $0e
     ld [$c3ee], a
+    
+    ; Open mouth
     ld a, $02
     ld [queen_headFrameNext], a
+    
+    ; Set delay timer for next state
     ld a, $20
     ld [queen_delayTimer], a
+    
+    
     ld a, $10
     ld [$c3e5], a
+
+    ; Set state
     ld a, $15 ; Blobs out
     ld [queen_state], a
+
+    ; ???
     ld [$c3e3], a
     ld de, $fff8
     add hl, de
 jp Jump_003_7288 ;}
 
-; Spawn Queen's spit?
-Call_003_756c: ;{ 03:756C
-    ; Set status
+; Spawn Queen's spit
+queen_spawnOneProjectile: ;{ 03:756C
+    ; Set status to active
     ld [hl], $00
-    ; Set Y
+    ; Set Y to B
     inc l
     ld [hl], b
-    ; Set X
+    ; Set X to C
     inc l
     ld [hl], c
-    ; Set sprite type
+    ; Set sprite type to $F2
     inc l
     ld [hl], $f2
-    ; Set flip flags
+    
+    ; Set flip flags to D
     ld a, l
     add $05
     ld l, a
     ld [hl], d
 ret ;}
 
-func_03_757B: ;{ 03:757B - Queen State $15: Projectiles out
+queenStateFunc_projectilesActive: ;{ 03:757B - Queen State $15: Projectiles out
     ld a, [queen_delayTimer]
     and a
     jr z, jr_003_758c
@@ -2447,7 +2494,7 @@ jr_003_75d0:
 
 
 Call_003_75fa: ;{ 03:75FA
-    ld hl, $c308
+    ld hl, queen_objectOAM ;$c308
     ld de, $c740
     ld b, $03
 
@@ -2663,6 +2710,7 @@ jr_003_76fb:
     ret
 ;}
 
+; Handle one spit ball ?
 Call_003_7701: ;{ 03:7701
     ld b, $02
     inc hl
@@ -2696,14 +2744,14 @@ Call_003_7701: ;{ 03:7701
     pop hl
 ret ;}
 
-func_03_772B: ;{ 03:772B - Queen State $0D: Prep Samus in mouth
+queenStateFunc_prepEatingSamus: ;{ 03:772B - Queen State $0D: Prep Samus in mouth
     ld a, [queen_pNeckPatternLow]
     ld l, a
     ld a, [queen_pNeckPatternHigh]
     ld h, a
     ld a, [hl]
     cp $81
-    jp z, queenStateFunc_pickNextState
+        jp z, queenStateFunc_pickNextState
 
     ld a, $02
     ld [$c3ba], a
@@ -2730,7 +2778,7 @@ func_03_772B: ;{ 03:772B - Queen State $0D: Prep Samus in mouth
     dec hl
 jp Jump_003_7399 ;}
 
-func_03_776F: ;{ 03:776F - Queen State $0E: Samus in mouth (neck retracting)
+queenStateFunc_retractNeckEating: ;{ 03:776F - Queen State $0E: Samus in mouth (neck retracting)
     ld a, [queen_neckStatus]
     cp $82
         ret nz
@@ -2742,7 +2790,7 @@ func_03_776F: ;{ 03:776F - Queen State $0E: Samus in mouth (neck retracting)
     ld [queen_footFrame], a
 ret ;}
 
-func_03_7785: ;{ 03:7785 - Queen State $0F: Samus in mouth/stomach
+queenStateFunc_samusEaten: ;{ 03:7785 - Queen State $0F: Samus in mouth/stomach
     ld a, [queen_eatingState]
     cp $04
     jr nz, jr_003_77b8
@@ -2796,7 +2844,7 @@ jr_003_77d5:
     jr jr_003_77c2
 ;}
 
-func_03_77DD: ;{ 03:77DD -  Queen State $10: Spitting Samus out
+queenStateFunc_vomitingOutMouth: ;{ 03:77DD -  Queen State $10: Spitting Samus out
     ld a, [queen_stunTimer]
     and a
     jr z, jr_003_77fd
@@ -2826,14 +2874,14 @@ jr_003_77fd:
     ; Pointless state assignment given the jump right there
     ld a, $06 ; Prep walking backwards
     ld [queen_state], a
-    ld hl, table_7484 + 6 ;$748a
+    ld hl, queen_stateList + 6 ;$748a
     jr queenStateFunc_pickNextState.direct ; Set state to queen_stateTable[6]
 ;}
 
 ; Set sprite attributes for neck
 Call_003_7812: ;{ 03:7812
     ld b, $0c
-    ld hl, spriteC300 + 8 ;$c308
+    ld hl, queen_objectOAM ;$c308
     .loop:
         inc l
         inc l
@@ -2844,7 +2892,7 @@ Call_003_7812: ;{ 03:7812
     jr nz, .loop
 ret ;}
 
-func_03_7821: ;{ 03:7821 - Queen State $00: Prep forward walk
+queenStateFunc_prepForwardWalk: ;{ 03:7821 - Queen State $00: Prep forward walk
     xor a
     ld [queen_walkCounter], a
     ld [$c3ba], a
@@ -2891,11 +2939,11 @@ queenStateFunc_pickNextState: ;{ 03:7846 - Queen State $0C: Pick next state from
         ld [queen_pNextStateHigh], a
         ret
     .else:
-        ld hl, table_7484
+        ld hl, queen_stateList
         jr .tryAgain
 ;}
 
-func_03_7864: ;{ 03:7864 - Queen State $02 - Prep neck extension
+queenStateFunc_prepExtendingNeck: ;{ 03:7864 - Queen State $02 - Prep neck extension
     ld hl, $c620
     ld [hl], $00
     ld a, $01
@@ -2978,7 +3026,7 @@ queenStateFunc_extendingNeck: ;{ 03:78EE - Queen State $03: Extending neck
         ret nz
 jp queenStateFunc_pickNextState ;}
 
-func_03_78F7: ;{ 03:78F7 - Queen State $04: Prep neck retraction
+queenStateFunc_prepRetractingNeck: ;{ 03:78F7 - Queen State $04: Prep neck retraction
     ld a, [queen_pNeckPatternLow]
     ld l, a
     ld a, [queen_pNeckPatternHigh]
@@ -3015,7 +3063,7 @@ queenStateFunc_retractingNeck: ;{ 03:7932 - Queen State $05: Retracting Neck
         ret nz
 jp queenStateFunc_pickNextState ;}
 
-func_03_793B: ;{ 03:793B Queen State $06: Prep walking backwards
+queenStateFunc_prepBackwardWalk: ;{ 03:793B Queen State $06: Prep walking backwards
     ld a, $02
     ld [queen_walkControl], a
     ld a, $03
@@ -3039,107 +3087,142 @@ queenStateFunc_backwardWalk: ;{ 03:7954 - Queen State $07: Walking Backwards
 jp queenStateFunc_pickNextState ;}
 
 ; Queen's neck sprite while she is vomiting Samus
-table_7961: ; 03:7961
+queen_bentNeckSprite: ; 03:7961
     db $00, $00, $b5
     db $08, $00, $c5
     db $00, $08, $b6
     db $00, $10, $b7
     db $08, $0c, $c6
 
-func_03_7970: ;{ 03:7970 - Queen State $08: Stomach Just Bombed
+queenStateFunc_stomachBombed: ;{ 03:7970 - Queen State $08: Stomach Just Bombed
+    ; Unnecessary comparisons of the Y position
     ld a, [queen_headY]
     cp $2c
     cp $71
+
+    ; Set next to extend
     ld a, $01
     ld [queen_neckControl], a
     xor a
     ld [$c3ba], a
+    
+    ; Set head frame
     ld a, $03
     ld [queen_headFrameNext], a
     ld [queen_headFrame], a
+    
+    ; Set next state
     ld a, $09 ; Prep spitting Samus out of stomach
     ld [queen_state], a
-    ld hl, $c308
+    
+; Write diagonal neck sprite
+    ; Set destination pointer
+    ld hl, queen_objectOAM ; $C308
+    
+    ; Get Y offset for sprite
     ld a, [queen_headY]
     add $14
     ld b, a
+    ; Get X offset for sprite
     ld a, [queen_headX]
     add $02
     ld c, a
-    ld de, table_7961
+    
+    ; Set source pointer
+    ld de, queen_bentNeckSprite
 
-    jr_003_799f:
+    .loop:
+        ; Write Y position
         ld a, [de]
         add b
         ld [hl+], a
-        
+        ; Write X position
         inc de
         ld a, [de]
         add c
         ld [hl+], a
-        
+        ; Write tile number
         inc de
         ld a, [de]
         ld [hl+], a
-        
+        ; Write attributes
         ld [hl], $80
         inc l
         inc de
         ld a, l
         cp $1c
-    jr nz, jr_003_799f
+    jr nz, .loop
 
+    ; Note: queen_pOamScratchpadLow needs to be aligned to 8 bytes for some reason.
     dec l
     dec l
     dec l
     dec l
     ld a, l
-    ld [$c3b8], a
+    ld [queen_pOamScratchpadLow], a
     ld a, h
-    ld [$c3b9], a
-    ld a, $04 ; Steep neck pattern (barfing samus)
+    ld [queen_pOamScratchpadHigh], a
+    
+    ; Select neck pattern (vomiting Samus)
+    ld a, $04
     ld [queen_neckPattern], a
+    ; ?
     ld [$c3d1], a
     call queen_setNeckBasePointer ; Load neck pattern pointer
     call queen_loadNeckBasePointer
     inc hl
 jp Jump_003_7399 ;}
 
-func_03_79D0: ;{ 03:79D0 - Queen State $09: Prep spitting Samus out of stomach
+queenStateFunc_prepVomitingSamus: ;{ 03:79D0 - Queen State $09: Prep spitting Samus out of stomach
+    ; Wait until neck is extended
     ld a, [queen_neckStatus]
     cp $81
         ret nz
+    ; Set delay timer for next state
     ld a, $50
     ld [queen_delayTimer], a
+    ; Set next state
     ld a, $0a ; Spitting Samus out
     ld [queen_state], a
 ret ;}
 
-func_03_79E1: ;{ 03:79E1 - Queen State $0A: Spitting Samus out of stomach
+queenStateFunc_vomitingSamus: ;{ 03:79E1 - Queen State $0A: Spitting Samus out of stomach
+    ; Wait for delay timer to expire
     ld a, [queen_delayTimer]
     and a
-    jr z, jr_003_79f6
+    jr z, .else
+        ; Decrement timer
         dec a
         ld [queen_delayTimer], a
+        ; Exit it foot is animating
         ld a, [queen_footFrame]
         cp $02
             ret nz
+        ; Stop foot animation
         xor a
         ld [queen_footFrame], a
         ret
-    jr_003_79f6:
+    .else:
+        ; Clear queen's body palette
         xor a
         ld [queen_bodyPalette], a
+        
+        ; Check if queen is dead
         ld a, [queen_health]
         and a
             jr z, jr_003_7a4d
-        sub $1e ; Hurt for 30 damage with bombs
+        ; Apply stomach bomb damage, kill if applicable
+        sub $1E ; Hurt for 30 damage with bombs
         ld [queen_health], a
             jr c, jr_003_7a4d
+        
+        ; Set neck to retract
         ld a, $02
         ld [queen_neckControl], a
+        ; Set state
         ld a, $0b ; Done spitting Samus out
         ld [queen_state], a
+        
         ; Set neck pattern
         ld a, [queen_pNeckPatternLow]
         ld l, a
@@ -3149,33 +3232,44 @@ func_03_79E1: ;{ 03:79E1 - Queen State $0A: Spitting Samus out of stomach
         jp Jump_003_7399
 ;}
 
-func_03_7A1D: ;{ 03:7A1D - Queen State $0B: Done spitting Samus out of stomach
+queenStateFunc_doneVomitingSamus: ;{ 03:7A1D - Queen State $0B: Done spitting Samus out of stomach
+    ; Wait until neck has finished retracting
     ld a, [queen_neckStatus]
     cp $82
         ret nz
+        
+    ; Animate head
     ld a, $01
     ld [queen_headFrameNext], a
     ld [queen_headFrame], a
+    
+    ; Clear variable
     xor a
     ld [$c3d1], a
-    ld hl, $c308
+    
+    ; Clear bent neck sprite
+    ld hl, queen_objectOAM ; $C308
     ld b, $05
-
-    jr_003_7a34:
+    .loop:
+        ; Set y pos offscreen
         ld [hl], $ff
         inc l
         inc l
         inc l
+        ; Set attribute
         ld [hl], $80
+        ; Iterate to next sprite, exit if done
         inc l
         dec b
-    jr nz, jr_003_7a34
+    jr nz, .loop
 
+    ; Reset OAM scratcpad pointer
     ld hl, spriteC300
     ld a, l
-    ld [$c3b8], a
+    ld [queen_pOamScratchpadLow], a
     ld a, h
-    ld [$c3b9], a
+    ld [queen_pOamScratchpadHigh], a
+    ; Pick next state
 jp queenStateFunc_pickNextState ;}
 
 jr_003_7a4d: ;{ Kill Queen from stomach
@@ -3196,11 +3290,11 @@ jr_003_7a4d: ;{ Kill Queen from stomach
     ld [queen_footFrame], a
     ld [queen_headFrameNext], a
     ld [$c3ef], a
-    ld hl, $c308
+    ld hl, queen_objectOAM ; $C308
     ld a, l
-    ld [$c3b8], a
+    ld [queen_pOamScratchpadLow], a
     ld a, h
-    ld [$c3b9], a
+    ld [queen_pOamScratchpadHigh], a
     inc l
     inc l
     inc l
@@ -3424,6 +3518,7 @@ queen_disintegrate: ;{ 03:7B69
         ret
 ;}
 
+; Note: Queen State $16 (All Done) is here
 queenStateFunc_deleteBody: ;{ 03:7B9D - Queen State $13: Dying Part 2 (delete body)
     ; Get pointer
     ld a, [queen_pDeleteBodyLow]
@@ -3486,19 +3581,25 @@ queenStateFunc_deleteBody: ;{ 03:7B9D - Queen State $13: Dying Part 2 (delete bo
 ;}
 
 queen_walk: ;{ 03:7BE8
+    ; Clear walking speed
     xor a
     ld [queen_walkSpeed], a
+    ; Exit if not walking
     ld a, [queen_walkControl]
     and a
         ret z
     ld b, a
+    
+    ; Wait for wait timer to expire (never used?)
     ld a, [queen_walkWaitTimer]
     and a
     jr z, .else_A
+        ; Decrement wait timer
         dec a
         ld [queen_walkWaitTimer], a
         ret
     .else_A:
+        ; Index into walk-speed table and then increment counter
         ld a, [queen_walkCounter]
         ld l, a
         inc a
@@ -3506,21 +3607,28 @@ queen_walk: ;{ 03:7BE8
         ld h, $00
         ld de, .walkSpeedTable
         add hl, de
+        ; Check walking direction
         ld a, b
         cp $01
         jr nz, .else_B
+            ; Walk forwards until $81 is encountered
             ld a, [hl]
             cp $81
-            jr nz, .move
-                ld [queen_walkStatus], a
-                xor a
-                ld [queen_walkControl], a
-                ret
+                jr nz, .move
+            ; Done walking backwards
+            ; Set status to $81
+            ld [queen_walkStatus], a
+            ; Stop walking
+            xor a
+            ld [queen_walkControl], a
+            ret
                 
             .move: ; Common case between the above and below branches
+                ; Negate value and store as speed
                 cpl
                 inc a
                 ld [queen_walkSpeed], a
+                ; Reload value and add to x position
                 ld a, [hl]
                 ld hl, queen_bodyXScroll
                 add [hl]
@@ -3528,6 +3636,7 @@ queen_walk: ;{ 03:7BE8
                 ret
         
         .else_B:
+            ; Walk backwards until $82 is encountered
             ld a, [hl]
             cp $82
                 jr nz, .move
