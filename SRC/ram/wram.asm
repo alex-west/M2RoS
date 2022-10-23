@@ -214,10 +214,10 @@ def numEnemies = $C425 ; Number of enemies (both currently active and offscreen)
 def numActiveEnemies = $C426 ; Number of currently active enemies (used to exit drawEnemies early).
 def numOffscreenEnemies = $C427 ; Number of offscreen enemies loaded in. Unused?
 ;
-;$C42E: Set to enemy Y position in $1:5A9A
-;$C42F: Set to enemy X position in $1:5A9A
-;$C430: Set to enemy sprite ID in $1:5A9A. Used as index for pointer table at $1:5AB1
-;$C431: Set to XOR of enemy bytes 4/5/6 AND F0h in $1:5A9A
+def drawEnemy_yPos   = $C42E ; Set to enemy Y position in $1:5A9A
+def drawEnemy_xPos   = $C42F ; Set to enemy X position in $1:5A9A
+def drawEnemy_sprite = $C430 ; Set to enemy sprite ID in $1:5A9A. Used as index for pointer table at $1:5AB1
+def drawEnemy_attr   = $C431 ; Set to XOR of enemy bytes 4/5/6 AND F0h in $1:5A9A
 
 section "WRAM c432", wram0[$C432]
 ; This scroll history is used by the enemy loading code to determine if we've moved.
@@ -253,9 +253,8 @@ def enemy_pWramHigh = $C451 ;  "" high byte
 
 def enemy_pFirstEnemyLow  = $C452 ; Pointer of the first enemy to process for the next frame
 def enemy_pFirstEnemyHigh = $C453 ;  - Used for making enemies lag instead of Samus
-
-;$C454: Enemy data address in $1:5A11
-;
+def drawEnemy_pLow  = $C454 ; Enemy data address for draw function (low byte)
+def drawEnemy_pHigh = $C455 ; Enemy data address for draw function (high byte)
 def loadEnemy_unusedVar_A = $C456 ; Set to the lower screen in the horizontal branch
 def loadEnemy_unusedVar_B = $C457 ; Set to the right edge of the screen
 def doorExitStatus = $C458 ; doorExitStatus - $2 is normal, $1 is if WARP or ENTER_QUEEN is used. Value is written to $C44B and then cleared. Different non-zero values have no purpose

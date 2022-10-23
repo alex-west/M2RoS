@@ -3154,68 +3154,82 @@ ret ;}
 itemTextPointerTable: ; 01:58F1
     include "data/itemNames.asm"
 
-drawEnemies: ; Draw enemies - 01:5A11
+drawEnemies: ;{ 01:5A11
     ; Exit if there are no enemies to render
     ld a, [numActiveEnemies]
     and a
         ret z
-
-    ld hl, $c600
+        
+    ; Initialize enemy pointer
+    ld hl, enemyDataSlots ;$c600
     ld a, l
-    ld [$c454], a
+    ld [drawEnemy_pLow], a
     ld a, h
-    ld [$c455], a
-
-    jr_001_5a21:
+    ld [drawEnemy_pHigh], a
+    .loop:
+        ; Render sprite if active (status == 0)
         ld a, [hl]
         and a
             call z, drawEnemySprite
-        ld a, [$c454]
+        ; Reload enemy pointer
+        ld a, [drawEnemy_pLow]
         ld l, a
-        ld a, [$c455]
+        ld a, [drawEnemy_pHigh]
         ld h, a
+        ; Iterate to next enemy
         ld de, $0020
         add hl, de
+        ; Save enemy pointer
         ld a, l
-        ld [$c454], a
+        ld [drawEnemy_pLow], a
         ld a, h
-        ld [$c455], a
-        cp $c8
-    jr nz, jr_001_5a21
-ret
+        ld [drawEnemy_pHigh], a
+        ; Exit if at end of enemy array
+        cp HIGH(enemyDataSlots_end) ; $C8
+    jr nz, .loop
+ret ;}
 
 ; Render enemy sprite
-drawEnemySprite: ; 01:5A3F
+drawEnemySprite: ;{ 01:5A3F
+    ; Get enemy sprite info
     call drawEnemySprite_getInfo
-    ld a, [$c430]
+    
+    ; Index into enemySpritePointerTable
+    ld a, [drawEnemy_sprite]
     ld d, $00
     ld e, a
     sla e
     rl d
     ld hl, enemySpritePointerTable ;$5ab1
     add hl, de
+    ; Load sprite pointer to DE
     ld a, [hl+]
     ld e, a
     ld a, [hl]
     ld d, a
 
-    ld h, $c0
+    ; Set HL to current OAM buffer position
+    ld h, HIGH(wram_oamBuffer) ; $C0
     ldh a, [hOamBufferIndex]
     ld l, a
 
-    ld a, [$c42e]
+    ld a, [drawEnemy_yPos]
     ld b, a
-    ld a, [$c42f]
+    ld a, [drawEnemy_xPos]
     ld c, a
 
     .spriteLoop:
+        ; Exit if at the end of the metasprite
         ld a, [de]
         cp METASPRITE_END
             jr z, .exit
-    
-        ld a, [$c431]
-        bit 6, a
+        
+    ; Load sprite Y position
+        ; Check if vertically flipped
+        ld a, [drawEnemy_attr]
+        bit OAMB_YFLIP, a
         jr z, .else_A
+            ; Flip vertically
             ld a, [de]
             cpl
             sub $07
@@ -3223,13 +3237,17 @@ drawEnemySprite: ; 01:5A3F
         .else_A:
             ld a, [de]
         .endIf_A:
-    
+        ; Add enemy Y position to sprite Y position, write to OAM buffer
         add b
         ld [hl+], a
+        
+    ; Load sprite X position
+        ; Check if horizontally flipped
         inc de
-        ld a, [$c431]
-        bit 5, a
+        ld a, [drawEnemy_attr]
+        bit OAMB_XFLIP, a
         jr z, .else_B
+            ; Flip horizontally
             ld a, [de]
             cpl
             sub $07
@@ -3237,47 +3255,55 @@ drawEnemySprite: ; 01:5A3F
         .else_B:
             ld a, [de]
         .endIf_B:
-    
+        ; Add enemy X position to sprite X position, write to OAM buffer
         add c
         ld [hl+], a
+        
+        ; Write sprite tile number
         inc de
         ld a, [de]
         ld [hl+], a
+        
+        ; Write sprite attributes
         inc de
         push hl
-        ld hl, $c431
-        ld a, [de]
-        xor [hl]
+            ld hl, drawEnemy_attr
+            ld a, [de]
+            xor [hl]
         pop hl
         ld [hl+], a
+        
+        ; Save OAM index
         ld a, l
         ldh [hOamBufferIndex], a
+        
+        ; Iterate to next sprite
         inc de
     jr .spriteLoop
 
     .exit:
-ret
+ret ;}
 
 ; Get base information for enemy sprite to render
-drawEnemySprite_getInfo: ; 01:5A9A
+drawEnemySprite_getInfo: ;{ 01:5A9A
     inc l
     ; y pos
     ld a, [hl+]
-    ld [$c42e], a
+    ld [drawEnemy_yPos], a
     ; x pos
     ld a, [hl+]
-    ld [$c42f], a
+    ld [drawEnemy_xPos], a
     ; sprite type
     ld a, [hl+]
-    ld [$c430], a
+    ld [drawEnemy_sprite], a
     ; Attributes
     ld a, [hl+] ; Base attributes
     xor [hl] ; Normal attributes
     inc l
     xor [hl] ; Stun counter
-    and $f0
-    ld [$c431], a
-ret
+    and $f0 ; Mask out lower bits
+    ld [drawEnemy_attr], a
+ret ;}
 
 ; 01:5AB1
 enemySpritePointerTable:
@@ -3286,12 +3312,12 @@ enemySpritePointerTable:
 
 ;------------------------------------------------------------------------------
 ; Alpha Metroid - get angle based on relative positions
-alpha_getAngle: ; 01:70BA - called from bank 2
+alpha_getAngle: ;{ 01:70BA - called from bank 2
     call metroid_getDistanceAndDirection
     call alpha_getAngleFromTable
-    ret
+ret ;}
 
-metroid_getDistanceAndDirection: ; 01:70C1
+metroid_getDistanceAndDirection: ;{ 01:70C1
     ld hl, hEnemy.yPos
     ld a, [hl]
     add $10
@@ -3332,10 +3358,10 @@ metroid_getDistanceAndDirection: ; 01:70C1
     ld [metroid_absSamusDistX], a
     ld a, b
     ld [metroid_samusXDir], a
-ret
+ret ;}
 
 
-alpha_getAngleFromTable: ; 01:70FE
+alpha_getAngleFromTable: ;{ 01:70FE
     ld a, [metroid_samusXDir]
     and a
         jr z, .pickVerticalDirection
@@ -3371,7 +3397,7 @@ alpha_getAngleFromTable: ; 01:70FE
     ld a, [metroid_angleTableIndex]
     ld e, a
     ld d, $00
-    ld hl, alpha_angleTable
+    ld hl, .angleTable
     add hl, de
     ld a, [hl]
     ld [hEnemy.state], a
@@ -3399,7 +3425,7 @@ ret
     jr .getAngleFromTable
 ; end proc
 
-alpha_angleTable: ; 01:7158
+.angleTable: ; 01:7158
     ; $00 - Cardinal directions
     db $00, $01, $02, $03
     ; $04 - Bottom right quadrant
@@ -3410,6 +3436,7 @@ alpha_angleTable: ; 01:7158
     db $00, $0A, $0B, $0C, $03
     ; $13 - Top left quadrant
     db $01, $0D, $0E, $0F, $03
+;}
 
 ; Returns (100*dY)/dX
 metroid_getSlopeToSamus: ; { 01:7170
@@ -3430,7 +3457,7 @@ metroid_getSlopeToSamus: ; { 01:7170
 ret ;}
 
 ; Adjusts the travel angle of the Alpha Metroid from one of the cardinal angles
-alpha_adjustAngle: ; 01:7189
+alpha_adjustAngle: ;{ 01:7189
     ld a, [metroid_slopeToSamusHigh]
     and a
     jr nz, .else_A
@@ -3471,11 +3498,11 @@ alpha_adjustAngle: ; 01:7189
     ld a, [metroid_angleTableIndex]
     add b
     ld [metroid_angleTableIndex], a
-ret
+ret ;}
 
 ; Alpha Metroid speed/direction vectors
 ; Load a (Y,X) sign-magnitude velocity pair to BC
-alpha_getSpeedVector: ; 01:71CB
+alpha_getSpeedVector: ;{ 01:71CB - Called from bank 2
     ld hl, .jumpTable
     ld a, [hEnemy.state] ; $EA - Metroid angle
     add a
@@ -3542,16 +3569,17 @@ func_7233: ld bc, $8282
     ret
 func_7237: ld bc, $8381
     ret
+;}
 
 ;------------------------------------------------------------------------------
 ; Gamma Metroid - get angle based on relative positions
 ;  Also used by the Omega Metroids' fireballs
-gamma_getAngle: ; 01:723B
+gamma_getAngle: ;{ 01:723B
     call metroid_getDistanceAndDirection
     call gamma_getAngleFromTable ; Get angle
-ret
+ret ;}
 
-gamma_getAngleFromTable: ; 01:7242
+gamma_getAngleFromTable: ;{ 01:7242
     ld a, [metroid_samusXDir]
     and a
         jr z, .pickVerticalDirection
@@ -3587,7 +3615,7 @@ gamma_getAngleFromTable: ; 01:7242
     ld a, [metroid_angleTableIndex]
     ld e, a
     ld d, $00
-    ld hl, gamma_angleTable
+    ld hl, .angleTable
     add hl, de
     ld a, [hl]
     ld [hEnemy.state], a
@@ -3615,7 +3643,7 @@ ret
     jr .getAngleFromTable
 ; end proc
 
-gamma_angleTable: ; 01:729C - Gamma angle table
+.angleTable: ; 01:729C - Gamma angle table
     ; $00 - Cardinal directions
     db $00, $01, $02, $03
     ; $04 - Bottom right quadrant
@@ -3626,8 +3654,9 @@ gamma_angleTable: ; 01:729C - Gamma angle table
     db $00, $0E, $0F, $10, $11, $12, $03
     ; $19 - Top left quadrant
     db $01, $13, $14, $15, $16, $17, $03
+;}
 
-gamma_adjustAngle:
+gamma_adjustAngle: ;{ 01:72BC
     ld a, [metroid_slopeToSamusHigh]
     and a
     jr nz, .else_A
@@ -3685,11 +3714,11 @@ gamma_adjustAngle:
     ld a, [metroid_angleTableIndex]
     add b
     ld [metroid_angleTableIndex], a
-ret
+ret ;}
 
 ; Gamma Metroid speed/direction vectors
 ; Load a (Y,X) sign-magnitude velocity pair to BC
-gamma_getSpeedVector: ; 01:7319
+gamma_getSpeedVector: ;{ 01:7319
     ld hl, .jumpTable
     ld a, [hEnemy.state]
     add a
@@ -3780,6 +3809,7 @@ func_73B1: ld bc, $8482
     ret
 func_73B5: ld bc, $8481
     ret
+;}
 
 ; HL = B * E
 math_multiply_B_E_to_HL: ; { 01:73B9
