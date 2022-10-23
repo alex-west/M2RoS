@@ -3311,61 +3311,84 @@ enemySpritePointerTable:
     include "data/sprites_enemies.asm"
 
 ;------------------------------------------------------------------------------
+
+; Alpha and Gamma Metroid chasing routines {
+
 ; Alpha Metroid - get angle based on relative positions
 alpha_getAngle: ;{ 01:70BA - called from bank 2
     call metroid_getDistanceAndDirection
     call alpha_getAngleFromTable
 ret ;}
 
+; Saves the absolute value of the distance between Samus and the metroid
+;  and the direction Samus is relative to the metroid, for each axis, to WRAM
 metroid_getDistanceAndDirection: ;{ 01:70C1
+    ; samusYpos - (enemy.yPos + $10)
     ld hl, hEnemy.yPos
     ld a, [hl]
     add $10
     ld b, a
     ld a, [samus_onscreenYPos]
     sub b
+    ; Check if Samus is above, below, or equal to the metroid
     jr c, .else_A
+        ; Set y direction to none if at the same y postion
         ld b, $00
         jr z, .endIf_A
+            ; Set y direction to down
             inc b
             jr .endIf_A
     .else_A:
+        ; Invert the y distance so it's positive
         cpl
         inc a
+        ; Set y direction to up
         ld b, $ff
     .endIf_A:
-
+    
+    ; Save vertical distance
     ld [metroid_absSamusDistY], a
+    ; Save vertical direction
     ld a, b
     ld [metroid_samusYDir], a
+    
+    ; samusXpos - (enemy.xPos + $10)
     inc l
     ld a, [hl]
     add $10
     ld b, a
     ld a, [samus_onscreenXPos]
     sub b
+    ; Check if Samus is left, right, or equal to the metroid
     jr c, .else_B
+        ; Set x direction to none
         ld b, $00
         jr z, .endIf_B
+            ; Set x direction to right
             inc b
             jr .endIf_B
     .else_B:
+        ; Invert the x distance so it's positive
         cpl
         inc a
+        ; Set x direction to left
         ld b, $ff
     .endIf_B:
-
+    
+    ; Save horizontal distance
     ld [metroid_absSamusDistX], a
+    ; Save horizontal direction
     ld a, b
     ld [metroid_samusXDir], a
 ret ;}
 
-
 alpha_getAngleFromTable: ;{ 01:70FE
+    ; If vertically aligned, picked a vertical direction
     ld a, [metroid_samusXDir]
     and a
         jr z, .pickVerticalDirection
     ld c, a
+    ; If horizontally aligned, pick a horizontal direction
     ld a, [metroid_samusYDir]
     and a
         jr z, .pickHorizontalDirection
@@ -3388,12 +3411,15 @@ alpha_getAngleFromTable: ;{ 01:70FE
         .else_C:
             ld a, $13 ; Top left quadrant
     .endIf_A:
-
     ld [metroid_angleTableIndex], a
-    call metroid_getSlopeToSamus ; Do some arithmetic
-    call alpha_adjustAngle ; Adjust the angle index
+
+    ; Get the value of the slope between Samus and the metroid
+    call metroid_getSlopeToSamus
+    ; Adjust the angle index based on the slope
+    call alpha_convertSlopeToAngleIndex
 
 .getAngleFromTable:
+    ; Load angle from table to general purpose enemy variable
     ld a, [metroid_angleTableIndex]
     ld e, a
     ld d, $00
@@ -3404,6 +3430,7 @@ alpha_getAngleFromTable: ;{ 01:70FE
 ret
 
     .pickHorizontalDirection:
+        ; Depending on the x direction, pick left or right from the first row of .angleTable
         ld a, [metroid_samusXDir]
         dec a
         jr z, .else_D
@@ -3412,7 +3439,9 @@ ret
         .else_D:
             xor a ; Right
             jr .setTableIndex
+        
     .pickVerticalDirection:
+        ; Depending on the y direction, pick up or down from the first row of .angleTable
         ld a, [metroid_samusYDir]
         dec a
         jr z, .else_E
@@ -3457,28 +3486,33 @@ metroid_getSlopeToSamus: ; { 01:7170
 ret ;}
 
 ; Adjusts the travel angle of the Alpha Metroid from one of the cardinal angles
-alpha_adjustAngle: ;{ 01:7189
+alpha_convertSlopeToAngleIndex: ;{ 01:7189
+    ; Do a bunch of comparisons with the slope to determine the value to add to the angle index
+    ;  (the greater the index, the more to add)
+    ; Not entirely sure about these ranges but it should give you an idea of what's happening
     ld a, [metroid_slopeToSamusHigh]
     and a
     jr nz, .else_A
+        ; Slope < $0100
         ld a, [metroid_slopeToSamusLow]
         cp $14
-            jr c, .add_0
+            jr c, .add_0 ; $0000 <= Slope < $0014
         cp $3c
-            jr c, .add_1
+            jr c, .add_1 ; $0014 <= Slope < $003C
         cp $c8
-            jr c, .add_2
-        jr .add_3
+            jr c, .add_2 ; $003C <= Slope < $00C8
+        jr .add_3        ; $00C8 <= Slope < $0100
     .else_A:
+        ; Slope >= $0100
         cp $02
         jr z, .else_B
-            jr nc, .add_4
-            jr .add_3
+            jr nc, .add_4 ; Slope >= $0300
+            jr .add_3 ; $0100 < Slope < $0200
         .else_B:
             ld a, [metroid_slopeToSamusLow]
             cp $58
-                jr nc, .add_4
-            jr .add_3
+                jr nc, .add_4 ; Slope > $0258
+            jr .add_3 ; $0200 < Slope < $0258
 
     .add_0: ; Keep horizontal
         ld b, $00
@@ -3495,6 +3529,7 @@ alpha_adjustAngle: ;{ 01:7189
     .add_4: ; Vertical
         ld b, $04
 .exit:
+    ; Add the offset to the angle index
     ld a, [metroid_angleTableIndex]
     add b
     ld [metroid_angleTableIndex], a
@@ -3503,71 +3538,79 @@ ret ;}
 ; Alpha Metroid speed/direction vectors
 ; Load a (Y,X) sign-magnitude velocity pair to BC
 alpha_getSpeedVector: ;{ 01:71CB - Called from bank 2
+    ; Use angle to index into jump table
     ld hl, .jumpTable
-    ld a, [hEnemy.state] ; $EA - Metroid angle
+    ld a, [hEnemy.state] ; [$EA] - Metroid angle
     add a
     ld e, a
     ld d, $00
     add hl, de
+    ; Load target address
     ld a, [hl+]
     ld d, [hl]
     ld h, d
     ld l, a
+    ; Jump!
     jp hl
     
     .jumpTable: ; 01:71DB
-        dw func_71FB ; $00 - Right                 (3,0)
-        dw func_71FF ; $01 - Left                 (-3,0)
-        dw func_7203 ; $02 - Down                  (0,3)
-        dw func_7207 ; $03 - Up                    (0,-3)
-        dw func_720B ; $04 - Bottom right quadrant (3,1)
-        dw func_720F ; $05 -  ""                   (2,2)
-        dw func_7213 ; $06 -  ""                   (1,3)
-        dw func_7217 ; $07 - Bottom left quadrant (-3,1)
-        dw func_721B ; $08 -  ""                  (-2,2)
-        dw func_721F ; $09 -  ""                  (-1,3)
-        dw func_7223 ; $0A - Upper right quadrant (3,-1)
-        dw func_7227 ; $0B -  ""                  (2,-2)
-        dw func_722B ; $0C -  ""                  (1,-3)
-        dw func_722F ; $0D - Upper left quadrant (-3,-1)
-        dw func_7233 ; $0E -  ""                 (-2,-2)
-        dw func_7237 ; $0F -  ""                 (-1,-3)
+        dw .angle_0 ; $00 - Right                 (3,0)
+        dw .angle_1 ; $01 - Left                 (-3,0)
+        dw .angle_2 ; $02 - Down                  (0,3)
+        dw .angle_3 ; $03 - Up                    (0,-3)
+        dw .angle_4 ; $04 - Bottom-right quadrant (3,1)
+        dw .angle_5 ; $05 -  ""                   (2,2)
+        dw .angle_6 ; $06 -  ""                   (1,3)
+        dw .angle_7 ; $07 - Bottom-left quadrant (-3,1)
+        dw .angle_8 ; $08 -  ""                  (-2,2)
+        dw .angle_9 ; $09 -  ""                  (-1,3)
+        dw .angle_A ; $0A - Upper-right quadrant (3,-1)
+        dw .angle_B ; $0B -  ""                  (2,-2)
+        dw .angle_C ; $0C -  ""                  (1,-3)
+        dw .angle_D ; $0D - Upper-left quadrant (-3,-1)
+        dw .angle_E ; $0E -  ""                 (-2,-2)
+        dw .angle_F ; $0F -  ""                 (-1,-3)
 
-func_71FB: ld bc, $0003
+; Cardinal directions
+.angle_0: ld bc, $0003
     ret
-func_71FF: ld bc, $0083
+.angle_1: ld bc, $0083
     ret
-func_7203: ld bc, $0300
+.angle_2: ld bc, $0300
     ret
-func_7207: ld bc, $8300
-    ret
-
-func_720B: ld bc, $0103
-    ret
-func_720F: ld bc, $0202
-    ret
-func_7213: ld bc, $0301
+.angle_3: ld bc, $8300
     ret
 
-func_7217: ld bc, $0183
+; Bottom-right quadrant
+.angle_4: ld bc, $0103
     ret
-func_721B: ld bc, $0282
+.angle_5: ld bc, $0202
     ret
-func_721F: ld bc, $0381
-    ret
-
-func_7223: ld bc, $8103
-    ret
-func_7227: ld bc, $8202
-    ret
-func_722B: ld bc, $8301
+.angle_6: ld bc, $0301
     ret
 
-func_722F: ld bc, $8183
+; Bottom-left quadrant
+.angle_7: ld bc, $0183
     ret
-func_7233: ld bc, $8282
+.angle_8: ld bc, $0282
     ret
-func_7237: ld bc, $8381
+.angle_9: ld bc, $0381
+    ret
+
+; Upper-right quadrant
+.angle_A: ld bc, $8103
+    ret
+.angle_B: ld bc, $8202
+    ret
+.angle_C: ld bc, $8301
+    ret
+
+; Upper-left quadrant
+.angle_D: ld bc, $8183
+    ret
+.angle_E: ld bc, $8282
+    ret
+.angle_F: ld bc, $8381
     ret
 ;}
 
@@ -3576,13 +3619,15 @@ func_7237: ld bc, $8381
 ;  Also used by the Omega Metroids' fireballs
 gamma_getAngle: ;{ 01:723B
     call metroid_getDistanceAndDirection
-    call gamma_getAngleFromTable ; Get angle
+    call gamma_getAngleFromTable
 ret ;}
 
 gamma_getAngleFromTable: ;{ 01:7242
+    ; If vertically aligned, picked a vertical direction
     ld a, [metroid_samusXDir]
     and a
         jr z, .pickVerticalDirection
+    ; If horizontally aligned, pick a horizontal direction
     ld c, a
     ld a, [metroid_samusYDir]
     and a
@@ -3606,12 +3651,15 @@ gamma_getAngleFromTable: ;{ 01:7242
         .else_C:
             ld a, $19 ; Top left quadrant
     .endIf_A:
-
     ld [metroid_angleTableIndex], a
-    call metroid_getSlopeToSamus ; Do some arithmetic
-    call gamma_adjustAngle
+    
+    ; Get the value of the slope between Samus and the metroid
+    call metroid_getSlopeToSamus
+    ; Adjust the angle index based on the slope
+    call gamma_convertSlopeToAngleIndex
 
 .getAngleFromTable:
+    ; Load angle from table to general purpose enemy variable
     ld a, [metroid_angleTableIndex]
     ld e, a
     ld d, $00
@@ -3622,6 +3670,7 @@ gamma_getAngleFromTable: ;{ 01:7242
 ret
 
     .pickHorizontalDirection:
+        ; Depending on the x direction, pick left or right from the first row of .angleTable
         ld a, [metroid_samusXDir]
         dec a
         jr z, .else_D
@@ -3630,7 +3679,9 @@ ret
         .else_D:
             xor a ; Right
             jr .setTableIndex
+        
     .pickVerticalDirection:
+        ; Depending on the y direction, pick up or down from the first row of .angleTable
         ld a, [metroid_samusYDir]
         dec a
         jr z, .else_E
@@ -3656,39 +3707,44 @@ ret
     db $01, $13, $14, $15, $16, $17, $03
 ;}
 
-gamma_adjustAngle: ;{ 01:72BC
+gamma_convertSlopeToAngleIndex: ;{ 01:72BC
+    ; Do a bunch of comparisons with the slope to determine the value to add to the angle index
+    ;  (the greater the index, the more to add)
+    ; Not entirely sure about these ranges but it should give you an idea of what's happening
     ld a, [metroid_slopeToSamusHigh]
     and a
     jr nz, .else_A
+        ; Slope < $0100
         ld a, [metroid_slopeToSamusLow]
         cp $0c
-            jr c, .add_0
+            jr c, .add_0 ; $0000 <= Slope < $000C
         cp $26
-            jr c, .add_1
+            jr c, .add_1 ; $000C <= Slope < $0026
         cp $4b
-            jr c, .add_2
+            jr c, .add_2 ; $0026 <= Slope < $004B
         cp $96
-            jr c, .add_3
-        jr .add_4
+            jr c, .add_3 ; $004B <= Slope < $0096
+        jr .add_4        ; $0096 <= Slope < $0100
     .else_A:
         cp $03
         jr z, .else_B
-            jr nc, .add_6
+            jr nc, .add_6 ; $0300 <= Slope
             cp $01
-                jr z, .else_C ; Odd jump
-            jr nc, .add_5
-            jr .add_4
+                jr z, .else_C ; $0100 <= Slope < $0200
+            jr nc, .add_5 ; $0200 <= Slope < $0300
+            jr .add_4 ; ? Not sure about this ?
         .else_B:
+            ; $0300 <= Slope < $0400
             ld a, [metroid_slopeToSamusLow]
             cp $20
-                jr nc, .add_6
-            jr .add_5
-
+                jr nc, .add_6 ; $0320 < Slope < $0400
+            jr .add_5 ; $0300 <= Slope < $0320
         .else_C: ; Odd jump
+            ; $0100 <= Slope < $0200
             ld a, [metroid_slopeToSamusLow]
             cp $2c
-                jr nc, .add_5
-            jr .add_4
+                jr nc, .add_5 ; $012C < Slope < $0200
+            jr .add_4 ; $0100 < Slope < $012C
 
     .add_0: ; Keep horizontal
         ld b, $00
@@ -3711,6 +3767,7 @@ gamma_adjustAngle: ;{ 01:72BC
     .add_6: ; Vertical
         ld b, $06
 .exit:
+    ; Add the offset to the angle index
     ld a, [metroid_angleTableIndex]
     add b
     ld [metroid_angleTableIndex], a
@@ -3719,95 +3776,103 @@ ret ;}
 ; Gamma Metroid speed/direction vectors
 ; Load a (Y,X) sign-magnitude velocity pair to BC
 gamma_getSpeedVector: ;{ 01:7319
+    ; Use angle to index into jump table
     ld hl, .jumpTable
-    ld a, [hEnemy.state]
+    ld a, [hEnemy.state] ; [$EA] - Metroid angle
     add a
     ld e, a
     ld d, $00
     add hl, de
+    ; Load target address
     ld a, [hl+]
     ld d, [hl]
     ld h, d
     ld l, a
+    ; Jump!
     jp hl
 
     .jumpTable: ; 01:7329
-        dw func_7359 ; $00 - Right
-        dw func_735D ; $01 - Left
-        dw func_7361 ; $02 - Down
-        dw func_7365 ; $03 - Up
-        dw func_7369 ; $04 - Bottom right quadrant
-        dw func_736D ; $05
-        dw func_7371 ; $06
-        dw func_7375 ; $07
-        dw func_7379 ; $08
-        dw func_737D ; $09 - Bottom left quadrant
-        dw func_7381 ; $0A
-        dw func_7385 ; $0B
-        dw func_7389 ; $0C
-        dw func_738D ; $0D
-        dw func_7391 ; $0E - Top right quadrant
-        dw func_7395 ; $0F
-        dw func_7399 ; $10
-        dw func_739D ; $11
-        dw func_73A1 ; $12
-        dw func_73A5 ; $13 - Top left quadrant
-        dw func_73A9 ; $14
-        dw func_73AD ; $15
-        dw func_73B1 ; $16
-        dw func_73B5 ; $17
+        dw .angle_00 ; $00 - Right
+        dw .angle_01 ; $01 - Left
+        dw .angle_02 ; $02 - Down
+        dw .angle_03 ; $03 - Up
+        dw .angle_04 ; $04 - Bottom-right quadrant
+        dw .angle_05 ; $05
+        dw .angle_06 ; $06
+        dw .angle_07 ; $07
+        dw .angle_08 ; $08
+        dw .angle_09 ; $09 - Bottom-left quadrant
+        dw .angle_0A ; $0A
+        dw .angle_0B ; $0B
+        dw .angle_0C ; $0C
+        dw .angle_0D ; $0D
+        dw .angle_0E ; $0E - Top-right quadrant
+        dw .angle_0F ; $0F
+        dw .angle_10 ; $10
+        dw .angle_11 ; $11
+        dw .angle_12 ; $12
+        dw .angle_13 ; $13 - Top-left quadrant
+        dw .angle_14 ; $14
+        dw .angle_15 ; $15
+        dw .angle_16 ; $16
+        dw .angle_17 ; $17
 
-func_7359: ld bc, $0004
+; Cardinal directions
+.angle_00: ld bc, $0004
     ret
-func_735D: ld bc, $0084
+.angle_01: ld bc, $0084
     ret
-func_7361: ld bc, $0400
+.angle_02: ld bc, $0400
     ret
-func_7365: ld bc, $8400
-    ret
-
-func_7369: ld bc, $0104
-    ret
-func_736D: ld bc, $0204
-    ret
-func_7371: ld bc, $0303
-    ret
-func_7375: ld bc, $0402
-    ret
-func_7379: ld bc, $0401
+.angle_03: ld bc, $8400
     ret
 
-func_737D: ld bc, $0184
+; Bottom-right quadrant
+.angle_04: ld bc, $0104
     ret
-func_7381: ld bc, $0284
+.angle_05: ld bc, $0204
     ret
-func_7385: ld bc, $0383
+.angle_06: ld bc, $0303
     ret
-func_7389: ld bc, $0482
+.angle_07: ld bc, $0402
     ret
-func_738D: ld bc, $0481
-    ret
-
-func_7391: ld bc, $8104
-    ret
-func_7395: ld bc, $8204
-    ret
-func_7399: ld bc, $8303
-    ret
-func_739D: ld bc, $8402
-    ret
-func_73A1: ld bc, $8401
+.angle_08: ld bc, $0401
     ret
 
-func_73A5: ld bc, $8184
+; Bottom-left quadrant
+.angle_09: ld bc, $0184
     ret
-func_73A9: ld bc, $8284
+.angle_0A: ld bc, $0284
     ret
-func_73AD: ld bc, $8383
+.angle_0B: ld bc, $0383
     ret
-func_73B1: ld bc, $8482
+.angle_0C: ld bc, $0482
     ret
-func_73B5: ld bc, $8481
+.angle_0D: ld bc, $0481
+    ret
+
+; Upper-right quadrant
+.angle_0E: ld bc, $8104
+    ret
+.angle_0F: ld bc, $8204
+    ret
+.angle_10: ld bc, $8303
+    ret
+.angle_11: ld bc, $8402
+    ret
+.angle_12: ld bc, $8401
+    ret
+
+; Upper-left quadrant
+.angle_13: ld bc, $8184
+    ret
+.angle_14: ld bc, $8284
+    ret
+.angle_15: ld bc, $8383
+    ret
+.angle_16: ld bc, $8482
+    ret
+.angle_17: ld bc, $8481
     ret
 ;}
 
@@ -3899,6 +3964,8 @@ math_divide_HL_by_C: ; { 01:73CC
         dec b
     jr nz, .loop
 ret ;}
+
+;} end Alpha and Gamma Metroid chasing routines
 
 ;------------------------------------------------------------------------------
 ; Draws sprites for title and credits
