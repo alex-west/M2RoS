@@ -1053,52 +1053,64 @@ table_6D27: ; 03:6D27 - 5
 
 ; Initialize Queen AI
 queen_initialize: ;{ 03:6D4A
+    ; Clear the entire page
     ld hl, spriteC300
     xor a
     ld b, a
-
-    jr_003_6d4f:
+    .clearLoop:
         ld [hl+], a
         dec b
-    jr nz, jr_003_6d4f
-
+    jr nz, .clearLoop
+    
+    ; Initial raster split locations
     ld a, $67
     ld [queen_bodyY], a
     ld a, $37
     ld [queen_bodyHeight], a
+    
     ld a, $44
     ld [rSTAT], a
+    
     ld a, $5c
     ld [queen_bodyXScroll], a
     ld a, [scrollX]
     ld [queen_cameraX], a
+    
     ld a, $03
     ld [rWX], a
     ld [queen_headX], a
+    
     ld a, [scrollY]
     ld [queen_cameraY], a
+    
     ld a, $70
     ld [rWY], a
     ld [queen_headY], a
+    
+    ; Initialize interrupt list
     ld hl, queen_interruptList
     ld [hl], $ff
     ld a, l
     ld [queen_pInterruptListLow], a
     ld a, h
     ld [queen_pInterruptListHigh], a
+    
     ld a, $09
     ld [$c3b7], a
     ld [$c3b6], a
+    
+    ; Initialize OAM scratchpad pointers
     ld hl, spriteC300
     ld a, l
     ld [queen_pOamScratchpadLow], a
     ld a, h
     ld [queen_pOamScratchpadHigh], a
+    
     ; Initialize wall sprites
-    ld hl, $c338
+    ld hl, queen_wallOAM ; $C338
     ld b, $0c
     ld a, $78
-    jr_003_6daa:
+    .wallLoop:
         ld [hl+], a
         ld [hl], $a2
         inc l
@@ -1108,7 +1120,7 @@ queen_initialize: ;{ 03:6D4A
         inc l
         add $08
         dec b
-    jr nz, jr_003_6daa
+    jr nz, .wallLoop
 
     call queen_adjustWallSpriteToHead
     ld hl, queen_stateList
@@ -1120,54 +1132,66 @@ queen_initialize: ;{ 03:6D4A
     ld [queen_state], a
     
     ; Clear enemy slots
-    ld hl, $c600
+    ld hl, enemyDataSlots ; $C600
     ld bc, $01a0
-    jr_003_6dd2:
+    .enemyLoop:
         xor a
         ld [hl+], a
         dec bc
         ld a, b
         or c
-    jr nz, jr_003_6dd2
+    jr nz, .enemyLoop
 
-    ld a, $96 ; Set initial health
+    ; Set initial health
+    ld a, $96 ; 150
     ld [queen_health], a
-    call Call_003_6f07
+    
+    call queen_setActorPositions
+    
     ; Set sprite types
-    ld hl, $c603
-    ld [hl], $f3
-    ld l, $23
-    ld [hl], $f5
-    ld l, $43
-    ld [hl], $f1
-    ld l, $63
-    ld [hl], $f2
-    ; Set sprite types
-    ld hl, $c683
+    ld hl, queenActor_body + 3 ; $C603
+    ld [hl], QUEEN_ACTOR_BODY ; $F3
+    ld l, LOW(queenActor_mouth + 3) ; $23
+    ld [hl], QUEEN_ACTOR_MOUTH_CLOSED ; $F5
+    ld l, LOW(queenActor_headL + 3) ; $43
+    ld [hl], QUEEN_ACTOR_HEAD_LEFT ; $F1
+    ld l, LOW(queenActor_headR + 3) ; $63
+    ld [hl], QUEEN_ACTOR_HEAD_RIGHT ; $F2
+    
+    ; Set sprite types for neck
+    ld hl, queenActor_neckA + 3 ; $C683
     ld de, $0020
     ld b, $06
-    ld a, $f0
-    jr_003_6dfc:
+    ld a, QUEEN_ACTOR_NECK ; $F0
+    .neckLoop:
         ld [hl], a
         add hl, de
         dec b
-    jr nz, jr_003_6dfc
+    jr nz, .neckLoop
 
-    call Call_003_6e12
+    call queen_deactivateActors.neck
+    
+    ; Initialize head frame
     ld a, $01
     ld [queen_headFrameNext], a
     ld [queen_headFrame], a
+    
     ; Set initial delay
     ld a, $8c
     ld [queen_delayTimer], a
 ret ;}
 
-; Deactivate actors (two entrances)
-Call_003_6e12: ;{
-    ld hl, $c680
-    ld b, $06
-Call_003_6e17:
+; Deactivate actors - two entrances (one for neck, one for arbitrary sets)
+queen_deactivateActors: ;{ 03:6E12
+    .neck:
+        ; Deactivate neck parts
+        ld hl, queenActor_neckA ; $C680
+        ld b, $06
+    .arbitrary: ; 03:6E17
+    
+    ; Set incrementation value
     ld de, $0020
+    ; Set status to $FF (inactive)
     ld a, $ff
     .clearLoop:
         ld [hl], a
@@ -1178,17 +1202,23 @@ ret ;}
 
 ; Adjust the wall sprites pertaining to the head to match y position
 queen_adjustWallSpriteToHead: ;{ 03:6E22
-    ld hl, $c354
+    ; Get base address of OAM scratchpad for wall sprites pertaining to the head
+    ld hl, queen_wallOAM_head ; $C354
+    ; Set loop counter
     ld b, $05
+    ; Get Y position and adjust
     ld a, [queen_headY]
     add $10
-
     .loop:
+        ; Set Y position
         ld [hl+], a
+        ; Skip X position, tile, and attributes
         inc l
         inc l
         inc l
+        ; Increment Y position
         add $08
+        ; Exit once loop is done
         dec b
     jr nz, .loop
 ret ;}
@@ -1229,198 +1259,260 @@ queenHandler: ;{ 03:6E36
             jr nz, .loop
     .endIf_B:
 
-    ; Set aggression flags?
+    ; Set aggression flags
+    ; Skip if health is zero
     ld a, [queen_health]
     and a
     jr z, .endIf_C
-        cp $64
+        ; Check if health is below 100
+        cp $64 ; 100
         jr nc, .endIf_C
+            ; Set middle health flag
             ld b, a
             ld a, $01
-            ld [$c3f1], a
+            ld [queen_midHealthFlag], a
+            ; Check if health is below 50
             ld a, b
-            cp $32
+            cp $32 ; 50
             jr nc, .endIf_C
+                ; Set low health flag
                 ld a, $01
-                ld [$c3ef], a
+                ld [queen_lowHealthFlag], a
     .endIf_C:
 
     call queen_handleState
     call queen_walk
     call Call_003_72b8 ; Neck related?
-    call Call_003_7230
-    call Call_003_716e
-    call Call_003_7190
-    call Call_003_71cf
-    call Call_003_6f07 ; Set actor positions (for collision detection?)
+    call Call_003_7230 ; Neck related?
+    call queen_getCameraDelta
+    call queen_adjustBodyForCamera
+    call queen_adjustSpritesForCamera
+    call queen_setActorPositions ; For collision detection
     call queen_adjustWallSpriteToHead
     call queen_writeOam ; Copy sprites from C600 area to OAM buffer
-    call Call_003_6ea7
+    call queen_headCollision ; Check if head got hit by a missile
 ret ;}
 
-Call_003_6ea7: ;{ 03:6EA7
-    ld a, [$c3f0]
+queen_headCollision: ;{ 03:6EA7
+    ; Skip ahead if timer is zero
+    ld a, [queen_flashTimer]
     and a
-    jr z, jr_003_6eba
+    jr z, .endIf_A
+        ; Decrement the timer, and reset the palette if it hit zero
         dec a
-        ld [$c3f0], a
-        jr nz, jr_003_6eba
+        ld [queen_flashTimer], a
+        jr nz, .endIf_A
             xor a
             ld [queen_bodyPalette], a
-            call Call_003_7812
-    jr_003_6eba:
+            call queen_setDefaultNeckAttributes
+    .endIf_A:
 
+    ; Load collision type
     ld a, [collision_weaponType]
     ld b, a
+    ; Clear collision type
     ld a, $ff
     ld [collision_weaponType], a
+    
+    ; Exit if collision type is none
     ld a, b
     cp $ff
         ret z
+    ; Exit if collision type is not missiles
     cp $08
         ret nz
+    
+; Check if it hit the mouth or head
     ld a, [collision_pEnemyHigh]
-    cp $c6
+    cp HIGH(queenActor_mouth) ; $C6
         ret nz
     ld h, a
+    ; Check if it hit the hed or not
     ld a, [collision_pEnemyLow]
-    cp $20
-        jr nz, jr_003_6efe
-    ld l, $23
+    cp LOW(queenActor_mouth) ; $20
+        jr nz, .checkHead
+
+; A mouth collision happened    
+    ; Exit if it hit the mouth when it was not open
+    ld l, LOW(queenActor_mouth + 3) ; $23
     ld a, [hl]
     cp $f6
         ret z
-jr_003_6ede:
-    call Call_003_7436
+.hurt:
+    ; Hurt the queen
+    call queen_missileHurt
+    
+    ; Set the flash timer
     ld a, $08
-    ld [$c3f0], a
+    ld [queen_flashTimer], a
+    ; Exit if the palette is non-zero
     ld a, [queen_bodyPalette]
     and a
-    ret nz
-
+        ret nz
+    ; Set palette
     ld a, $93
     ld [queen_bodyPalette], a
-    ld a, [$c3ef]
+    
+    ; Play screaming sound
+    ld a, [queen_lowHealthFlag]
     and a
-    ld a, $09
-    jr z, jr_003_6efa
-        ld a, $0a
-    jr_003_6efa:
-
+    ld a, $09 ; Normal sound
+    jr z, .endIf_B
+        ld a, $0a ; Low health sound
+    .endIf_B:
     ld [sfxRequest_noise], a
-    ret
+ret
 
-
-jr_003_6efe:
-    cp $40
-        jr z, jr_003_6ede
-    cp $60
-        jr z, jr_003_6ede
-    ret
+.checkHead:
+    ; Check if it hit one of the head objects
+    cp LOW(queenActor_headL) ; $40
+        jr z, .hurt
+    cp LOW(queenActor_headR) ; $60
+        jr z, .hurt
+ret
 ;}
 
-; Set actor positions
-Call_003_6f07: ;{
+; Set actor positions from these various variables
+queen_setActorPositions: ;{
     ; Queen body 
-    ld hl, $c601
+    ld hl, queenActor_body + 1 ; $C601
+    ; Y + &18
     ld a, [queen_bodyY]
     add $18
     ld [hl+], a
+    ; $30 - X
     ld a, [queen_bodyXScroll]
     cpl
     inc a
     add $30
     ld [hl], a
+    
     ; Queen head left half
-    ld l, $41
+    ld l, LOW(queenActor_headL + 1) ; $41
+    ; Y + $10
     ld a, [queen_headY]
     add $10
     ld [hl+], a
+    ; X
     ld a, [queen_headX]
     ld [hl], a
+    
     ; Queen head right half
-    ld l, $61
+    ld l, LOW(queenActor_headR + 1) ; $61
+    ; Y + $10
     ld a, [queen_headY]
     add $10
     ld [hl+], a
+    ; X + $20
     ld a, [queen_headX]
     add $20
     ld [hl], a
 
-    ld l, $23
+    ; Queen mouth
+    ld l, LOW(queenActor_mouth+3) ; $23
     ld b, $12
     ld c, $0e
+    ; Check if mouth is stunned
     ld a, [hl-]
-    cp $f7
-    jr nz, jr_003_6f41
+    cp QUEEN_ACTOR_MOUTH_STUNNED ; $F7
+    jr nz, .endIf_A
+        ; If so, adjust position forward
         ld b, $15
         ld c, $12
-    jr_003_6f41:
-
+    .endIf_A:
+    ; X + B ($12, or $15 when stunned)
     ld a, [queen_headX]
     add b
     ld [hl-], a
+    ; Y + C ($0E, or $12 when stunned)
     ld a, [queen_headY]
     add c
     ld [hl], a
-    call Call_003_6e12
+    
+    ; Deactivate neck actors every frame
+    call queen_deactivateActors.neck
+    
+    ; Exit if health is zero
     ld a, [queen_health]
     and a
         ret z
-    ld a, [$c3d1]
+        
+    ; Check if the Queen is dealing with her stomach being bombed (when her neck is bent upwards)
+    ld a, [queen_stomachBombedFlag]
     and a
-    jr nz, jr_003_6f8d
-        ld a, [$c3e3]
+    jr nz, .else_B
+        ; Exit if projectiles are active
+        ld a, [queen_projectilesActiveFlag]
         and a
             ret nz
+        ; Exit if OAM scratchpad is being unused
         ld a, [queen_pOamScratchpadLow]
         cp $00
             ret z
+        ; Read X/Y positions from OAM scratchpad to enemy RAM !?
+        ; Set source pounter
+        ; HL = X position of the last sprite
         inc a
         ld l, a
         ld a, [queen_pOamScratchpadHigh]
         ld h, a
-        ld de, $c683
-        ld a, $f0
+        
+        ; Setup destination pointer
+        ; Set sprite type to neck
+        ld de, queenActor_neckA + 3 ; $c683
+        ld a, QUEEN_ACTOR_NECK ; $F0
         ld [de], a
         dec e
-    
-        jr_003_6f71:
+        .loop:
+            ; Transfer sprite X to actor X
             ld a, [hl-]
             ld [de], a
+            
+            ; Transfer sprite Y to actor Y
             dec e
             ld a, [hl]
             ld [de], a
+            
+            ; Set actor status to active ($00)
             dec e
             xor a
             ld [de], a
+            
+            ; Iterate to the x position of the next sprite
             push de
-            ld de, $fff9
-            add hl, de
+                ld de, -7 ; $fff9
+                add hl, de
             pop de
+            ; Iterate to the x position of the next actor
             push hl
-            ld hl, $0022
-            add hl, de
-            ld e, l
-            ld d, h
+                ld hl, $0022
+                add hl, de
+                ld e, l
+                ld d, h
             pop hl
+            ; Exit loop if OAM scratchpad pointer has reached the end
             ld a, l
             cp $01
-        jr nz, jr_003_6f71
+        jr nz, .loop
         ret
-    jr_003_6f8d:
-        ld de, queen_objectOAM ; $c308
-        ld hl, $c680
+    .else_B:
+        ; Read X/Y positions from OAM scratchpad to enemy RAM !?
+        ld de, queen_objectOAM ; $C308
+        ld hl, queenActor_neckA ; $C680
+        ; Set status to active
         ld [hl], $00
+        ; Set Y position
         inc l
         ld a, [de]
         add $10
         ld [hl+], a
+        ; Set X position
         inc e
         ld a, [de]
         add $10
         ld [hl+], a
-        ld [hl], $82
+        ; Set enemy type
+        ld [hl], QUEEN_ACTOR_BENT_NECK ; $82
         ret
 ;}
 
@@ -1587,7 +1679,7 @@ queen_drawFeet: ;{
         inc a
     .endIf_D:
     ld [queen_footFrame], a
-ret ;}
+ret
 
 ; Pointers, tile numbers, and tilemap offsets for the rear and front feet.
 queen_rearFootPointers:
@@ -1641,7 +1733,7 @@ queen_frontFootOffsets:
     db $48,$49,$4a
     db $68,$69,$6a
 
-; No more code about the Queen's feet, please.
+;} No more code about the Queen's feet, please.
 
 ; Copy sprites to OAM buffer
 queen_writeOam: ;{ 03:7140
@@ -1690,121 +1782,158 @@ queen_writeOam: ;{ 03:7140
     ld [hOamBufferIndex], a
 ret ;}
 
-; Get camera delta?
-Call_003_716e: ;{ 03:716E
+; Compute the change in camera position
+queen_getCameraDelta: ;{ 03:716E
+    ; Load previous Y camera value
     ld a, [queen_cameraY]
     ld b, a
+    ; Clamp minimum value of camera to zero
     ld a, [scrollY]
     cp $f8
     jr c, .endIf
         xor a
     .endIf:
+    ; Update to current X camera value
     ld [queen_cameraY], a
+    ; delta = cur - prev
     sub b
     ld [queen_cameraDeltaY], a
     
+    ; Load previous X camera value
     ld a, [queen_cameraX]
     ld b, a
+    ; Update to current X camera value
     ld a, [scrollX]
     ld [queen_cameraX], a
+    ; delta = cur - prev
     sub b
     ld [queen_cameraDeltaX], a
 ret ;}
 
-Call_003_7190: ;{ 03:7190
+queen_adjustBodyForCamera: ;{ 03:7190
+; Adjust X positions
+    ; Get delta X
     ld a, [queen_cameraDeltaX]
     ld b, a
+    
+    ; Adjust body position
     ld a, [queen_bodyXScroll]
-    add b
+    add b ; Add due to how the raster split works
     ld [queen_bodyXScroll], a
+    ; Adjust head position
     ld a, [queen_headX]
     sub b
     ld [queen_headX], a
+
+; Adjust Y positions
+    ; Get delta Y
     ld a, [queen_cameraDeltaY]
     ld b, a
+    
+    ; Adjust body position
     ld a, [queen_headY]
     sub b
     ld [queen_headY], a
+    
+; Get the scanline numbers for the queen's raster splits (using queen body/height)
+    ; Clamp minimum value of camera to zero
     ld a, [scrollY]
     cp $f8
-    jr c, jr_003_71b5
+    jr c, .endIf
         xor a
-    jr_003_71b5:
-
+    .endIf:
     ld c, a
-    ld a, $67
+    
+    ld a, $67 ; Pixels between the top of the BG map to the top of the queen (minus 1)
     sub c
-    jr c, jr_003_71c4
+    jr c, .else
+        ; If the top of the camera is above the top of the queen's body
+        ; bodyY = $67 - ScrollY
         ld [queen_bodyY], a
+        ; height = standard
         ld a, $37
         ld [queen_bodyHeight], a
         ret
-    jr_003_71c4:
+    .else:
+        ; If the top of the camera is below the top of the queen's body (normally impossible)
+        ; height = $67 - ScrollY + $37 (this math doesn't seem right)
         ld d, $37
         add d
         ld [queen_bodyHeight], a
+        ; Set top of queen's body to top of the screen
         xor a
         ld [queen_bodyY], a
         ret
 ;}
 
-; Camera adjustment?
-Call_003_71cf: ;{ 03:71CF
-    ld a, [$c3d1]
+; Camera adjustment
+queen_adjustSpritesForCamera: ;{ 03:71CF
+    ; Set offset for OAM scratchpad pointer
+    ld a, [queen_stomachBombedFlag]
     ld d, $05
     and a
-    jr z, jr_003_71d9
+    jr z, .endIf_A
         ld d, $01
-    jr_003_71d9:
+    .endIf_A:
 
+    ; Load camera deltas to B and C
     ld a, [queen_cameraDeltaX]
     ld b, a
     ld a, [queen_cameraDeltaY]
     ld c, a
+    
+    ; Skip ahead if OAM scratchpad is being unused (low byte of pointer is $00)
     ld a, [queen_pOamScratchpadLow]
     cp $00
-    jr z, jr_003_7215
+    jr z, .endIf_B
+        ; Set OAM scratchpad pointer (should be pointing at an X value)
         add d
         ld l, a
         ld a, [queen_pOamScratchpadHigh]
         ld h, a
-    
-        jr_003_71ee:
+        ; Iterate backwards through the OAM scratchpad
+        .loop_A:
+            ; Adjust X position
             ld a, [hl]
             sub b
             ld [hl-], a
+            ; Adjust Y position
             ld a, [hl]
             sub c
             ld [hl-], a
+            ; Skip attributes and tile of previous sprite
             dec l
             dec l
+            ; Exit loop if below the end of the OAM scratchpad
             ld a, $05
             cp l
-        jr nz, jr_003_71ee
-    
-        ld hl, $c741
+        jr nz, .loop_A
+        
+        ; Adjust positions of projectiles
+        ld hl, queenActor_spitA + 1 ; $C741
         ld d, $03
-    
-        jr_003_7200:
-            call Call_003_7229
+        .loop_B:
+            call queen_singleCameraAdjustment
+            ; Iterate to next actor
             ld a, l
             add $1e
             ld l, a
             dec d
-        jr nz, jr_003_7200
+        jr nz, .loop_B
     
+        ; Adjust these Samus related positions 
         ld hl, $c3e6
         ld d, $03
-    
-        jr_003_720f:
-            call Call_003_7229
+        .loop_C:
+            call queen_singleCameraAdjustment
             dec d
-        jr nz, jr_003_720f
-    jr_003_7215:
+        jr nz, .loop_C
+    .endIf_B:
 
-    ld hl, $c338
+    ; Adjust positions of the wall sprites to match the camera
+    ld hl, queen_wallOAM ; $C338
     ld d, $0c
-    jr_003_721a:
+    .loop_D:
         ld a, [hl]
         sub c
         ld [hl+], a
@@ -1814,16 +1943,18 @@ Call_003_71cf: ;{ 03:71CF
         inc l
         inc l
         dec d
-    jr nz, jr_003_721a
+    jr nz, .loop_D
 
     call queen_adjustWallSpriteToHead
 ret ;}
 
-; Camera adjustment?
-Call_003_7229: ;{
+; Single camera adjustment
+queen_singleCameraAdjustment: ;{
+    ; Adjust Y position
     ld a, [hl]
     sub c
     ld [hl+], a
+    ; Adjust X position
     ld a, [hl]
     sub b
     ld [hl+], a
@@ -1939,53 +2070,60 @@ Call_003_72b8: ;{ 03:72B8
     cp $01
         jp nz, Jump_003_73b1
 
+    ; Check if paralyzed
     ld a, [queen_eatingState]
-    cp $10 ; Check if paralyzed
-    jr nz, jr_003_7314
-        ld hl, $c623
+    cp $10
+    jr nz, .endIf_A
+        ld hl, queenActor_mouth + 3 ; $C623
         ld a, [hl]
-        cp $f6
-        jr z, jr_003_72ff
+        cp QUEEN_ACTOR_MOUTH_OPEN ; $F6
+        jr z, .else_B
             ld a, [queen_stunTimer]
             and a
-            jr z, jr_003_72f5
+            jr z, .else_C
                 dec a
                 ld [queen_stunTimer], a
                 cp $58
                     ret nz
                 xor a
                 ld [queen_bodyPalette], a
-                call Call_003_7812
+                call queen_setDefaultNeckAttributes
                 ret
-            jr_003_72f5:
+            .else_C:
                 xor a
                 ld [queen_eatingState], a
-                ld hl, $c623
-                ld [hl], $f6
+                ld hl, queenActor_mouth + 3 ; $C623
+                ld [hl], QUEEN_ACTOR_MOUTH_OPEN ; $F6
                 ret
-        jr_003_72ff:
+        .else_B:
+            ; Set stun timer
             ld a, $60
             ld [queen_stunTimer], a
+            ; Change palette
             ld a, $93
             ld [queen_bodyPalette], a
+            ; Play noise
             ld a, $0a
             ld [sfxRequest_noise], a
-            ld hl, $c623
-            ld [hl], $f7
+            ; Change actor type
+            ld hl, queenActor_mouth + 3 ; $C623
+            ld [hl], QUEEN_ACTOR_MOUTH_STUNNED ; $F7
             ret
-    jr_003_7314:
+    .endIf_A:
 
+    ; Exit is Samus is entering mouth
     cp $01
         ret z
     cp $02
-    jr nz, jr_003_7328
-
+        jr nz, jr_003_7328
+    
+    ; Mouth closing with Samus in it
     xor a
     ld [queen_bodyPalette], a
-    call Call_003_7812
+    call queen_setDefaultNeckAttributes
     ld a, $0d ; Prep Samus in mouth
     ld [queen_state], a
-    ret
+ret
 
 
 jr_003_7328:
@@ -2005,7 +2143,7 @@ jr_003_7328:
     add c
     cp $d0
     jr c, jr_003_735c
-        ld a, [$c3d1]
+        ld a, [queen_stomachBombedFlag]
         and a
         jr nz, jr_003_7355
             ld a, $04 ; Prep retraction
@@ -2046,14 +2184,14 @@ jr_003_7328:
     add c
     ld [$c3b6], a
     inc hl
-    ld a, [$c3ef]
+    ld a, [queen_lowHealthFlag]
     and a
     jr z, jr_003_7399
 
     dec a
-    ld [$c3ef], a
+    ld [queen_lowHealthFlag], a
     push hl
-    call Call_003_7230
+        call Call_003_7230
     pop hl
     jr jr_003_7328
 
@@ -2135,8 +2273,8 @@ Jump_003_73b1:
         ld [queen_neckStatus], a
         xor a
         ld [queen_eatingState], a
-        ld hl, $c623
-        ld [hl], $f5
+        ld hl, queenActor_mouth + 3 ; $C623
+        ld [hl], QUEEN_ACTOR_MOUTH_CLOSED ; $F5
         ld hl, spriteC300
         ld a, l
         ld [queen_pOamScratchpadLow], a
@@ -2157,27 +2295,40 @@ Jump_003_742a:
     ld [queen_headX], a
 ret ;}
 
-Call_003_7436: ;{ 03:7436
+; Called when Queen's head is hit by a missile
+queen_missileHurt: ;{ 03:7436
+    ; Exit if health is zero
     ld a, [queen_health]
     and a
         ret z
-    dec a ; Hurt for one damage
+    ; Hurt for one damage, and exit if it was not fatal
+    dec a
     ld [queen_health], a
         ret nz
-    ; Do this is the hit was fatal
+    
+; Do this is the hit was fatal
+    ; Set status to "done extending"
     ld a, $81
     ld [queen_neckStatus], a
-    ld a, $11 ; Prep death
+    ; Set state to prep death
+    ld a, $11
     ld [queen_state], a
+    
+    ; Clear flags
     xor a
     ld [queen_neckControl], a
     ld [queen_walkControl], a
     ld [queen_footFrame], a
     ld [queen_headFrameNext], a
-    call Call_003_6e12
+    
+    call queen_deactivateActors.neck
+    
+    ; Deactivate body, mouth, and head (left and right)
     ld b, $04
-    ld hl, $c600
-    call Call_003_6e17
+    ld hl, queenActor_body
+    call queen_deactivateActors.arbitrary
+    
+    ; Close the bottom exit
     call queen_closeFloor
 ret ;}
 
@@ -2264,7 +2415,7 @@ queenStateFunc_startA: ;{ 03:74C4 - Queen State $17: Start Fight A (wait to scre
         ld a, $18
         ld [queen_state], a
         ; Make different noises based on aggression flag?
-        ld a, [$c3ef]
+        ld a, [queen_lowHealthFlag]
         and a
         ld a, $09
         jr z, .endIf_B
@@ -2375,8 +2526,8 @@ queenStateFunc_prepProjectiles: ;{ 03:7519 - Queen State $14: Prep spitting proj
     ld a, $15 ; Blobs out
     ld [queen_state], a
 
-    ; ???
-    ld [$c3e3], a
+    ; Set flag to indicate projectiles are active
+    ld [queen_projectilesActiveFlag], a
     ld de, $fff8
     add hl, de
 jp Jump_003_7288 ;}
@@ -2486,8 +2637,10 @@ jr_003_75d0:
     jr nz, jr_003_75e8
 
     call queenStateFunc_pickNextState
+    
+    ; Clear flag to signal projectiles are inactive
     xor a
-    ld [$c3e3], a
+    ld [queen_projectilesActiveFlag], a
     ld hl, spriteC300
     jp Jump_003_7288
 ;}
@@ -2769,10 +2922,13 @@ queenStateFunc_prepEatingSamus: ;{ 03:772B - Queen State $0D: Prep Samus in mout
     ld [queen_headFrame], a
     xor a
     ld [queen_neckStatus], a
+    
+    ; Deactivate mouth
     ld a, $ff
-    ld [$c620], a
-    ld a, $f5
-    ld [$c623], a
+    ld [queenActor_mouth], a
+    ld a, QUEEN_ACTOR_MOUTH_CLOSED ; $F5
+    ld [queenActor_mouth + 3], a
+    
     ld a, $0e ; Samus in mouth (head retracting)
     ld [queen_state], a
     dec hl
@@ -2796,7 +2952,7 @@ queenStateFunc_samusEaten: ;{ 03:7785 - Queen State $0F: Samus in mouth/stomach
     jr nz, jr_003_77b8
     
     ld a, [queen_health]
-    sub $0a ; Hurt for 10 damage?
+    sub $0a ; Hurt for 10 damage
     ld [queen_health], a
         jr c, jr_003_77d5
     ld a, $05
@@ -2856,7 +3012,7 @@ queenStateFunc_vomitingOutMouth: ;{ 03:77DD -  Queen State $10: Spitting Samus o
 
     xor a
     ld [queen_bodyPalette], a
-    call Call_003_7812
+    call queen_setDefaultNeckAttributes
 
 jr_003_77f2:
     ld a, [queen_footFrame]
@@ -2878,16 +3034,20 @@ jr_003_77fd:
     jr queenStateFunc_pickNextState.direct ; Set state to queen_stateTable[6]
 ;}
 
-; Set sprite attributes for neck
-Call_003_7812: ;{ 03:7812
+; Set default sprite attributes for neck
+queen_setDefaultNeckAttributes: ;{ 03:7812
+    ; Iterate for all 12 sprites
     ld b, $0c
     ld hl, queen_objectOAM ;$c308
     .loop:
+        ; Skip Y, X, and tile
         inc l
         inc l
         inc l
+        ; Write priority
         ld a, OAMF_PRI ;$80
         ld [hl+], a
+        ; Loop until it's done
         dec b
     jr nz, .loop
 ret ;}
@@ -2954,7 +3114,7 @@ queenStateFunc_prepExtendingNeck: ;{ 03:7864 - Queen State $02 - Prep neck exten
     ld a, [$c3be]
     xor $01
     ld [$c3be], a
-    ld a, [$c3f1]
+    ld a, [queen_midHealthFlag]
     and a
     jr nz, jr_003_78ac
         ld a, [$c3be]
@@ -3001,8 +3161,8 @@ queenStateFunc_prepExtendingNeck: ;{ 03:7864 - Queen State $02 - Prep neck exten
             ld a, [rDIV]
             and $03
             jr z, jr_003_78e4
-                ld hl, $c623
-                ld [hl], $f6
+                ld hl, queenActor_mouth + 3 ; $C623
+                ld [hl], QUEEN_ACTOR_MOUTH_OPEN ; $F6
         jr_003_78dd:
     
         ld a, b
@@ -3049,8 +3209,8 @@ queenStateFunc_prepRetractingNeck: ;{ 03:78F7 - Queen State $04: Prep neck retra
     ld a, $01
     ld [queen_headFrameNext], a
     ld [queen_headFrame], a
-    ld a, $f5
-    ld [$c623], a
+    ld a, QUEEN_ACTOR_MOUTH_CLOSED ; $F5
+    ld [queenActor_mouth + 3], a
     ld a, $05 ; Retracting neck
     ld [queen_state], a
     dec hl
@@ -3167,7 +3327,7 @@ queenStateFunc_stomachBombed: ;{ 03:7970 - Queen State $08: Stomach Just Bombed
     ld a, $04
     ld [queen_neckPattern], a
     ; ?
-    ld [$c3d1], a
+    ld [queen_stomachBombedFlag], a
     call queen_setNeckBasePointer ; Load neck pattern pointer
     call queen_loadNeckBasePointer
     inc hl
@@ -3243,9 +3403,9 @@ queenStateFunc_doneVomitingSamus: ;{ 03:7A1D - Queen State $0B: Done spitting Sa
     ld [queen_headFrameNext], a
     ld [queen_headFrame], a
     
-    ; Clear variable
+    ; Clear flag
     xor a
-    ld [$c3d1], a
+    ld [queen_stomachBombedFlag], a
     
     ; Clear bent neck sprite
     ld hl, queen_objectOAM ; $C308
@@ -3263,7 +3423,7 @@ queenStateFunc_doneVomitingSamus: ;{ 03:7A1D - Queen State $0B: Done spitting Sa
         dec b
     jr nz, .loop
 
-    ; Reset OAM scratcpad pointer
+    ; Reset OAM scratchpad pointer
     ld hl, spriteC300
     ld a, l
     ld [queen_pOamScratchpadLow], a
@@ -3275,7 +3435,7 @@ jp queenStateFunc_pickNextState ;}
 jr_003_7a4d: ;{ Kill Queen from stomach
     ld b, $0d
     ld hl, $c600
-    call Call_003_6e17
+    call queen_deactivateActors.arbitrary
     ld a, $01
     ld [queen_neckControl], a
     ld [$c3ba], a
@@ -3284,12 +3444,12 @@ jr_003_7a4d: ;{ Kill Queen from stomach
     xor a
     ld [$c3b6], a
     ld [$c3b7], a
-    ld [$c3d1], a
+    ld [queen_stomachBombedFlag], a
     ld [queen_health], a
     ld [queen_neckStatus], a
     ld [queen_footFrame], a
     ld [queen_headFrameNext], a
-    ld [$c3ef], a
+    ld [queen_lowHealthFlag], a
     ld hl, queen_objectOAM ; $C308
     ld a, l
     ld [queen_pOamScratchpadLow], a
@@ -3705,6 +3865,7 @@ LCDCInterruptHandler: ;{ 03:7C7F
         .case_1: ; Set scroll X and palette to queen's
             ld a, [queen_bodyXScroll]
             ld [rSCX], a
+            ; Skip writing palette if zero
             ld a, [queen_bodyPalette]
             and a
                 jr z, .nextToken

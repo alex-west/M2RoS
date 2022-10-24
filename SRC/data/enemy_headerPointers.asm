@@ -129,7 +129,7 @@
     dw enHead_NULL ; (no graphics)
     dw enHead_item ; Plasma beam orb
     dw enHead_item ; Plasma beam
-    dw enHead_item ; Ice beam orb
+    dw enHead_item ; Ice beam orb (and bent neck of Queen’s vomiting pose!?)
     dw enHead_item ; Ice beam
     dw enHead_item ; Wave beam orb
     dw enHead_item ; Wave beam

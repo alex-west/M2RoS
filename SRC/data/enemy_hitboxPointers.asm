@@ -129,7 +129,7 @@
     dw hitbox_point ; (no graphics)
     dw hitbox_block ; Plasma beam orb
     dw hitbox_tile ; Plasma beam
-    dw hitbox_block ; Ice beam orb
+    dw hitbox_block ; Ice beam orb (and bent neck of Queen’s vomiting pose!?)
     dw hitbox_tile ; Ice beam
     dw hitbox_block ; Wave beam orb
     dw hitbox_tile ; Wave beam

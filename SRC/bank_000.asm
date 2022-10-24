@@ -8453,7 +8453,7 @@ collision_bombOneEnemy: ;{ 00:30EA
     jr nz, .endIf_C
         ; and if the left half of her head just got bombed
         ldh a, [hCollision_enSprite]
-        cp $f1
+        cp QUEEN_ACTOR_HEAD_LEFT ; $F1
         jr nz, .endIf_C
             ; Release Samus from the mouth
             ld a, $04
@@ -8466,7 +8466,7 @@ collision_bombOneEnemy: ;{ 00:30EA
     jr nz, .endIf_D
         ; And her main body (stomach) just got bombed
         ldh a, [hCollision_enSprite]
-        cp $f3
+        cp QUEEN_ACTOR_BODY ; $F3
         jr nz, .endIf_D
             ; Then eject Samus from the Queen
             ld a, $07
@@ -8690,7 +8690,7 @@ collision_projectileOneEnemy: ;{ 00:31F1
     jr nz, .endIf_C
         ; And if we hit the Queen's open mouth
         ldh a, [hCollision_enSprite]
-        cp $f6
+        cp QUEEN_ACTOR_MOUTH_OPEN ; $F6
         jr nz, .endIf_C
             ; Then paralyze the Queen
             ld a, $10
@@ -9041,7 +9041,7 @@ ret ;}
     ; Special Queen logic {
     ; Check if touching the queen's stunned mouth
     ldh a, [hCollision_enSprite]
-    cp $f7
+    cp QUEEN_ACTOR_MOUTH_STUNNED ; $F7
     jr nz, .endIf_E
         ; Check if Samus' pose is (morph OR morphJump OR morphFall)
         ld a, [samusPose]
@@ -9502,7 +9502,7 @@ ret ;}
     ; Special Queen logic {
     ; Check if touching the queen's stunned mouth
     ldh a, [hCollision_enSprite]
-    cp $f7
+    cp QUEEN_ACTOR_MOUTH_STUNNED ; $F7
     jr nz, .endIf_E
         ; Check if Samus' pose is (morph OR morphJump OR morphFall)
         ld a, [samusPose]

@@ -129,7 +129,7 @@
     dw enSprite_none ; (no graphics)
     dw enSprite_itemOrb ; Plasma beam orb
     dw enSprite_item ; Plasma beam
-    dw enSprite_itemOrb ; Ice beam orb
+    dw enSprite_itemOrb ; Ice beam orb (and bent neck of Queen’s vomiting pose!?)
     dw enSprite_item ; Ice beam
     dw enSprite_itemOrb ; Wave beam orb
     dw enSprite_item ; Wave beam

@@ -141,8 +141,8 @@ queen_pNeckPatternBaseLow:  ds 1 ; $C3CD - Pointer to the start of the currently
 queen_pNeckPatternBaseHigh: ds 1 ; $C3CE -  "" (high byte)
 queen_delayTimer: ds 1 ; $C3CF - Generic delay timer between states/actions
 queen_stunTimer: ds 1 ; $C3D0 - Stun timer when hit with mouth open
-; $C3D1 - Neck related state?
-queen_bodyPalette = $C3D2 ; LCD interrupt handler background palette
+queen_stomachBombedFlag: ds 1 ; $C3D1 - Flag set when the stomach is bombed (helps determine neck behavior)
+queen_bodyPalette = $C3D2 ; LCD interrupt handler background palette. Palette is not written if zero
 queen_health = $C3D3 ; Metroid Queen health
 
 queen_deathArrayIndex = $C3D4 ; Queen death related (disintegration index?)
@@ -153,7 +153,7 @@ queen_pDeathChrHigh = $C3DF ;  "" high byte
 queen_deathBitmask = $C3E0 ; Queen disintegration bitmask - Bitmask is applied if non-zero
 ;$C3E1 - Unused?
 ;$C3E2 - Unused?
-;$C3E3 - Queen Blob related?
+queen_projectilesActiveFlag = $C3E3 ; Non-zero when projectiles are active
 ;$C3E4 - ??
 ;$C3E5 - blob related??
 ;$C3E6-$C3EB - array of 6 values related to Samus' position
@@ -162,13 +162,15 @@ queen_pDeleteBodyLow  = $C3EC ; Pointer for deleting queen's body after dying
 queen_pDeleteBodyHigh = $C3ED ;  "" high byte
 
 
-;$C3EF: Set to 1 in $3:6E36 if 0 < [Metroid Queen's health] < 32h, probably an aggression flag
-;
-;$C3F1: Set to 1 in $3:6E36 if 0 < [Metroid Queen's health] < 64h, probably an aggression flag
+queen_lowHealthFlag = $C3EF ; Set to 1 when the Queen's health] < 50
+queen_flashTimer = $C3F0 ; Timer for flashing effect when queen is hit
+queen_midHealthFlag = $C3F1 ; Set to 1 when the Queen's health] < 100
 
 queen_headDest = $C3F2 ; Metroid Queen's head lower half tilemap VRAM address low byte
 queen_headSrcHigh = $C3F3 ; Metroid Queen's head lower half tilemap source address (bank 3)
 queen_headSrcLow  = $C3F4 ; (rare instance of a big-endian variable!!)
+
+
 
 loadEnemies_unusedVar = $C400 ; Written, but never read. Possibly meant to be a direction, but the assigned values don't make sense
 loadEnemies_oscillator = $C401 ; Oscillates between 0 and 1 every frame. $00: Load enemies horizontally, else: Load enemies vertically
@@ -380,17 +382,17 @@ def enemyDataSlots = $C600;..C7FF ; Enemy data. 20h byte slots
 
 ; Enemy Data Slots used by Queen:
 ; - The Queen only cares about the first 4 bytes of each slot: status, Y, X, and ID (no AI pointer!)
-; - Though her projectiles use $C608 for something
+; - Exception: Her projectiles use $C608 for something
 ; - Each slot has a hardcoded purpose
-;  Slot - Sprite ID
-; $C600 - $F3 - Queen Body
-; $C620 - $F5/$F6/$F7 - Queen Mouth (closed/open/stunned)
-; $C640 - $F1 - Head Left Half
-; $C660 - $F2 - Head Right Half
-; $C680 - $F0 - Queen Neck <- This one get set to $82 when spitting Samus out?
+;                   Slot - Sprite ID
+queenActor_body  = $C600 ; $F3 - Queen Body
+queenActor_mouth = $C620 ; $F5/$F6/$F7 - Queen Mouth (closed/open/stunned)
+queenActor_headL = $C640 ; $F1 - Head Left Half
+queenActor_headR = $C660 ; $F2 - Head Right Half
+queenActor_neckA = $C680 ; $F0 - Queen Neck <- This one get set to $82 when spitting Samus out?
 ;  ...
 ; $C720 - $F0 - Queen Neck
-; $C740 - $F2 - Queen Projectile
+queenActor_spitA = $C740 ; $F2 - Queen Projectile
 ; $C760 - $F2 - Queen Projectile
 ; $C780 - $F2 - Queen Projectile
 ; Sprite ID $F4 is unused?
