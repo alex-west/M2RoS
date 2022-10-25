@@ -142,15 +142,15 @@ queen_pNeckPatternBaseHigh: ds 1 ; $C3CE -  "" (high byte)
 queen_delayTimer: ds 1 ; $C3CF - Generic delay timer between states/actions
 queen_stunTimer: ds 1 ; $C3D0 - Stun timer when hit with mouth open
 queen_stomachBombedFlag: ds 1 ; $C3D1 - Flag set when the stomach is bombed (helps determine neck behavior)
-queen_bodyPalette = $C3D2 ; LCD interrupt handler background palette. Palette is not written if zero
-queen_health = $C3D3 ; Metroid Queen health
+queen_bodyPalette: ds 1 ; $C3D2 - LCD interrupt handler background palette. Palette is not written if zero
+queen_health: ds 1 ; $C3D3 - Metroid Queen health
 
-queen_deathArrayIndex = $C3D4 ; Queen death related (disintegration index?)
-queen_deathAnimCounter = $C3D5 ; Counts down each time the 
-queen_deathArray = $C3D6 ;..$C3DD: Queen table of disintegration bitmasks for death animation
-queen_pDeathChrLow  = $C3DE ; VRAM pointer for Queen's disintegration animation
-queen_pDeathChrHigh = $C3DF ;  "" high byte
-queen_deathBitmask = $C3E0 ; Queen disintegration bitmask - Bitmask is applied if non-zero
+queen_deathArrayIndex: ds 1 ; $C3D4 - Queen death related (disintegration index?)
+queen_deathAnimCounter: ds 1 ; $C3D5 - Counts down each time the 
+queen_deathArray: ds 8 ; $C3D6..$C3DD - Queen table of disintegration bitmasks for death animation
+queen_pDeathChrLow:  ds 1 ; $C3DE - VRAM pointer for Queen's disintegration animation
+queen_pDeathChrHigh: ds 1 ; $C3DF -  "" high byte
+queen_deathBitmask: ds 1 ; $C3E0 - Queen disintegration bitmask - Bitmask is applied if non-zero
 ;$C3E1 - Unused?
 ;$C3E2 - Unused?
 queen_projectilesActiveFlag = $C3E3 ; Non-zero when projectiles are active

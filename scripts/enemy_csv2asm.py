@@ -20,12 +20,14 @@ def csv2asm(infile, outdir):
         i = 0
         reader = csv.reader(f)
         for row in reader:
-            spriteFile.write('    dw '+row[0]+' ; '+row[5]+'\n')
-            headerFile.write('    dw '+row[1]+' ; '+row[5]+'\n')
-            hitboxFile.write('    dw '+row[2]+' ; '+row[5]+'\n')
-            damageFile.write('    db '+row[3]+' ; '+row[5]+'\n')
+            spriteFile.write('    dw '+row[0]+' ; '+row[6]+'\n')
+            headerFile.write('    dw '+row[1]+' ; '+row[6]+'\n')
+            hitboxFile.write('    dw '+row[2]+' ; '+row[6]+'\n')
+            damageFile.write('    db '+row[3]+' ; '+row[6]+'\n')
             if row[4] != '':
-                constFile.write(row[4]+' = ${:02X} ; '.format(i)+row[5]+'\n')
+                constFile.write(row[4]+' = ${:02X} ; '.format(i)+row[6]+'\n')
+            if row[5] != '':
+                constFile.write(row[5]+' = ${:02X} ; '.format(i)+row[6]+'\n')
             i += 1
 
 

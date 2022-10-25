@@ -3669,11 +3669,11 @@ enemy_animateIce: ;{ 02:5652
     ; Check if sprite is a standard metroid
     ; (the standard metroid will call this on its own terms)
     ldh a, [hEnemy.spriteType]
-    cp METROID_SPRITES_START ; $A0
+    cp SPRITE_METROID_1 ; $A0
         jr z, enemy_commonAI.jumpToAI
     sub SPRITE_METROID_2 ; $CE
         jr z, enemy_commonAI.jumpToAI
-    dec a ; checks for $CF
+    dec a ; checks for SPRITE_METROID_3 ($CF)
         jr z, enemy_commonAI.jumpToAI
 .call: ; 02:565F - Called directly by normal metroids
     ; Act every other frame
@@ -10668,7 +10668,7 @@ ret
     ; Animate and make sound
     ld a, $03
     ld [larva_hurtAnimCounter], a
-    ld a, METROID_SPRITES_END ; $CF
+    ld a, SPRITE_METROID_3 ; $CF
     ldh [hEnemy.spriteType], a
     ld a, $05
     ld [sfxRequest_noise], a
@@ -10802,7 +10802,7 @@ ret
         ret nz
     ld hl, hEnemy.spriteType
     ld a, [hl]
-    xor METROID_SPRITES_START ^ SPRITE_METROID_2 ; $6E ; Osciallate between $A0 and $CE
+    xor SPRITE_METROID_1 ^ SPRITE_METROID_2 ; $6E ; Osciallate between $A0 and $CE
     ld [hl], a
 ret
 

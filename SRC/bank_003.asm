@@ -2066,9 +2066,11 @@ Call_003_72b8: ;{ 03:72B8
     ld a, [queen_pNeckPatternHigh]
     ld h, a
     
+    ; Check if extending or retracting
     ld a, b
     cp $01
-        jp nz, Jump_003_73b1
+        jp nz, Jump_003_73b1 ; Retracting case
+; Extending case
 
     ; Check if paralyzed
     ld a, [queen_eatingState]
@@ -2126,10 +2128,10 @@ Call_003_72b8: ;{ 03:72B8
 ret
 
 
-jr_003_7328:
+jr_003_7328: ;{ Extension logic
     ld a, [hl]
     cp $80
-    jr z, jr_003_73a2
+        jr z, jr_003_73a2
 
     ld a, [queen_headY]
     ld c, a
@@ -2174,6 +2176,7 @@ jr_003_7328:
     ld a, [$c3b7]
     add b
     ld [$c3b7], a
+    
     ld a, [hl]
     and $0f
     ld c, a
@@ -2194,6 +2197,7 @@ jr_003_7328:
         call Call_003_7230
     pop hl
     jr jr_003_7328
+;}
 
 Jump_003_7399:
 jr_003_7399: ; Save neck pattern and exit
@@ -2202,7 +2206,6 @@ jr_003_7399: ; Save neck pattern and exit
     ld a, h
     ld [queen_pNeckPatternHigh], a
     ret
-
 
 jr_003_73a2:
     xor a
@@ -2213,10 +2216,10 @@ jr_003_73a2:
     dec hl
     jr jr_003_7399 ; Save Neck Pattern and Exit
 
-Jump_003_73b1:
+Jump_003_73b1: ; Retracting case {
     ld a, [frameCounter]
     and $01
-    ret z
+        ret z
 
     ld a, [hl]
     cp $81
@@ -2285,7 +2288,7 @@ Jump_003_73b1:
         ld [$c3b7], a
         call queen_loadNeckBasePointer
         jp Jump_003_7399
-
+;}
 
 Jump_003_742a:
     ld a, [queen_walkSpeed]
@@ -2542,9 +2545,9 @@ queen_spawnOneProjectile: ;{ 03:756C
     ; Set X to C
     inc l
     ld [hl], c
-    ; Set sprite type to $F2
+    ; Set sprite type
     inc l
-    ld [hl], $f2
+    ld [hl], QUEEN_ACTOR_PROJECTILE ; $F2
     
     ; Set flip flags to D
     ld a, l
