@@ -155,12 +155,13 @@ queen_deathBitmask: ds 1 ; $C3E0 - Queen disintegration bitmask - Bitmask is app
 ;$C3E2 - Unused?
 queen_projectilesActiveFlag = $C3E3 ; Non-zero when projectiles are active
 ;$C3E4 - ??
-;$C3E5 - blob related??
+;$C3E5 - blob related decrementing counter
 ;$C3E6-$C3EB - array of 6 values related to Samus' position
 
 queen_pDeleteBodyLow  = $C3EC ; Pointer for deleting queen's body after dying
 queen_pDeleteBodyHigh = $C3ED ;  "" high byte
 
+; $C3EE - Some sort of decrementing counter for the queen's projectiles
 
 queen_lowHealthFlag = $C3EF ; Set to 1 when the Queen's health] < 50
 queen_flashTimer = $C3F0 ; Timer for flashing effect when queen is hit
@@ -393,8 +394,8 @@ queenActor_neckA = $C680 ; $F0 - Queen Neck <- This one get set to $82 when spit
 ;  ...
 ; $C720 - $F0 - Queen Neck
 queenActor_spitA = $C740 ; $F2 - Queen Projectile
-; $C760 - $F2 - Queen Projectile
-; $C780 - $F2 - Queen Projectile
+queenActor_spitB = $C760 ; $F2 - Queen Projectile
+queenActor_spitC = $C780 ; $F2 - Queen Projectile
 ; Sprite ID $F4 is unused?
 def enemyDataSlots_end = enemyDataSlots + $200
 

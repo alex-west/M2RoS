@@ -2443,8 +2443,7 @@ queenStateFunc_startB: ;{ 03:74EA - Queen State $18: Start Fight B (wait to move
     ld [queen_state], a
 ret ;}
 
-
-Call_003_74fb: ;{ 03:74FB
+queen_getSamusTargets: ;{ 03:74FB
     ; Set source pointer
     ld de, samus_onscreenYPos
     ; Set destination pointer
@@ -2480,7 +2479,7 @@ Call_003_74fb: ;{ 03:74FB
 ret ;}
 
 queenStateFunc_prepProjectiles: ;{ 03:7519 - Queen State $14: Prep spitting projectiles
-    call Call_003_74fb
+    call queen_getSamusTargets
     
     ; Get Y offset for projectiles
     ld a, [queen_headY]
@@ -2493,23 +2492,27 @@ queenStateFunc_prepProjectiles: ;{ 03:7519 - Queen State $14: Prep spitting proj
     ld c, a
     
     ; Spawn first projectile
-    ld hl, $c740
-    ld d, $20
+    ld hl, queenActor_spitA ;$C740
+    ld d, $20 ; Directional flag
     call queen_spawnOneProjectile
     ; Spawn second projectile
-    ld l, $60
+    ld l, LOW(queenActor_spitB) ; $60
     ld d, $20
     call queen_spawnOneProjectile
     ; Spawn third projectile
-    ld l, $80
+    ld l, LOW(queenActor_spitC) ; $80
     ld d, $21
     call queen_spawnOneProjectile
     
-    
-    ld hl, queen_objectOAM ; $c308
-    ld de, $c740
+    ; Unnecessarily setting these variables
+    ld hl, queen_objectOAM ; $C308
+    ld de, queenActor_spitA ; $C740
     ld b, $03
-    call Call_003_75fa
+    
+    ; Draw projectiles
+    call queen_drawProjectiles
+    
+    ; Set counter
     ld a, $0e
     ld [$c3ee], a
     
@@ -2521,7 +2524,7 @@ queenStateFunc_prepProjectiles: ;{ 03:7519 - Queen State $14: Prep spitting proj
     ld a, $20
     ld [queen_delayTimer], a
     
-    
+    ; Set counter
     ld a, $10
     ld [$c3e5], a
 
@@ -2531,7 +2534,7 @@ queenStateFunc_prepProjectiles: ;{ 03:7519 - Queen State $14: Prep spitting proj
 
     ; Set flag to indicate projectiles are active
     ld [queen_projectilesActiveFlag], a
-    ld de, $fff8
+    ld de, -8 ;$fff8
     add hl, de
 jp Jump_003_7288 ;}
 
@@ -2557,217 +2560,274 @@ queen_spawnOneProjectile: ;{ 03:756C
 ret ;}
 
 queenStateFunc_projectilesActive: ;{ 03:757B - Queen State $15: Projectiles out
+    ; Check delay timer
     ld a, [queen_delayTimer]
     and a
-    jr z, jr_003_758c
+    jr z, .endIf_A
+        ; Decrement delay timer, and close mouth once it's expired
         dec a
         ld [queen_delayTimer], a
-        jr nz, jr_003_758c
+        jr nz, .endIf_A
             ld a, $01
             ld [queen_headFrameNext], a
-    jr_003_758c:
+    .endIf_A:
 
-    call Call_003_7658
+    call queen_handleProjectiles ; Handle projectiles
+    
+    ; Check the collision type
     ld a, [collision_weaponType]
     cp $ff
-    jr z, jr_003_75b4
-
+        jr z, .clearCollision
     cp $20
-    jr z, jr_003_75b4
-
+        jr z, .clearCollision
+    ; Only missiles and screw can destroy these projectiles
     cp $08
-    jr z, jr_003_75a2
-
+        jr z, .verifyCollision
     cp $10
-    jr nz, jr_003_75b4
+        jr nz, .clearCollision
 
-jr_003_75a2:
+.verifyCollision:
+    ; Verify the collision happened in a slot >= $C740
     ld a, [collision_pEnemyHigh]
-    cp $c7
-    jr nz, jr_003_75b4
-
+    cp HIGH(queenActor_spitA) ; $C7
+        jr nz, .clearCollision
     ld h, a
     ld a, [collision_pEnemyLow]
-    cp $40
-    jr c, jr_003_75b4
+    cp LOW(queenActor_spitA) ; $40
+        jr c, .clearCollision
 
+    ; If so, deactivate projectile
     ld l, a
     ld [hl], $ff
 
-jr_003_75b4:
+.clearCollision:
+    ; Clear collision type
     ld a, $ff
     ld [collision_weaponType], a
+    
+    ; Check if any projectiles are active
     ld de, $0020
-    ld hl, $c740
+    ld hl, queenActor_spitA ; $C740
     ld b, $03
-
-    jr_003_75c1:
+    .loop_A:
+        ; Check if active or not (break if active)
         ld a, [hl]
         cp $ff
-            jr nz, jr_003_75cc
+            jr nz, .break
+        ; Iterate to next projectile
         add hl, de
         dec b
-    jr nz, jr_003_75c1
+    jr nz, .loop_A
+    
+    ; If all are inactive, end the state and move on to the next
+    jr .endState
+    
+    ; Else, draw the projectiles and keep going
+    .break:
+    call queen_drawProjectiles
+ret
 
-    jr jr_003_75d0
-
-jr_003_75cc:
-
-    call Call_003_75fa
-    ret
-
-
-jr_003_75d0:
-    ld hl, $c740
+.endState:
+    ; Deactivate all projectiles (even though that have to be inactive for us to be here...)
+    ld hl, queenActor_spitA ; $C740
     ld de, $0020
     ld b, $03
-
-    jr_003_75d8:
+    .loop_B:
         ld [hl], $ff
         add hl, de
         dec b
-    jr nz, jr_003_75d8
-
-    ld hl, $c308
+    jr nz, .loop_B
+    
+    ; Clear OAM scratchpad
+    ld hl, queen_objectOAM ; $C308
     ld de, $0004
     ld b, $0c
     ld a, $ff
-
-    jr_003_75e8:
+    .loop_C:
         ld [hl], a
         add hl, de
         dec b
-    jr nz, jr_003_75e8
-
+    jr nz, .loop_C
+    
+    ; Pick the next state
     call queenStateFunc_pickNextState
     
     ; Clear flag to signal projectiles are inactive
     xor a
     ld [queen_projectilesActiveFlag], a
+    
+    ; Clear the OAM scratchpad pointer
     ld hl, spriteC300
-    jp Jump_003_7288
+jp Jump_003_7288
 ;}
 
+; Draw projectiles
+queen_drawProjectiles: ;{ 03:75FA
+    ; Destination address (note this assumes the neck is not being drawn)
+    ld hl, queen_objectOAM ; $C308
+    ; Source actor addresses
+    ld de, queenActor_spitA ; $C740
 
-Call_003_75fa: ;{ 03:75FA
-    ld hl, queen_objectOAM ;$c308
-    ld de, $c740
-    ld b, $03
+    ld b, $03 ; Number of projectiles
+    .loop:
+        ; Save loop counter
+        push bc
+    .loopAfterDeactivation:
+        ; Save actor address
+        push de
+        
+        ; Load status
+        ld a, [de]
+        ; Set default YX position to draw
+        ld bc, $f0f0
+        ; Skip bounds check if inactive
+        cp $ff
+            jr z, .skipProjectile
+        
+        ; Deactivate if Y position is out of range
+        inc e
+        ld a, [de]
+        cp $E0
+            jr nc, .deactivate
+        ; Save Y postion to B
+        ld b, a
+        
+        ; Deactivate if X position is out of range
+        inc e
+        ld a, [de]
+        cp $E0
+            jr nc, .deactivate
+        ; Save X position to C
+        ld c, a
+    
+    .skipProjectile:
+        ; Draw at the (Y,X) position of (B,C)
+        call queen_drawOneProjectileMetasprite
+        
+        ; Restore actor address
+        pop de
+        ; Restore loop counter
+        pop bc
+        
+        ; Iterate to next blob
+        ld a, e
+        add $20
+        ld e, a
+        ; Exit if done
+        dec b
+    jr nz, .loop
+ret
 
-jr_003_7602:
-    push bc
-
-jr_003_7603:
-    push de
-    ld a, [de]
-    ld bc, $f0f0
-    cp $ff
-    jr z, jr_003_761a
-
-    inc e
-    ld a, [de]
-    cp $e0
-    jr nc, jr_003_7627
-
-    ld b, a
-    inc e
-    ld a, [de]
-    cp $e0
-    jr nc, jr_003_7627
-
-    ld c, a
-
-jr_003_761a:
-    call Call_003_762d
+.deactivate:
+    ; Reload actor address
     pop de
-    pop bc
-    ld a, e
-    add $20
-    ld e, a
-    dec b
-    jr nz, jr_003_7602
-    ret
-
-jr_003_7627:
-    pop de
+    ; Set status to inactive
     ld a, $ff
     ld [de], a
-    jr jr_003_7603
+    jr .loopAfterDeactivation
 ;}
 
-Call_003_762d: ;{ 03:762D
+; Draw one projectile, given Y,X in B,C
+queen_drawOneProjectileMetasprite: ;{ 03:762D
+    ; Draw tiles counter-clockwise from bottom-right
+    ; Set tile number
     ld d, $f1
-    ld e, $c0
-    call Call_003_764f
-    ld a, $f8
+    ; Set attribute
+    ld e, OAMF_PRI | OAMF_YFLIP ; $c0
+    call queen_drawOneProjectileSprite
+    
+    ; Subtract 8 from Y position
+    ld a, -8 ; $F8
     add b
     ld b, a
-    ld e, $80
-    call Call_003_764f
-    ld a, $f8
+    ; Set attribute
+    ld e, OAMF_PRI ; $80
+    call queen_drawOneProjectileSprite
+    
+    ; Subtract 8 from X position
+    ld a, -8 ; $F8
     add c
     ld c, a
+    ; Change tile to $F0
     dec d
-    call Call_003_764f
+    call queen_drawOneProjectileSprite
+    
+    ; Add 8 to Y position
     ld a, $08
     add b
     ld b, a
-    ld e, $c0
-    call Call_003_764f
+    ; Set attribute
+    ld e, OAMF_PRI | OAMF_YFLIP ; $C0
+    call queen_drawOneProjectileSprite
 ret ;}
 
-Call_003_764f: ;{ 03:764F
+; Draws one hardware sprite of a projectile
+;  B,C,D,E -> Y,X,T,A
+queen_drawOneProjectileSprite: ;{ 03:764F
+    ; Write Y
     ld [hl], b
+    ; Write X
     inc l
     ld [hl], c
+    ; Write tile number
     inc l
     ld [hl], d
+    ; Write tile attributes
     inc l
     ld [hl], e
+    ; Iterate to next sprite
     inc l
 ret ;}
 
 ; Handle queen's spit
-Call_003_7658: ;{ 03:7658
+queen_handleProjectiles: ;{ 03:7658
+    ; Iterate through projectiles
     ld b, $03
-    ld hl, $c740
-
-    jr_003_765d:
+    ld hl, queenActor_spitA ; $C740
+    .loop_A:
         push hl
         push bc
+        ; Check if projectile is active
         ld a, [hl]
         and a
-        jr nz, jr_003_7666
-            call Call_003_7701
-        jr_003_7666:
+        jr nz, .endIf_A
+            call queen_moveOneProjectile
+        .endIf_A:
         pop bc
         pop hl
+        ; Iterate to next projectile
         ld de, $0020
         add hl, de
         dec b
-    jr nz, jr_003_765d
+    jr nz, .loop_A
 
+    ; Exit if counter is not zero
     ld a, [$c3e5]
     and a
-    jr z, jr_003_767a
+    jr z, .endIf_B
+        ; Decrement counter
         dec a
         ld [$c3e5], a
         ret
-    jr_003_767a:
-
+    .endIf_B:
+    ; Reset counter
     ld a, $03
     ld [$c3e5], a
+    
+    ; Exit if counter is zero
     ld a, [$c3ee]
     and a
         ret z
+    ; Decrement counter
     dec a
     ld [$c3ee], a
-    call Call_003_74fb
-    ld hl, $c748
+    call queen_getSamusTargets
+    
+    ; Iterate through projectiles and their corresponding Samus targets
+    ld hl, queenActor_spitA + 8 ; $C748
     ld de, $c3e6
     ld b, $03
-
-    jr_003_7693:
+    .loop_B:
         push hl
         push de
         push bc
@@ -2775,15 +2835,18 @@ Call_003_7658: ;{ 03:7658
         pop bc
         pop de
         pop hl
+        ; Iterate to next actor
         ld a, l
         add $20
         ld l, a
+        ; Iterate to next Samus target
         inc de
         inc de
         dec b
-    jr nz, jr_003_7693
+    jr nz, .loop_B
 ret ;}
 
+; Function for projectile chasing Samus?
 Call_003_76a6: ;{ 03:76A6
     ld a, [hl]
     ld [$c3e4], a
@@ -2815,10 +2878,11 @@ Call_003_76a6: ;{ 03:76A6
     ld [hl], b
 ret ;}
 
+; Function for projectile chasing Samus?
 Call_003_76d5: ;{ 03:76D5
     ld a, [de]
     sub [hl]
-    ret z
+        ret z
 
     push af
     cp $06
@@ -2867,7 +2931,7 @@ jr_003_76fb:
 ;}
 
 ; Handle one spit ball ?
-Call_003_7701: ;{ 03:7701
+queen_moveOneProjectile: ;{ 03:7701
     ld b, $02
     inc hl
     push hl
@@ -2879,24 +2943,24 @@ Call_003_7701: ;{ 03:7701
     pop hl
     push hl
         ld a, [$c3e4]
-        jr_003_7712:
+        .loop:
             and $0f
-            jr z, jr_003_7720
+            jr z, .endIf
                 bit 3, a
-                jr nz, jr_003_771e
+                jr nz, .else
                     inc [hl]
                     inc [hl]
-                    jr jr_003_7720
-                jr_003_771e:
+                    jr .endIf
+                .else:
                     dec [hl]
                     dec [hl]
-            jr_003_7720:
+            .endIf:
         
             inc hl
             ld a, [$c3e4]
             swap a
             dec b
-        jr nz, jr_003_7712
+        jr nz, .loop
     pop hl
 ret ;}
 
