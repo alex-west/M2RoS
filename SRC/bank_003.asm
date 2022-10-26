@@ -1028,6 +1028,15 @@ queen_neckPatternPointers: ;{ 03:6C8E - Indexed by queen_neckPattern
     dw table_6D27 ; 5 - Down, steep, clips through floor (used during death)
     dw table_6CE7 ; 6 - Straight ahead (slight U shape)
 
+; These movement strings are traversed forwards when extending the neck
+;  and backwards when retracting the neck
+;
+; $80 tells the neck to stop extending
+; $81 tells the neck to stop retracting
+; 
+; The movement vectors are YX nybble pairs, with the Y component being signed
+;  and the X component being unsigned
+
 table_6C9C: ; 03:6C9C - 0
     db $81, $33, $33, $32, $32, $32, $32, $33, $23, $23, $24, $23, $23, $23, $24, $13
     db $13, $13, $13, $13, $00, $80
@@ -1068,9 +1077,11 @@ queen_initialize: ;{ 03:6D4A
     ld a, $37
     ld [queen_bodyHeight], a
     
-    ld a, $44
+    ; Enable interrupt
+    ld a, STATF_LYC | STATF_LYCF ; $44
     ld [rSTAT], a
     
+    ; Set initial position values
     ld a, $5c
     ld [queen_bodyXScroll], a
     ld a, [scrollX]
@@ -1095,9 +1106,10 @@ queen_initialize: ;{ 03:6D4A
     ld a, h
     ld [queen_pInterruptListHigh], a
     
+    ; Initialize the neck movement sums (why not with zero?)
     ld a, $09
-    ld [$c3b7], a
-    ld [$c3b6], a
+    ld [queen_neckYMovementSum], a
+    ld [queen_neckXMovementSum], a
     
     ; Initialize OAM scratchpad pointers
     ld hl, spriteC300
@@ -1111,18 +1123,25 @@ queen_initialize: ;{ 03:6D4A
     ld b, $0c
     ld a, $78
     .wallLoop:
+        ; Set Y pos
         ld [hl+], a
+        ; Set X pos
         ld [hl], $a2
+        ; Set tile
         inc l
         ld [hl], $b0
+        ; Set attributes
         inc l
         ld [hl], $00
+        ; Iterate to next sprite
         inc l
+        ; 
         add $08
         dec b
     jr nz, .wallLoop
-
     call queen_adjustWallSpriteToHead
+    
+    ; Initialize Queen's state
     ld hl, queen_stateList
     ld a, l
     ld [queen_pNextStateLow], a
@@ -1282,8 +1301,8 @@ queenHandler: ;{ 03:6E36
 
     call queen_handleState
     call queen_walk
-    call Call_003_72b8 ; Neck related?
-    call Call_003_7230 ; Neck related?
+    call queen_moveNeck
+    call queen_drawNeck
     call queen_getCameraDelta
     call queen_adjustBodyForCamera
     call queen_adjustSpritesForCamera
@@ -1373,7 +1392,7 @@ ret
 ;}
 
 ; Set actor positions from these various variables
-queen_setActorPositions: ;{
+queen_setActorPositions: ;{ 03:6F07
     ; Queen body 
     ld hl, queenActor_body + 1 ; $C601
     ; Y + &18
@@ -1921,8 +1940,8 @@ queen_adjustSpritesForCamera: ;{ 03:71CF
             dec d
         jr nz, .loop_B
     
-        ; Adjust these Samus related positions 
-        ld hl, $c3e6
+        ; Adjust Samus targets for the projectiles
+        ld hl, queen_samusTargetPoints
         ld d, $03
         .loop_C:
             call queen_singleCameraAdjustment
@@ -1945,6 +1964,7 @@ queen_adjustSpritesForCamera: ;{ 03:71CF
         dec d
     jr nz, .loop_D
 
+    ; Adjust the wall sprites to match the queen's head
     call queen_adjustWallSpriteToHead
 ret ;}
 
@@ -1960,100 +1980,129 @@ queen_singleCameraAdjustment: ;{
     ld [hl+], a
 ret ;}
 
-Call_003_7230: ;{ 03:7230
+; Neck extension related (draw neck?)
+queen_drawNeck: ;{ 03:7230
     ld a, [queen_pOamScratchpadLow]
     ld l, a
     ld a, [queen_pOamScratchpadHigh]
     ld h, a
-    ld a, [$c3ba]
+    
+    ; Exit if state 0
+    ld a, [queen_neckDrawingState]
     and a
         ret z
+    ; Jump ahead if state 2 (retracting)
     cp $01
-    jr nz, jr_003_7291
-
-    ld a, [$c3b6]
+        jr nz, .retractionCase
+    
+    ; State 1 (extending)
+    ; Continue and draw sprite...
+    ; ...if the head has moved for than 8 pixels horizontally
+    ld a, [queen_neckXMovementSum]
     cp $08
-    jr nc, jr_003_724e
-
-    ld a, [$c3b7]
-    cp $0c
-    ret c
-
-jr_003_724e:
+    jr nc, .endIf_A
+        ; ...or if the head has moved more than 12 pixels vertically 
+        ld a, [queen_neckYMovementSum]
+        cp $0c
+        ret c
+    .endIf_A:
+    ; Clear counters
     xor a
-    ld [$c3b6], a
-    ld [$c3b7], a
+    ld [queen_neckXMovementSum], a
+    ld [queen_neckYMovementSum], a
     ld a, $30
     cp l
-    ret z
+        ret z
 
+    ; Get OAM scratchpad position of the next sprite
     ld de, $0008
     add hl, de
     push hl
-    ld a, [queen_headFrame]
-    ld b, $15
-    cp $03
-    jr nz, jr_003_7269
-        ld b, $27
-    jr_003_7269:
-
-    ld a, [queen_headY]
-    add b
-    ld [hl+], a
-    ld b, a
-    ld a, [queen_headX]
-    sub $00
-    ld [hl+], a
-    ld c, a
-    ld [hl], $b5
-    inc l
-    ld [hl], $80
-    inc l
-    ld a, b
-    add $08
-    ld [hl+], a
-    ld [hl], c
-    inc l
-    ld [hl], $c5
-    inc l
-    ld [hl], $80
+        ; Get Y offset depending on Queen's head frame
+        ld a, [queen_headFrame]
+        ld b, $15
+        cp $03
+        jr nz, .endIf_B
+            ld b, $27
+        .endIf_B:
+        
+        ; Render first neck sprite
+        ; Write Y position
+        ld a, [queen_headY]
+        add b
+        ld [hl+], a
+        ; Save Y position
+        ld b, a
+        ; Write X position
+        ld a, [queen_headX]
+        sub $00 ; ??
+        ld [hl+], a
+        ; Save X position
+        ld c, a
+        ; Write tile
+        ld [hl], $b5
+        ; Write attributes
+        inc l
+        ld [hl], OAMF_PRI ; $80
+        
+        ; Render second neck sprite
+        ; Write Y position
+        inc l
+        ld a, b
+        add $08
+        ld [hl+], a
+        ; Write X position
+        ld [hl], c
+        ; Write tile
+        inc l
+        ld [hl], $c5
+        ; Write attributes
+        inc l
+        ld [hl], OAMF_PRI ; $80
     pop hl
-
-Jump_003_7288: ; Projectile related?
-jr_003_7288:
+    ; Save the scratchpad pointer at the beginning of the latest sprite-pair
+    
+.saveScratchpadPointer:
     ld a, l
     ld [queen_pOamScratchpadLow], a
     ld a, h
     ld [queen_pOamScratchpadHigh], a
-    ret
+ret
 
-
-jr_003_7291:
-    ld a, [$c3b6]
+.retractionCase:
+    ; Continue and erase sprite...
+    ; ...if the head has moved for than 8 pixels horizontally
+    ld a, [queen_neckXMovementSum]
     cp $08
-    jr nc, jr_003_729e
-        ld a, [$c3b7]
+    jr nc, .endIf_C
+        ; ...or if the head has moved more than 12 pixels vertically
+        ld a, [queen_neckYMovementSum]
         cp $0c
         ret c
-    jr_003_729e:
+    .endIf_C:
+    ; Set counters to 7 (TODO: Figure out why this is not zero
     ld a, $07
-    ld [$c3b6], a
-    ld [$c3b7], a
+    ld [queen_neckXMovementSum], a
+    ld [queen_neckYMovementSum], a
+    
+    ; Set Y position of one sprite to be offscreen
     ld [hl], $ff
-    ld de, $0004
+    ; Set Y position of next sprite to be offscreen
+    ld de, 4 ; $0004
     add hl, de
     ld [hl], $ff
-    ld de, $fff4 ; Don't think this is hEnemy.xScreen
+    
+    ; Save scratchpad OAM pointer to the beginning of the previous displayed sprite
+    ld de, -12 ;$fff4 ; Don't think this is hEnemy.xScreen
     add hl, de
     ld a, $00
-    cp l
-    ret z
-
-    jr jr_003_7288
+    cp l ; Comparison for special underflow case...
+        ret z
+    jr .saveScratchpadPointer
 ;}
 
 ; Neck-related?
-Call_003_72b8: ;{ 03:72B8
+queen_moveNeck: ;{ 03:72B8
     ld a, [queen_neckControl]
     and a ; Case 0 - Do nothing
         ret z
@@ -2161,6 +2210,7 @@ jr_003_7328: ;{ Extension logic
     jr_003_735c:
 
     ld [queen_headY], a
+    
     ld a, [hl]
     and $f0
     swap a
@@ -2173,9 +2223,9 @@ jr_003_7328: ;{ Extension logic
         ld b, a
     jr_003_736e:
 
-    ld a, [$c3b7]
+    ld a, [queen_neckYMovementSum]
     add b
-    ld [$c3b7], a
+    ld [queen_neckYMovementSum], a
     
     ld a, [hl]
     and $0f
@@ -2183,9 +2233,11 @@ jr_003_7328: ;{ Extension logic
     ld a, [queen_headX]
     add c
     ld [queen_headX], a
-    ld a, [$c3b6]
+    
+    ld a, [queen_neckXMovementSum]
     add c
-    ld [$c3b6], a
+    ld [queen_neckXMovementSum], a
+    
     inc hl
     ld a, [queen_lowHealthFlag]
     and a
@@ -2194,7 +2246,7 @@ jr_003_7328: ;{ Extension logic
     dec a
     ld [queen_lowHealthFlag], a
     push hl
-        call Call_003_7230
+        call queen_drawNeck
     pop hl
     jr jr_003_7328
 ;}
@@ -2210,7 +2262,7 @@ jr_003_7399: ; Save neck pattern and exit
 jr_003_73a2:
     xor a
     ld [queen_neckControl], a
-    ld [$c3ba], a
+    ld [queen_neckDrawingState], a
     ld a, $81
     ld [queen_neckStatus], a
     dec hl
@@ -2252,9 +2304,9 @@ Jump_003_73b1: ; Retracting case {
             ld b, a
         jr_003_73de:
     
-        ld a, [$c3b7]
+        ld a, [queen_neckYMovementSum]
         add b
-        ld [$c3b7], a
+        ld [queen_neckYMovementSum], a
         ld a, [hl]
         and $0f
         cpl
@@ -2263,15 +2315,15 @@ Jump_003_73b1: ; Retracting case {
         ld a, [queen_headX]
         add b
         ld [queen_headX], a
-        ld a, [$c3b6]
+        ld a, [queen_neckXMovementSum]
         add b
-        ld [$c3b6], a
+        ld [queen_neckXMovementSum], a
         dec hl
         jr jr_003_7399
     jr_003_73fc:
         xor a
         ld [queen_neckControl], a
-        ld [$c3ba], a
+        ld [queen_neckDrawingState], a
         ld a, $82
         ld [queen_neckStatus], a
         xor a
@@ -2284,8 +2336,8 @@ Jump_003_73b1: ; Retracting case {
         ld a, h
         ld [queen_pOamScratchpadHigh], a
         ld a, $09
-        ld [$c3b6], a
-        ld [$c3b7], a
+        ld [queen_neckXMovementSum], a
+        ld [queen_neckYMovementSum], a
         call queen_loadNeckBasePointer
         jp Jump_003_7399
 ;}
@@ -2447,7 +2499,7 @@ queen_getSamusTargets: ;{ 03:74FB
     ; Set source pointer
     ld de, samus_onscreenYPos
     ; Set destination pointer
-    ld hl, $c3e6
+    ld hl, queen_samusTargetPoints
     
     ; Samus Y
     ld a, [de]
@@ -2479,6 +2531,7 @@ queen_getSamusTargets: ;{ 03:74FB
 ret ;}
 
 queenStateFunc_prepProjectiles: ;{ 03:7519 - Queen State $14: Prep spitting projectiles
+    ; Get homing targets for projectiles
     call queen_getSamusTargets
     
     ; Get Y offset for projectiles
@@ -2512,9 +2565,9 @@ queenStateFunc_prepProjectiles: ;{ 03:7519 - Queen State $14: Prep spitting proj
     ; Draw projectiles
     call queen_drawProjectiles
     
-    ; Set counter
+    ; Set number of times the projectiles will switch bearings to chase Samus
     ld a, $0e
-    ld [$c3ee], a
+    ld [queen_projectileChaseCounter], a
     
     ; Open mouth
     ld a, $02
@@ -2524,9 +2577,9 @@ queenStateFunc_prepProjectiles: ;{ 03:7519 - Queen State $14: Prep spitting proj
     ld a, $20
     ld [queen_delayTimer], a
     
-    ; Set counter
+    ; Set timer
     ld a, $10
-    ld [$c3e5], a
+    ld [queen_projectileChaseTimer], a
 
     ; Set state
     ld a, $15 ; Blobs out
@@ -2534,9 +2587,9 @@ queenStateFunc_prepProjectiles: ;{ 03:7519 - Queen State $14: Prep spitting proj
 
     ; Set flag to indicate projectiles are active
     ld [queen_projectilesActiveFlag], a
-    ld de, -8 ;$fff8
+    ld de, -8 ; $FFF8
     add hl, de
-jp Jump_003_7288 ;}
+jp queen_drawNeck.saveScratchpadPointer ;}
 
 ; Spawn Queen's spit
 queen_spawnOneProjectile: ;{ 03:756C
@@ -2658,7 +2711,7 @@ ret
     
     ; Clear the OAM scratchpad pointer
     ld hl, spriteC300
-jp Jump_003_7288
+jp queen_drawNeck.saveScratchpadPointer
 ;}
 
 ; Draw projectiles
@@ -2787,12 +2840,12 @@ queen_handleProjectiles: ;{ 03:7658
     .loop_A:
         push hl
         push bc
-        ; Check if projectile is active
-        ld a, [hl]
-        and a
-        jr nz, .endIf_A
-            call queen_moveOneProjectile
-        .endIf_A:
+            ; Check if projectile is active
+            ld a, [hl]
+            and a
+            jr nz, .endIf_A
+                call queen_moveOneProjectile
+            .endIf_A:
         pop bc
         pop hl
         ; Iterate to next projectile
@@ -2801,37 +2854,39 @@ queen_handleProjectiles: ;{ 03:7658
         dec b
     jr nz, .loop_A
 
-    ; Exit if counter is not zero
-    ld a, [$c3e5]
+    ; Exit if timer is not zero
+    ld a, [queen_projectileChaseTimer]
     and a
     jr z, .endIf_B
-        ; Decrement counter
+        ; Decrement timer
         dec a
-        ld [$c3e5], a
+        ld [queen_projectileChaseTimer], a
         ret
     .endIf_B:
-    ; Reset counter
+    ; Reset timer
     ld a, $03
-    ld [$c3e5], a
+    ld [queen_projectileChaseTimer], a
     
     ; Exit if counter is zero
-    ld a, [$c3ee]
+    ld a, [queen_projectileChaseCounter]
     and a
         ret z
     ; Decrement counter
     dec a
-    ld [$c3ee], a
+    ld [queen_projectileChaseCounter], a
+    
     call queen_getSamusTargets
     
     ; Iterate through projectiles and their corresponding Samus targets
     ld hl, queenActor_spitA + 8 ; $C748
-    ld de, $c3e6
+    ld de, queen_samusTargetPoints
     ld b, $03
     .loop_B:
+        ; Save registers
         push hl
         push de
         push bc
-        call Call_003_76a6
+            call queen_projectileSeek
         pop bc
         pop de
         pop hl
@@ -2847,117 +2902,159 @@ queen_handleProjectiles: ;{ 03:7658
 ret ;}
 
 ; Function for projectile chasing Samus?
-Call_003_76a6: ;{ 03:76A6
+queen_projectileSeek: ;{ 03:76A6
+    ; Load directional flags to temp
     ld a, [hl]
-    ld [$c3e4], a
+    ld [queen_projectileTempDirection], a
+    ; Set HL to Y position
     ld a, l
     sub $07
     ld l, a
-    ld a, [$c3e4]
+    ; Get lower nybble of direction byte (Y nybble)
+    ld a, [queen_projectileTempDirection]
     and $0f
     ld c, a
-    call Call_003_76d5
+    ; Adjust Y nybble of direction byte
+    call queen_projectileSeekOneAxis
+
+    ; Increment pointer to point to Samus X target and actor X position
     inc de
     inc hl
+    ; Save results to B
     ld a, c
     and $0f
     ld b, a
-    ld a, [$c3e4]
+    
+    ; Get upper nybble of direction byte
+    ld a, [queen_projectileTempDirection]
     and $f0
+    ; Swap it to the lower nybble and store in C
     swap a
     ld c, a
-    call Call_003_76d5
+    ; Adjust X nybble of direction byte
+    call queen_projectileSeekOneAxis
+    
+    ; Combined both nybbles and save results to B
     ld a, c
     and $0f
     swap a
     or b
     ld b, a
+    ; Reset HL to point at direction byte
     ld a, l
     add $06
     ld l, a
+    ; Store new direction byte
     ld [hl], b
 ret ;}
 
-; Function for projectile chasing Samus?
-Call_003_76d5: ;{ 03:76D5
+; Function for projectile chasing Samus
+queen_projectileSeekOneAxis: ;{ 03:76D5
+; DE points to target
+; HL points to position
+; Lower nybble of C stores the direction value (E, F, 0, 1, 2)
+    ; A = Target - Position
     ld a, [de]
     sub [hl]
         ret z
-
+    
+    ; Store difference and processor flags
     push af
+    
+    ; If projectile is within 6 pixels of target
+    ;  then branch ahead and consider doing nothing
     cp $06
-    jr c, jr_003_76fb
-
+        jr c, .considerNoAction
     cp $fa
-    jr nc, jr_003_76fb
+        jr nc, .considerNoAction
 
-jr_003_76e1:
+.chooseDirection:
+    ; Reload processor flags for (Target - Position)
     pop af
+    ; Load direction value
     ld a, c
-    jr nc, jr_003_76f0
+    ; Branch if Target >= Position
+        jr nc, .moveForward
 
-    cp $0e
-    ret z
-
+; moveBackward
+    ; Clamp to a minimum value of -2 (just looking at the single nybble)
+    cp -2 & $0F ; $0e
+        ret z
+    ; Decrement by 1
     dec a
+    ; (unless the result is zero, in which case decrement again)
     and $0f
-    jr nz, jr_003_76ee
-
+        jr nz, .exit
     dec a
+; jr .exit
 
-jr_003_76ee:
+.exit:
+    ; Save result to C
     ld c, a
-    ret
+ret
 
-
-jr_003_76f0:
+.moveForward:
+    ; Clamp to a max value of 2
     cp $02
-    ret z
-
+        ret z
+    ; Increment by 1
     inc a
+    ; (unless the result is zero, in which case increment again)
     and $0f
-    jr nz, jr_003_76ee
-
+        jr nz, .exit
     inc a
-    jr jr_003_76ee
+jr .exit
 
-jr_003_76fb:
+.considerNoAction:
+    ; If the direction value is zero (not moving) then do nothing.
+    ;  else, choose a direction to head in
     ld a, c
     and a
-    jr nz, jr_003_76e1
-
+        jr nz, .chooseDirection
+    ; Clean stack
     pop af
-    ret
+ret
 ;}
 
-; Handle one spit ball ?
+; Move one spitball according to their direction flags (XY)
 queen_moveOneProjectile: ;{ 03:7701
+    ; Set loop counter (two axes)
     ld b, $02
+    ; Increment HL to Y position
     inc hl
     push hl
+        ; Store projectile's direction flags in temp
         ld a, l
         add $07
         ld l, a
         ld a, [hl]
-        ld [$c3e4], a
+        ld [queen_projectileTempDirection], a
     pop hl
     push hl
-        ld a, [$c3e4]
+        ld a, [queen_projectileTempDirection]
         .loop:
+            ; Check the lower nybble
             and $0f
+            ; Don't move if zero
             jr z, .endIf
+                ; Check if bit 3 is set ($x8)
                 bit 3, a
                 jr nz, .else
+                    ; If not set, treat nybble as positive
+                    ;  and move forward 2 pixels
                     inc [hl]
                     inc [hl]
                     jr .endIf
                 .else:
+                    ; If set, treat nybble as negative
+                    ;  and move backward 2 pixels
                     dec [hl]
                     dec [hl]
             .endIf:
-        
+            ; Increment HL to X position
             inc hl
-            ld a, [$c3e4]
+            ; Swap nybbles and iterate to do the X axis
+            ld a, [queen_projectileTempDirection]
             swap a
             dec b
         jr nz, .loop
@@ -2974,7 +3071,7 @@ queenStateFunc_prepEatingSamus: ;{ 03:772B - Queen State $0D: Prep Samus in mout
         jp z, queenStateFunc_pickNextState
 
     ld a, $02
-    ld [$c3ba], a
+    ld [queen_neckDrawingState], a
     ld [queen_neckControl], a
     ld a, [queen_headFrame]
     cp $03
@@ -3122,7 +3219,7 @@ ret ;}
 queenStateFunc_prepForwardWalk: ;{ 03:7821 - Queen State $00: Prep forward walk
     xor a
     ld [queen_walkCounter], a
-    ld [$c3ba], a
+    ld [queen_neckDrawingState], a
     inc a
     ld [queen_walkControl], a
     ld a, $03
@@ -3175,7 +3272,7 @@ queenStateFunc_prepExtendingNeck: ;{ 03:7864 - Queen State $02 - Prep neck exten
     ld [hl], $00
     ld a, $01
     ld [queen_neckControl], a
-    ld [$c3ba], a
+    ld [queen_neckDrawingState], a
     ld a, $03 ; Extending neck
     ld [queen_state], a
     ld a, [$c3be]
@@ -3263,7 +3360,7 @@ queenStateFunc_prepRetractingNeck: ;{ 03:78F7 - Queen State $04: Prep neck retra
     jp z, queenStateFunc_pickNextState
 
     ld a, $02
-    ld [$c3ba], a
+    ld [queen_neckDrawingState], a
     ld [queen_neckControl], a
     ld a, [queen_headFrame]
     cp $03
@@ -3296,7 +3393,7 @@ queenStateFunc_prepBackwardWalk: ;{ 03:793B Queen State $06: Prep walking backwa
     ld a, $03
     ld [queen_neckControl], a
     xor a
-    ld [$c3ba], a
+    ld [queen_neckDrawingState], a
     ld a, $82
     ld [queen_footFrame], a
     ld a, $07 ; Walking backward
@@ -3330,8 +3427,9 @@ queenStateFunc_stomachBombed: ;{ 03:7970 - Queen State $08: Stomach Just Bombed
     ; Set next to extend
     ld a, $01
     ld [queen_neckControl], a
+    ; Do not perform the standard neck drawing procedure with extending the neck
     xor a
-    ld [$c3ba], a
+    ld [queen_neckDrawingState], a
     
     ; Set head frame
     ld a, $03
@@ -3505,12 +3603,12 @@ jr_003_7a4d: ;{ Kill Queen from stomach
     call queen_deactivateActors.arbitrary
     ld a, $01
     ld [queen_neckControl], a
-    ld [$c3ba], a
+    ld [queen_neckDrawingState], a
     ld a, $11 ; Prep death
     ld [queen_state], a
     xor a
-    ld [$c3b6], a
-    ld [$c3b7], a
+    ld [queen_neckXMovementSum], a
+    ld [queen_neckYMovementSum], a
     ld [queen_stomachBombedFlag], a
     ld [queen_health], a
     ld [queen_neckStatus], a

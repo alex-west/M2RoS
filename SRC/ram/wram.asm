@@ -110,16 +110,16 @@ queen_interruptList: ds 9 ;$C3AD..B5: LCD interrupt data: Initial slot for a y p
 ;    FFh: End interrupts for frame (possibly unneeded with the x4 command)
 ;}
 
-; $C3B6 - Neck related counter
-; $C3B7 - Neck related counter
+queen_neckXMovementSum: ds 1 ; $C3B6 - Neck related counter (X displacement counter?)
+queen_neckYMovementSum: ds 1 ; $C3B7 - Neck related counter (Y displacement counter?)
 
 queen_pOamScratchpadLow  = $C3B8 ; Pointer used in constructing the sprite at C608
 queen_pOamScratchpadHigh = $C3B9
-; $C3BA
+queen_neckDrawingState = $C3BA ; Neck drawing state: $00 - nothing, $01 - Extending, $02 - Retracting
 queen_cameraDeltaX = $C3BB ; Change in camera X position from the last frame
 queen_cameraDeltaY = $C3BC ; Change in camera Y position from the last frame
 queen_walkControl  = $C3BD ; 0x00 = Don't walk, 0x01: Walk forwards, 0x02: Walk backwards
-; queen_ ??? = $C3BE ; alternates between 0x00 and 0x01 often
+; queen_ ??? = $C3BE ; alternates between 0x00 and 0x01 often. Related to choosing a neck pattern
 queen_walkStatus = $C3BF ; 0x81 = "done walking forward", 0x82 = "done walking backward"
 
 queen_neckControl = $C3C0 ; $00 - nothing, $01 - Extending, $02 - Retracting, $03 - In place (used when walking)
@@ -151,21 +151,19 @@ queen_deathArray: ds 8 ; $C3D6..$C3DD - Queen table of disintegration bitmasks f
 queen_pDeathChrLow:  ds 1 ; $C3DE - VRAM pointer for Queen's disintegration animation
 queen_pDeathChrHigh: ds 1 ; $C3DF -  "" high byte
 queen_deathBitmask: ds 1 ; $C3E0 - Queen disintegration bitmask - Bitmask is applied if non-zero
-;$C3E1 - Unused?
-;$C3E2 - Unused?
-queen_projectilesActiveFlag = $C3E3 ; Non-zero when projectiles are active
-;$C3E4 - ??
-;$C3E5 - blob related decrementing counter
-;$C3E6-$C3EB - array of 6 values related to Samus' position
+ds 1 ; $C3E1 - Unused
+ds 1 ; $C3E2 - Unused
+queen_projectilesActiveFlag: ds 1 ; $C3E3 - Non-zero when projectiles are active
+queen_projectileTempDirection: ds 1 ; $C3E4 - Temp storage for directional flags of projectile
+queen_projectileChaseTimer: ds 1 ; $C3E5 - Decrementing timer used for keeping track of how often the projectiles change directions
+queen_samusTargetPoints: ds 6 ; $C3E6-$C3EB - Array of 3 YX pairs that the Queen's projectiles chase
 
-queen_pDeleteBodyLow  = $C3EC ; Pointer for deleting queen's body after dying
-queen_pDeleteBodyHigh = $C3ED ;  "" high byte
-
-; $C3EE - Some sort of decrementing counter for the queen's projectiles
-
-queen_lowHealthFlag = $C3EF ; Set to 1 when the Queen's health] < 50
-queen_flashTimer = $C3F0 ; Timer for flashing effect when queen is hit
-queen_midHealthFlag = $C3F1 ; Set to 1 when the Queen's health] < 100
+queen_pDeleteBodyLow:  ds 1 ; $C3EC - Pointer for deleting queen's body after dying
+queen_pDeleteBodyHigh: ds 1 ; $C3ED -  "" high byte
+queen_projectileChaseCounter: ds 1 ; $C3EE - Decrementing counter that keeps track of how many times the Queen's projectiles have to change their bearings
+queen_lowHealthFlag: ds 1 ; $C3EF - Set to 1 when the Queen's health] < 50
+queen_flashTimer: ds 1 ; $C3F0 - Timer for flashing effect when queen is hit
+queen_midHealthFlag: ds 1 ; $C3F1 - Set to 1 when the Queen's health] < 100
 
 queen_headDest = $C3F2 ; Metroid Queen's head lower half tilemap VRAM address low byte
 queen_headSrcHigh = $C3F3 ; Metroid Queen's head lower half tilemap source address (bank 3)
