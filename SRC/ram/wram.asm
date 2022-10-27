@@ -56,7 +56,7 @@ def spriteC300 = $C300 ;$C300..3D: Set to [$2:4FFE..503A] in $2:4DB1
 ;    $C334: Set to E8h in $2:4EA1 if [$C382] = 0
 ;}
 def queen_objectOAM = $C308 ; $C308..37: Metroid Queen neck/spit OAM. Ch slots of 4 bytes (Y, X, tile, attr)
-
+def queen_bentNeckOAM_end = $C31C
 def queen_wallOAM = $C338
 def queen_wallOAM_body = $C338 ; $C338 - Queen Wall OAM (body portion) - 7 slots
 def queen_wallOAM_head = $C354 ; $C354 - Queen Wall OAM (head portion) - 5 slots
@@ -87,15 +87,20 @@ section "Queen Stuff 1", wram0[$C3A0]
 queen_bodyY: ds 1 ; $C3A0 - Y position of the Queen's body (used for the setting the raster split and setting the hitbox)
 queen_bodyXScroll: ds 1 ; $C3A1 - LCD interrupt handler scroll X (higher numbers -> body is more left)
 queen_bodyHeight: ds 1 ; $C3A2 - Queen body height? (used for timing the bottom of the raster split)
+
 queen_walkWaitTimer: ds 1 ; $C3A3 - If non-zero, decrements and pauses the Queen's walking animation (never written to?)
 queen_walkCounter: ds 1 ; $C3A4 - Index into the queen's walk speed table
 ds 1 ; $C3A5 - Unused? (perhaps the walk counter used to be a pointer?)
+
 queen_pNeckPatternLow:  ds 1 ; $C3A6 - Pointer to the current working byte of the current neck pattern
 queen_pNeckPatternHigh: ds 1 ; $C3A7 - "" (high byte)
+
 queen_headX: ds 1 ;$C3A8 - X position of Metroid Queen's head on screen
 queen_headY: ds 1 ;$C3A9 - Y position of Metroid Queen's head on screen
+
 queen_pInterruptListLow:  ds 1 ; $C3AA - Pointer to LCD interrupt data
 queen_pInterruptListHigh: ds 1 ; $C3AB -  "" (high byte)
+
 queen_headBottomY: ds 1 ; $C3AC: Y position of the bottom of the visible portion of the queen's head
 ; Set to min(8Fh, [Y position of Metroid Queen's head on screen] + 26h])
 queen_interruptList: ds 9 ;$C3AD..B5: LCD interrupt data: Initial slot for a y position, 4 slots of 2 bytes commands
@@ -113,32 +118,37 @@ queen_interruptList: ds 9 ;$C3AD..B5: LCD interrupt data: Initial slot for a y p
 queen_neckXMovementSum: ds 1 ; $C3B6 - Neck related counter (X displacement counter?)
 queen_neckYMovementSum: ds 1 ; $C3B7 - Neck related counter (Y displacement counter?)
 
-queen_pOamScratchpadLow  = $C3B8 ; Pointer used in constructing the sprite at C608
-queen_pOamScratchpadHigh = $C3B9
-queen_neckDrawingState = $C3BA ; Neck drawing state: $00 - nothing, $01 - Extending, $02 - Retracting
-queen_cameraDeltaX = $C3BB ; Change in camera X position from the last frame
-queen_cameraDeltaY = $C3BC ; Change in camera Y position from the last frame
-queen_walkControl  = $C3BD ; 0x00 = Don't walk, 0x01: Walk forwards, 0x02: Walk backwards
-; queen_ ??? = $C3BE ; alternates between 0x00 and 0x01 often. Related to choosing a neck pattern
-queen_walkStatus = $C3BF ; 0x81 = "done walking forward", 0x82 = "done walking backward"
+queen_pOamScratchpadLow: ds 1 ; $C3B8 - Pointer used in constructing the sprite at C608
+queen_pOamScratchpadHigh: ds 1 ; $C3B9
+queen_neckDrawingState: ds 1 ; $C3BA - Neck drawing state: $00 - nothing, $01 - Extending, $02 - Retracting
 
-queen_neckControl = $C3C0 ; $00 - nothing, $01 - Extending, $02 - Retracting, $03 - In place (used when walking)
-queen_neckStatus = $C3C1 ; 0x81 = "done extending", 0x82 = "done retracting"
+queen_cameraDeltaX: ds 1 ; $C3BB - Change in camera X position from the last frame
+queen_cameraDeltaY: ds 1 ; $C3BC - Change in camera Y position from the last frame
 
-section "Queen Stuff 2", wram0[$c3c2]
+queen_walkControl: ds 1 ; $C3BD - 0x00 = Don't walk, 0x01: Walk forwards, 0x02: Walk backwards
+queen_neckSelectionFlag: ds 1 ; $C3BE - Alternates between 0x00 and 0x01. Used to determine how to select neck patterns when the queen's health is high
+queen_walkStatus: ds 1 ; $C3BF - 0x81 = "done walking forward", 0x82 = "done walking backward"
+queen_neckControl: ds 1 ; $C3C0 - $00 - nothing, $01 - Extending, $02 - Retracting, $03 - In place (used when walking)
+queen_neckStatus: ds 1 ; $C3C1 - 0x81 = "done extending", 0x82 = "done retracting"
 queen_walkSpeed: ds 1 ; $C3C2 - Used for adjusting the queen's head's position
+
 queen_state: ds 1 ; $C3C3 - Metroid Queen's state
 queen_pNextStateLow:  ds 1 ; $C3C4 - Pointer to the next state number (low byte)
 queen_pNextStateHigh: ds 1 ; $C3C5 -  "" (high byte)
+
 queen_cameraX: ds 1 ; $C3C6 - Current camera position in room
 queen_cameraY: ds 1 ; $C3C7 -  ""
+
 queen_footFrame: ds 1 ; $C3C8 - Metroid Queen's foot animation frame. Very similar to the head. Cleared in $3:6E36
 queen_footAnimCounter: ds 1 ; $C3C9 - Delay value until next frame
+
 queen_headFrameNext: ds 1 ; $C3CA - Metroid Queen's head animation frame to draw. FFh = resume previous tilemap update, 0 = disabled, 1 = frame 0, 2 = frame 1, otherwise frame 2. Cleared in $3:6E36
 queen_headFrame: ds 1 ; $C3CB - Currently display head frame of Queen
+
 queen_neckPattern: ds 1 ; $C3CC - Index for the queen's neck swoop pattern
 queen_pNeckPatternBaseLow:  ds 1 ; $C3CD - Pointer to the start of the currently active neck pattern
 queen_pNeckPatternBaseHigh: ds 1 ; $C3CE -  "" (high byte)
+
 queen_delayTimer: ds 1 ; $C3CF - Generic delay timer between states/actions
 queen_stunTimer: ds 1 ; $C3D0 - Stun timer when hit with mouth open
 queen_stomachBombedFlag: ds 1 ; $C3D1 - Flag set when the stomach is bombed (helps determine neck behavior)
@@ -165,9 +175,9 @@ queen_lowHealthFlag: ds 1 ; $C3EF - Set to 1 when the Queen's health] < 50
 queen_flashTimer: ds 1 ; $C3F0 - Timer for flashing effect when queen is hit
 queen_midHealthFlag: ds 1 ; $C3F1 - Set to 1 when the Queen's health] < 100
 
-queen_headDest = $C3F2 ; Metroid Queen's head lower half tilemap VRAM address low byte
-queen_headSrcHigh = $C3F3 ; Metroid Queen's head lower half tilemap source address (bank 3)
-queen_headSrcLow  = $C3F4 ; (rare instance of a big-endian variable!!)
+queen_headDest: ds 1 ; $C3F2 - Metroid Queen's head lower half tilemap VRAM address low byte
+queen_headSrcHigh: ds 1 ; $C3F3 - Metroid Queen's head lower half tilemap source address (bank 3)
+queen_headSrcLow:  ds 1 ; $C3F4 - (rare instance of a big-endian variable!!)
 
 
 

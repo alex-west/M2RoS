@@ -2101,13 +2101,13 @@ ret
     jr .saveScratchpadPointer
 ;}
 
-; Neck-related?
+; Move the neck
 queen_moveNeck: ;{ 03:72B8
     ld a, [queen_neckControl]
     and a ; Case 0 - Do nothing
         ret z
     cp $03 ; Case 3 - Follow body walking
-        jp z, Jump_003_742a
+        jp z, .walk
     ld b, a
     ; Load pointer
     ld a, [queen_pNeckPatternLow]
@@ -2118,7 +2118,7 @@ queen_moveNeck: ;{ 03:72B8
     ; Check if extending or retracting
     ld a, b
     cp $01
-        jp nz, Jump_003_73b1 ; Retracting case
+        jp nz, .retract ; Retracting case
 ; Extending case
 
     ; Check if paralyzed
@@ -2166,7 +2166,7 @@ queen_moveNeck: ;{ 03:72B8
     cp $01
         ret z
     cp $02
-        jr nz, jr_003_7328
+        jr nz, .extend
     
     ; Mouth closing with Samus in it
     xor a
@@ -2177,37 +2177,37 @@ queen_moveNeck: ;{ 03:72B8
 ret
 
 
-jr_003_7328: ;{ Extension logic
+.extend: ;{ Extension logic
     ld a, [hl]
     cp $80
-        jr z, jr_003_73a2
+        jr z, .doneExtending
 
     ld a, [queen_headY]
     ld c, a
     ld a, [hl]
     and $f0
     bit 7, a
-    jr z, jr_003_733a
+    jr z, .endIf_D
         or $0f
-    jr_003_733a:
+    .endIf_D:
     swap a
     add c
     cp $d0
-    jr c, jr_003_735c
+    jr c, .endIf_E
         ld a, [queen_stomachBombedFlag]
         and a
-        jr nz, jr_003_7355
+        jr nz, .else_F
             ld a, $04 ; Prep retraction
             ld [queen_state], a
             xor a
             ld [queen_walkStatus], a
             ld [queen_neckStatus], a
-            jr jr_003_7399
-        jr_003_7355:
+            jr .saveNeckPointer
+        .else_F:
             ld a, $0a ; Spitting Samus out
             ld [queen_state], a
-            jr jr_003_7399
-    jr_003_735c:
+            jr .saveNeckPointer
+    .endIf_E:
 
     ld [queen_headY], a
     
@@ -2216,12 +2216,12 @@ jr_003_7328: ;{ Extension logic
     swap a
     ld b, a
     bit 3, a
-    jr z, jr_003_736e
+    jr z, .endIf_G
         or $f0
         cpl
         inc a
         ld b, a
-    jr_003_736e:
+    .endIf_G:
 
     ld a, [queen_neckYMovementSum]
     add b
@@ -2241,68 +2241,67 @@ jr_003_7328: ;{ Extension logic
     inc hl
     ld a, [queen_lowHealthFlag]
     and a
-    jr z, jr_003_7399
+        jr z, .saveNeckPointer
 
     dec a
     ld [queen_lowHealthFlag], a
     push hl
         call queen_drawNeck
     pop hl
-    jr jr_003_7328
+    jr .extend
 ;}
 
-Jump_003_7399:
-jr_003_7399: ; Save neck pattern and exit
+.saveNeckPointer: ; Save neck pattern and exit
+;queen_moveNeck.saveNeckPointer:
     ld a, l
     ld [queen_pNeckPatternLow], a
     ld a, h
     ld [queen_pNeckPatternHigh], a
     ret
 
-jr_003_73a2:
+.doneExtending:
     xor a
     ld [queen_neckControl], a
     ld [queen_neckDrawingState], a
     ld a, $81
     ld [queen_neckStatus], a
     dec hl
-    jr jr_003_7399 ; Save Neck Pattern and Exit
+jr .saveNeckPointer ; Save Neck Pattern and Exit
 
-Jump_003_73b1: ; Retracting case {
+.retract: ; Retracting case {
     ld a, [frameCounter]
     and $01
         ret z
 
     ld a, [hl]
     cp $81
-    jr z, jr_003_73fc
-
+    jr z, .else_H
         ld a, [hl]
         and $f0
         swap a
         bit 3, a
-        jr z, jr_003_73cc
+        jr z, .else_I
             or $f0
             cpl
             inc a
             ld b, a
-            jr jr_003_73cf
-        jr_003_73cc:
+            jr .endIf_I
+        .else_I:
             cpl
             inc a
             ld b, a
-        jr_003_73cf:
+        .endIf_I:
     
         ld a, [queen_headY]
         add b
         ld [queen_headY], a
         bit 7, b
-        jr nz, jr_003_73de
+        jr nz, .endIf_J
             ld a, b
             cpl
             inc a
             ld b, a
-        jr_003_73de:
+        .endIf_J:
     
         ld a, [queen_neckYMovementSum]
         add b
@@ -2319,8 +2318,8 @@ Jump_003_73b1: ; Retracting case {
         add b
         ld [queen_neckXMovementSum], a
         dec hl
-        jr jr_003_7399
-    jr_003_73fc:
+        jr .saveNeckPointer
+    .else_H:
         xor a
         ld [queen_neckControl], a
         ld [queen_neckDrawingState], a
@@ -2339,10 +2338,11 @@ Jump_003_73b1: ; Retracting case {
         ld [queen_neckXMovementSum], a
         ld [queen_neckYMovementSum], a
         call queen_loadNeckBasePointer
-        jp Jump_003_7399
+        jp queen_moveNeck.saveNeckPointer
 ;}
 
-Jump_003_742a:
+.walk:
+    ; Add walk speed to head position
     ld a, [queen_walkSpeed]
     ld b, a
     ld a, [queen_headX]
@@ -3062,28 +3062,35 @@ queen_moveOneProjectile: ;{ 03:7701
 ret ;}
 
 queenStateFunc_prepEatingSamus: ;{ 03:772B - Queen State $0D: Prep Samus in mouth
+    ; Load neck pointer
     ld a, [queen_pNeckPatternLow]
     ld l, a
     ld a, [queen_pNeckPatternHigh]
     ld h, a
+    ; Move on to next state if we were at the very end of a neck extension (?)
     ld a, [hl]
     cp $81
         jp z, queenStateFunc_pickNextState
-
+    
+    ; Set queen neck to rectract
     ld a, $02
     ld [queen_neckDrawingState], a
     ld [queen_neckControl], a
+    
+    ; Adjust head downwards if it's in the upward pose
     ld a, [queen_headFrame]
     cp $03
-    jr nz, jr_003_7750
+    jr nz, .endIf
         ld a, [queen_headY]
         add $10
         ld [queen_headY], a
-    jr_003_7750:
-
+    .endIf:
+    ; Set head to normal frame
     ld a, $01
     ld [queen_headFrameNext], a
     ld [queen_headFrame], a
+    
+    ; Clear status
     xor a
     ld [queen_neckStatus], a
     
@@ -3093,109 +3100,132 @@ queenStateFunc_prepEatingSamus: ;{ 03:772B - Queen State $0D: Prep Samus in mout
     ld a, QUEEN_ACTOR_MOUTH_CLOSED ; $F5
     ld [queenActor_mouth + 3], a
     
+    ; Set state
     ld a, $0e ; Samus in mouth (head retracting)
     ld [queen_state], a
+    
+    ; Decrement neck pointer and save
     dec hl
-jp Jump_003_7399 ;}
+jp queen_moveNeck.saveNeckPointer ;}
 
 queenStateFunc_retractNeckEating: ;{ 03:776F - Queen State $0E: Samus in mouth (neck retracting)
+    ; Wait until neck has fully retracted
     ld a, [queen_neckStatus]
     cp $82
         ret nz
+    ; Set eating state to mouth closed and in place
     ld a, $03
     ld [queen_eatingState], a
+    ; Set state
     ld a, $0f ; Samus in mouth/stomach (head retracted)
     ld [queen_state], a
+    ; Animate
     ld a, $01
     ld [queen_footFrame], a
 ret ;}
 
 queenStateFunc_samusEaten: ;{ 03:7785 - Queen State $0F: Samus in mouth/stomach
+    ; Check if the mouth was just bombed
     ld a, [queen_eatingState]
     cp $04
-    jr nz, jr_003_77b8
-    
-    ld a, [queen_health]
-    sub $0a ; Hurt for 10 damage
-    ld [queen_health], a
-        jr c, jr_003_77d5
-    ld a, $05
-    ld [queen_eatingState], a
-    ld a, $02
-    ld [queen_headFrameNext], a
-    ld [queen_headFrame], a
-    ld a, $10 ; Spitting Samus out of mouth
-    ld [queen_state], a
-    ld a, $3e
-    ld [queen_stunTimer], a
-    ld a, $93
-    ld [queen_bodyPalette], a
-    ld a, $0a
-    ld [sfxRequest_noise], a
-    ret
+    jr nz, .else_A
+        ; Mouth was just bombed
+        ; Hurt queen for 10 damage, kill if necessary
+        ld a, [queen_health]
+        sub $0A
+        ld [queen_health], a
+            jr c, .kill
+        ; Set eating state to Samus escaping bombed mouth
+        ld a, $05
+        ld [queen_eatingState], a
+        ; Open mouth
+        ld a, $02
+        ld [queen_headFrameNext], a
+        ld [queen_headFrame], a
+        ; Set state
+        ld a, $10 ; Spitting Samus out of mouth
+        ld [queen_state], a
+        ; Set timer
+        ld a, $3e
+        ld [queen_stunTimer], a
+        ; Make the queen flash
+        ld a, $93
+        ld [queen_bodyPalette], a
+        ; Make noise
+        ld a, $0a
+        ld [sfxRequest_noise], a
+        ret
+    .else_A:
+        ; Check if the Queen is swallowing Samus
+        cp $06
+        jr nz, .else_B
+            ; Do nothing if so
+            ret
+        .else_B:
+            ; Check if the Queen's stomach was just bombed (exit if not)
+            cp $07
+                ret nz
+            ; Set eating state to Samus escaping stomach
+            ld a, $08
+          .killExit:
+            ld [queen_eatingState], a
+            ; Set state
+            ld a, $08 ; Queen's stomach just bombed
+            ld [queen_state], a
+            ; Have the queen flash
+            ld a, $93
+            ld [queen_bodyPalette], a
+            ; Make noise
+            ld a, $0a
+            ld [sfxRequest_noise], a
+            ret
 
-jr_003_77b8:
-    cp $06
-    jr nz, jr_003_77bd
-
-    ret
-
-
-jr_003_77bd:
-    cp $07
-    ret nz
-
-    ld a, $08
-
-jr_003_77c2:
-    ld [queen_eatingState], a
-    ld a, $08 ; Queen just bombed
-    ld [queen_state], a
-    ld a, $93
-    ld [queen_bodyPalette], a
-    ld a, $0a
-    ld [sfxRequest_noise], a
-    ret
-
-jr_003_77d5:
+.kill:
+    ; Clear the queen's health
     xor a
     ld [queen_health], a
+    ; Set eating state to dying (from mouth bombing)
     ld a, $20
-    jr jr_003_77c2
+jr .killExit
 ;}
 
 queenStateFunc_vomitingOutMouth: ;{ 03:77DD -  Queen State $10: Spitting Samus out
+    ; Wait for stun timer to expire
     ld a, [queen_stunTimer]
     and a
-    jr z, jr_003_77fd
-
-    dec a
-    ld [queen_stunTimer], a
-    cp $2e
-    jr nz, jr_003_77f2
-
-    xor a
-    ld [queen_bodyPalette], a
-    call queen_setDefaultNeckAttributes
-
-jr_003_77f2:
-    ld a, [queen_footFrame]
-    cp $02
-        ret nz
-    xor a
-    ld [queen_footFrame], a
-    ret
-
-jr_003_77fd:
-    ld [queen_eatingState], a
-    ld a, $01
-    ld [queen_headFrameNext], a
-    ld [queen_headFrame], a
-    ; Pointless state assignment given the jump right there
-    ld a, $06 ; Prep walking backwards
-    ld [queen_state], a
-    ld hl, queen_stateList + 6 ;$748a
-    jr queenStateFunc_pickNextState.direct ; Set state to queen_stateTable[6]
+    jr z, .else
+        ; Decrement timer in the meantime
+        dec a
+        ld [queen_stunTimer], a
+        
+        ; Restore body/neck palette at a timer value of $2E
+        cp $2e
+        jr nz, .endIf
+            xor a
+            ld [queen_bodyPalette], a
+            call queen_setDefaultNeckAttributes
+        .endIf:
+        
+        ; Check foot frame
+        ld a, [queen_footFrame]
+        cp $02
+            ret nz
+        ; Stop feed
+        xor a
+        ld [queen_footFrame], a
+        ret
+    .else:
+        ; Clear eating state
+        ld [queen_eatingState], a
+        ; Set head to default
+        ld a, $01
+        ld [queen_headFrameNext], a
+        ld [queen_headFrame], a
+        ; Pointless state assignment given the jump right there
+        ld a, $06 ; Prep walking backwards
+        ld [queen_state], a
+        ld hl, queen_stateList + 6 ;$748a
+        jr queenStateFunc_pickNextState.direct ; Set state to queen_stateTable[6]
 ;}
 
 ; Set default sprite attributes for neck
@@ -3217,15 +3247,21 @@ queen_setDefaultNeckAttributes: ;{ 03:7812
 ret ;}
 
 queenStateFunc_prepForwardWalk: ;{ 03:7821 - Queen State $00: Prep forward walk
+    ; Clear forward walk
     xor a
     ld [queen_walkCounter], a
+    ; Don't draw the neck
     ld [queen_neckDrawingState], a
+    ; Set to 1 (walk forwards)
     inc a
     ld [queen_walkControl], a
+    ; Have the neck follow the body (if extended at all)
     ld a, $03
     ld [queen_neckControl], a
+    ; Set foot frame
     ld a, $02
     ld [queen_footFrame], a
+    ; Set state
     ld a, $01 ; Walking forward
     ld [queen_state], a
 ret ;}
@@ -3268,80 +3304,106 @@ queenStateFunc_pickNextState: ;{ 03:7846 - Queen State $0C: Pick next state from
 ;}
 
 queenStateFunc_prepExtendingNeck: ;{ 03:7864 - Queen State $02 - Prep neck extension
-    ld hl, $c620
+    ; Activate mouth
+    ld hl, queenActor_mouth ; $C620
     ld [hl], $00
+    ; Set neck controls to extending the neck
     ld a, $01
     ld [queen_neckControl], a
     ld [queen_neckDrawingState], a
+    ; Set next state
     ld a, $03 ; Extending neck
     ld [queen_state], a
-    ld a, [$c3be]
+    
+    ; Flip flag every call
+    ld a, [queen_neckSelectionFlag]
     xor $01
-    ld [$c3be], a
+    ld [queen_neckSelectionFlag], a
+    
+    ; Default to else branch if below 100 health
     ld a, [queen_midHealthFlag]
     and a
-    jr nz, jr_003_78ac
-        ld a, [$c3be]
-        and a
-        jr z, jr_003_78ac
-            ld a, [queen_headY]
-            ld b, $02 ; downwards neck pattern
-            cp $46
-            jr c, jr_003_78a5
-                ld b, $03 ; Upwards neck pattern
-                ld a, [queen_headY]
-                add $f0
-                ld [queen_headY], a
-                ld a, $03
-                ld [queen_headFrameNext], a
-                ld [queen_headFrame], a
-            jr_003_78a5:
-            
-            ld a, b
-            ld [queen_neckPattern], a
-            jp Jump_003_78e4
-    jr_003_78ac:
+        jr nz, .else_A
+    ; Alternate to the else branch every other time
+    ld a, [queen_neckSelectionFlag]
+    and a
+    jr z, .else_A
+        ; Select downwards pattern by default
         ld a, [queen_headY]
+        ld b, $02 ; downwards neck pattern
+        
+        ; Select the upwards neck pattern if the head is below $46 pixels onscreen
+        cp $46
+        jr c, .endIf_B
+            ld b, $03
+            
+            ; Adjust head Y position for upwards frame
+            ld a, [queen_headY]
+            add -$10 ; $F0
+            ld [queen_headY], a
+            
+            ; Select upwards frame
+            ld a, $03
+            ld [queen_headFrameNext], a
+            ld [queen_headFrame], a
+        .endIf_B:
+        
+        ; Store neck pattern index
+        ld a, b
+        ld [queen_neckPattern], a
+        jp .endIf_A
+    .else_A:
+        ld a, [queen_headY]
+        ; Choose downwards 
         ld b, $00 ; downwards neck pattern
+        ; Select another neck pattern if the head is below $29 pixels onscreen
         cp $29
-        jr c, jr_003_78c5
+        jr c, .endIf_C
             ld b, $06 ; Forwards neck pattern
-            cp $4c
-            jr c, jr_003_78c5
+            ; Select the upwards neck pattern if the head is below $4C pixels onscreen
+            cp $4C
+            jr c, .endIf_C
                 ld b, $01 ; Upwards neck pattern
+                ; Adjust head Y position for upwards frame
                 ld a, [queen_headY]
-                add $f0
+                add -$10 ; $F0
                 ld [queen_headY], a
-        jr_003_78c5:
-    
+        .endIf_C:
+        
+        ; Save neck pattern
         ld a, b
         ld [queen_neckPattern], a
         
-        ; Randomly select head pose
+        ; Select head pose
+        ; Select upwards head pose by default
         ld b, $03
+        ; Select a different pose if the upwards neck pattern was n
         cp $01
-        jr z, jr_003_78dd
+        jr z, .endIf_D
+            ; Standard head pose
             ld b, $02
+            ; Randomly set mouth to open (1/4 chance)
             ld a, [rDIV]
             and $03
-            jr z, jr_003_78e4
+            jr z, .endIf_A
                 ld hl, queenActor_mouth + 3 ; $C623
                 ld [hl], QUEEN_ACTOR_MOUTH_OPEN ; $F6
-        jr_003_78dd:
-    
+        .endIf_D:
+        
+        ; Save head frame
         ld a, b
         ld [queen_headFrameNext], a
         ld [queen_headFrame], a
-    Jump_003_78e4:
-    jr_003_78e4:
+    .endIf_A:
 
-    ; Load neck pattern pointer
+    ; Set the neck point based on the index
     call queen_setNeckBasePointer
-    ; Skip first entry in the neck pattern table
-    call queen_loadNeckBasePointer ; Load
-    inc hl 
-    jp Jump_003_7399 ; Store
-;} end proc
+    ; Load pointer to HL
+    call queen_loadNeckBasePointer
+    ; Skip the first entry of the neck pointer list (the byte that is used to stop it from retracting)
+    inc hl
+    ; Save the neck pointer
+jp queen_moveNeck.saveNeckPointer ;}
 
 queenStateFunc_extendingNeck: ;{ 03:78EE - Queen State $03: Extending neck
     ; Wait until status is $81
@@ -3351,34 +3413,45 @@ queenStateFunc_extendingNeck: ;{ 03:78EE - Queen State $03: Extending neck
 jp queenStateFunc_pickNextState ;}
 
 queenStateFunc_prepRetractingNeck: ;{ 03:78F7 - Queen State $04: Prep neck retraction
+    ; Load neck pointer to HL
     ld a, [queen_pNeckPatternLow]
     ld l, a
     ld a, [queen_pNeckPatternHigh]
     ld h, a
+    ; If we were fully extended, simply move to the next state
     ld a, [hl]
     cp $81
-    jp z, queenStateFunc_pickNextState
+        jp z, queenStateFunc_pickNextState
 
+    ; Set controls to retract neck
     ld a, $02
     ld [queen_neckDrawingState], a
     ld [queen_neckControl], a
+    
+    ; If Queen's head was upwards, adjust it down
     ld a, [queen_headFrame]
     cp $03
-    jr nz, jr_003_791c
+    jr nz, .endIf
         ld a, [queen_headY]
         add $10
         ld [queen_headY], a
-    jr_003_791c:
-
+    .endIf:
+    ; Set head frame to default
     ld a, $01
     ld [queen_headFrameNext], a
     ld [queen_headFrame], a
+    
+    ; Close the queen's mouth
     ld a, QUEEN_ACTOR_MOUTH_CLOSED ; $F5
     ld [queenActor_mouth + 3], a
+    
+    ; Set state manually
     ld a, $05 ; Retracting neck
     ld [queen_state], a
+    
+    ; Decrement/save neck pointer (in case it was at the end of the list?)
     dec hl
-jp Jump_003_7399 ;}
+jp queen_moveNeck.saveNeckPointer ;}
 
 queenStateFunc_retractingNeck: ;{ 03:7932 - Queen State $05: Retracting Neck
     ; Wait until status is $82
@@ -3388,14 +3461,19 @@ queenStateFunc_retractingNeck: ;{ 03:7932 - Queen State $05: Retracting Neck
 jp queenStateFunc_pickNextState ;}
 
 queenStateFunc_prepBackwardWalk: ;{ 03:793B Queen State $06: Prep walking backwards
+    ; Walk backwards
     ld a, $02
     ld [queen_walkControl], a
+    ; Move neck with head
     ld a, $03
     ld [queen_neckControl], a
+    ; Don't update neck rendering
     xor a
     ld [queen_neckDrawingState], a
+    ; Set foot frame
     ld a, $82
     ld [queen_footFrame], a
+    ; Set state
     ld a, $07 ; Walking backward
     ld [queen_state], a
 ret ;}
@@ -3428,6 +3506,7 @@ queenStateFunc_stomachBombed: ;{ 03:7970 - Queen State $08: Stomach Just Bombed
     ld a, $01
     ld [queen_neckControl], a
     ; Do not perform the standard neck drawing procedure with extending the neck
+    ;  because this function will manually draw the bent neck sprite
     xor a
     ld [queen_neckDrawingState], a
     
@@ -3472,13 +3551,15 @@ queenStateFunc_stomachBombed: ;{ 03:7970 - Queen State $08: Stomach Just Bombed
         ld [hl+], a
         ; Write attributes
         ld [hl], $80
+        ; Iterate to next sprite
         inc l
         inc de
         ld a, l
-        cp $1c
+        cp LOW(queen_bentNeckOAM_end) ; $1C
     jr nz, .loop
 
-    ; Note: queen_pOamScratchpadLow needs to be aligned to 8 bytes for some reason.
+    ; Decrement queen_pOamScratchpadLow by four
+    ; (unsure why it does this, but I think it's to make the sprite erasing code work properly)
     dec l
     dec l
     dec l
@@ -3491,12 +3572,14 @@ queenStateFunc_stomachBombed: ;{ 03:7970 - Queen State $08: Stomach Just Bombed
     ; Select neck pattern (vomiting Samus)
     ld a, $04
     ld [queen_neckPattern], a
-    ; ?
+    ; Set flag
     ld [queen_stomachBombedFlag], a
-    call queen_setNeckBasePointer ; Load neck pattern pointer
+    ; Set neck pointer based on index
+    call queen_setNeckBasePointer
+    ; Skip the first byte of the neck speed list (because it tells the Queen to stop retracting the neck)
     call queen_loadNeckBasePointer
     inc hl
-jp Jump_003_7399 ;}
+jp queen_moveNeck.saveNeckPointer ;}
 
 queenStateFunc_prepVomitingSamus: ;{ 03:79D0 - Queen State $09: Prep spitting Samus out of stomach
     ; Wait until neck is extended
@@ -3519,7 +3602,7 @@ queenStateFunc_vomitingSamus: ;{ 03:79E1 - Queen State $0A: Spitting Samus out o
         ; Decrement timer
         dec a
         ld [queen_delayTimer], a
-        ; Exit it foot is animating
+        ; Exit it foot is not on a particular frame
         ld a, [queen_footFrame]
         cp $02
             ret nz
@@ -3535,11 +3618,11 @@ queenStateFunc_vomitingSamus: ;{ 03:79E1 - Queen State $0A: Spitting Samus out o
         ; Check if queen is dead
         ld a, [queen_health]
         and a
-            jr z, jr_003_7a4d
+            jr z, queen_killFromStomach
         ; Apply stomach bomb damage, kill if applicable
         sub $1E ; Hurt for 30 damage with bombs
         ld [queen_health], a
-            jr c, jr_003_7a4d
+            jr c, queen_killFromStomach
         
         ; Set neck to retract
         ld a, $02
@@ -3554,7 +3637,7 @@ queenStateFunc_vomitingSamus: ;{ 03:79E1 - Queen State $0A: Spitting Samus out o
         ld a, [queen_pNeckPatternHigh]
         ld h, a
         dec hl
-        jp Jump_003_7399
+        jp queen_moveNeck.saveNeckPointer
 ;}
 
 queenStateFunc_doneVomitingSamus: ;{ 03:7A1D - Queen State $0B: Done spitting Samus out of stomach
@@ -3597,15 +3680,21 @@ queenStateFunc_doneVomitingSamus: ;{ 03:7A1D - Queen State $0B: Done spitting Sa
     ; Pick next state
 jp queenStateFunc_pickNextState ;}
 
-jr_003_7a4d: ;{ Kill Queen from stomach
+queen_killFromStomach: ;{ 03:7A4D Kill Queen from stomach
+    ; Deactivate all enemies
     ld b, $0d
-    ld hl, $c600
+    ld hl, enemyDataSlots ; $C600
     call queen_deactivateActors.arbitrary
+    
+    ; Set neck to extend
     ld a, $01
     ld [queen_neckControl], a
     ld [queen_neckDrawingState], a
+    ; Set state
     ld a, $11 ; Prep death
     ld [queen_state], a
+    
+    ; Clear several variables
     xor a
     ld [queen_neckXMovementSum], a
     ld [queen_neckYMovementSum], a
@@ -3615,34 +3704,43 @@ jr_003_7a4d: ;{ Kill Queen from stomach
     ld [queen_footFrame], a
     ld [queen_headFrameNext], a
     ld [queen_lowHealthFlag], a
+    
+    ; Reset OAM scratchpad pointer
     ld hl, queen_objectOAM ; $C308
     ld a, l
     ld [queen_pOamScratchpadLow], a
     ld a, h
     ld [queen_pOamScratchpadHigh], a
+    ; Set priority bit of the first two sprites (why?)
     inc l
     inc l
     inc l
-    ld [hl], $80
+    ld [hl], OAMF_PRI ;$80
     inc l
     inc l
     inc l
     inc l
-    ld [hl], $80
+    ld [hl], OAMF_PRI ;$80
+    
+    ; Close the exit
     call queen_closeFloor
+    
+    ; Play sound
     ld a, $0f
     ld [sfxRequest_noise], a
+    
+    ; Drop the head to the ground
     ld a, $05 ; Dying neck pattern
     ld [queen_neckPattern], a
     call queen_setNeckBasePointer
     call queen_loadNeckBasePointer
     inc hl
-jp Jump_003_7399 ;}
+jp queen_moveNeck.saveNeckPointer ;}
 
 ; Seals the bottom exit upon death
 queen_closeFloor: ;{ 03:7AA8
-    ; Get address to write
-    ld hl, $9b0e
+    ; Get address to write. (X,Y) = (14,24)
+    ld hl, $9800 + $20*24 + 14 ; $9B0E
     
     ; Wait for HBlank
     .waitLoop_A:
@@ -3680,6 +3778,7 @@ queenStateFunc_prepDeath: ;{ 03:7ABF - State $11: Prep Death
     xor a
     ld [queen_health], a
     ld [queen_deathArrayIndex], a
+    
     ; Set table for disintegration animation
     ld hl, queen_deathArray
     ld [hl], $ee
@@ -3877,7 +3976,7 @@ queenStateFunc_deleteBody: ;{ 03:7B9D - Queen State $13: Dying Part 2 (delete bo
     add hl, de
 
     ; Check if we're at the end
-    ;  Note: this check relies on the fact that the queen's body is less than 128 pixels tall
+    ;  Note: this check relies on the fact that the queen's body is less than 128 pixels tall (i.e. contained in a range of less than 256 tiles from top to bottom)
     ld a, l
     cp LOW(queenDeath_bodyEnd)
     jr z, .else
