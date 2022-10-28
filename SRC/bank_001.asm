@@ -3111,25 +3111,25 @@ miscIngameTasks: ;{ 01:57F2
                 jr nc, .else_I
                     ; Check if health decreased from the last frame
                     ld b, a
-                    ld a, [$d0a1]
+                    ld a, [samus_prevHealthLowByte]
                     cp b
                     jr z, .endIf_H
                         ; Queue up new sound effect based on tens digit
                         ld a, b
-                        ld [$d0a1], a
+                        ld [samus_prevHealthLowByte], a
                         and $f0
                         swap a
                         inc a
-                        ld [$cfe5], a
+                        ld [sfxRequest_lowHealthBeep], a
                         jr .endIf_H
             .else_I:
                 ; Check if not already clear
-                ld a, [$cfe6]
+                ld a, [sfxPlaying_lowHealthBeep]
                 and a
                 jr z, .endIf_H
                     ; Clear the low health beep
                     ld a, $ff
-                    ld [$cfe5], a
+                    ld [sfxRequest_lowHealthBeep], a
     .endIf_H: ;}
 
 ; Handle fade-in

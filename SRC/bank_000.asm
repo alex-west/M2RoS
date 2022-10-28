@@ -10241,7 +10241,7 @@ gameMode_unusedA: ;{ 00:3ACE
     ; Clear sound, graphics, etc.
     call silenceAudio_longJump
     ld a, $ff
-    ld [$cfe5], a
+    ld [sfxRequest_lowHealthBeep], a
     call disableLCD
     call clearTilemaps
     xor a
@@ -10315,7 +10315,7 @@ gameMode_unusedC: ;{ 00:3B43
     ; Clear sound, graphics, etc.
     call silenceAudio_longJump
     ld a, $ff
-    ld [$cfe5], a
+    ld [sfxRequest_lowHealthBeep], a
     call disableLCD
     call clearTilemaps
     xor a

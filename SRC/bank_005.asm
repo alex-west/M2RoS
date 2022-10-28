@@ -1149,7 +1149,7 @@ prepareCredits: ;{ 05:587F
         ld [countdownTimerLow], a
         ; Remove the low health beep sound
         ld a, $ff
-        ld [$cfe5], a
+        ld [sfxRequest_lowHealthBeep], a
     .endIf_A:
 
     ; Disable LCD

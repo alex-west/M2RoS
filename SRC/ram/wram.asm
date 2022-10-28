@@ -207,7 +207,7 @@ rightEdge_pixel: ds 1 ; $C414
 leftEdge_screen: ds 1 ; $C415
 leftEdge_pixel: ds 1 ; $C416
 
-
+metroid_babyTouchingTile: ds 1 ; $C417 - The tile index the baby metroid is touching, according to the enemy BG collision function
 
 def unused_romBankPlusOne = $C418 ; Set to [room bank+1] in $2:4000, never read
 ;
@@ -230,6 +230,7 @@ def numEnemies = $C425 ; Number of enemies (both currently active and offscreen)
 def numActiveEnemies = $C426 ; Number of currently active enemies (used to exit drawEnemies early).
 def numOffscreenEnemies = $C427 ; Number of offscreen enemies loaded in. Unused?
 ;
+def unknown_C42D = $C42D ; en_bgCollisionResult for the Omega Metroid's fireball. Written to, but never read
 def drawEnemy_yPos   = $C42E ; Set to enemy Y position in $1:5A9A
 def drawEnemy_xPos   = $C42F ; Set to enemy X position in $1:5A9A
 def drawEnemy_sprite = $C430 ; Set to enemy sprite ID in $1:5A9A. Used as index for pointer table at $1:5AB1
@@ -1081,7 +1082,7 @@ def credits_runAnimCounter = $D09D ; Counts video frames between animation frame
 def justStartedTransition = $D09E ; $00 = Normal, $FF = Just entered a screen transition
 def credits_scrollingDone  = $D09F ; Flag to indicate if credits stopped scrolling (allows timer to display)
 def debugFlag = $D0A0 ; Activates debug pause menu and other stuff
-;$D0A1: Previous low health
+def samus_prevHealthLowByte = $D0A1 ; Previous value of health (low-byte)
 def gameTimeSeconds = $D0A2 ; 256-frames long (~1/14 of a minute), not 60 frames long. In-game time, but not saved
 def activeSaveSlot = $D0A3 ; Save slot
 def title_showClearOption = $D0A4 ; Show clear save slot option flag

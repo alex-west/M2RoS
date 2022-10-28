@@ -1304,7 +1304,7 @@ enCollision_right: ;{ 02:4608
         ret c
     jr .exitA
 
-.midMedium: ; 02:4662 - Note: saves tile number to $C417
+.midMedium: ; 02:4662 - Note: saves tile number to metroid_babyTouchingTile
 ;(7,-6)
 ;(7, 0)
 ;(7, 6)
@@ -1317,7 +1317,7 @@ enCollision_right: ;{ 02:4608
     add $07
     ld [enemy_testPointXPos], a
     call getTileIndex.enemy
-    ld [$c417], a
+    ld [metroid_babyTouchingTile], a
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1325,7 +1325,7 @@ enCollision_right: ;{ 02:4608
     add $06
     ld [enemy_testPointYPos], a
     call getTileIndex.enemy
-    ld [$c417], a
+    ld [metroid_babyTouchingTile], a
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1333,7 +1333,7 @@ enCollision_right: ;{ 02:4608
     add $06
     ld [enemy_testPointYPos], a
     call getTileIndex.enemy
-    ld [$c417], a
+    ld [metroid_babyTouchingTile], a
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1559,7 +1559,7 @@ enCollision_left: ;{ 02:47E1
         ret c
     jr .exitA
 
-.midMedium: ; 02:483B - Note: saves tile number to $C417
+.midMedium: ; 02:483B - Note: saves tile number to metroid_babyTouchingTile
 ;(-7,-6)
 ;(-7, 0)
 ;(-7, 6)
@@ -1572,7 +1572,7 @@ enCollision_left: ;{ 02:47E1
     sub $07
     ld [enemy_testPointXPos], a
     call getTileIndex.enemy
-    ld [$c417], a
+    ld [metroid_babyTouchingTile], a
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1580,7 +1580,7 @@ enCollision_left: ;{ 02:47E1
     add $06
     ld [enemy_testPointYPos], a
     call getTileIndex.enemy
-    ld [$c417], a
+    ld [metroid_babyTouchingTile], a
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1588,7 +1588,7 @@ enCollision_left: ;{ 02:47E1
     add $06
     ld [enemy_testPointYPos], a
     call getTileIndex.enemy
-    ld [$c417], a
+    ld [metroid_babyTouchingTile], a
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1826,7 +1826,7 @@ enCollision_down: ;{ 02:49BA
     res 1, [hl]
 ret
 
-.midMedium: ; 02:4A28 - Note: saves tile number to $C417
+.midMedium: ; 02:4A28 - Note: saves tile number to metroid_babyTouchingTile
 ;(-6,7)
 ;( 0,7)
 ;( 6,7)
@@ -1839,7 +1839,7 @@ ret
     sub $06
     ld [enemy_testPointXPos], a
     call getTileIndex.enemy
-    ld [$c417], a
+    ld [metroid_babyTouchingTile], a
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1847,7 +1847,7 @@ ret
     add $06
     ld [enemy_testPointXPos], a
     call getTileIndex.enemy
-    ld [$c417], a
+    ld [metroid_babyTouchingTile], a
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -1855,7 +1855,7 @@ ret
     add $06
     ld [enemy_testPointXPos], a
     call getTileIndex.enemy
-    ld [$c417], a
+    ld [metroid_babyTouchingTile], a
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -2108,7 +2108,7 @@ enCollision_up: ;{ 02:4BC2
     res 3, [hl]
     ret
 
-.midMedium: ; 02:4C30 - Note: saves tile number to $C417
+.midMedium: ; 02:4C30 - Note: saves tile number to metroid_babyTouchingTile
 ;(-6,-7)
 ;( 0,-7)
 ;( 6,-7)
@@ -2121,7 +2121,7 @@ enCollision_up: ;{ 02:4BC2
     sub $06
     ld [enemy_testPointXPos], a
     call getTileIndex.enemy
-    ld [$c417], a
+    ld [metroid_babyTouchingTile], a
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -2129,7 +2129,7 @@ enCollision_up: ;{ 02:4BC2
     add $06
     ld [enemy_testPointXPos], a
     call getTileIndex.enemy
-    ld [$c417], a
+    ld [metroid_babyTouchingTile], a
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -2137,7 +2137,7 @@ enCollision_up: ;{ 02:4BC2
     add $06
     ld [enemy_testPointXPos], a
     call getTileIndex.enemy
-    ld [$c417], a
+    ld [metroid_babyTouchingTile], a
     ld hl, enemySolidityIndex
     cp [hl]
         ret c
@@ -10229,7 +10229,7 @@ ret
 
 .fireballHit:
     ld a, [en_bgCollisionResult]
-    ld [$c42d], a
+    ld [unknown_C42D], a
     xor a
     ldh [hEnemy.counter], a
     ldh [hEnemy.state], a
@@ -11070,7 +11070,7 @@ baby_checkBlocks: ;{ 02:7D2A - Check if blocks need to be cleared
             jr z, .endIf_A
 
         .clearBlockY:
-        ld a, [$c417]
+        ld a, [metroid_babyTouchingTile]
         cp $64 ; Tile ID of the block the baby can clear
         call z, baby_clearBlock
     
@@ -11101,7 +11101,7 @@ baby_checkBlocks: ;{ 02:7D2A - Check if blocks need to be cleared
             ret z
     
         .clearBlockX:
-        ld a, [$c417]
+        ld a, [metroid_babyTouchingTile]
         cp $64 ; Tile ID of the block the baby can clear
             call z, baby_clearBlock
     
