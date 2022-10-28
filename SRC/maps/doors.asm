@@ -2465,10 +2465,10 @@ door19D:
     SOLIDITY $2
     TILETABLE $3
     COPY_SPR gfx_queenSPR, vramDest_enemies, $0500
-    COPY_DATA bg_queenHead, _SCRN1, $0020
-    COPY_DATA bg_queenHeadRow2, (_SCRN1+$20), $0020
-    COPY_DATA bg_queenHeadRow3, (_SCRN1+$40), $0020
-    COPY_DATA bg_queenHeadRow4, (_SCRN1+$60), $0020
+    COPY_DATA bg_queenHead.row1, _SCRN1, $0020
+    COPY_DATA bg_queenHead.row2, (_SCRN1+$20), $0020
+    COPY_DATA bg_queenHead.row3, (_SCRN1+$40), $0020
+    COPY_DATA bg_queenHead.row4, (_SCRN1+$60), $0020
     ENTER_QUEEN $F, $0F48, $0EAE, $0F02, $0EDE
     END_DOOR
 
