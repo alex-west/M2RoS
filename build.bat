@@ -19,6 +19,12 @@ if errorlevel 1 goto errorLINK
 echo.  Success
 echo. 
 
+echo. Fixing header
+rgbfix -v out/M2RoS.gb
+if errorlevel 1 goto errorFIX
+echo.  Done
+echo.
+
 certutil -hashfile out/M2RoS.gb MD5
 echo.
 fc /b Metroid2.gb out\M2RoS.gb
@@ -37,6 +43,11 @@ goto done
 :errorLINK
 echo.
 echo. Linker Error.
+echo.
+goto done
+:errorFIX
+echo.
+echo. RGBFIX Error.
 echo.
 
 :done
