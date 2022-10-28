@@ -82,7 +82,7 @@ def arachnus_health = $C394 ; Set in procedure at 02:511C
 ;$C395: unused
 ;$C396: unused
 
-section "Queen Stuff 1", wram0[$C3A0]
+section "Queen Variables", wram0[$C3A0]
 ; Queen variables appear to start at $C3A0
 queen_bodyY: ds 1 ; $C3A0 - Y position of the Queen's body (used for the setting the raster split and setting the hitbox)
 queen_bodyXScroll: ds 1 ; $C3A1 - LCD interrupt handler scroll X (higher numbers -> body is more left)

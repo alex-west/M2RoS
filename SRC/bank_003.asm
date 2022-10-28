@@ -1020,13 +1020,13 @@ ret ;}
 
 ; Neck swoop patterns
 queen_neckPatternPointers: ;{ 03:6C8E - Indexed by queen_neckPattern
-    dw table_6C9C ; 0 - Down 1 (curving up)
-    dw table_6CB2 ; 1 - Up 1
-    dw table_6D00 ; 2 - Down 2 (curving down)
-    dw table_6CC8 ; 3 - Up 2
-    dw table_6D1E ; 4 - Up, steep (being spat out)
-    dw table_6D27 ; 5 - Down, steep, clips through floor (used during death)
-    dw table_6CE7 ; 6 - Straight ahead (slight U shape)
+    dw .down_A ; 0 - Down 1 (curving up)
+    dw .up_A ; 1 - Up 1
+    dw .down_B ; 2 - Down 2 (curving down)
+    dw .up_B ; 3 - Up 2
+    dw .vomiting ; 4 - Up, steep (being spat out)
+    dw .dying ; 5 - Down, steep, clips through floor (used during death)
+    dw .forward ; 6 - Straight ahead (slight U shape)
 
 ; These movement strings are traversed forwards when extending the neck
 ;  and backwards when retracting the neck
@@ -1037,24 +1037,24 @@ queen_neckPatternPointers: ;{ 03:6C8E - Indexed by queen_neckPattern
 ; The movement vectors are YX nybble pairs, with the Y component being signed
 ;  and the X component being unsigned
 
-table_6C9C: ; 03:6C9C - 0
+.down_A: ; 03:6C9C - 0
     db $81, $33, $33, $32, $32, $32, $32, $33, $23, $23, $24, $23, $23, $23, $24, $13
     db $13, $13, $13, $13, $00, $80
-table_6CB2: ; 03:6CB2 - 1
+.up_A: ; 03:6CB2 - 1
     db $81, $E3, $E3, $E3, $E3, $E3, $E2, $E2, $E2, $E2, $E2, $E2, $D2, $D2, $D2, $D2
     db $D2, $D2, $00, $00, $00, $80
-table_6CC8: ; 03:6CC8 - 3
+.up_B: ; 03:6CC8 - 3
     db $81, $01, $01, $01, $01, $F1, $01, $F1, $F1, $F1, $F1, $F1, $F1, $F2, $F2, $E2
     db $E2, $E2, $E2, $E2, $E2, $E2, $D2, $D2, $D2, $D2, $D2, $00, $00, $00, $80
-table_6CE7: ; 03:6CE7 - 6
+.forward: ; 03:6CE7 - 6
     db $81, $01, $02, $12, $02, $12, $12, $12, $12, $13, $13, $13, $F3, $03, $03, $F3
     db $03, $F3, $F3, $F3, $00, $00, $00, $00, $80
-table_6D00: ; 03:6D00 - 2
+.down_B: ; 03:6D00 - 2
     db $81, $01, $01, $01, $01, $01, $01, $02, $02, $12, $02, $12, $02, $12, $12, $12
     db $12, $12, $22, $22, $22, $23, $23, $33, $33, $33, $00, $00, $00, $80
-table_6D1E: ; 03:6D1E - 4
+.vomiting: ; 03:6D1E - 4
     db $81, $93, $93, $93, $D3, $00, $00, $00, $80
-table_6D27: ; 03:6D27 - 5
+.dying: ; 03:6D27 - 5
     db $81, $10, $20, $20, $20, $20, $20, $21, $21, $20, $20, $20, $20, $20, $20, $21
     db $21, $20, $20, $20, $20, $20, $21, $21, $21, $20, $20, $20, $20, $20, $21, $21
     db $21, $00, $80
@@ -2176,167 +2176,225 @@ queen_moveNeck: ;{ 03:72B8
     ld [queen_state], a
 ret
 
-
 .extend: ;{ Extension logic
+    ; Branch ahead if done extending
     ld a, [hl]
     cp $80
         jr z, .doneExtending
-
+    
+    ; Save Y position to C
     ld a, [queen_headY]
     ld c, a
+    
+    ; Load Y velocity (signed value)
     ld a, [hl]
     and $f0
+    
+    ; Sign-extend (if necessary) and swap nybbles
     bit 7, a
     jr z, .endIf_D
         or $0f
     .endIf_D:
     swap a
+    
+    ; A = Velocity + Position
     add c
+    
+    ; Check if Queen's head is below $D0 (nearly impossible in a normal fight?)
     cp $d0
     jr c, .endIf_E
+        ; If so, check if the queen's stomach was just bombed or not
         ld a, [queen_stomachBombedFlag]
         and a
         jr nz, .else_F
+            ; If not, just immediately retract the neck
             ld a, $04 ; Prep retraction
             ld [queen_state], a
+            ; Clear variables
             xor a
             ld [queen_walkStatus], a
             ld [queen_neckStatus], a
             jr .saveNeckPointer
         .else_F:
+            ; If so, just spit Samus out
             ld a, $0a ; Spitting Samus out
             ld [queen_state], a
             jr .saveNeckPointer
     .endIf_E:
 
+    ; Save new Y position
     ld [queen_headY], a
     
+    ; Reload Y velocity and save to B
     ld a, [hl]
     and $f0
     swap a
     ld b, a
+    ; Check if it was negative
     bit 3, a
     jr z, .endIf_G
+        ; If so, sign-extend it
         or $f0
+        ; Then negate it so we have the absolute value and save it to B
         cpl
         inc a
         ld b, a
     .endIf_G:
-
+    ; Add the Y speed to the running tally of Y movement (for rendering)
     ld a, [queen_neckYMovementSum]
     add b
     ld [queen_neckYMovementSum], a
     
+    ; Load the X position (unsigned)
     ld a, [hl]
     and $0f
     ld c, a
     ld a, [queen_headX]
     add c
     ld [queen_headX], a
-    
+    ; Add the X speed to the running tally of X movement (for rendering)
     ld a, [queen_neckXMovementSum]
     add c
     ld [queen_neckXMovementSum], a
     
+    ; Increment pointer to next value
     inc hl
+    
+    ; Exit if low-health flag is zero
     ld a, [queen_lowHealthFlag]
     and a
         jr z, .saveNeckPointer
-
+    
+    ; Else, clear the low-health flag (just for this frame)
     dec a
     ld [queen_lowHealthFlag], a
+    ; And then draw the neck preemptively and run through this loop again as well
+    ; So the neck extends twice as fast during the queen's desperation mode
     push hl
         call queen_drawNeck
     pop hl
-    jr .extend
+jr .extend
 ;}
 
-.saveNeckPointer: ; Save neck pattern and exit
-;queen_moveNeck.saveNeckPointer:
+.saveNeckPointer:
+    ; Save neck pattern and exit
     ld a, l
     ld [queen_pNeckPatternLow], a
     ld a, h
     ld [queen_pNeckPatternHigh], a
-    ret
+ret
 
 .doneExtending:
+    ; Stop drawing/moving neck
     xor a
     ld [queen_neckControl], a
     ld [queen_neckDrawingState], a
+    ; Set status to "done"
     ld a, $81
     ld [queen_neckStatus], a
+    ; Decrement pointer so it isn't sitting on the "stop extending" byte
     dec hl
 jr .saveNeckPointer ; Save Neck Pattern and Exit
 
 .retract: ; Retracting case {
+    ; Only act every other frame
     ld a, [frameCounter]
     and $01
         ret z
-
+    
+    ; Check if the neck is done retracting
     ld a, [hl]
     cp $81
     jr z, .else_H
+        ; If not, move it back
+        
+        ; Load Y velocity from upper nybble
         ld a, [hl]
         and $f0
         swap a
+        ; Check if it's positive or negative
         bit 3, a
         jr z, .else_I
+            ; If negative, then sign-extend it
             or $f0
+            ; And make it positive instead
             cpl
             inc a
             ld b, a
             jr .endIf_I
         .else_I:
+            ; If positive, make it negative instead
             cpl
             inc a
             ld b, a
         .endIf_I:
-    
+        ; Add the inverted Y velocity to the Y position
         ld a, [queen_headY]
         add b
         ld [queen_headY], a
+        
+        ; Check if the inverted velocity was negative
         bit 7, b
         jr nz, .endIf_J
+            ; If it was negative, make it positive
             ld a, b
             cpl
             inc a
             ld b, a
         .endIf_J:
-    
+        ; Add it to the running Y movement sum (for un-rendering the neck)
         ld a, [queen_neckYMovementSum]
         add b
         ld [queen_neckYMovementSum], a
+        
+        ; Load the X speed from the lower nybble
         ld a, [hl]
         and $0f
+        ; Negate it
         cpl
         inc a
         ld b, a
+        ; Add it to the head's X position
         ld a, [queen_headX]
         add b
         ld [queen_headX], a
+        ; And to the running X movement sum
         ld a, [queen_neckXMovementSum]
         add b
         ld [queen_neckXMovementSum], a
+        
+        ; Iterate to previous byte in the movement string
         dec hl
         jr .saveNeckPointer
     .else_H:
+        ; Stop updating neck
         xor a
         ld [queen_neckControl], a
         ld [queen_neckDrawingState], a
+        ; Signal that the neck is done retracting
         ld a, $82
         ld [queen_neckStatus], a
+        
+        ; Clear eating state (just in case)
         xor a
         ld [queen_eatingState], a
+        ; Close mouth
         ld hl, queenActor_mouth + 3 ; $C623
         ld [hl], QUEEN_ACTOR_MOUTH_CLOSED ; $F5
+        
+        ; Clear OAM scratchpad pointer
         ld hl, spriteC300
         ld a, l
         ld [queen_pOamScratchpadLow], a
         ld a, h
         ld [queen_pOamScratchpadHigh], a
+        
+        ; Reset movement sum (?)
         ld a, $09
         ld [queen_neckXMovementSum], a
         ld [queen_neckYMovementSum], a
+        
+        ; Save neck pointer where it's at
         call queen_loadNeckBasePointer
         jp queen_moveNeck.saveNeckPointer
 ;}
