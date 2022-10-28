@@ -1,6 +1,6 @@
 # Return of Samus Disassembly
 
-A disassembly of one of my favorite Game Boy games -- still very much a work in progress at the moment. Feel free to contribute.
+A disassembly of one of my favorite Game Boy games. A first-pass over every function of code has been completed, but there are still plenty of improvements to be made to make the code more intelligible and usable. Feel free to contribute.
 
 ## Build Instructions
 
@@ -12,18 +12,20 @@ The resultant file should have this hash: `md5: 9639948ad274fa15281f549e5f9c4d87
 
 ## How to Contribute
 
-1. Fork this repository.
+1. Fork this repository (if you please).
 2. Make something better. Perhaps start by doing something like:
+   - Checking the issue tracker.
    - Giving a function or variable a (better) name.
    - Properly defining a RAM address (eg. labelName: ds 1).
+   - Turning a magic number into a constant.
    - Turning a raw pointer (eg. $4242) into a proper label (eg. enemyAI_squeek).
-   - Adding a missing label
-   - Adding informative comments
+   - Adding a missing label.
+   - Adding informative comments.
    - etc.
 3. Verify that your changes still result in a byte-for-byte identical game.
 4. Submit a pull request.
 
-At the current phase of this project, please refrain from moving any chunk of code into a separate file.
+Please refrain from moving any chunk of code into a separate file without first discussing it in the issue tracker.
 
 If you have questions or comments, please drop by the #metroid-ii channel on the [MetConst Discord](https://discord.gg/xDwaaqa).
 
