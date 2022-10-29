@@ -1109,25 +1109,25 @@ setChannelOptionSet:
 ;{
 .square1
     push hl
-    ld hl, $ff10
+    ld hl, rAUD1SWEEP
     ld b, $05
     jr .merge
 
 .square2
     push hl
-    ld hl, $ff16
+    ld hl, rAUD2LEN
     ld b, $04
     jr .merge
 
 .wave
     push hl
-    ld hl, $ff1a
+    ld hl, rAUD3ENA
     ld b, $05
     jr .merge
 
 .noise
     push hl
-    ld hl, $ff20
+    ld hl, rAUD4LEN
     ld b, $04
     jr .merge
 
@@ -1153,7 +1153,7 @@ audioPause:
     ld [sfxPlaying_noise], a
     ld a, $40
     ld [audioPauseSoundEffectTimer], a
-    ld de, $487c
+    ld de, pausedOptionSets.frame40
 ;}
 
 handleAudio_paused_noiseSfx:
@@ -1164,25 +1164,25 @@ handleAudio_paused_noiseSfx:
 
 handleAudio_paused_frame3D:
 ;{
-    ld de, $4880
+    ld de, pausedOptionSets.frame3D
     jr handleAudio_paused_noiseSfx
 ;}
 
 handleAudio_paused_frame32:
 ;{
-    ld de, $488e
+    ld de, pausedOptionSets.frame32
     jr handleAudio_paused_noiseSfx
 ;}
 
 handleAudio_paused_frame27:
 ;{
-    ld de, $4897
+    ld de, pausedOptionSets.frame27
     jr handleAudio_paused_noiseSfx
 ;}
 
 handleAudio_paused_frame3F:
 ;{
-    ld de, $4884
+    ld de, pausedOptionSets.frame3F
 ;}
 
 handleAudio_paused_square1Sfx:
@@ -1193,19 +1193,19 @@ handleAudio_paused_square1Sfx:
 
 handleAudio_paused_frame3A:
 ;{
-    ld de, $4889
+    ld de, pausedOptionSets.frame3A
     jr handleAudio_paused_square1Sfx
 ;}
 
 handleAudio_paused_frame2F:
 ;{
-    ld de, $4892
+    ld de, pausedOptionSets.frame2F
     jr handleAudio_paused_square1Sfx
 ;}
 
 handleAudio_paused_frame24:
 ;{
-    ld de, $489b
+    ld de, pausedOptionSets.frame24
     jr handleAudio_paused_square1Sfx
 ;}
 

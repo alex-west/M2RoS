@@ -1165,7 +1165,7 @@ prepareCredits: ;{ 05:587F
 
     call clearTilemaps    
     ; Clear OAM buffer
-    ld hl, $c0ff
+    ld hl, wram_oamBuffer + $FF ; $C0FF
     ld a, $ff
     ld c, $01
     ld b, $00
