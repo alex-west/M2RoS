@@ -1,13 +1,11 @@
 ; WRAM
 
-section "WRAM Bank0", wram0[$c000]
-
 ;;;; $C000..CFFF: WRAM bank 0 ;;;
 ;{
-OAM_MAX = $a0 ; 160 bytes -> 40 hardware sprites
-wram_oamBuffer:: ds $A0 ; $C000
-;$C000..9F: OAM
-;{
+section "WRAM Bank 0 - OAM Buffer", wram0[$C000] ;{
+
+OAM_MAX = $A0 ; 40 hardware sprites -> 160 bytes
+wram_oamBuffer:: ds OAM_MAX ;{ $C000..9F: OAM Entries
 ;    + 0: Y position
 ;    + 1: X position
 ;    + 2: Tile number
@@ -17,18 +15,33 @@ wram_oamBuffer:: ds $A0 ; $C000
 ;         40: Y flip
 ;         80: Priority (set: behind background)
 ;}
-;
 
-; Pixel coordinate of a tile to read
-def tileY = $C203 ; Tile Y (see $22BC)
-def tileX = $C204 ; Tile X (see $22BC)
-def scrollY = $C205 ; Scroll Y
-def scrollX = $C206 ; Scroll X
+;}
+
+; $C0A0-$C1FF: Unused
+; WARNING: Most OAM buffer routines do not appear to do proper of bounds checking,
+;  meaning that if the OAM buffer overflows then then these RAM addresses could be corrupted.
+;  Be advised.
+
+section "WRAM Bank 0 - C200", wram0[$C200] ;{
+
+ds 1 ; $C200 - Unused
+ds 1 ; $C201 - Unused
+ds 1 ; $C202 - Unused
+
+; Tilemap pixel coordinate of a tile to read
+tileY: ds 1 ; $C203 - Tile Y (see $22BC)
+tileX: ds 1 ; $C204 - Tile X (see $22BC)
+
+; Written to the hardward scroll registers
+scrollY: ds 1 ; $C205 - Scroll Y
+scrollX: ds 1 ; $C206 - Scroll X
+
 ;
 def pTilemapDestLow  = $C215 ; Tilemap destination pointer based on the given xy coordinates in ([$C204], [$C203]) (see $22BC)
 def pTilemapDestHigh = $C216 ;  "" (high byte)
 
-;
+
 def gameOver_LCDC_copy = $C219 ; LCD control mirror. Only set by death routine. This variable is pretty much useless, set to 0 on boot and to C3h by game over, checked for bitset 8 by $2266 (get tilemap value)
 ;{
 ;    v = emwdMsob
@@ -45,6 +58,7 @@ def gameOver_LCDC_copy = $C219 ; LCD control mirror. Only set by death routine. 
 ;
 def unknown_C227 = $C227
 
+;}
 
 def enSprite_blobThrower = $C300
 def spriteC300 = $C300 ;$C300..3D: Set to [$2:4FFE..503A] in $2:4DB1
