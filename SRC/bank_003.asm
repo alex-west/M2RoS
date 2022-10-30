@@ -586,7 +586,7 @@ loadOneEnemy: ;{ 03:422F
     ld [hl], a
 
     ; Increment number of enemies (total/active)
-    ld hl, numEnemies
+    ld hl, numEnemies.total
     inc [hl]
     inc l
     inc [hl]
@@ -730,23 +730,23 @@ enemy_deleteSelf: ;{ 03:6AE7
     ld [hl+], a
     ld [hl], a
     ; Decrement number of total enemies and number of active enemies
-    ld hl, numEnemies
+    ld hl, numEnemies.total
     dec [hl]
     inc l
     dec [hl]
-    ; Check if [enCollision_pEnemyHigh] = [$FFFD]
-    ld hl, enCollision_pEnemyHigh
+    ; Check if [enSprCollision.pEnemyHigh] = [$FFFD]
+    ld hl, enSprCollision.pEnemyHigh
     ld de, hEnemyWramAddrHigh
     ld a, [de]
     cp [hl]
         ret nz
-    ; Check if [enCollision_pEnemyLow] = [$FFFE]
+    ; Check if [enSprCollision.pEnemyLow] = [$FFFE]
     dec e
     dec l
     ld a, [de]
     cp [hl]
         ret nz
-    ; Clear enCollision_weaponType, etc. ($ C466, $ C467, $ C468, $ C469)
+    ; Clear enSprCollision.weaponType, etc. ($ C466, $ C467, $ C468, $ C469)
     dec l
     ld a, $ff
     ld [hl+], a
@@ -875,7 +875,7 @@ scrollEnemies: ;{ 03:6BD2
     or b
         ret z
     ; Exit if no enemies
-    ld a, [numEnemies]
+    ld a, [numEnemies.total]
     and a
         ret z
     ; Save number of enemies to process

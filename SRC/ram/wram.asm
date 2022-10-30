@@ -1,7 +1,7 @@
 ; WRAM
 
-;;;; $C000..CFFF: WRAM bank 0 ;;;
-;{
+;;;; $C000..CFFF: WRAM bank 0 ;;; {
+
 section "WRAM Bank 0 - OAM Buffer", wram0[$C000] ;{
 
 OAM_MAX = $A0 ; 40 hardware sprites -> 160 bytes
@@ -16,18 +16,17 @@ wram_oamBuffer:: ds OAM_MAX ;{ $C000..9F: OAM Entries
 ;         80: Priority (set: behind background)
 ;}
 
-;}
+; WARNING: Most OAM buffer routines do not appear to do proper of bounds checking,
+;  meaning that if the OAM buffer overflows then then the RAM addresses following it
+;  could become corrupted. Exercise some caution here.
 
 ; $C0A0-$C1FF: Unused
-; WARNING: Most OAM buffer routines do not appear to do proper of bounds checking,
-;  meaning that if the OAM buffer overflows then then these RAM addresses could be corrupted.
-;  Be advised.
+
+;}
 
 section "WRAM Bank 0 - C200", wram0[$C200] ;{
 
-ds 1 ; $C200 - Unused
-ds 1 ; $C201 - Unused
-ds 1 ; $C202 - Unused
+ds 3 ; $C200..$C202 - Unused
 
 ; Tilemap pixel coordinate of a tile to read
 tileY: ds 1 ; $C203 - Tile Y (see $22BC)
@@ -37,13 +36,18 @@ tileX: ds 1 ; $C204 - Tile X (see $22BC)
 scrollY: ds 1 ; $C205 - Scroll Y
 scrollX: ds 1 ; $C206 - Scroll X
 
-;
-def pTilemapDestLow  = $C215 ; Tilemap destination pointer based on the given xy coordinates in ([$C204], [$C203]) (see $22BC)
-def pTilemapDestHigh = $C216 ;  "" (high byte)
+ds 14 ; $C207..$C214 - Unused
 
+; Return value of getTilemapAddress, which takes tileY and tileX as arguments
+;  Provides the VRAM address of the tile in question
+pTilemapDestLow:  ds 1 ; $C215 - Low Byte
+pTilemapDestHigh: ds 1 ; $C216 - High Byte
 
-def gameOver_LCDC_copy = $C219 ; LCD control mirror. Only set by death routine. This variable is pretty much useless, set to 0 on boot and to C3h by game over, checked for bitset 8 by $2266 (get tilemap value)
-;{
+ds 2 ; $C217..$C218 - Unused
+
+; LCD control mirror. Only set by death routine.
+; This variable is pretty much useless, set to 0 on boot and to C3h by game over, checked for bitset 8 by $2266 (get tilemap value)
+gameOver_LCDC_copy: ds 1 ;{ $C219 
 ;    v = emwdMsob
 ;
 ;    e: Enable LCD
@@ -55,10 +59,19 @@ def gameOver_LCDC_copy = $C219 ; LCD control mirror. Only set by death routine. 
 ;    o: Enable sprite
 ;    b: Enable BG. If CGB, then 0 additionally disables window regardless of w
 ;}
-;
-def unknown_C227 = $C227
+
+ds 13 ; $C21A..$C226 - Unused
+
+; Unknown variable used in unknownProc_230C, where it allows the function to run and acts as some sort of internal control byte
+unknown_C227: ds 1 ; $C227 - Unknown
+
+; $C228..$C2FF - Unused. Appears safe to use.
 
 ;}
+
+; OAM Scratchpad and special enemy variables
+; section "WRAM Bank 0 - C300", wram0[$C300] {
+; Note: This entire page ($C300..$C3FF) is initialized to $00 by the Queen)
 
 def enSprite_blobThrower = $C300
 def spriteC300 = $C300 ;$C300..3D: Set to [$2:4FFE..503A] in $2:4DB1
@@ -76,28 +89,36 @@ def queen_wallOAM_body = $C338 ; $C338 - Queen Wall OAM (body portion) - 7 slots
 def queen_wallOAM_head = $C354 ; $C354 - Queen Wall OAM (head portion) - 5 slots
 
 def hitboxC360 = $C360 ;-$C363: Set to [$2:503B..3E] in $2:4DB1
-;
-def blobThrower_actionTimer = $C380 ; Cleared in $2:4DB1. Used as index in $2:4FD4
-def blobThrower_waitTimer = $C381 ; Timer for $2:4EA1
-def blobThrower_state = $C382 ; Valid values are 0, 1, 2, 3
-; $C383 - unused?
-; $C384 - unused?
-; $C385 - unused?
-def blobThrower_facingDirection = $C386 ; Set to Samus is right of enemy in $2:4F87
-def blobThrowerBlob_unknownVar = $C387 ; Written to, but never read
-def temp_spriteType = $C388 ; 02:4DD3 - Temp variable used to store the sprite type in the item AI (02:4DD3)
 
-; Arachnus variables
-def arachnus_jumpCounter = $C390
-def arachnus_actionTimer = $C391 ; Set to 20h, 10h, and 04h
-def arachnus_unknownVar  = $C392 ; Set to 5 in $2:513F (unwritten but never read?)
-def arachnus_jumpStatus  = $C393 ; $00 - in jump arc, $80 - At the end of an arc, $81 - At the end of the last arc
-def arachnus_health = $C394 ; Set in procedure at 02:511C
-;$C395: unused
-;$C396: unused
+section "Special Enemy Variables", wram0[$C380]
 
-section "Queen Variables", wram0[$C3A0]
-; Queen variables appear to start at $C3A0
+; Blob Thrower variables {
+blobThrower_actionTimer: ds 1 ; $C380 - Cleared in $2:4DB1. Used as index in $2:4FD4
+blobThrower_waitTimer: ds 1 ; $C381 - Timer for $2:4EA1
+blobThrower_state: ds 1 ; $C382 - Valid values are 0, 1, 2, 3
+ds 3 ; $C383..$C385 - Unused
+blobThrower_facingDirection: ds 1 ; $C386 - Set to Samus is right of enemy in $2:4F87
+blobThrowerBlob_unknownVar: ds 1 ; $C387 - Clear by the Blow Thrower Projectile, but never read
+;}
+
+temp_spriteType: ds 1 ; $C388 - Used by the Item AI to temporarily store what sprite it is.
+
+ds 7 ; $C389..$C38F - Unused
+
+; Arachnus variables {
+arachnus_jumpCounter: ds 1 ; $C390
+arachnus_actionTimer: ds 1 ; $C391 - Set to 20h, 10h, and 04h
+arachnus_unknownVar:  ds 1 ; $C392 - Set to 5 by Arachnus' AI but never read
+arachnus_jumpStatus:  ds 1 ; $C393 - $00 - in jump arc, $80 - At the end of an arc, $81 - At the end of the last arc
+arachnus_health:      ds 1 ; $C394 - Set by Arachnus AI
+ds 1 ; $C395 - Unused, but cleared by Arachnus' init state
+ds 1 ; $C396 - Unused, but cleared by Arachnus' init state
+;}
+
+ds 9 ; $C397..$C39F - Unused
+
+; Queen Variables {
+
 queen_bodyY: ds 1 ; $C3A0 - Y position of the Queen's body (used for the setting the raster split and setting the hitbox)
 queen_bodyXScroll: ds 1 ; $C3A1 - LCD interrupt handler scroll X (higher numbers -> body is more left)
 queen_bodyHeight: ds 1 ; $C3A2 - Queen body height? (used for timing the bottom of the raster split)
@@ -192,14 +213,22 @@ queen_midHealthFlag: ds 1 ; $C3F1 - Set to 1 when the Queen's health] < 100
 queen_headDest: ds 1 ; $C3F2 - Metroid Queen's head lower half tilemap VRAM address low byte
 queen_headSrcHigh: ds 1 ; $C3F3 - Metroid Queen's head lower half tilemap source address (bank 3)
 queen_headSrcLow:  ds 1 ; $C3F4 - (rare instance of a big-endian variable!!)
+;}
 
+; $C3F5..$C3FF - Unused
 
+;}
 
-loadEnemies_unusedVar = $C400 ; Written, but never read. Possibly meant to be a direction, but the assigned values don't make sense
-loadEnemies_oscillator = $C401 ; Oscillates between 0 and 1 every frame. $00: Load enemies horizontally, else: Load enemies vertically
-en_bgCollisionResult = $C402 ; Enemy tilemap collision routine return value (initialized to $11, $22, $44, or $88)
+; Various generic enemy variables
+section "WRAM Bank 0 - C400", wram0[$C400] ;{
 
-section "WRAM c407", wram0[$C407]
+loadEnemies_unusedVar:  ds 1 ; $C400 - Written, but never read. Possibly meant to be a direction, but the assigned values don't make sense
+loadEnemies_oscillator: ds 1 ; $C401 - Oscillates between 0 and 1 every frame. $00: Load enemies horizontally, else: Load enemies vertically
+
+en_bgCollisionResult: ds 1 ; $C402 - Enemy tilemap collision routine return value (initialized to $11, $22, $44, or $88)
+
+ds 4 ; $C403..$C406 - Unused
+
 enemySolidityIndex: ds 1 ;$C407: Copy of enemySolidityIndex_canon (actually used by enemy code)
 
 ; This copy of the scrolling history appears to be used in the function that adjusts enemy positions due to scrolling
@@ -210,60 +239,78 @@ scrollHistory_A:
 .x2: ds 1 ;$C40B: Scroll X two frames ago (according to $2:45CA)
 .y1: ds 1 ;$C40C: Scroll Y one frame ago (according to $2:45CA)
 .x1: ds 1 ;$C40D: Scroll X one frame ago (according to $2:45CA)
+
 unused_samusDirectionFromEnemy: ds 1 ;$C40E: Set to 0 if [$FFE2] < [Samus' X position on screen] else 2 by $2:45E4
+
 ; Screen edges used when loading enemies
 bottomEdge_screen: ds 1 ; $C40F
-bottomEdge_pixel: ds 1 ; $C410
-topEdge_screen: ds 1 ; $C411
-topEdge_pixel: ds 1 ; $C412
-rightEdge_screen: ds 1 ; $C413
-rightEdge_pixel: ds 1 ; $C414
-leftEdge_screen: ds 1 ; $C415
-leftEdge_pixel: ds 1 ; $C416
+bottomEdge_pixel:  ds 1 ; $C410
+topEdge_screen:    ds 1 ; $C411
+topEdge_pixel:     ds 1 ; $C412
+rightEdge_screen:  ds 1 ; $C413
+rightEdge_pixel:   ds 1 ; $C414
+leftEdge_screen:   ds 1 ; $C415
+leftEdge_pixel:    ds 1 ; $C416
 
 metroid_babyTouchingTile: ds 1 ; $C417 - The tile index the baby metroid is touching, according to the enemy BG collision function
 
-def unused_romBankPlusOne = $C418 ; Set to [room bank+1] in $2:4000, never read
-;
-metroid_postDeathTimer = $C41B ; 90h*2 frame timer for waiting to restore the room's normal music
-def metroid_state = $C41C ; General Metroid related state. $00 = inactive, $80 = dying/dead, others depend on the metroid type
-;$C41D : Appears unused
-def enemy_yPosMirror = $C41E ; Initial y position for the current working enemy for the current frame
-def enemy_xPosMirror = $C41F ; Initial x position for the current working enemy for the current frame
-;
-def samus_hurtFlag = $C422 ; Samus damage flag
-def samus_damageBoostDirection = $C423 ; Damage boost direction
+unused_romBankPlusOne: ds 1 ; $C418 - Set to [room bank+1] in $2:4000, never read
+
+ds 2 ; $C419..$C41A - Unused
+
+metroid_postDeathTimer: ds 1 ; $C41B - 90h*2 frame timer for waiting to restore the room's normal music
+metroid_state: ds 1 ; $C41C - General Metroid related state. $00 = inactive, $80 = dying/dead, others depend on the metroid type
+
+ds 1 ;$C41D - Unused
+
+; Initial Y,X position for the current working enemy for the current frame
+;  Used for reverting the enemy's position in the case of a solid collision
+enemy_yPosMirror: ds 1 ; $C41E
+enemy_xPosMirror: ds 1 ; $C41F
+
+ds 2 ; $C420..$C421 - Unused
+
+samus_hurtFlag: ds 1 ; $C422 - Samus damage flag
+samus_damageBoostDirection: ds 1 ; $C423 - Damage boost direction
 ;{
+;   -1: Up-left ($FF)
 ;    0: Up
 ;    1: Up-right
-;    FFh: Up-left
 ;}
-def samus_damageValue = $C424 ; Health to take from Samus
+samus_damageValue: ds 1 ; $C424 - Health to take from Samus (BCD)
 
-def numEnemies = $C425 ; Number of enemies (both currently active and offscreen)
-def numActiveEnemies = $C426 ; Number of currently active enemies (used to exit drawEnemies early).
-def numOffscreenEnemies = $C427 ; Number of offscreen enemies loaded in. Unused?
-;
-def unknown_C42D = $C42D ; en_bgCollisionResult for the Omega Metroid's fireball. Written to, but never read
-def drawEnemy_yPos   = $C42E ; Set to enemy Y position in $1:5A9A
-def drawEnemy_xPos   = $C42F ; Set to enemy X position in $1:5A9A
-def drawEnemy_sprite = $C430 ; Set to enemy sprite ID in $1:5A9A. Used as index for pointer table at $1:5AB1
-def drawEnemy_attr   = $C431 ; Set to XOR of enemy bytes 4/5/6 AND F0h in $1:5A9A
+; Variables that account for the number of enemies
+numEnemies:
+.total:     ds 1 ; $C425 - Number of enemies (both currently active and offscreen)
+.active:    ds 1 ; $C426 - Number of currently active enemies (used to exit drawEnemies early).
+.offscreen: ds 1 ; $C427 - Number of offscreen enemies loaded in.
 
-section "WRAM c432", wram0[$C432]
+ds 5 ; $C428..$C42C - Unused
+
+unknown_C42D: ds 1 ; $C42D - en_bgCollisionResult for the Omega Metroid's fireball. Written to, but never read
+
+drawEnemy_yPos:   ds 1 ; $C42E - Set to enemy Y position in $1:5A9A
+drawEnemy_xPos:   ds 1 ; $C42F - Set to enemy X position in $1:5A9A
+drawEnemy_sprite: ds 1 ; $C430 - Set to enemy sprite ID in $1:5A9A. Used as index for pointer table at $1:5AB1
+drawEnemy_attr:   ds 1 ; $C431 - Set to XOR of enemy bytes 4/5/6 AND F0h in $1:5A9A
+
 ; This scroll history is used by the enemy loading code to determine if we've moved.
 scrollHistory_B:
 .y2: ds 1 ;$C432: Scroll Y two frames ago (according to $3:4000)
 .y1: ds 1 ;$C433: Scroll Y one frame ago (according to $3:4000)
 .x2: ds 1 ;$C434: Scroll X two frames ago (according to $3:4000)
 .x1: ds 1 ;$C435: Scroll X one frame ago (according to $3:4000)
-def loadSpawnFlagsRequest = $C436 ; Set to 0 to request - Executes $2:412F in $2:4000 if zero, set to 1 afterwards. Flag for updating $C540..7F. Cleared when exiting Metroid Queen's room, and when loading from save
-def zeta_xProximityFlag = $C437 ; Set to 1 in the Zeta's AI if within $20 pixels on the x axis
-def enemy_sameEnemyFrameFlag = $C438 ; Used to force enemies to update at 30 FPS, and handle enemy lag. Set to $00 if we'll start a new enemy frame next frame. Set to non-zero if the next enemy frame is a continuation of the current (enemy frame counter does not increment).
-def enemiesLeftToProcess = $C439 ; Number of enemies left to process
-def samus_onSolidSprite = $C43A ; Is Samus atop a solid sprite
 
-section "WRAM C43B", wram0[$C43B]
+loadSpawnFlagsRequest: ds 1 ; $C436 - Set to 0 to request - Executes $2:412F in $2:4000 if zero, set to 1 afterwards. Flag for updating $C540..7F. Cleared when exiting Metroid Queen's room, and when loading from save
+
+zeta_xProximityFlag: ds 1 ; $C437 - Set to 1 in the Zeta's AI if within $20 pixels on the x axis
+
+enemy_sameEnemyFrameFlag: ds 1 ; $C438 - Used to force enemies to update at 30 FPS, and handle enemy lag. Set to $00 if we'll start a new enemy frame next frame. Set to non-zero if the next enemy frame is a continuation of the current (enemy frame counter does not increment).
+
+enemiesLeftToProcess: ds 1 ; $C439 - Number of enemies left to process
+
+samus_onSolidSprite: ds 1 ; $C43A - Is Samus atop a solid sprite
+
 baby_tempXpos: ds 1 ; $C43B: Used by the baby's AI so it's vertical collision detection can used the previous x position instead
 
 ; Temp variables used in enemy_seekSamus (03:6B44)
@@ -273,52 +320,61 @@ seekSamusTemp:
 .samusY: ds 1 ; $C43E: samus Y pos + $10
 .samusX: ds 1 ; $C43F: samus X pos + $10
 
-def saveLoadSpawnFlagsRequest = $C44B ; Request to execute $2:418C (save/load spawn/save flags). Set by doorExitStatus in the door script function
-def scrollEnemies_numEnemiesLeft = $C44C ; Number of enemies left to process for scrolling the enemies
-def enemy_testPointYPos = $C44D ; Test point for enemy collision (in camera-space)
-def enemy_testPointXPos = $C44E ; Test point for enemy collision (in camera-space)
-;;$C44E: Tile X relative to scroll X (see $2250)
-def omega_tempSpriteType = $C44F ; Used to preserve sprite type when stunned
-def enemy_pWramLow  = $C450 ; Enemy WRAM address in bank 3
-def enemy_pWramHigh = $C451 ;  "" high byte
+ds 11 ; $C440..$C44A - Unused
 
-def enemy_pFirstEnemyLow  = $C452 ; Pointer of the first enemy to process for the next frame
-def enemy_pFirstEnemyHigh = $C453 ;  - Used for making enemies lag instead of Samus
-def drawEnemy_pLow  = $C454 ; Enemy data address for draw function (low byte)
-def drawEnemy_pHigh = $C455 ; Enemy data address for draw function (high byte)
-def loadEnemy_unusedVar_A = $C456 ; Set to the lower screen in the horizontal branch
-def loadEnemy_unusedVar_B = $C457 ; Set to the right edge of the screen
-def doorExitStatus = $C458 ; doorExitStatus - $2 is normal, $1 is if WARP or ENTER_QUEEN is used. Value is written to $C44B and then cleared. Different non-zero values have no purpose
-def previousLevelBank = $C459 ; Previous level bank --- used during door transitions to make sure that the enemySaveFlags are saved to the correct location
+saveLoadSpawnFlagsRequest: ds 1 ; $C44B - Request to execute $2:418C (save/load spawn/save flags). Set by doorExitStatus in the door script function
+
+scrollEnemies_numEnemiesLeft: ds 1 ; $C44C - Number of enemies left to process for scrolling the enemies
+
+enemy_testPointYPos: ds 1 ; $C44D - Test point for enemy collision (in camera-space)
+enemy_testPointXPos: ds 1 ; $C44E - Test point for enemy collision (in camera-space)
+
+omega_tempSpriteType: ds 1 ; $C44F - Used to preserve sprite type when stunned
+enemy_pWramLow:  ds 1 ; $C450 - Enemy WRAM address in bank 3
+enemy_pWramHigh: ds 1 ; $C451 -  "" high byte
+
+enemy_pFirstEnemyLow:  ds 1 ; $C452 - Pointer of the first enemy to process for the next frame
+enemy_pFirstEnemyHigh: ds 1 ; $C453 - Used for making enemies lag instead of Samus
+
+drawEnemy_pLow:  ds 1 ; $C454 - Enemy data address for draw function (low byte)
+drawEnemy_pHigh: ds 1 ; $C455 - Enemy data address for draw function (high byte)
+
+loadEnemy_unusedVar_A: ds 1 ; $C456 - Set to the lower screen in the horizontal branch
+loadEnemy_unusedVar_B: ds 1 ; $C457 - Set to the right edge of the screen
+
+doorExitStatus: ds 1 ; $C458 - doorExitStatus - $2 is normal, $1 is if WARP or ENTER_QUEEN is used. Value is written to $C44B and then cleared. Different non-zero values have no purpose
+previousLevelBank: ds 1 ; $C459 - Previous level bank --- used during door transitions to make sure that the enemySaveFlags are saved to the correct location
 ;
-metroid_samusXDir = $C45A ; Relative X direction of Samus from a metroid ($FF: up, $00: equal, $01: down)
-metroid_samusYDir = $C45B ; Relative Y direction of Samus from a metroid ($FF: up, $00: equal, $01: down)
-metroid_angleTableIndex = $C45C ; Used as index for table at $1:729C, value for $FFEA
-metroid_absSamusDistY = $C45D ; abs(samusY-enemyY) (used for metroid seeking)
-metroid_absSamusDistX = $C45E ; abs(samusX-enemyX) (used for metroid seeking)
-metroid_slopeToSamusLow  = $C45F ; Metroid-Samus slope (100*dY/dX) (low byte)
-metroid_slopeToSamusHigh = $C460 ; Metroid-Samus slope (100*dY/dX) (high byte)
+metroid_samusXDir: ds 1 ; $C45A - Relative X direction of Samus from a metroid ($FF: up, $00: equal, $01: down)
+metroid_samusYDir: ds 1 ; $C45B - Relative Y direction of Samus from a metroid ($FF: up, $00: equal, $01: down)
+metroid_angleTableIndex: ds 1 ; $C45C - Used as index for table at $1:729C, value for $FFEA
+metroid_absSamusDistY: ds 1 ; $C45D - abs(samusY-enemyY) (used for metroid seeking)
+metroid_absSamusDistX: ds 1 ; $C45E - abs(samusX-enemyX) (used for metroid seeking)
+metroid_slopeToSamusLow:  ds 1 ; $C45F - Metroid-Samus slope (100*dY/dX) (low byte)
+metroid_slopeToSamusHigh: ds 1 ; $C460 - Metroid-Samus slope (100*dY/dX) (high byte)
 
-loadEnemy_spawnFlagTemp = $C461 ; Temp storage of Enemy spawn flag during load routine
+loadEnemy_spawnFlagTemp: ds 1 ; $C461 - Temp storage of Enemy spawn flag during load routine
 
-def omega_stunCounter = $C462 ; Omega Metroid stun counter
-def cutsceneActive = $C463 ; Set to 1 if a cutscene is active (e.g. Metroid is appearing). Freezes time.
-def alpha_stunCounter = $C464 ; Alpha Metroid stun counter
-def metroid_fightActive = $C465 ; 0 = no fight, 1 = fight active, 2 = metroid exploding
+omega_stunCounter: ds 1 ; $C462 - Omega Metroid stun counter
+cutsceneActive: ds 1 ; $C463 - Set to 1 if a cutscene is active (e.g. Metroid is appearing). Freezes time.
+alpha_stunCounter: ds 1 ; $C464 - Alpha Metroid stun counter
+metroid_fightActive: ds 1 ; $C465 - 0 = no fight, 1 = fight active, 2 = metroid exploding
 ; Checked and cleared in $2:4000, cleared in $2:412F
 
-;$C466..69: Copied from [$D05D..60] if collision happened
-enCollision_weaponType = $C466 ; Projectile type - Copied to [$C46D] if a collision occurred
-enCollision_pEnemyLow  = $C467 ; Enemy data pointer of target enemy (if collision happens)
-enCollision_pEnemyHigh = $C468
-enCollision_weaponDir  = $C469 ; Projectile direction - Copied to [$C46E] if a collision occurred
+;$C466..69: Copied from [$D05D..60] if a Samus-sprite collision happened
+enSprCollision:
+.weaponType: ds 1 ; $C466 ; Projectile type - Copied to [$C46D] if a collision occurred
+.pEnemyLow:  ds 1 ; $C467 - Enemy data pointer of target enemy (if collision happens)
+.pEnemyHigh: ds 1 ; $C468
+.weaponDir:  ds 1 ; $C469 - Projectile direction - Copied to [$C46E] if a collision occurred
 
-;$C468 is a pointer compared against in $2:7DA0
-def gamma_stunCounter = $C46A ; Gamma Metroid stun counter
+gamma_stunCounter: ds 1 ; $C46A - Gamma Metroid stun counter
 
-def zeta_stunCounter = $C46C ; Zeta Metroid stun counter
+ds 1 ; $C46B - Unused
 
-enemy_weaponType = $C46D ; Set to FFh in $2:412F. Value for $D06F in $2:4DD3
+zeta_stunCounter: ds 1 ; $C46C - Zeta Metroid stun counter
+
+enemy_weaponType: ds 1 ; $C46D - Set to FFh in $2:412F. Value for $D06F in $2:4DD3
 ;  Enemy-Samus/Beam collision results
 ; $00 - Power beam
 ; $01 - Ice
@@ -329,25 +385,37 @@ enemy_weaponType = $C46D ; Set to FFh in $2:412F. Value for $D06F in $2:4DD3
 ; $10 - Screw
 ; $20 - Touch
 ; $FF - Nothing
-enemy_weaponDir = $C46E ; Enemy-Beam collision direction results
+enemy_weaponDir: ds 1 ; $C46E - Enemy-Beam collision direction results
 
-def omega_waitCounter = $C46F ; Omega Metroid waiting counter of some sort
-def omega_samusPrevHealth = $C470 ; Samus's previous health value (low byte only)
+omega_waitCounter: ds 1 ; $C46F - Omega Metroid waiting counter of some sort
+omega_samusPrevHealth: ds 1 ; $C470 - Samus's previous health value (low byte only)
 
-metroid_screwKnockbackDone = $C471 ; Set to 1 when a Metroid's screw attack knockback is finished.
-; $C472: Unused?
-def larva_hurtAnimCounter = $C473 ; Set to 3, counts down to 0 before resetting sprite type to $CE
-def larva_bombState = $C474 ; Weird variable. Set to $02 when a metroid is bombed to prevent others from latching on to you for a bit. Set to $01 when touched normally, but never acknowledged elsewhere.
-def larva_latchState = $C475 ; Larva Metroid variable: $02: Latched, $01: Flying away, $00: Unlatch
+metroid_screwKnockbackDone: ds 1 ; $C471 - Set to 1 when a Metroid's screw attack knockback is finished.
 
-;
-def enemy_tempSpawnFlag = $C477 ; Spawn flag for child object to be spawned
-def omega_chaseTimerIndex = $C478 ; Selects duration of chase timer. Goes from 0,1,2,3,4,0,etc. Screw attack sets this to 3.
-def hasMovedOffscreen = $C479 ; Temp variable for $2:452E (deactivateOffscreenEnemy)
+ds 1 ; $C472: Unused
 
+larva_hurtAnimCounter: ds 1 ; $C473 - Set to 3, counts down to 0 before resetting sprite type to $CE
+larva_bombState: ds 1 ; $C474 - Weird variable. Set to $02 when a metroid is bombed to prevent others from latching on to you for a bit. Set to $01 when touched normally, but never acknowledged elsewhere.
+larva_latchState: ds 1 ; $C475 - Larva Metroid variable: $02: Latched, $01: Flying away, $00: Unlatch
+
+ds 1 ;  $C476 - Unused
+
+enemy_tempSpawnFlag: ds 1 ; $C477 - Spawn flag for child object to be spawned
+
+omega_chaseTimerIndex: ds 1 ; $C478 - Selects duration of chase timer. Goes from 0,1,2,3,4,0,etc. Screw attack sets this to 3.
+
+hasMovedOffscreen: ds 1 ; $C479 - Temp variable for $2:452E (deactivateOffscreenEnemy)
+
+; $C47A..$C4FF - Unused
+
+;}
+
+section "WRAM Bank 0 - Enemy Spawn Flags", wram0[$C500] ;{
 ; These two arrays follow the same format, but one is saved and the other is not.
-def enemySpawnFlags = $C500 ;$C500..3F: Filled with FFh by $2:418C. Apparently off-screen enemy bytes for current map
-def enemySaveFlags  = $C540 ;$C540..7F: Working copy of $C900 data for room bank. Apparently item/Metroid data bytes for current map
+enemySpawnFlags:
+.unsaved: ds $40 ; $C500..3F: Filled with FFh by $2:418C. Apparently off-screen enemy bytes for current map
+.saved:   ds $40 ; $C540..7F: Working copy of $C900 data for room bank. Apparently item/Metroid data bytes for current map
+;def enemySaveFlags  = $C540 
 ;{
 ;    For metroid:
 ;        1: Hatching
@@ -379,6 +447,11 @@ def enemySaveFlags  = $C540 ;$C540..7F: Working copy of $C900 data for room bank
 ;    
 ;    Read at $3:4205 (metroid checking if it should spawn?)
 ;}
+
+; $C580..$C5FF - TODO: Verified if these are ever cleared or set
+
+;}
+
 ;
 def enemyDataSlots = $C600;..C7FF ; Enemy data. 20h byte slots
 ;{
@@ -421,6 +494,8 @@ queenActor_spitB = $C760 ; $F2 - Queen Projectile
 queenActor_spitC = $C780 ; $F2 - Queen Projectile
 ; Sprite ID $F4 is unused?
 def enemyDataSlots_end = enemyDataSlots + $200
+
+; $C800..$C8FF - Unused?
 
 saveBuf_enemySaveFlags = $C900 ;$C900..CABF: Copied to/from SRAM ($B000 + [save slot] * 200h). 40h byte slots, one for each level data bank
 
@@ -763,11 +838,10 @@ def audioChannelOutputStereoFlagsBackup equ $CFED ; Backup of audio channel outp
 def loudLowHealthBeepTimer equ $CFEE ; Loud low health beep timer
 ;}
 ;}
-;
-;
-;;;; $D000..DFFF: WRAM bank 1 ;;;
-section "WRAM bank 0 - D000", wramx[$d000]
-;{
+
+
+;;;; $D000..DFFF: WRAM bank 1 ;;; {
+section "WRAM bank 0 - D000", wramx[$d000] ;{
 wramUnused_D000: ds 8 ; $D000..07: Unused
 
 tempMetatile:
@@ -1105,8 +1179,10 @@ def sound_playQueenRoar = $D0A6 ; Enable Queen's distant roar as a sound effect
 def metroidLCounterDisp = $D0A7 ; L Counter value to display (Metroids remaining in area)
 def wramUnknown_D0A8 = $D0A8 ; Set to 0 by $239C
 ;
-;$D0F9: Used in title
-;
+;$D0F9: Used in title?
+;}
+
+
 def credits_starArray = $D600 ; ds $20 (inadvertantly, only the first $10 bytes are properly initialized)
 ;
 def doorScriptBuffer = $D700 ; to D73F: Screen transition commands (see $5:46E5)
@@ -1255,5 +1331,11 @@ mapUpdateFlag = mapUpdateBuffer + 1 ; $DE01
 ;    + 4: Bottom-left tile
 ;    + 5: Bottom-right tile
 ;}
-;$DF00..FF: Stack
+
+stack: ;$DF00..FF: Stack
+.top: ds $FF
+.bottom:
+
+wram_end: ; $DFFF
+
 ;}

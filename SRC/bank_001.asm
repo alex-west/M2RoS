@@ -3156,7 +3156,7 @@ itemTextPointerTable: ; 01:58F1
 
 drawEnemies: ;{ 01:5A11
     ; Exit if there are no enemies to render
-    ld a, [numActiveEnemies]
+    ld a, [numEnemies.active]
     and a
         ret z
         
@@ -4172,7 +4172,7 @@ saveEnemyFlagsToSRAM: ;{ 01:7A6C
     add hl, de
     
     ; Load 
-    ld de, enemySaveFlags
+    ld de, enemySpawnFlags.saved
     ld b, $40
     .bufferLoop:
         ld a, [de]

@@ -173,7 +173,7 @@ reti
 bootRoutine: ;{ 00:01FB
     ; Clear $D000-$DFFF
     xor a
-    ld hl, $dfff
+    ld hl, wram_end ; $DFFF
     ld c, $10
     ld b, $00
     .clearLoop_A:
@@ -213,7 +213,7 @@ bootRoutine: ;{ 00:01FB
     ld [ob_palette1], a
     
     ; Init stack pointer before calling a function
-    ld sp, $dfff
+    ld sp, stack.bottom ; $DFFF
     call initializeAudio_longJump
     ; Enable SRAM (?)
     ld a, $0a
@@ -221,7 +221,7 @@ bootRoutine: ;{ 00:01FB
     
     ; Clear $DF00-$DF00 (stack)
     xor a
-    ld hl, $dfff
+    ld hl, stack.bottom ; $DFFF
     ld b, $00
     .clearLoop_B:
         ld [hl-], a
@@ -10169,11 +10169,11 @@ handleItemPickup_end: ;{ 00:3A01
     
     ; Set collision variables
     ld a, [itemOrb_collisionType]
-    ld [enCollision_weaponType], a
+    ld [enSprCollision.weaponType], a
     ld a, [itemOrb_pEnemyWramLow]
-    ld [enCollision_pEnemyLow], a
+    ld [enSprCollision.pEnemyLow], a
     ld a, [itemOrb_pEnemyWramHigh]
-    ld [enCollision_pEnemyHigh], a
+    ld [enSprCollision.pEnemyHigh], a
 
     .waitLoop_B:
         ; Perform common functions during this wait loop

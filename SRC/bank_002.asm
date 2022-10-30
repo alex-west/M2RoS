@@ -24,7 +24,7 @@ enemyHandler: ;{ 02:4000
         ld [justStartedTransition], a
         ; Clear enemy collision variables
         ld a, $ff
-        ld hl, enCollision_weaponType
+        ld hl, enSprCollision.weaponType
         ld [hl+], a
         ld [hl+], a
         ld [hl], a
@@ -133,7 +133,7 @@ processEnemies: ;{ 02:409E
         inc a
         ldh [hEnemy_frameCounter], a
         ; Set number of enemies to process
-        ld a, [numEnemies]
+        ld a, [numEnemies.total]
         ld [enemiesLeftToProcess], a
     .endIf_A:
     ; Skip processing if there are no enemies to process
@@ -240,8 +240,8 @@ inGame_loadEnemySaveFlags: ;{ 02:412F
     rl d
     ld hl, saveBuf_enemySaveFlags
     add hl, de
-    ; Load enemySaveFlags from buffer
-    ld de, enemySaveFlags
+    ; Load enemySpawnFlags.saved from buffer
+    ld de, enemySpawnFlags.saved
     ld b, $40
     .loop:
         ld a, [hl+]
@@ -259,15 +259,15 @@ inGame_loadEnemySaveFlags: ;{ 02:412F
     ld [metroid_state], a
     ld [metroid_fightActive], a
     ld [cutsceneActive], a
-    ld [numEnemies], a
-    ld [numActiveEnemies], a
-    ld [numOffscreenEnemies], a
+    ld [numEnemies.total], a
+    ld [numEnemies.active], a
+    ld [numEnemies.offscreen], a
     ld [enemy_sameEnemyFrameFlag], a
     ; Clear sprite collision stuff
     ld a, $ff
-    ld [enCollision_weaponType], a
-    ld [enCollision_pEnemyLow], a
-    ld [enCollision_pEnemyHigh], a
+    ld [enSprCollision.weaponType], a
+    ld [enSprCollision.pEnemyLow], a
+    ld [enSprCollision.pEnemyHigh], a
     ld [enemy_weaponType], a
     ; Clear scroll history
     ld hl, scrollHistory_B.y2
@@ -285,7 +285,7 @@ ret
 ; Save enemy save flags for previous map and then load save flags for new map
 inGame_saveAndLoadEnemySaveFlags: ;{ 02:418C
     ; Clear first $40 enemy spawn flags
-    ld hl, enemySpawnFlags
+    ld hl, enemySpawnFlags.unsaved
     ld b, $40
     ld a, $ff
     .loop_A:
@@ -293,7 +293,7 @@ inGame_saveAndLoadEnemySaveFlags: ;{ 02:418C
         dec b
     jr nz, .loop_A
 
-    ; Save the enemySaveFlags to the save buffer
+    ; Save the enemySpawnFlags.saved to the save buffer
     ld d, $00
     ; Save variable to C for later
     ld a, [currentLevelBank]
@@ -312,12 +312,12 @@ inGame_saveAndLoadEnemySaveFlags: ;{ 02:418C
         ld hl, saveBuf_enemySaveFlags
         add hl, de
         ; Save flags to save buffer
-        ld de, enemySaveFlags
+        ld de, enemySpawnFlags.saved
         ld b, $40    
         .loop_B:
             ld a, [de]
             cp $02 ; Save $02 as $02
-                jr z, .saveAsIs        
+                jr z, .saveAsIs
             cp $fe ; Save $FE as $FE
                 jr z, .saveAsIs
             cp $04 ; Save $04 as $FE
@@ -349,8 +349,8 @@ inGame_saveAndLoadEnemySaveFlags: ;{ 02:418C
     rl d
     ld hl, saveBuf_enemySaveFlags
     add hl, de
-    ; Copy enemySaveFlags from save buffer
-    ld de, enemySaveFlags
+    ; Copy enemySpawnFlags.saved from save buffer
+    ld de, enemySpawnFlags.saved
     ld b, $40
     .loop_C:
         ld a, [hl+]
@@ -369,9 +369,9 @@ inGame_saveAndLoadEnemySaveFlags: ;{ 02:418C
     ld [enemy_pFirstEnemyHigh], a
     ; Clear collision variables
     ld a, $ff
-    ld [enCollision_weaponType], a
-    ld [enCollision_pEnemyLow], a
-    ld [enCollision_pEnemyHigh], a
+    ld [enSprCollision.weaponType], a
+    ld [enSprCollision.pEnemyLow], a
+    ld [enSprCollision.pEnemyHigh], a
     ; Clear scroll history
     ld hl, scrollHistory_B.y2
     ld a, [scrollY]
@@ -406,7 +406,7 @@ deactivateAllEnemies: ;{ 02:4217
         dec b
     jr nz, .loop_B
 
-    ; Clear numEnemies and related variables
+    ; Clear numEnemies.total and related variables
     xor a
     ld hl, numEnemies
     ld b, $03
@@ -498,7 +498,7 @@ enemy_getDamagedOrGiveDrop: ;{ 02:4239
     ldh [hEnemy.spawnFlag], a
     ; Clear stuff
     call .transferCollisionResults
-    ld hl, enCollision_weaponType
+    ld hl, enSprCollision.weaponType
     ld a, $ff
     ld [hl+], a
     ld [hl+], a
@@ -699,13 +699,13 @@ jp processEnemies.doneProcessingEnemy ; Skip to next enemy
     ;  to generic-enemy routine copies
     ld hl, collision_weaponType
     ld a, [hl+]
-    ld [enCollision_weaponType], a
+    ld [enSprCollision.weaponType], a
     ld a, [hl+]
-    ld [enCollision_pEnemyLow], a
+    ld [enSprCollision.pEnemyLow], a
     ld a, [hl+]
-    ld [enCollision_pEnemyHigh], a
+    ld [enSprCollision.pEnemyHigh], a
     ld a, [hl]
-    ld [enCollision_weaponDir], a
+    ld [enSprCollision.weaponDir], a
     ; Clear collision routine copies of the enemy collision information
     ld a, $ff
     ld [hl-], a
@@ -938,14 +938,14 @@ deleteOffscreenEnemy: ;{ 02:4464
     ; Clear screen coordinates (Y,X)
     ld [hl+], a
     ld [hl], a
-    ; Decrement numEnemies and numOffscreenEnemies
-    ld hl, numEnemies
+    ; Decrement numEnemies.total and numEnemies.offscreen
+    ld hl, numEnemies.total
     dec [hl]
     inc l
     inc l
     dec [hl]
     ; Clear collision variables if these addresses are equal
-    ld hl, enCollision_pEnemyHigh
+    ld hl, enSprCollision.pEnemyHigh
     ld de, hEnemyWramAddrHigh
     ld a, [de]
     cp [hl]
@@ -1063,7 +1063,7 @@ reactivateOffscreenEnemy: ;{ 02:44C0
     ld hl, hEnemy.status
     ld [hl], $00
     ; Increment number of active enemies
-    ld hl, numActiveEnemies
+    ld hl, numEnemies.active
     inc [hl]
     inc l
     ; Decrement number of offscreen enemies
@@ -1141,7 +1141,7 @@ deactivateOffscreenEnemy: ;{ 02:452E
         jr z, .deleteProjectile
 
     ; Deactivate enemy
-    ld hl, numActiveEnemies
+    ld hl, numEnemies.active
     dec [hl]
     inc l
     inc [hl]
@@ -3913,7 +3913,7 @@ enemy_metroidExplosion: ;{ 02:5732
     ;.case_4:
         ; Clear collision variables
         ld a, $ff
-        ld hl, enCollision_weaponType
+        ld hl, enSprCollision.weaponType
         ld [hl+], a
         ld [hl+], a
         ld [hl], a
@@ -5407,7 +5407,7 @@ enAI_pipeBug: ;{ 02:5F67
     ld a, [enemy_tempSpawnFlag]
     ld [hl], a
     ; Increment total number of enemies and number of active enemies
-    ld hl, numEnemies
+    ld hl, numEnemies.total
     inc [hl]
     inc l
     inc [hl]
@@ -9113,7 +9113,7 @@ enemy_spawnObject: ;{ Procedure has two entry points
     ld a, [enemy_tempSpawnFlag]
     ld [hl], a
     ; Increment total number of enemies and number of active enemies
-    ld hl, numEnemies
+    ld hl, numEnemies.total
     inc [hl]
     inc l
     inc [hl]
@@ -10044,7 +10044,7 @@ ret
 ; State 2 - Idle while fireballs are onscreen (can be preempted by .selectChaseTimer)
 ;  (note: state 3 appears to be unused for Omega Metroids, while state 0 is used for setup)
     ; Set state to 1 once there are no more fireballs
-    ld a, [numEnemies]
+    ld a, [numEnemies.total]
     dec a
         jr z, .state4
     ; Wait some frames before using .animateState2
@@ -11145,7 +11145,7 @@ enemy_getSamusCollisionResults: ;{ 02:7DA0
     ld [enemy_weaponType], a
     ld c, a
     ; Check if enCollision_pEnemy is equal to the current enemy pointer in HRAM
-    ld hl, enCollision_pEnemyHigh
+    ld hl, enSprCollision.pEnemyHigh
     ld de, hEnemyWramAddrHigh
     ld a, [de]
     cp [hl]
@@ -11157,12 +11157,12 @@ enemy_getSamusCollisionResults: ;{ 02:7DA0
         ret nz
     ; A collision with the currently processed enemy has occurred
     dec l
-    ld c, [hl] ; Read enCollision_weaponType
+    ld c, [hl] ; Read enSprCollision.weaponType
     ld a, $ff
-    ld [hl+], a ; Clear enCollision_weaponType
-    ld [hl+], a ; Clear enCollision_pEnemyLow
-    ld [hl+], a ; Clear enCollision_pEnemyHigh
-    ld b, [hl]  ; Read enCollision_weaponDir
+    ld [hl+], a ; Clear enSprCollision.weaponType
+    ld [hl+], a ; Clear enSprCollision.pEnemyLow
+    ld [hl+], a ; Clear enSprCollision.pEnemyHigh
+    ld b, [hl]  ; Read enSprCollision.weaponDir
     ld [hl], a
     ; Save results
     ld a, c
