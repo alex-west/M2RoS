@@ -452,8 +452,11 @@ enemySpawnFlags:
 
 ;}
 
-;
-def enemyDataSlots = $C600;..C7FF ; Enemy data. 20h byte slots
+section "WRAM Bank 0 - Enemy Data Slots", wram0[$C600] ;{
+
+def ENEMY_SLOT_SIZE = $20
+
+enemyDataSlots: ; $C600;..C7FF ; Enemy data. 20h byte slots
 ;{
 ;    + 0: If bits 0..3 clear, collision with projectiles/bombs/Samus is enabled. If zero, sprite set is not drawn. If FFh, enemy is deleted
 ;    + 1: Y position. Relative to screen top boundary - 10h. Value for $FFB7 in $30EA
@@ -477,27 +480,54 @@ def enemyDataSlots = $C600;..C7FF ; Enemy data. 20h byte slots
 ;    + 1Eh: AI pointer(?)
 ;}
 
-; Enemy Data Slots used by Queen:
+.slot_0: ds ENEMY_SLOT_SIZE ; $C600
+.slot_1: ds ENEMY_SLOT_SIZE ; $C620
+.slot_2: ds ENEMY_SLOT_SIZE ; $C640
+.slot_3: ds ENEMY_SLOT_SIZE ; $C660
+.slot_4: ds ENEMY_SLOT_SIZE ; $C680
+.slot_5: ds ENEMY_SLOT_SIZE ; $C6A0
+.slot_6: ds ENEMY_SLOT_SIZE ; $C6C0
+.slot_7: ds ENEMY_SLOT_SIZE ; $C6E0
+.slot_8: ds ENEMY_SLOT_SIZE ; $C700
+.slot_9: ds ENEMY_SLOT_SIZE ; $C720
+.slot_A: ds ENEMY_SLOT_SIZE ; $C740
+.slot_B: ds ENEMY_SLOT_SIZE ; $C760
+.slot_C: ds ENEMY_SLOT_SIZE ; $C780
+.slot_D: ds ENEMY_SLOT_SIZE ; $C7A0
+.slot_E: ds ENEMY_SLOT_SIZE ; $C7C0
+.slot_F: ds ENEMY_SLOT_SIZE ; $C7E0
+.end:
+
+; Enemy Data Slots used by Queen: {
 ; - The Queen only cares about the first 4 bytes of each slot: status, Y, X, and ID (no AI pointer!)
-; - Exception: Her projectiles use $C608 for something
-; - Each slot has a hardcoded purpose
-;                   Slot - Sprite ID
-queenActor_body  = $C600 ; $F3 - Queen Body
-queenActor_mouth = $C620 ; $F5/$F6/$F7 - Queen Mouth (closed/open/stunned)
-queenActor_headL = $C640 ; $F1 - Head Left Half
-queenActor_headR = $C660 ; $F2 - Head Right Half
-queenActor_neckA = $C680 ; $F0 - Queen Neck <- This one get set to $82 when spitting Samus out?
-;  ...
-; $C720 - $F0 - Queen Neck
-queenActor_spitA = $C740 ; $F2 - Queen Projectile
-queenActor_spitB = $C760 ; $F2 - Queen Projectile
-queenActor_spitC = $C780 ; $F2 - Queen Projectile
-; Sprite ID $F4 is unused?
-def enemyDataSlots_end = enemyDataSlots + $200
+; - Exception: Her projectiles use $C608 to encode their directional state.
+;   - $YX directional vector. Each nybble is signed and ranges from -2 ($E) to 2.
+; - Each slot is statically allocated for one purpose:
+;                     Slot - Sprite ID
+queenActor_body  = .slot_0 ; F3 - Queen Body
+queenActor_mouth = .slot_1 ; $F5/$F6/$F7 - Queen Mouth (closed/open/stunned)
+queenActor_headL = .slot_2 ; $F1 - Head Left Half
+queenActor_headR = .slot_3 ; $F2 - Head Right Half
+queenActor_neckA = .slot_4 ; $F0 - Queen Neck <- This one get set to $82 when spitting Samus out
+                 ;  ...
+                 ; .slot_9 ; $F0 - Queen Neck
+queenActor_spitA = .slot_A ; $F2 - Queen Projectile
+queenActor_spitB = .slot_B ; $F2 - Queen Projectile
+queenActor_spitC = .slot_C ; $F2 - Queen Projectile
+; Note Sprite ID $F4 is unused
+;}
 
-; $C800..$C8FF - Unused?
+;}
 
-saveBuf_enemySaveFlags = $C900 ;$C900..CABF: Copied to/from SRAM ($B000 + [save slot] * 200h). 40h byte slots, one for each level data bank
+; $C800..$C8FF - Unused
+; Note: Some enemy routines do not do proper bounds checking when dealing
+;  with the enemy array, so it's possible for data here to get corrupted.
+
+section "WRAM Bank 0 - Save Buffer for Spawn Flags", wram0[$C900]
+
+saveBuf_enemySpawnFlags: ds $40 * 7 ; $C900..CABF: Copied to/from SRAM ($B000 + [save slot] * 1C0h). 40h byte slots, one for each level data bank
+
+; $CAC0..$CEBF - Unused ($400 bytes!!)
 
 
 ;$CEC0..CFFF: Audio data
@@ -837,6 +867,7 @@ def audioChannelOutputStereoFlags equ $CFEC ; Audio channel output stereo flags
 def audioChannelOutputStereoFlagsBackup equ $CFED ; Backup of audio channel output stereo flags (during song interruption)
 def loudLowHealthBeepTimer equ $CFEE ; Loud low health beep timer
 ;}
+
 ;}
 
 

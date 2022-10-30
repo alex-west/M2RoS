@@ -882,8 +882,8 @@ scrollEnemies: ;{ 03:6BD2
     ld [scrollEnemies_numEnemiesLeft], a
 
     ; Iterate through enemy slots to find the first enemy
-    ld hl, enemyDataSlots - $20 ;$c5e0
-    ld de, $0020
+    ld hl, enemyDataSlots - ENEMY_SLOT_SIZE ;$c5e0
+    ld de, ENEMY_SLOT_SIZE ; $0020
 .findNextEnemy: ; Jump back here from the end to find next
     .findLoop:
         add hl, de
@@ -1152,7 +1152,7 @@ queen_initialize: ;{ 03:6D4A
     
     ; Clear enemy slots
     ld hl, enemyDataSlots ; $C600
-    ld bc, $01a0
+    ld bc, ENEMY_SLOT_SIZE * $0D ; $01a0
     .enemyLoop:
         xor a
         ld [hl+], a
@@ -3740,7 +3740,7 @@ jp queenStateFunc_pickNextState ;}
 
 queen_killFromStomach: ;{ 03:7A4D Kill Queen from stomach
     ; Deactivate all enemies
-    ld b, $0d
+    ld b, $0D
     ld hl, enemyDataSlots ; $C600
     call queen_deactivateActors.arbitrary
     

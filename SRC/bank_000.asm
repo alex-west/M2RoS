@@ -8282,11 +8282,11 @@ collision_bombEnemies: ;{ 00:30BB
             jr c, .break
         .endIf:
         ; Iterate to next enemy
-        ld de, $0020
+        ld de, ENEMY_SLOT_SIZE ; $0020
         add hl, de
         ; Exit loop if at end of enemy slots
         ld a, h
-        cp HIGH(enemyDataSlots_end)
+        cp HIGH(enemyDataSlots.end)
     jr nz, .loop
     .break:
     
@@ -8507,7 +8507,7 @@ collision_projectileEnemies: ;{ 00:31B6 - Projectile/enemy collision function
     switchBank enemyHitboxPointers ; and enemyDamageTable
 
     ; Iterate through enemy slots
-    ld hl, enemyDataSlots ;$c600
+    ld hl, enemyDataSlots ;$C600
     .loop:
         ; Check if enemy is active ($x0 status value)
         ld a, [hl]
@@ -8519,11 +8519,11 @@ collision_projectileEnemies: ;{ 00:31B6 - Projectile/enemy collision function
             jr c, .break
         .endIf:
         ; Iterate to next enemy
-        ld de, $0020
+        ld de, ENEMY_SLOT_SIZE ; $0020
         add hl, de
         ; Exit loop if at end of enemy slots
         ld a, h
-        cp HIGH(enemyDataSlots_end) ;$c8
+        cp HIGH(enemyDataSlots.end) ;$c8
     jr nz, .loop
     .break:
     
@@ -8790,11 +8790,11 @@ collision_samusEnemies: ;{ 00:32AB - Samus enemy collision detection loop
             ret c
         .endIf:
         ; Iterate to next enemy
-        ld de, $0020
+        ld de, ENEMY_SLOT_SIZE ; $0020
         add hl, de
         ; Exit if we finished all enemies
         ld a, h
-        cp HIGH(enemyDataSlots_end) ; $C8
+        cp HIGH(enemyDataSlots.end) ; $C8
     jr nz, .loop
 ret ;}
 
@@ -9201,11 +9201,11 @@ collision_samusEnemiesDown: ;{ 00:348D
             .endIf_A:
         
         ; Iterate to next enemy
-        ld de, $0020
+        ld de, ENEMY_SLOT_SIZE ; $0020
         add hl, de
         ; Exit if we finished all enemies
         ld a, h
-        cp HIGH(enemyDataSlots_end) ; $C8
+        cp HIGH(enemyDataSlots.end) ; $C8
     jr nz, .loop
 ret ;}
 
@@ -9268,11 +9268,11 @@ collision_samusEnemiesUp: ;{ 00:34EF
         .endIf:
         
         ; Iterate to next enemy
-        ld de, $0020
+        ld de, ENEMY_SLOT_SIZE ; $0020
         add hl, de
         ; Exit if we finished all enemies
         ld a, h
-        cp HIGH(enemyDataSlots_end) ; $C8
+        cp HIGH(enemyDataSlots.end) ; $C8
     jr nz, .loop
 ret ;}
 

@@ -3177,7 +3177,7 @@ drawEnemies: ;{ 01:5A11
         ld a, [drawEnemy_pHigh]
         ld h, a
         ; Iterate to next enemy
-        ld de, $0020
+        ld de, ENEMY_SLOT_SIZE ; $0020
         add hl, de
         ; Save enemy pointer
         ld a, l
@@ -3185,7 +3185,7 @@ drawEnemies: ;{ 01:5A11
         ld a, h
         ld [drawEnemy_pHigh], a
         ; Exit if at end of enemy array
-        cp HIGH(enemyDataSlots_end) ; $C8
+        cp HIGH(enemyDataSlots.end) ; $C8
     jr nz, .loop
 ret ;}
 
@@ -4168,7 +4168,7 @@ saveEnemyFlagsToSRAM: ;{ 01:7A6C
     add a
     ld e, a
     rl d
-    ld hl, saveBuf_enemySaveFlags
+    ld hl, saveBuf_enemySpawnFlags
     add hl, de
     
     ; Load 
@@ -4210,7 +4210,7 @@ saveEnemyFlagsToSRAM: ;{ 01:7A6C
     ld d, a
     
     ; Set source pointer
-    ld hl, saveBuf_enemySaveFlags
+    ld hl, saveBuf_enemySpawnFlags
     
     ld bc, $40*7 ; $01C0
     .saveLoop:
@@ -4238,7 +4238,7 @@ loadEnemySaveFlags: ;{ 01:7AB9
     
 ; Copy over 7 banks of save flags    
     ; Set destination pointer
-    ld de, saveBuf_enemySaveFlags
+    ld de, saveBuf_enemySpawnFlags
     
     ; Set loop counter
     ld bc, $40*7 ; $01C0

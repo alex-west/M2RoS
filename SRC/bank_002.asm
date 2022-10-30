@@ -168,7 +168,7 @@ processEnemies: ;{ 02:409E
         ld [enemiesLeftToProcess], a
             jr z, .allEnemiesDone
         ; Reload sizeOf(enemy struct)
-        ld de, $0020
+        ld de, ENEMY_SLOT_SIZE ; $0020
         ; Reload enemy base address
         ldh a, [hEnemyWramAddrLow]
         ld l, a
@@ -231,14 +231,14 @@ inGame_loadEnemySaveFlags: ;{ 02:412F
     ; Update level bank
     ld a, [currentLevelBank]
     ld [previousLevelBank], a
-    ; HL = saveBuf_enemySaveFlags + ((currentLevelBank-9)*16)*4
+    ; HL = saveBuf_enemySpawnFlags + ((currentLevelBank-9)*16)*4
     sub $09
     swap a
     add a
     add a
     ld e, a
     rl d
-    ld hl, saveBuf_enemySaveFlags
+    ld hl, saveBuf_enemySpawnFlags
     add hl, de
     ; Load enemySpawnFlags.saved from buffer
     ld de, enemySpawnFlags.saved
@@ -302,14 +302,14 @@ inGame_saveAndLoadEnemySaveFlags: ;{ 02:418C
     ld a, [previousLevelBank]
     and a
     jr z, .endIf
-        ; HL = saveBuf_enemySaveFlags + ((currentLevelBank-9)*16)*4
+        ; HL = saveBuf_enemySpawnFlags + ((currentLevelBank-9)*16)*4
         sub $09
         swap a
         add a
         add a
         ld e, a
         rl d
-        ld hl, saveBuf_enemySaveFlags
+        ld hl, saveBuf_enemySpawnFlags
         add hl, de
         ; Save flags to save buffer
         ld de, enemySpawnFlags.saved
@@ -340,14 +340,14 @@ inGame_saveAndLoadEnemySaveFlags: ;{ 02:418C
     ; Update level bank
     ld a, c
     ld [previousLevelBank], a
-    ; HL = saveBuf_enemySaveFlags + ((currentLevelBank-9)*16)*4
+    ; HL = saveBuf_enemySpawnFlags + ((currentLevelBank-9)*16)*4
     sub $09
     swap a
     add a
     add a
     ld e, a
     rl d
-    ld hl, saveBuf_enemySaveFlags
+    ld hl, saveBuf_enemySpawnFlags
     add hl, de
     ; Copy enemySpawnFlags.saved from save buffer
     ld de, enemySpawnFlags.saved
@@ -390,7 +390,7 @@ deactivateAllEnemies: ;{ 02:4217
     ; Deactivate all 10 enemy data slots
     ld a, $ff
     ld hl, enemyDataSlots
-    ld c, $20
+    ld c, ENEMY_SLOT_SIZE ; $20
     ld d, $10
     .loop_A:
         ld [hl], a
