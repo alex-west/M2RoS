@@ -602,7 +602,7 @@ ret ;}
 ; WARNING: Does not perform any bounds check
 loadEnemy_getFirstEmptySlot: ;{ 03:42B4
     ld hl, enemyDataSlots
-    ld bc, $0020
+    ld bc, ENEMY_SLOT_SIZE ; $0020
     .findLoop:
         ld a, [hl]
         cp $ff ; Exit with address if enemy is inactive
@@ -1063,7 +1063,7 @@ queen_neckPatternPointers: ;{ 03:6C8E - Indexed by queen_neckPattern
 ; Initialize Queen AI
 queen_initialize: ;{ 03:6D4A
     ; Clear the entire page
-    ld hl, spriteC300
+    ld hl, oamScratchpad
     xor a
     ld b, a
     .clearLoop:
@@ -1112,7 +1112,7 @@ queen_initialize: ;{ 03:6D4A
     ld [queen_neckXMovementSum], a
     
     ; Initialize OAM scratchpad pointers
-    ld hl, spriteC300
+    ld hl, oamScratchpad
     ld a, l
     ld [queen_pOamScratchpadLow], a
     ld a, h
@@ -2383,7 +2383,7 @@ jr .saveNeckPointer ; Save Neck Pattern and Exit
         ld [hl], QUEEN_ACTOR_MOUTH_CLOSED ; $F5
         
         ; Clear OAM scratchpad pointer
-        ld hl, spriteC300
+        ld hl, oamScratchpad
         ld a, l
         ld [queen_pOamScratchpadLow], a
         ld a, h
@@ -2768,7 +2768,7 @@ ret
     ld [queen_projectilesActiveFlag], a
     
     ; Clear the OAM scratchpad pointer
-    ld hl, spriteC300
+    ld hl, oamScratchpad
 jp queen_drawNeck.saveScratchpadPointer
 ;}
 
@@ -3730,7 +3730,7 @@ queenStateFunc_doneVomitingSamus: ;{ 03:7A1D - Queen State $0B: Done spitting Sa
     jr nz, .loop
 
     ; Reset OAM scratchpad pointer
-    ld hl, spriteC300
+    ld hl, oamScratchpad
     ld a, l
     ld [queen_pOamScratchpadLow], a
     ld a, h

@@ -70,25 +70,23 @@ unknown_C227: ds 1 ; $C227 - Unknown
 ;}
 
 ; OAM Scratchpad and special enemy variables
-; section "WRAM Bank 0 - C300", wram0[$C300] {
+section "WRAM Bank 0 - C300", wram0[$C300] ;{
 ; Note: This entire page ($C300..$C3FF) is initialized to $00 by the Queen)
 
-def enSprite_blobThrower = $C300
-def spriteC300 = $C300 ;$C300..3D: Set to [$2:4FFE..503A] in $2:4DB1
-;{
-;    $C302/06: Set to DFh in $2:4EA1 if [$C382] = 0, set to E2h if [$C382] = 1, set to E3h if [$C382] = 2
-;    $C30A/0E: Set to E1h in $2:4EA1 if [$C382] = 0
-;    $C312/16/1A: XOR'd with 7 in $2:4EA1
-;    $C322/2E: XOR'd with Dh in $2:4EA1
-;    $C334: Set to E8h in $2:4EA1 if [$C382] = 0
-;}
-def queen_objectOAM = $C308 ; $C308..37: Metroid Queen neck/spit OAM. Ch slots of 4 bytes (Y, X, tile, attr)
-def queen_bentNeckOAM_end = $C31C
-def queen_wallOAM = $C338
-def queen_wallOAM_body = $C338 ; $C338 - Queen Wall OAM (body portion) - 7 slots
-def queen_wallOAM_head = $C354 ; $C354 - Queen Wall OAM (head portion) - 5 slots
+oamScratchpad: ds $60 ; $C300..3D: Used for compositing dynamic sprites
 
-def hitboxC360 = $C360 ;-$C363: Set to [$2:503B..3E] in $2:4DB1
+def enSprite_blobThrower = oamScratchpad ; Uses $40 bytes
+
+; Queen skips the first $08 bytes of the scratchpad for some reason
+def queen_objectOAM = oamScratchpad + $08 ; $C308..37: Metroid Queen neck/spit OAM. Ch slots of 4 bytes (Y, X, tile, attr)
+def queen_bentNeckOAM_end = queen_objectOAM + 4*$05 ; $C31C
+
+def queen_wallOAM = queen_objectOAM + 4*$0C ; $C338
+def queen_wallOAM_body = queen_wallOAM ; $C338 - Queen Wall OAM (body portion) - 7 slots
+def queen_wallOAM_head = queen_wallOAM + 4*$07 ; $C354 - Queen Wall OAM (head portion) - 5 slots
+
+; Queen OAM overwrites this 
+hitboxC360: ds 4 ; $C360..$C363 - Blob Thrower hitbox
 
 section "Special Enemy Variables", wram0[$C380]
 
