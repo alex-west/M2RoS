@@ -745,7 +745,10 @@ songPolynomialCounter_working: ds 1 ; $CF0E - Working sound channel frequency / 
 
 songCounterControl_working: ds 1 ; $CF0F - Working noise channel counter control (upper byte of working sound channel frequency)
 
-audioChannelOptions: ; $CF10..CF23 - Audio channel options (low bytes correspond with $FF10..23, and code exploits this fact)
+; Apparently some code in bank 4 expects address range of these variables ($CF10..23)
+;  to align with the address range of the registers it corresponds to ($FF10..23)
+ALIGN 8, $10
+audioChannelOptions: ; $CF10..CF23 - Audio channel options (low bytes of addresses correspond with $FF10..23, and code exploits this fact)
 ;        {
 songSweep_square1: ds 1 ; $CF10 - Tone/sweep channel sweep
 songSoundLength_square1: ds 1 ; $CF11 - Tone/sweep channel sound length / wave pattern duty
