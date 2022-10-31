@@ -916,7 +916,8 @@ loudLowHealthBeepTimer: ds 1 ; $CFEE - Loud low health beep timer
 
 ;;;; $D000..DFFF: WRAM bank 1 ;;; {
 section "WRAM bank 0 - D000", wramx[$d000] ;{
-wramUnused_D000: ds 8 ; $D000..07: Unused
+
+ds 8 ; $D000..07: Unused
 
 tempMetatile:
 .topLeft:     ds 1 ; $D008: Metatile top-left
@@ -924,26 +925,32 @@ tempMetatile:
 .bottomLeft:  ds 1 ; $D00A: Metatile bottom-left
 .bottomRight: ds 1 ; $D00B: Metatile bottom-right
 
-def samusPrevYPixel = $D00C ; Samus' previous Y position. Used for scrolling, low byte only
-def samusBeamCooldown = $D00D ; Auto-fire cooldown counter
-def doorScrollDirection = $D00E ; Door transition direction
+samusPrevYPixel: ds 1 ; $D00C - Samus' previous Y position. Used for scrolling, low byte only
+samusBeamCooldown: ds 1 ; $D00D - Auto-fire cooldown counter
+
+doorScrollDirection: ds 1 ; $D00E - Door transition direction
 ;{
 ;    1: Right
 ;    2: Left
 ;    4: Up
 ;    8: Down
 ;}
-def samusAirDirection = $D00F ; Direction Samus is moving in air, used for spin-jumping, damage boosting, and bomb knockback
+
+samusAirDirection: ds 1 ; $D00F - Direction Samus is moving in air, used for spin-jumping, damage boosting, and bomb knockback
 ;{
 ;    FFh: Up-left
 ;    0: Up
 ;    1: Up-right
 ;}
-def samus_jumpStartCounter = $D010 ; Counter for the beginning of Samus's jump state (used in the jumpStart pose)
-def unused_D011 = $D011 ; Nothing. Only cleared
-def weaponDirection = $D012 ; Direction of the projectile currently being processed
-;
-def samusPose = $D020 ; Samus' pose
+samus_jumpStartCounter: ds 1 ; $D010 - Counter for the beginning of Samus's jump state (used in the jumpStart pose)
+
+unused_D011: ds 1 ; $D011 - Nothing. Only cleared
+
+weaponDirection: ds 1 ; $D012 - Direction of the projectile currently being processed
+
+ds 13 ; $D013..$D01F - Unused
+
+samusPose: ds 1 ; $D020 - Samus' pose
 ;{
 ;    00: Standing
 ;    01: Jumping
@@ -972,53 +979,64 @@ def samusPose = $D020 ; Samus' pose
 ;    1C: Escaping Metroid Queen
 ;    1D: Escaped Metroid Queen
 ;}
-;
-def samus_animationTimer = $D022
+
+ds 1 ; $D021 - Unused
+
 ; Used by the running animation. 
 ;  Bits 4 and 5 select the animation frame. Clamped to be below $30. Typically incremented by 3 when running.
 ; Also used as a cooldown timer for certain actions (holding down to morph, up to stand, etc.)
+samus_animationTimer: ds 1 ; $D022
 
-def camera_scrollDirection = $D023 ; Direction of screen movement
+camera_scrollDirection: ds 1 ; $D023 - Direction of screen movement
 ;{
 ;    10: Right
 ;    20: Left
 ;    40: Up
 ;    80: Down
 ;}
-def samus_fallArcCounter = $D024 ; Index into falling velocity arrays. Max value is $16
-; $D025 - Unused?
-def samus_jumpArcCounter = $D026 ; Index into jump velocity arrays. Values below $40 use a linear velocity case instead. Subtract by $40 before indexing an array with this.
-prevSamusXPixel  = $D027 ; $D027: Samus' previous X position
-prevSamusXScreen = $D028
-prevSamusYPixel  = $D029 ; $D029: Samus' previous Y position
-prevSamusYScreen = $D02A
-def samusFacingDirection = $D02B ; Direction Samus is facing. Saved to SRAM, mirror of $D81E?
+
+samus_fallArcCounter: ds 1 ; $D024 - Index into falling velocity arrays. Max value is $16
+
+ds 1 ; $D025 - Unused
+
+samus_jumpArcCounter: ds 1 ; $D026 - Index into jump velocity arrays. Values below $40 use a linear velocity case instead. Subtract by $40 before indexing an array with this.
+
+prevSamusXPixel:  ds 1 ; $D027 ; $D027: Samus' previous X position
+prevSamusXScreen: ds 1 ; $D028
+prevSamusYPixel:  ds 1 ; $D029 ; $D029: Samus' previous Y position
+prevSamusYScreen: ds 1 ; $D02A
+
+samusFacingDirection: ds 1 ; $D02B - Direction Samus is facing. Saved to SRAM, mirror of $D81E?
 ;{
 ;    0: Left
 ;    1: Right
 ;}
-def samus_turnAnimTimer = $D02C ; Timer for turnaround animation (facing the screen). Used and decremented when MSB of samusPose is set.
+samus_turnAnimTimer: ds 1 ; $D02C - Timer for turnaround animation (facing the screen). Used and decremented when MSB of samusPose is set.
 
 ; $D02D..30: Vertical offsets to test for Samus's horizontal collision
-def collision_samusYOffset_A = $D02D
-def collision_samusYOffset_B = $D02E
-def collision_samusYOffset_C = $D02F
-def collision_samusYOffset_D = $D030
-; $D031: Unused. Was likely intended for as a RAM value for the 5th horizontal test point.
+collision_samusYOffset_A: ds 1 ; $D02D
+collision_samusYOffset_B: ds 1 ; $D02E
+collision_samusYOffset_C: ds 1 ; $D02F
+collision_samusYOffset_D: ds 1 ; $D030
+ds 1 ; $D031: Unused. Was likely intended for as a RAM value for the 5th horizontal test point.
 
-def projectileIndex = $D032 ; Index of working projectile
-def samus_speedDown = $D033 ; Set by samus_moveVertical. Cleared by morph
-def samus_speedDownTemp = $D034 ; Temp variable used by samus_moveVertical
-def camera_speedRight = $D035 ; Screen right velocity
-def camera_speedLeft  = $D036 ; Screen left velocity
-def camera_speedUp    = $D037 ; Screen up velocity
-def camera_speedDown  = $D038 ; Screen down velocity
+projectileIndex: ds 1 ; $D032 - Index of working projectile
 
-def title_unusedD039 = $D039 ; Set to 0 by load title screen, otherwise unused
-;
-def samus_onscreenYPos = $D03B ; Samus' Y position on screen
-def samus_onscreenXPos = $D03C ; Samus' X position on screen
-def spiderContactState = $D03D ; Spider ball orientation
+samus_speedDown: ds 1 ; $D033 ; Set by samus_moveVertical. Cleared by morph
+samus_speedDownTemp: ds 1 ; $D034 ; Temp variable used by samus_moveVertical
+
+camera_speedRight: ds 1 ; $D035 - Screen right velocity
+camera_speedLeft:  ds 1 ; $D036 - Screen left velocity
+camera_speedUp:    ds 1 ; $D037 - Screen up velocity
+camera_speedDown:  ds 1 ; $D038 - Screen down velocity
+
+title_unusedD039: ds 1 ; $D039 - Set to 0 by load title screen, otherwise unused
+
+ds 1 ; $D03A - Unused
+
+samus_onscreenYPos: ds 1 ; $D03B - Samus' Y position on screen
+samus_onscreenXPos: ds 1 ; $D03C - Samus' X position on screen
+spiderContactState: ds 1 ; $D03D - Spider ball orientation
 ;{
 ; The game checks the following points on the spider ball
 ; Point Bitmasks
@@ -1050,32 +1068,40 @@ def spiderContactState = $D03D ; Spider ball orientation
 ;    E: Inside corner:  Of right-facing wall and floor
 ;    F: Unused:         Embedded in solid
 ;}
-;
-def spiderBallDirection = $D042 ; Spider ball translational direction
+
+ds 4 ; $D03E..$D041 - Unused
+
+spiderBallDirection: ds 1 ; $D042 - Spider ball translational direction
 ;{
 ;    1: Right
 ;    2: Left
 ;    4: Up
 ;    8: Down
 ;}
-;
-def spiderDisplacement  = $D043 ; Distance moved by spider ball (non-directional)
-def spiderRotationState = $D044 ; Spider ball rotational direction
+
+spiderDisplacement:  ds 1 ; $D043 - Distance moved by spider ball (non-directional)
+spiderRotationState: ds 1 ; $D044 - Spider ball rotational direction
 ;{
 ;    0: Not moving
 ;    1: Anti-clockwise
 ;    2: Clockwise
 ;}
-def samusItems = $D045 ; Samus' equipment
 
-def debugItemIndex = $D046 ; Debug screen selector index
-def vramTransferFlag = $D047 ; VRAM tiles update flag (see $FFB1..B6, $2BA3, $27BA)
-def waterContactFlag = $D048 ; Flag to tell if Samus is touching water
-def samus_unmorphJumpTimer = $D049 ; Timer for allowing an unmorph jump. Decremented every frame. Written to in several places.
-def bomb_mapYPixel = $D04A ; Bomb Y position in map-space (for BG collision)
-def bomb_mapXPixel = $D04B ; Bomb X position in map-space (for BG collision)
-def mapUpdate_unusedVar = $D04C ; Cleared by prepMapUpdate, set to FFh in prepMapUpdate or during screen transition when rendering a row/column of blocks. Never read
-def samusActiveWeapon = $D04D ; Weapon equipped.  See also $D055
+samusItems: ds 1 ; $D045 - Samus' equipment
+
+debugItemIndex: ds 1 ; $D046 - Debug screen selector index
+
+vramTransferFlag: ds 1 ; $D047 - VRAM tiles update flag (see $FFB1..B6, $2BA3, $27BA)
+
+waterContactFlag: ds 1 ; $D048 - Flag to tell if Samus is touching water
+samus_unmorphJumpTimer: ds 1 ; $D049 - Timer for allowing an unmorph jump. Decremented every frame. Written to in several places.
+
+bomb_mapYPixel: ds 1 ; $D04A - Bomb Y position in map-space (for BG collision)
+bomb_mapXPixel: ds 1 ; $D04B - Bomb X position in map-space (for BG collision)
+
+mapUpdate_unusedVar: ds 1 ; $D04C - Cleared by prepMapUpdate, set to FFh in prepMapUpdate or during screen transition when rendering a row/column of blocks. Never read
+
+samusActiveWeapon: ds 1 ; $D04D - Weapon equipped.  See also $D055
 ;{
 ;    0: Normal
 ;    1: Ice
@@ -1084,17 +1110,18 @@ def samusActiveWeapon = $D04D ; Weapon equipped.  See also $D055
 ;    4: Plasma
 ;    8: Missile
 ;}
-def bankRegMirror = $D04E ;Bank
-def samusInvulnerableTimer = $D04F ; Invincibility timer
-def samusEnergyTanks   = $D050 ; Samus' max health, in tanks,     see also $D817
-def samusEnergyTanks   = $D050 ; Samus' max health, in tanks,     see also $D817
-def samusCurHealthLow  = $D051 ; Samus' current health,           see also $D818/$D084
-def samusCurHealthHigh = $D052 ; Samus' current health (in tanks) see also $D819/$D085
 
-def samusCurMissilesLow  = $D053 ; Samus' missiles (low byte)     see also $D81C
-def samusCurMissilesHigh = $D054 ; Samus' missiles (high byte)
+bankRegMirror: ds 1 ; $D04E - Bank
 
-def samusBeam = $D055 ; Current beam that Samus owns. See also $D04D/$D816
+samusInvulnerableTimer: ds 1 ; $D04F - Invincibility timer
+samusEnergyTanks:   ds 1 ; $D050 - Samus' max health, in tanks,     see also $D817
+samusCurHealthLow:  ds 1 ; $D051 - Samus' current health,           see also $D818/$D084
+samusCurHealthHigh: ds 1 ; $D052 - Samus' current health (in tanks) see also $D819/$D085
+
+samusCurMissilesLow:  ds 1 ; $D053 - Samus' missiles (low byte)     see also $D81C
+samusCurMissilesHigh: ds 1 ; $D054 - Samus' missiles (high byte)
+
+samusBeam: ds 1 ; $D055 - Current beam that Samus owns. See also $D04D/$D816
 ;{
 ;    0: Normal
 ;    1: Ice
@@ -1102,36 +1129,44 @@ def samusBeam = $D055 ; Current beam that Samus owns. See also $D04D/$D816
 ;    3: Spazer
 ;    4: Plasma
 ;}
-samusSolidityIndex = $D056 ; Samus solid block threshold
-samus_screenSpritePriority = $D057 ; Room sprite priority
+
+samusSolidityIndex: ds 1 ; $D056 - Samus solid block threshold
+samus_screenSpritePriority: ds 1 ; $D057 - Room sprite priority
 ;{
 ;    0: Sprites over BG
 ;    1: BG over sprites
 ;}
-def currentLevelBank = $D058 ; Bank for current room
-def deathAnimTimer = $D059 ; Death sequence timer
-def pDeathAltAnimBaseLow  = $D05A ; Base address of pixels to clear in Samus' VRAM tiles (for unused animation)
-def pDeathAltAnimBaseHigh = $D05B
-def samusSpriteCollisionProcessedFlag = $D05C ; Flag set when collision_samusEnemies ($32AB) is executed to prevent it from being executed unnecessarily
+currentLevelBank: ds 1 ; $D058 - Bank for current room
+
+deathAnimTimer: ds 1 ; $D059 - Death sequence timer
+pDeathAltAnimBaseLow:  ds 1 ; $D05A - Base address of pixels to clear in Samus' VRAM tiles (for unused animation)
+pDeathAltAnimBaseHigh: ds 1 ; $D05B
+
+samusSpriteCollisionProcessedFlag: ds 1 ; $D05C - Flag set when collision_samusEnemies ($32AB) is executed to prevent it from being executed unnecessarily
 
 ;$D05D..60: Collision information
 ; - Copied to $C466..69 by a generic enemy routine if the enemy pointer matches
-collision_weaponType = $D05D ; Projectile type - Set to [$D08D] or an appropriate constant
-collision_pEnemyLow  = $D05E ; Enemy data pointer of target enemy (if collision happens)
-collision_pEnemyHigh = $D05F
-collision_weaponDir  = $D060 ; Projectile direction - Set to [$D012] if shot
-;
-def acidContactFlag = $D062 ; Flag set every frame if Samus is touching acid.
-def deathFlag = $D063 ; Dying flag
+collision_weaponType: ds 1 ; $D05D - Projectile type - Set to [$D08D] or an appropriate constant
+collision_pEnemyLow:  ds 1 ; $D05E - Enemy data pointer of target enemy (if collision happens)
+collision_pEnemyHigh: ds 1 ; $D05F
+collision_weaponDir:  ds 1 ; $D060 - Projectile direction - Set to [$D012] if shot
+
+ds 1 ; $D061 - Unused
+
+acidContactFlag: ds 1 ; $D062 - Flag set every frame if Samus is touching acid.
+
+deathFlag: ds 1 ; $D063 - Dying flag
 ;{
 ;    0: Not dying
 ;    1: Dying
 ;    FFh: Dead
 ;}
-samusTopOamOffset = $D064 ; Last OAM offset used by Samus, HUD, etc. Used in by door transition routine ($239C) to erase enemies
-vramTransfer_srcBank = $D065 ; VRAM tiles update source bank (see $FFB1..B6, $2BA3)
-countdownTimerLow = $D066;  ; Generic countdown timer used for
-countdownTimerHigh = $D067; ;  various events
+samusTopOamOffset: ds 1 ; $D064 - Last OAM offset used by Samus, HUD, etc. Used in by door transition routine ($239C) to erase enemies
+
+vramTransfer_srcBank: ds 1 ; $D065 - VRAM tiles update source bank (see $FFB1..B6, $2BA3)
+
+countdownTimerLow:  ds 1 ; $D066 - Generic countdown timer used for
+countdownTimerHigh: ds 1 ; $D067 -  various events
 ;{
 ;    Decremented during v-blank interrupt handler.
 ;    Set to 140h on loading Samus. Whilst set, Samus can't move when facing screen and low health beep doesn't play.
@@ -1141,11 +1176,16 @@ countdownTimerHigh = $D067; ;  various events
 ;    Set to FFFFh on load title screen. Checked as timer for title screen flashing
 ;    Used in many other places in bank 5
 ;}
-;
-enemySolidityIndex_canon = $D069 ; Canonicaly copy of the enemy solid block threshold (not used by enemy code, however)
-;
-unused_D06B = $D06B ; Unused. Cleared by loading save
-def itemCollected = $D06C ; Item pickup being collected at the moment. Set to ([enemy sprite ID] - 81h) / 2 + 1 by $2:4DD3
+
+ds 1 ; $D068 - Unused
+
+enemySolidityIndex_canon: ds 1 ; $D069 - Canonicaly copy of the enemy solid block threshold (not used by enemy code, however)
+
+ds 1 ; $D06A - Unused
+
+unused_D06B: ds 1 ; $D06B - Unused. Cleared by loading save
+
+itemCollected: ds 1 ; $D06C - Item pickup being collected at the moment. Set to ([enemy sprite ID] - 81h) / 2 + 1 by $2:4DD3
 ;{
 ;    1: Plasma
 ;    2: Ice
@@ -1163,56 +1203,70 @@ def itemCollected = $D06C ; Item pickup being collected at the moment. Set to ([
 ;    Eh: Energy refill
 ;    Fh: Missile refill
 ;}
-def itemCollectionFlag = $D06D ; Item collection flag. Stops the status bar from updating. Three values:
+itemCollectionFlag: ds 1 ; $D06D - Item collection flag. Stops the status bar from updating. Three values:
 ;{
 ;    $00 = No item is being collected
 ;    $FF = Set by Item AI to indicate an item is being collected
 ;    $03 = Set by handleItemPickup (00:372F) to tell the item AI that it's time to delete the item
 ;}
 
-def maxOamPrevFrame = $D06E ; OAM slots used in by the previous frame
+maxOamPrevFrame: ds 1 ; $D06E - OAM slots used in by the previous frame
 
-def itemOrb_collisionType = $D06F  ; Used (?) to override collision results during item collection
-def itemOrb_pEnemyWramLow  = $D070 ;
-def itemOrb_pEnemyWramHigh = $D071 ;
+itemOrb_collisionType:  ds 1 ; $D06F - Used (?) to override collision results during item collection
+itemOrb_pEnemyWramLow:  ds 1 ; $D070
+itemOrb_pEnemyWramHigh: ds 1 ; $D071
 
-def samus_spinAnimationTimer = $D072 ; Animation timer for spinning. Incremented by general pose handler and door transitions.
-def credits_textPointerLow  = $D073 ; Pointer to the working copy of the credits in SRAM. Stops being incremented when it hits the byte $F0. Character data is subtracted by $21 to adjust to almost-ASCII
-def credits_textPointerHigh = $D074 ;
-def credits_unusedVar = $D075 ; Cleared, but never read
-def credits_nextLineReady = $D076 ; Flag to indicate that the next line of the credits is ready to be uploaded
+samus_spinAnimationTimer: ds 1 ; $D072 - Animation timer for spinning. Incremented by general pose handler and door transitions.
 
-def acidDamageValue = $D077 ; Acid damage. Saved to SRAM
-def spikeDamageValue = $D078 ; Spike damage. Saved to SRAM
-def loadingFromFile = $D079 ; 00h: loading new game, otherwise: loading from file. Adjusts behaviors relating to loading the font and if Samus stays facing the screen.
-def title_clearSelected = $D07A ; 0: Start selected, 1: Clear selected
-def titleStarY = $D07B ; Star Y position
-def titleStarX = $D07C ; Star X position
-def saveContactFlag = $D07D ; On save pillar flag
+credits_textPointerLow:  ds 1 ; $D073 - Pointer to the working copy of the credits in SRAM. Stops being incremented when it hits the byte $F0. Character data is subtracted by $21 to adjust to almost-ASCII
+credits_textPointerHigh: ds 1 ; $D074
+credits_unusedVar: ds 1 ; $D075 - Cleared, but never read
+credits_nextLineReady: ds 1 ; $D076 - Flag to indicate that the next line of the credits is ready to be uploaded
+
+acidDamageValue:  ds 1 ; $D077 - Acid damage. Saved to SRAM
+spikeDamageValue: ds 1 ; $D078 - Spike damage. Saved to SRAM
+
+loadingFromFile: ds 1 ; $D079 - 00h: loading new game, otherwise: loading from file. Adjusts behaviors relating to loading the font and if Samus stays facing the screen.
+
+title_clearSelected: ds 1 ; $D07A - 0: Start selected, 1: Clear selected
+titleStarY: ds 1 ; $D07B - Star Y position
+titleStarX: ds 1 ; $D07C - Star X position
+
+saveContactFlag: ds 1 ; $D07D - On save pillar flag
 ;{
 ;    0: Not on save pillar
 ;    FFh: On save pillar
 ;}
-def bg_palette  = $D07E ; BG palette
-def ob_palette0 = $D07F ; Object 0 palette
-def ob_palette1 = $D080 ; Object 1 palette
 
-def samusMaxMissilesLow  = $D081 ; Samus' max missiles, see also $D81A
-def samusMaxMissilesHigh = $D082 ; Samus' max missiles (high byte)
-def earthquakeTimer = $D083 ; Earthquake timer (how long the earthquake itself lasts)
-def samusDispHealthLow  = $D084 ; Samus' health for display,   see also $D051/$D818
-def samusDispHealthHigh = $D085 ; Samus' energy tanks for display, see also $D052/$D819
-def samusDispMissilesLow  = $D086 ; Samus' missiles for display, see also $D053/$D81C
-def samusDispMissilesHigh = $D087 ; Samus' missiles for display (high byte)
-def saveMessageCooldownTimer = $D088 ; Cooldown timer for game save message (for displaying the "Completed" text)
-def metroidCountReal = $D089 ; Real number of metroids remaining (BCD)
-def beamSolidityIndex = $D08A ; Projectile solid block threshold
-def queen_roomFlag = $D08B ; 11h: In Metroid Queen's room (set by screen transition command 8), other values less than 10h: not in Queen's room
-def variaAnimationFlag = $D08C ; Flag for doing the varia-collection-style VRAM update (pixel-row by pixel-row) -- $00: off, $FF: on
-def weaponType = $D08D ; Type of projectile currently being processed
-def doorIndexLow  = $D08E ; Index of screen transition command set. Set to [$4300 + ([screen Y position high] * 10h + [screen X position high]) * 2] & ~800h by set up door transition
-def doorIndexHigh = $D08F
-def queen_eatingState = $D090 ; Metroid Queen eating pose
+bg_palette:  ds 1 ; $D07E - BG palette
+ob_palette0: ds 1 ; $D07F - Object 0 palette
+ob_palette1: ds 1 ; $D080 - Object 1 palette
+
+samusMaxMissilesLow:  ds 1 ; $D081 - Samus' max missiles, see also $D81A
+samusMaxMissilesHigh: ds 1 ; $D082 - Samus' max missiles (high byte)
+
+earthquakeTimer: ds 1 ; $D083 - Earthquake timer (how long the earthquake itself lasts)
+
+samusDispHealthLow:  ds 1 ; $D084 - Samus' health for display,   see also $D051/$D818
+samusDispHealthHigh: ds 1 ; $D085 - Samus' energy tanks for display, see also $D052/$D819
+samusDispMissilesLow:  ds 1 ; $D086 - Samus' missiles for display, see also $D053/$D81C
+samusDispMissilesHigh: ds 1 ; $D087 - Samus' missiles for display (high byte)
+
+saveMessageCooldownTimer: ds 1 ; $D088 - Cooldown timer for game save message (for displaying the "Completed" text)
+metroidCountReal: ds 1 ; $D089 - Real number of metroids remaining (BCD)
+
+beamSolidityIndex: ds 1 ; $D08A - Projectile solid block threshold
+
+queen_roomFlag: ds 1 ; $D08B - 11h: In Metroid Queen's room (set by screen transition command 8), other values less than 10h: not in Queen's room
+
+variaAnimationFlag: ds 1 ; $D08C - Flag for doing the varia-collection-style VRAM update (pixel-row by pixel-row) -- $00: off, $FF: on
+
+weaponType: ds 1 ; $D08D - Type of projectile currently being processed
+
+doorIndexLow:  ds 1 ; $D08E - Index of screen transition command set. Set to [$4300 + ([screen Y position high] * 10h + [screen X position high]) * 2] & ~800h by set up door transition
+doorIndexHigh: ds 1 ; $D08F
+
+queen_eatingState: ds 1 ; $D090 - Metroid Queen eating pose
 ;{
 ;    Sets Samus pose = escaping Metroid Queen when 7, checked for 5/20h and set to 6 in in Metroid Queen's mouth
 ;    0: Otherwise                        - Set by Queen
@@ -1228,40 +1282,65 @@ def queen_eatingState = $D090 ; Metroid Queen eating pose
 ;    20h: Dying (from bombing the mouth) - Set by Queen
 ;    22h: Dying                          - Set by Queen
 ;}
-def nextEarthquakeTimer = $D091 ; Time until next Metroid earthquake. Counts down in $100h frame intervals after killing a metroid.
-def currentRoomSong = $D092 ; Song for room. Used when restoring song when loading a save and after some other events
-def itemCollected_copy = $D093 ; Copy of $D06C, used by handleItemPickup (00:372F)
-def unused_itemOrb_yPos = $D094 ; Written to by item orb AI, but never read?
-def unused_itemOrb_xPos = $D095 ; Written to by item orb AI, but never read?
-def metroidCountShuffleTimer = $D096 ; Metroids remaining shuffle timer
-def credits_samusAnimState = $D097 ; Samus' animation state during the credits
-def gameTimeMinutes = $D098 ; In-game timer, minutes
-def gameTimeHours   = $D099 ; In-game timer, hours
-def metroidCountDisplayed = $D09A ; Number of Metroids remaining (displayed, not real)
-def fadeInTimer = $D09B ; Fade in timer. Max value of 3Fh, is set to zero when Dh reached
-def credits_runAnimFrame   = $D09C ; Tracks current animation frame of run animation
-def credits_runAnimCounter = $D09D ; Counts video frames between animation frames
-def justStartedTransition = $D09E ; $00 = Normal, $FF = Just entered a screen transition
-def credits_scrollingDone  = $D09F ; Flag to indicate if credits stopped scrolling (allows timer to display)
-def debugFlag = $D0A0 ; Activates debug pause menu and other stuff
-def samus_prevHealthLowByte = $D0A1 ; Previous value of health (low-byte)
-def gameTimeSeconds = $D0A2 ; 256-frames long (~1/14 of a minute), not 60 frames long. In-game time, but not saved
-def activeSaveSlot = $D0A3 ; Save slot
-def title_showClearOption = $D0A4 ; Show clear save slot option flag
-def songRequest_afterEarthquake = $D0A5 ; Song to play after earthquake
-def sound_playQueenRoar = $D0A6 ; Enable Queen's distant roar as a sound effect
-def metroidLCounterDisp = $D0A7 ; L Counter value to display (Metroids remaining in area)
-def wramUnknown_D0A8 = $D0A8 ; Set to 0 by $239C
-;
-;$D0F9: Used in title?
+
+nextEarthquakeTimer: ds 1 ; $D091 - Time until next Metroid earthquake. Counts down in $100h frame intervals after killing a metroid.
+
+currentRoomSong: ds 1 ; $D092 - Song for room. Used when restoring song when loading a save and after some other events
+
+itemCollected_copy: ds 1 ; $D093 - Copy of $D06C, used by handleItemPickup (00:372F)
+unused_itemOrb_yPos: ds 1 ; $D094 - Written to by item orb AI, but never read?
+unused_itemOrb_xPos: ds 1 ; $D095 - Written to by item orb AI, but never read?
+
+metroidCountShuffleTimer: ds 1 ; $D096 - Metroids remaining shuffle timer
+
+credits_samusAnimState: ds 1 ; $D097 - Samus' animation state during the credits
+
+gameTimeMinutes: ds 1 ; $D098 - In-game timer, minutes
+gameTimeHours:   ds 1 ; $D099 - In-game timer, hours
+
+metroidCountDisplayed: ds 1 ; $D09A - Number of Metroids remaining (displayed, not real)
+
+fadeInTimer: ds 1 ; $D09B - Fade in timer. Max value of 3Fh, is set to zero when Dh reached
+
+credits_runAnimFrame:   ds 1 ; $D09C - Tracks current animation frame of run animation
+credits_runAnimCounter: ds 1 ; $D09D - Counts video frames between animation frames
+
+justStartedTransition: ds 1 ; $D09E - $00 = Normal, $FF = Just entered a screen transition
+
+credits_scrollingDone: ds 1 ; $D09F - Flag to indicate if credits stopped scrolling (allows timer to display)
+
+debugFlag: ds 1 ; $D0A0 - Activates debug pause menu and other stuff
+
+samus_prevHealthLowByte: ds 1 ; $D0A1 - Previous value of health (low-byte)
+
+gameTimeSeconds: ds 1 ; $D0A2 - 256-frames long (~1/14 of a minute), not 60 frames long. In-game time, but not saved
+
+activeSaveSlot: ds 1 ; $D0A3 - Save slot
+title_showClearOption: ds 1 ; $D0A4 - Show clear save slot option flag
+
+songRequest_afterEarthquake: ds 1 ; $D0A5 - Song to play after earthquake
+sound_playQueenRoar: ds 1 ; $D0A6 - Enable Queen's distant roar as a sound effect
+
+metroidLCounterDisp: ds 1 ; $D0A7 - L Counter value to display (Metroids remaining in area)
+
+wramUnknown_D0A8: ds 1 ; $D0A8 - Set to 0 by $239C
+
+; $D0A9..$D0FF - Unused
+
 ;}
 
 
-def credits_starArray = $D600 ; ds $20 (inadvertantly, only the first $10 bytes are properly initialized)
-;
-def doorScriptBuffer = $D700 ; to D73F: Screen transition commands (see $5:46E5)
-	def doorScriptBufferSize = $40
-;
+; $D100..$D5FF - Unused ($500 bytes!)
+
+
+section "WRAM Star Array", wramx[$d600]
+credits_starArray: ds $20 ; $D600..$D620 - (inadvertantly, only the first $10 bytes are properly initialized)
+
+
+section "WRAM Door Script Buffer", wramx[$d700]
+def doorScriptBufferSize = $40
+doorScriptBuffer: ds doorScriptBufferSize ; $D700..$D73F: Screen transition commands (see $5:46E5)
+
 
 section "WRAM SaveBuffer", wramx[$d800]
 ;$D800..25: Save data. Data loaded from $1:4E64..89 by game mode Bh, loaded from $A008..2D + save slot * 40h by game mode Ch
