@@ -2626,6 +2626,7 @@ door1B4:
     END_DOOR
 
 door1B5:
+;unused and swapped out for 01F2
     IF_MET_LESS $34, $01E1
     IF_MET_LESS $42, $01E3
     END_DOOR
@@ -2880,7 +2881,16 @@ door1F0:
     END_DOOR
 
 door1F1:
+    WARP $A, $84
+    IF_MET_LESS $24, $0188
+    IF_MET_LESS $34, $01E3
+    IF_MET_LESS $42, $01E2
+    END_DOOR
 door1F2:
+    WARP $A, $83
+    IF_MET_LESS $34, $01E1
+    IF_MET_LESS $42, $01E3
+    END_DOOR
 door1F3:
 door1F4:
 door1F5:

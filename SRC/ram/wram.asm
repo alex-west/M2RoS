@@ -1346,7 +1346,8 @@ doorScriptBuffer: ds doorScriptBufferSize ; $D700..$D73F: Screen transition comm
 section "WRAM SaveBuffer", wramx[$d800]
 ;$D800..25: Save data. Data loaded from $1:4E64..89 by game mode Bh, loaded from $A008..2D + save slot * 40h by game mode Ch
 ;{
-saveBuffer: ; $26 bytes
+saveBuffer: ; $26 bytes 
+			; - now 28 with the map ones added
 saveBuf_samusYPixel:  ds 1 ; $D800: Samus' Y position
 saveBuf_samusYScreen: ds 1 ; $D801: Samus' Y position
 saveBuf_samusXPixel:  ds 1 ; $D802: Samus' X position
@@ -1405,6 +1406,8 @@ saveBuf_gameTimeMinutes: ds 1 ; $D823: In-game timer, minutes
 saveBuf_gameTimeHours:   ds 1 ; $D824: In-game timer, hours
 
 saveBuf_metroidCountDisplayed: ds 1 ; $D825: Number of Metroids remaining
+saveBuf_startItems: ds 1 ; $D826: Number of Items to find remaining
+saveBuf_totalItems: ds 1 ; $D827: Total number of items
 ;}
 
 section "Tiletable Array", wramx[$d900]
@@ -1471,7 +1474,23 @@ bombArray:: ;$DD30..5F: Bomb data. 10h byte slots
 ;    + 2: Y position
 ;    + 3: X position
 ;}
-wramUnused_DD60: ds $100 - $60 ;$DD60..FF: Unused
+loadNewMapFlag:: ds $01	;IN USE flag at endDoorScript in bank 0 to run load new map tiles
+mapLevelBankIndexOffset:: ds $01	;debugging vars, =(mapLevelBank-9)x2, used as an offset to adjust an index
+mapCollectionIndex:: ds $01	;IN USE $dd60, map index to load, 256 entries per level map, used in bank 10 to determine which map to load
+mapCollectionTableXY:: ds $02 ;IN USE debug, XY index for address to look up in previous table
+mapToLoad:: ds $01	;debug, value of the map to load as stored in the lookup table
+samusMapY:: ds $01 ;IN USE supposedly, Samus Y position for the map
+samusMapX:: ds $01 ;IN USE supposedly, samus X position for the map
+mapItemsFound:: ds $01
+mapItemsTotal:: ds $01
+mapSamusLocatorYOffset:: ds $01 ;IN USE note these two are in use
+mapSamusLocatorXOffset:: ds $01 ;IN USE these are temporary for samus map location to display on window
+clearItemDotLow:: ds $01 ;IN USE for clearing item dot after contacting item, due to nonpersistent hRam vals
+clearItemDotHigh:: ds $01 ;IN USE same as prevSamusXPixel
+clearItemBank:: ds $01	;IN USE track map bank for item collected on touch
+clearItemIndex:: ds $01	;IN USE tracking the offset of item bank
+mapWram:: ds $70 ;IN USE map sprite buffer data
+wramUnused_DD80: ds $100 - $4c ;$DD71..FF: Unused
 
 ; List of metatiles from the map to update to VRAM
 mapUpdateBuffer:: ds $100 ; $DE00..FF

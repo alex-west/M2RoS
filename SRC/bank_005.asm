@@ -135,7 +135,6 @@ reti ;}
 ; called by gameMode_boot
 loadTitleScreen: ;{ 05:408F
     call title_loadGraphics
-    ; Load HUD
     ld hl, hudBaseTilemap
     ld de, vramDest_statusBar
     ld b, $14
@@ -145,6 +144,11 @@ loadTitleScreen: ;{ 05:408F
         inc de
         dec b
     jr nz, .hudLoop
+    ; Load HUD
+		;;;;hijack
+			handleLoadMapTiles:
+			call doHandleLoadMapTiles_farCall
+		;;;;end hijack
     ; Load "Save" text
     ld hl, saveTextTilemap
     ld de, vramDest_itemText

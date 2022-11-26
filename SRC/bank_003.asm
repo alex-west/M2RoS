@@ -1062,8 +1062,21 @@ queen_neckPatternPointers: ;{ 03:6C8E - Indexed by queen_neckPattern
 
 ; Initialize Queen AI
 queen_initialize: ;{ 03:6D4A
+<<<<<<< Updated upstream
     ; Clear the entire page
     ld hl, oamScratchpad
+=======
+		;;;;;;;;;;;; hijack - hopefully just at start of fight
+			ld a, $ff
+			ld [$9c88], a
+			ld [$9c89], a
+			ld [$9c8a], a
+			ld [$9c8b], a
+			ld [$9c8c], a
+			ld [$9c8d], a
+		;;;;;;;;;;;; end hijack
+    ld hl, spriteC300
+>>>>>>> Stashed changes
     xor a
     ld b, a
     .clearLoop:

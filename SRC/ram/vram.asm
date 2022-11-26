@@ -39,6 +39,11 @@ def vramDest_queenStatusBar = $9BE0
 ; Window Tilemap - $9C00-9FFF - $20 bytes/row
 def vramDest_statusBar = $9C00
 def vramDest_itemText  = $9C20
+;def vramDest_map1 = $9C40
+def vramDest_map2 = $9C40
+;def vramDest_map3 = $9D40
+;def vramDest_map4 = $9E20
+
 ; Queen's head row 3
 ; Queen's head row 4
     

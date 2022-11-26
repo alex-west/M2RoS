@@ -1657,6 +1657,7 @@ enSprite_item:
     db  -8,  0, $B5, $00
     db   0, -8, $B6, $00
     db   0,  0, $B7, $00
+<<<<<<< Updated upstream
     db METASPRITE_END
 enSprite_energyTank:
     db  -8, -8, $AB, $00
@@ -1665,6 +1666,17 @@ enSprite_energyTank:
     db   0,  0, $AE, $00
     db METASPRITE_END
 enSprite_missileTank:
+=======
+    db $FF
+sprite7074:
+	;hijack edit for map hack to gain 2 tiles
+    db  -8, -8, $AB, $00
+    db  -8,  0, $AB, $20
+    db   0, -8, $AC, $00
+    db   0,  0, $AC, $20
+    db $FF
+sprite7085:
+>>>>>>> Stashed changes
     db  -8, -8, $F0, $00
     db  -8,  0, $F1, $00
     db   0, -8, $F2, $00

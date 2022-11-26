@@ -92,3 +92,6 @@ queenDeath_firstTile = $8B10
 queenDeath_lastTile = $9570
 queenDeath_bodyStart = $99A0
 queenDeath_bodyEnd = $9A80
+
+
+INCLUDE "mapPatchTables/mapTileConstants.asm"

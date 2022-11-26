@@ -32,3 +32,7 @@
 	db $00       ; In-game timer, minutes
 	db $00       ; In-game timer, hours
 	db $39       ; Number of Metroids remaining
+	
+	;map patch additions
+	db start_items		 ;starting 'equipment found' count
+	db total_items		 ;total equipment to find

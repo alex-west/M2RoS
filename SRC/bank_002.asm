@@ -2476,6 +2476,14 @@ ret
     ; Let game know that an item is being collected now
     ld a, $ff
     ld [itemCollectionFlag], a
+	;;;;;;;;;;;;;;;;;hijack to store enemy WRAM to do update to clear item dot
+		ld a, [hEnemyWramAddrLow]
+		ld [clearItemDotLow], a
+		ld a, [hEnemyWramAddrHigh]
+		ld [clearItemDotHigh], a
+;		ld a, [currentLevelBank]
+;		ld [clearItemBank], a
+	;;;;;;;;;;;;;;;;;end hijack
 ret
 
 .checkIfDone:

@@ -105,9 +105,18 @@ VBlank_updateStatusBar: ;{ 01:493E
     ld [hl+], a
     
     ; Skip over missile icon (drawn previously)
-    inc hl
-    inc hl
-    inc hl
+	;inc hl
+	;inc hl
+    ;inc hl
+	;;;;hijack - draw these to accomadate new pause hud
+	;;;;hijack - redraw blank tile to accomodate new pause hud
+		ld a, $af
+		ld [hl+], a
+		ld a, $9f
+		ld [hl+], a
+		ld a, $9e
+		ld [hl+], a
+	;;;;end hijack
     
     ; Draw Samus' missiles (hundreds digit)
     ld a, [samusDispMissilesHigh]
@@ -128,7 +137,12 @@ VBlank_updateStatusBar: ;{ 01:493E
     
     ; Skip over metroid icon
     inc hl
-    inc hl
+	;inc hl
+	;;;;hijack - redraw blank tile to accomodate new pause hud
+		;comments out inc above
+		ld a, $ff
+		ld [hl+], a
+	;;;;end hijack
     inc hl
     inc hl
 
@@ -175,25 +189,26 @@ VBlank_updateStatusBar: ;{ 01:493E
             ld [hl], a
             ret
     .else_C:
-        ld a, [metroidLCounterDisp]
-        cp $ff
-        jr z, .else_E
-            ; Draw normal L counter (tens digit)
-            and $f0
-            swap a
-            add $a0
-            ld [hl+], a
-            ; Ones digit
-            ld a, [metroidLCounterDisp]
-            and $0f
-            add $a0
-            ld [hl], a
-            ret
-        .else_E:
-            ; Draw blank L counter "--"
-            ld a, $9e ; Dash
-            ld [hl+], a
-            ld [hl], a
+;moved to bank 10 during pause sprite handling
+;        ld a, [metroidLCounterDisp]
+;        cp $ff
+;        jr z, .else_E
+;            ; Draw normal L counter (tens digit)
+;            and $f0
+;            swap a
+;            add $a0
+;            ld [hl+], a
+;            ; Ones digit
+;            ld a, [metroidLCounterDisp]
+;            and $0f
+;            add $a0
+;            ld [hl], a
+;            ret
+;        .else_E:
+;            ; Draw blank L counter "--"
+;            ld a, $9e ; Dash
+;            ld [hl+], a
+;            ld [hl], a
             ret
 ;}
 ;} end proc
@@ -462,7 +477,6 @@ drawSamusSprite: ;{ 01:4B62
     ld b, a
     ldh a, [hSpriteXPixel]
     ld c, a
-
     .spriteLoop:
         ; No sprite flipping logic here
         ; Load y coordinate
@@ -966,7 +980,15 @@ createNewSave: ;{ 01:4E1C
     ; Copy initial save file to save buffer
     ld hl, initialSaveFile
     ld de, saveBuffer
+<<<<<<< Updated upstream
     ld b, $26
+=======
+;    ld b, $26
+	;;;hijack - comment above and make $28
+		ld b, $28
+	;;;;end hijack
+
+>>>>>>> Stashed changes
     .loadLoop:
         ld a, [hl+]
         ld [de], a
@@ -1002,7 +1024,15 @@ loadSaveFile: ;{ 01:4E33
     
     ; Copy save file to save buffer
     ld de, saveBuffer
+<<<<<<< Updated upstream
     ld b, $26
+=======
+;    ld b, $26
+	;;;;hijack - comment above and make $28 for new item collection tally
+		ld b, $28
+	;;;;end hijack
+
+>>>>>>> Stashed changes
     .loadLoop:
         ld a, [hl+]
         ld [de], a
@@ -2989,8 +3019,15 @@ miscIngameTasks: ;{ 01:57F2
     ; Skip this if in the Queen fight
     ld a, [queen_roomFlag]
     cp $11
+<<<<<<< Updated upstream
     jr z, .endIf_B
         ; Check if window is active
+=======
+;OG    jr z, .endIf_B
+		;;;; hijack comments above jr and makes a jp
+			jp z, .endIf_B
+		;;;;end hijack
+>>>>>>> Stashed changes
         ldh a, [rLCDC]
         bit 5, a
         jr nz, .endIf_C
@@ -2999,8 +3036,11 @@ miscIngameTasks: ;{ 01:57F2
             ldh [rLCDC], a
         .endIf_C:
         
-        ld a, $88 ; Default window position
-        ldh [rWY], a
+				;;;;;;;;hijack
+						call hijackForPauseMap
+				;        ld a, $88 ; Default window position
+				;        ldh [rWY], a
+				;;;;;;;;end hijack
         ; Check different cases for raising the window
         ld a, [saveContactFlag] ; Only unset by door transitions and this function
         and a
@@ -3008,17 +3048,45 @@ miscIngameTasks: ;{ 01:57F2
             ; Check if item being collected
             ld a, [itemCollected_copy]
             and a
-            jr z, .endIf_B
+            jp z, .endIf_B
                 ld a, [itemCollected_copy]
                 cp $0b ; Check if not a common item or refill
-                jr nc, .endIf_B
+                jp nc, .endIf_B
                     ld a, $80 ; Higher window position
                     ldh [rWY], a
-                    jr .endIf_B
+                    jp .endIf_B
         .else_D:
             ; Touching a save point
             ld a, $80 ; Higher window position
             ldh [rWY], a
+				;;;;hijack - draw save text to HUD
+						;reset half-tile behind metroid
+							ld a, $ff
+							ld [$9c0f], a
+							ld [$9c20], a
+							ld [$9c26], a
+							ld [$9c27], a
+							ld [$9c28], a
+							ld [$9c29], a
+							ld [$9c2a], a
+							ld [$9c2b], a
+							ld [$9c2c], a
+							ld [$9c2d], a
+							ld [$9c2e], a
+							ld [$9c2f], a
+							ld [$9c30], a
+						; Load "SAVE:" text:
+							ld a, $d2
+							ld [$9c21], a
+							ld a, $c0
+							ld [$9c22], a
+							ld a, $d5
+							ld [$9c23], a
+							ld a, $c4
+							ld [$9c24], a
+							ld a, $de
+							ld [$9c25], a
+				;;;;end hijack
             ; Don't allow saving while "Completed" is displayed
             ld a, [saveMessageCooldownTimer]
             and a
@@ -4390,8 +4458,18 @@ saveFileToSRAM: ;{ 01:7ADF
     
     ; Save displayed metroid count
     ld a, [metroidCountDisplayed]
+<<<<<<< Updated upstream
     ld [hl], a
     
+=======
+    ld [hl+], a
+	;;;;hijack - add total items and collected to be tracked
+			ld a, [mapItemsFound]
+			ld [hl+], a
+			ld a, [mapItemsTotal]
+			ld [hl+], a
+	;;;;end hijack
+>>>>>>> Stashed changes
     ; Disable SRAM
     ld a, $00
     ld [$0000], a
@@ -4411,4 +4489,21 @@ saveFileToSRAM: ;{ 01:7ADF
     ldh [gameMode], a
 ret ;}
 
+<<<<<<< Updated upstream
 bank1_freespace: ; 1:7B87 - Freespace (filled with $00)
+=======
+; 1:7B87 - Freespace (filled with $00)
+
+hijackForPauseMap:
+    ldh a, [gameMode]
+    cp $08
+	jr z, isPausedLoadMap
+	ld a, $88
+	ldh [rWY], a
+	ret
+	isPausedLoadMap:
+	ld a, $00
+	ldh [rWY], a
+	ret	
+
+>>>>>>> Stashed changes

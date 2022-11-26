@@ -1,0 +1,52 @@
+;map tables for vanilla bank 0D
+;map to load for each screen of bank
+	db $FF, $0C, $0C, $0C, $0C, $0C, $FF, $02, $09, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+	db $FF, $0C, $0C, $0C, $FF, $FF, $FF, $FF, $FF, $FF, $09, $09, $FF, $FF, $FF, $FF
+	db $FF, $0C, $0C, $0C, $FF, $FF, $FF, $FF, $FF, $FF, $09, $09, $FF, $FF, $FF, $FF
+	db $FF, $FF, $0C, $0C, $0C, $FF, $FF, $FF, $FF, $FF, $09, $09, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $00, $00, $00, $00, $00, $FF, $09, $09, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $06, $06, $FF, $FF, $FF, $FF, $09, $09, $FF, $FF, $FF, $FF
+	db $FF, $06, $FF, $FF, $06, $06, $FF, $FF, $FF, $FF, $09, $09, $FF, $FF, $FF, $FF
+	db $FF, $06, $FF, $FF, $06, $06, $FF, $FF, $FF, $FF, $09, $09, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $06, $06, $FF, $FF, $FF, $FF, $09, $09, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $FF, $06, $FF, $FF, $06, $FF, $09, $09, $FF, $FF, $FF, $FF
+	db $06, $06, $06, $06, $06, $06, $06, $06, $06, $FF, $09, $09, $FF, $FF, $FF, $FF
+	db $06, $06, $06, $06, $06, $06, $06, $06, $FF, $FF, $FF, $09, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $09, $FF, $FF, $FF, $FF
+	db $FF, $0C, $FF, $0C, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+;samus map location offset X for screen
+	db $FF, $04, $04, $04, $04, $04, $FF, $08, $0B, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+	db $FF, $04, $04, $04, $FF, $FF, $FF, $FF, $FF, $FF, $06, $06, $FF, $FF, $FF, $FF
+	db $FF, $04, $04, $04, $FF, $FF, $FF, $FF, $FF, $FF, $06, $06, $FF, $FF, $FF, $FF
+	db $FF, $FF, $04, $04, $04, $FF, $FF, $FF, $FF, $FF, $06, $06, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $00, $00, $00, $00, $00, $FF, $06, $06, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $02, $02, $FF, $FF, $FF, $FF, $06, $06, $FF, $FF, $FF, $FF
+	db $FF, $02, $FF, $FF, $02, $02, $FF, $FF, $FF, $FF, $06, $06, $FF, $FF, $FF, $FF
+	db $FF, $02, $FF, $FF, $02, $02, $FF, $FF, $FF, $FF, $06, $06, $FF, $FF, $FF, $FF
+	db $FF, $02, $02, $02, $02, $02, $FF, $FF, $FF, $FF, $06, $06, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $FF, $02, $FF, $FF, $02, $FF, $06, $06, $FF, $FF, $FF, $FF
+	db $02, $02, $02, $02, $02, $02, $02, $02, $02, $FF, $06, $06, $FF, $FF, $FF, $FF
+	db $00, $00, $00, $00, $00, $00, $00, $00, $FF, $FF, $FF, $06, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $06, $FF, $FF, $FF, $FF
+	db $FF, $1A, $FF, $1C, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+;samus map location offset X for screen
+	db $FF, $08, $08, $08, $08, $08, $FF, $0A, $04, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+	db $FF, $08, $08, $08, $FF, $FF, $FF, $FF, $FF, $FF, $1F, $1F, $FF, $FF, $FF, $FF
+	db $FF, $08, $08, $08, $FF, $FF, $FF, $FF, $FF, $FF, $1F, $1F, $FF, $FF, $FF, $FF
+	db $FF, $FF, $08, $08, $08, $FF, $FF, $FF, $FF, $FF, $1F, $1F, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $00, $00, $00, $00, $00, $FF, $1F, $1F, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $0B, $0B, $FF, $FF, $FF, $FF, $1F, $1F, $FF, $FF, $FF, $FF
+	db $FF, $0B, $FF, $FF, $0B, $0B, $FF, $FF, $FF, $FF, $1F, $1F, $FF, $FF, $FF, $FF
+	db $FF, $0B, $FF, $FF, $0B, $0B, $FF, $FF, $FF, $FF, $1F, $1F, $FF, $FF, $FF, $FF
+	db $FF, $0B, $0B, $0B, $0B, $0B, $FF, $FF, $FF, $FF, $1F, $1F, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $FF, $0B, $FF, $FF, $0B, $FF, $1F, $1F, $FF, $FF, $FF, $FF
+	db $0B, $0B, $0B, $0B, $0B, $0B, $0B, $0B, $0B, $FF, $1F, $1F, $FF, $FF, $FF, $FF
+	db $0B, $0B, $0B, $0B, $0B, $0B, $0B, $0B, $FF, $FF, $FF, $1F, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $1F, $FF, $FF, $FF, $FF
+	db $FF, $0A, $FF, $09, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+	db $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF

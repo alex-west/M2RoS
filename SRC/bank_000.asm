@@ -56,7 +56,7 @@ HeaderTitle:: db "METROID2", $00, $00, $00, $00, $00, $00, $00, $00
 HeaderNewLicenseeCode:: db $00, $00
 HeaderSGBFlag::         db $00
 HeaderCartridgeType::   db $03
-HeaderROMSize::         db $03
+HeaderROMSize::         db $04 ;originally 03
 HeaderRAMSize::         db $02
 HeaderDestinationCode:: db $01
 HeaderOldLicenseeCode:: db $01
@@ -132,10 +132,20 @@ VBlankHandler: ;{ 00:0154
         call VBlank_updateMap
         jr .endIf_B
     .else_B:
+		;;;;hijack new update status bar
+			ld a, [gameMode]
+			cp a, $08
+			jr nz, .skipUpdateHudPaused
+				ld a, BANK(VBlank_updateStatusBarPaused)
+				ld [rMBC_BANK_REG], a
+				jr .endIf_B
+			.skipUpdateHudPaused:			
+		;;;;end hijack
         ld a, BANK(VBlank_updateStatusBar)
         ld [rMBC_BANK_REG], a
         call VBlank_updateStatusBar
     .endIf_B:
+		
 ; End vblank
     call OAM_DMA ; Sprite DMA
     ld a, [bankRegMirror]
@@ -570,6 +580,12 @@ gameMode_LoadA: ;{ 00:03B5
     ld a, [saveBuf_metroidCountDisplayed]
     ld [metroidCountDisplayed], a
 
+		;;;;hijack - for item count
+		    ld a, [saveBuf_startItems]
+			ld [mapItemsFound], a
+		    ld a, [saveBuf_totalItems]
+			ld [mapItemsTotal], a
+		;;;;end hijack
     ; Clear variables
     xor a
     ld [doorScrollDirection], a
@@ -666,6 +682,14 @@ gameMode_LoadB: ;{ 00:0464
     ldh a, [hCameraXPixel]
     sub $30
     ld [scrollX], a
+
+	;;;;;;;;hijack
+		; Load pauseMap
+		callFar farLoadMapTiles
+		ld a, [currentLevelBank]
+		ld [bankRegMirror], a
+		ld [rMBC_BANK_REG], a
+	;;;;end hijack
 
     ; Enable LCD
     ld a, $e3
@@ -1333,7 +1357,18 @@ handleCamera: ;{ 00:08FE
     or b
     ld e, a    
     ld d, $00
-    
+		;;;;;;;;hijack - write to DD60 debug table
+;		ld a, [currentLevelBank]
+;		ld [$dd72], a
+;		ld a, [hSamusYScreen]
+;		ld [$dd73], a
+;		ld a, [hSamusXScreen]
+;		ld [$dd74], a
+;		ld a, $99
+;		ld [samusCurHealthLow], a
+;		ld [samusDispHealthLow], a
+		;;;;;;;;end hijack
+	
     ; Load scroll data for screen
     ld hl, map_scrollData ;$4200
     add hl, de
@@ -6154,6 +6189,10 @@ executeDoorScript: ;{ 00:239C
     .doorToken_warp:
     cp $40 ; WARP {
     jr nz, .doorToken_escapeQueen
+			;;;;;;;;hijack
+				ld a, $01
+				ld [loadNewMapFlag], a
+			;;;;;;;;end hijack
         call door_warp
         ; Set exit status to indicate that enemy spawn flags should be refreshed
         ;  (although loadDoorIndex does that already so this might be unnecessary)
@@ -6467,6 +6506,7 @@ executeDoorScript: ;{ 00:239C
         ; Load lower nybble of token (minus 1)
         ld a, [hl] ; Note: this is not [HL+]
         push hl
+<<<<<<< Updated upstream
             dec a
             and $0f
             ; Multiply by $40 to get offset for sprite graphics
@@ -6588,6 +6628,108 @@ executeDoorScript: ;{ 00:239C
             call beginGraphicsTransfer
         pop hl ;}
     jr .nextToken ;}
+=======
+        dec a
+        and $0f
+        swap a
+        ld e, a
+        ld d, $00
+        sla e
+        rl d
+        sla e
+        rl d
+        ld hl, gfx_items
+        add hl, de
+        ld a, l
+        ldh [hVramTransfer.srcAddrLow], a
+        ld a, h
+        ldh [hVramTransfer.srcAddrHigh], a
+
+        ld a, LOW(vramDest_item)
+        ldh [hVramTransfer.destAddrLow], a
+        ld a, HIGH(vramDest_item)
+
+        ldh [hVramTransfer.destAddrHigh], a
+        ld a, $40
+        ldh [hVramTransfer.sizeLow], a
+        ld a, $00
+        ldh [hVramTransfer.sizeHigh], a
+        call Call_000_27ba
+        ; Load item orb
+        ld a, LOW(gfx_itemOrb)
+        ldh [hVramTransfer.srcAddrLow], a
+        ld a, HIGH(gfx_itemOrb)
+        ldh [hVramTransfer.srcAddrHigh], a
+        ld a, $00
+        ldh [hVramTransfer.destAddrLow], a
+        ld a, $8b
+        ldh [hVramTransfer.destAddrHigh], a
+        ld a, $40
+        ldh [hVramTransfer.sizeLow], a
+        ld a, $00
+        ldh [hVramTransfer.sizeHigh], a
+        call Call_000_27ba
+        ; Load item font text
+        ld a, BANK(gfx_itemFont)
+        ld [bankRegMirror], a
+        ld [$d065], a
+        ld [rMBC_BANK_REG], a
+        ld a, LOW(gfx_itemFont) ;$34
+        ldh [hVramTransfer.srcAddrLow], a
+        ld a, HIGH(gfx_itemFont) ;$6c
+        ldh [hVramTransfer.srcAddrHigh], a
+        ; VRAM Dest
+        ld a, LOW(vramDest_itemFont)
+        ldh [hVramTransfer.destAddrLow], a
+        ld a, HIGH(vramDest_itemFont)
+        ldh [hVramTransfer.destAddrHigh], a
+        ; Write length
+        ld a, $30
+        ldh [hVramTransfer.sizeLow], a
+        ld a, $02
+        ldh [hVramTransfer.sizeHigh], a
+        call Call_000_27ba
+;;;;;;;;big hijack - move this to item collection handler    
+;        pop hl
+;        ld a, BANK(itemTextPointerTable)
+;        ld [bankRegMirror], a
+;        ld [$d065], a
+;        ld [rMBC_BANK_REG], a
+;        ld a, [hl+]
+;        push hl
+;        and $0f
+;        ld e, a
+;        ld d, $00
+;        sla e
+;        rl d
+;        ld hl, itemTextPointerTable
+;        add hl, de
+;        ld a, [hl+]
+;        ld e, a
+;        ld a, [hl]
+;        ld h, a
+;        ld a, e
+;        ld l, a
+;        ld a, l
+;        ldh [hVramTransfer.srcAddrLow], a
+;        ld a, h
+;        ldh [hVramTransfer.srcAddrHigh], a
+;        
+;        ld a, LOW(vramDest_itemText)
+;        ldh [hVramTransfer.destAddrLow], a
+;        ld a, HIGH(vramDest_itemText)
+;        ldh [hVramTransfer.destAddrHigh], a
+;        ld a, $10
+;        ldh [hVramTransfer.sizeLow], a
+;        ld a, $00
+;        ldh [hVramTransfer.sizeHigh], a
+;        call Call_000_27ba
+;;;;;;;;;end big hijack
+        pop hl
+		;added inc as part of above hijack
+		inc hl
+        jr .nextToken
+>>>>>>> Stashed changes
 
 .nextToken:
     ; Wait a frame before reading another token
@@ -6604,9 +6746,28 @@ executeDoorScript: ;{ 00:239C
     ld [doorIndexLow], a
     ld [doorIndexHigh], a
     ld [doorExitStatus], a
+<<<<<<< Updated upstream
     ; Otherwise unused variable
     ld [wramUnknown_D0A8], a
 ret ;}
+=======
+    ld [$d0a8], a
+				;;;;hijack
+				ld a, [loadNewMapFlag]
+				cp a, $01
+				jr nz, .next
+					call disableLCD
+					callFar farLoadMapTiles
+					ld a, [currentLevelBank]
+					ld [bankRegMirror], a
+					ld [rMBC_BANK_REG], a
+					ld a, $e3
+					ldh [rLCDC], a
+				.next:
+				;;;;end hijack
+ret
+
+>>>>>>> Stashed changes
 
 ; Door script load graphics routine
 door_loadGraphics: ;{ 00:26EB
@@ -7599,7 +7760,18 @@ tryPausing: ;{ 00:2C79
     ; Set game mode
     ld a, $08
     ldh [gameMode], a
+<<<<<<< Updated upstream
 ret ;}
+=======
+		;;;;;;;;hijack
+			call disableLCD
+			call clearAllOam_longJump
+			callFar pauseAdjustSpriteSetup
+			ld a, $e3
+			ldh [rLCDC], a
+		;;;;;;;;end hijacked
+ret
+>>>>>>> Stashed changes
 
 gameMode_Paused: ;{ 00:2CED
     ; Change palette on a 32 frame cycle (16 frame light/dark phases)
@@ -7624,6 +7796,9 @@ gameMode_Paused: ;{ 00:2CED
         ret z
 
     ; Return to main game mode if start is pressed
+		;;;;hijack, clear the map sprites
+			call clearAllOam_longJump
+		;;;;end hijack
     ld a, $93
     ld [bg_palette], a
     ld [ob_palette0], a
@@ -9778,6 +9953,45 @@ handleItemPickup: ;{ 00:372F
         ld a, $00
         ld [songInterruptionRequest], a
     .endIf_C:
+	;;;;hijack - increment map items found if first beam or non-refill
+		call disableLCD
+		callFar calcFoundEquipment
+			;returns d=$00 and e=item number-1 *2
+
+			;paste from big hijack in door routine, down below?:
+				;d and e set above
+				ld a, BANK(itemTextPointerTable)
+				ld [bankRegMirror], a
+				ld [$d065], a
+				ld [rMBC_BANK_REG], a
+				push hl
+				ld hl, itemTextPointerTable
+				ld a, [itemCollected]
+				rl a
+				ld e, a
+				add hl, de
+				ld e, [hl]
+				inc hl
+				ld d, [hl]
+				ld h, d
+				ld l, e
+				ld e, $21
+				ld d, $9c
+				ld c, $10
+				.loopWriteItem
+					ld a, [hl+]
+					ld [de], a
+					inc de
+					dec c
+					jr nz, .loopWriteItem
+				pop hl
+					ld a, [currentLevelBank]
+					ld [bankRegMirror], a
+					ld [rMBC_BANK_REG], a
+			;end relocation
+		ld a, $e3
+		ldh [rLCDC], a
+	;;;;end hijack
 
     ; Jump to pick-up specific routine
     ld a, b
@@ -10638,10 +10852,10 @@ handleEnemyLoading_farCall: ; 00:3DE2
     callFar handleEnemyLoading ;$4000
     switchBank processEnemies
 ret
-
+		
 loadEnemy_getFirstEmptySlot_longJump: ; 00:3DF6
-    callFar loadEnemy_getFirstEmptySlot
-    switchBankVar $02 ; Enemy AI bank
+	callFar loadEnemy_getFirstEmptySlot
+	switchBankVar $02 ; Enemy AI bank
 ret
 
 loadEnemySaveFlags_longJump: ; 00:3E0A
@@ -10810,4 +11024,13 @@ unusedDeathAnimation_copy: ;{ 00:3F07
     pop af
 reti ;}
 
+<<<<<<< Updated upstream
 bank0_freespace: ; Freespace - 00:3F60 (filled with $00)
+=======
+; Freespace - 00:3F60 (filled with $00)
+doHandleLoadMapTiles_farCall:
+    callFar farLoadMapTiles
+    switchBank handleLoadMapTiles
+	ret
+
+>>>>>>> Stashed changes
