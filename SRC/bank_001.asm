@@ -980,15 +980,10 @@ createNewSave: ;{ 01:4E1C
     ; Copy initial save file to save buffer
     ld hl, initialSaveFile
     ld de, saveBuffer
-<<<<<<< Updated upstream
-    ld b, $26
-=======
 ;    ld b, $26
 	;;;hijack - comment above and make $28
 		ld b, $28
 	;;;;end hijack
-
->>>>>>> Stashed changes
     .loadLoop:
         ld a, [hl+]
         ld [de], a
@@ -1024,15 +1019,10 @@ loadSaveFile: ;{ 01:4E33
     
     ; Copy save file to save buffer
     ld de, saveBuffer
-<<<<<<< Updated upstream
-    ld b, $26
-=======
 ;    ld b, $26
 	;;;;hijack - comment above and make $28 for new item collection tally
 		ld b, $28
 	;;;;end hijack
-
->>>>>>> Stashed changes
     .loadLoop:
         ld a, [hl+]
         ld [de], a
@@ -3019,15 +3009,10 @@ miscIngameTasks: ;{ 01:57F2
     ; Skip this if in the Queen fight
     ld a, [queen_roomFlag]
     cp $11
-<<<<<<< Updated upstream
-    jr z, .endIf_B
-        ; Check if window is active
-=======
 ;OG    jr z, .endIf_B
 		;;;; hijack comments above jr and makes a jp
 			jp z, .endIf_B
 		;;;;end hijack
->>>>>>> Stashed changes
         ldh a, [rLCDC]
         bit 5, a
         jr nz, .endIf_C
@@ -4458,10 +4443,6 @@ saveFileToSRAM: ;{ 01:7ADF
     
     ; Save displayed metroid count
     ld a, [metroidCountDisplayed]
-<<<<<<< Updated upstream
-    ld [hl], a
-    
-=======
     ld [hl+], a
 	;;;;hijack - add total items and collected to be tracked
 			ld a, [mapItemsFound]
@@ -4469,7 +4450,6 @@ saveFileToSRAM: ;{ 01:7ADF
 			ld a, [mapItemsTotal]
 			ld [hl+], a
 	;;;;end hijack
->>>>>>> Stashed changes
     ; Disable SRAM
     ld a, $00
     ld [$0000], a
@@ -4489,10 +4469,7 @@ saveFileToSRAM: ;{ 01:7ADF
     ldh [gameMode], a
 ret ;}
 
-<<<<<<< Updated upstream
 bank1_freespace: ; 1:7B87 - Freespace (filled with $00)
-=======
-; 1:7B87 - Freespace (filled with $00)
 
 hijackForPauseMap:
     ldh a, [gameMode]
@@ -4505,5 +4482,3 @@ hijackForPauseMap:
 	ld a, $00
 	ldh [rWY], a
 	ret	
-
->>>>>>> Stashed changes

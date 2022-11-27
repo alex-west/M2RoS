@@ -6506,7 +6506,6 @@ executeDoorScript: ;{ 00:239C
         ; Load lower nybble of token (minus 1)
         ld a, [hl] ; Note: this is not [HL+]
         push hl
-<<<<<<< Updated upstream
             dec a
             and $0f
             ; Multiply by $40 to get offset for sprite graphics
@@ -6583,153 +6582,56 @@ executeDoorScript: ;{ 00:239C
             ; Transfer graphics
             call beginGraphicsTransfer
         ;}
-        pop hl
-        
-        ; Load item text {
-        ; Set source bank
-        ld a, BANK(itemTextPointerTable)
-        ld [bankRegMirror], a
-        ld [vramTransfer_srcBank], a
-        ld [rMBC_BANK_REG], a
-        ; Read lower nybble of token
-        ld a, [hl+]
-        push hl
-            and $0f
-            ; Index into text pointer table
-            ld e, a
-            ld d, $00
-            sla e
-            rl d
-            ld hl, itemTextPointerTable
-            add hl, de
-            ; Load pointer to HL
-            ld a, [hl+]
-            ld e, a
-            ld a, [hl]
-            ld h, a
-            ld a, e
-            ld l, a
-            ; Set source address of text
-            ld a, l
-            ldh [hVramTransfer.srcAddrLow], a
-            ld a, h
-            ldh [hVramTransfer.srcAddrHigh], a
-            ; Set destination address of text
-            ld a, LOW(vramDest_itemText)
-            ldh [hVramTransfer.destAddrLow], a
-            ld a, HIGH(vramDest_itemText)
-            ldh [hVramTransfer.destAddrHigh], a
-            ; Set length of string (16 letters)
-            ld a, $10
-            ldh [hVramTransfer.sizeLow], a
-            ld a, $00
-            ldh [hVramTransfer.sizeHigh], a
-            ; Transfer graphics
-            call beginGraphicsTransfer
-        pop hl ;}
-    jr .nextToken ;}
-=======
-        dec a
-        and $0f
-        swap a
-        ld e, a
-        ld d, $00
-        sla e
-        rl d
-        sla e
-        rl d
-        ld hl, gfx_items
-        add hl, de
-        ld a, l
-        ldh [hVramTransfer.srcAddrLow], a
-        ld a, h
-        ldh [hVramTransfer.srcAddrHigh], a
-
-        ld a, LOW(vramDest_item)
-        ldh [hVramTransfer.destAddrLow], a
-        ld a, HIGH(vramDest_item)
-
-        ldh [hVramTransfer.destAddrHigh], a
-        ld a, $40
-        ldh [hVramTransfer.sizeLow], a
-        ld a, $00
-        ldh [hVramTransfer.sizeHigh], a
-        call Call_000_27ba
-        ; Load item orb
-        ld a, LOW(gfx_itemOrb)
-        ldh [hVramTransfer.srcAddrLow], a
-        ld a, HIGH(gfx_itemOrb)
-        ldh [hVramTransfer.srcAddrHigh], a
-        ld a, $00
-        ldh [hVramTransfer.destAddrLow], a
-        ld a, $8b
-        ldh [hVramTransfer.destAddrHigh], a
-        ld a, $40
-        ldh [hVramTransfer.sizeLow], a
-        ld a, $00
-        ldh [hVramTransfer.sizeHigh], a
-        call Call_000_27ba
-        ; Load item font text
-        ld a, BANK(gfx_itemFont)
-        ld [bankRegMirror], a
-        ld [$d065], a
-        ld [rMBC_BANK_REG], a
-        ld a, LOW(gfx_itemFont) ;$34
-        ldh [hVramTransfer.srcAddrLow], a
-        ld a, HIGH(gfx_itemFont) ;$6c
-        ldh [hVramTransfer.srcAddrHigh], a
-        ; VRAM Dest
-        ld a, LOW(vramDest_itemFont)
-        ldh [hVramTransfer.destAddrLow], a
-        ld a, HIGH(vramDest_itemFont)
-        ldh [hVramTransfer.destAddrHigh], a
-        ; Write length
-        ld a, $30
-        ldh [hVramTransfer.sizeLow], a
-        ld a, $02
-        ldh [hVramTransfer.sizeHigh], a
-        call Call_000_27ba
 ;;;;;;;;big hijack - move this to item collection handler    
 ;        pop hl
+;        
+;        ; Load item text {
+;        ; Set source bank
 ;        ld a, BANK(itemTextPointerTable)
 ;        ld [bankRegMirror], a
-;        ld [$d065], a
+;        ld [vramTransfer_srcBank], a
 ;        ld [rMBC_BANK_REG], a
+;        ; Read lower nybble of token
 ;        ld a, [hl+]
 ;        push hl
-;        and $0f
-;        ld e, a
-;        ld d, $00
-;        sla e
-;        rl d
-;        ld hl, itemTextPointerTable
-;        add hl, de
-;        ld a, [hl+]
-;        ld e, a
-;        ld a, [hl]
-;        ld h, a
-;        ld a, e
-;        ld l, a
-;        ld a, l
-;        ldh [hVramTransfer.srcAddrLow], a
-;        ld a, h
-;        ldh [hVramTransfer.srcAddrHigh], a
-;        
-;        ld a, LOW(vramDest_itemText)
-;        ldh [hVramTransfer.destAddrLow], a
-;        ld a, HIGH(vramDest_itemText)
-;        ldh [hVramTransfer.destAddrHigh], a
-;        ld a, $10
-;        ldh [hVramTransfer.sizeLow], a
-;        ld a, $00
-;        ldh [hVramTransfer.sizeHigh], a
-;        call Call_000_27ba
+;            and $0f
+;            ; Index into text pointer table
+;            ld e, a
+;            ld d, $00
+;            sla e
+;            rl d
+;            ld hl, itemTextPointerTable
+;            add hl, de
+;            ; Load pointer to HL
+;            ld a, [hl+]
+;            ld e, a
+;            ld a, [hl]
+;            ld h, a
+;            ld a, e
+;            ld l, a
+;            ; Set source address of text
+;            ld a, l
+;            ldh [hVramTransfer.srcAddrLow], a
+;            ld a, h
+;            ldh [hVramTransfer.srcAddrHigh], a
+;            ; Set destination address of text
+;            ld a, LOW(vramDest_itemText)
+;            ldh [hVramTransfer.destAddrLow], a
+;            ld a, HIGH(vramDest_itemText)
+;            ldh [hVramTransfer.destAddrHigh], a
+;            ; Set length of string (16 letters)
+;            ld a, $10
+;            ldh [hVramTransfer.sizeLow], a
+;            ld a, $00
+;            ldh [hVramTransfer.sizeHigh], a
+;            ; Transfer graphics
+;            call beginGraphicsTransfer
+;        pop hl ;}
 ;;;;;;;;;end big hijack
         pop hl
 		;added inc as part of above hijack
 		inc hl
         jr .nextToken
->>>>>>> Stashed changes
 
 .nextToken:
     ; Wait a frame before reading another token
@@ -6746,12 +6648,8 @@ executeDoorScript: ;{ 00:239C
     ld [doorIndexLow], a
     ld [doorIndexHigh], a
     ld [doorExitStatus], a
-<<<<<<< Updated upstream
     ; Otherwise unused variable
     ld [wramUnknown_D0A8], a
-ret ;}
-=======
-    ld [$d0a8], a
 				;;;;hijack
 				ld a, [loadNewMapFlag]
 				cp a, $01
@@ -6765,9 +6663,7 @@ ret ;}
 					ldh [rLCDC], a
 				.next:
 				;;;;end hijack
-ret
-
->>>>>>> Stashed changes
+ret ;}
 
 ; Door script load graphics routine
 door_loadGraphics: ;{ 00:26EB
@@ -7760,9 +7656,6 @@ tryPausing: ;{ 00:2C79
     ; Set game mode
     ld a, $08
     ldh [gameMode], a
-<<<<<<< Updated upstream
-ret ;}
-=======
 		;;;;;;;;hijack
 			call disableLCD
 			call clearAllOam_longJump
@@ -7770,8 +7663,7 @@ ret ;}
 			ld a, $e3
 			ldh [rLCDC], a
 		;;;;;;;;end hijacked
-ret
->>>>>>> Stashed changes
+ret ;}
 
 gameMode_Paused: ;{ 00:2CED
     ; Change palette on a 32 frame cycle (16 frame light/dark phases)
@@ -11024,13 +10916,8 @@ unusedDeathAnimation_copy: ;{ 00:3F07
     pop af
 reti ;}
 
-<<<<<<< Updated upstream
 bank0_freespace: ; Freespace - 00:3F60 (filled with $00)
-=======
-; Freespace - 00:3F60 (filled with $00)
 doHandleLoadMapTiles_farCall:
     callFar farLoadMapTiles
     switchBank handleLoadMapTiles
 	ret
-
->>>>>>> Stashed changes

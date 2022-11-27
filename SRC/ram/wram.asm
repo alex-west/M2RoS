@@ -1490,7 +1490,7 @@ clearItemDotHigh:: ds $01 ;IN USE same as prevSamusXPixel
 clearItemBank:: ds $01	;IN USE track map bank for item collected on touch
 clearItemIndex:: ds $01	;IN USE tracking the offset of item bank
 mapWram:: ds $70 ;IN USE map sprite buffer data
-wramUnused_DD80: ds $100 - $4c ;$DD71..FF: Unused
+wramUnused_DD80: ds $100 - $e0 ;$DD71..FF: Unused
 
 ; List of metatiles from the map to update to VRAM
 mapUpdateBuffer:: ds $100 ; $DE00..FF
