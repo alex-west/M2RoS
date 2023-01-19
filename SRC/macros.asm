@@ -1,7 +1,7 @@
 ; macros.asm
 
 ; Call a function in another bank
-callFar: MACRO
+MACRO callFar
     ld a, BANK(\1)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -9,7 +9,7 @@ callFar: MACRO
 ENDM
 
 ; Jump to a function in another bank
-jpLong: MACRO
+MACRO jpLong
     ld a, BANK(\1)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
@@ -17,14 +17,14 @@ jpLong: MACRO
 ENDM
 
 ; Switch active bank to another bank (based off of label)
-switchBank: MACRO
+MACRO switchBank
     ld a, BANK(\1)
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
 ENDM
 
 ; Switch to another bank (based off some other expression)
-switchBankVar: MACRO
+MACRO switchBankVar
     ld a, \1
     ld [bankRegMirror], a
     ld [rMBC_BANK_REG], a
