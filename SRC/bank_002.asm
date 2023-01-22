@@ -6594,7 +6594,7 @@ enAI_autom: ;{ 02:6540
     ld [hl+], a
     ; Load header
     call enemy_createLinkForChildObject
-    ld de, .header_65C8
+    ld de, .flamethrowerHeader
     call enemy_spawnObject.longHeader
     ; Animate
     ld hl, hEnemy.spriteType
@@ -6643,7 +6643,7 @@ ret
         ret
 ; end proc
 
-.header_65C8:
+.flamethrowerHeader:
     db SPRITE_AUTOM_SHOT_1 ; $5E
     db $00, $00, $00, $00, $00, $00, $00, $00, $ff, $00
     dw enAI_autom
