@@ -2692,7 +2692,7 @@ ret
     ld [hl], $de
     ; Set this y coordinate to $FF so this sprite and the one after it don't get rendered
     ld hl, enSprite_blobThrower + 13*4; $C334
-    ld [hl], $ff
+    ld [hl], METASPRITE_END ; $ff
     xor a
     ld [blobThrower_state], a
 ret
@@ -2754,9 +2754,9 @@ ret
     db $10, $F4, $D3, $00
     db $10, $FC, $D9, $00
     db $10, $04, $D5, $00
-    db $FF, $F0, $E0, $00 ; Note the $FF. It's dynamically changed to a valid value so this sprite and the next appear conditionally.
+    db METASPRITE_END, $F0, $E0, $00 ; Note the METASPRITE_END. It's dynamically changed to a valid y-position so this sprite and the next appear conditionally.
     db $E8, $08, $E0, $20
-    db $FF
+    db METASPRITE_END
 .hitbox: ; 02:503B
     db $FC, $18, $F8, $08
 
