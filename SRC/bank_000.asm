@@ -10442,7 +10442,7 @@ loadGame_samusItemGraphics: ;{ 00:3BB4
     
         cp $03
         jr nz, .endIf_spazer
-            ld hl, gfxInfo_plasma
+            ld hl, gfxInfo_spazer
             call loadGame_copyItemToVram
             jr .endBeamBranch
         .endIf_spazer:
