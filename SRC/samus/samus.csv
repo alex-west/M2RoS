@@ -1,0 +1,31 @@
+Number,Constants,PoseFunctions,bombed.fallingPoseTable,bombPoseTable,damagePoseTransitionTable,horizontalYOffsetLists,,,,,,,,bgHitboxTop,spriteHitboxTopTable,destroyBlock.samusHeightTable,cannonYOffsetByPose,possibleShotDirections,drawFunctions
+$00,pose_standing   ,poseFunc_standing   ,pose_standing   ,pose_bombed     ,pose_hurt       ,$10, $18, $20, $28, $2A, $80,0,0,$08,$EC,$20,$17,$07,drawSamus_standing  
+$01,pose_jump       ,poseFunc_jump       ,pose_standing   ,pose_bombed     ,pose_hurt       ,$14, $18, $20, $28, $2A, $80,0,0,$14,$F4,$20,$1F,$0F,drawSamus_jump      
+$02,pose_spinJump   ,poseFunc_spinJump   ,pose_standing   ,pose_bombed     ,pose_hurt       ,$1A, $20, $28, $2A, $80,0,0,0,$1A,$FC,$20,$00,$00,drawSamus_spinJump  
+$03,pose_run        ,poseFunc_running    ,pose_standing   ,pose_bombed     ,pose_hurt       ,$10, $18, $20, $28, $2A, $80,0,0,$08,$EC,$20,$14,$07,drawSamus_run       
+$04,pose_crouch     ,poseFunc_crouch     ,pose_standing   ,pose_bombed     ,pose_hurt       ,$10, $18, $20, $28, $2A, $80,0,0,$10,$F6,$20,$21,$03,drawSamus_crouch    
+$05,pose_morph      ,poseFunc_morphBall  ,pose_standing   ,pose_morphBombed,pose_morphHurt  ,$20, $25, $2A, $80,0,0,0,0,$20,$04,$10,$00,$80,drawSamus_morph     
+$06,pose_morphJump  ,poseFunc_morphJump  ,pose_standing   ,pose_morphBombed,pose_morphHurt  ,$20, $25, $2A, $80,0,0,0,0,$20,$04,$10,$00,$80,drawSamus_morph     
+$07,pose_fall       ,poseFunc_fall       ,pose_standing   ,pose_bombed     ,pose_hurt       ,$10, $18, $20, $28, $2A, $80,0,0,$10,$EC,$20,$1D,$0F,drawSamus_jump      
+$08,pose_morphFall  ,poseFunc_morphFall  ,pose_standing   ,pose_morphBombed,pose_morphHurt  ,$20, $25, $2A, $80,0,0,0,0,$20,$04,$10,$00,$80,drawSamus_morph     
+$09,pose_nJumpStart ,poseFunc_jumpStart  ,pose_standing   ,pose_bombed     ,pose_hurt       ,$10, $18, $20, $28, $2A, $80,0,0,$10,$EC,$20,$15,$0F,drawSamus_jumpStart 
+$0A,pose_spinStart  ,poseFunc_jumpStart  ,pose_standing   ,pose_bombed     ,pose_hurt       ,$10, $18, $20, $28, $2A, $80,0,0,$10,$EC,$20,$15,$0F,drawSamus_jumpStart 
+$0B,pose_spiderRoll ,poseFunc_spiderRoll ,pose_standing   ,pose_morphBombed,pose_morphHurt  ,$20, $25, $2B, $80,0,0,0,0,$20,$04,$10,$00,$80,drawSamus_spider    
+$0C,pose_spiderFall ,poseFunc_spiderFall ,pose_standing   ,pose_morphBombed,pose_morphHurt  ,$20, $25, $2B, $80,0,0,0,0,$20,$04,$10,$00,$80,drawSamus_spider    
+$0D,pose_spiderJump ,poseFunc_spiderJump ,pose_standing   ,pose_morphBombed,pose_morphHurt  ,$20, $25, $2B, $80,0,0,0,0,$20,$04,$10,$00,$80,drawSamus_spider    
+$0E,pose_spider     ,poseFunc_spiderBall ,pose_standing   ,pose_morphBombed,pose_morphHurt  ,$20, $25, $2B, $80,0,0,0,0,$20,$04,$10,$00,$80,drawSamus_spider    
+$0F,pose_hurt       ,poseFunc_hurt       ,pose_fall       ,pose_bombed     ,pose_hurt       ,$14, $18, $20, $28, $2A, $80,0,0,$10,$EC,$20,$1F,$0F,drawSamus_knockback 
+$10,pose_morphHurt  ,poseFunc_morphHurt  ,pose_morphFall  ,pose_morphBombed,pose_morphHurt  ,$20, $25, $2A, $80,0,0,0,0,$20,$04,$10,$00,$80,drawSamus_morph     
+$11,pose_bombed     ,poseFunc_bombed     ,pose_fall       ,pose_bombed     ,pose_hurt       ,$10, $18, $20, $28, $2A, $80,0,0,$10,$EC,$20,$1F,$0F,drawSamus_knockback 
+$12,pose_morphBombed,poseFunc_morphBombed,pose_morphFall  ,pose_morphBombed,pose_morphHurt  ,$20, $25, $2A, $80,0,0,0,0,$20,$04,$10,$00,$80,drawSamus_morph     
+$13,pose_faceScreen ,poseFunc_faceScreen ,pose_standing   ,pose_bombed     ,pose_hurt       ,$10, $18, $20, $28, $2A, $80,0,0,$08,$EC,,,$00,drawSamus_faceScreen
+$14,pose_unusedA    ,poseFunc_faceScreen ,pose_standing   ,pose_standing   ,pose_standing   ,0,0,0,0,0,0,0,0,$20,$04,,,$00,drawSamus_faceScreen
+$15,pose_unusedB    ,poseFunc_faceScreen ,pose_standing   ,pose_standing   ,pose_standing   ,0,0,0,0,0,0,0,0,$20,,,,$00,drawSamus_faceScreen
+$16,pose_unusedC    ,poseFunc_faceScreen ,pose_standing   ,pose_standing   ,pose_standing   ,0,0,0,0,0,0,0,0,,,,,$00,drawSamus_faceScreen
+$17,pose_unusedD    ,poseFunc_faceScreen ,pose_standing   ,pose_standing   ,pose_standing   ,0,0,0,0,0,0,0,0,,,,,$00,drawSamus_faceScreen
+$18,pose_beingEaten ,poseFunc_beingEaten ,pose_beingEaten ,pose_morphBombed,pose_morphHurt  ,$20, $25, $2A, $80,0,0,0,0,,,,,$00,drawSamus_morph     
+$19,pose_inMouth    ,poseFunc_inMouth    ,pose_inMouth    ,pose_morphBombed,pose_morphHurt  ,$20, $25, $2A, $80,0,0,0,0,,,,,$80,drawSamus_morph     
+$1A,pose_toStomach  ,poseFunc_toStomach  ,pose_toStomach  ,pose_toStomach  ,pose_toStomach  ,$20, $25, $2A, $80,0,0,0,0,,,,,$00,drawSamus_morph     
+$1B,pose_inStomach  ,poseFunc_inStomach  ,pose_inStomach  ,pose_inStomach  ,pose_inStomach  ,$20, $25, $2A, $80,0,0,0,0,,,,,$80,drawSamus_morph     
+$1C,pose_outStomach ,poseFunc_outStomach ,pose_outStomach ,pose_outStomach ,pose_outStomach ,$20, $25, $2A, $80,0,0,0,0,,,,,$00,drawSamus_morph     
+$1D,pose_exitQueen  ,poseFunc_morphBombed,pose_morphFall  ,pose_exitQueen  ,pose_exitQueen  ,$20, $25, $2A, $80,0,0,0,0,,,,,$80,drawSamus_morph     

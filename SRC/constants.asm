@@ -77,7 +77,10 @@ pose_morphHurt   = $10 ;Morphball knockback
 pose_bombed      = $11 ;Standing bombed
 pose_morphBombed = $12 ;Morphball bombed
 pose_faceScreen  = $13 ;Facing screen
-
+pose_unusedA     = $14
+pose_unusedB     = $15
+pose_unusedC     = $16
+pose_unusedD     = $17
 pose_beingEaten  = $18 ;Being eaten by Metroid Queen
 pose_inMouth     = $19 ;In Metroid Queen's mouth
 pose_toStomach   = $1A ;Being swallowed by Metroid Queen
