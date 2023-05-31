@@ -4,6 +4,8 @@ if not exist out mkdir out
 echo. Running scripts
 python .\scripts\enemy_csv2asm.py -i .\SRC\data\enemies.csv -o .\SRC\data
 if errorlevel 1 goto errorSCRIPT
+python.exe .\scripts\samus_csv2asm.py -i .\SRC\samus\samus.csv -o .\SRC\samus
+if errorlevel 1 goto errorSCRIPT
 echo.  Success
 echo.
 

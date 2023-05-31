@@ -614,36 +614,8 @@ drawSamus: ;{ 01:4BD9 Draw Samus
     ; Jump to the appropriate draw routine
     ld a, [samusPose]
     rst $28
-        dw drawSamus_standing   ; $00 - Standing
-        dw drawSamus_jump       ; $01 - Jumping
-        dw drawSamus_spinJump   ; $02 - Spin-jumping
-        dw drawSamus_run        ; $03 - Running (set to 83h when turning)
-        dw drawSamus_crouch     ; $04 - Crouching
-        dw drawSamus_morph      ; $05 - Morphball
-        dw drawSamus_morph      ; $06 - Morphball jumping
-        dw drawSamus_jump       ; $07 - Falling
-        dw drawSamus_morph      ; $08 - Morphball falling
-        dw drawSamus_jumpStart  ; $09 - Starting to jump
-        dw drawSamus_jumpStart  ; $0A - Starting to spin-jump
-        dw drawSamus_spider     ; $0B - Spider ball rolling
-        dw drawSamus_spider     ; $0C - Spider ball falling
-        dw drawSamus_spider     ; $0D - Spider ball jumping
-        dw drawSamus_spider     ; $0E - Spider ball
-        dw drawSamus_knockback  ; $0F - Knockback
-        dw drawSamus_morph      ; $10 - Morphball knockback
-        dw drawSamus_knockback  ; $11 - Standing bombed
-        dw drawSamus_morph      ; $12 - Morphball bombed
-        dw drawSamus_faceScreen ; $13 - Facing screen
-        dw drawSamus_faceScreen ; $14   
-        dw drawSamus_faceScreen ; $15   
-        dw drawSamus_faceScreen ; $16   
-        dw drawSamus_faceScreen ; $17   
-        dw drawSamus_morph      ; $18 - Being eaten by Metroid Queen
-        dw drawSamus_morph      ; $19 - In Metroid Queen's mouth
-        dw drawSamus_morph      ; $1A - Being swallowed by Metroid Queen
-        dw drawSamus_morph      ; $1B - In Metroid Queen's stomach
-        dw drawSamus_morph      ; $1C - Escaping Metroid Queen
-        dw drawSamus_morph      ; $1D - Escaped Metroid Queen
+        ; Table Generated from samus/samus.csv
+        include "samus/samus_drawJumpTable.asm"
 ;}
 
 drawSamus_knockback: ;{ 01:4C59 - $0F, $11: Knockback
@@ -2485,36 +2457,8 @@ bombs_samusAndBGCollision: ;{ 01:54D7
 ret ;}
 
 samus_bombPoseTable: ;{ 01:55DD - Samus-bombed pose transition table
-    db $11 ; $00 - Standing
-    db $11 ; $01 - Jumping
-    db $11 ; $02 - Spin-jumping
-    db $11 ; $03 - Running (set to 83h when turning)
-    db $11 ; $04 - Crouching
-    db $12 ; $05 - Morphball
-    db $12 ; $06 - Morphball jumping
-    db $11 ; $07 - Falling
-    db $12 ; $08 - Morphball falling
-    db $11 ; $09 - Starting to jump
-    db $11 ; $0A - Starting to spin-jump
-    db $12 ; $0B - Spider ball rolling
-    db $12 ; $0C - Spider ball falling
-    db $12 ; $0D - Spider ball jumping
-    db $12 ; $0E - Spider ball
-    db $11 ; $0F - Knockback
-    db $12 ; $10 - Morphball knockback
-    db $11 ; $11 - Standing bombed
-    db $12 ; $12 - Morphball bombed
-    db $11 ; $13 - Facing screen
-    db $00 ; 
-    db $00 ; 
-    db $00 ; 
-    db $00 ; 
-    db $12 ; $18 - Being eaten by Metroid Queen
-    db $12 ; $19 - In Metroid Queen's mouth
-    db $1A ; $1A - Being swallowed by Metroid Queen
-    db $1B ; $1B - In Metroid Queen's stomach
-    db $1C ; $1C - Escaping Metroid Queen
-    db $1D ; $1D - Escaped Metroid Queen
+    ; Table Generated from samus/samus.csv
+    include "samus/samus_bombPoseTransitionTable.asm"
 ;}
 
 samus_cannonXOffsetTable: ;{ 01:55FB - Projectile X offsets
@@ -2541,25 +2485,8 @@ samus_cannonXOffsetTable: ;{ 01:55FB - Projectile X offsets
 ;}
 
 samus_cannonYOffsetByPose: ;{ 01:561D - Projectile y-offsets per pose
-    db $17 ; $00 - Standing
-    db $1F ; $01 - Jumping
-    db $00 ; $02 - Spin-jumping
-    db $14 ; $03 - Running (set to 83h when turning)
-    db $21 ; $04 - Crouching
-    db $00 ; $05 - Morphball
-    db $00 ; $06 - Morphball jumping
-    db $1D ; $07 - Falling
-    db $00 ; $08 - Morphball falling
-    db $15 ; $09 - Starting to jump
-    db $15 ; $0A - Starting to spin-jump
-    db $00 ; $0B - Spider ball rolling
-    db $00 ; $0C - Spider ball falling
-    db $00 ; $0D - Spider ball jumping
-    db $00 ; $0E - Spider ball
-    db $1F ; $0F - Knockback
-    db $00 ; $10 - Morphball knockback
-    db $1F ; $11 - Standing bombed
-    db $00 ; $12 - Morphball bombed
+    ; Table Generated from samus/samus.csv
+    include "samus/samus_cannonYOffsetByPose.asm"
 ;}
 
 samus_cannonYOffsetByAimDirection: ;{ 01:5630 - Projectile y offset due to firing direction
@@ -2607,37 +2534,8 @@ samus_possibleShotDirections: ;{ 01:5653
 ; $00 = Shots not permitted in this pose
 ; $80 = Use bombs in this pose
 ; %0000dulr - Set these bits to permit shooting in this direction
-
-    db $07 ; $00 - Standing
-    db $0F ; $01 - Jumping
-    db $00 ; $02 - Spin-jumping
-    db $07 ; $03 - Running (set to 83h when turning)
-    db $03 ; $04 - Crouching
-    db $80 ; $05 - Morphball
-    db $80 ; $06 - Morphball jumping
-    db $0F ; $07 - Falling
-    db $80 ; $08 - Morphball falling
-    db $0F ; $09 - Starting to jump
-    db $0F ; $0A - Starting to spin-jump
-    db $80 ; $0B - Spider ball rolling
-    db $80 ; $0C - Spider ball falling
-    db $80 ; $0D - Spider ball jumping
-    db $80 ; $0E - Spider ball
-    db $0F ; $0F - Knockback
-    db $80 ; $10 - Morphball knockback
-    db $0F ; $11 - Standing bombed
-    db $80 ; $12 - Morphball bombed
-    db $00 ; $13 - Facing screen
-    db $00 ; 
-    db $00 ; 
-    db $00 ; 
-    db $00 ; 
-    db $00 ; $18 - Being eaten by Metroid Queen
-    db $80 ; $19 - In Metroid Queen's mouth
-    db $00 ; $1A - Being swallowed by Metroid Queen
-    db $80 ; $1B - In Metroid Queen's stomach
-    db $00 ; $1C - Escaping Metroid Queen
-    db $80 ; $1D - Escaped Metroid Queen
+    ; Table Generated from samus/samus.csv
+    include "samus/samus_possibleShotDirections.asm"
 ;}
 
 ;} end of Samus' projectile and bomb functions
@@ -2951,25 +2849,8 @@ ret ;}
 ret
 
 .samusHeightTable: ; 01:57DF
-    db $20 ; $00 - Standing
-    db $20 ; $01 - Jumping
-    db $20 ; $02 - Spin-jumping
-    db $20 ; $03 - Running (set to 83h when turning)
-    db $20 ; $04 - Crouching
-    db $10 ; $05 - Morphball
-    db $10 ; $06 - Morphball jumping
-    db $20 ; $07 - Falling
-    db $10 ; $08 - Morphball falling
-    db $20 ; $09 - Starting to jump
-    db $20 ; $0A - Starting to spin-jump
-    db $10 ; $0B - Spider ball rolling
-    db $10 ; $0C - Spider ball falling
-    db $10 ; $0D - Spider ball jumping
-    db $10 ; $0E - Spider ball
-    db $20 ; $0F - Knockback
-    db $10 ; $10 - Morphball knockback
-    db $20 ; $11 - Standing bombed
-    db $10 ; $12 - Morphball bombed
+    ; Table Generated from samus/samus.csv
+    include "samus/samus_blockReformHeightTable.asm"
 ;}
 
 ;} end destroy block code

@@ -8,11 +8,28 @@ autoWarning = '; This file was automatically generated from samus.csv. Please ed
 def csv2asm(infile, outdir):
     # All of these strings must correlate to column headings
     # Words
-    wordLists = [ 'poseFunctions', 'bombPoseTransitionTable', 'bombedFallingPoseTransitionTable', 'damagePoseTransitionTable', 'drawFunctions']
+    wordLists = [ 'poseJumpTable', 
+                  'drawJumpTable'
+                ]
     # Bytes
-    byteLists = [ 'bgHitboxTop', 'spriteHitboxTopTable', 'destroyBlock.samusHeightTable', 'cannonYOffsetByPose', 'possibleShotDirections']
-    # Offsets
-    offsetLists = [ 'horizontalYOffsetA', 'horizontalYOffsetB', 'horizontalYOffsetC', 'horizontalYOffsetD', 'horizontalYOffsetE', 'horizontalYOffsetF', 'horizontalYOffsetG', 'horizontalYOffsetH']
+    byteLists = [ 'bombPoseTransitionTable', 
+                  'bombedFallingPoseTransitionTable', 
+                  'damagePoseTransitionTable', 
+                  'bgHitboxTop', 
+                  'spriteHitboxTopTable', 
+                  'blockReformHeightTable', 
+                  'cannonYOffsetByPose', 
+                  'possibleShotDirections'
+                ]
+    # Horizontal Collision Y-Offsets
+    offsetLists = [ 'horizontalYOffsetA', 
+                    'horizontalYOffsetB',
+                    'horizontalYOffsetC',
+                    'horizontalYOffsetD',
+                    'horizontalYOffsetE',
+                    'horizontalYOffsetF',
+                    'horizontalYOffsetG',
+                    'horizontalYOffsetH']
 
     # Open File
     f = open(infile)
@@ -50,7 +67,7 @@ def csv2asm(infile, outdir):
     for wordType in wordLists:
         writeWordTableToAsm(outdir, locals()[wordType], wordType, poseComments)
     for byteType in byteLists:
-        writeWordTableToAsm(outdir, locals()[byteType], byteType, poseComments)
+        writeByteTableToAsm(outdir, locals()[byteType], byteType, poseComments)
     writeOffsetTableToAsm(outdir, transposedOffsets, 'horizontalYOffsets', poseComments)
 
 
