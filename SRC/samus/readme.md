@@ -6,7 +6,7 @@ The script `scripts/samus_csv2asm.py` is used to convert `samus.csv` into severa
 
 Note that there are a handful of tables that do not fill out a row for every single pose. This is undeniably bad practice, but I suppose the original devs decided to shave a few extra bytes because those rows are not relavent when being eaten by the Queen.
 
-If you want to add a another pose-indexed table to the game, simply insert a named column using your spreadsheet software of choice to `samus.csv`, and then add the name of the column to either the `wordLists` or `byteLists` lists in `samus_csv2asm.py` (depending on whether the value is 2 bytes or 1 bytes). More sophisticated pose-indexed tables (such as `horizontalYOffset` one) will require the addition of bespoke solutions.
+If you want to add a another pose-indexed table to the game, simply insert a named column using your spreadsheet software of choice to `samus.csv`, and then add the name of the column to either the `wordLists` or `byteLists` lists in `samus_csv2asm.py` (depending on whether the value is 2 bytes or 1 bytes). More sophisticated pose-indexed tables (such as `horizontalYOffset` one) will require the addition of bespoke code to the script.
 
 Adding a new pose to the game is just a matter of adding a new row to the spreadsheet, and filling out all of the columns. Make sure in particular to have `poseJumpTable` and `drawJumpTable` reference actual labels in the game's source code, and please avoid leaving any cells blank. The unused poses `$14`-`$17` are perhaps a good place to start.
 
