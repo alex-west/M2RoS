@@ -120,7 +120,7 @@ def writeOffsetTableToAsm(outdir, table, fileName, comments):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('-i','--infile', default='enemies.csv', help='Input CSV file')
+    ap.add_argument('-i','--infile', default='samus.csv', help='Input CSV file')
     ap.add_argument('-o','--outdir', default='.', help='Output directory for the asm files')
     args = ap.parse_args()
 
