@@ -7470,7 +7470,7 @@ ret ;}
 
 gameMode_Paused: ;{ 00:2CED
     ; Change palette on a 32 frame cycle (16 frame light/dark phases)
-    ld b, $e7
+    ld b, $93 ;$e7
     ldh a, [frameCounter]
     bit 4, a
     jr z, .endIf

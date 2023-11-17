@@ -1,3 +1,7 @@
+This is a branch of the M2RoS disassembly that aims to make the game safer for photosensitive audiences.
+
+Below is the readme of the main branch repeated verbatim. The contribution instructions will likely differ in the future. Contact the author of this repository on the MetConst Discord if you are interested in contributing.
+
 # Return of Samus Disassembly
 
 A disassembly of one of my favorite Game Boy games. A first-pass over every function of code has been completed, but there are still plenty of improvements to be made to make the code more intelligible and usable. Feel free to contribute.

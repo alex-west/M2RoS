@@ -565,14 +565,15 @@ drawSamus: ;{ 01:4BD9 Draw Samus
         ld [samusInvulnerableTimer], a
         ; 4 frames on, 4 frames off
         ldh a, [frameCounter]
-        bit 2, a
+        nop
+        nop ;bit 2, a
             ret z
     .endIf_A:
     
     ; Check if touching acid
     ld a, [acidContactFlag]
     and a
-    jr z, .endIf_B
+    jr .endIf_B ;z, .endIf_B
         ; 4 frames on, 4 frames off
         ldh a, [frameCounter]
         bit 2, a

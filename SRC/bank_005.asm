@@ -228,7 +228,7 @@ titleScreenRoutine: ;{ 05:4118
             bit 1, a
             jr z, .endIf_A
                 ; Flash
-                ld a, $90
+                ld a, $93 ;$90
                 ld [bg_palette], a
     .endIf_A:
 
