@@ -111,7 +111,7 @@ Rules:
 - If value is even, drop missile
 - If value is >$0A, drop large health
 - Else, drop small health
-- Note: All rops have a 50% chance of happening or being nothing
+- Note: All drops have a 50% chance of happening or being nothing
 
 #### Drop Type
 Values:
