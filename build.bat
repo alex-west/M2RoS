@@ -43,7 +43,7 @@ echo.
 
 certutil -hashfile out/M2RoS.gb MD5
 echo.
-:: fc /b Metroid2.gb out\M2RoS.gb
+fc /b Metroid2.gb out\M2RoS.gb
 goto done
 
 :errorSCRIPT
