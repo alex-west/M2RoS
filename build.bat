@@ -1,4 +1,5 @@
 @echo off
+
 if not exist out mkdir out
 
 echo. Running scripts
@@ -44,27 +45,33 @@ echo.
 certutil -hashfile out/M2RoS.gb MD5
 echo.
 fc /b Metroid2.gb out\M2RoS.gb
-goto done
+goto assembledDone
 
 :errorSCRIPT
 echo.
 echo. Script Error.
 echo.
-goto done
+goto errorDone
 :errorASM
 echo.
 echo. Assembler Error.
 echo.
-goto done
+goto errorDone
 :errorLINK
 echo.
 echo. Linker Error.
 echo.
-goto done
+goto errorDone
 :errorFIX
 echo.
 echo. RGBFIX Error.
 echo.
+goto errorDone
 
-:done
+:assembledDone
+if not [%1] == [yes] pause
+exit 0
+
+:errorDone
 pause
+exit 1
