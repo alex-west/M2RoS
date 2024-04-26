@@ -652,6 +652,7 @@ ret ;}
 ; Enemy Data starts here
 enemyDataPointers:
 	include "maps/enemyData.asm"
+enemyData_end:
 
 ; 03:6244 -- Enemy Data ends here
 ; Freespace filled with $00 (NOP)

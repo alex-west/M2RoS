@@ -585,6 +585,7 @@ titleCursorTable: ; 05:42E1
 doorPointerTable:: ; 05:42E5
 include "maps/door macros.asm"
 include "maps/doors.asm"
+doorData_end:
 
 ;------------------------------------------------------------------------------
 ; Game Mode $13 - Credits
