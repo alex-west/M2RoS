@@ -1375,9 +1375,9 @@ queen_headCollision: ;{ 03:6EA7
     ; Play screaming sound
     ld a, [queen_lowHealthFlag]
     and a
-    ld a, $09 ; Normal sound
+    ld a, sfx_noise_metroidQueenCry ; Normal sound
     jr z, .endIf_B
-        ld a, $0a ; Low health sound
+        ld a, sfx_noise_metroidQueenHurtCry ; Low health sound
     .endIf_B:
     ld [sfxRequest_noise], a
 ret
@@ -2154,7 +2154,7 @@ queen_moveNeck: ;{ 03:72B8
             ld a, $93
             ld [queen_bodyPalette], a
             ; Play noise
-            ld a, $0a
+            ld a, sfx_noise_metroidQueenHurtCry
             ld [sfxRequest_noise], a
             ; Change actor type
             ld hl, queenActor_mouth + 3 ; $C623
@@ -2530,9 +2530,9 @@ queenStateFunc_startA: ;{ 03:74C4 - Queen State $17: Start Fight A (wait to scre
         ; Make different noises based on aggression flag?
         ld a, [queen_lowHealthFlag]
         and a
-        ld a, $09
+        ld a, sfx_noise_metroidQueenCry
         jr z, .endIf_B
-            ld a, $0a
+            ld a, sfx_noise_metroidQueenHurtCry
         .endIf_B:
         ld [sfxRequest_noise], a
         ; Set timer for next state
@@ -3210,7 +3210,7 @@ queenStateFunc_samusEaten: ;{ 03:7785 - Queen State $0F: Samus in mouth/stomach
         ld a, $93
         ld [queen_bodyPalette], a
         ; Make noise
-        ld a, $0a
+        ld a, sfx_noise_metroidQueenHurtCry
         ld [sfxRequest_noise], a
         ret
     .else_A:
@@ -3234,7 +3234,7 @@ queenStateFunc_samusEaten: ;{ 03:7785 - Queen State $0F: Samus in mouth/stomach
             ld a, $93
             ld [queen_bodyPalette], a
             ; Make noise
-            ld a, $0a
+            ld a, sfx_noise_metroidQueenHurtCry
             ld [sfxRequest_noise], a
             ret
 
@@ -3784,7 +3784,7 @@ queen_killFromStomach: ;{ 03:7A4D Kill Queen from stomach
     call queen_closeFloor
     
     ; Play sound
-    ld a, $0f
+    ld a, sfx_noise_clearedSaveFile
     ld [sfxRequest_noise], a
     
     ; Drop the head to the ground
@@ -4056,7 +4056,7 @@ queenStateFunc_deleteBody: ;{ 03:7B9D - Queen State $13: Dying Part 2 (delete bo
         ; Shuffle counter and play noise
         ld a, $80
         ld [metroidCountShuffleTimer], a
-        ld a, $17
+        ld a, sfx_noise_babyMetroidCry
         ld [sfxRequest_noise], a
     queenStateFunc_allDone: ; 03:7BE7 - Queen State $16: All Done
         ret

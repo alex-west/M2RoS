@@ -352,7 +352,7 @@ titleScreenRoutine: ;{ 05:4118
     cp PADF_SELECT
     jr nz, .endIf_F
         ; Play sound effect
-        ld a, $15
+        ld a, sfx_square1_select
         ld [sfxRequest_square1], a
         ; Toggle flag
         ld a, [title_showClearOption]
@@ -368,7 +368,7 @@ titleScreenRoutine: ;{ 05:4118
         cp PADF_RIGHT
         jr nz, .endIf_G
             ; Play sound effect
-            ld a, $15
+            ld a, sfx_square1_select
             ld [sfxRequest_square1], a
             ; Increment slot number
             ld a, [activeSaveSlot]
@@ -389,7 +389,7 @@ titleScreenRoutine: ;{ 05:4118
         cp PADF_LEFT
         jr nz, .endIf_H
             ; Play sound effect
-            ld a, $15
+            ld a, sfx_square1_select
             ld [sfxRequest_square1], a
             ; Decrement slot number
             ld a, [activeSaveSlot]
@@ -421,7 +421,7 @@ titleScreenRoutine: ;{ 05:4118
             bit PADB_DOWN, a
             jr z, .endIf_I
                 ; Play sound effect
-                ld a, $15
+                ld a, sfx_square1_select
                 ld [sfxRequest_square1], a
     .endIf_I:
 
@@ -443,7 +443,7 @@ titleScreenRoutine: ;{ 05:4118
         jr nz, .clearSaveBranch
 
     ; Play sound
-    ld a, $15
+    ld a, sfx_square1_select
     ld [sfxRequest_square1], a
     ; Play Samus fanfare
     ld a, $12
@@ -526,7 +526,7 @@ ret
 ; Clear file
 .clearSaveBranch:
     ; Play sound effect
-    ld a, $0f
+    ld a, sfx_noise_clearedSaveFile
     ld [sfxRequest_noise], a
     ; Get base address of save slot
     ; de = $A000 + (activeSaveSlot * $40)

@@ -2330,7 +2330,7 @@ poseFunc_morphBombed: ;{ 00:0ECB - $12 and $1D - Morphball bombed
             ld [samusPose], a
             xor a
             ld [spiderRotationState], a
-            ld a, $0d
+            ld a, sfx_square1_spiderBall
             ld [sfxRequest_square1], a
             ret
     .endIf:
@@ -2365,7 +2365,7 @@ poseFunc_hurt: ;{ 00:0EF7 - $0F - Knockback
     ;  High-jump case
     ld a, samus_jumpArrayBaseOffset - $1F ;$21
     ld [samus_jumpArcCounter], a
-    ld a, $02
+    ld a, sfx_square1_hijumping
     ld [sfxRequest_square1], a
     ; Verify we have high jump
     ld a, [samusItems]
@@ -2374,7 +2374,7 @@ poseFunc_hurt: ;{ 00:0EF7 - $0F - Knockback
         ; Normal jump case
         ld a, samus_jumpArrayBaseOffset - $0F ;$31
         ld [samus_jumpArcCounter], a
-        ld a, $01
+        ld a, sfx_square1_jumping
         ld [sfxRequest_square1], a
     .endIf_A:
 
@@ -2429,7 +2429,7 @@ poseFunc_morphHurt: ;{ 00:0F38 - $10 - Morphball knockback
             xor a
             ld [samus_jumpStartCounter], a
             ; Play sound
-            ld a, $01
+            ld a, sfx_square1_jumping
             ld [sfxRequest_square1], a
             ret
     .endIf_B:
@@ -2536,7 +2536,7 @@ poseFunc_spiderBall: ;{ 00:1029 - $0E: Spider Ball (not moving)
     jr z, .endIf_A
         ld a, pose_morph
         ld [samusPose], a
-        ld a, $06
+        ld a, sfx_square1_morphingTransition
         ld [sfxRequest_square1], a
             ret
     .endIf_A:
@@ -2596,7 +2596,7 @@ poseFunc_spiderRoll: ;{ 00:1083 - $0B: Spider Ball (rolling)
     jr z, .endIf_A
         ld a, pose_morph
         ld [samusPose], a
-        ld a, $06
+        ld a, sfx_square1_morphingTransition
         ld [sfxRequest_square1], a
         ret
     .endIf_A:
@@ -2756,7 +2756,7 @@ poseFunc_spiderJump: ;{ 00:1170 - $0D: Spider ball jumping
     jr z, .endIf_A
         ld a, pose_morphJump
         ld [samusPose], a
-        ld a, $06
+        ld a, sfx_square1_morphingTransition
         ld [sfxRequest_square1], a
         ret
     .endIf_A:
@@ -2847,7 +2847,7 @@ poseFunc_spiderFall: ;{ 00:11E4 - $0C
         ld a, pose_morphFall
         ld [samusPose], a
         ; Play sound
-        ld a, $06
+        ld a, sfx_square1_morphingTransition
         ld [sfxRequest_square1], a
         ret
     .endIf_A:
@@ -2933,7 +2933,7 @@ poseFunc_morphFall: ;{ 00:123B - $08: Morphball falling
             xor a
             ld [spiderRotationState], a
             ; Play sound
-            ld a, $0d
+            ld a, sfx_square1_spiderBall
             ld [sfxRequest_square1], a
             ret
     .endIf_A:
@@ -2958,7 +2958,7 @@ poseFunc_morphFall: ;{ 00:123B - $08: Morphball falling
             xor a
             ld [samus_jumpStartCounter], a
             ; Play jump sound
-            ld a, $01
+            ld a, sfx_square1_jumping
             ld [sfxRequest_square1], a
             ret
     .endIf_B:
@@ -3069,7 +3069,7 @@ poseFunc_fall: ;{ 00:12F5 - $07 - Falling
             ld [samus_jumpArcCounter], a
         .endIf_B:
         ; High jump SFX
-        ld a, $02
+        ld a, sfx_square1_hijumping
         ld [sfxRequest_square1], a
 
         ; Check if Samus does not have high jump
@@ -3080,7 +3080,7 @@ poseFunc_fall: ;{ 00:12F5 - $07 - Falling
             ld a, samus_jumpArrayBaseOffset - $F ;$31
             ld [samus_jumpArcCounter], a
             ; High jump 
-            ld a, $01
+            ld a, sfx_square1_jumping
             ld [sfxRequest_square1], a
         .endIf_C:
         ; Set pose
@@ -3208,7 +3208,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
             ; High jump parameters
             ld a, samus_jumpArrayBaseOffset - $1F ;$21
             ld [samus_jumpArcCounter], a
-            ld a, $02
+            ld a, sfx_square1_hijumping
             ld [sfxRequest_square1], a
             ; Check for high jump
             ld a, [samusItems]
@@ -3217,7 +3217,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
                 ; Normal jump parameters
                 ld a, samus_jumpArrayBaseOffset - $0F ;$31
                 ld [samus_jumpArcCounter], a
-                ld a, $01
+                ld a, sfx_square1_jumping
                 ld [sfxRequest_square1], a
             .endIf_C:
             ; Decrease jump height in water
@@ -3238,7 +3238,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
             ld a, [samusItems]
             bit itemBit_screw, a
                 ret z
-            ld a, $03
+            ld a, sfx_square1_screwAttacking
             ld [sfxRequest_square1], a
             ret
     .endIf_B:
@@ -3258,7 +3258,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
             ld [samusFacingDirection], a
             ld a, $02
             ld [samus_turnAnimTimer], a
-            ld a, $04
+            ld a, sfx_square1_standingTransition
             ld [sfxRequest_square1], a
             ret
         .else_F:
@@ -3287,7 +3287,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
             ld [samusFacingDirection], a
             ld a, $02
             ld [samus_turnAnimTimer], a
-            ld a, $04
+            ld a, sfx_square1_standingTransition
             ld [sfxRequest_square1], a
             ret
         .else_H:
@@ -3312,7 +3312,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
         ld a, pose_crouch
         ld [samusPose], a
         ; Play sound
-        ld a, $05
+        ld a, sfx_square1_crouchingTransition
         ld [sfxRequest_square1], a
         ret
     .endIf_I:
@@ -3327,7 +3327,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
         ; High jump parameters
         ld a, samus_jumpArrayBaseOffset - $1F ;$21
         ld [samus_jumpArcCounter], a
-        ld a, $02
+        ld a, sfx_square1_hijumping
         ld [sfxRequest_square1], a
         ; Check for high jump
         ld a, [samusItems]
@@ -3336,7 +3336,7 @@ poseFunc_standing: ;{ 00:13B7 - $00: Standing
             ; Normal jump parameters
             ld a, samus_jumpArrayBaseOffset - $0F ;$31
             ld [samus_jumpArcCounter], a
-            ld a, $01
+            ld a, sfx_square1_jumping
             ld [sfxRequest_square1], a
         .endIf_K:
         ; Decrease jump height in water
@@ -3393,7 +3393,7 @@ poseFunc_running: ;{ 00:14D6 - $03: Running
             and itemMask_hiJump
             srl a
             inc a
-            ld [sfxRequest_square1], a
+            ld [sfxRequest_square1], a ; 1 or 2 (sfx_square1_jumping or sfx_square1_hijumping)
             ; Check equipment
             ld a, [samusItems]
             bit itemBit_hiJump, a
@@ -3420,7 +3420,7 @@ poseFunc_running: ;{ 00:14D6 - $03: Running
             ld a, [samusItems]
             bit itemBit_screw, a
                 ret z
-            ld a, $03
+            ld a, sfx_square1_screwAttacking
             ld [sfxRequest_square1], a
             ret
     .endIf_B:
@@ -3440,7 +3440,7 @@ poseFunc_running: ;{ 00:14D6 - $03: Running
             ld [samusFacingDirection], a
             ld a, $02
             ld [samus_turnAnimTimer], a
-            ld a, $04
+            ld a, sfx_square1_standingTransition
             ld [sfxRequest_square1], a
             ret
         .else_F:
@@ -3467,7 +3467,7 @@ poseFunc_running: ;{ 00:14D6 - $03: Running
             ld [samusFacingDirection], a
             ld a, $02
             ld [samus_turnAnimTimer], a
-            ld a, $04
+            ld a, sfx_square1_standingTransition
             ld [sfxRequest_square1], a
             ret
         .else_H:
@@ -3494,7 +3494,7 @@ poseFunc_running: ;{ 00:14D6 - $03: Running
         ld a, pose_crouch
         ld [samusPose], a
         ; Request sound
-        ld a, $05
+        ld a, sfx_square1_crouchingTransition
         ld [sfxRequest_square1], a
         ret
     .endIf_I:
@@ -3530,14 +3530,14 @@ poseFunc_running: ;{ 00:14D6 - $03: Running
         ld [samus_jumpStartCounter], a
         
         ; High jump sound
-        ld a, $02
+        ld a, sfx_square1_hijumping
         ld [sfxRequest_square1], a
         ; Check equipment
         ld a, [samusItems]
         bit itemBit_hiJump, a
         jr nz, .endIf_L
             ; Normal jump sound
-            ld a, $01
+            ld a, sfx_square1_jumping
             ld [sfxRequest_square1], a
         .endIf_L:
         
@@ -3594,7 +3594,7 @@ poseFunc_crouch: ;{ 00:15F4 - $04: Crouching
             ; Morph if can't stand
             ld a, pose_morph
             ld [samusPose], a
-            ld a, $06
+            ld a, sfx_square1_morphingTransition
             ld [sfxRequest_square1], a
             ret
         .else_D:
@@ -3634,7 +3634,7 @@ poseFunc_crouch: ;{ 00:15F4 - $04: Crouching
             ; Morph if can't stand
             ld a, pose_morph
             ld [samusPose], a
-            ld a, $06
+            ld a, sfx_square1_morphingTransition
             ld [sfxRequest_square1], a
             ret
         .else_G:
@@ -3653,7 +3653,7 @@ poseFunc_crouch: ;{ 00:15F4 - $04: Crouching
         and itemMask_hiJump
         srl a
         inc a
-        ld [sfxRequest_square1], a
+        ld [sfxRequest_square1], a ; 1 or 2 (sfx_square1_jumping or sfx_square1_hijumping)
         ; Check if we're making a normal jump or spin jump
         ldh a, [hInputPressed]
         and PADF_LEFT | PADF_RIGHT ;$30
@@ -3665,7 +3665,7 @@ poseFunc_crouch: ;{ 00:15F4 - $04: Crouching
             ld a, [samusItems]
             bit itemBit_screw, a
             jr z, .endIf_I
-                ld a, $03
+                ld a, sfx_square1_screwAttacking
                 ld [sfxRequest_square1], a
                 jr .endIf_I
         .else_I:
@@ -3795,7 +3795,7 @@ poseFunc_morphBall: ;{ 00:1701 - $05: Morph ball
             xor a
             ld [samus_jumpStartCounter], a
             ; Play SFX
-            ld a, $01
+            ld a, sfx_square1_jumping
             ld [sfxRequest_square1], a
             ret
     .endIf_C:
@@ -3810,7 +3810,7 @@ poseFunc_morphBall: ;{ 00:1701 - $05: Morph ball
             jp nz, .activateSpiderBall
         ld a, pose_morphJump
         ld [samusPose], a
-        ld a, $01
+        ld a, sfx_square1_jumping
         ld [sfxRequest_square1], a
         ; Set up initial jump arc table index for morph bounce
         jr nz, .else_B
@@ -3854,7 +3854,7 @@ poseFunc_morphBall: ;{ 00:1701 - $05: Morph ball
     xor a
     ld [spiderRotationState], a
     ; Play noise
-    ld a, $0d
+    ld a, sfx_square1_spiderBall
     ld [sfxRequest_square1], a
 ret
 ;}
@@ -3873,7 +3873,7 @@ poseFunc_morphJump: ;{ 00:179F - $06: Morph Jump
             ld [samusPose], a
             xor a
             ld [spiderRotationState], a
-            ld a, $0d
+            ld a, sfx_square1_spiderBall
             ld [sfxRequest_square1], a
             ret
     .jump: ; Fall through to jump handler below
@@ -4067,7 +4067,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
                 ; High-jump space jump value
                 ld a, samus_jumpArrayBaseOffset - $28 ;$18
                 ld [samus_jumpArcCounter], a
-                ld a, $02
+                ld a, sfx_square1_hijumping
                 ld [sfxRequest_square1], a
                 
                 ld a, [samusItems]
@@ -4076,14 +4076,14 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
                     ; Normal jump space jump value
                     ld a, samus_jumpArrayBaseOffset - $18 ;$28
                     ld [samus_jumpArcCounter], a
-                    ld a, $01
+                    ld a, sfx_square1_jumping
                     ld [sfxRequest_square1], a
                 .endIf_E:
                 ; Screw sound effect
                 ld a, [samusItems]
                 bit itemBit_screw, a
                 jr z, .endIf_F
-                    ld a, $03
+                    ld a, sfx_square1_screwAttacking
                     ld [sfxRequest_square1], a
                 .endIf_F:
                 ; Convert Samus's air direction to her facing direction
@@ -4185,7 +4185,7 @@ poseFunc_spinJump: ;{ 00:18E8 - $02: Spin jumping
     ld a, [samusItems]
     and itemMask_space | itemMask_screw
     jr z, .endIf_L
-        ld a, $04
+        ld a, sfx_square1_standingTransition
         ld [sfxRequest_square1], a
     .endIf_L
 
@@ -4454,7 +4454,7 @@ jr samus_groundUnmorph_cont ;} This is structured like it used to be a condition
 
 ; Attempts to stand up. Returns carry if it fails.
 samus_tryStanding: ;{ 00:1B37
-    ld a, $04
+    ld a, sfx_square1_standingTransition
     ld [sfxRequest_square1], a
     ; Check upper left pixel
     ldh a, [hSamusXPixel]
@@ -4478,7 +4478,7 @@ samus_tryStanding: ;{ 00:1B37
     ; Set pose to standing
     xor a
     ld [samusPose], a
-    ld a, $04
+    ld a, sfx_square1_standingTransition
     ld [sfxRequest_square1], a
 ret
 ;}
@@ -4508,7 +4508,7 @@ samus_groundUnmorph_cont: ;{ 00:1B6B - Unmorph on ground, continued
             ; Clear timer, play sound
             xor a
             ld [samus_animationTimer], a
-            ld a, $05
+            ld a, sfx_square1_crouchingTransition
             ld [sfxRequest_square1], a
             ret
     .endIf:
@@ -4528,7 +4528,7 @@ samus_morphOnGround: ;{ 00:1BA4
     xor a
     ld [samus_speedDown], a
     ; Play morphing sound
-    ld a, $06
+    ld a, sfx_square1_morphingTransition
     ld [sfxRequest_square1], a
 ret ;}
 
@@ -4578,7 +4578,7 @@ samus_unmorphInAir: ;{ 00:1BB3
     ld a, pose_fall
     ld [samusPose], a
     ; Fall
-    ld a, $04
+    ld a, sfx_square1_standingTransition
     ld [sfxRequest_square1], a
 ret
     .exit:
@@ -5461,7 +5461,7 @@ samus_getTileIndex: ;{ 00:1FF5
         bit blockType_spike, a
         jr z, .endIf_B
             ; Play sfx
-            ld a, $04
+            ld a, sfx_square1_standingTransition
             ld [sfxRequest_square1], a
             ; Samus damaged flag
             ld a, $01
@@ -5587,7 +5587,7 @@ samus_tryShooting: ;{ 00:21FB
         ld hl, gfxInfo_cannonBeam
         call loadGraphics
         ; Play sound effect
-        ld a, $15
+        ld a, sfx_square1_select
         ld [sfxRequest_square1], a
         ret
     .else:
@@ -5600,7 +5600,7 @@ samus_tryShooting: ;{ 00:21FB
         ld hl, gfxInfo_cannonMissile
         call loadGraphics
         ; Play sound effect
-        ld a, $15
+        ld a, sfx_square1_select
         ld [sfxRequest_square1], a
         ret
 ;}
@@ -7840,7 +7840,7 @@ applyDamage: ;{ This procedure has multiple entry points
         ldh a, [frameCounter]
         and $07
             ret nz
-        ld a, $07
+        ld a, sfx_noise_acidDamage
         ld [sfxRequest_noise], a
         ; Damage once every 16 frames
         ldh a, [frameCounter]
@@ -7860,7 +7860,7 @@ applyDamage: ;{ This procedure has multiple entry points
         and $07
             ret nz
         ; Make noise
-        ld a, $07
+        ld a, sfx_noise_acidDamage
         ld [sfxRequest_noise], a
         jr .apply
         
@@ -7872,7 +7872,7 @@ applyDamage: ;{ This procedure has multiple entry points
         and $0f
             ret nz
         ; Make noise
-        ld a, $07
+        ld a, sfx_noise_acidDamage
         ld [sfxRequest_noise], a
         jr .apply
         
@@ -7883,7 +7883,7 @@ applyDamage: ;{ This procedure has multiple entry points
         cp $60
             ret nc
         ; Play sound
-        ld a, $06
+        ld a, sfx_noise_samusHurt
         ld [sfxRequest_noise], a
         ; Fallthrough to .apply
         
@@ -7930,7 +7930,7 @@ killSamus: ;{ 00:2FA2
     ; Silence audio
     call silenceAudio_longJump
     ; Play noise
-    ld a, $0b
+    ld a, sfx_noise_samusKilled
     ld [sfxRequest_noise], a
     ; Delay a frame
     call waitOneFrame
@@ -9579,7 +9579,7 @@ handleItemPickup: ;{ 00:372F
     ld [itemCollected_copy], a
     ld b, a
     ; Unused SFX
-    ld a, $12
+    ld a, sfx_square1_12
     ld [sfxRequest_square1], a
     ; Play item get jingle
     ld a, $01
@@ -9611,11 +9611,11 @@ handleItemPickup: ;{ 00:372F
             ; No delay
             ld [countdownTimerHigh], a
             ld [countdownTimerLow], a
-            ld a, $0e
+            ld a, sfx_square1_pickedUpSmallEnergyDrop
             ld [sfxRequest_square1], a
             jr z, .endIf_A
                 ; Play sound effect
-                ld a, $0c
+                ld a, sfx_square1_pickedUpMissileDrop
                 ld [sfxRequest_square1], a
     .endIf_A:
 
@@ -9812,7 +9812,7 @@ pickup_variaSuit: ;{
     call waitOneFrame
     
     ; Play sound
-    ld a, $1d
+    ld a, sfx_square1_variaSuitTransformation
     ld [sfxRequest_square1], a
     
     ; Set flag for updating tiles varia-collection-style

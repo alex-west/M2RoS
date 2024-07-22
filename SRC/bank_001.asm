@@ -261,7 +261,7 @@ adjustHudValues:: ;{ 01:4A2B - Adjusts displayed health and missiles
         ldh a, [frameCounter]
         and $03
         jr nz, .checkMissileHighByte
-            ld a, $18
+            ld a, sfx_square1_samusHealthChange
             ld [sfxRequest_square1], a
     jr .checkMissileHighByte
 
@@ -285,7 +285,7 @@ adjustHudValues:: ;{ 01:4A2B - Adjusts displayed health and missiles
         ldh a, [frameCounter]
         and $03
         jr nz, .checkMissileHighByte
-            ld a, $18
+            ld a, sfx_square1_samusHealthChange
             ld [sfxRequest_square1], a
     ; Fallthrough to .checkMissileHighByte
 ;}
@@ -326,7 +326,7 @@ adjustHudValues:: ;{ 01:4A2B - Adjusts displayed health and missiles
     ldh a, [frameCounter]
     and $03
     ret nz
-        ld a, $0c
+        ld a, sfx_square1_pickedUpMissileDrop
         ld [sfxRequest_square1], a
 ret
 
@@ -826,7 +826,7 @@ drawSamus_run: ;{ 01:4D77 - $03: Running
         ld a, [sfxRequest_noise]
         and a
         jr nz, .endIf_B
-            ld a, $10
+            ld a, sfx_noise_footstep
             ld [sfxRequest_noise], a
     .endIf_B:
 
@@ -1138,7 +1138,7 @@ samusShoot: ;{ 01:4E8A
         or b
         jr nz, .endIf_D
             ; If not, play sound effect and exit
-            ld a, $19
+            ld a, sfx_square1_noMissileDudShot
             ld [sfxRequest_square1], a
             ret
         .endIf_D:
@@ -1290,15 +1290,15 @@ ret ;}
 ;} end of samusShoot
 
 beamSoundTable: ;{ 01:4FE5
-    db $07 ; 0: Normal
-    db $09 ; 1: Ice
-    db $16 ; 2: Wave
-    db $0B ; 3: Spazer
-    db $0A ; 4: Plasma
-    db $07 ; 5: x
-    db $07 ; 6: x
-    db $07 ; 7: x
-    db $08 ; 8: Missile
+    db sfx_square1_shootingBeam ; 0: Normal
+    db sfx_square1_shootingIceBeam ; 1: Ice
+    db sfx_square1_shootingWaveBeam ; 2: Wave
+    db sfx_square1_shootingSpazerBeam ; 3: Spazer
+    db sfx_square1_shootingPlasmaBeam ; 4: Plasma
+    db sfx_square1_shootingBeam ; 5: x
+    db sfx_square1_shootingBeam ; 6: x
+    db sfx_square1_shootingBeam ; 7: x
+    db sfx_square1_shootingMissile ; 8: Missile
 ;}
 
 getFirstEmptyProjectileSlot: ;{ 01:4FEE
@@ -2054,7 +2054,7 @@ bombBeam_layBomb: ;{ 01:53AF
     add $04
     ld [hl+], a
     ; Play sound
-    ld a, $13
+    ld a, sfx_square1_bombLaid
     ld [sfxRequest_square1], a
 ret ;}
 
@@ -2102,7 +2102,7 @@ samus_layBomb: ;{ 01:53D9 - Lay bombs
     add $10
     ld [hl+], a
     ; Play sound
-    ld a, $13
+    ld a, sfx_square1_bombLaid
     ld [sfxRequest_square1], a
 ret ;}
 
@@ -2191,7 +2191,7 @@ drawBombs: ;{ 01:540E
                             call collision_bombEnemies
                             
                             ; Play explosion sound
-                            ld a, $0c
+                            ld a, sfx_noise_bombDetonated
                             ld [sfxRequest_noise], a
                             jr .nextBomb
                         .else_C:
@@ -2569,7 +2569,7 @@ destroyRespawningBlock: ;{ 01:5671
     ld a, [tileX]
     ld [hl+], a
     ; Request sound effect
-    ld a, $04
+    ld a, sfx_noise_shotBlockDestroyed
     ld [sfxRequest_noise], a
 ret ;}
 
@@ -2674,7 +2674,7 @@ destroyBlock: ;{ 01:56E9
     ld [hl], a
     
     ; Play sound
-    ld a, $04
+    ld a, sfx_noise_shotBlockDestroyed
     ld [sfxRequest_noise], a
 ret ;}
 
@@ -3026,7 +3026,7 @@ miscIngameTasks: ;{ 01:57F2
         ldh a, [frameCounter]
         and $7f
         jr nz, .else_J
-            ld a, $17
+            ld a, sfx_noise_babyMetroidCry
             ld [sfxRequest_noise], a
     .else_J:
 ret ;}
@@ -4281,10 +4281,10 @@ saveFileToSRAM: ;{ 01:7ADF
     call saveEnemyFlagsToSRAM
     
     ; Play save sound effect
-    ld a, $1c
+    ld a, sfx_square1_saved
     ld [sfxRequest_square1], a
     ; But why write to this twice?
-    ld a, $1c
+    ld a, sfx_square1_saved
     ld [sfxRequest_square1], a
     
     ; Turn game mode back to main
