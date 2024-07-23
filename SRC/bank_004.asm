@@ -569,13 +569,13 @@ handleChannelSoundEffect_noise:
     ret z
 
     ld a, [sfxPlaying_noise]
-    cp $0d
+    cp sfx_noise_metroidKilled
         jr z, .endif_sfxRequested
 
-    cp $0e
+    cp sfx_noise_omegaMetroidExplosion
         jr z, .endif_sfxRequested
 
-    cp $0f
+    cp sfx_noise_clearedSaveFile
         jr z, .endif_sfxRequested
 
         ld a, [sfxRequest_noise]
@@ -2604,7 +2604,7 @@ square1Sfx_playback_3:
 square1Sfx_init_4:
 ;{
     ld a, [sfxPlaying_square1]
-    cp $04
+    cp sfx_square1_standingTransition
         jp nc, handleChannelSoundEffect_square1.playing
 
     ld a, $0a
