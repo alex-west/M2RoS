@@ -129,7 +129,7 @@
     db $00 ; (no graphics)
     db $FF ; Plasma beam orb
     db $00 ; Plasma beam
-    db $FF ; Ice beam orb (and bent neck of Queen’s vomiting pose!?)
+    db $FF ; Ice beam orb (and bent neck of Queenâ€™s vomiting pose!?)
     db $00 ; Ice beam
     db $FF ; Wave beam orb
     db $00 ; Wave beam

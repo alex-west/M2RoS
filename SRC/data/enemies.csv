@@ -128,7 +128,7 @@ enSprite_none,enHead_NULL,hitbox_point,$00,,,(no graphics),$7E
 enSprite_none,enHead_NULL,hitbox_point,$00,,,(no graphics),$7F
 enSprite_itemOrb,enHead_item,hitbox_block,$FF,,,Plasma beam orb,$80
 enSprite_item,enHead_item,hitbox_tile,$00,SPRITE_ITEM_BASE_ID,,Plasma beam,$81
-enSprite_itemOrb,enHead_item,hitbox_block,$FF,,QUEEN_ACTOR_BENT_NECK,Ice beam orb (and bent neck of Queen’s vomiting pose!?),$82
+enSprite_itemOrb,enHead_item,hitbox_block,$FF,,QUEEN_ACTOR_BENT_NECK,Ice beam orb (and bent neck of Queenâ€™s vomiting pose!?),$82
 enSprite_item,enHead_item,hitbox_tile,$00,,,Ice beam,$83
 enSprite_itemOrb,enHead_item,hitbox_block,$FF,,,Wave beam orb,$84
 enSprite_item,enHead_item,hitbox_tile,$00,,,Wave beam,$85

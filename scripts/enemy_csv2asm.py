@@ -25,9 +25,9 @@ def csv2asm(infile, outdir):
             hitboxFile.write('    dw '+row[2]+' ; '+row[6]+'\n')
             damageFile.write('    db '+row[3]+' ; '+row[6]+'\n')
             if row[4] != '':
-                constFile.write(row[4]+' = ${:02X} ; '.format(i)+row[6]+'\n')
+                constFile.write('def '+row[4]+' = ${:02X} ; '.format(i)+row[6]+'\n')
             if row[5] != '':
-                constFile.write(row[5]+' = ${:02X} ; '.format(i)+row[6]+'\n')
+                constFile.write('def '+row[5]+' = ${:02X} ; '.format(i)+row[6]+'\n')
             i += 1
 
 

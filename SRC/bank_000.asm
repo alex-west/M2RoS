@@ -285,7 +285,7 @@ bootRoutine: ;{ 00:01FB
     ld hl, oamDMA_routine
     .loadLoop:
         ld a, [hl+]
-        ld [c], a
+        ldh [c], a
         inc c
         dec b
     jr nz, .loadLoop
@@ -4297,13 +4297,13 @@ poseFunc_jumpStart: ;{ 00:19E2 - $09 and $0A - Starting to jump
 ;
 
 ; Pertinent constants (TODO: get these from every other Samus-related collision function too and put them in their own file)
-spiderXLeft  = $0A
-spiderXRight = $15
-spiderXMid   = (spiderXLeft + spiderXRight)/2 ; $0F
+def spiderXLeft  = $0A
+def spiderXRight = $15
+def spiderXMid   = (spiderXLeft + spiderXRight)/2 ; $0F
 
-spiderYTop    = $1E
-spiderYBottom = $2C
-spiderYMid    = (spiderYTop + spiderYBottom)/2 ; $25
+def spiderYTop    = $1E
+def spiderYBottom = $2C
+def spiderYMid    = (spiderYTop + spiderYBottom)/2 ; $25
 
 collision_checkSpiderSet: ;{ 00:1A42
     ; Clear spider ball results flag

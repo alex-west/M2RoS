@@ -78,7 +78,7 @@ def writeConstantsToAsm(outdir, table, fileName, comments):
     i = 0
     for item in table:
         if (item != ''):
-            outFile.write(item+' = ${:02X} ; '.format(i)+comments[i]+'\n')
+            outFile.write('def '+item+' = ${:02X} ; '.format(i)+comments[i]+'\n')
         i += 1
     
     outFile.close()
