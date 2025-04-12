@@ -461,14 +461,14 @@ enemy_getDamagedOrGiveDrop: ;{ 02:4239
         ; Set value (BCD)
         ld b, $20
         ; Play sound
-        ld a, $17
+        ld a, sfx_square1_pickedUpLargeEnergyDrop
         ld [sfxRequest_square1], a
         jr .giveHealth
     .giveSmallHealth:
         ; Set value (BCD)
         ld b, $05
         ; Play sound
-        ld a, $0e
+        ld a, sfx_square1_pickedUpSmallEnergyDrop
         ld [sfxRequest_square1], a
 
 .giveHealth:
@@ -510,7 +510,7 @@ jp processEnemies.doneProcessingEnemy ; Next enemy
 
 .giveMissileDrop:
     ; Play sound
-    ld a, $0c
+    ld a, sfx_square1_pickedUpMissileDrop
     ld [sfxRequest_square1], a
     ; Give 5 missiles
     ld hl, samusCurMissilesLow
@@ -584,7 +584,7 @@ jr .deleteDrop
         dec [hl]
     .endIf_D:
     ; Play freeze sound
-    ld a, $01
+    ld a, sfx_noise_enemyShot
     ld [sfxRequest_noise], a
 .freeze:
     ld hl, hEnemy.stunCounter
@@ -595,7 +595,7 @@ jp .transferCollisionResults ; Exit
 
 .freezeInvulnerable:
     ; Play plink sound
-    ld a, $0f
+    ld a, sfx_square1_beamDink
     ld [sfxRequest_square1], a
     jr .freeze
 ;} end Ice Beam case
@@ -615,7 +615,7 @@ jp .transferCollisionResults ; Exit
         jr c, .smallExplosion
     ; 
     ldh [hEnemy.health], a
-    ld a, $01
+    ld a, sfx_noise_enemyShot
     ld [sfxRequest_noise], a
     call .transferCollisionResults ; Clear stuff
     ld a, $11
@@ -634,7 +634,7 @@ jp processEnemies.doneProcessingEnemy ; Next enemy
         jr .prepareDrop
     .endIf_E:
 .plink:
-    ld a, $0f
+    ld a, sfx_square1_beamDink
     ld [sfxRequest_square1], a
 jr .transferCollisionResults ; Exit
 
@@ -679,7 +679,7 @@ jr .transferCollisionResults ; Exit
     xor a
     ldh [hEnemy.counter], a
     ; Play noise
-    ld a, $02
+    ld a, sfx_noise_enemyKilled
     ld [sfxRequest_noise], a
 .unusedJump:
     call .transferCollisionResults ; Clear stuff
@@ -2393,9 +2393,9 @@ enAI_itemOrb: ;{ 02:4DD3
     cp $20
         ret z
     ; Request sound effect
-    xor a
+    xor a ; sfx_square1_nothing
     ld [sfxRequest_square1], a
-    ld a, $02
+    ld a, sfx_noise_enemyKilled
     ld [sfxRequest_noise], a
     ; Change orb into item
     ld a, c
@@ -2986,7 +2986,7 @@ ret
     jr z, .endIf_G
         cp $09 ; Check if bomb
         jr nz, .endIf_G
-            ld a, $05
+            ld a, sfx_noise_metroidHurt
             ld [sfxRequest_noise], a
             ld a, $11
             ldh [hEnemy.stunCounter], a
@@ -3032,7 +3032,7 @@ ret
 ; end state
 
 .die: ; Become Spring ball
-    ld a, $0d
+    ld a, sfx_noise_metroidKilled
     ld [sfxRequest_noise], a
     ; Transform into spring ball
     ld hl, hEnemy.health
@@ -3587,7 +3587,7 @@ ret
     .endIf_A:
     
     ; Play sound effect
-    ld a, $11
+    ld a, sfx_noise_enemyHitGround
     ld [sfxRequest_noise], a
     
     ; Return to home y-position
@@ -3711,7 +3711,7 @@ enemy_animateIce: ;{ 02:5652
             ret
         .else_B:
             ; Kill
-            ld a, $02
+            ld a, sfx_noise_enemyKilled
             ld [sfxRequest_noise], a
             call enemy_deleteSelf_farCall
             ld a, $02
@@ -4530,7 +4530,7 @@ ret
         ld a, SPRITE_SKREEK_4 ; $07
         ldh [hEnemy.spriteType], a
         ; *spit*
-        ld a, $12
+        ld a, sfx_noise_enemyProjectileFired
         ld [sfxRequest_noise], a
         ret
 ; end state
@@ -4792,7 +4792,7 @@ ret
     ; Ground has been hit, so move on to next state
     ld a, SPRITE_DRIVEL_SPIT_4 ; $0F
     ldh [hEnemy.spriteType], a
-    ld a, $11
+    ld a, sfx_noise_enemyHitGround
     ld [sfxRequest_noise], a
 ret
 
@@ -4838,7 +4838,7 @@ ret
 
     ; Delete self
     call enemy_deleteSelf_farCall
-    ld a, $03
+    ld a, sfx_noise_enemyExplosion
     ld [sfxRequest_noise], a
     ld a, $ff
     ldh [hEnemy.spawnFlag], a
@@ -5304,7 +5304,7 @@ enAI_pipeBug: ;{ 02:5F67
         ; Delete self
         call enemy_deleteSelf_farCall
         ; Play sound
-        ld a, $14
+        ld a, sfx_square1_pipeBugSpawnerStop
         ld [sfxRequest_square1], a
         ; Kill permanently if spawn number is within the saved range of $40-$7F (!)
         ld a, $02
@@ -5796,7 +5796,7 @@ enAI_autrack: ;{ 02:6145
     ld a, SPRITE_AUTRACK_4 ; $44
     ldh [hEnemy.spriteType], a
     ; Request sound effect
-    ld a, $13
+    ld a, sfx_noise_autrackLaser
     ld [sfxRequest_noise], a
 
 .action:
@@ -5814,7 +5814,7 @@ enAI_autrack: ;{ 02:6145
         ret nz
 
     ; Request sound effect
-    ld a, $18
+    ld a, sfx_noise_autrackRises
     ld [sfxRequest_noise], a
 ret
 
@@ -5909,7 +5909,7 @@ ret
     ; Play jumping SFX if a certain enemy type during a certain frame
     cp SPRITE_AUTOAD_2 ; $47
         ret nz
-    ld a, $1a
+    ld a, sfx_noise_autoadJump
     ld [sfxRequest_noise], a
 ret
 
@@ -6038,7 +6038,7 @@ enAI_wallfire: ;{ 02:62B4
     ld [hl], a
     ld a, $ff
     ld [sfxRequest_square1], a
-    ld a, $02
+    ld a, sfx_noise_enemyKilled
     ld [sfxRequest_noise], a
 ret
 
@@ -6095,7 +6095,7 @@ ret
     ; Open mouth
     ld a, SPRITE_WALLFIRE_2 ; $4B
     ldh [hEnemy.spriteType], a
-    ld a, $12
+    ld a, sfx_noise_enemyProjectileFired
     ld [sfxRequest_noise], a
 ret
 
@@ -6138,7 +6138,7 @@ ret
         ; Set sprite type and make noise
         ld a, SPRITE_WALLFIRE_SHOT_3 ; $4F
         ldh [hEnemy.spriteType], a
-        ld a, $03
+        ld a, sfx_noise_enemyExplosion
         ld [sfxRequest_noise], a
         ret
     .else_C:
@@ -6279,7 +6279,7 @@ ret
     ld hl, hEnemy.state
     inc [hl]
     ; Make noise
-    ld a, $12
+    ld a, sfx_noise_enemyProjectileFired
     ld [sfxRequest_noise], a
 ret
 
@@ -6315,7 +6315,7 @@ ret
     ld hl, hEnemy.state
     inc [hl]
     ; Make noise
-    ld a, $12
+    ld a, sfx_noise_enemyProjectileFired
     ld [sfxRequest_noise], a
 ret
 
@@ -6418,7 +6418,7 @@ ret
     ; Set flag to indicate a diagonal shot has been fired
     ld a, $01
     ldh [hEnemy.state], a
-    ld a, $12
+    ld a, sfx_noise_enemyProjectileFired
     ld [sfxRequest_noise], a
 ret
 
@@ -6457,7 +6457,7 @@ ret
     sub $04
     ld [hl], a
     ; Noise
-    ld a, $03
+    ld a, sfx_noise_enemyExplosion
     ld [sfxRequest_noise], a
 ret
 
@@ -6497,7 +6497,7 @@ ret
         ld a, SPRITE_GUNZOO_HSHOT_3 ; $59
         ldh [hEnemy.spriteType], a
         ; Make noise
-        ld a, $03
+        ld a, sfx_noise_enemyExplosion
         ld [sfxRequest_noise], a
         ret
     .else_B:
@@ -6605,7 +6605,7 @@ enAI_autom: ;{ 02:6540
 ret
 
 .projectileCode:
-    ld a, $07
+    ld a, sfx_square2_automFlamethrower
     ld [sfxRequest_square2], a
     ; Check sprite type
     ld hl, hEnemy.spriteType
@@ -6744,7 +6744,7 @@ enAI_missileBlock: ;{ 02:6622
         ret nc
     ld b, a
     ; Play plink sound
-    ld a, $0f
+    ld a, sfx_square1_beamDink
     ld [sfxRequest_square1], a
     ; Exit if not hit by a missile
     ld a, b
@@ -6755,7 +6755,7 @@ enAI_missileBlock: ;{ 02:6622
     ld a, $ff
     ld [sfxRequest_square1], a
     ; Play missile hit sound
-    ld a, $08
+    ld a, sfx_noise_missileDamage
     ld [sfxRequest_noise], a
     ; Check direction block was hit from
     ld a, [enemy_weaponDir]
@@ -7607,7 +7607,7 @@ enAI_missileDoor: ;{ 02:6A14
 
     ld b, a
     ; Play sound (plink)
-    ld a, $0f
+    ld a, sfx_square1_beamDink
     ld [sfxRequest_square1], a
     ; Exit if not hit by missile
     ld a, b
@@ -7618,7 +7618,7 @@ enAI_missileDoor: ;{ 02:6A14
     ld a, $ff
     ld [sfxRequest_square1], a
     ; Play missile sound
-    ld a, $08
+    ld a, sfx_noise_missileDamage
     ld [sfxRequest_noise], a
     ; Change palette for a few frames
     ld a, $13
@@ -7639,7 +7639,7 @@ enAI_missileDoor: ;{ 02:6A14
     ld a, SPRITE_SCREW_EXPLOSION_START ; $E2
     ldh [hEnemy.spriteType], a
     ; Play sound effect
-    ld a, $10
+    ld a, sfx_square1_missileDoorExploding
     ld [sfxRequest_square1], a
     
     ; Check which direction the door was hit from, to adjust the position of the explosion
@@ -7950,7 +7950,7 @@ enAI_hatchingAlpha: ;{ 02:6BB2
             ld a, [enemy_weaponType]
             cp $10
                 ret nc
-            ld a, $0f
+            ld a, sfx_square1_beamDink
             ld [sfxRequest_square1], a
             ret
         .else_B:
@@ -8079,7 +8079,7 @@ jr .standardAction
         jr z, .screwReaction
     cp $08
         jr z, .hurtReaction
-    ld a, $0f
+    ld a, sfx_square1_beamDink
     ld [sfxRequest_square1], a
 ret
 
@@ -8145,7 +8145,7 @@ ret
 
 .screwReaction:
     call metroid_screwReaction
-    ld a, $1a
+    ld a, sfx_square1_metroidScrewAttacked
     ld [sfxRequest_square1], a
 ret
 
@@ -8157,7 +8157,7 @@ ret
         jr z, .death
     ld a, $08
     ld [alpha_stunCounter], a
-    ld a, $05
+    ld a, sfx_noise_metroidHurt
     ld [sfxRequest_noise], a
     ; Clear directional flag
     ld hl, hEnemy.directionFlags
@@ -8231,7 +8231,7 @@ ret
     ; Explode
     ld a, SPRITE_SCREW_EXPLOSION_START ; $E2
     ldh [hEnemy.spriteType], a
-    ld a, $0d
+    ld a, sfx_noise_metroidKilled
     ld [sfxRequest_noise], a
     ; Play metroid killed jingle
     ld a, $0f
@@ -8620,7 +8620,7 @@ enAI_gammaMetroid: ;{ 02:6F60
     ld a, [enemy_weaponType]
     cp $10
         ret nc
-    ld a, $0f
+    ld a, sfx_square1_beamDink
     ld [sfxRequest_square1], a
 ret
 
@@ -8741,7 +8741,7 @@ ret
         ld a, [enemy_weaponType]
         cp $10
             ret nc
-        ld a, $0f
+        ld a, sfx_square1_beamDink
         ld [sfxRequest_square1], a
         ret
     .else_D:
@@ -8752,14 +8752,14 @@ ret
             jr z, .screwReaction
         cp $08
             jr z, .hurtReaction
-        ld a, $0f
+        ld a, sfx_square1_beamDink
         ld [sfxRequest_square1], a
         ret
 ; end branch
 
 .screwReaction:
     call metroid_screwReaction
-    ld a, $1a
+    ld a, sfx_square1_metroidScrewAttacked
     ld [sfxRequest_square1], a
 ret
 
@@ -8772,7 +8772,7 @@ ret
 
     ld a, $08
     ld [gamma_stunCounter], a
-    ld a, $05
+    ld a, sfx_noise_metroidHurt
     ld [sfxRequest_noise], a
     ld hl, hEnemy.directionFlags
     ld [hl], $00
@@ -8880,7 +8880,7 @@ ret
     ld [metroid_state], a
     ld a, SPRITE_SCREW_EXPLOSION_START ; $E2
     ldh [hEnemy.spriteType], a
-    ld a, $0d
+    ld a, sfx_noise_metroidKilled
     ld [sfxRequest_noise], a
     ; Play "killed metroid" jingle
     ld a, $0f
@@ -8993,7 +8993,7 @@ ret
         ldh [hEnemy.spawnFlag], a
         xor a
         ldh [hEnemy.counter], a
-        ld a, $14
+        ld a, sfx_noise_gammaMetroidLightning
         ld [sfxRequest_noise], a
         ret
 
@@ -9158,7 +9158,7 @@ enAI_zetaMetroid: ;{ 02:7276
     ld a, [enemy_weaponType]
     cp $10
         ret nc
-    ld a, $0f
+    ld a, sfx_square1_beamDink
     ld [sfxRequest_square1], a
 ret
 
@@ -9359,13 +9359,13 @@ ret
     cp $08
         jr z, .hurtReaction
 .plink:
-    ld a, $0f
+    ld a, sfx_square1_beamDink
     ld [sfxRequest_square1], a
 ret
 
 .screwReaction:
     call metroid_screwReaction
-    ld a, $1a
+    ld a, sfx_square1_metroidScrewAttacked
     ld [sfxRequest_square1], a
 ret
 
@@ -9386,7 +9386,7 @@ ret
     ldh [hEnemy.spriteType], a
     ld a, $08
     ld [zeta_stunCounter], a
-    ld a, $05
+    ld a, sfx_noise_metroidHurt
     ld [sfxRequest_noise], a
     ld hl, hEnemy.directionFlags
     ld [hl], $00
@@ -9443,7 +9443,7 @@ ret
     ld [metroid_state], a
     ld a, SPRITE_SCREW_EXPLOSION_START ; $E2
     ldh [hEnemy.spriteType], a
-    ld a, $0d
+    ld a, sfx_noise_metroidKilled
     ld [sfxRequest_noise], a
     ; Play metroid killed jingle
     ld a, $0f
@@ -9712,7 +9712,7 @@ ret
     ld a, $06
     ld [enemy_tempSpawnFlag], a
     call enemy_spawnObject.shortHeader
-    ld a, $15
+    ld a, sfx_noise_metroidFireball
     ld [sfxRequest_noise], a
     ret
 
@@ -9819,7 +9819,7 @@ enAI_omegaMetroid: ;{ 02:7631
     ld a, [enemy_weaponType]
     cp $10
         ret nc
-    ld a, $0f
+    ld a, sfx_square1_beamDink
     ld [sfxRequest_square1], a
 ret
 
@@ -9842,13 +9842,13 @@ ret
     cp $08 ; Missiles
         jr z, .hurtReaction
 .plink:
-    ld a, $0f
+    ld a, sfx_square1_beamDink
     ld [sfxRequest_square1], a
 ret
 
 .screwReaction:
     call metroid_screwReaction
-    ld a, $1a
+    ld a, sfx_square1_metroidScrewAttacked
     ld [sfxRequest_square1], a
 ret
 
@@ -9895,7 +9895,7 @@ ret
     ; Animate
     ld [hl], $c4
     ; Noise
-    ld a, $09
+    ld a, sfx_noise_metroidQueenCry
     ld [sfxRequest_noise], a
     ; Apply knockback
     bit 0, b
@@ -9926,7 +9926,7 @@ ret
     ld a, SPRITE_SCREW_EXPLOSION_START ; $E2
     ldh [hEnemy.spriteType], a
     ; Play noise
-    ld a, $0e
+    ld a, sfx_noise_omegaMetroidExplosion
     ld [sfxRequest_noise], a
     ; Play metroid killed jingle
     ld a, $0f
@@ -10156,7 +10156,7 @@ ret
     ldh [hEnemy.spawnFlag], a
     ld a, SPRITE_OMEGA_3 ; $C1
     ldh [hEnemy.spriteType], a
-    ld a, $15
+    ld a, sfx_noise_metroidFireball
     ld [sfxRequest_noise], a
 ret
 
@@ -10455,7 +10455,7 @@ ret
     ; Set sprite type, SFX, and state
     ld a, SPRITE_OMEGA_5 ; $C3
     ldh [hEnemy.spriteType], a
-    ld a, $2d
+    ld a, sfx_square1_2D
     ld [sfxRequest_square1], a
     ld a, $05
     ld [metroid_state], a
@@ -10641,7 +10641,7 @@ ret
     dec a ; $01 - Ice (refreeze)
         jp z, .freeze
     ; Plink
-    ld a, $0f
+    ld a, sfx_square1_beamDink
     ld [sfxRequest_square1], a
 ret
 
@@ -10670,7 +10670,7 @@ ret
     ld [larva_hurtAnimCounter], a
     ld a, SPRITE_METROID_3 ; $CF
     ldh [hEnemy.spriteType], a
-    ld a, $05
+    ld a, sfx_noise_metroidHurt
     ld [sfxRequest_noise], a
 ret
 
@@ -10686,7 +10686,7 @@ ret
     ; Prep explosion
     ld a, $10
     ldh [hEnemy.explosionFlag], a
-    ld a, $0d
+    ld a, sfx_noise_metroidKilled
     ld [sfxRequest_noise], a
     ; Adjust Metroid counts
     ld hl, metroidCountReal
@@ -10719,7 +10719,7 @@ ret
         jr z, .bombReaction
     dec a ; $01 - Ice
         jr z, .freeze
-    ld a, $0f
+    ld a, sfx_square1_beamDink
     ld [sfxRequest_square1], a
 ret
 
@@ -10753,12 +10753,12 @@ ret
     xor a
     ldh [hEnemy.counter], a
     call metroid_screwReaction
-    ld a, $1a
+    ld a, sfx_square1_metroidScrewAttacked
     ld [sfxRequest_square1], a
 ret
 
 .freeze:
-    ld a, $1a
+    ld a, sfx_square1_metroidScrewAttacked
     ld [sfxRequest_square1], a
     ld a, $10
     ldh [hEnemy.stunCounter], a
@@ -10910,7 +10910,7 @@ ret
         inc [hl]
         ld a, $04
         ldh [hEnemy.spawnFlag], a
-        ld a, $16
+        ld a, sfx_noise_babyMetroidClearingBlock
         ld [sfxRequest_noise], a
         ret
     .else_A:
@@ -10932,7 +10932,7 @@ ret
         ; Set to state 2 (active)
         ld a, $02
         ld [metroid_state], a
-        ld a, $16
+        ld a, sfx_noise_babyMetroidClearingBlock
         ld [sfxRequest_noise], a
         ret
 ; end proc
@@ -11123,7 +11123,7 @@ ret
 
 baby_clearBlock: ;{ 02:7D97
     call destroyBlock_farCall
-    ld a, $16
+    ld a, sfx_noise_babyMetroidClearingBlock
     ld [sfxRequest_noise], a
 ret
 ;}

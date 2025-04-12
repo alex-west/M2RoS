@@ -553,18 +553,18 @@ sfxPlaying_square1: ds 1 ; $CEC1 - Tone/sweep channel sound effect playing
     def sfx_square1_pickedUpMissileDrop      equ $C ; Picked up missile drop
     def sfx_square1_spiderBall               equ $D ; Spider ball
     def sfx_square1_pickedUpSmallEnergyDrop  equ $E ; Picked up small energy drop
-    def sfx_square1_beamDink                 equ $F ; Shot missile door with beam (maybe certain enemies too?)
-    def sfx_square1_10                       equ $10 ; (set in $2:6A14)
+    def sfx_square1_beamDink                 equ $F ; Shot missile door with beam (certain enemies too)
+    def sfx_square1_missileDoorExploding     equ $10 ; Missile door exploding
     def sfx_square1_11                       equ $11 ; Unused
-    def sfx_square1_12                       equ $12 ; Unused
+    def sfx_square1_12                       equ $12 ; Empty (has duration 0)
     def sfx_square1_bombLaid                 equ $13 ; Bomb laid
-    def sfx_square1_14                       equ $14 ; Unused
+    def sfx_square1_pipeBugSpawnerStop       equ $14 ; Pipe bug spawner stop sound
     def sfx_square1_select                   equ $15 ; Option select / missile select
     def sfx_square1_shootingWaveBeam         equ $16 ; Shooting wave beam
     def sfx_square1_pickedUpLargeEnergyDrop  equ $17 ; Picked up large energy drop
     def sfx_square1_samusHealthChange        equ $18 ; Samus' health changed
     def sfx_square1_noMissileDudShot         equ $19 ; No missile dud shot
-    def sfx_square1_1A                       equ $1A ; (set in $2:6BB2 and other places in bank 2)
+    def sfx_square1_metroidScrewAttacked     equ $1A ; Screw attacked / froze metroid
     def sfx_square1_metroidCry               equ $1B ; Metroid cry
     def sfx_square1_saved                    equ $1C ; Saved
     def sfx_square1_variaSuitTransformation  equ $1D ; Varia suit transformation
@@ -590,14 +590,14 @@ ds 2 ; $CEC5..$CEC6 - Unused?
 sfxRequest_square2: ds 1 ; $CEC7 - Tone channel sound effect request
 sfxPlaying_square2: ds 1 ; $CEC8 - Tone channel sound effect playing
 ; {
-    def sfx_square2_0                        equ 0 ; Nothing
+    def sfx_square2_nothing                  equ 0 ; Nothing
     def sfx_square2_1                        equ 1 ; Nothing
     def sfx_square2_2                        equ 2 ; Nothing
     def sfx_square2_metroidQueenCry          equ 3 ; Metroid Queen cry
     def sfx_square2_babyMetroidClearingBlock equ 4 ; Baby Metroid hatched / clearing blocks
     def sfx_square2_babyMetroidCry           equ 5 ; Baby Metroid cry
     def sfx_square2_metroidQueenHurtCry      equ 6 ; Metroid Queen hurt cry
-    def sfx_square2_7                        equ 7 ; Set in $2:6540 when $FFEF % 10h = 0
+    def sfx_square2_automFlamethrower        equ 7 ; Autom flamethrower
 ; }
 
 ds 1 ; $CEC9 - Unused?
@@ -621,36 +621,35 @@ ds 5 ; $CED0..CED4 - Unused?
 ;    {
 sfxRequest_noise: ds 1 ; $CED5 - Noise channel sound effect request
 sfxPlaying_noise: ds 1 ; $CED6 - Noise channel sound effect playing
-;        {
-;            FFh: Clear sound effect and disable noise channel
-;            0: Nothing
-;            1: Enemy shot
-;            2: Enemy killed
-;            3: Set in bank 2
-;            4: Shot block destroyed
-;            5: Metroid hurt
-;            6: Samus hurt
-;            7: Acid damage
-;            8: Shot missile door with missile (maybe certain enemies too?)
-;            9: Metroid Queen cry
-;            Ah: Metroid Queen hurt cry
-;            Bh: Samus killed
-;            Ch: Bomb detonated
-;            Dh: Metroid killed
-;            Eh: Set in bank 2
-;            Fh: Cleared save file
-;            10h Footsteps
-;            11h: Set in bank 2
-;            12h: Set in bank 2
-;            13h: Unused
-;            14h: Set in bank 2
-;            15h: Set in bank 2
-;            16h: Baby Metroid hatched / clearing blocks
-;            17h: Baby Metroid cry
-;            18h: Set in bank 2
-;            19h: Unused
-;            1Ah: Set in bank 2
-;        }
+; {
+    def sfx_noise_nothing                  equ $0 ; Nothing
+    def sfx_noise_enemyShot                equ $1 ; Enemy shot
+    def sfx_noise_enemyKilled              equ $2 ; Enemy killed
+    def sfx_noise_enemyExplosion           equ $3 ; Drivel / wallfire / gunzoo projectile explosion
+    def sfx_noise_shotBlockDestroyed       equ $4 ; Shot block destroyed
+    def sfx_noise_metroidHurt              equ $5 ; Metroid hurt
+    def sfx_noise_samusHurt                equ $6 ; Samus hurt
+    def sfx_noise_acidDamage               equ $7 ; Acid damage
+    def sfx_noise_missileDamage            equ $8 ; Shot missile block/door with missile
+    def sfx_noise_metroidQueenCry          equ $9 ; Metroid Queen cry
+    def sfx_noise_metroidQueenHurtCry      equ $A ; Metroid Queen hurt cry
+    def sfx_noise_samusKilled              equ $B ; Samus killed
+    def sfx_noise_bombDetonated            equ $C ; Bomb detonated
+    def sfx_noise_metroidKilled            equ $D ; Metroid killed
+    def sfx_noise_omegaMetroidExplosion    equ $E ; Omega Metroid explosion
+    def sfx_noise_clearedSaveFile          equ $F ; Cleared save file
+    def sfx_noise_footstep                 equ $10 ; Footsteps
+    def sfx_noise_enemyHitGround           equ $11 ; Rock icicle / drivel spit hit ground
+    def sfx_noise_enemyProjectileFired     equ $12 ; Skreek / wallfire / gunzoo projectile fired
+    def sfx_noise_autrackLaser             equ $13 ; Autrack laser
+    def sfx_noise_gammaMetroidLightning    equ $14 ; Gamma metroid lightning
+    def sfx_noise_metroidFireball          equ $15 ; Zeta / omega metroid fireball
+    def sfx_noise_babyMetroidClearingBlock equ $16 ; Baby Metroid hatched / clearing blocks
+    def sfx_noise_babyMetroidCry           equ $17 ; Baby Metroid cry
+    def sfx_noise_autrackRises             equ $18 ; Autrack rises
+    def sfx_noise_19                       equ $19 ; Unused
+    def sfx_noise_autoadJump               equ $1A ; Autoad jump
+; }
 
 ds 1 ; $CED7 - Unused?
 

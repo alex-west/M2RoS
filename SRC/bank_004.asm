@@ -569,13 +569,13 @@ handleChannelSoundEffect_noise:
     ret z
 
     ld a, [sfxPlaying_noise]
-    cp $0d
+    cp sfx_noise_metroidKilled
         jr z, .endif_sfxRequested
 
-    cp $0e
+    cp sfx_noise_omegaMetroidExplosion
         jr z, .endif_sfxRequested
 
-    cp $0f
+    cp sfx_noise_clearedSaveFile
         jr z, .endif_sfxRequested
 
         ld a, [sfxRequest_noise]
@@ -2263,7 +2263,7 @@ square1Sfx_initPointers:
     dw square1Sfx_init_1 ; 1: Jumping
     dw square1Sfx_init_2 ; 2: Hi-jumping
     dw square1Sfx_init_3 ; 3: Screw attacking
-    dw square1Sfx_init_4 ; 4: Uncrouching / turning around / landing
+    dw square1Sfx_init_4 ; 4: Uncrouching / turning around / landing / hurt by spike
     dw square1Sfx_init_5 ; 5: Crouching / unmorphing
     dw square1Sfx_init_6 ; 6: Morphing
     dw square1Sfx_init_7 ; 7: Shooting beam
@@ -2273,22 +2273,22 @@ square1Sfx_initPointers:
     dw square1Sfx_init_B ; Bh: Shooting spazer beam
     dw square1Sfx_init_C ; Ch: Picked up missile drop
     dw square1Sfx_init_D ; Dh: Spider ball
-    dw square1Sfx_init_E ; Eh: Picked up energy drop
-    dw square1Sfx_init_F ; Fh: Shot missile door with beam
-    dw square1Sfx_init_10 ; 10h
+    dw square1Sfx_init_E ; Eh: Picked up small energy drop
+    dw square1Sfx_init_F ; Fh: Shot missile door with beam (certain enemies too)
+    dw square1Sfx_init_10 ; 10h: Missile door exploding
     dw initializeAudio.ret ; 11h: ret
-    dw square1Sfx_init_12 ; 12h
+    dw square1Sfx_init_12 ; 12h: Empty (has duration 0)
     dw square1Sfx_init_13 ; 13h: Bomb laid
-    dw square1Sfx_init_14 ; 14h
+    dw square1Sfx_init_14 ; 14h: Pipe bug spawner stop sound
     dw square1Sfx_init_15 ; 15h: Option select / missile select
     dw square1Sfx_init_16 ; 16h: Shooting wave beam
-    dw square1Sfx_init_17 ; 17h
+    dw square1Sfx_init_17 ; 17h: Picked up large energy drop
     dw square1Sfx_init_18 ; 18h: Samus' health changed
     dw square1Sfx_init_19 ; 19h: No missile dud shot
-    dw square1Sfx_init_1A ; 1Ah
+    dw square1Sfx_init_1A ; 1Ah: Screw attacked / froze metroid
     dw square1Sfx_init_1B ; 1Bh: Metroid cry
     dw square1Sfx_init_1C ; 1Ch: Saved
-    dw square1Sfx_init_1D ; 1Dh
+    dw square1Sfx_init_1D ; 1Dh: Varia suit transformation
     dw square1Sfx_init_1E ; 1Eh: Unpaused
 ;}
 
@@ -2297,7 +2297,7 @@ square1Sfx_playbackPointers:
     dw square1Sfx_playback_1 ; 1: Jumping
     dw square1Sfx_playback_2 ; 2: Hi-jumping
     dw square1Sfx_playback_3 ; 3: Screw attacking
-    dw square1Sfx_playback_4 ; 4: Uncrouching / turning around / landing
+    dw square1Sfx_playback_4 ; 4: Uncrouching / turning around / landing / hurt by spike
     dw square1Sfx_playback_5 ; 5: Crouching / unmorphing
     dw square1Sfx_playback_6 ; 6: Morphing
     dw square1Sfx_playback_7 ; 7: Shooting beam
@@ -2307,22 +2307,22 @@ square1Sfx_playbackPointers:
     dw square1Sfx_playback_B ; Bh: Shooting spazer beam
     dw square1Sfx_playback_C ; Ch: Picked up missile drop
     dw square1Sfx_playback_D ; Dh: Spider ball
-    dw square1Sfx_playback_E ; Eh: Picked up energy drop
-    dw square1Sfx_playback_F ; Fh: Shot missile door with beam
-    dw square1Sfx_playback_10 ; 10h
+    dw square1Sfx_playback_E ; Eh: Picked up small energy drop
+    dw square1Sfx_playback_F ; Fh: Shot missile door with beam (certain enemies too)
+    dw square1Sfx_playback_10 ; 10h: Missile door exploding
     dw initializeAudio.ret ; 11h: ret
-    dw decrementChannelSoundEffectTimer_square1 ; 12h
+    dw decrementChannelSoundEffectTimer_square1 ; 12h: Empty (has duration 0)
     dw decrementChannelSoundEffectTimer_square1 ; 13h: Bomb laid
-    dw square1Sfx_playback_14 ; 14h
+    dw square1Sfx_playback_14 ; 14h: Pipe bug spawner stop sound
     dw square1Sfx_playback_15 ; 15h: Option select / missile select
     dw square1Sfx_playback_16 ; 16h: Shooting wave beam
-    dw square1Sfx_playback_17 ; 17h
+    dw square1Sfx_playback_17 ; 17h: Picked up large energy drop
     dw decrementChannelSoundEffectTimer_square1 ; 18h: Samus' health changed
     dw square1Sfx_playback_19 ; 19h: No missile dud shot
-    dw square1Sfx_playback_1A ; 1Ah
+    dw square1Sfx_playback_1A ; 1Ah: Screw attacked / froze metroid
     dw square1Sfx_playback_1B ; 1Bh: Metroid cry
     dw square1Sfx_playback_1C ; 1Ch: Saved
-    dw square1Sfx_playback_1D ; 1Dh
+    dw square1Sfx_playback_1D ; 1Dh: Varia suit transformation
     dw square1Sfx_playback_1E ; 1Eh: Unpaused
 ;}
 
@@ -2604,7 +2604,7 @@ square1Sfx_playback_3:
 square1Sfx_init_4:
 ;{
     ld a, [sfxPlaying_square1]
-    cp $04
+    cp sfx_square1_standingTransition
         jp nc, handleChannelSoundEffect_square1.playing
 
     ld a, $0a
@@ -2910,7 +2910,7 @@ square1Sfx_init_E:
 ;{
     call rememberIfScrewAttackingSfxIsPlaying
     ld a, $0a
-    ld de, optionSets_square1.pickedUpEnergyDrop_0
+    ld de, optionSets_square1.smallEnergyDrop_0
     jp playSquare1Sfx
 ;}
 
@@ -2928,11 +2928,11 @@ square1Sfx_playback_E:
     ret
 
 .set1
-    ld de, optionSets_square1.pickedUpEnergyDrop_1
+    ld de, optionSets_square1.smallEnergyDrop_1
     jp setChannelOptionSet.square1
 
 .set2
-    ld de, optionSets_square1.pickedUpEnergyDrop_2
+    ld de, optionSets_square1.smallEnergyDrop_2
     jp setChannelOptionSet.square1
 ;}
 
@@ -2964,7 +2964,7 @@ square1Sfx_playback_F:
 square1Sfx_init_10:
 ;{
     ld a, $16
-    ld de, optionSets_square1.unknown10_0
+    ld de, optionSets_square1.missileDoorExploding_0
     jp playSquare1Sfx
 ;}
 
@@ -2994,43 +2994,43 @@ square1Sfx_playback_10:
     ret
 
 .set1
-    ld de, optionSets_square1.unknown10_1
+    ld de, optionSets_square1.missileDoorExploding_1
     jp setChannelOptionSet.square1
 
 .set2
-    ld de, optionSets_square1.unknown10_2
+    ld de, optionSets_square1.missileDoorExploding_2
     jp setChannelOptionSet.square1
 
 .set3
-    ld de, optionSets_square1.unknown10_3
+    ld de, optionSets_square1.missileDoorExploding_3
     jp setChannelOptionSet.square1
 
 .set4
-    ld de, optionSets_square1.unknown10_4
+    ld de, optionSets_square1.missileDoorExploding_4
     jp setChannelOptionSet.square1
 
 .set5
-    ld de, optionSets_square1.unknown10_5
+    ld de, optionSets_square1.missileDoorExploding_5
     jp setChannelOptionSet.square1
 
 .set6
-    ld de, optionSets_square1.unknown10_6
+    ld de, optionSets_square1.missileDoorExploding_6
     jp setChannelOptionSet.square1
 
 .set7
-    ld de, optionSets_square1.unknown10_7
+    ld de, optionSets_square1.missileDoorExploding_7
     jp setChannelOptionSet.square1
 
 .set8
-    ld de, optionSets_square1.unknown10_8
+    ld de, optionSets_square1.missileDoorExploding_8
     jp setChannelOptionSet.square1
 
 .set9
-    ld de, optionSets_square1.unknown10_9
+    ld de, optionSets_square1.missileDoorExploding_9
     jp setChannelOptionSet.square1
 
 .setA
-    ld de, optionSets_square1.unknown10_A
+    ld de, optionSets_square1.missileDoorExploding_A
     jp setChannelOptionSet.square1
 ;}
 
@@ -3051,7 +3051,7 @@ square1Sfx_init_13:
 square1Sfx_init_14:
 ;{
     ld a, $0e
-    ld de, optionSets_square1.unused14_0
+    ld de, optionSets_square1.pipeBugSpawnerStop_0
     jp playSquare1Sfx
 ;}
 
@@ -3063,7 +3063,7 @@ square1Sfx_playback_14:
     ret
 
 .set1
-    ld de, optionSets_square1.unused14_1
+    ld de, optionSets_square1.pipeBugSpawnerStop_1
     jp setChannelOptionSet.square1
 ;}
 
@@ -3226,7 +3226,7 @@ square1Sfx_playback_19:
 square1Sfx_init_1A:
 ;{
     ld a, $16
-    ld de, optionSets_square1.unknown1A_0
+    ld de, optionSets_square1.metroidScrewAttacked_0
     jp playSquare1Sfx
 ;}
 
@@ -3256,27 +3256,27 @@ square1Sfx_playback_1A:
     ret
 
 .set1
-    ld de, optionSets_square1.unknown1A_1
+    ld de, optionSets_square1.metroidScrewAttacked_1
     jp setChannelOptionSet.square1
 
 .set2
-    ld de, optionSets_square1.unknown1A_2
+    ld de, optionSets_square1.metroidScrewAttacked_2
     jp setChannelOptionSet.square1
 
 .set3
-    ld de, optionSets_square1.unknown1A_3
+    ld de, optionSets_square1.metroidScrewAttacked_3
     jp setChannelOptionSet.square1
 
 .set4
-    ld de, optionSets_square1.unknown1A_4
+    ld de, optionSets_square1.metroidScrewAttacked_4
     jp setChannelOptionSet.square1
 
 .set5
-    ld de, optionSets_square1.unknown1A_5
+    ld de, optionSets_square1.metroidScrewAttacked_5
     jp setChannelOptionSet.square1
 
 .set6
-    ld de, optionSets_square1.unknown1A_6
+    ld de, optionSets_square1.metroidScrewAttacked_6
     jp setChannelOptionSet.square1
 ;}
 
@@ -3564,7 +3564,7 @@ songSoundEffectInitialisationFunctionPointers_square2:
     dw square2Sfx_init_4 ; 4: Baby Metroid hatched / clearing blocks
     dw square2Sfx_init_5 ; 5: Baby Metroid cry
     dw square2Sfx_init_6 ; 6: Metroid Queen hurt cry
-    dw square2Sfx_init_7 ; 7: unknown
+    dw square2Sfx_init_7 ; 7: Autom flamethrower
 ;}
 
 songSoundEffectPlaybackFunctionPointers_square2:
@@ -3575,7 +3575,7 @@ songSoundEffectPlaybackFunctionPointers_square2:
     dw square2Sfx_playback_4 ; 4: Baby Metroid hatched / clearing blocks
     dw square2Sfx_playback_5 ; 5: Baby Metroid cry
     dw square2Sfx_playback_6 ; 6: Metroid Queen hurt cry
-    dw decrementChannelSoundEffectTimer_square2 ; 7: unknown
+    dw decrementChannelSoundEffectTimer_square2 ; 7: Autom flamethrower
 ;}
 
 square2Sfx_init_3:
@@ -3694,7 +3694,7 @@ square2Sfx_init_6:
 square2Sfx_init_7:
 ;{
     ld a, $01
-    ld de, optionSets_square2.unknown7
+    ld de, optionSets_square2.automFlamethrower
     jp playSquare2Sfx
 ;}
 
@@ -3714,37 +3714,37 @@ songSoundEffectInitialisationFunctionPointers_noise:
 ;{
     dw noiseSfx_init_1 ; 1: Enemy shot
     dw noiseSfx_init_2 ; 2: Enemy killed
-    dw noiseSfx_init_3 ; 3:
+    dw noiseSfx_init_3 ; 3: Drivel / wallfire / gunzoo projectile explosion
     dw noiseSfx_init_4 ; 4: Shot block destroyed
     dw noiseSfx_init_5 ; 5: Metroid hurt
     dw noiseSfx_init_6 ; 6: Samus hurt
     dw noiseSfx_init_7 ; 7: Acid damage
-    dw noiseSfx_init_8 ; 8: Shot missile door with missile
+    dw noiseSfx_init_8 ; 8: Shot missile block/door with missile
     dw noiseSfx_init_9 ; 9: Metroid Queen cry
     dw noiseSfx_init_A ; Ah: Metroid Queen hurt cry
     dw noiseSfx_init_B ; Bh: Samus killed
     dw noiseSfx_init_C ; Ch: Bomb detonated
     dw noiseSfx_init_D ; Dh: Metroid killed
-    dw noiseSfx_init_E ; Eh:
-    dw noiseSfx_init_F ; Fh:
+    dw noiseSfx_init_E ; Eh: Omega Metroid explosion
+    dw noiseSfx_init_F ; Fh: Cleared save file
     dw noiseSfx_init_10 ; 10h Footsteps
-    dw noiseSfx_init_11 ; 11h:
-    dw noiseSfx_init_12 ; 12h:
+    dw noiseSfx_init_11 ; 11h: Rock icicle / drivel spit hit ground
+    dw noiseSfx_init_12 ; 12h: Skreek / wallfire / gunzoo projectile fired
     dw noiseSfx_init_13 ; 13h: Unused
-    dw noiseSfx_init_14 ; 14h:
-    dw noiseSfx_init_15 ; 15h:
+    dw noiseSfx_init_14 ; 14h: Gamma metroid lightning
+    dw noiseSfx_init_15 ; 15h: Zeta / omega metroid fireball
     dw noiseSfx_init_16 ; 16h: Baby Metroid hatched / clearing blocks
     dw noiseSfx_init_17 ; 17h: Baby Metroid cry
-    dw noiseSfx_init_18 ; 18h:
+    dw noiseSfx_init_18 ; 18h: Autrack rises
     dw noiseSfx_init_19 ; 19h: Unused
-    dw noiseSfx_init_1A ; 1Ah:
+    dw noiseSfx_init_1A ; 1Ah: Autoad jump
 ;}
 
 songSoundEffectPlaybackFunctionPointers_noise:
 ;{
     dw decrementChannelSoundEffectTimer_noise ; 1: Enemy shot
     dw noiseSfx_playback_2 ; 2: Enemy killed
-    dw decrementChannelSoundEffectTimer_noise ; 3:
+    dw decrementChannelSoundEffectTimer_noise ; 3: Drivel / wallfire / gunzoo projectile explosion
     dw decrementChannelSoundEffectTimer_noise ; 4: Shot block destroyed
     dw noiseSfx_playback_5 ; 5: Metroid hurt
     dw noiseSfx_playback_6 ; 6: Samus hurt
@@ -3755,19 +3755,19 @@ songSoundEffectPlaybackFunctionPointers_noise:
     dw noiseSfx_playback_B ; Bh: Samus killed
     dw noiseSfx_playback_C ; Ch: Bomb detonated
     dw noiseSfx_playback_D ; Dh: Metroid killed
-    dw noiseSfx_playback_E ; Eh:
-    dw noiseSfx_playback_F ; Fh:
+    dw noiseSfx_playback_E ; Eh: Omega Metroid explosion
+    dw noiseSfx_playback_F ; Fh: Cleared save file
     dw noiseSfx_playback_10 ; 10h Footsteps
-    dw noiseSfx_playback_11 ; 11h:
-    dw noiseSfx_playback_12 ; 12h:
+    dw noiseSfx_playback_11 ; 11h: Rock icicle / drivel spit hit ground
+    dw noiseSfx_playback_12 ; 12h: Skreek / wallfire / gunzoo projectile fired
     dw noiseSfx_playback_13 ; 13h: Unused
-    dw noiseSfx_playback_14 ; 14h:
-    dw noiseSfx_playback_15 ; 15h:
+    dw noiseSfx_playback_14 ; 14h: Gamma metroid lightning
+    dw noiseSfx_playback_15 ; 15h: Zeta / omega metroid fireball
     dw decrementChannelSoundEffectTimer_noise ; 16h: Baby Metroid hatched / clearing blocks
     dw decrementChannelSoundEffectTimer_noise ; 17h: Baby Metroid cry
-    dw noiseSfx_playback_18 ; 18h:
+    dw noiseSfx_playback_18 ; 18h: Autrack rises
     dw decrementChannelSoundEffectTimer_noise ; 19h: Unused
-    dw decrementChannelSoundEffectTimer_noise ; 1Ah:
+    dw decrementChannelSoundEffectTimer_noise ; 1Ah: Autoad jump
 ;}
 
 noiseSfx_init_1:
@@ -3799,7 +3799,7 @@ noiseSfx_playback_2:
 noiseSfx_init_3:
 ;{
     ld a, $1d
-    ld de, optionSets_noise.unknown3
+    ld de, optionSets_noise.enemyExplosion
     jp playNoiseSweepSfx
 ;}
 
@@ -4110,7 +4110,7 @@ noiseSfx_playback_D:
 noiseSfx_init_E:
 ;{
     ld a, $4f
-    ld de, optionSets_noise.unknownE_0
+    ld de, optionSets_noise.omegaMetroidExplosion_0
     jp playNoiseSweepSfx
 ;}
 
@@ -4142,7 +4142,7 @@ noiseSfx_playback_E:
     ret
 
 .set1
-    ld de, optionSets_noise.unknownE_1
+    ld de, optionSets_noise.omegaMetroidExplosion_1
     jp setChannelOptionSet.noise
 ;}
 
@@ -4215,7 +4215,7 @@ noiseSfx_playback_10:
 noiseSfx_init_11:
 ;{
     ld a, $10
-    ld de, optionSets_noise.unknown11_0
+    ld de, optionSets_noise.enemyHitGround_0
     jp playNoiseSweepSfx
 ;}
 
@@ -4229,28 +4229,28 @@ noiseSfx_playback_13:
     ret
 
 .set1
-    ld de, optionSets_noise.unknown_1
+    ld de, optionSets_noise.misc_11_12_13_1
     jp setChannelOptionSet.noise
 ;}
 
 noiseSfx_init_12:
 ;{
     ld a, $10
-    ld de, optionSets_noise.unknown12_0
+    ld de, optionSets_noise.enemyProjectileFired_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_init_13:
 ;{
     ld a, $10
-    ld de, optionSets_noise.unused13_0
+    ld de, optionSets_noise.autrackLaser_0
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_init_14:
 ;{
     ld a, $18
-    ld de, optionSets_noise.unknown14_0
+    ld de, optionSets_noise.gammaMetroidLightning_0
     jp playNoiseSweepSfx
 ;}
 
@@ -4266,18 +4266,18 @@ noiseSfx_playback_14:
     ret
 
 .set1
-    ld de, optionSets_noise.unknown14_1
+    ld de, optionSets_noise.gammaMetroidLightning_1
     jp setChannelOptionSet.noise
 
 .set0
-    ld de, optionSets_noise.unknown14_0
+    ld de, optionSets_noise.gammaMetroidLightning_0
     jp setChannelOptionSet.noise
 ;}
 
 noiseSfx_init_15:
 ;{
     ld a, $30
-    ld de, optionSets_noise.unknown15_0
+    ld de, optionSets_noise.metroidFireball_0
     jp playNoiseSweepSfx
 ;}
 
@@ -4289,7 +4289,7 @@ noiseSfx_playback_15:
     ret
 
 .set1
-    ld de, optionSets_noise.unknown15_1
+    ld de, optionSets_noise.metroidFireball_1
     jp setChannelOptionSet.noise
 ;}
 
@@ -4314,7 +4314,7 @@ noiseSfx_init_17:
 noiseSfx_init_18:
 ;{
     ld a, $0f
-    ld de, optionSets_noise.unknown18_0
+    ld de, optionSets_noise.autrackRises_0
     jp playNoiseSweepSfx
 ;}
 
@@ -4326,21 +4326,21 @@ noiseSfx_playback_18:
     ret
 
 .set1
-    ld de, optionSets_noise.unknown18_1
+    ld de, optionSets_noise.autrackRises_1
     jp setChannelOptionSet.noise
 ;}
 
 noiseSfx_init_19:
 ;{
     ld a, $10
-    ld de, optionSets_noise.unused19
+    ld de, optionSets_noise.noMissileDudShot
     jp playNoiseSweepSfx
 ;}
 
 noiseSfx_init_1A:
 ;{
     ld a, $10
-    ld de, optionSets_noise.unknown1A
+    ld de, optionSets_noise.autoadJump
     jp playNoiseSweepSfx
 ;}
 
@@ -4743,19 +4743,19 @@ optionSets_square1:
     FrequencyOptions $600, 0
 
 
-.pickedUpEnergyDrop_0 ; $5B5E
+.smallEnergyDrop_0 ; $5B5E
     DescendingSweepOptions 1, 3
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $E
     FrequencyOptions $740, 0
 
-.pickedUpEnergyDrop_1 ; $5B63
+.smallEnergyDrop_1 ; $5B63
     AscendingSweepOptions 4, 4
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $D
     FrequencyOptions $6F0, 0
 
-.pickedUpEnergyDrop_2 ; $5B68
+.smallEnergyDrop_2 ; $5B68
     AscendingSweepOptions 4, 4
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $9
@@ -4782,67 +4782,67 @@ optionSets_square1:
     FrequencyOptions $7D0, 0
 
 
-.unknown10_0 ; $5B7C
+.missileDoorExploding_0 ; $5B7C
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $5A0, 0
 
-.unknown10_1 ; $5B81
+.missileDoorExploding_1 ; $5B81
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $5C0, 0
 
-.unknown10_2 ; $5B86
+.missileDoorExploding_2 ; $5B86
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $5F0, 0
 
-.unknown10_3 ; $5B8B
+.missileDoorExploding_3 ; $5B8B
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $610, 0
 
-.unknown10_4 ; $5B90
+.missileDoorExploding_4 ; $5B90
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $640, 0
 
-.unknown10_5 ; $5B95
+.missileDoorExploding_5 ; $5B95
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $670, 0
 
-.unknown10_6 ; $5B9A
+.missileDoorExploding_6 ; $5B9A
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $690, 0
 
-.unknown10_7 ; $5B9F
+.missileDoorExploding_7 ; $5B9F
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $6A0, 0
 
-.unknown10_8 ; $5BA4
+.missileDoorExploding_8 ; $5BA4
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $6C0, 0
 
-.unknown10_9 ; $5BA9
+.missileDoorExploding_9 ; $5BA9
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $6E0, 0
 
-.unknown10_A ; $5BAE
+.missileDoorExploding_A ; $5BAE
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
@@ -4863,13 +4863,13 @@ optionSets_square1:
     FrequencyOptions $7C0, 0
 
 
-.unused14_0 ; $5BBD
+.pipeBugSpawnerStop_0 ; $5BBD
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $C
     FrequencyOptions $400, 0
 
-.unused14_1 ; $5BC2
+.pipeBugSpawnerStop_1 ; $5BC2
     DescendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $C
@@ -4977,43 +4977,43 @@ optionSets_square1:
     FrequencyOptions $6A0, 0
 
 
-.unknown1A_0 ; $5C17
+.metroidScrewAttacked_0 ; $5C17
     DescendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 1, $F
     FrequencyOptions $7C0, 0
 
-.unknown1A_1 ; $5C1C
+.metroidScrewAttacked_1 ; $5C1C
     DescendingSweepOptions 1, 3
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 1, $F
     FrequencyOptions $7D0, 0
 
-.unknown1A_2 ; $5C21
+.metroidScrewAttacked_2 ; $5C21
     DescendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 1, $E
     FrequencyOptions $7C4, 0
 
-.unknown1A_3 ; $5C26
+.metroidScrewAttacked_3 ; $5C26
     DescendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 1, $D
     FrequencyOptions $7CC, 0
 
-.unknown1A_4 ; $5C2B
+.metroidScrewAttacked_4 ; $5C2B
     DescendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 1, $E
     FrequencyOptions $7D0, 0
 
-.unknown1A_5 ; $5C30
+.metroidScrewAttacked_5 ; $5C30
     DescendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 1, $D
     FrequencyOptions $7D8, 0
 
-.unknown1A_6 ; $5C35
+.metroidScrewAttacked_6 ; $5C35
     DescendingSweepOptions 5, 1
     LengthDutyOptions $38, 0
     DescendingEnvelopeOptions 1, $E
@@ -5127,7 +5127,7 @@ optionSets_noise:
     PolynomialCounterOptions 6, 1, $4
     CounterControlOptions 0
 
-.unknown3 ; $5C87
+.enemyExplosion ; $5C87
     LengthOptions $0
     DescendingEnvelopeOptions 2, $F
     PolynomialCounterOptions 4, 1, $6
@@ -5248,13 +5248,13 @@ optionSets_noise:
     PolynomialCounterOptions 2, 0, $2
     CounterControlOptions 0
 
-.unknownE_0 ; $5CD7
+.omegaMetroidExplosion_0 ; $5CD7
     LengthOptions $0
     DescendingEnvelopeOptions 7, $F
     PolynomialCounterOptions 2, 0, $2
     CounterControlOptions 0
 
-.unknownE_1 ; $5CDB
+.omegaMetroidExplosion_1 ; $5CDB
     LengthOptions $0
     DescendingEnvelopeOptions 5, $A
     PolynomialCounterOptions 3, 0, $3
@@ -5284,49 +5284,50 @@ optionSets_noise:
     PolynomialCounterOptions 2, 1, $2
     CounterControlOptions 1
 
-.unknown11_0 ; $5CEF
+.enemyHitGround_0 ; $5CEF
     LengthOptions $0
     DescendingEnvelopeOptions 3, $7
     PolynomialCounterOptions 7, 0, $2
     CounterControlOptions 0
 
-.unknown_1 ; $5CF3
+; Used for enemy hit ground, enemy projectile fired, autrack laser
+.misc_11_12_13_1 ; $5CF3
     LengthOptions $0
     DescendingEnvelopeOptions 7, $9
     PolynomialCounterOptions 7, 0, $7
     CounterControlOptions 0
 
-.unknown12_0 ; $5CF7
+.enemyProjectileFired_0 ; $5CF7
     LengthOptions $0
     DescendingEnvelopeOptions 7, $8
     PolynomialCounterOptions 4, 0, $4
     CounterControlOptions 0
 
-.unused13_0 ; $5CFB
+.autrackLaser_0 ; $5CFB
     LengthOptions $0
     DescendingEnvelopeOptions 7, $8
     PolynomialCounterOptions 3, 0, $3
     CounterControlOptions 0
 
-.unknown14_0 ; $5CFF
+.gammaMetroidLightning_0 ; $5CFF
     LengthOptions $0
     DescendingEnvelopeOptions 1, $9
     PolynomialCounterOptions 4, 1, $3
     CounterControlOptions 0
 
-.unknown14_1 ; $5D03
+.gammaMetroidLightning_1 ; $5D03
     LengthOptions $0
     DescendingEnvelopeOptions 1, $9
     PolynomialCounterOptions 3, 1, $4
     CounterControlOptions 0
 
-.unknown15_0 ; $5D07
+.metroidFireball_0 ; $5D07
     LengthOptions $0
     DescendingEnvelopeOptions 7, $A
     PolynomialCounterOptions 5, 0, $5
     CounterControlOptions 0
 
-.unknown15_1 ; $5D0B
+.metroidFireball_1 ; $5D0B
     LengthOptions $0
     DescendingEnvelopeOptions 3, $C
     PolynomialCounterOptions 3, 0, $5
@@ -5344,25 +5345,25 @@ optionSets_noise:
     PolynomialCounterOptions 5, 1, $7
     CounterControlOptions 0
 
-.unknown18_0 ; $5D17
+.autrackRises_0 ; $5D17
     LengthOptions $0
     DescendingEnvelopeOptions 1, $6
     PolynomialCounterOptions 7, 1, $2
     CounterControlOptions 0
 
-.unknown18_1 ; $5D1B
+.autrackRises_1 ; $5D1B
     LengthOptions $0
     DescendingEnvelopeOptions 0, $6
     PolynomialCounterOptions 1, 0, $2
     CounterControlOptions 0
 
-.unused19 ; $5D1F
+.noMissileDudShot ; $5D1F
     LengthOptions $0
     DescendingEnvelopeOptions 3, $C
     PolynomialCounterOptions 1, 0, $1
     CounterControlOptions 0
 
-.unknown1A ; $5D23
+.autoadJump ; $5D23
     LengthOptions $0
     DescendingEnvelopeOptions 4, $4
     PolynomialCounterOptions 2, 1, $4
@@ -5397,7 +5398,7 @@ optionSets_square2:
     DescendingEnvelopeOptions 7, $F
     FrequencyOptions $700, 0
 
-.unknown7 ; $5D3B
+.automFlamethrower ; $5D3B
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $8
     FrequencyOptions $200, 0

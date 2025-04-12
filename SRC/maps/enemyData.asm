@@ -129,6 +129,7 @@
 
 
 ; Enemy Data for Banks 9-F
+; <spawn number>, <sprite type>, <X>, <Y>
 enemyBank9_00: db $FF
 enemyBank9_01: db $65,$99,$88,$18, $FF
 enemyBank9_02: db $67,$97,$48,$18, $FF
