@@ -5,7 +5,7 @@ A disassembly of one of my favorite Game Boy games. A first-pass over every func
 ## Build Instructions
 
 1. Install [rgbds](https://github.com/rednex/rgbds#1-installing-rgbds)
-2. Either run `make all` or `build.bat`, depending on your preference.
+2. Either run `make all` or `build.py`, depending on your preference.
 3. The assembled game and a [BGB](http://bgb.bircd.org/) compatible `.sym` file will appear in the `out` folder.
 
 The resultant file should have this hash: `md5: 9639948ad274fa15281f549e5f9c4d87`
