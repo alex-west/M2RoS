@@ -36,38 +36,39 @@ def csv2asm(infile, outdir):
     csvReader = csv.DictReader(f)
     
     # Initialize Tables
+    listDictionary = {}
     poseComments = []
     poseConstants = []
     for wordType in wordLists:
-        locals()[wordType] = []
+        listDictionary[wordType] = []
     for byteType in byteLists:
-        locals()[byteType] = []
+        listDictionary[byteType] = []
     for offsetType in offsetLists:
-        locals()[offsetType] = []
+        listDictionary[offsetType] = []
     
     # Read Rows
     for row in csvReader:
         poseComments.append(row['poseComments'])
         poseConstants.append(row['poseConstants'])
         for wordType in wordLists:
-            locals()[wordType].append(row[wordType])
+            listDictionary[wordType].append(row[wordType])
         for byteType in byteLists:
-            locals()[byteType].append(row[byteType])
+            listDictionary[byteType].append(row[byteType])
         for offsetType in offsetLists:
-            locals()[offsetType].append(row[offsetType])
+            listDictionary[offsetType].append(row[offsetType])
     
     # Transpose Y Offset Lists
     offsetListsList = []
     for oneList in offsetLists:
-        offsetListsList.append(locals()[oneList])
+        offsetListsList.append(listDictionary[oneList])
     transposedOffsets = [[row[i] for row in offsetListsList] for i in range(len(offsetListsList[0]))]
     
     # Write Lists to Separate ASM files
     writeConstantsToAsm(outdir, poseConstants, 'poseConstants', poseComments)
     for wordType in wordLists:
-        writeWordTableToAsm(outdir, locals()[wordType], wordType, poseComments)
+        writeWordTableToAsm(outdir, listDictionary[wordType], wordType, poseComments)
     for byteType in byteLists:
-        writeByteTableToAsm(outdir, locals()[byteType], byteType, poseComments)
+        writeByteTableToAsm(outdir, listDictionary[byteType], byteType, poseComments)
     writeOffsetTableToAsm(outdir, transposedOffsets, 'horizontalYOffsets', poseComments)
 
 
