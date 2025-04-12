@@ -4,7 +4,7 @@
 
 section "WRAM Bank 0 - OAM Buffer", wram0[$C000] ;{
 
-OAM_MAX = $A0 ; 40 hardware sprites -> 160 bytes
+def OAM_MAX = $A0 ; 40 hardware sprites -> 160 bytes
 wram_oamBuffer:: ds OAM_MAX ;{ $C000..9F: OAM Entries
 ;    + 0: Y position
 ;    + 1: X position
@@ -501,17 +501,17 @@ enemyDataSlots: ; $C600;..C7FF ; Enemy data. 20h byte slots
 ; - Exception: Her projectiles use $C608 to encode their directional state.
 ;   - $YX directional vector. Each nybble is signed and ranges from -2 ($E) to 2.
 ; - Each slot is statically allocated for one purpose:
-;                     Slot - Sprite ID
-queenActor_body  = .slot_0 ; F3 - Queen Body
-queenActor_mouth = .slot_1 ; $F5/$F6/$F7 - Queen Mouth (closed/open/stunned)
-queenActor_headL = .slot_2 ; $F1 - Head Left Half
-queenActor_headR = .slot_3 ; $F2 - Head Right Half
-queenActor_neckA = .slot_4 ; $F0 - Queen Neck <- This one get set to $82 when spitting Samus out
-                 ;  ...
-                 ; .slot_9 ; $F0 - Queen Neck
-queenActor_spitA = .slot_A ; $F2 - Queen Projectile
-queenActor_spitB = .slot_B ; $F2 - Queen Projectile
-queenActor_spitC = .slot_C ; $F2 - Queen Projectile
+;                         Slot - Sprite ID
+def queenActor_body  = .slot_0 ; F3 - Queen Body
+def queenActor_mouth = .slot_1 ; $F5/$F6/$F7 - Queen Mouth (closed/open/stunned)
+def queenActor_headL = .slot_2 ; $F1 - Head Left Half
+def queenActor_headR = .slot_3 ; $F2 - Head Right Half
+def queenActor_neckA = .slot_4 ; $F0 - Queen Neck <- This one get set to $82 when spitting Samus out
+                     ;  ...
+                     ; .slot_9 ; $F0 - Queen Neck
+def queenActor_spitA = .slot_A ; $F2 - Queen Projectile
+def queenActor_spitB = .slot_B ; $F2 - Queen Projectile
+def queenActor_spitC = .slot_C ; $F2 - Queen Projectile
 ; Note Sprite ID $F4 is unused
 ;}
 
@@ -612,7 +612,7 @@ square2_variableFrequency: ds 1 ; $CECC - Variable tone channel frequency. Only 
 ds 1 ; $CECD - Unused?
 
 ;    $CECE..CED4: Would be the wave channel sound effect, but is unused (only cleared) and $CEE6/$CFE5 is used instead.
-sfxRequest_fakeWave : ds 1 ; $CECE
+sfxRequest_fakeWave: ds 1 ; $CECE
 sfxPlaying_fakeWave: ds 1 ; $CECF
 
 ds 5 ; $CED0..CED4 - Unused?
@@ -1474,7 +1474,7 @@ wramUnused_DD60: ds $100 - $60 ;$DD60..FF: Unused
 
 ; List of metatiles from the map to update to VRAM
 mapUpdateBuffer:: ds $100 ; $DE00..FF
-mapUpdateFlag = mapUpdateBuffer + 1 ; $DE01
+def mapUpdateFlag = mapUpdateBuffer + 1 ; $DE01
 ;{
 ;    + 0: VRAM background tilemap destination address.
 ;         - $00xx terminates update
