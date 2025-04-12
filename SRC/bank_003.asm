@@ -652,9 +652,10 @@ ret ;}
 ; Enemy Data starts here
 enemyDataPointers:
 	include "maps/enemyData.asm"
-
 ; 03:6244 -- Enemy Data ends here
 ; Freespace filled with $00 (NOP)
+DS $BC ;This fills freespace
+enemyData_end: ;Label used by the LAMP Editor
 
 SECTION "ROM Bank $003 Part 2", ROMX[$6300], BANK[$3]
 enemyHeaderPointers: ; 03:6300 - Enemy headers

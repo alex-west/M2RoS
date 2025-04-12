@@ -56,4 +56,4 @@ Subject to change.
 
 - [M2Edit](https://m2sw.zophar.net/m2edit/) - Abandoned editor from 2004. Stable, but closed source and lacks enemy and door editing capabilities.
 - [ROSE](https://github.com/liamnajor/ROSE) - WIP editor. Web based.
-- [YAM2E](https://github.com/ConConner/YAM2E) - Very early WIP editor.
+- [LAMP](https://github.com/LAMP-Platform/LAMP) - Feature rich, Windows only, editor with support for this disassembly.
