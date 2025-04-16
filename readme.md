@@ -5,10 +5,13 @@ A disassembly of one of my favorite Game Boy games. A first-pass over every func
 ## Build Instructions
 
 1. Install [rgbds](https://github.com/rednex/rgbds#1-installing-rgbds)
-2. Either run `make all` or `build.py`, depending on your preference.
-3. The assembled game and a [BGB](http://bgb.bircd.org/) compatible `.sym` file will appear in the `out` folder.
+2. Install [Python](https://www.python.org/downloads/)
+3. Either run `make all`, `build.bat`, or `build.py`, depending on your preference.
+4. The assembled game and a [BGB](http://bgb.bircd.org/) compatible `.sym` file will appear in the `out` folder.
 
 The resultant file should have this hash: `md5: 9639948ad274fa15281f549e5f9c4d87`
+
+This project uses rgbds v0.9.1 and Python 3.13. Compatibility with other versions of these tools is not guaranteed.
 
 ## How to Contribute
 
@@ -57,3 +60,4 @@ Subject to change.
 - [M2Edit](https://m2sw.zophar.net/m2edit/) - Abandoned editor from 2004. Stable, but closed source and lacks enemy and door editing capabilities.
 - [ROSE](https://github.com/liamnajor/ROSE) - WIP editor. Web based.
 - [LAMP](https://github.com/LAMP-Platform/LAMP) - Feature rich, Windows only, editor with support for this disassembly.
+- [2DEd](https://metroidconstruction.com/resource.php?id=730) - Lightweight editor, designed to be used with this disassembly.

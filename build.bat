@@ -25,7 +25,7 @@ if ERRORLEVEL 1 (
 
 echo. RGBDS detected
 echo. Assembling .asm files
-rgbasm --preserve-ld -o out/game.o -i SRC/ SRC/game.asm
+rgbasm -o out/game.o -i SRC/ SRC/game.asm
 if errorlevel 1 goto errorASM
 echo.  Success
 echo.

@@ -26,8 +26,7 @@ if completed_process.returncode != 0:
 
 print('RGBDS detected')
 print('Assembling .asm files')
-run_or_exit("rgbasm --preserve-ld -o out/game.o -I SRC/ SRC/game.asm", "Assembler Error.") # Use if compiling the original
-#run_or_exit("rgbasm -o out/game.o -I SRC/ SRC/game.asm", "Assembler Error.") # Use if making a mod
+run_or_exit("rgbasm -o out/game.o -I SRC/ SRC/game.asm", "Assembler Error.")
 print('Success\n')
 
 print('Linking .o files')
