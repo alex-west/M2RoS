@@ -41,4 +41,12 @@ def vramDest_statusBar = $9C00
 def vramDest_itemText  = $9C20
 ; Queen's head row 3
 ; Queen's head row 4
-    
+
+
+; Queen related constants
+
+; First and last tiles to be clear by disintegration animation
+def queenDeath_firstTile = $8B10
+def queenDeath_lastTile = $9570
+def queenDeath_bodyStart = $99A0
+def queenDeath_bodyEnd = $9A80

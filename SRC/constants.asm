@@ -79,10 +79,3 @@ include "samus/samus_poseConstants.asm"
 
 
 
-; Queen related constants
-
-; First and last tiles to be clear by disintegration animation
-def queenDeath_firstTile = $8B10
-def queenDeath_lastTile = $9570
-def queenDeath_bodyStart = $99A0
-def queenDeath_bodyEnd = $9A80
