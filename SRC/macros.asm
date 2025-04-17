@@ -106,9 +106,9 @@ macro WaveOptions ; [wave pattern data pointer], [volume], [unused]
     db \2 << 5 | \3
 endm
 
-macro SongHeader ; [music note offset], [CF01], [tone/sweep channel pointer], [tone channel pointer], [wave channel pointer], [noise channel pointer]
+macro SongHeader ; [music note offset], [tempo table pointer], [tone/sweep channel pointer], [tone channel pointer], [wave channel pointer], [noise channel pointer]
     static_assert \1 < $100, "Invalid music note offset"
-    static_assert \2 < $10000, "Invalid CF01"
+    static_assert \2 < $10000, "Invalid tempo table pointer"
     assert \3 < $10000, "Invalid tone/sweep channel pointer"
     assert \4 < $10000, "Invalid tone channel pointer"
     assert \5 < $10000, "Invalid wave channel pointer"
@@ -175,8 +175,8 @@ macro SongNote ; [note name in "[A-G]b?[2-7]" format]
 endm
 
 macro SongNoiseNote ; [note index]
-    static_assert \1 < $2A, "Invalid noise note index"
-    db \1 * 4
+    static_assert \1 - songNoiseChannelOptionSets == LOW(\1 - songNoiseChannelOptionSets), "Invalid noise note index"
+    db \1 - songNoiseChannelOptionSets
 endm
 
 macro SongNoteLength ; [note length index]

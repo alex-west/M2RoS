@@ -127,53 +127,53 @@ songNoiseChannelOptionSets:
 ;     r: Restart sound
 ;     s: Stop output after sound has finished (according to sound length)
 
-;       _____________ Sound length
-;      |    _________ Envelope
-;      |   |    _____ Polynomial counter
-;      |   |   |    _ Counter control
-;      |   |   |   |
-    db $00,$08,$00,$80
-    db $00,$21,$3D,$80 ; Can never be used (in song handler, '1' disables sound channel)
-    db $30,$40,$31,$C0
-    db $00,$31,$3E,$80
-    db $35,$F7,$6E,$C0
-    db $30,$61,$4B,$C0
-    db $30,$C1,$6D,$C0
-    db $00,$81,$4B,$80
-    db $00,$F6,$6D,$80
-    db $00,$B6,$6D,$80
-    db $00,$77,$6D,$80
-    db $00,$47,$6D,$80
-    db $00,$97,$6B,$80
-    db $00,$77,$6B,$80
-    db $00,$57,$6B,$80
-    db $00,$37,$6B,$80
-    db $00,$80,$6D,$80
-    db $00,$40,$4D,$80
-    db $00,$1F,$47,$80
-    db $00,$40,$47,$80
-    db $00,$40,$46,$80
-    db $00,$40,$45,$80
-    db $00,$40,$44,$80
-    db $00,$40,$43,$80
-    db $00,$40,$42,$80
-    db $00,$40,$41,$80
-    db $00,$1B,$37,$80
-    db $00,$A5,$27,$80
-    db $00,$1F,$37,$80
-    db $00,$27,$46,$80
-    db $00,$27,$45,$80
-    db $00,$1B,$6B,$80
-    db $00,$1A,$6B,$80
-    db $00,$19,$6B,$80
-    db $00,$1F,$37,$80
-    db $00,$1C,$6C,$80
-    db $00,$51,$4D,$80
-    db $30,$F1,$6F,$C0
-    db $38,$A1,$3B,$C0
-    db $38,$A1,$3A,$C0
-    db $00,$F4,$7A,$80
-    db $00,$F4,$7B,$80
+;             _____________ Sound length
+;            |    _________ Envelope
+;            |   |    _____ Polynomial counter
+;            |   |   |    _ Counter control
+;            |   |   |   |
+.noise0:  db $00,$08,$00,$80 ; Can never be used (in song handler, $00 ends current section)
+.noise1:  db $00,$21,$3D,$80
+.noise2:  db $30,$40,$31,$C0
+.noise3:  db $00,$31,$3E,$80
+.noise4:  db $35,$F7,$6E,$C0
+.noise5:  db $30,$61,$4B,$C0
+.noise6:  db $30,$C1,$6D,$C0
+.noise7:  db $00,$81,$4B,$80
+.noise8:  db $00,$F6,$6D,$80
+.noise9:  db $00,$B6,$6D,$80
+.noiseA:  db $00,$77,$6D,$80
+.noiseB:  db $00,$47,$6D,$80
+.noiseC:  db $00,$97,$6B,$80
+.noiseD:  db $00,$77,$6B,$80
+.noiseE:  db $00,$57,$6B,$80
+.noiseF:  db $00,$37,$6B,$80
+.noise10: db $00,$80,$6D,$80 ; unused
+.noise11: db $00,$40,$4D,$80 ; unused
+.noise12: db $00,$1F,$47,$80
+.noise13: db $00,$40,$47,$80
+.noise14: db $00,$40,$46,$80
+.noise15: db $00,$40,$45,$80
+.noise16: db $00,$40,$44,$80
+.noise17: db $00,$40,$43,$80
+.noise18: db $00,$40,$42,$80
+.noise19: db $00,$40,$41,$80
+.noise1A: db $00,$1B,$37,$80
+.noise1B: db $00,$A5,$27,$80
+.noise1C: db $00,$1F,$37,$80 ; unused
+.noise1D: db $00,$27,$46,$80
+.noise1E: db $00,$27,$45,$80
+.noise1F: db $00,$1B,$6B,$80
+.noise20: db $00,$1A,$6B,$80
+.noise21: db $00,$19,$6B,$80
+.noise22: db $00,$1F,$37,$80 ; unused
+.noise23: db $00,$1C,$6C,$80 ; unused
+.noise24: db $00,$51,$4D,$80
+.noise25: db $30,$F1,$6F,$C0
+.noise26: db $38,$A1,$3B,$C0 ; unused
+.noise27: db $38,$A1,$3A,$C0 ; unused
+.noise28: db $00,$F4,$7A,$80 ; unused
+.noise29: db $00,$F4,$7B,$80 ; unused
 ;}
 
 ; Song sound channel effect tables
@@ -6057,8 +6057,8 @@ song_babyMetroid_wave_section4:
 song_babyMetroid_noise_section3:
 ;{
     SongNoteLength_Quaver
-    SongNoiseNote $1D
-    SongNoiseNote $1E
+    SongNoiseNote songNoiseChannelOptionSets.noise1D
+    SongNoiseNote songNoiseChannelOptionSets.noise1E
     SongNoteLength_Hemidemisemiquaver
     SongRest
     SongEnd
@@ -6396,9 +6396,9 @@ song_metroidQueenBattle_noise_section1:
 ;{
     SongRepeatSetup $4
         SongNoteLength_Quaver
-        SongNoiseNote $9
+        SongNoiseNote songNoiseChannelOptionSets.noise9
         SongRest
-        SongNoiseNote $D
+        SongNoiseNote songNoiseChannelOptionSets.noiseD
         SongRest
     SongRepeat
     SongEnd
@@ -6408,12 +6408,12 @@ song_metroidQueenBattle_noise_section1:
 song_metroidQueenBattle_noise_section2:
 ;{
     SongNoteLength_Semiquaver
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Crochet
     SongNoteLength_Hemidemisemiquaver
     SongNoteLength_DottedSemiquaver
     SongRest
-    SongNoiseNote $1A
+    SongNoiseNote songNoiseChannelOptionSets.noise1A
     SongEnd
 ;}
 
@@ -8033,7 +8033,7 @@ song_mainCaves_noise_section0:
 ;{
     SongRepeatSetup $8
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $4
+        SongNoiseNote songNoiseChannelOptionSets.noise4
     SongRepeat
     SongEnd
 ;}
@@ -8043,38 +8043,38 @@ song_mainCaves_noise_section1:
 ;{
     SongRepeatSetup $3
         SongNoteLength_Semiquaver
-        SongNoiseNote $24
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $25
-        SongNoiseNote $1
-        SongNoiseNote $1
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $1
-        SongNoiseNote $1
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $24
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $3
+        SongNoiseNote songNoiseChannelOptionSets.noise24
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise25
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise24
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise3
     SongRepeat
     SongNoteLength_Semiquaver
-    SongNoiseNote $24
-    SongNoiseNote $1
-    SongNoiseNote $3
-    SongNoiseNote $24
-    SongNoiseNote $1
-    SongNoiseNote $1
-    SongNoiseNote $3
-    SongNoiseNote $1
-    SongNoiseNote $5
-    SongNoiseNote $4
-    SongNoiseNote $5
-    SongNoiseNote $4
+    SongNoiseNote songNoiseChannelOptionSets.noise24
+    SongNoiseNote songNoiseChannelOptionSets.noise1
+    SongNoiseNote songNoiseChannelOptionSets.noise3
+    SongNoiseNote songNoiseChannelOptionSets.noise24
+    SongNoiseNote songNoiseChannelOptionSets.noise1
+    SongNoiseNote songNoiseChannelOptionSets.noise1
+    SongNoiseNote songNoiseChannelOptionSets.noise3
+    SongNoiseNote songNoiseChannelOptionSets.noise1
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise4
     SongNoteLength_Crochet
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongEnd
 ;}
 
@@ -8083,24 +8083,24 @@ song_mainCaves_noise_section2:
 ;{
     SongRepeatSetup $F
         SongNoteLength_Semiquaver
-        SongNoiseNote $24
-        SongNoiseNote $1
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $24
-        SongNoiseNote $1
-        SongNoiseNote $3
-        SongNoiseNote $1
+        SongNoiseNote songNoiseChannelOptionSets.noise24
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise24
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
     SongRepeat
     SongNoteLength_Semiquaver
-    SongNoiseNote $5
-    SongNoiseNote $4
-    SongNoiseNote $4
-    SongNoiseNote $4
-    SongNoiseNote $5
-    SongNoiseNote $4
-    SongNoiseNote $5
-    SongNoiseNote $4
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise4
     SongEnd
 ;}
 
@@ -8109,39 +8109,39 @@ song_mainCaves_noise_section3:
 ;{
     SongRepeatSetup $7
         SongNoteLength_Semiquaver
-        SongNoiseNote $24
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $25
-        SongNoiseNote $5
-        SongNoiseNote $1
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $24
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $3
-        SongNoiseNote $25
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $1
+        SongNoiseNote songNoiseChannelOptionSets.noise24
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise25
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise24
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise25
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise1
     SongRepeat
-    SongNoiseNote $24
-    SongNoiseNote $3
-    SongNoiseNote $2
-    SongNoiseNote $25
-    SongNoiseNote $24
-    SongNoiseNote $3
-    SongNoiseNote $2
-    SongNoiseNote $1
-    SongNoiseNote $5
-    SongNoiseNote $4
-    SongNoiseNote $4
-    SongNoiseNote $4
-    SongNoiseNote $5
-    SongNoiseNote $4
-    SongNoiseNote $5
-    SongNoiseNote $4
+    SongNoiseNote songNoiseChannelOptionSets.noise24
+    SongNoiseNote songNoiseChannelOptionSets.noise3
+    SongNoiseNote songNoiseChannelOptionSets.noise2
+    SongNoiseNote songNoiseChannelOptionSets.noise25
+    SongNoiseNote songNoiseChannelOptionSets.noise24
+    SongNoiseNote songNoiseChannelOptionSets.noise3
+    SongNoiseNote songNoiseChannelOptionSets.noise2
+    SongNoiseNote songNoiseChannelOptionSets.noise1
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise4
     SongEnd
 ;}
 
@@ -8150,54 +8150,54 @@ song_mainCaves_noise_section4:
 ;{
     SongRepeatSetup $4
         SongNoteLength_Semiquaver
-        SongNoiseNote $5
-        SongNoiseNote $3
-        SongNoiseNote $5
-        SongNoiseNote $1
-        SongNoiseNote $2
-        SongNoiseNote $3
-        SongNoiseNote $2
-        SongNoiseNote $1
-        SongNoiseNote $1
-        SongNoiseNote $3
-        SongNoiseNote $2
-        SongNoiseNote $1
-        SongNoiseNote $2
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise2
         SongNoteLength_Quaver
-        SongNoiseNote $1A
+        SongNoiseNote songNoiseChannelOptionSets.noise1A
         SongNoteLength_Semiquaver
-        SongNoiseNote $3
+        SongNoiseNote songNoiseChannelOptionSets.noise3
     SongRepeat
     SongRepeatSetup $3
         SongNoteLength_Semiquaver
-        SongNoiseNote $4
-        SongNoiseNote $4
-        SongNoiseNote $1
-        SongNoiseNote $4
-        SongNoiseNote $5
-        SongNoiseNote $3
-        SongNoiseNote $2
-        SongNoiseNote $1
-        SongNoiseNote $24
-        SongNoiseNote $3
-        SongNoiseNote $2
-        SongNoiseNote $1
-        SongNoiseNote $24
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise24
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise24
         SongNoteLength_Quaver
-        SongNoiseNote $1A
+        SongNoiseNote songNoiseChannelOptionSets.noise1A
         SongNoteLength_Semiquaver
-        SongNoiseNote $3
+        SongNoiseNote songNoiseChannelOptionSets.noise3
     SongRepeat
-    SongNoiseNote $24
-    SongNoiseNote $3
-    SongNoiseNote $24
-    SongNoiseNote $1
-    SongNoiseNote $2
-    SongNoiseNote $3
-    SongNoiseNote $2
-    SongNoiseNote $1
+    SongNoiseNote songNoiseChannelOptionSets.noise24
+    SongNoiseNote songNoiseChannelOptionSets.noise3
+    SongNoiseNote songNoiseChannelOptionSets.noise24
+    SongNoiseNote songNoiseChannelOptionSets.noise1
+    SongNoiseNote songNoiseChannelOptionSets.noise2
+    SongNoiseNote songNoiseChannelOptionSets.noise3
+    SongNoiseNote songNoiseChannelOptionSets.noise2
+    SongNoiseNote songNoiseChannelOptionSets.noise1
     SongRepeatSetup $8
-        SongNoiseNote $5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
     SongRepeat
     SongEnd
 ;}
@@ -9089,11 +9089,11 @@ song_finalCaves_wave_section0:
 song_finalCaves_noise_section0:
 ;{
     SongNoteLength_Crochet
-    SongNoiseNote $1D
+    SongNoiseNote songNoiseChannelOptionSets.noise1D
     SongNoteLength_Semiquaver
     SongRest
     SongNoteLength_DottedQuaver
-    SongNoiseNote $1E
+    SongNoiseNote songNoiseChannelOptionSets.noise1E
     SongNoteLength_Semiquaver
     SongRest
     SongEnd
@@ -9317,11 +9317,11 @@ song_metroidHive_wave_section0:
 song_metroidHive_noise_section0:
 ;{
     SongNoteLength_DottedSemiquaver
-    SongNoiseNote $1D
+    SongNoiseNote songNoiseChannelOptionSets.noise1D
     SongNoteLength_Hemidemisemiquaver
     SongRest
     SongNoteLength_DottedSemiquaver
-    SongNoiseNote $1E
+    SongNoiseNote songNoiseChannelOptionSets.noise1E
     SongNoteLength_Demisemiquaver
     SongRest
     SongEnd
@@ -9536,15 +9536,15 @@ song_itemGet_wave_section0:
 song_itemGet_noise_section0:
 ;{
     SongNoteLength_DottedQuaver
-    SongNoiseNote $1A
+    SongNoiseNote songNoiseChannelOptionSets.noise1A
     SongNoteLength_Minum
-    SongNoiseNote $1B
+    SongNoiseNote songNoiseChannelOptionSets.noise1B
     SongRest
     SongRest
     SongNoteLength_DottedQuaver
-    SongNoiseNote $1A
+    SongNoiseNote songNoiseChannelOptionSets.noise1A
     SongNoteLength_Semibreve
-    SongNoiseNote $1B
+    SongNoiseNote songNoiseChannelOptionSets.noise1B
     SongEnd
 ;}
 
@@ -9617,11 +9617,11 @@ song_metroidQueenHallway_square1_section1:
 song_metroidQueenHallway_noise_section0:
 ;{
     SongNoteLength_DottedSemiquaver
-    SongNoiseNote $1D
+    SongNoiseNote songNoiseChannelOptionSets.noise1D
     SongNoteLength_Hemidemisemiquaver
     SongRest
     SongNoteLength_DottedSemiquaver
-    SongNoiseNote $1E
+    SongNoiseNote songNoiseChannelOptionSets.noise1E
     SongNoteLength_Demisemiquaver
     SongRest
     SongEnd
@@ -9933,19 +9933,19 @@ song_metroidBattle_wave_section1:
 song_metroidBattle_noise_section0:
 ;{
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $6
-    SongNoiseNote $7
-    SongNoiseNote $6
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise6
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise6
     SongNoteLength_DottedCrochet
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Semiquaver
-    SongNoiseNote $4
-    SongNoiseNote $5
-    SongNoiseNote $6
-    SongNoiseNote $6
-    SongNoiseNote $7
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise6
+    SongNoiseNote songNoiseChannelOptionSets.noise6
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongEnd
 ;}
 
@@ -9953,38 +9953,38 @@ song_metroidBattle_noise_section0:
 song_metroidBattle_noise_section1:
 ;{
     SongNoteLength_Quaver
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongNoteLength_Semiquaver
     SongRest
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $4
+    SongNoiseNote songNoiseChannelOptionSets.noise4
     SongRepeatSetup $6
         SongNoteLength_Quaver
-        SongNoiseNote $5
-        SongNoiseNote $5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
     SongRepeat
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongNoteLength_Quaver
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongNoteLength_DottedQuaver
-    SongNoiseNote $12
+    SongNoiseNote songNoiseChannelOptionSets.noise12
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongNoteLength_Quaver
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongEnd
 ;}
 
@@ -10134,66 +10134,66 @@ song_earthquake_noise:
 song_earthquake_noise_section0:
 ;{
     SongNoteLength_Quaver
-    SongNoiseNote $12
+    SongNoiseNote songNoiseChannelOptionSets.noise12
     SongRepeatSetup $3
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $B
-        SongNoiseNote $B
+        SongNoiseNote songNoiseChannelOptionSets.noiseB
+        SongNoiseNote songNoiseChannelOptionSets.noiseB
     SongRepeat
     SongRepeatSetup $3
-        SongNoiseNote $B
-        SongNoiseNote $A
+        SongNoiseNote songNoiseChannelOptionSets.noiseB
+        SongNoiseNote songNoiseChannelOptionSets.noiseA
     SongRepeat
     SongRepeatSetup $2
-        SongNoiseNote $A
-        SongNoiseNote $9
+        SongNoiseNote songNoiseChannelOptionSets.noiseA
+        SongNoiseNote songNoiseChannelOptionSets.noise9
     SongRepeat
     SongRepeatSetup $3
-        SongNoiseNote $8
-        SongNoiseNote $9
+        SongNoiseNote songNoiseChannelOptionSets.noise8
+        SongNoiseNote songNoiseChannelOptionSets.noise9
     SongRepeat
     SongRepeatSetup $2
-        SongNoiseNote $D
-        SongNoiseNote $E
+        SongNoiseNote songNoiseChannelOptionSets.noiseD
+        SongNoiseNote songNoiseChannelOptionSets.noiseE
     SongRepeat
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $8
-    SongNoiseNote $D
-    SongNoiseNote $B
-    SongNoiseNote $E
-    SongNoiseNote $8
-    SongNoiseNote $E
-    SongNoiseNote $B
-    SongNoiseNote $D
-    SongNoiseNote $B
-    SongNoiseNote $D
-    SongNoiseNote $A
-    SongNoiseNote $D
-    SongNoiseNote $8
-    SongNoiseNote $F
-    SongNoiseNote $8
-    SongNoiseNote $B
-    SongNoiseNote $8
-    SongNoiseNote $F
-    SongNoiseNote $A
-    SongNoiseNote $D
-    SongNoiseNote $A
-    SongNoiseNote $C
-    SongNoiseNote $A
-    SongNoiseNote $B
+    SongNoiseNote songNoiseChannelOptionSets.noise8
+    SongNoiseNote songNoiseChannelOptionSets.noiseD
+    SongNoiseNote songNoiseChannelOptionSets.noiseB
+    SongNoiseNote songNoiseChannelOptionSets.noiseE
+    SongNoiseNote songNoiseChannelOptionSets.noise8
+    SongNoiseNote songNoiseChannelOptionSets.noiseE
+    SongNoiseNote songNoiseChannelOptionSets.noiseB
+    SongNoiseNote songNoiseChannelOptionSets.noiseD
+    SongNoiseNote songNoiseChannelOptionSets.noiseB
+    SongNoiseNote songNoiseChannelOptionSets.noiseD
+    SongNoiseNote songNoiseChannelOptionSets.noiseA
+    SongNoiseNote songNoiseChannelOptionSets.noiseD
+    SongNoiseNote songNoiseChannelOptionSets.noise8
+    SongNoiseNote songNoiseChannelOptionSets.noiseF
+    SongNoiseNote songNoiseChannelOptionSets.noise8
+    SongNoiseNote songNoiseChannelOptionSets.noiseB
+    SongNoiseNote songNoiseChannelOptionSets.noise8
+    SongNoiseNote songNoiseChannelOptionSets.noiseF
+    SongNoiseNote songNoiseChannelOptionSets.noiseA
+    SongNoiseNote songNoiseChannelOptionSets.noiseD
+    SongNoiseNote songNoiseChannelOptionSets.noiseA
+    SongNoiseNote songNoiseChannelOptionSets.noiseC
+    SongNoiseNote songNoiseChannelOptionSets.noiseA
+    SongNoiseNote songNoiseChannelOptionSets.noiseB
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $9
-    SongNoiseNote $17
+    SongNoiseNote songNoiseChannelOptionSets.noise9
+    SongNoiseNote songNoiseChannelOptionSets.noise17
     SongRepeatSetup $3
-        SongNoiseNote $A
-        SongNoiseNote $18
+        SongNoiseNote songNoiseChannelOptionSets.noiseA
+        SongNoiseNote songNoiseChannelOptionSets.noise18
     SongRepeat
     SongRepeatSetup $5A
-        SongNoiseNote $A
-        SongNoiseNote $B
+        SongNoiseNote songNoiseChannelOptionSets.noiseA
+        SongNoiseNote songNoiseChannelOptionSets.noiseB
     SongRepeat
     SongNoteLength_Minum
-    SongNoiseNote $A
+    SongNoiseNote songNoiseChannelOptionSets.noiseA
     SongEnd
 ;}
 
@@ -10641,15 +10641,15 @@ song_title_noise_section4:
 ;{
     SongRepeatSetup $2
         SongNoteLength_Semiquaver
-        SongNoiseNote $5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
         SongNoteLength_Minum
-        SongNoiseNote $8
+        SongNoiseNote songNoiseChannelOptionSets.noise8
         SongNoteLength_Crochet
         SongRest
         SongNoteLength_DottedQuaver
         SongRest
         SongNoteLength_Semibreve
-        SongNoiseNote $C
+        SongNoiseNote songNoiseChannelOptionSets.noiseC
     SongRepeat
     SongEnd
 ;}
@@ -11351,25 +11351,25 @@ song_title_noise_section7:
     SongNoteLength_Crochet
     SongRest
     SongNoteLength_Minum
-    SongNoiseNote $8
+    SongNoiseNote songNoiseChannelOptionSets.noise8
     SongRest
     SongRest
-    SongNoiseNote $8
+    SongNoiseNote songNoiseChannelOptionSets.noise8
     SongRest
     SongRest
     SongNoteLength_DottedQuaver
-    SongNoiseNote $8
+    SongNoiseNote songNoiseChannelOptionSets.noise8
     SongNoteLength_Demisemiquaver
     SongRest
     SongNoteLength_Semiquaver
-    SongNoiseNote $1F
+    SongNoiseNote songNoiseChannelOptionSets.noise1F
     SongRest
-    SongNoiseNote $20
+    SongNoiseNote songNoiseChannelOptionSets.noise20
     SongRest
-    SongNoiseNote $21
+    SongNoiseNote songNoiseChannelOptionSets.noise21
     SongRest
     SongNoteLength_DottedSemiquaver
-    SongNoiseNote $21
+    SongNoiseNote songNoiseChannelOptionSets.noise21
     SongNoteLength_Semiquaver
     SongRest
     SongEnd
@@ -11380,21 +11380,21 @@ song_title_noise_section8:
 ;{
     SongRepeatSetup $5
         SongNoteLength_DottedCrochet
-        SongNoiseNote $8
-        SongNoiseNote $C
-        SongNoiseNote $8
+        SongNoiseNote songNoiseChannelOptionSets.noise8
+        SongNoiseNote songNoiseChannelOptionSets.noiseC
+        SongNoiseNote songNoiseChannelOptionSets.noise8
     SongRepeat
-    SongNoiseNote $8
-    SongNoiseNote $C
-    SongNoiseNote $8
-    SongNoiseNote $C
-    SongNoiseNote $9
-    SongNoiseNote $9
-    SongNoiseNote $E
-    SongNoiseNote $A
-    SongNoiseNote $A
-    SongNoiseNote $F
-    SongNoiseNote $F
+    SongNoiseNote songNoiseChannelOptionSets.noise8
+    SongNoiseNote songNoiseChannelOptionSets.noiseC
+    SongNoiseNote songNoiseChannelOptionSets.noise8
+    SongNoiseNote songNoiseChannelOptionSets.noiseC
+    SongNoiseNote songNoiseChannelOptionSets.noise9
+    SongNoiseNote songNoiseChannelOptionSets.noise9
+    SongNoiseNote songNoiseChannelOptionSets.noiseE
+    SongNoiseNote songNoiseChannelOptionSets.noiseA
+    SongNoiseNote songNoiseChannelOptionSets.noiseA
+    SongNoiseNote songNoiseChannelOptionSets.noiseF
+    SongNoiseNote songNoiseChannelOptionSets.noiseF
     SongRepeatSetup $5
         SongNoteLength_Minum
         SongRest
@@ -11500,20 +11500,20 @@ song_samusFanfare_wave_section0:
 song_samusFanfare_noise_section0:
 ;{
     SongNoteLength_DottedQuaver
-    SongNoiseNote $12
-    SongNoiseNote $1D
-    SongNoiseNote $12
+    SongNoiseNote songNoiseChannelOptionSets.noise12
+    SongNoiseNote songNoiseChannelOptionSets.noise1D
+    SongNoiseNote songNoiseChannelOptionSets.noise12
     SongNoteLength_DottedSemiquaver
-    SongNoiseNote $17
-    SongNoiseNote $15
-    SongNoiseNote $13
-    SongNoiseNote $14
+    SongNoiseNote songNoiseChannelOptionSets.noise17
+    SongNoiseNote songNoiseChannelOptionSets.noise15
+    SongNoiseNote songNoiseChannelOptionSets.noise13
+    SongNoiseNote songNoiseChannelOptionSets.noise14
     SongNoteLength_Semiquaver
-    SongNoiseNote $16
+    SongNoiseNote songNoiseChannelOptionSets.noise16
     SongNoteLength_Quaver
-    SongNoiseNote $1A
+    SongNoiseNote songNoiseChannelOptionSets.noise1A
     SongNoteLength_Semibreve
-    SongNoiseNote $1B
+    SongNoiseNote songNoiseChannelOptionSets.noise1B
     SongEnd
 ;}
 
@@ -13272,45 +13272,45 @@ song_reachedTheGunship_noise_section0:
 ;{
     SongRepeatSetup $2
         SongNoteLength_Semiquaver
-        SongNoiseNote $4
-        SongNoiseNote $3
-        SongNoiseNote $4
-        SongNoiseNote $3
-        SongNoiseNote $4
-        SongNoiseNote $3
-        SongNoiseNote $3
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise3
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $7
-        SongNoiseNote $5
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise5
     SongRepeat
     SongRepeatSetup $3
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $4
-        SongNoiseNote $5
-        SongNoiseNote $3
-        SongNoiseNote $1
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
     SongRepeat
-    SongNoiseNote $5
-    SongNoiseNote $3
-    SongNoiseNote $7
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise3
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongRepeatSetup $2
-        SongNoiseNote $4
-        SongNoiseNote $7
-        SongNoiseNote $3
-        SongNoiseNote $1
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
     SongRepeat
-    SongNoiseNote $7
-    SongNoiseNote $7
-    SongNoiseNote $7
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Semiquaver
-    SongNoiseNote $1A
+    SongNoiseNote songNoiseChannelOptionSets.noise1A
     SongNoteLength_Hemidemisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $7
-    SongNoiseNote $7
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongEnd
 ;}
 
@@ -13318,45 +13318,45 @@ song_reachedTheGunship_noise_section0:
 song_reachedTheGunship_noise_section1:
 ;{
     SongNoteLength_Minum
-    SongNoiseNote $1B
+    SongNoiseNote songNoiseChannelOptionSets.noise1B
     SongRest
     SongRest
     SongNoteLength_DottedCrochet
     SongRest
     SongNoteLength_Quaver
-    SongNoiseNote $1A
+    SongNoiseNote songNoiseChannelOptionSets.noise1A
     SongNoteLength_Quaver
-    SongNoiseNote $1B
-    SongNoiseNote $14
-    SongNoiseNote $15
-    SongNoiseNote $16
+    SongNoiseNote songNoiseChannelOptionSets.noise1B
+    SongNoiseNote songNoiseChannelOptionSets.noise14
+    SongNoiseNote songNoiseChannelOptionSets.noise15
+    SongNoiseNote songNoiseChannelOptionSets.noise16
     SongNoteLength_Quaver
-    SongNoiseNote $15
+    SongNoiseNote songNoiseChannelOptionSets.noise15
     SongNoteLength_Crochet
-    SongNoiseNote $17
+    SongNoiseNote songNoiseChannelOptionSets.noise17
     SongNoteLength_Quaver
-    SongNoiseNote $19
-    SongNoiseNote $18
-    SongNoiseNote $16
+    SongNoiseNote songNoiseChannelOptionSets.noise19
+    SongNoiseNote songNoiseChannelOptionSets.noise18
+    SongNoiseNote songNoiseChannelOptionSets.noise16
     SongNoteLength_Crochet
-    SongNoiseNote $15
+    SongNoiseNote songNoiseChannelOptionSets.noise15
     SongNoteLength_Quaver
-    SongNoiseNote $14
-    SongNoiseNote $13
-    SongNoiseNote $15
-    SongNoiseNote $14
+    SongNoiseNote songNoiseChannelOptionSets.noise14
+    SongNoiseNote songNoiseChannelOptionSets.noise13
+    SongNoiseNote songNoiseChannelOptionSets.noise15
+    SongNoiseNote songNoiseChannelOptionSets.noise14
     SongRepeatSetup $4
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $13
-        SongNoiseNote $19
+        SongNoiseNote songNoiseChannelOptionSets.noise13
+        SongNoiseNote songNoiseChannelOptionSets.noise19
     SongRepeat
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongNoteLength_Quaver
-    SongNoiseNote $1B
+    SongNoiseNote songNoiseChannelOptionSets.noise1B
     SongEnd
 ;}
 
@@ -13365,25 +13365,25 @@ song_reachedTheGunship_noise_section2:
 ;{
     SongRepeatSetup $3
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $7
-        SongNoiseNote $3
-        SongNoiseNote $5
-        SongNoiseNote $5
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
     SongRepeat
     SongNoteLength_Semiquaver
-    SongNoiseNote $1A
+    SongNoiseNote songNoiseChannelOptionSets.noise1A
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $3
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise3
     SongRepeatSetup $3
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $7
-        SongNoiseNote $2
-        SongNoiseNote $5
-        SongNoiseNote $5
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
     SongRepeat
     SongNoteLength_Quaver
-    SongNoiseNote $1B
+    SongNoiseNote songNoiseChannelOptionSets.noise1B
     SongEnd
 ;}
 
@@ -13392,34 +13392,34 @@ song_reachedTheGunship_noise_section3:
 ;{
     SongRepeatSetup $7
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $5
-        SongNoiseNote $3
-        SongNoiseNote $4
-        SongNoiseNote $4
-        SongNoiseNote $5
-        SongNoiseNote $2
-        SongNoiseNote $4
-        SongNoiseNote $4
-        SongNoiseNote $5
-        SongNoiseNote $1
-        SongNoiseNote $4
-        SongNoiseNote $4
-        SongNoiseNote $5
-        SongNoiseNote $3
-        SongNoiseNote $5
-        SongNoiseNote $1
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise1
     SongRepeat
     SongRepeatSetup $3
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $5
-        SongNoiseNote $2
-        SongNoiseNote $4
-        SongNoiseNote $4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise4
     SongRepeat
-    SongNoiseNote $7
-    SongNoiseNote $5
-    SongNoiseNote $7
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongEnd
 ;}
 
@@ -13428,23 +13428,23 @@ song_reachedTheGunship_noise_section4:
 ;{
     SongRepeatSetup $11
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $7
-        SongNoiseNote $3
-        SongNoiseNote $2
-        SongNoiseNote $3
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise3
     SongRepeat
     SongRepeatSetup $2
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $7
-        SongNoiseNote $3
-        SongNoiseNote $7
-        SongNoiseNote $3
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise3
     SongRepeat
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $5
-    SongNoiseNote $7
-    SongNoiseNote $3
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise3
     SongEnd
 ;}
 
@@ -13453,24 +13453,24 @@ song_reachedTheGunship_noise_section5:
 ;{
     SongRepeatSetup $F
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $7
-        SongNoiseNote $4
-        SongNoiseNote $2
-        SongNoiseNote $4
-        SongNoiseNote $7
-        SongNoiseNote $3
-        SongNoiseNote $4
-        SongNoiseNote $2
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise2
     SongRepeat
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $5
-    SongNoiseNote $2
-    SongNoiseNote $5
-    SongNoiseNote $7
-    SongNoiseNote $5
-    SongNoiseNote $7
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise2
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongEnd
 ;}
 
@@ -13479,20 +13479,20 @@ song_reachedTheGunship_noise_section6:
 ;{
     SongRepeatSetup $1E
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $5
-        SongNoiseNote $3
-        SongNoiseNote $2
-        SongNoiseNote $3
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise3
     SongRepeat
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $5
-    SongNoiseNote $2
-    SongNoiseNote $5
-    SongNoiseNote $7
-    SongNoiseNote $5
-    SongNoiseNote $7
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise2
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongEnd
 ;}
 
@@ -13501,20 +13501,20 @@ song_reachedTheGunship_noise_section7:
 ;{
     SongRepeatSetup $E
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $5
-        SongNoiseNote $4
-        SongNoiseNote $3
-        SongNoiseNote $4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise4
     SongRepeat
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $5
-    SongNoiseNote $2
-    SongNoiseNote $5
-    SongNoiseNote $7
-    SongNoiseNote $5
-    SongNoiseNote $7
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise2
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongEnd
 ;}
 
@@ -13523,58 +13523,58 @@ song_reachedTheGunship_noise_section8:
 ;{
     SongRepeatSetup $8
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $5
-        SongNoiseNote $4
-        SongNoiseNote $2
-        SongNoiseNote $4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise4
     SongRepeat
     SongRepeatSetup $4
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $5
-        SongNoiseNote $3
-        SongNoiseNote $5
-        SongNoiseNote $4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise4
     SongRepeat
     SongRepeatSetup $8
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $5
-        SongNoiseNote $5
-        SongNoiseNote $2
-        SongNoiseNote $5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise5
     SongRepeat
     SongRepeatSetup $4
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $5
-        SongNoiseNote $5
-        SongNoiseNote $5
-        SongNoiseNote $5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
     SongRepeat
     SongRepeatSetup $8
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $7
-        SongNoiseNote $7
-        SongNoiseNote $7
-        SongNoiseNote $7
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise7
     SongRepeat
     SongNoteLength_DottedSemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Semiquaver
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Crochet
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Quaver
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Semiquaver
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Semihemidemisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Minum
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongEnd
 ;}
 
@@ -13761,12 +13761,12 @@ song_metroidHive_withIntro_wave_section1:
 song_metroidHive_withIntro_noise_section0:
 ;{
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $6
-    SongNoiseNote $7
-    SongNoiseNote $6
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise6
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise6
     SongNoteLength_DottedCrochet
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongEnd
 ;}
 
@@ -13849,10 +13849,10 @@ song_missilePickup_wave_section0:
 song_missilePickup_noise_section0:
 ;{
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongEnd
 ;}
 
