@@ -3058,7 +3058,7 @@ drawEnemies: ;{ 01:5A11
         ld a, [drawEnemy_pHigh]
         ld h, a
         ; Iterate to next enemy
-        ld de, ENEMY_SLOT_SIZE ; $0020
+        ld de, enemyDataSlotSize ; $0020
         add hl, de
         ; Save enemy pointer
         ld a, l

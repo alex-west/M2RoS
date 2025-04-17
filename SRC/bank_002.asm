@@ -168,7 +168,7 @@ processEnemies: ;{ 02:409E
         ld [enemiesLeftToProcess], a
             jr z, .allEnemiesDone
         ; Reload sizeOf(enemy struct)
-        ld de, ENEMY_SLOT_SIZE ; $0020
+        ld de, enemyDataSlotSize ; $0020
         ; Reload enemy base address
         ldh a, [hEnemyWramAddrLow]
         ld l, a
@@ -390,7 +390,7 @@ deactivateAllEnemies: ;{ 02:4217
     ; Deactivate all 10 enemy data slots
     ld a, $ff
     ld hl, enemyDataSlots
-    ld c, ENEMY_SLOT_SIZE ; $20
+    ld c, enemyDataSlotSize ; $20
     ld d, $10
     .loop_A:
         ld [hl], a

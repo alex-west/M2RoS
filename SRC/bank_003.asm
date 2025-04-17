@@ -602,7 +602,7 @@ ret ;}
 ; WARNING: Does not perform any bounds check
 loadEnemy_getFirstEmptySlot: ;{ 03:42B4
     ld hl, enemyDataSlots
-    ld bc, ENEMY_SLOT_SIZE ; $0020
+    ld bc, enemyDataSlotSize ; $0020
     .findLoop:
         ld a, [hl]
         cp $ff ; Exit with address if enemy is inactive
@@ -883,8 +883,8 @@ scrollEnemies: ;{ 03:6BD2
     ld [scrollEnemies_numEnemiesLeft], a
 
     ; Iterate through enemy slots to find the first enemy
-    ld hl, enemyDataSlots - ENEMY_SLOT_SIZE ;$c5e0
-    ld de, ENEMY_SLOT_SIZE ; $0020
+    ld hl, enemyDataSlots - enemyDataSlotSize ;$c5e0
+    ld de, enemyDataSlotSize ; $0020
 .findNextEnemy: ; Jump back here from the end to find next
     .findLoop:
         add hl, de
@@ -1153,7 +1153,7 @@ queen_initialize: ;{ 03:6D4A
     
     ; Clear enemy slots
     ld hl, enemyDataSlots ; $C600
-    ld bc, ENEMY_SLOT_SIZE * $0D ; $01a0
+    ld bc, enemyDataSlotSize * $0D ; $01a0
     .enemyLoop:
         xor a
         ld [hl+], a
