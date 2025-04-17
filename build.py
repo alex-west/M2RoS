@@ -20,8 +20,8 @@ print('Success\n')
 completed_process = subprocess.run("rgbasm -V", shell=True)
 if completed_process.returncode != 0:
     print("RGBDS not detected. Downloading...")
-    run_or_exit("curl -LJO \"https://github.com/gbdev/rgbds/releases/download/v0.9.0/rgbds-0.9.0-win32.zip\"", "Failed to download.")
-    run_or_exit("tar -xvf rgbds-0.9.0-win32.zip", "Failed to extract RGBDS archive.")
+    run_or_exit("curl -LJO \"https://github.com/gbdev/rgbds/releases/download/v0.9.1/rgbds-0.9.1-win32.zip\"", "Failed to download.")
+    run_or_exit("tar -xvf rgbds-0.9.1-win32.zip", "Failed to extract RGBDS archive.")
     run_or_exit("rgbasm -V", "Unable to use downloaded RGBDS.")
 
 print('RGBDS detected')

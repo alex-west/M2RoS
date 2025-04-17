@@ -45,19 +45,19 @@ musicNotes:
 ; Essentially, this means that the F2 pppp song instruction controls the tempo of the song
 
 ;           _____________________________________________________________________ BPM (in decimal)
-;          |        _____________________________________________________________ 0: 1/32. Demisemiquaver
-;          |       |     ________________________________________________________ 1: 1/16. Semiquaver
-;          |       |    |     ___________________________________________________ 2: 1/8. Quaver
-;          |       |    |    |     ______________________________________________ 3: 1/4. Crochet
-;          |       |    |    |    |     _________________________________________ 4: 1/2. Minum
-;          |       |    |    |    |    |     ____________________________________ 5: 1. Semibreve
-;          |       |    |    |    |    |    |     _______________________________ 6: 3/16. Dotted quaver
-;          |       |    |    |    |    |    |    |     __________________________ 7: 3/8. Dotted crochet
-;          |       |    |    |    |    |    |    |    |     _____________________ 8: 3/4. Dotted minum
-;          |       |    |    |    |    |    |    |    |    |     ________________ 9: 1/12. Triplet quaver
-;          |       |    |    |    |    |    |    |    |    |    |     ___________ Ah: 1/6. Triplet crochet
-;          |       |    |    |    |    |    |    |    |    |    |    |     ______ Bh: 1/64. Hemidemisemiquaver
-;          |       |    |    |    |    |    |    |    |    |    |    |    |     _ Ch: 2. Breve
+;          |        _____________________________________________________________ 0: 1/64. Hemidemisemiquaver
+;          |       |     ________________________________________________________ 1: 1/32. Demisemiquaver
+;          |       |    |     ___________________________________________________ 2: 1/16. Semiquaver
+;          |       |    |    |     ______________________________________________ 3: 1/8. Quaver
+;          |       |    |    |    |     _________________________________________ 4: 1/4. Crochet
+;          |       |    |    |    |    |     ____________________________________ 5: 1/2. Minum
+;          |       |    |    |    |    |    |     _______________________________ 6: 3/32. Dotted Semiquaver
+;          |       |    |    |    |    |    |    |     __________________________ 7: 3/16. Dotted Quaver
+;          |       |    |    |    |    |    |    |    |     _____________________ 8: 3/8. Dotted Crochet
+;          |       |    |    |    |    |    |    |    |    |     ________________ 9: 1/24. Triplet Semiquaver
+;          |       |    |    |    |    |    |    |    |    |    |     ___________ Ah: 1/12. Triplet Quaver
+;          |       |    |    |    |    |    |    |    |    |    |    |     ______ Bh: 1/128. Semihemidemisemiquaver
+;          |       |    |    |    |    |    |    |    |    |    |    |    |     _ Ch: 1. Semibreve
 ;          |       |    |    |    |    |    |    |    |    |    |    |    |    |
 tempoTable_448: db $01, $01, $02, $04, $08, $10, $03, $06, $0c, $01, $03, $01, $20
 tempoTable_224: db $01, $02, $04, $08, $10, $20, $06, $0c, $18, $02, $05, $01, $40
@@ -6011,7 +6011,7 @@ song_babyMetroid_square2_section9:
 song_babyMetroid_wave_section5:
 ;{
     SongOptions
-        WaveOptions $4113, 3, $0
+        WaveOptions wavePatterns.wave0, 3, $0
 ;}
 
 ; $6060
@@ -6257,7 +6257,7 @@ song_metroidQueenBattle_square2_section2:
 song_metroidQueenBattle_wave_section0:
 ;{
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
     SongRepeatSetup $A
         SongNoteLength_DottedQuaver
         SongNote "A2"
@@ -6272,7 +6272,7 @@ song_metroidQueenBattle_wave_section0:
 song_metroidQueenBattle_wave_section1:
 ;{
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
     SongRepeatSetup $4
         SongNoteLength_Quaver
         SongNote "A3"
@@ -6976,7 +6976,7 @@ song_chozoRuins_wave_section0:
 song_chozoRuins_wave_section3:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_Quaver
     SongRest
     SongNoteLength_Semiquaver
@@ -7728,7 +7728,7 @@ song_mainCaves_square2_section3:
 song_mainCaves_wave_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_Demisemiquaver
     SongNote "C2"
     SongNote "F2"
@@ -7745,7 +7745,7 @@ song_mainCaves_wave_section0:
 song_mainCaves_wave_section1:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_Quaver
     SongNote "C4"
     SongNoteLength_Semiquaver
@@ -7795,7 +7795,7 @@ song_mainCaves_wave_section1:
 song_mainCaves_wave_section2:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_DottedSemiquaver
     SongNote "C4"
     Echo1
@@ -7940,7 +7940,7 @@ song_mainCaves_wave_section2:
 song_mainCaves_wave_section3:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_DottedQuaver
     SongNote "F3"
     Echo1
@@ -8791,7 +8791,7 @@ song_subCaves3_square2_section1:
 song_subCaves3_wave_section1:
 ;{
     SongOptions
-        WaveOptions $418B, 3, $3
+        WaveOptions wavePatterns.wave4, 3, $3
     SongNoteLength_DottedCrochet
     SongRepeatSetup $6
         SongNote "B3"
@@ -8939,7 +8939,7 @@ song_finalCaves_square2_section0:
 song_finalCaves_wave_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $4
+        WaveOptions wavePatterns.wave3, 2, $4
     SongRepeatSetup $5
         SongNoteLength_Semibreve
         SongRest
@@ -9283,7 +9283,7 @@ song_metroidHive_square2_section5:
 song_metroidHive_wave_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongRepeatSetup $A
         SongNoteLength_Minum
         SongNote "B2"
@@ -9492,7 +9492,7 @@ song_itemGet_square2_section0:
 song_itemGet_wave_section0:
 ;{
     SongOptions
-        WaveOptions $4123, 1, $0
+        WaveOptions wavePatterns.wave1, 1, $0
     SongNoteLength_Quaver
     SongRest
     SongNoteLength_Semiquaver
@@ -9599,7 +9599,7 @@ song_metroidQueenHallway_square1_section0:
 song_metroidQueenHallway_wave_section0:
 ;{
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
 ;}
 
 ; $6D7B
@@ -9871,7 +9871,7 @@ song_metroidBattle_square2_section1:
 song_metroidBattle_wave_section0:
 ;{
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
     SongNoteLength_Demisemiquaver
     SongNote "D5"
     SongNote "D3"
@@ -9889,7 +9889,7 @@ song_metroidBattle_wave_section0:
 song_metroidBattle_wave_section1:
 ;{
     SongOptions
-        WaveOptions $418B, 2, $7
+        WaveOptions wavePatterns.wave4, 2, $7
     SongNoteLength_Quaver
     SongNote "A3"
     SongNote "A3"
@@ -9908,7 +9908,7 @@ song_metroidBattle_wave_section1:
         SongNote "A3"
     SongRepeat
     SongOptions
-        WaveOptions $417B, 2, $7
+        WaveOptions wavePatterns.wave3, 2, $7
     SongNoteLength_Demisemiquaver
     SongNote "Db7"
     SongNote "Gb7"
@@ -10315,7 +10315,7 @@ unused6FB9_section2:
 song_killedMetroid_wave_section0:
 ;{
     SongOptions
-        WaveOptions $416B, 1, $0
+        WaveOptions wavePatterns.wave2, 1, $0
     SongNoteLength_Quaver
     SongRest
     SongNoteLength_Demisemiquaver
@@ -10330,7 +10330,7 @@ song_killedMetroid_wave_section0:
     SongNoteLength_Crochet
     SongRest
     SongOptions
-        WaveOptions $416B, 3, $0
+        WaveOptions wavePatterns.wave2, 3, $0
     SongNoteLength_Semihemidemisemiquaver
     SongNote "C4"
     SongNote "G4"
@@ -10448,7 +10448,7 @@ song_title_wave_section4:
 song_title_wave_section1:
 ;{
     SongOptions
-        WaveOptions $4123, 3, $3
+        WaveOptions wavePatterns.wave1, 3, $3
     SongNoteLength_Semibreve
     SongRest
     SongRest
@@ -10513,7 +10513,7 @@ song_title_wave_section2:
     SongNote "Bb6"
     Echo1
     SongOptions
-        WaveOptions $4123, 2, $3
+        WaveOptions wavePatterns.wave1, 2, $3
     SongNoteLength_Crochet
     SongRest
     SongNoteLength_Semiquaver
@@ -10579,7 +10579,7 @@ song_title_wave_section2:
 song_title_wave_section3:
 ;{
     SongOptions
-        WaveOptions $4113, 2, $0
+        WaveOptions wavePatterns.wave0, 2, $0
     SongNoteLength_Quaver
     SongNote "F7"
     Echo1
@@ -10862,7 +10862,7 @@ song_title_square1_section9:
 song_title_wave_section5:
 ;{
     SongOptions
-        WaveOptions $41AB, 1, $0
+        WaveOptions wavePatterns.wave6, 1, $0
     SongNoteLength_Demisemiquaver
     SongRest
     SongNoteLength_Quaver
@@ -10926,7 +10926,7 @@ song_title_wave_section5:
 song_title_wave_section6:
 ;{
     SongOptions
-        WaveOptions $418B, 1, $0
+        WaveOptions wavePatterns.wave4, 1, $0
     SongNoteLength_Semiquaver
     SongRest
     SongNoteLength_DottedSemiquaver
@@ -11095,7 +11095,7 @@ song_title_wave_section6:
     Echo1
     SongNote "D5"
     SongOptions
-        WaveOptions $418B, 1, $0
+        WaveOptions wavePatterns.wave4, 1, $0
     SongNoteLength_Demisemiquaver
     Echo1
     SongNoteLength_DottedSemiquaver
@@ -11281,7 +11281,7 @@ song_title_wave_section6:
 song_title_wave_section7:
 ;{
     SongOptions
-        WaveOptions $416B, 1, $0
+        WaveOptions wavePatterns.wave2, 1, $0
     SongNoteLength_Demisemiquaver
     Echo1
     SongNoteLength_Semiquaver
@@ -11299,7 +11299,7 @@ song_title_wave_section7:
         Echo1
     SongRepeat
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
     SongRepeatSetup $3
         SongNoteLength_Semiquaver
         SongNote "C3"
@@ -11310,7 +11310,7 @@ song_title_wave_section7:
         Echo1
     SongRepeat
     SongOptions
-        WaveOptions $416B, 3, $0
+        WaveOptions wavePatterns.wave2, 3, $0
     SongRepeatSetup $5
         SongNoteLength_Semiquaver
         SongNote "C3"
@@ -11473,7 +11473,7 @@ song_samusFanfare_square1_section0:
 song_samusFanfare_wave_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_DottedCrochet
     SongRest
     SongNoteLength_Semiquaver
@@ -12862,7 +12862,7 @@ song_reachedTheGunship_square2_section9:
 song_reachedTheGunship_wave_section0:
 ;{
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
     SongRepeatSetup $2
         SongNoteLength_Hemidemisemiquaver
         SongNote "C3"
@@ -12976,7 +12976,7 @@ song_reachedTheGunship_square1_section1:
 song_reachedTheGunship_wave_section1:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_Crochet
     SongNote "C6"
     SongNoteLength_DottedQuaver
@@ -13052,7 +13052,7 @@ song_reachedTheGunship_wave_section1:
 song_reachedTheGunship_wave_section2:
 ;{
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
     SongRepeatSetup $7
         SongNoteLength_Demisemiquaver
         SongNote "C3"
@@ -13075,7 +13075,7 @@ song_reachedTheGunship_wave_section2:
 song_reachedTheGunship_wave_section3:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_Crochet
     SongNote "C4"
     SongNote "F3"
@@ -13165,7 +13165,7 @@ song_reachedTheGunship_wave_section8:
     SongNote "C4"
     SongNote "F4"
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
     SongRepeatSetup $2
         SongNoteLength_Semiquaver
         SongNote "C4"
@@ -13248,7 +13248,7 @@ song_reachedTheGunship_wave_section8:
     SongNote "G4"
     Echo1
     SongOptions
-        WaveOptions $416B, 1, $0
+        WaveOptions wavePatterns.wave2, 1, $0
     SongNoteLength_Demisemiquaver
     SongNote "G3"
     Echo1
@@ -13728,7 +13728,7 @@ song_metroidHive_withIntro_square2_section3:
 song_metroidHive_withIntro_wave_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_Demisemiquaver
     SongNote "D5"
     SongNote "D3"
@@ -13745,7 +13745,7 @@ song_metroidHive_withIntro_wave_section0:
 song_metroidHive_withIntro_wave_section1:
 ;{
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
     SongNoteLength_Demisemiquaver
     SongNote "C2"
     Echo1
@@ -13833,7 +13833,7 @@ song_missilePickup_square1_section0:
 song_missilePickup_wave_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_Demisemiquaver
     SongNote "Bb4"
     Echo1
@@ -13913,7 +13913,7 @@ unused7D56_section0:
 song_babyMetroid_wave_section3:
 ;{
     SongOptions
-        WaveOptions $417B, 3, $0
+        WaveOptions wavePatterns.wave3, 3, $0
     SongEnd
 ;}
 
@@ -13921,7 +13921,7 @@ song_babyMetroid_wave_section3:
 unused7D60_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongEnd
 ;}
 
@@ -13929,7 +13929,7 @@ unused7D60_section0:
 unused7D65_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 1, $0
+        WaveOptions wavePatterns.wave3, 1, $0
     SongEnd
 ;}
 
@@ -14163,7 +14163,7 @@ song_subCaves1_wave_section0:
 song_subCaves4_wave_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongRepeatSetup $2
         SongNoteLength_Semiquaver
         SongNote "C4"
@@ -14209,7 +14209,7 @@ song_title_wave_section0:
 song_babyMetroid_wave_section2:
 ;{
     SongOptions
-        WaveOptions $416B, 3, $0
+        WaveOptions wavePatterns.wave2, 3, $0
     SongNoteLength_Crochet
     SongRest
     SongEnd
@@ -14244,7 +14244,7 @@ song_babyMetroid_wave_section0:
 song_babyMetroid_wave_section1:
 ;{
     SongOptions
-        WaveOptions $416B, 3, $0
+        WaveOptions wavePatterns.wave2, 3, $0
     SongNoteLength_Minum
     SongRest
     SongEnd

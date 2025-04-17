@@ -135,35 +135,35 @@ macro Echo2
 endm
 
 macro SongNote ; [note name in "[A-G]b?[2-7]" format]
-    def _note   equs strsub(\1, 0, strlen(\1) - 1)
+    def _note   equs strsub(\1, 1, strlen(\1) - 1)
     def _octave equs strsub(\1, -1, 1)
     
     def _i_octave equ _octave - 2
     static_assert _i_octave < 6, "Invalid note octave"
     
-    if strcmp("\"{_note}\"", "\"C\"") == 0
+    if strcmp("{_note}", "C") == 0
         def _i_note equ 0
-    elif strcmp("\"{_note}\"", "\"Db\"") == 0
+    elif strcmp("{_note}", "Db") == 0
         def _i_note equ 1
-    elif strcmp("\"{_note}\"", "\"D\"") == 0
+    elif strcmp("{_note}", "D") == 0
         def _i_note equ 2
-    elif strcmp("\"{_note}\"", "\"Eb\"") == 0
+    elif strcmp("{_note}", "Eb") == 0
         def _i_note equ 3
-    elif strcmp("\"{_note}\"", "\"E\"") == 0
+    elif strcmp("{_note}", "E") == 0
         def _i_note equ 4
-    elif strcmp("\"{_note}\"", "\"F\"") == 0
+    elif strcmp("{_note}", "F") == 0
         def _i_note equ 5
-    elif strcmp("\"{_note}\"", "\"Gb\"") == 0
+    elif strcmp("{_note}", "Gb") == 0
         def _i_note equ 6
-    elif strcmp("\"{_note}\"", "\"G\"") == 0
+    elif strcmp("{_note}", "G") == 0
         def _i_note equ 7
-    elif strcmp("\"{_note}\"", "\"Ab\"") == 0
+    elif strcmp("{_note}", "Ab") == 0
         def _i_note equ 8
-    elif strcmp("\"{_note}\"", "\"A\"") == 0
+    elif strcmp("{_note}", "A") == 0
         def _i_note equ 9
-    elif strcmp("\"{_note}\"", "\"Bb\"") == 0
+    elif strcmp("{_note}", "Bb") == 0
         def _i_note equ $A
-    elif strcmp("\"{_note}\"", "\"B\"") == 0
+    elif strcmp("{_note}", "B") == 0
         def _i_note equ $B
     else
         fail "Invalid note name"
