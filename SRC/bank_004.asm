@@ -45,19 +45,19 @@ musicNotes:
 ; Essentially, this means that the F2 pppp song instruction controls the tempo of the song
 
 ;           _____________________________________________________________________ BPM (in decimal)
-;          |        _____________________________________________________________ 0: 1/32. Demisemiquaver
-;          |       |     ________________________________________________________ 1: 1/16. Semiquaver
-;          |       |    |     ___________________________________________________ 2: 1/8. Quaver
-;          |       |    |    |     ______________________________________________ 3: 1/4. Crochet
-;          |       |    |    |    |     _________________________________________ 4: 1/2. Minum
-;          |       |    |    |    |    |     ____________________________________ 5: 1. Semibreve
-;          |       |    |    |    |    |    |     _______________________________ 6: 3/16. Dotted quaver
-;          |       |    |    |    |    |    |    |     __________________________ 7: 3/8. Dotted crochet
-;          |       |    |    |    |    |    |    |    |     _____________________ 8: 3/4. Dotted minum
-;          |       |    |    |    |    |    |    |    |    |     ________________ 9: 1/12. Triplet quaver
-;          |       |    |    |    |    |    |    |    |    |    |     ___________ Ah: 1/6. Triplet crochet
-;          |       |    |    |    |    |    |    |    |    |    |    |     ______ Bh: 1/64. Hemidemisemiquaver
-;          |       |    |    |    |    |    |    |    |    |    |    |    |     _ Ch: 2. Breve
+;          |        _____________________________________________________________ 0: 1/64. Hemidemisemiquaver
+;          |       |     ________________________________________________________ 1: 1/32. Demisemiquaver
+;          |       |    |     ___________________________________________________ 2: 1/16. Semiquaver
+;          |       |    |    |     ______________________________________________ 3: 1/8. Quaver
+;          |       |    |    |    |     _________________________________________ 4: 1/4. Crochet
+;          |       |    |    |    |    |     ____________________________________ 5: 1/2. Minum
+;          |       |    |    |    |    |    |     _______________________________ 6: 3/32. Dotted Semiquaver
+;          |       |    |    |    |    |    |    |     __________________________ 7: 3/16. Dotted Quaver
+;          |       |    |    |    |    |    |    |    |     _____________________ 8: 3/8. Dotted Crochet
+;          |       |    |    |    |    |    |    |    |    |     ________________ 9: 1/24. Triplet Semiquaver
+;          |       |    |    |    |    |    |    |    |    |    |     ___________ Ah: 1/12. Triplet Quaver
+;          |       |    |    |    |    |    |    |    |    |    |    |     ______ Bh: 1/128. Semihemidemisemiquaver
+;          |       |    |    |    |    |    |    |    |    |    |    |    |     _ Ch: 1. Semibreve
 ;          |       |    |    |    |    |    |    |    |    |    |    |    |    |
 tempoTable_448: db $01, $01, $02, $04, $08, $10, $03, $06, $0c, $01, $03, $01, $20
 tempoTable_224: db $01, $02, $04, $08, $10, $20, $06, $0c, $18, $02, $05, $01, $40
@@ -72,10 +72,10 @@ tempoTable_50:  db $04, $09, $12, $24, $48, $90, $1b, $36, $6c, $0c, $1a, $02, $
 
 wavePatterns:
 ;{
-.wave0 ; $4113
+.wave0: ; $4113
     db $ee, $ee, $a5, $e5, $e0, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 
-.wave1 ; $4123
+.wave1: ; $4123
     db $cc, $cc, $82, $c3, $c0, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 
 ; Unused data
@@ -84,19 +84,19 @@ wavePatterns:
     db $99, $aa, $bb, $cc, $bb, $aa, $77, $33, $11, $34, $67, $89, $aa, $a7, $87, $78
     db $ab, $ef, $fe, $da, $97, $43, $11, $31
 
-.wave2 ; $416B
+.wave2: ; $416B
     db $EE, $EE, $EE, $00, $00, $00, $EE, $EE, $EE, $00, $00, $00, $EE, $00, $EE, $00
 
-.wave3 ; $417B
+.wave3: ; $417B
     db $AA, $AA, $AA, $00, $00, $00, $AA, $AA, $AA, $00, $00, $00, $AA, $00, $AA, $00
 
-.wave4 ; $418B
+.wave4: ; $418B
     db $77, $77, $77, $00, $00, $00, $77, $77, $77, $00, $00, $00, $77, $00, $77, $00
 
-.wave5 ; $419B
+.wave5: ; $419B
     db $44, $00, $22, $00, $00, $00, $22, $44, $44, $00, $00, $00, $33, $00, $44, $00
 
-.wave6 ; $41AB
+.wave6: ; $41AB
     db $FF, $FF, $00, $00, $FF, $FF, $00, $00, $FF, $FF, $00, $00, $FF, $FF, $00, $00
 ;}
 
@@ -127,53 +127,53 @@ songNoiseChannelOptionSets:
 ;     r: Restart sound
 ;     s: Stop output after sound has finished (according to sound length)
 
-;       _____________ Sound length
-;      |    _________ Envelope
-;      |   |    _____ Polynomial counter
-;      |   |   |    _ Counter control
-;      |   |   |   |
-    db $00,$08,$00,$80
-    db $00,$21,$3D,$80 ; Can never be used (in song handler, '1' disables sound channel)
-    db $30,$40,$31,$C0
-    db $00,$31,$3E,$80
-    db $35,$F7,$6E,$C0
-    db $30,$61,$4B,$C0
-    db $30,$C1,$6D,$C0
-    db $00,$81,$4B,$80
-    db $00,$F6,$6D,$80
-    db $00,$B6,$6D,$80
-    db $00,$77,$6D,$80
-    db $00,$47,$6D,$80
-    db $00,$97,$6B,$80
-    db $00,$77,$6B,$80
-    db $00,$57,$6B,$80
-    db $00,$37,$6B,$80
-    db $00,$80,$6D,$80
-    db $00,$40,$4D,$80
-    db $00,$1F,$47,$80
-    db $00,$40,$47,$80
-    db $00,$40,$46,$80
-    db $00,$40,$45,$80
-    db $00,$40,$44,$80
-    db $00,$40,$43,$80
-    db $00,$40,$42,$80
-    db $00,$40,$41,$80
-    db $00,$1B,$37,$80
-    db $00,$A5,$27,$80
-    db $00,$1F,$37,$80
-    db $00,$27,$46,$80
-    db $00,$27,$45,$80
-    db $00,$1B,$6B,$80
-    db $00,$1A,$6B,$80
-    db $00,$19,$6B,$80
-    db $00,$1F,$37,$80
-    db $00,$1C,$6C,$80
-    db $00,$51,$4D,$80
-    db $30,$F1,$6F,$C0
-    db $38,$A1,$3B,$C0
-    db $38,$A1,$3A,$C0
-    db $00,$F4,$7A,$80
-    db $00,$F4,$7B,$80
+;             _____________ Sound length
+;            |    _________ Envelope
+;            |   |    _____ Polynomial counter
+;            |   |   |    _ Counter control
+;            |   |   |   |
+.noise0:  db $00,$08,$00,$80 ; Can never be used (in song handler, $00 ends current section)
+.noise1:  db $00,$21,$3D,$80
+.noise2:  db $30,$40,$31,$C0
+.noise3:  db $00,$31,$3E,$80
+.noise4:  db $35,$F7,$6E,$C0
+.noise5:  db $30,$61,$4B,$C0
+.noise6:  db $30,$C1,$6D,$C0
+.noise7:  db $00,$81,$4B,$80
+.noise8:  db $00,$F6,$6D,$80
+.noise9:  db $00,$B6,$6D,$80
+.noiseA:  db $00,$77,$6D,$80
+.noiseB:  db $00,$47,$6D,$80
+.noiseC:  db $00,$97,$6B,$80
+.noiseD:  db $00,$77,$6B,$80
+.noiseE:  db $00,$57,$6B,$80
+.noiseF:  db $00,$37,$6B,$80
+.noise10: db $00,$80,$6D,$80 ; unused
+.noise11: db $00,$40,$4D,$80 ; unused
+.noise12: db $00,$1F,$47,$80
+.noise13: db $00,$40,$47,$80
+.noise14: db $00,$40,$46,$80
+.noise15: db $00,$40,$45,$80
+.noise16: db $00,$40,$44,$80
+.noise17: db $00,$40,$43,$80
+.noise18: db $00,$40,$42,$80
+.noise19: db $00,$40,$41,$80
+.noise1A: db $00,$1B,$37,$80
+.noise1B: db $00,$A5,$27,$80
+.noise1C: db $00,$1F,$37,$80 ; unused
+.noise1D: db $00,$27,$46,$80
+.noise1E: db $00,$27,$45,$80
+.noise1F: db $00,$1B,$6B,$80
+.noise20: db $00,$1A,$6B,$80
+.noise21: db $00,$19,$6B,$80
+.noise22: db $00,$1F,$37,$80 ; unused
+.noise23: db $00,$1C,$6C,$80 ; unused
+.noise24: db $00,$51,$4D,$80
+.noise25: db $30,$F1,$6F,$C0
+.noise26: db $38,$A1,$3B,$C0 ; unused
+.noise27: db $38,$A1,$3A,$C0 ; unused
+.noise28: db $00,$F4,$7A,$80 ; unused
+.noise29: db $00,$F4,$7B,$80 ; unused
 ;}
 
 ; Song sound channel effect tables
@@ -320,7 +320,7 @@ playSongInterruption:
     ld a, [songProcessingStateSize]
     ld b, a
 
-    .copyLoop
+    .copyLoop:
         ld a, [de]
         ld [hl+], a
         inc de
@@ -348,7 +348,7 @@ startEndingSongInterruption:
     ld a, [songProcessingStateSize]
     ld b, a
 
-    .copyStateLoop
+    .copyStateLoop:
         ld a, [de]
         ld [hl+], a
         inc de
@@ -360,7 +360,7 @@ startEndingSongInterruption:
     ld hl, audioChannelOptions
     ld de, rAUD1SWEEP
 
-    .copyOptionsLoop
+    .copyOptionsLoop:
         ld a, [hl+]
         ld [de], a
         inc e
@@ -392,7 +392,7 @@ finishEndingSongInterruption:
     jr z, .endIf
         ld a, [sfxPlayingBackup_lowHealthBeep]
         ld [sfxPlaying_lowHealthBeep], a
-        .endIf
+        .endIf:
 
     ld a, [audioChannelOutputStereoFlagsBackup]
     ld [audioChannelOutputStereoFlags], a
@@ -444,11 +444,11 @@ handleAudio_handleFadingOutMusic:
 
     jp handleSongAndSoundEffects
 
-.timerA0
+.timerA0:
     ld a, $65
     jr .merge
 
-.timer70
+.timer70:
     xor a
     ld [songChannelEnable_noise], a
     ld a, $60
@@ -457,14 +457,14 @@ handleAudio_handleFadingOutMusic:
     ld a, $45
     jr .merge
 
-.timer30
+.timer30:
     ld a, $25
     jr .merge
 
-.timer10
+.timer10:
     ld a, $13
 
-.merge
+.merge:
     ld [songNoteEnvelope_square1], a
     ld [songNoteEnvelope_square2], a
     ld [songNoteEnvelope_noise], a
@@ -472,7 +472,7 @@ handleAudio_handleFadingOutMusic:
     ld [ramCF5E], a
     jp handleSongAndSoundEffects
 
-.timer0
+.timer0:
     xor a
     ld [songPlaying], a
     ld [songInterruptionPlaying], a
@@ -502,9 +502,9 @@ handleChannelSoundEffect_square1:
         ld hl, square1Sfx_initPointers
         call loadPointerFromTable
         jp hl
-    .endif_sfxRequested
+    .endif_sfxRequested:
 
-.playing
+.playing:
     ld a, [sfxPlaying_square1]
     and a
     ret z
@@ -514,7 +514,7 @@ handleChannelSoundEffect_square1:
         ld hl, square1Sfx_playbackPointers
         call loadPointerFromTable
         jp hl
-    .endif_sfxPlaying
+    .endif_sfxPlaying:
 
     xor a
     ld [sfxPlaying_square1], a
@@ -536,7 +536,7 @@ handleChannelSoundEffect_square2:
     ld hl, songSoundEffectInitialisationFunctionPointers_square2
     call loadPointerFromTable
     jp hl
-    .endif_sfxRequested
+    .endif_sfxRequested:
 
     ld a, [sfxPlaying_square2]
     and a
@@ -547,7 +547,7 @@ handleChannelSoundEffect_square2:
         ld hl, songSoundEffectPlaybackFunctionPointers_square2
         call loadPointerFromTable
         jp hl
-    .endif_sfxPlaying
+    .endif_sfxPlaying:
 
     xor a
     ld [sfxPlaying_square2], a
@@ -584,9 +584,9 @@ handleChannelSoundEffect_noise:
         ld hl, songSoundEffectInitialisationFunctionPointers_noise
         call loadPointerFromTable
         jp hl
-    .endif_sfxRequested
+    .endif_sfxRequested:
 
-.playing
+.playing:
     ld a, [sfxPlaying_noise]
     and a
     ret z
@@ -596,7 +596,7 @@ handleChannelSoundEffect_noise:
         ld hl, songSoundEffectPlaybackFunctionPointers_noise
         call loadPointerFromTable
         jp hl
-    .endif_sfxPlaying
+    .endif_sfxPlaying:
 
     xor a
     ld [.playing], a ; Bug, should be sfxPlaying_noise. This branch is never taken anyway though
@@ -622,7 +622,7 @@ handleChannelSoundEffect_wave:
     call loadPointerFromTable
     jp hl
 
-.soundEffect0
+.soundEffect0:
     ld a, [sfxPlaying_wave]
     and a
     ret z
@@ -638,7 +638,7 @@ handleChannelSoundEffect_wave:
     ld [sfxPlaying_wave], a
     ret
 
-.soundEffectFF
+.soundEffectFF:
     xor a
     ldh [rAUD3ENA], a
     ld a, [songWavePatternDataPointer]
@@ -681,7 +681,7 @@ handleSong:
         call clearChannelSoundEffect_square1
         call clearChannelSoundEffect_noise
         ld a, [songRequest]
-    .endIf
+    .endIf:
 
     cp $21
         jr nc, handleSongPlaying
@@ -763,7 +763,7 @@ handleSongPlaying:
     ldh [rAUD1LOW], a
     ld a, [songFrequency_working+1]
     ldh [rAUD1HIGH], a
-    .endSquare1
+    .endSquare1:
 
     xor a
     ld [songOptionsSetFlag_working], a
@@ -798,7 +798,7 @@ handleSongPlaying:
     ldh [rAUD2LOW], a
     ld a, [songFrequency_working+1]
     ldh [rAUD2HIGH], a
-    .endSquare2
+    .endSquare2:
 
     xor a
     ld [songOptionsSetFlag_working], a
@@ -834,7 +834,7 @@ handleSongPlaying:
     ld a, [songFrequency_working+1]
     res 7, a
     ldh [rNR34], a
-    .endWave
+    .endWave:
 
     xor a
     ld [songOptionsSetFlag_working], a
@@ -852,7 +852,7 @@ handleSongPlaying:
     dec a
     ld [songInstructionTimer_noise], a
     ret
-    .endNoise
+    .endNoise:
 
     ld a, [songChannelEnable_square1]
     and a
@@ -1024,7 +1024,7 @@ initializeAudio:
     ldh [rNR51], a
     ld hl, sfxRequest_square1
 
-    .loop
+    .loop:
         ld [hl], $00
         inc hl
         ld a, h
@@ -1093,7 +1093,7 @@ writeToWavePatternRam:
     push de
     ld c, _AUD3WAVERAM & $FF
 
-    .loop
+    .loop:
         ld a, [de]
         ldh [c], a
         inc de
@@ -1109,32 +1109,32 @@ writeToWavePatternRam:
 
 setChannelOptionSet:
 ;{
-.square1
+.square1:
     push hl
     ld hl, rAUD1SWEEP
     ld b, $05
     jr .merge
 
-.square2
+.square2:
     push hl
     ld hl, rAUD2LEN
     ld b, $04
     jr .merge
 
-.wave
+.wave:
     push hl
     ld hl, rAUD3ENA
     ld b, $05
     jr .merge
 
-.noise
+.noise:
     push hl
     ld hl, rAUD4LEN
     ld b, $04
     jr .merge
 
-.merge
-    .copyLoop
+.merge:
+    .copyLoop:
         ld a, [de]
         ld [hl+], a
         inc de
@@ -1248,49 +1248,49 @@ handleAudio_paused:
 
 pausedOptionSets:
 ;{
-.frame40 ; $487C
+.frame40: ; $487C
     LengthOptions $0
     DescendingEnvelopeOptions 7, $8
     PolynomialCounterOptions 1, 0, $3
     CounterControlOptions 0
 
-.frame3D ; $4880
+.frame3D: ; $4880
     LengthOptions $0
     DescendingEnvelopeOptions 3, $8
     PolynomialCounterOptions 5, 1, $5
     CounterControlOptions 0
 
-.frame3F ; $4884
+.frame3F: ; $4884
     DescendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $F
     FrequencyOptions $7C0, 0
 
-.frame3A ; $4889
+.frame3A: ; $4889
     DescendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $C
     FrequencyOptions $7D0, 0
 
-.frame32 ; $488E
+.frame32: ; $488E
     LengthOptions $0
     DescendingEnvelopeOptions 3, $5
     PolynomialCounterOptions 4, 1, $5
     CounterControlOptions 0
 
-.frame2F ; $4892
+.frame2F: ; $4892
     DescendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $7
     FrequencyOptions $7D5, 0
 
-.frame27 ; $4897
+.frame27: ; $4897
     LengthOptions $0
     DescendingEnvelopeOptions 6, $3
     PolynomialCounterOptions 3, 1, $5
     CounterControlOptions 0
 
-.frame24 ; $489B
+.frame24: ; $489B
     DescendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $4
@@ -1307,7 +1307,7 @@ loadSongHeader:
         ld a, $01
         ld [songFrequencyTweak_square2], a
         pop af
-    .endIf_frequencyTweak
+    .endIf_frequencyTweak:
 
     res 0, a
     ld [songTranspose], a
@@ -1345,14 +1345,14 @@ loadSongHeader:
         ld a, $80
         ldh [rAUD1HIGH], a
         jr .endIf_square1
-    .else_square1
+    .else_square1:
         ld a, $01
         ld [songChannelEnable_square1], a
         ld a, [hl+]
         ld [songChannelInstructionPointer_square1+1], a
         ld a, [hl]
         ld [songChannelInstructionPointer_square1], a
-    .endIf_square1
+    .endIf_square1:
 
     ld a, [songSectionPointer_square2]
     ld h, a
@@ -1368,14 +1368,14 @@ loadSongHeader:
         ld a, $80
         ldh [rAUD2HIGH], a
         jr .endIf_square2
-    .else_square2
+    .else_square2:
         ld a, $02
         ld [songChannelEnable_square2], a
         ld a, [hl+]
         ld [songChannelInstructionPointer_square2+1], a
         ld a, [hl]
         ld [songChannelInstructionPointer_square2], a
-    .endIf_square2
+    .endIf_square2:
 
     ld a, [songSectionPointer_wave]
     ld h, a
@@ -1389,14 +1389,14 @@ loadSongHeader:
         xor a
         ldh [rAUD3ENA], a
         jr .endIf_wave
-    .else_wave
+    .else_wave:
         ld a, $03
         ld [songChannelEnable_wave], a
         ld a, [hl+]
         ld [songChannelInstructionPointer_wave+1], a
         ld a, [hl]
         ld [songChannelInstructionPointer_wave], a
-    .endIf_wave
+    .endIf_wave:
 
     ld a, [songSectionPointer_noise]
     ld h, a
@@ -1408,14 +1408,14 @@ loadSongHeader:
         xor a
         ld [songChannelEnable_noise], a
         jr .endIf_noise
-    .else_noise
+    .else_noise:
         ld a, $04
         ld [songChannelEnable_noise], a
         ld a, [hl+]
         ld [songChannelInstructionPointer_noise+1], a
         ld a, [hl]
         ld [songChannelInstructionPointer_noise], a
-    .endIf_noise
+    .endIf_noise:
 
     ld a, $01
     ld [songInstructionTimer_square1], a
@@ -1455,7 +1455,7 @@ handleSong_loadNextChannelSound_square1:
         ld [songSweep_square1], a
         ld a, [songSoundLength_working]
         ld [songSoundLength_square1], a
-    .endIf
+    .endIf:
 
     ld a, [songEnvelope_working]
     ld [songEnvelope_square1], a
@@ -1508,7 +1508,7 @@ handleSong_loadNextChannelSound_square2:
     jr nz, .endIf_setSoundLength
         ld a, [songSoundLength_working]
         ld [songSoundLength_square2], a
-    .endIf_setSoundLength
+    .endIf_setSoundLength:
 
     ld a, [songEnvelope_working]
     ld [songEnvelope_square2], a
@@ -1534,15 +1534,15 @@ handleSong_loadNextChannelSound_square2:
             inc hl
             inc hl
             jr .endIf
-        .else
+        .else:
             inc hl
-        .endIf
+        .endIf:
 
         ld a, l
         ld [songFrequency_square2], a
         ld a, h
         ld [songFrequency_square2+1], a
-    .endIf_tweakFrequency
+    .endIf_tweakFrequency:
 
     ld a, [songEnvelope_square2]
     ldh [rAUD2ENV], a
@@ -1658,7 +1658,7 @@ loadNextSound:
     and a
         jp nz, .loop
 
-.nextInstructionList
+.nextInstructionList:
     ld a, [songSectionPointer_working]
     ld h, a
     ld a, [songSectionPointer_working+1]
@@ -1680,7 +1680,7 @@ loadNextSound:
         xor a
         ld [workingSoundChannel], a
         ret
-    .endif_endOfInstructionLists
+    .endif_endOfInstructionLists:
 
     ld a, [hl]
     cp $f0
@@ -1735,7 +1735,7 @@ loadNextSound:
         ld [songInstructionTimer_working], a
         ld [songInstructionLength_working], a
         inc hl
-    .endIf_instructionLength
+    .endIf_instructionLength:
 
     ld a, [songInstructionLength_working]
     ld [songInstructionTimer_working], a
@@ -1744,11 +1744,11 @@ loadNextSound:
         jp z, .noise
     ld a, [hl+]
     cp $01
-        jr z, .mute
+        jr z, .songRest
     cp $03
-        jp z, .songInstruction3
+        jp z, .echo1
     cp $05
-        jp z, .songInstruction5
+        jp z, .echo2
         
     push hl
     push af
@@ -1764,7 +1764,7 @@ loadNextSound:
         set 2, [hl]
         ld a, $80
         ld [songEnable_working], a
-    .endIf_wave
+    .endIf_wave:
 
     pop af
     ld b, a
@@ -1773,7 +1773,7 @@ loadNextSound:
     jr z, .endIf_noise
         ld a, [songTranspose]
         add b
-    .endIf_noise
+    .endIf_noise:
 
     ld c, a
     ld b, $00
@@ -1788,7 +1788,7 @@ loadNextSound:
     pop hl
     ret
 
-.mute:
+.songRest:
     ld a, [workingSoundChannel]
     cp $03
     jr z, .endIf_restartChannel
@@ -1797,7 +1797,7 @@ loadNextSound:
         ld a, $80
         ld [songCounterControl_working], a
         ret
-    .endIf_restartChannel
+    .endIf_restartChannel:
 
     xor a
     ld [songEnable_working], a
@@ -1807,7 +1807,7 @@ loadNextSound:
 .noise:
     ld a, [hl+]
     cp $01
-        jr z, .mute
+        jr z, .songRest
 
     push hl
     ld c, a
@@ -1825,23 +1825,23 @@ loadNextSound:
     pop hl
     ret
 
-.songInstruction3:
+.echo1:
     ld a, $66
     ld [songEnvelope_working], a
     jr .merge
 
-.songInstruction5:
+.echo2:
     ld a, $46
     ld [songEnvelope_working], a
     jr .merge
 
-.merge
+.merge:
     ld a, [songInterruptionPlaying]
     cp songInterruption_fadeOutMusic
     jr nz, .endIf_fadeOut
         ld a, songInterruption_fadeOutMusic
         ld [songEnvelope_working], a
-    .endIf_fadeOut
+    .endIf_fadeOut:
 
     ld a, [workingSoundChannel]
     cp $01
@@ -1852,21 +1852,21 @@ loadNextSound:
         jr z, .setFrequency_wave
     ret
 
-.setFrequency_square1
+.setFrequency_square1:
     ld a, [songFrequency_square1]
     ld [songFrequency_working], a
     ld a, [songFrequency_square1+1]
     ld [songFrequency_working+1], a
     ret
 
-.setFrequency_square2
+.setFrequency_square2:
     ld a, [songFrequency_square2]
     ld [songFrequency_working], a
     ld a, [songFrequency_square2+1]
     ld [songFrequency_working+1], a
     ret
 
-.setFrequency_wave
+.setFrequency_wave:
     ld a, [sfxActive_wave]
     and a
         ret nz
@@ -1894,11 +1894,11 @@ songInstruction_setWorkingSoundChannelOptions:
         ld a, [hl+]
         ld [songEnvelope_working], a
         jr .endIf_fadeOut
-    .else_fadeOut
+    .else_fadeOut:
         ld a, [hl+]
         ld [songEnvelope_working], a
         ld [songNoteEnvelope_working], a
-    .endIf_fadeOut
+    .endIf_fadeOut:
     
     ld a, [hl+]
     ld [songSweep_working], a
@@ -1907,11 +1907,11 @@ songInstruction_setWorkingSoundChannelOptions:
     res 6, a
     res 7, a
 
-.effectIndex
+.effectIndex:
     and a
     jr nz, .endIf_badCode
         xor a
-    .endIf_badCode
+    .endIf_badCode:
 
     ld [songEffectIndex_working], a
 ;}
@@ -1943,11 +1943,11 @@ songInstruction_setWorkingSoundChannelOptions_wave:
         ld a, [hl]
         ld [songVolume_working], a
         jr .endIf_fadeOut
-    .else_fadeOut
+    .else_fadeOut:
         ld a, [hl]
         ld [songVolume_working], a
         ld [songNoteVolume_working], a
-    .endIf_fadeOut
+    .endIf_fadeOut:
 
     ld a, [sfxActive_wave]
     and a
@@ -1955,7 +1955,7 @@ songInstruction_setWorkingSoundChannelOptions_wave:
         xor a
         ldh [rAUD3ENA], a
         call writeToWavePatternRam
-    .endIf_disableWave
+    .endIf_disableWave:
 
     ld a, [songVolume_working]
     res 5, a
@@ -2027,7 +2027,7 @@ copyChannelSongProcessingState:
     ld a, [channelSongProcessingStateSize]
     ld b, a
 
-    .loopCopy
+    .loopCopy:
         ld a, [de]
         ld [hl+], a
         inc de
@@ -2060,13 +2060,13 @@ handleSongSoundChannelEffect:
         jp z, .effectIndexA
     ret
 
-.merge
+.merge:
     ld a, [songSoundChannelEffectTimer]
     and a
     jr nz, .endIf_resetTimer
         ld a, $11
         ld [songSoundChannelEffectTimer], a
-    .endIf_resetTimer
+    .endIf_resetTimer:
 
     dec a
     ld [songSoundChannelEffectTimer], a
@@ -2118,7 +2118,7 @@ handleSongSoundChannelEffect:
     res 6, a
     ld [songFrequency_working+1], a
 
-.setFrequency
+.setFrequency:
     ld a, [workingSoundChannel]
     cp $01
     jr nz, .endIf_square1
@@ -2127,7 +2127,7 @@ handleSongSoundChannelEffect:
         ld a, [songFrequency_working+1]
         ld [songFrequency_square1+1], a
         ret
-    .endIf_square1
+    .endIf_square1:
 
     cp $02
     jr nz, .endIf_square2
@@ -2136,7 +2136,7 @@ handleSongSoundChannelEffect:
         ld a, [songFrequency_working+1]
         ld [songFrequency_square2+1], a
         ret
-    .endIf_square2
+    .endIf_square2:
 
     cp $03
         ret nz
@@ -2230,7 +2230,7 @@ resetSongSoundChannelOptions:
     ld a, [channelAllSongProcessingStateSizes]
     ld b, a
 
-    .loop
+    .loop:
         ld [hl], $00
         inc hl
         dec b
@@ -2383,23 +2383,23 @@ square1Sfx_playback_1:
         jr z, .set5
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.jumping_1
     jp setChannelOptionSet.square1
 
-.set2
+.set2:
     ld de, optionSets_square1.jumping_2
     jp setChannelOptionSet.square1
 
-.set3
+.set3:
     ld de, optionSets_square1.jumping_3
     jp setChannelOptionSet.square1
 
-.set4
+.set4:
     ld de, optionSets_square1.jumping_4
     jp setChannelOptionSet.square1
 
-.set5
+.set5:
     ld de, optionSets_square1.jumping_5
     jp setChannelOptionSet.square1
 ;}
@@ -2464,35 +2464,35 @@ square1Sfx_playback_2:
         jr z, .set7
     ret
 
-.set0
+.set0:
     ld de, optionSets_square1.hijumping_0
     jp setChannelOptionSet.square1
 
-.set1
+.set1:
     ld de, optionSets_square1.hijumping_1
     jp setChannelOptionSet.square1
 
-.set2
+.set2:
     ld de, optionSets_square1.hijumping_2
     jp setChannelOptionSet.square1
 
-.set3
+.set3:
     ld de, optionSets_square1.hijumping_3
     jp setChannelOptionSet.square1
 
-.set4
+.set4:
     ld de, optionSets_square1.hijumping_4
     jp setChannelOptionSet.square1
 
-.set5
+.set5:
     ld de, optionSets_square1.hijumping_5
     jp setChannelOptionSet.square1
 
-.set6
+.set6:
     ld de, optionSets_square1.hijumping_6
     jp setChannelOptionSet.square1
 
-.set7
+.set7:
     ld de, optionSets_square1.hijumping_7
     jp setChannelOptionSet.square1
 ;}
@@ -2546,59 +2546,59 @@ square1Sfx_playback_3:
         jr z, .setC
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.screwAttacking_1
     jp setChannelOptionSet.square1
 
-.set2
+.set2:
     ld de, optionSets_square1.screwAttacking_2
     jp setChannelOptionSet.square1
 
-.set3
+.set3:
     ld de, optionSets_square1.screwAttacking_3
     jp setChannelOptionSet.square1
 
-.set4
+.set4:
     ld de, optionSets_square1.screwAttacking_4
     jp setChannelOptionSet.square1
 
-.set5
+.set5:
     ld de, optionSets_square1.screwAttacking_5
     jp setChannelOptionSet.square1
 
-.set6
+.set6:
     ld de, optionSets_square1.screwAttacking_6
     jp setChannelOptionSet.square1
 
-.set7
+.set7:
     ld de, optionSets_square1.screwAttacking_7
     jp setChannelOptionSet.square1
 
-.set8
+.set8:
     ld de, optionSets_square1.screwAttacking_8
     jp setChannelOptionSet.square1
 
-.set9
+.set9:
     ld de, optionSets_square1.screwAttacking_9
     jp setChannelOptionSet.square1
 
-.setA
+.setA:
     ld de, optionSets_square1.screwAttacking_A
     jp setChannelOptionSet.square1
 
-.setB
+.setB:
     ld de, optionSets_square1.screwAttacking_B
     jp setChannelOptionSet.square1
 
-.setC
+.setC:
     ld de, optionSets_square1.screwAttacking_C
     jp setChannelOptionSet.square1
 
-.setD
+.setD:
     ld de, optionSets_square1.screwAttacking_D
     jp setChannelOptionSet.square1
 
-.getTimerResetValue
+.getTimerResetValue:
     ld a, $10
     ret
 ;}
@@ -2623,11 +2623,11 @@ square1Sfx_playback_4:
         jr z, .set2
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.standingTransition_1
     jp setChannelOptionSet.square1
 
-.set2
+.set2:
     ld de, optionSets_square1.standingTransition_2
     jp setChannelOptionSet.square1
 ;}
@@ -2648,11 +2648,11 @@ square1Sfx_playback_5:
         jr z, .set2
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.crouchingTransition_1
     jp setChannelOptionSet.square1
 
-.set2
+.set2:
     ld de, optionSets_square1.crouchingTransition_2
     jp setChannelOptionSet.square1
 ;}
@@ -2675,15 +2675,15 @@ square1Sfx_playback_6:
         jr z, .set2
     ret
 
-.set0
+.set0:
     ld de, optionSets_square1.morphing_0
     jp setChannelOptionSet.square1
 
-.set1
+.set1:
     ld de, optionSets_square1.morphing_1
     jp setChannelOptionSet.square1
 
-.set2
+.set2:
     ld de, optionSets_square1.morphing_2
     jp setChannelOptionSet.square1
 ;}
@@ -2714,19 +2714,19 @@ square1Sfx_playback_7:
         jr z, .set4
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.shootingBeam_1
     jp setChannelOptionSet.square1
 
-.set2
+.set2:
     ld de, optionSets_square1.shootingBeam_2
     jp setChannelOptionSet.square1
 
-.set3
+.set3:
     ld de, optionSets_square1.shootingBeam_3
     jp setChannelOptionSet.square1
 
-.set4
+.set4:
     ld de, optionSets_square1.shootingBeam_4
     jp setChannelOptionSet.square1
 ;}
@@ -2761,39 +2761,39 @@ square1Sfx_playback_8:
         jr z, .set9
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.shootingMissile_1
     jp setChannelOptionSet.square1
 
-.set2
+.set2:
     ld de, optionSets_square1.shootingMissile_2
     jp setChannelOptionSet.square1
 
-.set3
+.set3:
     ld de, optionSets_square1.shootingMissile_3
     jp setChannelOptionSet.square1
 
-.set4
+.set4:
     ld de, optionSets_square1.shootingMissile_4
     jp setChannelOptionSet.square1
 
-.set5
+.set5:
     ld de, optionSets_square1.shootingMissile_5
     jp setChannelOptionSet.square1
 
-.set6
+.set6:
     ld de, optionSets_square1.shootingMissile_6
     jp setChannelOptionSet.square1
 
-.set7
+.set7:
     ld de, optionSets_square1.shootingMissile_7
     jp setChannelOptionSet.square1
 
-.set8
+.set8:
     ld de, optionSets_square1.shootingMissile_8
     jp setChannelOptionSet.square1
 
-.set9
+.set9:
     ld de, optionSets_square1.shootingMissile_9
     jp setChannelOptionSet.square1
 ;}
@@ -2874,19 +2874,19 @@ square1Sfx_playback_C:
         jr z, setPickedUpDropEndOptionSet
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.pickingUpMissileDrop_1
     jp setChannelOptionSet.square1
 
-.set2
+.set2:
     ld de, optionSets_square1.pickingUpMissileDrop_2
     jp setChannelOptionSet.square1
 
-.set3
+.set3:
     ld de, optionSets_square1.pickingUpMissileDrop_3
     jp setChannelOptionSet.square1
 
-.set4
+.set4:
     ld de, optionSets_square1.pickingUpMissileDrop_4
     jp setChannelOptionSet.square1
 ;}
@@ -2929,11 +2929,11 @@ square1Sfx_playback_E:
         jr z, setPickedUpDropEndOptionSet
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.smallEnergyDrop_1
     jp setChannelOptionSet.square1
 
-.set2
+.set2:
     ld de, optionSets_square1.smallEnergyDrop_2
     jp setChannelOptionSet.square1
 ;}
@@ -2958,7 +2958,7 @@ square1Sfx_playback_F:
         jr z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.shotMissileDoorWithBeam_1
     jp setChannelOptionSet.square1
 ;}
@@ -2995,43 +2995,43 @@ square1Sfx_playback_10:
         jr z, .setA
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.missileDoorExploding_1
     jp setChannelOptionSet.square1
 
-.set2
+.set2:
     ld de, optionSets_square1.missileDoorExploding_2
     jp setChannelOptionSet.square1
 
-.set3
+.set3:
     ld de, optionSets_square1.missileDoorExploding_3
     jp setChannelOptionSet.square1
 
-.set4
+.set4:
     ld de, optionSets_square1.missileDoorExploding_4
     jp setChannelOptionSet.square1
 
-.set5
+.set5:
     ld de, optionSets_square1.missileDoorExploding_5
     jp setChannelOptionSet.square1
 
-.set6
+.set6:
     ld de, optionSets_square1.missileDoorExploding_6
     jp setChannelOptionSet.square1
 
-.set7
+.set7:
     ld de, optionSets_square1.missileDoorExploding_7
     jp setChannelOptionSet.square1
 
-.set8
+.set8:
     ld de, optionSets_square1.missileDoorExploding_8
     jp setChannelOptionSet.square1
 
-.set9
+.set9:
     ld de, optionSets_square1.missileDoorExploding_9
     jp setChannelOptionSet.square1
 
-.setA
+.setA:
     ld de, optionSets_square1.missileDoorExploding_A
     jp setChannelOptionSet.square1
 ;}
@@ -3064,7 +3064,7 @@ square1Sfx_playback_14:
         jr z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.pipeBugSpawnerStop_1
     jp setChannelOptionSet.square1
 ;}
@@ -3083,7 +3083,7 @@ square1Sfx_playback_15:
         jr z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.optionMissileSelect_1
     jp setChannelOptionSet.square1
 ;}
@@ -3114,19 +3114,19 @@ square1Sfx_playback_16:
         jr z, .set4
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.shootingWaveBeam_1
     jp setChannelOptionSet.square1
 
-.set2
+.set2:
     ld de, optionSets_square1.shootingWaveBeam_2
     jp setChannelOptionSet.square1
 
-.set3
+.set3:
     ld de, optionSets_square1.shootingWaveBeam_3
     jp setChannelOptionSet.square1
 
-.set4
+.set4:
     ld de, optionSets_square1.shootingWaveBeam_4
     jp setChannelOptionSet.square1
 ;}
@@ -3156,19 +3156,19 @@ square1Sfx_playback_17:
         jr z, .set4
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.largeEnergyDrop_1
     jp setChannelOptionSet.square1
 
-.set2
+.set2:
     ld de, optionSets_square1.largeEnergyDrop_2
     jp setChannelOptionSet.square1
 
-.set3
+.set3:
     ld de, optionSets_square1.largeEnergyDrop_3
     jp setChannelOptionSet.square1
 
-.set4
+.set4:
     ld de, optionSets_square1.largeEnergyDrop_4
     jp setChannelOptionSet.square1
 ;}
@@ -3191,14 +3191,14 @@ square1Sfx_init_18:
     ld [samusHealthChangedOptionSetIndex], a
     ret
 
-.set0
+.set0:
     dec a
     ld [samusHealthChangedOptionSetIndex], a
     ld a, $02
     ld de, optionSets_square1.samusHealthChanged_0
     jp playSquare1Sfx
 
-.set1
+.set1:
     dec a
     ld [samusHealthChangedOptionSetIndex], a
     ld a, $02
@@ -3220,7 +3220,7 @@ square1Sfx_playback_19:
         jr z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.noMissileDudShot_1
     jp setChannelOptionSet.square1
 ;}
@@ -3257,27 +3257,27 @@ square1Sfx_playback_1A:
         jr z, .set6
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.metroidScrewAttacked_1
     jp setChannelOptionSet.square1
 
-.set2
+.set2:
     ld de, optionSets_square1.metroidScrewAttacked_2
     jp setChannelOptionSet.square1
 
-.set3
+.set3:
     ld de, optionSets_square1.metroidScrewAttacked_3
     jp setChannelOptionSet.square1
 
-.set4
+.set4:
     ld de, optionSets_square1.metroidScrewAttacked_4
     jp setChannelOptionSet.square1
 
-.set5
+.set5:
     ld de, optionSets_square1.metroidScrewAttacked_5
     jp setChannelOptionSet.square1
 
-.set6
+.set6:
     ld de, optionSets_square1.metroidScrewAttacked_6
     jp setChannelOptionSet.square1
 ;}
@@ -3336,11 +3336,11 @@ square1Sfx_playback_1C:
         jr z, .set2
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.saved1
     jp setChannelOptionSet.square1
 
-.set2
+.set2:
     ld de, optionSets_square1.saved2
     jp setChannelOptionSet.square1
 ;}
@@ -3371,7 +3371,7 @@ square1Sfx_playback_1D:
         jr z, .set
     ret
 
-.set
+.set:
     ld de, optionSets_square1.variaSuitTransformation
     jp setChannelOptionSet.square1
 ;}
@@ -3392,11 +3392,11 @@ square1Sfx_playback_1E:
         jr z, .set2
     ret
 
-.set1
+.set1:
     ld de, optionSets_square1.unpaused_1
     jp setChannelOptionSet.square1
 
-.set2
+.set2:
     ld de, optionSets_square1.unpaused_2
     jp setChannelOptionSet.square1
 ;}
@@ -3605,7 +3605,7 @@ square2Sfx_playback_6:
     set 4, a
     ld [square2_variableFrequency], a
 
-.merge
+.merge:
     ld a, [sfxTimer_square2]
     cp $20
         jr c, .part2
@@ -3616,13 +3616,13 @@ square2Sfx_playback_6:
     ld [square2_variableFrequency], a
     ret
 
-.even
+.even:
     ld a, [square2_variableFrequency]
     res 4, a
     ld [square2_variableFrequency], a
     jr .merge
 
-.part2
+.part2:
     ld a, [square2_variableFrequency]
     dec a
     ldh [rAUD2LOW], a
@@ -3656,12 +3656,12 @@ square2Sfx_playback_4:
     ldh [rAUD2LOW], a
     ret
 
-.part2
+.part2:
     ld a, $a0
     ld [square2_variableFrequency], a
     ret
 
-.part3
+.part3:
     ld a, $90
     ld [square2_variableFrequency], a
     ret
@@ -3793,7 +3793,7 @@ noiseSfx_playback_2:
         jr z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_noise.enemyKilled_1
     jp setChannelOptionSet.noise
 ;}
@@ -3828,7 +3828,7 @@ noiseSfx_playback_5:
         jr z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_noise.metroidHurt_1
     jp setChannelOptionSet.noise
 ;}
@@ -3851,11 +3851,11 @@ noiseSfx_playback_6:
         jr z, .set1
     ret
 
-.set0
+.set0:
     ld de, optionSets_noise.SamusHurt_0
     jp setChannelOptionSet.noise
 
-.set1
+.set1:
     ld de, optionSets_noise.SamusHurt_1
     jp setChannelOptionSet.noise
 ;}
@@ -3889,7 +3889,7 @@ noiseSfx_playback_8:
         jr z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_noise.shotMissileDoor_1
     jp setChannelOptionSet.noise
 ;}
@@ -3910,7 +3910,7 @@ noiseSfx_playback_9:
         jr z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_noise.metroidQueenCry_1
     jp setChannelOptionSet.noise
 ;}
@@ -3931,7 +3931,7 @@ noiseSfx_playback_A:
         jr z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_noise.metroidQueenHurtCry_1
     jp setChannelOptionSet.noise
 ;}
@@ -3974,11 +3974,11 @@ noiseSfx_playback_B:
         jr z, setOptionSetSamusKilled_3
     ret
 
-.set1
+.set1:
     ld de, optionSets_noise.samusKilled_1
     jp setChannelOptionSet.noise
 
-.set2
+.set2:
     ld de, optionSets_noise.samusKilled_2
     jp setChannelOptionSet.noise
 ;}
@@ -4073,7 +4073,7 @@ noiseSfx_playback_C:
         jr z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_noise.bombDetonated_1
     jp setChannelOptionSet.noise
 ;}
@@ -4104,7 +4104,7 @@ noiseSfx_playback_D:
         jr z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_noise.metroidKilled_1
     jp setChannelOptionSet.noise
 ;}
@@ -4143,7 +4143,7 @@ noiseSfx_playback_E:
         jr z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_noise.omegaMetroidExplosion_1
     jp setChannelOptionSet.noise
 ;}
@@ -4182,7 +4182,7 @@ noiseSfx_playback_F:
         jr z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_noise.clearedSaveFile_1
     jp setChannelOptionSet.noise
 ;}
@@ -4209,7 +4209,7 @@ noiseSfx_playback_10:
         jp z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_noise.footsteps_1
     jp setChannelOptionSet.noise
 ;}
@@ -4230,7 +4230,7 @@ noiseSfx_playback_13:
         jr z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_noise.misc_11_12_13_1
     jp setChannelOptionSet.noise
 ;}
@@ -4267,11 +4267,11 @@ noiseSfx_playback_14:
         jr z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_noise.gammaMetroidLightning_1
     jp setChannelOptionSet.noise
 
-.set0
+.set0:
     ld de, optionSets_noise.gammaMetroidLightning_0
     jp setChannelOptionSet.noise
 ;}
@@ -4290,7 +4290,7 @@ noiseSfx_playback_15:
         jr z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_noise.metroidFireball_1
     jp setChannelOptionSet.noise
 ;}
@@ -4327,7 +4327,7 @@ noiseSfx_playback_18:
         jr z, .set1
     ret
 
-.set1
+.set1:
     ld de, optionSets_noise.autrackRises_1
     jp setChannelOptionSet.noise
 ;}
@@ -4360,749 +4360,749 @@ playNoiseSweepSfx:
 ;{
 optionSets_square1:
 ;{
-.jumping_0 ; $5A28
+.jumping_0: ; $5A28
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $690, 0
 
-.jumping_1 ; $5A2D
+.jumping_1: ; $5A2D
     AscendingSweepOptions 6, 2
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 3, $8
     FrequencyOptions $5C0, 0
 
-.jumping_2 ; $5A32
+.jumping_2: ; $5A32
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $4
     FrequencyOptions $690, 0
 
-.jumping_3 ; $5A37
+.jumping_3: ; $5A37
     AscendingSweepOptions 6, 2
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $3
     FrequencyOptions $5C0, 0
 
-.jumping_4 ; $5A3C
+.jumping_4: ; $5A3C
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $2
     FrequencyOptions $690, 0
 
-.jumping_5 ; $5A41
+.jumping_5: ; $5A41
     AscendingSweepOptions 6, 2
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $2
     FrequencyOptions $5C0, 0
 
 
-.hijumping_0 ; $5A46
+.hijumping_0: ; $5A46
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $690, 0
 
-.hijumping_1 ; $5A4B
+.hijumping_1: ; $5A4B
     AscendingSweepOptions 6, 2
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 3, $7
     FrequencyOptions $6C0, 0
 
-.hijumping_2 ; $5A50
+.hijumping_2: ; $5A50
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $3
     FrequencyOptions $690, 0
 
-.hijumping_3 ; $5A55
+.hijumping_3: ; $5A55
     AscendingSweepOptions 6, 2
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $3
     FrequencyOptions $6C0, 0
 
-.hijumping_4 ; $5A5A
+.hijumping_4: ; $5A5A
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $2
     FrequencyOptions $690, 0
 
-.hijumping_5 ; $5A5F
+.hijumping_5: ; $5A5F
     AscendingSweepOptions 6, 2
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $2
     FrequencyOptions $6C0, 0
 
-.hijumping_6 ; $5A64
+.hijumping_6: ; $5A64
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $1
     FrequencyOptions $690, 0
 
-.hijumping_7 ; $5A69
+.hijumping_7: ; $5A69
     AscendingSweepOptions 6, 2
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $1
     FrequencyOptions $6C0, 0
 
 
-.screwAttacking_0 ; $5A6E
+.screwAttacking_0: ; $5A6E
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $7
     FrequencyOptions $700, 0
 
-.screwAttacking_1 ; $5A73
+.screwAttacking_1: ; $5A73
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $B
     FrequencyOptions $560, 0
 
-.screwAttacking_2 ; $5A78
+.screwAttacking_2: ; $5A78
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $F
     FrequencyOptions $5C0, 0
 
-.screwAttacking_3 ; $5A7D
+.screwAttacking_3: ; $5A7D
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $F
     FrequencyOptions $600, 0
 
-.screwAttacking_4 ; $5A82
+.screwAttacking_4: ; $5A82
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 1
     DescendingEnvelopeOptions 7, $F
     FrequencyOptions $640, 0
 
-.screwAttacking_5 ; $5A87
+.screwAttacking_5: ; $5A87
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 1
     DescendingEnvelopeOptions 7, $E
     FrequencyOptions $670, 0
 
-.screwAttacking_6 ; $5A8C
+.screwAttacking_6: ; $5A8C
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $D
     FrequencyOptions $690, 0
 
-.screwAttacking_7 ; $5A91
+.screwAttacking_7: ; $5A91
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $C
     FrequencyOptions $6B0, 0
 
-.screwAttacking_8 ; $5A96
+.screwAttacking_8: ; $5A96
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $6C0, 0
 
-.screwAttacking_9 ; $5A9B
+.screwAttacking_9: ; $5A9B
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 1
     DescendingEnvelopeOptions 7, $8
     FrequencyOptions $6C0, 0
 
-.screwAttacking_A ; $5AA0
+.screwAttacking_A: ; $5AA0
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 1
     DescendingEnvelopeOptions 7, $8
     FrequencyOptions $6D0, 0
 
-.screwAttacking_B ; $5AA5
+.screwAttacking_B: ; $5AA5
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 1
     DescendingEnvelopeOptions 7, $4
     FrequencyOptions $6E0, 0
 
-.screwAttacking_C ; $5AAA
+.screwAttacking_C: ; $5AAA
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 1
     DescendingEnvelopeOptions 7, $5
     FrequencyOptions $6F0, 0
 
-.screwAttacking_D ; $5AAF
+.screwAttacking_D: ; $5AAF
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 1
     DescendingEnvelopeOptions 7, $5
     FrequencyOptions $700, 0
 
 
-.standingTransition_0 ; $5AB4
+.standingTransition_0: ; $5AB4
     AscendingSweepOptions 4, 1
     LengthDutyOptions $36, 2
     DescendingEnvelopeOptions 1, $9
     FrequencyOptions $4A0, 1
 
-.standingTransition_1 ; $5AB9
+.standingTransition_1: ; $5AB9
     AscendingSweepOptions 4, 1
     LengthDutyOptions $36, 2
     DescendingEnvelopeOptions 1, $7
     FrequencyOptions $4A0, 1
 
-.standingTransition_2 ; $5ABE
+.standingTransition_2: ; $5ABE
     AscendingSweepOptions 4, 1
     LengthDutyOptions $36, 2
     DescendingEnvelopeOptions 1, $5
     FrequencyOptions $4A0, 1
 
 
-.crouchingTransition_0 ; $5AC3
+.crouchingTransition_0: ; $5AC3
     AscendingSweepOptions 4, 1
     LengthDutyOptions $26, 1
     DescendingEnvelopeOptions 1, $9
     FrequencyOptions $4A0, 1
 
-.crouchingTransition_1 ; $5AC8
+.crouchingTransition_1: ; $5AC8
     AscendingSweepOptions 4, 1
     LengthDutyOptions $26, 1
     DescendingEnvelopeOptions 1, $6
     FrequencyOptions $4A0, 1
 
-.crouchingTransition_2 ; $5ACD
+.crouchingTransition_2: ; $5ACD
     AscendingSweepOptions 4, 1
     LengthDutyOptions $26, 1
     DescendingEnvelopeOptions 1, $4
     FrequencyOptions $4A0, 1
 
 
-.morphing_0 ; $5AD2
+.morphing_0: ; $5AD2
     AscendingSweepOptions 4, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $700, 0
 
-.morphing_1 ; $5AD7
+.morphing_1: ; $5AD7
     DescendingSweepOptions 5, 3
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 1, $C
     FrequencyOptions $750, 0
 
-.morphing_2 ; $5ADC
+.morphing_2: ; $5ADC
     DescendingSweepOptions 5, 3
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 1, $6
     FrequencyOptions $750, 0
 
 
-.shootingBeam_0 ; $5AE1
+.shootingBeam_0: ; $5AE1
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $F
     FrequencyOptions $6D0, 0
 
-.shootingBeam_1 ; $5AE6
+.shootingBeam_1: ; $5AE6
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 5, $9
     FrequencyOptions $680, 0
 
-.shootingBeam_2 ; $5AEB
+.shootingBeam_2: ; $5AEB
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 5, $9
     FrequencyOptions $6C0, 0
 
-.shootingBeam_3 ; $5AF0
+.shootingBeam_3: ; $5AF0
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 5, $8
     FrequencyOptions $700, 0
 
-.shootingBeam_4 ; $5AF5
+.shootingBeam_4: ; $5AF5
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 5, $7
     FrequencyOptions $780, 0
 
 
-.shootingMissile_0 ; $5AFA
+.shootingMissile_0: ; $5AFA
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 1
     DescendingEnvelopeOptions 7, $F
     FrequencyOptions $690, 0
 
-.shootingMissile_1 ; $5AFF
+.shootingMissile_1: ; $5AFF
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $F
     FrequencyOptions $5A0, 0
 
-.shootingMissile_2 ; $5B04
+.shootingMissile_2: ; $5B04
     DescendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 5, $5
     FrequencyOptions $7A0, 0
 
-.shootingMissile_3 ; $5B09
+.shootingMissile_3: ; $5B09
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $6
     FrequencyOptions $600, 0
 
-.shootingMissile_4 ; $5B0E
+.shootingMissile_4: ; $5B0E
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $620, 0
 
-.shootingMissile_5 ; $5B13
+.shootingMissile_5: ; $5B13
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $9
     FrequencyOptions $640, 0
 
-.shootingMissile_6 ; $5B18
+.shootingMissile_6: ; $5B18
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $8
     FrequencyOptions $660, 0
 
-.shootingMissile_7 ; $5B1D
+.shootingMissile_7: ; $5B1D
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $6
     FrequencyOptions $680, 0
 
-.shootingMissile_8 ; $5B22
+.shootingMissile_8: ; $5B22
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $4
     FrequencyOptions $6A0, 0
 
-.shootingMissile_9 ; $5B27
+.shootingMissile_9: ; $5B27
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $3
     FrequencyOptions $6C0, 0
 
 
-.shootingIceBeam ; $5B2C
+.shootingIceBeam: ; $5B2C
     DescendingSweepOptions 7, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $7
     FrequencyOptions $7D0, 0
 
 
-.shootingPlasmaBeam ; $5B31
+.shootingPlasmaBeam: ; $5B31
     AscendingSweepOptions 7, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $600, 0
 
 
-.shootingSpazerBeam ; $5B36
+.shootingSpazerBeam: ; $5B36
     DescendingSweepOptions 7, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $C
     FrequencyOptions $7D0, 0
 
 
-.pickingUpMissileDrop_0 ; $5B3B
+.pickingUpMissileDrop_0: ; $5B3B
     AscendingSweepOptions 5, 3
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $8
     FrequencyOptions $6A0, 0
 
-.pickingUpMissileDrop_1 ; $5B40
+.pickingUpMissileDrop_1: ; $5B40
     AscendingSweepOptions 4, 3
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $C
     FrequencyOptions $710, 0
 
-.pickingUpMissileDrop_2 ; $5B45
+.pickingUpMissileDrop_2: ; $5B45
     AscendingSweepOptions 4, 3
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $B
     FrequencyOptions $740, 0
 
-.pickingUpMissileDrop_3 ; $5B4A
+.pickingUpMissileDrop_3: ; $5B4A
     AscendingSweepOptions 4, 3
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $9
     FrequencyOptions $760, 0
 
-.pickingUpMissileDrop_4 ; $5B4F
+.pickingUpMissileDrop_4: ; $5B4F
     AscendingSweepOptions 4, 3
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $6
     FrequencyOptions $780, 0
 
 
-.spiderBall_0 ; $5B54
+.spiderBall_0: ; $5B54
     DescendingSweepOptions 2, 2
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $F
     FrequencyOptions $600, 0
 
-.spiderBall_1 ; $5B59
+.spiderBall_1: ; $5B59
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $5
     FrequencyOptions $600, 0
 
 
-.smallEnergyDrop_0 ; $5B5E
+.smallEnergyDrop_0: ; $5B5E
     DescendingSweepOptions 1, 3
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $E
     FrequencyOptions $740, 0
 
-.smallEnergyDrop_1 ; $5B63
+.smallEnergyDrop_1: ; $5B63
     AscendingSweepOptions 4, 4
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $D
     FrequencyOptions $6F0, 0
 
-.smallEnergyDrop_2 ; $5B68
+.smallEnergyDrop_2: ; $5B68
     AscendingSweepOptions 4, 4
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $9
     FrequencyOptions $6F0, 0
 
 
-.pickedUpDropEnd ; $5B6D
+.pickedUpDropEnd: ; $5B6D
     AscendingSweepOptions 4, 4
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $3
     FrequencyOptions $6F0, 0
 
 
-.shotMissileDoorWithBeam_0 ; $5B72
+.shotMissileDoorWithBeam_0: ; $5B72
     AscendingSweepOptions 4, 4
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 1, $C
     FrequencyOptions $700, 0
 
-.shotMissileDoorWithBeam_1 ; $5B77
+.shotMissileDoorWithBeam_1: ; $5B77
     AscendingSweepOptions 0, 0
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 1, $4
     FrequencyOptions $7D0, 0
 
 
-.missileDoorExploding_0 ; $5B7C
+.missileDoorExploding_0: ; $5B7C
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $5A0, 0
 
-.missileDoorExploding_1 ; $5B81
+.missileDoorExploding_1: ; $5B81
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $5C0, 0
 
-.missileDoorExploding_2 ; $5B86
+.missileDoorExploding_2: ; $5B86
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $5F0, 0
 
-.missileDoorExploding_3 ; $5B8B
+.missileDoorExploding_3: ; $5B8B
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $610, 0
 
-.missileDoorExploding_4 ; $5B90
+.missileDoorExploding_4: ; $5B90
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $640, 0
 
-.missileDoorExploding_5 ; $5B95
+.missileDoorExploding_5: ; $5B95
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $670, 0
 
-.missileDoorExploding_6 ; $5B9A
+.missileDoorExploding_6: ; $5B9A
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $690, 0
 
-.missileDoorExploding_7 ; $5B9F
+.missileDoorExploding_7: ; $5B9F
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $6A0, 0
 
-.missileDoorExploding_8 ; $5BA4
+.missileDoorExploding_8: ; $5BA4
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $6C0, 0
 
-.missileDoorExploding_9 ; $5BA9
+.missileDoorExploding_9: ; $5BA9
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $6E0, 0
 
-.missileDoorExploding_A ; $5BAE
+.missileDoorExploding_A: ; $5BAE
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $700, 0
 
 
-.unused12 ; $5BB3
+.unused12: ; $5BB3
     AscendingSweepOptions 0, 0
     LengthDutyOptions $0, 0
     AscendingEnvelopeOptions 0, $0
     FrequencyOptions $0, 0
 
 
-.bombLaid ; $5BB8
+.bombLaid: ; $5BB8
     DescendingSweepOptions 6, 1
     LengthDutyOptions $0, 1
     DescendingEnvelopeOptions 7, $5
     FrequencyOptions $7C0, 0
 
 
-.pipeBugSpawnerStop_0 ; $5BBD
+.pipeBugSpawnerStop_0: ; $5BBD
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $C
     FrequencyOptions $400, 0
 
-.pipeBugSpawnerStop_1 ; $5BC2
+.pipeBugSpawnerStop_1: ; $5BC2
     DescendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $C
     FrequencyOptions $7D0, 0
 
 
-.optionMissileSelect_0 ; $5BC7
+.optionMissileSelect_0: ; $5BC7
     AscendingSweepOptions 4, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $C
     FrequencyOptions $700, 0
 
-.optionMissileSelect_1 ; $5BCC
+.optionMissileSelect_1: ; $5BCC
     AscendingSweepOptions 4, 1
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $C
     FrequencyOptions $640, 0
 
 
-.shootingWaveBeam_0 ; $5BD1
+.shootingWaveBeam_0: ; $5BD1
     AscendingSweepOptions 6, 1
     LengthDutyOptions $0, 1
     DescendingEnvelopeOptions 7, $F
     FrequencyOptions $6D0, 0
 
-.shootingWaveBeam_1 ; $5BD6
+.shootingWaveBeam_1: ; $5BD6
     AscendingSweepOptions 6, 1
     LengthDutyOptions $0, 1
     DescendingEnvelopeOptions 7, $C
     FrequencyOptions $680, 0
 
-.shootingWaveBeam_2 ; $5BDB
+.shootingWaveBeam_2: ; $5BDB
     AscendingSweepOptions 6, 1
     LengthDutyOptions $0, 1
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $6C0, 0
 
-.shootingWaveBeam_3 ; $5BE0
+.shootingWaveBeam_3: ; $5BE0
     AscendingSweepOptions 6, 1
     LengthDutyOptions $0, 1
     DescendingEnvelopeOptions 7, $8
     FrequencyOptions $700, 0
 
-.shootingWaveBeam_4 ; $5BE5
+.shootingWaveBeam_4: ; $5BE5
     AscendingSweepOptions 7, 1
     LengthDutyOptions $0, 1
     DescendingEnvelopeOptions 7, $C
     FrequencyOptions $7A0, 0
 
 
-.largeEnergyDrop_0 ; $5BEA
+.largeEnergyDrop_0: ; $5BEA
     DescendingSweepOptions 1, 3
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $F
     FrequencyOptions $740, 0
 
-.largeEnergyDrop_1 ; $5BEF
+.largeEnergyDrop_1: ; $5BEF
     AscendingSweepOptions 4, 4
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $E
     FrequencyOptions $710, 0
 
-.largeEnergyDrop_2 ; $5BF4
+.largeEnergyDrop_2: ; $5BF4
     AscendingSweepOptions 4, 4
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $C
     FrequencyOptions $710, 0
 
-.largeEnergyDrop_3 ; $5BF9
+.largeEnergyDrop_3: ; $5BF9
     AscendingSweepOptions 4, 4
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $A
     FrequencyOptions $710, 0
 
-.largeEnergyDrop_4 ; $5BFE
+.largeEnergyDrop_4: ; $5BFE
     AscendingSweepOptions 4, 4
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $3
     FrequencyOptions $710, 0
 
 
-.samusHealthChanged_0 ; $5C03
+.samusHealthChanged_0: ; $5C03
     AscendingSweepOptions 6, 1
     LengthDutyOptions $3D, 2
     DescendingEnvelopeOptions 5, $5
     FrequencyOptions $750, 0
 
-.samusHealthChanged_1 ; $5C08
+.samusHealthChanged_1: ; $5C08
     AscendingSweepOptions 0, 0
     LengthDutyOptions $3D, 2
     DescendingEnvelopeOptions 5, $5
     FrequencyOptions $7A0, 0
 
 
-.noMissileDudShot_0 ; $5C0D
+.noMissileDudShot_0: ; $5C0D
     AscendingSweepOptions 4, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $C
     FrequencyOptions $6A0, 0
 
-.noMissileDudShot_1 ; $5C12
+.noMissileDudShot_1: ; $5C12
     AscendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $C
     FrequencyOptions $6A0, 0
 
 
-.metroidScrewAttacked_0 ; $5C17
+.metroidScrewAttacked_0: ; $5C17
     DescendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 1, $F
     FrequencyOptions $7C0, 0
 
-.metroidScrewAttacked_1 ; $5C1C
+.metroidScrewAttacked_1: ; $5C1C
     DescendingSweepOptions 1, 3
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 1, $F
     FrequencyOptions $7D0, 0
 
-.metroidScrewAttacked_2 ; $5C21
+.metroidScrewAttacked_2: ; $5C21
     DescendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 1, $E
     FrequencyOptions $7C4, 0
 
-.metroidScrewAttacked_3 ; $5C26
+.metroidScrewAttacked_3: ; $5C26
     DescendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 1, $D
     FrequencyOptions $7CC, 0
 
-.metroidScrewAttacked_4 ; $5C2B
+.metroidScrewAttacked_4: ; $5C2B
     DescendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 1, $E
     FrequencyOptions $7D0, 0
 
-.metroidScrewAttacked_5 ; $5C30
+.metroidScrewAttacked_5: ; $5C30
     DescendingSweepOptions 5, 1
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 1, $D
     FrequencyOptions $7D8, 0
 
-.metroidScrewAttacked_6 ; $5C35
+.metroidScrewAttacked_6: ; $5C35
     DescendingSweepOptions 5, 1
     LengthDutyOptions $38, 0
     DescendingEnvelopeOptions 1, $E
     FrequencyOptions $7DC, 1
 
 
-.metroidCry ; $5C3A
+.metroidCry: ; $5C3A
     DescendingSweepOptions 7, 4
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 6, $F
     FrequencyOptions $7F0, 0
 
 
-.saved0 ; $5C3F
+.saved0: ; $5C3F
     DescendingSweepOptions 4, 5
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $C
     FrequencyOptions $780, 0
 
-.saved1 ; $5C44
+.saved1: ; $5C44
     AscendingSweepOptions 5, 4
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $8
     FrequencyOptions $782, 0
 
-.saved2 ; $5C49
+.saved2: ; $5C49
     AscendingSweepOptions 5, 4
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $5
     FrequencyOptions $782, 0
 
 
-.variaSuitTransformation ; $5C4E
+.variaSuitTransformation: ; $5C4E
     AscendingSweepOptions 4, 3
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 5, $A
     FrequencyOptions $200, 0
 
 
-.unpaused_0 ; $5C53
+.unpaused_0: ; $5C53
     AscendingSweepOptions 3, 4
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $F
     FrequencyOptions $700, 0
 
-.unpaused_1 ; $5C58
+.unpaused_1: ; $5C58
     AscendingSweepOptions 5, 4
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $F
     FrequencyOptions $7A2, 0
 
-.unpaused_2 ; $5C5D
+.unpaused_2: ; $5C5D
     AscendingSweepOptions 5, 4
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 7, $5
     FrequencyOptions $7A2, 0
 
 
-.exampleA ; $5C62
+.exampleA: ; $5C62
     AscendingSweepOptions 7, 7
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 1, $F
     FrequencyOptions $600, 0
 
 
-.exampleB ; $5C67
+.exampleB: ; $5C67
     AscendingSweepOptions 7, 7
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 1, $F
     FrequencyOptions $6A0, 0
 
 
-.exampleC ; $5C6C
+.exampleC: ; $5C6C
     AscendingSweepOptions 7, 7
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 1, $F
     FrequencyOptions $700, 0
 
 
-.exampleD ; $5C71
+.exampleD: ; $5C71
     AscendingSweepOptions 7, 7
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 1, $F
     FrequencyOptions $740, 0
 
 
-.exampleE ; $5C76
+.exampleE: ; $5C76
     AscendingSweepOptions 7, 7
     LengthDutyOptions $0, 2
     DescendingEnvelopeOptions 1, $F
@@ -5111,267 +5111,267 @@ optionSets_square1:
 
 optionSets_noise:
 ;{
-.enemyShot ; $5C7B
+.enemyShot: ; $5C7B
     LengthOptions $0
     AscendingEnvelopeOptions 1, $0
     PolynomialCounterOptions 2, 0, $6
     CounterControlOptions 0
 
-.enemyKilled_0 ; $5C7F
+.enemyKilled_0: ; $5C7F
     LengthOptions $0
     AscendingEnvelopeOptions 1, $1
     PolynomialCounterOptions 3, 0, $3
     CounterControlOptions 0
 
-.enemyKilled_1 ; $5C83
+.enemyKilled_1: ; $5C83
     LengthOptions $0
     DescendingEnvelopeOptions 1, $F
     PolynomialCounterOptions 6, 1, $4
     CounterControlOptions 0
 
-.enemyExplosion ; $5C87
+.enemyExplosion: ; $5C87
     LengthOptions $0
     DescendingEnvelopeOptions 2, $F
     PolynomialCounterOptions 4, 1, $6
     CounterControlOptions 0
 
-.shotBlockDestroyed ; $5C8B
+.shotBlockDestroyed: ; $5C8B
     LengthOptions $0
     AscendingEnvelopeOptions 1, $1
     PolynomialCounterOptions 5, 1, $4
     CounterControlOptions 0
 
-.metroidHurt_0 ; $5C8F
+.metroidHurt_0: ; $5C8F
     LengthOptions $0
     AscendingEnvelopeOptions 1, $0
     PolynomialCounterOptions 5, 1, $3
     CounterControlOptions 0
 
-.metroidHurt_1 ; $5C93
+.metroidHurt_1: ; $5C93
     LengthOptions $0
     DescendingEnvelopeOptions 4, $F
     PolynomialCounterOptions 5, 0, $4
     CounterControlOptions 0
 
-.SamusHurt_0 ; $5C97
+.SamusHurt_0: ; $5C97
     LengthOptions $0
     DescendingEnvelopeOptions 7, $F
     PolynomialCounterOptions 2, 1, $4
     CounterControlOptions 0
 
-.SamusHurt_1 ; $5C9B
-.acidDamage_1 ; $5C9B
+.SamusHurt_1: ; $5C9B
+.acidDamage_1: ; $5C9B
     LengthOptions $0
     DescendingEnvelopeOptions 5, $4
     PolynomialCounterOptions 2, 1, $4
     CounterControlOptions 0
 
-.acidDamage_0 ; $5C9F
+.acidDamage_0: ; $5C9F
     LengthOptions $0
     DescendingEnvelopeOptions 7, $F
     PolynomialCounterOptions 2, 1, $4
     CounterControlOptions 0
 
-.shotMissileDoor_0 ; $5CA3
+.shotMissileDoor_0: ; $5CA3
     LengthOptions $0
     DescendingEnvelopeOptions 7, $F
     PolynomialCounterOptions 3, 0, $3
     CounterControlOptions 0
 
-.shotMissileDoor_1 ; $5CA7
+.shotMissileDoor_1: ; $5CA7
     LengthOptions $0
     DescendingEnvelopeOptions 1, $F
     PolynomialCounterOptions 4, 1, $5
     CounterControlOptions 0
 
-.metroidQueenCry_0 ; $5CAB
+.metroidQueenCry_0: ; $5CAB
     LengthOptions $0
     DescendingEnvelopeOptions 2, $E
     PolynomialCounterOptions 6, 1, $4
     CounterControlOptions 0
 
-.metroidQueenCry_1 ; $5CAF
+.metroidQueenCry_1: ; $5CAF
     LengthOptions $0
     DescendingEnvelopeOptions 6, $C
     PolynomialCounterOptions 5, 0, $4
     CounterControlOptions 0
 
-.metroidQueenHurtCry_0 ; $5CB3
+.metroidQueenHurtCry_0: ; $5CB3
     LengthOptions $0
     DescendingEnvelopeOptions 2, $F
     PolynomialCounterOptions 2, 1, $5
     CounterControlOptions 0
 
-.metroidQueenHurtCry_1 ; $5CB7
+.metroidQueenHurtCry_1: ; $5CB7
     LengthOptions $0
     DescendingEnvelopeOptions 4, $F
     PolynomialCounterOptions 4, 0, $4
     CounterControlOptions 0
 
-.samusKilled_1 ; $5CBB
+.samusKilled_1: ; $5CBB
     LengthOptions $0
     AscendingEnvelopeOptions 5, $0
     PolynomialCounterOptions 4, 0, $2
     CounterControlOptions 0
 
-.samusKilled_2 ; $5CBF
+.samusKilled_2: ; $5CBF
     LengthOptions $0
     DescendingEnvelopeOptions 0, $F
     PolynomialCounterOptions 5, 0, $1
     CounterControlOptions 0
 
-.samusKilled_3 ; $5CC3
+.samusKilled_3: ; $5CC3
     LengthOptions $0
     DescendingEnvelopeOptions 7, $8
     PolynomialCounterOptions 4, 0, $7
     CounterControlOptions 0
 
-.bombDetonated_0 ; $5CC7
+.bombDetonated_0: ; $5CC7
     LengthOptions $0
     DescendingEnvelopeOptions 7, $A
     PolynomialCounterOptions 3, 0, $4
     CounterControlOptions 0
 
-.bombDetonated_1 ; $5CCB
+.bombDetonated_1: ; $5CCB
     LengthOptions $0
     DescendingEnvelopeOptions 1, $F
     PolynomialCounterOptions 4, 0, $6
     CounterControlOptions 0
 
-.metroidKilled_0 ; $5CCF
+.metroidKilled_0: ; $5CCF
     LengthOptions $0
     DescendingEnvelopeOptions 7, $F
     PolynomialCounterOptions 4, 0, $6
     CounterControlOptions 0
 
-.metroidKilled_1 ; $5CD3
+.metroidKilled_1: ; $5CD3
     LengthOptions $0
     DescendingEnvelopeOptions 3, $A
     PolynomialCounterOptions 2, 0, $2
     CounterControlOptions 0
 
-.omegaMetroidExplosion_0 ; $5CD7
+.omegaMetroidExplosion_0: ; $5CD7
     LengthOptions $0
     DescendingEnvelopeOptions 7, $F
     PolynomialCounterOptions 2, 0, $2
     CounterControlOptions 0
 
-.omegaMetroidExplosion_1 ; $5CDB
+.omegaMetroidExplosion_1: ; $5CDB
     LengthOptions $0
     DescendingEnvelopeOptions 5, $A
     PolynomialCounterOptions 3, 0, $3
     CounterControlOptions 0
 
-.clearedSaveFile_0 ; $5CDF
+.clearedSaveFile_0: ; $5CDF
     LengthOptions $0
     DescendingEnvelopeOptions 0, $F
     PolynomialCounterOptions 3, 0, $4
     CounterControlOptions 0
 
-.clearedSaveFile_1 ; $5CE3
+.clearedSaveFile_1: ; $5CE3
     LengthOptions $0
     DescendingEnvelopeOptions 6, $F
     PolynomialCounterOptions 5, 0, $6
     CounterControlOptions 0
 
-.footsteps_0 ; $5CE7
+.footsteps_0: ; $5CE7
     LengthOptions $3D
     DescendingEnvelopeOptions 7, $3
     PolynomialCounterOptions 2, 1, $2
     CounterControlOptions 1
 
-.footsteps_1 ; $5CEB
+.footsteps_1: ; $5CEB
     LengthOptions $3C
     DescendingEnvelopeOptions 5, $1
     PolynomialCounterOptions 2, 1, $2
     CounterControlOptions 1
 
-.enemyHitGround_0 ; $5CEF
+.enemyHitGround_0: ; $5CEF
     LengthOptions $0
     DescendingEnvelopeOptions 3, $7
     PolynomialCounterOptions 7, 0, $2
     CounterControlOptions 0
 
 ; Used for enemy hit ground, enemy projectile fired, autrack laser
-.misc_11_12_13_1 ; $5CF3
+.misc_11_12_13_1: ; $5CF3
     LengthOptions $0
     DescendingEnvelopeOptions 7, $9
     PolynomialCounterOptions 7, 0, $7
     CounterControlOptions 0
 
-.enemyProjectileFired_0 ; $5CF7
+.enemyProjectileFired_0: ; $5CF7
     LengthOptions $0
     DescendingEnvelopeOptions 7, $8
     PolynomialCounterOptions 4, 0, $4
     CounterControlOptions 0
 
-.autrackLaser_0 ; $5CFB
+.autrackLaser_0: ; $5CFB
     LengthOptions $0
     DescendingEnvelopeOptions 7, $8
     PolynomialCounterOptions 3, 0, $3
     CounterControlOptions 0
 
-.gammaMetroidLightning_0 ; $5CFF
+.gammaMetroidLightning_0: ; $5CFF
     LengthOptions $0
     DescendingEnvelopeOptions 1, $9
     PolynomialCounterOptions 4, 1, $3
     CounterControlOptions 0
 
-.gammaMetroidLightning_1 ; $5D03
+.gammaMetroidLightning_1: ; $5D03
     LengthOptions $0
     DescendingEnvelopeOptions 1, $9
     PolynomialCounterOptions 3, 1, $4
     CounterControlOptions 0
 
-.metroidFireball_0 ; $5D07
+.metroidFireball_0: ; $5D07
     LengthOptions $0
     DescendingEnvelopeOptions 7, $A
     PolynomialCounterOptions 5, 0, $5
     CounterControlOptions 0
 
-.metroidFireball_1 ; $5D0B
+.metroidFireball_1: ; $5D0B
     LengthOptions $0
     DescendingEnvelopeOptions 3, $C
     PolynomialCounterOptions 3, 0, $5
     CounterControlOptions 0
 
-.babyMetroidClearingBlock ; $5D0F
+.babyMetroidClearingBlock: ; $5D0F
     LengthOptions $0
     AscendingEnvelopeOptions 3, $1
     PolynomialCounterOptions 1, 0, $3
     CounterControlOptions 0
 
-.babyMetroidCry ; $5D13
+.babyMetroidCry: ; $5D13
     LengthOptions $0
     DescendingEnvelopeOptions 7, $A
     PolynomialCounterOptions 5, 1, $7
     CounterControlOptions 0
 
-.autrackRises_0 ; $5D17
+.autrackRises_0: ; $5D17
     LengthOptions $0
     DescendingEnvelopeOptions 1, $6
     PolynomialCounterOptions 7, 1, $2
     CounterControlOptions 0
 
-.autrackRises_1 ; $5D1B
+.autrackRises_1: ; $5D1B
     LengthOptions $0
     DescendingEnvelopeOptions 0, $6
     PolynomialCounterOptions 1, 0, $2
     CounterControlOptions 0
 
-.noMissileDudShot ; $5D1F
+.noMissileDudShot: ; $5D1F
     LengthOptions $0
     DescendingEnvelopeOptions 3, $C
     PolynomialCounterOptions 1, 0, $1
     CounterControlOptions 0
 
-.autoadJump ; $5D23
+.autoadJump: ; $5D23
     LengthOptions $0
     DescendingEnvelopeOptions 4, $4
     PolynomialCounterOptions 2, 1, $4
     CounterControlOptions 0
 
-.samusKilled_0 ; $5D27
+.samusKilled_0: ; $5D27
     LengthOptions $0
     AscendingEnvelopeOptions 0, $0
     PolynomialCounterOptions 0, 0, $0
@@ -5380,27 +5380,27 @@ optionSets_noise:
 
 optionSets_square2:
 ;{
-.metroidQueenCry ; $5D2B
+.metroidQueenCry: ; $5D2B
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 4, $F
     FrequencyOptions $700, 0
 
-.babyMetroidClearingBlock ; $5D2F
+.babyMetroidClearingBlock: ; $5D2F
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $9
     FrequencyOptions $790, 0
 
-.babyMetroidCry ; $5D33
+.babyMetroidCry: ; $5D33
     LengthDutyOptions $0, 1
     DescendingEnvelopeOptions 7, $5
     FrequencyOptions $700, 0
 
-.metroidQueenHurtCry ; $5D37
+.metroidQueenHurtCry: ; $5D37
     LengthDutyOptions $0, 1
     DescendingEnvelopeOptions 7, $F
     FrequencyOptions $700, 0
 
-.automFlamethrower ; $5D3B
+.automFlamethrower: ; $5D3B
     LengthDutyOptions $0, 0
     DescendingEnvelopeOptions 7, $8
     FrequencyOptions $200, 0
@@ -5455,7 +5455,7 @@ waveSfx_playback_2:
         jr z, .set0
     ret
 
-.set1
+.set1:
     ld a, [loudLowHealthBeepTimer]
     and a
     jr z, .else1
@@ -5464,27 +5464,27 @@ waveSfx_playback_2:
         ld de, wavePatterns.wave4
         call writeToWavePatternRam
         jr .endIf1
-    .else1
+    .else1:
         xor a
         ldh [rAUD3ENA], a
         ld de, wavePatterns.wave5
         call writeToWavePatternRam
-    .endIf1
+    .endIf1:
 
     ld de, optionSets_wave.healthUnder20_1
     jp setChannelOptionSet.wave
 
-.set0
+.set0:
     ld a, [loudLowHealthBeepTimer]
     and a
     jr z, .else0
         ld de, wavePatterns.wave4
         call writeToWavePatternRam
         jr .endIf0
-    .else0
+    .else0:
         ld de, wavePatterns.wave5
         call writeToWavePatternRam
-    .endIf0
+    .endIf0:
 
     ld a, [sfxLength_wave]
     ld [sfxTimer_wave], a
@@ -5518,7 +5518,7 @@ waveSfx_playback_3:
         jr z, .set0
     ret
 
-.set1
+.set1:
     ld a, [loudLowHealthBeepTimer]
     and a
     jr z, .else1
@@ -5527,27 +5527,27 @@ waveSfx_playback_3:
         ld de, wavePatterns.wave4
         call writeToWavePatternRam
         jr .endIf1
-    .else1
+    .else1:
         xor a
         ldh [rAUD3ENA], a
         ld de, wavePatterns.wave5
         call writeToWavePatternRam
-    .endIf1
+    .endIf1:
 
     ld de, optionSets_wave.healthUnder30_1
     jp setChannelOptionSet.wave
 
-.set0
+.set0:
     ld a, [loudLowHealthBeepTimer]
     and a
     jr z, .else0
         ld de, wavePatterns.wave4
         call writeToWavePatternRam
         jr .endIf0
-    .else0
+    .else0:
         ld de, wavePatterns.wave5
         call writeToWavePatternRam
-    .endIf0
+    .endIf0:
 
     ld a, [sfxLength_wave]
     ld [sfxTimer_wave], a
@@ -5581,7 +5581,7 @@ waveSfx_playback_4:
         jr z, .set0
     ret
 
-.set1
+.set1:
     ld a, [loudLowHealthBeepTimer]
     and a
     jr z, .else1
@@ -5590,27 +5590,27 @@ waveSfx_playback_4:
         ld de, wavePatterns.wave4
         call writeToWavePatternRam
         jr .endIf1
-    .else1
+    .else1:
         xor a
         ldh [rAUD3ENA], a
         ld de, wavePatterns.wave5
         call writeToWavePatternRam
-    .endIf1
+    .endIf1:
 
     ld de, optionSets_wave.healthUnder40_1
     jp setChannelOptionSet.wave
 
-.set0
+.set0:
     ld a, [loudLowHealthBeepTimer]
     and a
     jr z, .else0
         ld de, wavePatterns.wave4
         call writeToWavePatternRam
         jr .endIf0
-    .else0
+    .else0:
         ld de, wavePatterns.wave5
         call writeToWavePatternRam
-    .endIf0
+    .endIf0:
 
     ld a, [sfxLength_wave]
     ld [sfxTimer_wave], a
@@ -5644,7 +5644,7 @@ waveSfx_playback_5:
         jr z, .set0
     ret
 
-.set1
+.set1:
     ld a, [loudLowHealthBeepTimer]
     and a
     jr z, .else1
@@ -5653,27 +5653,27 @@ waveSfx_playback_5:
         ld de, wavePatterns.wave4
         call writeToWavePatternRam
         jr .endIf1
-    .else1
+    .else1:
         xor a
         ldh [rAUD3ENA], a
         ld de, wavePatterns.wave5
         call writeToWavePatternRam
-    .endIf1
+    .endIf1:
 
     ld de, optionSets_wave.healthUnder50_1
     jp setChannelOptionSet.wave
 
-.set0
+.set0:
     ld a, [loudLowHealthBeepTimer]
     and a
     jr z, .else0
         ld de, wavePatterns.wave4
         call writeToWavePatternRam
         jr .endIf0
-    .else0
+    .else0:
         ld de, wavePatterns.wave5
         call writeToWavePatternRam
-    .endIf0
+    .endIf0:
 
     ld a, [sfxLength_wave]
     ld [sfxTimer_wave], a
@@ -5814,7 +5814,7 @@ song_babyMetroid_square1:
     dw song_babyMetroid_square1_section6 ; $5FF2
     dw song_babyMetroid_square1_section7 ; $7D4C
     dw song_babyMetroid_square1_section8 ; $6002
-    .loop
+    .loop:
     dw song_babyMetroid_square1_section9 ; $600A
     dw $00F0, .loop
 ;}
@@ -5831,7 +5831,7 @@ song_babyMetroid_square2:
     dw song_babyMetroid_square2_section6 ; $6030
     dw song_babyMetroid_square2_section7 ; $7D4C
     dw song_babyMetroid_square2_section8 ; $603E
-    .loop
+    .loop:
     dw song_babyMetroid_square2_section9 ; $6046
     dw $00F0, .loop
 ;}
@@ -5844,7 +5844,7 @@ song_babyMetroid_wave:
     dw song_babyMetroid_wave_section2 ; $7E10
     dw song_babyMetroid_wave_section3 ; $7D5B
     dw song_babyMetroid_wave_section4 ; $6060
-    .loop
+    .loop:
     dw song_babyMetroid_wave_section5 ; $605C
     dw $00F0, .loop
 ;}
@@ -5852,7 +5852,7 @@ song_babyMetroid_wave:
 ; $5FDB
 song_babyMetroid_noise:
 ;{
-    .loop
+    .loop:
     dw song_babyMetroid_noise_section0 ; $7E28
     dw song_babyMetroid_noise_section1 ; $7E28
     dw song_babyMetroid_noise_section2 ; $7E17
@@ -6011,7 +6011,7 @@ song_babyMetroid_square2_section9:
 song_babyMetroid_wave_section5:
 ;{
     SongOptions
-        WaveOptions $4113, 3, $0
+        WaveOptions wavePatterns.wave0, 3, $0
 ;}
 
 ; $6060
@@ -6057,8 +6057,8 @@ song_babyMetroid_wave_section4:
 song_babyMetroid_noise_section3:
 ;{
     SongNoteLength_Quaver
-    SongNoiseNote $1D
-    SongNoiseNote $1E
+    SongNoiseNote songNoiseChannelOptionSets.noise1D
+    SongNoiseNote songNoiseChannelOptionSets.noise1E
     SongNoteLength_Hemidemisemiquaver
     SongRest
     SongEnd
@@ -6110,7 +6110,7 @@ song_metroidQueenBattle_square1:
     dw song_metroidQueenBattle_square1_section24 ; $610C
     dw song_metroidQueenBattle_square1_section25 ; $7D7E
     dw song_metroidQueenBattle_square1_section26 ; $7D8E
-    .loop
+    .loop:
     dw song_metroidQueenBattle_square1_section27 ; $6118
     dw $00F0, .loop
 ;}
@@ -6120,7 +6120,7 @@ song_metroidQueenBattle_square2:
 ;{
     dw song_metroidQueenBattle_square2_section0 ; $6122
     dw song_metroidQueenBattle_square2_section1 ; $612F
-    .loop
+    .loop:
     dw song_metroidQueenBattle_square2_section2 ; $613C
     dw $00F0, .loop
 ;}
@@ -6130,7 +6130,7 @@ song_metroidQueenBattle_wave:
 ;{
     dw song_metroidQueenBattle_wave_section0 ; $6146
     dw song_metroidQueenBattle_wave_section1 ; $6153
-    .loop
+    .loop:
     dw song_metroidQueenBattle_wave_section2 ; $6160
     dw $00F0, .loop
 ;}
@@ -6140,7 +6140,7 @@ song_metroidQueenBattle_noise:
 ;{
     dw song_metroidQueenBattle_noise_section0 ; $61BA
     dw song_metroidQueenBattle_noise_section1 ; $61C3
-    .loop
+    .loop:
     dw song_metroidQueenBattle_noise_section2 ; $61CC
     dw $00F0, .loop
 ;}
@@ -6257,7 +6257,7 @@ song_metroidQueenBattle_square2_section2:
 song_metroidQueenBattle_wave_section0:
 ;{
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
     SongRepeatSetup $A
         SongNoteLength_DottedQuaver
         SongNote "A2"
@@ -6272,7 +6272,7 @@ song_metroidQueenBattle_wave_section0:
 song_metroidQueenBattle_wave_section1:
 ;{
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
     SongRepeatSetup $4
         SongNoteLength_Quaver
         SongNote "A3"
@@ -6396,9 +6396,9 @@ song_metroidQueenBattle_noise_section1:
 ;{
     SongRepeatSetup $4
         SongNoteLength_Quaver
-        SongNoiseNote $9
+        SongNoiseNote songNoiseChannelOptionSets.noise9
         SongRest
-        SongNoiseNote $D
+        SongNoiseNote songNoiseChannelOptionSets.noiseD
         SongRest
     SongRepeat
     SongEnd
@@ -6408,12 +6408,12 @@ song_metroidQueenBattle_noise_section1:
 song_metroidQueenBattle_noise_section2:
 ;{
     SongNoteLength_Semiquaver
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Crochet
     SongNoteLength_Hemidemisemiquaver
     SongNoteLength_DottedSemiquaver
     SongRest
-    SongNoiseNote $1A
+    SongNoiseNote songNoiseChannelOptionSets.noise1A
     SongEnd
 ;}
 
@@ -6426,7 +6426,7 @@ song_chozoRuins_clone_header:
 song_chozoRuins_clone_square1:
 song_chozoRuins_square1:
 ;{
-    .loop
+    .loop:
     dw song_chozoRuins_square1_section0 ; $6219
     dw song_chozoRuins_square1_section1 ; $624C
     dw song_chozoRuins_square1_section2 ; $6264
@@ -6443,7 +6443,7 @@ song_chozoRuins_square1:
 song_chozoRuins_clone_square2:
 song_chozoRuins_square2:
 ;{
-    .loop
+    .loop:
     dw song_chozoRuins_square2_section0 ; $62F6
     dw song_chozoRuins_square2_section1 ; $6328
     dw song_chozoRuins_square2_section2 ; $6349
@@ -6458,7 +6458,7 @@ song_chozoRuins_square2:
 song_chozoRuins_clone_wave:
 song_chozoRuins_wave:
 ;{
-    .loop
+    .loop:
     dw song_chozoRuins_wave_section0 ; $63DF
     dw song_chozoRuins_wave_section1 ; $6412
     dw song_chozoRuins_wave_section2 ; $6435
@@ -6976,7 +6976,7 @@ song_chozoRuins_wave_section0:
 song_chozoRuins_wave_section3:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_Quaver
     SongRest
     SongNoteLength_Semiquaver
@@ -7270,9 +7270,9 @@ song_mainCaves_header:
 song_mainCaves_square1:
 ;{
     dw song_mainCaves_square1_section0 ; $6542
-    .alternateEntry
+    .alternateEntry:
     dw song_mainCaves_square1_section1 ; $6672
-    .loop
+    .loop:
     dw song_mainCaves_square1_section2 ; $659C
     dw song_mainCaves_square1_section3 ; $659C
     dw song_mainCaves_square1_section4 ; $65EB
@@ -7294,9 +7294,9 @@ song_mainCaves_square1:
 song_mainCaves_square2:
 ;{
     dw song_mainCaves_square2_section0 ; $6615
-    .alternateEntry
+    .alternateEntry:
     dw song_mainCaves_square2_section1 ; $6623
-    .loop
+    .loop:
     dw song_mainCaves_square2_section2 ; $6631
     dw song_mainCaves_square2_section3 ; $6672
     dw $00F0, .loop
@@ -7306,8 +7306,8 @@ song_mainCaves_square2:
 song_mainCaves_wave:
 ;{
     dw song_mainCaves_wave_section0 ; $669E
-    .loop
-    .alternateEntry
+    .loop:
+    .alternateEntry:
     dw song_mainCaves_wave_section1 ; $66AC
     dw song_mainCaves_wave_section2 ; $66DB
     dw song_mainCaves_wave_section3 ; $676A
@@ -7318,8 +7318,8 @@ song_mainCaves_wave:
 song_mainCaves_noise:
 ;{
     dw song_mainCaves_noise_section0 ; $67C3
-    .loop
-    .alternateEntry
+    .loop:
+    .alternateEntry:
     dw song_mainCaves_noise_section1 ; $67C9
     dw song_mainCaves_noise_section2 ; $67ED
     dw song_mainCaves_noise_section3 ; $6803
@@ -7728,7 +7728,7 @@ song_mainCaves_square2_section3:
 song_mainCaves_wave_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_Demisemiquaver
     SongNote "C2"
     SongNote "F2"
@@ -7745,7 +7745,7 @@ song_mainCaves_wave_section0:
 song_mainCaves_wave_section1:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_Quaver
     SongNote "C4"
     SongNoteLength_Semiquaver
@@ -7795,7 +7795,7 @@ song_mainCaves_wave_section1:
 song_mainCaves_wave_section2:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_DottedSemiquaver
     SongNote "C4"
     Echo1
@@ -7940,7 +7940,7 @@ song_mainCaves_wave_section2:
 song_mainCaves_wave_section3:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_DottedQuaver
     SongNote "F3"
     Echo1
@@ -8033,7 +8033,7 @@ song_mainCaves_noise_section0:
 ;{
     SongRepeatSetup $8
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $4
+        SongNoiseNote songNoiseChannelOptionSets.noise4
     SongRepeat
     SongEnd
 ;}
@@ -8043,38 +8043,38 @@ song_mainCaves_noise_section1:
 ;{
     SongRepeatSetup $3
         SongNoteLength_Semiquaver
-        SongNoiseNote $24
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $25
-        SongNoiseNote $1
-        SongNoiseNote $1
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $1
-        SongNoiseNote $1
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $24
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $3
+        SongNoiseNote songNoiseChannelOptionSets.noise24
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise25
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise24
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise3
     SongRepeat
     SongNoteLength_Semiquaver
-    SongNoiseNote $24
-    SongNoiseNote $1
-    SongNoiseNote $3
-    SongNoiseNote $24
-    SongNoiseNote $1
-    SongNoiseNote $1
-    SongNoiseNote $3
-    SongNoiseNote $1
-    SongNoiseNote $5
-    SongNoiseNote $4
-    SongNoiseNote $5
-    SongNoiseNote $4
+    SongNoiseNote songNoiseChannelOptionSets.noise24
+    SongNoiseNote songNoiseChannelOptionSets.noise1
+    SongNoiseNote songNoiseChannelOptionSets.noise3
+    SongNoiseNote songNoiseChannelOptionSets.noise24
+    SongNoiseNote songNoiseChannelOptionSets.noise1
+    SongNoiseNote songNoiseChannelOptionSets.noise1
+    SongNoiseNote songNoiseChannelOptionSets.noise3
+    SongNoiseNote songNoiseChannelOptionSets.noise1
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise4
     SongNoteLength_Crochet
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongEnd
 ;}
 
@@ -8083,24 +8083,24 @@ song_mainCaves_noise_section2:
 ;{
     SongRepeatSetup $F
         SongNoteLength_Semiquaver
-        SongNoiseNote $24
-        SongNoiseNote $1
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $24
-        SongNoiseNote $1
-        SongNoiseNote $3
-        SongNoiseNote $1
+        SongNoiseNote songNoiseChannelOptionSets.noise24
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise24
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
     SongRepeat
     SongNoteLength_Semiquaver
-    SongNoiseNote $5
-    SongNoiseNote $4
-    SongNoiseNote $4
-    SongNoiseNote $4
-    SongNoiseNote $5
-    SongNoiseNote $4
-    SongNoiseNote $5
-    SongNoiseNote $4
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise4
     SongEnd
 ;}
 
@@ -8109,39 +8109,39 @@ song_mainCaves_noise_section3:
 ;{
     SongRepeatSetup $7
         SongNoteLength_Semiquaver
-        SongNoiseNote $24
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $25
-        SongNoiseNote $5
-        SongNoiseNote $1
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $24
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $3
-        SongNoiseNote $25
-        SongNoiseNote $3
-        SongNoiseNote $1
-        SongNoiseNote $1
+        SongNoiseNote songNoiseChannelOptionSets.noise24
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise25
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise24
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise25
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise1
     SongRepeat
-    SongNoiseNote $24
-    SongNoiseNote $3
-    SongNoiseNote $2
-    SongNoiseNote $25
-    SongNoiseNote $24
-    SongNoiseNote $3
-    SongNoiseNote $2
-    SongNoiseNote $1
-    SongNoiseNote $5
-    SongNoiseNote $4
-    SongNoiseNote $4
-    SongNoiseNote $4
-    SongNoiseNote $5
-    SongNoiseNote $4
-    SongNoiseNote $5
-    SongNoiseNote $4
+    SongNoiseNote songNoiseChannelOptionSets.noise24
+    SongNoiseNote songNoiseChannelOptionSets.noise3
+    SongNoiseNote songNoiseChannelOptionSets.noise2
+    SongNoiseNote songNoiseChannelOptionSets.noise25
+    SongNoiseNote songNoiseChannelOptionSets.noise24
+    SongNoiseNote songNoiseChannelOptionSets.noise3
+    SongNoiseNote songNoiseChannelOptionSets.noise2
+    SongNoiseNote songNoiseChannelOptionSets.noise1
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise4
     SongEnd
 ;}
 
@@ -8150,54 +8150,54 @@ song_mainCaves_noise_section4:
 ;{
     SongRepeatSetup $4
         SongNoteLength_Semiquaver
-        SongNoiseNote $5
-        SongNoiseNote $3
-        SongNoiseNote $5
-        SongNoiseNote $1
-        SongNoiseNote $2
-        SongNoiseNote $3
-        SongNoiseNote $2
-        SongNoiseNote $1
-        SongNoiseNote $1
-        SongNoiseNote $3
-        SongNoiseNote $2
-        SongNoiseNote $1
-        SongNoiseNote $2
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise2
         SongNoteLength_Quaver
-        SongNoiseNote $1A
+        SongNoiseNote songNoiseChannelOptionSets.noise1A
         SongNoteLength_Semiquaver
-        SongNoiseNote $3
+        SongNoiseNote songNoiseChannelOptionSets.noise3
     SongRepeat
     SongRepeatSetup $3
         SongNoteLength_Semiquaver
-        SongNoiseNote $4
-        SongNoiseNote $4
-        SongNoiseNote $1
-        SongNoiseNote $4
-        SongNoiseNote $5
-        SongNoiseNote $3
-        SongNoiseNote $2
-        SongNoiseNote $1
-        SongNoiseNote $24
-        SongNoiseNote $3
-        SongNoiseNote $2
-        SongNoiseNote $1
-        SongNoiseNote $24
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise24
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise24
         SongNoteLength_Quaver
-        SongNoiseNote $1A
+        SongNoiseNote songNoiseChannelOptionSets.noise1A
         SongNoteLength_Semiquaver
-        SongNoiseNote $3
+        SongNoiseNote songNoiseChannelOptionSets.noise3
     SongRepeat
-    SongNoiseNote $24
-    SongNoiseNote $3
-    SongNoiseNote $24
-    SongNoiseNote $1
-    SongNoiseNote $2
-    SongNoiseNote $3
-    SongNoiseNote $2
-    SongNoiseNote $1
+    SongNoiseNote songNoiseChannelOptionSets.noise24
+    SongNoiseNote songNoiseChannelOptionSets.noise3
+    SongNoiseNote songNoiseChannelOptionSets.noise24
+    SongNoiseNote songNoiseChannelOptionSets.noise1
+    SongNoiseNote songNoiseChannelOptionSets.noise2
+    SongNoiseNote songNoiseChannelOptionSets.noise3
+    SongNoiseNote songNoiseChannelOptionSets.noise2
+    SongNoiseNote songNoiseChannelOptionSets.noise1
     SongRepeatSetup $8
-        SongNoiseNote $5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
     SongRepeat
     SongEnd
 ;}
@@ -8211,8 +8211,8 @@ song_subCaves1_square1:
 ;{
     dw song_subCaves1_square1_section0 ; $7DA0
     dw song_subCaves1_square1_section1 ; $7D86
-    .loop
-    .alternateEntry
+    .loop:
+    .alternateEntry:
     dw song_subCaves1_square1_section2 ; $6880
     dw $00F0, .loop
 ;}
@@ -8369,8 +8369,8 @@ song_subCaves2_square1:
 song_subCaves2_square2:
 ;{
     dw song_subCaves2_square2_section0 ; $7DCA
-    .loop
-    .alternateEntry
+    .loop:
+    .alternateEntry:
     dw song_subCaves2_square2_section1 ; $6911
     dw $00F0, .loop
     dw $0000
@@ -8523,8 +8523,8 @@ song_subCaves3_square1:
 ;{
     dw song_subCaves3_square1_section0 ; $7DA0
     dw song_subCaves3_square1_section1 ; $7D7E
-    .loop
-    .alternateEntry
+    .loop:
+    .alternateEntry:
     dw song_subCaves3_square1_section2 ; $69B1
     dw $00F0, .loop
 ;}
@@ -8533,8 +8533,8 @@ song_subCaves3_square1:
 song_subCaves3_square2:
 ;{
     dw song_subCaves3_square2_section0 ; $7DCA
-    .loop
-    .alternateEntry
+    .loop:
+    .alternateEntry:
     dw song_subCaves3_square2_section1 ; $69E2
     dw $00F0, .loop
 ;}
@@ -8543,8 +8543,8 @@ song_subCaves3_square2:
 song_subCaves3_wave:
 ;{
     dw song_subCaves3_wave_section0 ; $7DF4
-    .loop
-    .alternateEntry
+    .loop:
+    .alternateEntry:
     dw song_subCaves3_wave_section1 ; $6A92
     dw $00F0, .loop
 ;}
@@ -8791,7 +8791,7 @@ song_subCaves3_square2_section1:
 song_subCaves3_wave_section1:
 ;{
     SongOptions
-        WaveOptions $418B, 3, $3
+        WaveOptions wavePatterns.wave4, 3, $3
     SongNoteLength_DottedCrochet
     SongRepeatSetup $6
         SongNote "B3"
@@ -8861,7 +8861,7 @@ song_finalCaves_clone_header:
 song_finalCaves_clone_square1:
 song_finalCaves_square1:
 ;{
-    .loop
+    .loop:
     dw song_finalCaves_square1_section0 ; $6B05
     dw $00F0, .loop
 ;}
@@ -8870,7 +8870,7 @@ song_finalCaves_square1:
 song_finalCaves_clone_square2:
 song_finalCaves_square2:
 ;{
-    .loop
+    .loop:
     dw song_finalCaves_square2_section0 ; $6B15
     dw $00F0, .loop
 ;}
@@ -8879,7 +8879,7 @@ song_finalCaves_square2:
 song_finalCaves_clone_wave:
 song_finalCaves_wave:
 ;{
-    .loop
+    .loop:
     dw song_finalCaves_wave_section0 ; $6B25
     dw $00F0, .loop
 ;}
@@ -8888,7 +8888,7 @@ song_finalCaves_wave:
 song_finalCaves_clone_noise:
 song_finalCaves_noise:
 ;{
-    .loop
+    .loop:
     dw song_finalCaves_noise_section0 ; $6BBA
     dw $00F0, .loop
 ;}
@@ -8939,7 +8939,7 @@ song_finalCaves_square2_section0:
 song_finalCaves_wave_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $4
+        WaveOptions wavePatterns.wave3, 2, $4
     SongRepeatSetup $5
         SongNoteLength_Semibreve
         SongRest
@@ -9089,11 +9089,11 @@ song_finalCaves_wave_section0:
 song_finalCaves_noise_section0:
 ;{
     SongNoteLength_Crochet
-    SongNoiseNote $1D
+    SongNoiseNote songNoiseChannelOptionSets.noise1D
     SongNoteLength_Semiquaver
     SongRest
     SongNoteLength_DottedQuaver
-    SongNoiseNote $1E
+    SongNoiseNote songNoiseChannelOptionSets.noise1E
     SongNoteLength_Semiquaver
     SongRest
     SongEnd
@@ -9107,7 +9107,7 @@ song_metroidHive_clone_header:
 ; $6BCE
 song_metroidHive_withIntro_square1_loop:
 ;{
-    .loop
+    .loop:
     dw song_metroidHive_withIntro_square1_loop_section0 ; $6C00
     dw song_metroidHive_withIntro_square1_loop_section1 ; $6C00
     dw song_metroidHive_withIntro_square1_loop_section2 ; $6C5F
@@ -9122,7 +9122,7 @@ song_metroidHive_withIntro_square1_loop:
 song_metroidHive_clone_square2:
 song_metroidHive_square2:
 ;{
-    .loop
+    .loop:
     dw song_metroidHive_square2_section0 ; $6C5A
     dw song_metroidHive_square2_section1 ; $6C04
     dw song_metroidHive_square2_section2 ; $6C04
@@ -9138,7 +9138,7 @@ song_metroidHive_square2:
 song_metroidHive_clone_wave:
 song_metroidHive_wave:
 ;{
-    .loop
+    .loop:
     dw song_metroidHive_wave_section0 ; $6C65
     dw $00F0, .loop
 ;}
@@ -9147,7 +9147,7 @@ song_metroidHive_wave:
 song_metroidHive_clone_noise:
 song_metroidHive_noise:
 ;{
-    .loop
+    .loop:
     dw song_metroidHive_noise_section0 ; $6C85
     dw $00F0, .loop
 ;}
@@ -9283,7 +9283,7 @@ song_metroidHive_square2_section5:
 song_metroidHive_wave_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongRepeatSetup $A
         SongNoteLength_Minum
         SongNote "B2"
@@ -9317,11 +9317,11 @@ song_metroidHive_wave_section0:
 song_metroidHive_noise_section0:
 ;{
     SongNoteLength_DottedSemiquaver
-    SongNoiseNote $1D
+    SongNoiseNote songNoiseChannelOptionSets.noise1D
     SongNoteLength_Hemidemisemiquaver
     SongRest
     SongNoteLength_DottedSemiquaver
-    SongNoiseNote $1E
+    SongNoiseNote songNoiseChannelOptionSets.noise1E
     SongNoteLength_Demisemiquaver
     SongRest
     SongEnd
@@ -9492,7 +9492,7 @@ song_itemGet_square2_section0:
 song_itemGet_wave_section0:
 ;{
     SongOptions
-        WaveOptions $4123, 1, $0
+        WaveOptions wavePatterns.wave1, 1, $0
     SongNoteLength_Quaver
     SongRest
     SongNoteLength_Semiquaver
@@ -9536,15 +9536,15 @@ song_itemGet_wave_section0:
 song_itemGet_noise_section0:
 ;{
     SongNoteLength_DottedQuaver
-    SongNoiseNote $1A
+    SongNoiseNote songNoiseChannelOptionSets.noise1A
     SongNoteLength_Minum
-    SongNoiseNote $1B
+    SongNoiseNote songNoiseChannelOptionSets.noise1B
     SongRest
     SongRest
     SongNoteLength_DottedQuaver
-    SongNoiseNote $1A
+    SongNoiseNote songNoiseChannelOptionSets.noise1A
     SongNoteLength_Semibreve
-    SongNoiseNote $1B
+    SongNoiseNote songNoiseChannelOptionSets.noise1B
     SongEnd
 ;}
 
@@ -9560,7 +9560,7 @@ song_metroidQueenHallway_square2:
 song_metroidQueenHallway_square1:
 ;{
     dw song_metroidQueenHallway_square1_section0 ; $6D70
-    .loop
+    .loop:
     dw song_metroidQueenHallway_square1_section1 ; $6D7B
     dw $00F0, .loop
 ;}
@@ -9569,7 +9569,7 @@ song_metroidQueenHallway_square1:
 song_metroidQueenHallway_clone_wave:
 song_metroidQueenHallway_wave:
 ;{
-    .loop
+    .loop:
     dw song_metroidQueenHallway_wave_section0 ; $6D77
     dw $00F0, .loop
 ;}
@@ -9578,7 +9578,7 @@ song_metroidQueenHallway_wave:
 song_metroidQueenHallway_clone_noise:
 song_metroidQueenHallway_noise:
 ;{
-    .loop
+    .loop:
     dw song_metroidQueenHallway_noise_section0 ; $6D82
     dw $00F0, .loop
 ;}
@@ -9599,7 +9599,7 @@ song_metroidQueenHallway_square1_section0:
 song_metroidQueenHallway_wave_section0:
 ;{
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
 ;}
 
 ; $6D7B
@@ -9617,11 +9617,11 @@ song_metroidQueenHallway_square1_section1:
 song_metroidQueenHallway_noise_section0:
 ;{
     SongNoteLength_DottedSemiquaver
-    SongNoiseNote $1D
+    SongNoiseNote songNoiseChannelOptionSets.noise1D
     SongNoteLength_Hemidemisemiquaver
     SongRest
     SongNoteLength_DottedSemiquaver
-    SongNoiseNote $1E
+    SongNoiseNote songNoiseChannelOptionSets.noise1E
     SongNoteLength_Demisemiquaver
     SongRest
     SongEnd
@@ -9638,7 +9638,7 @@ song_metroidBattle_square1:
 ;{
     dw song_metroidBattle_square1_section0 ; $6DB8
     dw song_metroidBattle_square1_section1 ; $7D7E
-    .loop
+    .loop:
     dw song_metroidBattle_square1_section2 ; $6DC6
     dw $00F0, .loop
 ;}
@@ -9648,7 +9648,7 @@ song_metroidBattle_clone_square2:
 song_metroidBattle_square2:
 ;{
     dw song_metroidBattle_square2_section0 ; $6E0D
-    .loop
+    .loop:
     dw song_metroidBattle_square2_section1 ; $6E29
     dw $00F0, .loop
 ;}
@@ -9658,7 +9658,7 @@ song_metroidBattle_clone_wave:
 song_metroidBattle_wave:
 ;{
     dw song_metroidBattle_wave_section0 ; $6E68
-    .loop
+    .loop:
     dw song_metroidBattle_wave_section1 ; $6E77
     dw $00F0, .loop
 ;}
@@ -9668,7 +9668,7 @@ song_metroidBattle_clone_noise:
 song_metroidBattle_noise:
 ;{
     dw song_metroidBattle_noise_section0 ; $6EA3
-    .loop
+    .loop:
     dw song_metroidBattle_noise_section1 ; $6EB2
     dw $00F0, .loop
 ;}
@@ -9871,7 +9871,7 @@ song_metroidBattle_square2_section1:
 song_metroidBattle_wave_section0:
 ;{
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
     SongNoteLength_Demisemiquaver
     SongNote "D5"
     SongNote "D3"
@@ -9889,7 +9889,7 @@ song_metroidBattle_wave_section0:
 song_metroidBattle_wave_section1:
 ;{
     SongOptions
-        WaveOptions $418B, 2, $7
+        WaveOptions wavePatterns.wave4, 2, $7
     SongNoteLength_Quaver
     SongNote "A3"
     SongNote "A3"
@@ -9908,7 +9908,7 @@ song_metroidBattle_wave_section1:
         SongNote "A3"
     SongRepeat
     SongOptions
-        WaveOptions $417B, 2, $7
+        WaveOptions wavePatterns.wave3, 2, $7
     SongNoteLength_Demisemiquaver
     SongNote "Db7"
     SongNote "Gb7"
@@ -9933,19 +9933,19 @@ song_metroidBattle_wave_section1:
 song_metroidBattle_noise_section0:
 ;{
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $6
-    SongNoiseNote $7
-    SongNoiseNote $6
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise6
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise6
     SongNoteLength_DottedCrochet
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Semiquaver
-    SongNoiseNote $4
-    SongNoiseNote $5
-    SongNoiseNote $6
-    SongNoiseNote $6
-    SongNoiseNote $7
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise4
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise6
+    SongNoiseNote songNoiseChannelOptionSets.noise6
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongEnd
 ;}
 
@@ -9953,38 +9953,38 @@ song_metroidBattle_noise_section0:
 song_metroidBattle_noise_section1:
 ;{
     SongNoteLength_Quaver
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongNoteLength_Semiquaver
     SongRest
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $4
+    SongNoiseNote songNoiseChannelOptionSets.noise4
     SongRepeatSetup $6
         SongNoteLength_Quaver
-        SongNoiseNote $5
-        SongNoiseNote $5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
     SongRepeat
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongNoteLength_Quaver
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongNoteLength_DottedQuaver
-    SongNoiseNote $12
+    SongNoiseNote songNoiseChannelOptionSets.noise12
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongNoteLength_Quaver
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongEnd
 ;}
 
@@ -10004,8 +10004,8 @@ song_subCaves4_square1:
 song_subCaves4_square2:
 ;{
     dw song_subCaves4_square2_section0 ; $7DCA
-    .loop
-    .alternateEntry
+    .loop:
+    .alternateEntry:
     dw song_subCaves4_square2_section1 ; $6EF6
     dw $00F0, .loop
 ;}
@@ -10134,66 +10134,66 @@ song_earthquake_noise:
 song_earthquake_noise_section0:
 ;{
     SongNoteLength_Quaver
-    SongNoiseNote $12
+    SongNoiseNote songNoiseChannelOptionSets.noise12
     SongRepeatSetup $3
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $B
-        SongNoiseNote $B
+        SongNoiseNote songNoiseChannelOptionSets.noiseB
+        SongNoiseNote songNoiseChannelOptionSets.noiseB
     SongRepeat
     SongRepeatSetup $3
-        SongNoiseNote $B
-        SongNoiseNote $A
+        SongNoiseNote songNoiseChannelOptionSets.noiseB
+        SongNoiseNote songNoiseChannelOptionSets.noiseA
     SongRepeat
     SongRepeatSetup $2
-        SongNoiseNote $A
-        SongNoiseNote $9
+        SongNoiseNote songNoiseChannelOptionSets.noiseA
+        SongNoiseNote songNoiseChannelOptionSets.noise9
     SongRepeat
     SongRepeatSetup $3
-        SongNoiseNote $8
-        SongNoiseNote $9
+        SongNoiseNote songNoiseChannelOptionSets.noise8
+        SongNoiseNote songNoiseChannelOptionSets.noise9
     SongRepeat
     SongRepeatSetup $2
-        SongNoiseNote $D
-        SongNoiseNote $E
+        SongNoiseNote songNoiseChannelOptionSets.noiseD
+        SongNoiseNote songNoiseChannelOptionSets.noiseE
     SongRepeat
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $8
-    SongNoiseNote $D
-    SongNoiseNote $B
-    SongNoiseNote $E
-    SongNoiseNote $8
-    SongNoiseNote $E
-    SongNoiseNote $B
-    SongNoiseNote $D
-    SongNoiseNote $B
-    SongNoiseNote $D
-    SongNoiseNote $A
-    SongNoiseNote $D
-    SongNoiseNote $8
-    SongNoiseNote $F
-    SongNoiseNote $8
-    SongNoiseNote $B
-    SongNoiseNote $8
-    SongNoiseNote $F
-    SongNoiseNote $A
-    SongNoiseNote $D
-    SongNoiseNote $A
-    SongNoiseNote $C
-    SongNoiseNote $A
-    SongNoiseNote $B
+    SongNoiseNote songNoiseChannelOptionSets.noise8
+    SongNoiseNote songNoiseChannelOptionSets.noiseD
+    SongNoiseNote songNoiseChannelOptionSets.noiseB
+    SongNoiseNote songNoiseChannelOptionSets.noiseE
+    SongNoiseNote songNoiseChannelOptionSets.noise8
+    SongNoiseNote songNoiseChannelOptionSets.noiseE
+    SongNoiseNote songNoiseChannelOptionSets.noiseB
+    SongNoiseNote songNoiseChannelOptionSets.noiseD
+    SongNoiseNote songNoiseChannelOptionSets.noiseB
+    SongNoiseNote songNoiseChannelOptionSets.noiseD
+    SongNoiseNote songNoiseChannelOptionSets.noiseA
+    SongNoiseNote songNoiseChannelOptionSets.noiseD
+    SongNoiseNote songNoiseChannelOptionSets.noise8
+    SongNoiseNote songNoiseChannelOptionSets.noiseF
+    SongNoiseNote songNoiseChannelOptionSets.noise8
+    SongNoiseNote songNoiseChannelOptionSets.noiseB
+    SongNoiseNote songNoiseChannelOptionSets.noise8
+    SongNoiseNote songNoiseChannelOptionSets.noiseF
+    SongNoiseNote songNoiseChannelOptionSets.noiseA
+    SongNoiseNote songNoiseChannelOptionSets.noiseD
+    SongNoiseNote songNoiseChannelOptionSets.noiseA
+    SongNoiseNote songNoiseChannelOptionSets.noiseC
+    SongNoiseNote songNoiseChannelOptionSets.noiseA
+    SongNoiseNote songNoiseChannelOptionSets.noiseB
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $9
-    SongNoiseNote $17
+    SongNoiseNote songNoiseChannelOptionSets.noise9
+    SongNoiseNote songNoiseChannelOptionSets.noise17
     SongRepeatSetup $3
-        SongNoiseNote $A
-        SongNoiseNote $18
+        SongNoiseNote songNoiseChannelOptionSets.noiseA
+        SongNoiseNote songNoiseChannelOptionSets.noise18
     SongRepeat
     SongRepeatSetup $5A
-        SongNoiseNote $A
-        SongNoiseNote $B
+        SongNoiseNote songNoiseChannelOptionSets.noiseA
+        SongNoiseNote songNoiseChannelOptionSets.noiseB
     SongRepeat
     SongNoteLength_Minum
-    SongNoiseNote $A
+    SongNoiseNote songNoiseChannelOptionSets.noiseA
     SongEnd
 ;}
 
@@ -10315,7 +10315,7 @@ unused6FB9_section2:
 song_killedMetroid_wave_section0:
 ;{
     SongOptions
-        WaveOptions $416B, 1, $0
+        WaveOptions wavePatterns.wave2, 1, $0
     SongNoteLength_Quaver
     SongRest
     SongNoteLength_Demisemiquaver
@@ -10330,7 +10330,7 @@ song_killedMetroid_wave_section0:
     SongNoteLength_Crochet
     SongRest
     SongOptions
-        WaveOptions $416B, 3, $0
+        WaveOptions wavePatterns.wave2, 3, $0
     SongNoteLength_Semihemidemisemiquaver
     SongNote "C4"
     SongNote "G4"
@@ -10379,7 +10379,7 @@ song_title_header:
 song_title_square2:
 song_title_square1:
 ;{
-    .loop
+    .loop:
     dw song_title_square1_section0 ; $7E09
     dw song_title_square1_section1 ; $708B
     dw song_title_square1_section2 ; $708B
@@ -10397,7 +10397,7 @@ song_title_square1:
 ; $7061
 song_title_wave:
 ;{
-    .loop
+    .loop:
     dw song_title_wave_section0 ; $7E10
     dw song_title_wave_section1 ; $7095
     dw song_title_wave_section2 ; $709F
@@ -10412,7 +10412,7 @@ song_title_wave:
 ; $7075
 song_title_noise:
 ;{
-    .loop
+    .loop:
     dw song_title_noise_section0 ; $7E17
     dw song_title_noise_section1 ; $713E
     dw song_title_noise_section2 ; $713E
@@ -10448,7 +10448,7 @@ song_title_wave_section4:
 song_title_wave_section1:
 ;{
     SongOptions
-        WaveOptions $4123, 3, $3
+        WaveOptions wavePatterns.wave1, 3, $3
     SongNoteLength_Semibreve
     SongRest
     SongRest
@@ -10513,7 +10513,7 @@ song_title_wave_section2:
     SongNote "Bb6"
     Echo1
     SongOptions
-        WaveOptions $4123, 2, $3
+        WaveOptions wavePatterns.wave1, 2, $3
     SongNoteLength_Crochet
     SongRest
     SongNoteLength_Semiquaver
@@ -10579,7 +10579,7 @@ song_title_wave_section2:
 song_title_wave_section3:
 ;{
     SongOptions
-        WaveOptions $4113, 2, $0
+        WaveOptions wavePatterns.wave0, 2, $0
     SongNoteLength_Quaver
     SongNote "F7"
     Echo1
@@ -10641,15 +10641,15 @@ song_title_noise_section4:
 ;{
     SongRepeatSetup $2
         SongNoteLength_Semiquaver
-        SongNoiseNote $5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
         SongNoteLength_Minum
-        SongNoiseNote $8
+        SongNoiseNote songNoiseChannelOptionSets.noise8
         SongNoteLength_Crochet
         SongRest
         SongNoteLength_DottedQuaver
         SongRest
         SongNoteLength_Semibreve
-        SongNoiseNote $C
+        SongNoiseNote songNoiseChannelOptionSets.noiseC
     SongRepeat
     SongEnd
 ;}
@@ -10862,7 +10862,7 @@ song_title_square1_section9:
 song_title_wave_section5:
 ;{
     SongOptions
-        WaveOptions $41AB, 1, $0
+        WaveOptions wavePatterns.wave6, 1, $0
     SongNoteLength_Demisemiquaver
     SongRest
     SongNoteLength_Quaver
@@ -10926,7 +10926,7 @@ song_title_wave_section5:
 song_title_wave_section6:
 ;{
     SongOptions
-        WaveOptions $418B, 1, $0
+        WaveOptions wavePatterns.wave4, 1, $0
     SongNoteLength_Semiquaver
     SongRest
     SongNoteLength_DottedSemiquaver
@@ -11095,7 +11095,7 @@ song_title_wave_section6:
     Echo1
     SongNote "D5"
     SongOptions
-        WaveOptions $418B, 1, $0
+        WaveOptions wavePatterns.wave4, 1, $0
     SongNoteLength_Demisemiquaver
     Echo1
     SongNoteLength_DottedSemiquaver
@@ -11281,7 +11281,7 @@ song_title_wave_section6:
 song_title_wave_section7:
 ;{
     SongOptions
-        WaveOptions $416B, 1, $0
+        WaveOptions wavePatterns.wave2, 1, $0
     SongNoteLength_Demisemiquaver
     Echo1
     SongNoteLength_Semiquaver
@@ -11299,7 +11299,7 @@ song_title_wave_section7:
         Echo1
     SongRepeat
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
     SongRepeatSetup $3
         SongNoteLength_Semiquaver
         SongNote "C3"
@@ -11310,7 +11310,7 @@ song_title_wave_section7:
         Echo1
     SongRepeat
     SongOptions
-        WaveOptions $416B, 3, $0
+        WaveOptions wavePatterns.wave2, 3, $0
     SongRepeatSetup $5
         SongNoteLength_Semiquaver
         SongNote "C3"
@@ -11351,25 +11351,25 @@ song_title_noise_section7:
     SongNoteLength_Crochet
     SongRest
     SongNoteLength_Minum
-    SongNoiseNote $8
+    SongNoiseNote songNoiseChannelOptionSets.noise8
     SongRest
     SongRest
-    SongNoiseNote $8
+    SongNoiseNote songNoiseChannelOptionSets.noise8
     SongRest
     SongRest
     SongNoteLength_DottedQuaver
-    SongNoiseNote $8
+    SongNoiseNote songNoiseChannelOptionSets.noise8
     SongNoteLength_Demisemiquaver
     SongRest
     SongNoteLength_Semiquaver
-    SongNoiseNote $1F
+    SongNoiseNote songNoiseChannelOptionSets.noise1F
     SongRest
-    SongNoiseNote $20
+    SongNoiseNote songNoiseChannelOptionSets.noise20
     SongRest
-    SongNoiseNote $21
+    SongNoiseNote songNoiseChannelOptionSets.noise21
     SongRest
     SongNoteLength_DottedSemiquaver
-    SongNoiseNote $21
+    SongNoiseNote songNoiseChannelOptionSets.noise21
     SongNoteLength_Semiquaver
     SongRest
     SongEnd
@@ -11380,21 +11380,21 @@ song_title_noise_section8:
 ;{
     SongRepeatSetup $5
         SongNoteLength_DottedCrochet
-        SongNoiseNote $8
-        SongNoiseNote $C
-        SongNoiseNote $8
+        SongNoiseNote songNoiseChannelOptionSets.noise8
+        SongNoiseNote songNoiseChannelOptionSets.noiseC
+        SongNoiseNote songNoiseChannelOptionSets.noise8
     SongRepeat
-    SongNoiseNote $8
-    SongNoiseNote $C
-    SongNoiseNote $8
-    SongNoiseNote $C
-    SongNoiseNote $9
-    SongNoiseNote $9
-    SongNoiseNote $E
-    SongNoiseNote $A
-    SongNoiseNote $A
-    SongNoiseNote $F
-    SongNoiseNote $F
+    SongNoiseNote songNoiseChannelOptionSets.noise8
+    SongNoiseNote songNoiseChannelOptionSets.noiseC
+    SongNoiseNote songNoiseChannelOptionSets.noise8
+    SongNoiseNote songNoiseChannelOptionSets.noiseC
+    SongNoiseNote songNoiseChannelOptionSets.noise9
+    SongNoiseNote songNoiseChannelOptionSets.noise9
+    SongNoiseNote songNoiseChannelOptionSets.noiseE
+    SongNoiseNote songNoiseChannelOptionSets.noiseA
+    SongNoiseNote songNoiseChannelOptionSets.noiseA
+    SongNoiseNote songNoiseChannelOptionSets.noiseF
+    SongNoiseNote songNoiseChannelOptionSets.noiseF
     SongRepeatSetup $5
         SongNoteLength_Minum
         SongRest
@@ -11473,7 +11473,7 @@ song_samusFanfare_square1_section0:
 song_samusFanfare_wave_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_DottedCrochet
     SongRest
     SongNoteLength_Semiquaver
@@ -11500,20 +11500,20 @@ song_samusFanfare_wave_section0:
 song_samusFanfare_noise_section0:
 ;{
     SongNoteLength_DottedQuaver
-    SongNoiseNote $12
-    SongNoiseNote $1D
-    SongNoiseNote $12
+    SongNoiseNote songNoiseChannelOptionSets.noise12
+    SongNoiseNote songNoiseChannelOptionSets.noise1D
+    SongNoiseNote songNoiseChannelOptionSets.noise12
     SongNoteLength_DottedSemiquaver
-    SongNoiseNote $17
-    SongNoiseNote $15
-    SongNoiseNote $13
-    SongNoiseNote $14
+    SongNoiseNote songNoiseChannelOptionSets.noise17
+    SongNoiseNote songNoiseChannelOptionSets.noise15
+    SongNoiseNote songNoiseChannelOptionSets.noise13
+    SongNoiseNote songNoiseChannelOptionSets.noise14
     SongNoteLength_Semiquaver
-    SongNoiseNote $16
+    SongNoiseNote songNoiseChannelOptionSets.noise16
     SongNoteLength_Quaver
-    SongNoiseNote $1A
+    SongNoiseNote songNoiseChannelOptionSets.noise1A
     SongNoteLength_Semibreve
-    SongNoiseNote $1B
+    SongNoiseNote songNoiseChannelOptionSets.noise1B
     SongEnd
 ;}
 
@@ -12862,7 +12862,7 @@ song_reachedTheGunship_square2_section9:
 song_reachedTheGunship_wave_section0:
 ;{
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
     SongRepeatSetup $2
         SongNoteLength_Hemidemisemiquaver
         SongNote "C3"
@@ -12976,7 +12976,7 @@ song_reachedTheGunship_square1_section1:
 song_reachedTheGunship_wave_section1:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_Crochet
     SongNote "C6"
     SongNoteLength_DottedQuaver
@@ -13052,7 +13052,7 @@ song_reachedTheGunship_wave_section1:
 song_reachedTheGunship_wave_section2:
 ;{
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
     SongRepeatSetup $7
         SongNoteLength_Demisemiquaver
         SongNote "C3"
@@ -13075,7 +13075,7 @@ song_reachedTheGunship_wave_section2:
 song_reachedTheGunship_wave_section3:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_Crochet
     SongNote "C4"
     SongNote "F3"
@@ -13165,7 +13165,7 @@ song_reachedTheGunship_wave_section8:
     SongNote "C4"
     SongNote "F4"
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
     SongRepeatSetup $2
         SongNoteLength_Semiquaver
         SongNote "C4"
@@ -13248,7 +13248,7 @@ song_reachedTheGunship_wave_section8:
     SongNote "G4"
     Echo1
     SongOptions
-        WaveOptions $416B, 1, $0
+        WaveOptions wavePatterns.wave2, 1, $0
     SongNoteLength_Demisemiquaver
     SongNote "G3"
     Echo1
@@ -13272,45 +13272,45 @@ song_reachedTheGunship_noise_section0:
 ;{
     SongRepeatSetup $2
         SongNoteLength_Semiquaver
-        SongNoiseNote $4
-        SongNoiseNote $3
-        SongNoiseNote $4
-        SongNoiseNote $3
-        SongNoiseNote $4
-        SongNoiseNote $3
-        SongNoiseNote $3
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise3
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $7
-        SongNoiseNote $5
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise5
     SongRepeat
     SongRepeatSetup $3
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $4
-        SongNoiseNote $5
-        SongNoiseNote $3
-        SongNoiseNote $1
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
     SongRepeat
-    SongNoiseNote $5
-    SongNoiseNote $3
-    SongNoiseNote $7
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise3
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongRepeatSetup $2
-        SongNoiseNote $4
-        SongNoiseNote $7
-        SongNoiseNote $3
-        SongNoiseNote $1
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise1
     SongRepeat
-    SongNoiseNote $7
-    SongNoiseNote $7
-    SongNoiseNote $7
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Semiquaver
-    SongNoiseNote $1A
+    SongNoiseNote songNoiseChannelOptionSets.noise1A
     SongNoteLength_Hemidemisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $7
-    SongNoiseNote $7
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongEnd
 ;}
 
@@ -13318,45 +13318,45 @@ song_reachedTheGunship_noise_section0:
 song_reachedTheGunship_noise_section1:
 ;{
     SongNoteLength_Minum
-    SongNoiseNote $1B
+    SongNoiseNote songNoiseChannelOptionSets.noise1B
     SongRest
     SongRest
     SongNoteLength_DottedCrochet
     SongRest
     SongNoteLength_Quaver
-    SongNoiseNote $1A
+    SongNoiseNote songNoiseChannelOptionSets.noise1A
     SongNoteLength_Quaver
-    SongNoiseNote $1B
-    SongNoiseNote $14
-    SongNoiseNote $15
-    SongNoiseNote $16
+    SongNoiseNote songNoiseChannelOptionSets.noise1B
+    SongNoiseNote songNoiseChannelOptionSets.noise14
+    SongNoiseNote songNoiseChannelOptionSets.noise15
+    SongNoiseNote songNoiseChannelOptionSets.noise16
     SongNoteLength_Quaver
-    SongNoiseNote $15
+    SongNoiseNote songNoiseChannelOptionSets.noise15
     SongNoteLength_Crochet
-    SongNoiseNote $17
+    SongNoiseNote songNoiseChannelOptionSets.noise17
     SongNoteLength_Quaver
-    SongNoiseNote $19
-    SongNoiseNote $18
-    SongNoiseNote $16
+    SongNoiseNote songNoiseChannelOptionSets.noise19
+    SongNoiseNote songNoiseChannelOptionSets.noise18
+    SongNoiseNote songNoiseChannelOptionSets.noise16
     SongNoteLength_Crochet
-    SongNoiseNote $15
+    SongNoiseNote songNoiseChannelOptionSets.noise15
     SongNoteLength_Quaver
-    SongNoiseNote $14
-    SongNoiseNote $13
-    SongNoiseNote $15
-    SongNoiseNote $14
+    SongNoiseNote songNoiseChannelOptionSets.noise14
+    SongNoiseNote songNoiseChannelOptionSets.noise13
+    SongNoiseNote songNoiseChannelOptionSets.noise15
+    SongNoiseNote songNoiseChannelOptionSets.noise14
     SongRepeatSetup $4
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $13
-        SongNoiseNote $19
+        SongNoiseNote songNoiseChannelOptionSets.noise13
+        SongNoiseNote songNoiseChannelOptionSets.noise19
     SongRepeat
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongNoteLength_Quaver
-    SongNoiseNote $1B
+    SongNoiseNote songNoiseChannelOptionSets.noise1B
     SongEnd
 ;}
 
@@ -13365,25 +13365,25 @@ song_reachedTheGunship_noise_section2:
 ;{
     SongRepeatSetup $3
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $7
-        SongNoiseNote $3
-        SongNoiseNote $5
-        SongNoiseNote $5
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
     SongRepeat
     SongNoteLength_Semiquaver
-    SongNoiseNote $1A
+    SongNoiseNote songNoiseChannelOptionSets.noise1A
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $3
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise3
     SongRepeatSetup $3
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $7
-        SongNoiseNote $2
-        SongNoiseNote $5
-        SongNoiseNote $5
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
     SongRepeat
     SongNoteLength_Quaver
-    SongNoiseNote $1B
+    SongNoiseNote songNoiseChannelOptionSets.noise1B
     SongEnd
 ;}
 
@@ -13392,34 +13392,34 @@ song_reachedTheGunship_noise_section3:
 ;{
     SongRepeatSetup $7
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $5
-        SongNoiseNote $3
-        SongNoiseNote $4
-        SongNoiseNote $4
-        SongNoiseNote $5
-        SongNoiseNote $2
-        SongNoiseNote $4
-        SongNoiseNote $4
-        SongNoiseNote $5
-        SongNoiseNote $1
-        SongNoiseNote $4
-        SongNoiseNote $4
-        SongNoiseNote $5
-        SongNoiseNote $3
-        SongNoiseNote $5
-        SongNoiseNote $1
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise1
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise1
     SongRepeat
     SongRepeatSetup $3
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $5
-        SongNoiseNote $2
-        SongNoiseNote $4
-        SongNoiseNote $4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise4
     SongRepeat
-    SongNoiseNote $7
-    SongNoiseNote $5
-    SongNoiseNote $7
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongEnd
 ;}
 
@@ -13428,23 +13428,23 @@ song_reachedTheGunship_noise_section4:
 ;{
     SongRepeatSetup $11
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $7
-        SongNoiseNote $3
-        SongNoiseNote $2
-        SongNoiseNote $3
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise3
     SongRepeat
     SongRepeatSetup $2
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $7
-        SongNoiseNote $3
-        SongNoiseNote $7
-        SongNoiseNote $3
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise3
     SongRepeat
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $5
-    SongNoiseNote $7
-    SongNoiseNote $3
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise3
     SongEnd
 ;}
 
@@ -13453,24 +13453,24 @@ song_reachedTheGunship_noise_section5:
 ;{
     SongRepeatSetup $F
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $7
-        SongNoiseNote $4
-        SongNoiseNote $2
-        SongNoiseNote $4
-        SongNoiseNote $7
-        SongNoiseNote $3
-        SongNoiseNote $4
-        SongNoiseNote $2
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise2
     SongRepeat
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $5
-    SongNoiseNote $2
-    SongNoiseNote $5
-    SongNoiseNote $7
-    SongNoiseNote $5
-    SongNoiseNote $7
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise2
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongEnd
 ;}
 
@@ -13479,20 +13479,20 @@ song_reachedTheGunship_noise_section6:
 ;{
     SongRepeatSetup $1E
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $5
-        SongNoiseNote $3
-        SongNoiseNote $2
-        SongNoiseNote $3
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise3
     SongRepeat
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $5
-    SongNoiseNote $2
-    SongNoiseNote $5
-    SongNoiseNote $7
-    SongNoiseNote $5
-    SongNoiseNote $7
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise2
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongEnd
 ;}
 
@@ -13501,20 +13501,20 @@ song_reachedTheGunship_noise_section7:
 ;{
     SongRepeatSetup $E
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $5
-        SongNoiseNote $4
-        SongNoiseNote $3
-        SongNoiseNote $4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise4
     SongRepeat
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $5
-    SongNoiseNote $2
-    SongNoiseNote $5
-    SongNoiseNote $7
-    SongNoiseNote $5
-    SongNoiseNote $7
-    SongNoiseNote $5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise2
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
     SongEnd
 ;}
 
@@ -13523,58 +13523,58 @@ song_reachedTheGunship_noise_section8:
 ;{
     SongRepeatSetup $8
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $5
-        SongNoiseNote $4
-        SongNoiseNote $2
-        SongNoiseNote $4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise4
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise4
     SongRepeat
     SongRepeatSetup $4
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $5
-        SongNoiseNote $3
-        SongNoiseNote $5
-        SongNoiseNote $4
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise3
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise4
     SongRepeat
     SongRepeatSetup $8
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $5
-        SongNoiseNote $5
-        SongNoiseNote $2
-        SongNoiseNote $5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise2
+        SongNoiseNote songNoiseChannelOptionSets.noise5
     SongRepeat
     SongRepeatSetup $4
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $5
-        SongNoiseNote $5
-        SongNoiseNote $5
-        SongNoiseNote $5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
+        SongNoiseNote songNoiseChannelOptionSets.noise5
     SongRepeat
     SongRepeatSetup $8
         SongNoteLength_Demisemiquaver
-        SongNoiseNote $7
-        SongNoiseNote $7
-        SongNoiseNote $7
-        SongNoiseNote $7
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise7
+        SongNoiseNote songNoiseChannelOptionSets.noise7
     SongRepeat
     SongNoteLength_DottedSemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Semiquaver
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Crochet
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Quaver
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Semiquaver
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Semihemidemisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongNoteLength_Minum
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongEnd
 ;}
 
@@ -13728,7 +13728,7 @@ song_metroidHive_withIntro_square2_section3:
 song_metroidHive_withIntro_wave_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_Demisemiquaver
     SongNote "D5"
     SongNote "D3"
@@ -13745,7 +13745,7 @@ song_metroidHive_withIntro_wave_section0:
 song_metroidHive_withIntro_wave_section1:
 ;{
     SongOptions
-        WaveOptions $416B, 2, $0
+        WaveOptions wavePatterns.wave2, 2, $0
     SongNoteLength_Demisemiquaver
     SongNote "C2"
     Echo1
@@ -13761,12 +13761,12 @@ song_metroidHive_withIntro_wave_section1:
 song_metroidHive_withIntro_noise_section0:
 ;{
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $7
-    SongNoiseNote $6
-    SongNoiseNote $7
-    SongNoiseNote $6
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise6
+    SongNoiseNote songNoiseChannelOptionSets.noise7
+    SongNoiseNote songNoiseChannelOptionSets.noise6
     SongNoteLength_DottedCrochet
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongEnd
 ;}
 
@@ -13833,7 +13833,7 @@ song_missilePickup_square1_section0:
 song_missilePickup_wave_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongNoteLength_Demisemiquaver
     SongNote "Bb4"
     Echo1
@@ -13849,10 +13849,10 @@ song_missilePickup_wave_section0:
 song_missilePickup_noise_section0:
 ;{
     SongNoteLength_Demisemiquaver
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $5
-    SongNoiseNote $7
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise5
+    SongNoiseNote songNoiseChannelOptionSets.noise7
     SongEnd
 ;}
 
@@ -13913,7 +13913,7 @@ unused7D56_section0:
 song_babyMetroid_wave_section3:
 ;{
     SongOptions
-        WaveOptions $417B, 3, $0
+        WaveOptions wavePatterns.wave3, 3, $0
     SongEnd
 ;}
 
@@ -13921,7 +13921,7 @@ song_babyMetroid_wave_section3:
 unused7D60_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongEnd
 ;}
 
@@ -13929,7 +13929,7 @@ unused7D60_section0:
 unused7D65_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 1, $0
+        WaveOptions wavePatterns.wave3, 1, $0
     SongEnd
 ;}
 
@@ -14163,7 +14163,7 @@ song_subCaves1_wave_section0:
 song_subCaves4_wave_section0:
 ;{
     SongOptions
-        WaveOptions $417B, 2, $0
+        WaveOptions wavePatterns.wave3, 2, $0
     SongRepeatSetup $2
         SongNoteLength_Semiquaver
         SongNote "C4"
@@ -14209,7 +14209,7 @@ song_title_wave_section0:
 song_babyMetroid_wave_section2:
 ;{
     SongOptions
-        WaveOptions $416B, 3, $0
+        WaveOptions wavePatterns.wave2, 3, $0
     SongNoteLength_Crochet
     SongRest
     SongEnd
@@ -14244,7 +14244,7 @@ song_babyMetroid_wave_section0:
 song_babyMetroid_wave_section1:
 ;{
     SongOptions
-        WaveOptions $416B, 3, $0
+        WaveOptions wavePatterns.wave2, 3, $0
     SongNoteLength_Minum
     SongRest
     SongEnd

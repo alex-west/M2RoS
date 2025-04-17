@@ -929,7 +929,7 @@ ret ; Should never end up here
   .forceRow: ; Alternate call point used when loading the game
     ; Get x pixel/screen of the top-left of the source row
     ldh a, [hCameraXPixel]
-    sub $80
+    sub SCRN_X / 2 + $30
     ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
@@ -937,7 +937,7 @@ ret ; Should never end up here
     ldh [hMapSource.xScreen], a
     ; Get y pixel/screen of the top-left of the source row
     ldh a, [hCameraYPixel]
-    sub $78
+    sub SCRN_Y / 2 + $30
     ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
@@ -958,7 +958,7 @@ jp .row
     ld [mapUpdate_unusedVar], a
     ; Get x pixel/screen of the top-left of the source row
     ldh a, [hCameraXPixel]
-    sub $80
+    sub SCRN_X / 2 + $30
     ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
@@ -966,7 +966,7 @@ jp .row
     ldh [hMapSource.xScreen], a
     ; Get y pixel/screen of the top-left of the source row
     ldh a, [hCameraYPixel]
-    add $78
+    add SCRN_Y / 2 + $30
     ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     adc $00
@@ -987,7 +987,7 @@ jr .row
     ld [mapUpdate_unusedVar], a
     ; Get x pixel/screen of the top-left of the source column
     ldh a, [hCameraXPixel]
-    sub $80
+    sub SCRN_X / 2 + $30
     ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
@@ -995,7 +995,7 @@ jr .row
     ldh [hMapSource.xScreen], a
     ; Get y pixel/screen of the top-left of the source column
     ldh a, [hCameraYPixel]
-    sub $78
+    sub SCRN_Y / 2 + $30
     ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
@@ -1016,7 +1016,7 @@ jp .column
     ld [mapUpdate_unusedVar], a
     ; Get x pixel/screen of the top-left of the source column
     ldh a, [hCameraXPixel]
-    add $70
+    add SCRN_X / 2 + $20
     ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     adc $00
@@ -1024,7 +1024,7 @@ jp .column
     ldh [hMapSource.xScreen], a
     ; Get y pixel/screen of the top-left of the source column
     ldh a, [hCameraYPixel]
-    sub $78
+    sub SCRN_Y / 2 + $30
     ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
@@ -1346,11 +1346,11 @@ handleCamera: ;{ 00:08FE
     jr z, .endIf_A
         ; Check if the camera is on the right edge of the screen
         ldh a, [hCameraXPixel]
-        cp $b0
+        cp $100 - SCRN_X / 2
         jp nz, .else_B
             ; If so, check if Samus is to the right of the screen boundary
             ld a, [samus_onscreenXPos]
-            cp $a1
+            cp SCRN_X + OAM_X_OFS - $07
                 jr c, .endRightCase
             ; If so, initiate a rightward door transition
             ld a, $01 ; Right
@@ -1395,10 +1395,10 @@ handleCamera: ;{ 00:08FE
         ; (Get Samus's coordinate in camera-space, relative to the left edge of the screen)
         ldh a, [hSamusXPixel]
         sub b
-        add $60 ; Adjusts math to be relative to the edge, not center, of the screen
+        add SCRN_X / 2 + OAM_X_OFS + samusOriginX_toCenter ; Adjusts math to be relative to the edge, not center, of the screen
         
         ; Check if camera has not caught up with the right-scrolling guide
-        cp $40
+        cp OAM_X_OFS + $38
         jr c, .else_D
             ; Move camera an extra pixel right
             ldh a, [hCameraXPixel]
@@ -1411,7 +1411,7 @@ handleCamera: ;{ 00:08FE
             jr .endIf_C
         .else_D:
             ; Check if the camera is past the right-scrolling guide
-            cp $3f
+            cp OAM_X_OFS + $38 - 1
             jr nc, .endIf_C
                 ; Move camera an extra pixel left
                 ldh a, [hCameraXPixel]
@@ -1430,11 +1430,11 @@ handleCamera: ;{ 00:08FE
     jr z, .endIf_E
         ; Check if camera is on the left edge of the screen
         ldh a, [hCameraXPixel]
-        cp $50
+        cp SCRN_X / 2
         jr nz, .else_F
             ; If so, check if Samus is to the left of the screen boundary
             ld a, [samus_onscreenXPos]
-            cp $0f
+            cp OAM_X_OFS + $07
                 jp nc, .endLeftCase
             ; If so, initiate a leftwards screen transition
             ld a, $02 ; Left
@@ -1488,10 +1488,10 @@ handleCamera: ;{ 00:08FE
         ; (Get Samus's coordinate in camera-space, relative to the left edge of the screen)
         ldh a, [hSamusXPixel]
         sub b
-        add $60 ; Adjusts math to be relative to the edge, not center, of the screen
+        add SCRN_X / 2 + OAM_X_OFS + samusOriginX_toCenter ; Adjusts math to be relative to the edge, not center, of the screen
 
         ; Check if the camera has not caught up with the left-scrolling guide
-        cp $70
+        cp SCRN_X + OAM_X_OFS - $38
         jr nc, .else_H
             ; Move an extra pixel to the left
             ldh a, [hCameraXPixel]
@@ -1504,7 +1504,7 @@ handleCamera: ;{ 00:08FE
             jr .endIf_G
         .else_H:
             ; Check if the camera is beyond the left-scrolling guide
-            cp $71
+            cp SCRN_X + OAM_X_OFS - $38 + 1
             jr c, .endIf_G
                 ; Move an extra pixel to the right
                 ldh a, [hCameraXPixel]
@@ -1528,7 +1528,7 @@ handleCamera: ;{ 00:08FE
     ld b, a
     ldh a, [hSamusYPixel]
     sub b
-    add $60 ; Adjusts math to be relative to the edge, not center, of the screen
+    add SCRN_Y / 2 + OAM_Y_OFS + samusOriginY_toCenter - 2 ; Adjusts math to be relative to the edge, not center, of the screen
     ldh [hTemp.b], a
     
     ; deltaY = y - yPrev
@@ -1560,19 +1560,19 @@ handleCamera: ;{ 00:08FE
             jr nz, .else_K
                 ; Check if camera is at bottom of queen's room
                 ldh a, [hCameraYPixel]
-                cp $a0
+                cp $100 - SCRN_Y / 2 + $08 - $20
                     jr nz, .endIf_K
                 jr .checkBottomExit
             .else_K:
                 ; Check if camera is at bottom of screen
                 ldh a, [hCameraYPixel]
-                cp $c0
+                cp $100 - SCRN_Y / 2 + $08
                 jr nz, .endIf_K
     
                 .checkBottomExit:
                     ; Check if Samus is at the bottom of the screen
                     ld a, [samus_onscreenYPos]
-                    cp $78
+                    cp SCRN_Y + OAM_Y_OFS - $20 - $08
                         jp c, .exit
                     ; If so, initiate a downwards door transition
                     ld a, $08 ; Down
@@ -1643,11 +1643,11 @@ handleCamera: ;{ 00:08FE
         ; (Screen blocks scrolling upwards)
         ; Check if screen is at threshold
         ldh a, [hCameraYPixel]
-        cp $48
+        cp SCRN_Y / 2
         jr nz, .else_N
             ; Check if Samus is above threshold
             ld a, [samus_onscreenYPos]
-            cp $1b
+            cp OAM_Y_OFS + $0b
                 jr nc, .endIf_M
             ; If so, initiate upwards door transition
             ld a, $04 ; Up
@@ -1758,7 +1758,7 @@ handleCamera_door: ;{ 00:0B44
         ldh [hSamusXScreen], a
         ; Check if camera has reached threshold
         ldh a, [hCameraXPixel]
-        cp $50
+        cp SCRN_X / 2
             ret nz
         jp .endDoor
     .endIf_A: ;}
@@ -1792,7 +1792,7 @@ handleCamera_door: ;{ 00:0B44
         ldh [hSamusXScreen], a
         ; Check if camera has reached threshold
         ldh a, [hCameraXPixel]
-        cp $b0
+        cp $100 - SCRN_X / 2
             ret nz
         jr .endDoor
     .endIf_B: ;}
@@ -1830,7 +1830,7 @@ handleCamera_door: ;{ 00:0B44
         ldh [hSamusYScreen], a
         ; Check if camera has reached threshold
         ldh a, [hCameraYPixel]
-        cp $b8
+        cp $100 - SCRN_Y / 2
             ret nz
         jr .endDoor
     .endIf_C: ;}
@@ -1868,7 +1868,7 @@ handleCamera_door: ;{ 00:0B44
         ldh [hSamusYScreen], a
         ; Check if camera has reached threshold
         ldh a, [hCameraYPixel]
-        cp $48
+        cp SCRN_Y / 2
             ret nz
     ;} end downwards case
 
@@ -4448,7 +4448,7 @@ collision_checkSpiderSet: ;{ 00:1A42
 samus_groundUnmorph: ;{ 00:1B2E - Unmorph on ground
     ; Check upper left pixel
     ldh a, [hSamusXPixel]
-    add $0b
+    add OAM_X_OFS + samusOriginX_toLeft
     ld [tileX], a
 jr samus_groundUnmorph_cont ;} This is structured like it used to be a conditional jump...
 
@@ -4458,10 +4458,10 @@ samus_tryStanding: ;{ 00:1B37
     ld [sfxRequest_square1], a
     ; Check upper left pixel
     ldh a, [hSamusXPixel]
-    add $0c
+    add OAM_X_OFS + samusOriginX_toLeft + 1
     ld [tileX], a
     ldh a, [hSamusYPixel]
-    add $10
+    add OAM_Y_OFS + samusOriginY_toStandCheck
     ld [tileY], a
     call samus_getTileIndex
     ld hl, samusSolidityIndex
@@ -4469,7 +4469,7 @@ samus_tryStanding: ;{ 00:1B37
         ret c
     ; Check upper right pixel
     ldh a, [hSamusXPixel]
-    add $14
+    add OAM_X_OFS + samusOriginX_toRight
     ld [tileX], a
     call samus_getTileIndex
     ld hl, samusSolidityIndex
@@ -4486,7 +4486,7 @@ ret
 samus_groundUnmorph_cont: ;{ 00:1B6B - Unmorph on ground, continued
     ; Check upper left pixel (cont.)
     ldh a, [hSamusYPixel]
-    add $18
+    add OAM_Y_OFS + samusOriginY_toCrouchCheck
     ld [tileY], a
     call samus_getTileIndex
     ; Check if solid
@@ -4495,7 +4495,7 @@ samus_groundUnmorph_cont: ;{ 00:1B6B - Unmorph on ground, continued
     jr c, .endIf
         ; Was not solid, check upper right pixel
         ldh a, [hSamusXPixel]
-        add $14
+        add OAM_X_OFS + samusOriginX_toRight
         ld [tileX], a
         call samus_getTileIndex
         ; Check if solid
@@ -4536,10 +4536,10 @@ samus_unmorphInAir: ;{ 00:1BB3
 ; Check top row of tiles
     ; Check upper-left tile
     ldh a, [hSamusYPixel]
-    add $08
+    add OAM_Y_OFS + samusOriginY_toStand
     ld [tileY], a
     ldh a, [hSamusXPixel]
-    add $0b
+    add OAM_X_OFS + samusOriginX_toLeft
     ld [tileX], a
     call samus_getTileIndex
     ld hl, samusSolidityIndex
@@ -4547,7 +4547,7 @@ samus_unmorphInAir: ;{ 00:1BB3
         jr c, .exit
     ; Check upper-right tile
     ldh a, [hSamusXPixel]
-    add $14
+    add OAM_X_OFS + samusOriginX_toRight
     ld [tileX], a
     call samus_getTileIndex
     ld hl, samusSolidityIndex
@@ -4556,10 +4556,10 @@ samus_unmorphInAir: ;{ 00:1BB3
 ; Check lower row of tiles
     ; Check lower-left tile
     ldh a, [hSamusYPixel]
-    add $18
+    add OAM_Y_OFS + samusOriginY_toCrouchCheck
     ld [tileY], a
     ldh a, [hSamusXPixel]
-    add $0b
+    add OAM_X_OFS + samusOriginX_toLeft
     ld [tileX], a
     call samus_getTileIndex
     ld hl, samusSolidityIndex
@@ -4567,7 +4567,7 @@ samus_unmorphInAir: ;{ 00:1BB3
         jr c, .exit
     ; Check lower-right tile
     ldh a, [hSamusXPixel]
-    add $14
+    add OAM_X_OFS + samusOriginX_toRight
     ld [tileX], a
     call samus_getTileIndex
     ld hl, samusSolidityIndex
@@ -4970,7 +4970,7 @@ collision_samusHorizontal: ;{ Has two entry points (left and right)
         push bc
         ; Get offset for left side
         ldh a, [hSamusXPixel]
-        add $0b
+        add OAM_X_OFS + samusOriginX_toLeft
         ld [tileX], a
         jr .start
     .right: ; 00:1DE2 - Entry point for right-side collision
@@ -4979,7 +4979,7 @@ collision_samusHorizontal: ;{ Has two entry points (left and right)
         push bc
         ; Get offset for right side
         ldh a, [hSamusXPixel]
-        add $14
+        add OAM_X_OFS + samusOriginX_toRight
         ld [tileX], a
 .start: ; Start
     ; Do sprite collision
@@ -5096,7 +5096,7 @@ collision_samusTop: ;{ 00:1E88
 ; Top left side
     ; Set x offset for left side
     ldh a, [hSamusXPixel]
-    add $0c
+    add OAM_X_OFS + samusOriginX_toLeft + 1
     ld [tileX], a
     ; Load y offset for top from table
     ld hl, collision_samusBGHitboxTopTable
@@ -5156,7 +5156,7 @@ collision_samusTop: ;{ 00:1E88
 ; Top right side
     ; Get x offset for right side
     ldh a, [hSamusXPixel]
-    add $14
+    add OAM_X_OFS + samusOriginX_toRight
     ld [tileX], a
     ; Perform collision check
     call samus_getTileIndex
@@ -5230,11 +5230,11 @@ collision_samusBottom: ;{ 00:1F0F
 ; Bottom left side
     ; Set x offset for left side
     ldh a, [hSamusXPixel]
-    add $0c
+    add OAM_X_OFS + samusOriginX_toLeft + 1
     ld [tileX], a
     ; Set y offset for bottom
     ldh a, [hSamusYPixel]
-    add $2c
+    add OAM_Y_OFS + samusOriginY_toBottom
     ld [tileY], a
     
     ; Perform collision check 
@@ -5294,7 +5294,7 @@ collision_samusBottom: ;{ 00:1F0F
 ; Bottom right side
     ; Set x offset for right side
     ldh a, [hSamusXPixel]
-    add $14
+    add OAM_X_OFS + samusOriginX_toRight
     ld [tileX], a
     
     ; Perform collision check 
@@ -5710,8 +5710,8 @@ ret ;}
 getTilemapAddress: ;{ 00:22BC
     ; HL = $9800 + (tileY-$10)/8*$20
     ld a, [tileY]
-    sub $10
-    ld b, $08
+    sub OAM_Y_OFS
+    ld b, OAM_X_OFS ; code assumes that OAM_X_OFS is one tile long
     ld de, $0020
     ld hl, $9800 - $20 ;$97E0
     .loop:
@@ -5857,14 +5857,15 @@ oamDMA_routine: ;{ 00:235C Copied to $FFA0 in HRAM
     jr nz, .loop
 ret ;}
 
+
 ; Converts camera values to hardware scroll values
 convertCameraToScroll: ;{ 00:2366
     ; Camera values are in the center of the screen
     ldh a, [hCameraYPixel]
-    sub $48
+    sub SCRN_Y / 2
     ld [scrollY], a
     ldh a, [hCameraXPixel]
-    sub $50
+    sub SCRN_X / 2
     ld [scrollX], a
     ; Handle earthquake
     call earthquake_adjustScroll_longJump
@@ -6767,14 +6768,14 @@ door_queen: ;{ 00:2887
     ; Load camera y position (pixel/screen)
     ld a, [hl+]
     ldh [hCameraYPixel], a
-    sub $48
+    sub SCRN_Y / 2
     ld [scrollY], a
     ld a, [hl+]
     ldh [hCameraYScreen], a
     ; Load camera X position (pixel/screen)
     ld a, [hl+]
     ldh [hCameraXPixel], a
-    sub $50
+    sub SCRN_X / 2
     ld [scrollX], a
     ld a, [hl+]
     ldh [hCameraXScreen], a
@@ -6799,14 +6800,14 @@ door_queen: ;{ 00:2887
         ld b, a
         ldh a, [hSamusXPixel]
         sub b
-        add $60
+        add SCRN_X / 2 + OAM_X_OFS + samusOriginX_toCenter
         ld [samus_onscreenXPos], a
         ; Initialize Samus's onscreen y position
         ldh a, [hCameraYPixel]
         ld b, a
         ldh a, [hSamusYPixel]
         sub b
-        add $62
+        add SCRN_Y / 2 + OAM_Y_OFS + samusOriginY_toCenter
         ld [samus_onscreenYPos], a
         ld a, $e3
         ldh [rLCDC], a
@@ -6880,7 +6881,7 @@ ret
     ld [mapUpdate_unusedVar], a
     ; Get the x coordinate of the column to be rendered
     ldh a, [hCameraXPixel]
-    add $50
+    add SCRN_X / 2 + $00
     ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     adc $00
@@ -6888,7 +6889,7 @@ ret
     ldh [hMapSource.xScreen], a
     ; Get y coordinate of the top of the column to be rendered
     ldh a, [hCameraYPixel]
-    sub $74
+    sub SCRN_Y / 2 + $30 - 4
     ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
@@ -6909,7 +6910,7 @@ ret
     ld [mapUpdate_unusedVar], a
     ; Get the x coordinate of the next column to be rendered
     ldh a, [hCameraXPixel]
-    add $60
+    add SCRN_X / 2 + $10
     ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     adc $00
@@ -6930,7 +6931,7 @@ ret
     ld [mapUpdate_unusedVar], a
     ; Get the x coordinate of the next column to be rendered
     ldh a, [hCameraXPixel]
-    add $70
+    add SCRN_X / 2 + $20
     ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     adc $00
@@ -6954,7 +6955,7 @@ ret ;}
     ld [mapUpdate_unusedVar], a
     ; Get the x coordinate of the column to be rendered
     ldh a, [hCameraXPixel]
-    sub $60
+    sub SCRN_X / 2 + $10
     ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
@@ -6962,7 +6963,7 @@ ret ;}
     ldh [hMapSource.xScreen], a
     ; Get y coordinate of the top of the column to be rendered
     ldh a, [hCameraYPixel]
-    sub $74
+    sub SCRN_Y / 2 + $30 - 4
     ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
@@ -6983,7 +6984,7 @@ ret ;}
     ld [mapUpdate_unusedVar], a
     ; Get the x coordinate of the next column to be rendered
     ldh a, [hCameraXPixel]
-    sub $70
+    sub SCRN_X / 2 + $20
     ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
@@ -7004,7 +7005,7 @@ ret ;}
     ld [mapUpdate_unusedVar], a
     ; Get the x coordinate of the next column to be rendered
     ldh a, [hCameraXPixel]
-    sub $80
+    sub SCRN_X / 2 + $30
     ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
@@ -7028,7 +7029,7 @@ ret ;}
     ld [mapUpdate_unusedVar], a
     ; Get x coordinate of the left of the row to be rendered
     ldh a, [hCameraXPixel]
-    sub $80
+    sub SCRN_X / 2 + $30
     ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
@@ -7036,7 +7037,7 @@ ret ;}
     ldh [hMapSource.xScreen], a
     ; Get the y coordinate of the row to be rendered
     ldh a, [hCameraYPixel]
-    add $78
+    add SCRN_Y / 2 + $30
     ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     adc $00
@@ -7057,7 +7058,7 @@ ret ;}
     ld [mapUpdate_unusedVar], a
     ; Get the y coordinate of the next row to be rendered
     ldh a, [hCameraYPixel]
-    add $68
+    add SCRN_Y / 2 + $20
     ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     adc $00
@@ -7078,7 +7079,7 @@ ret ;}
     ld [mapUpdate_unusedVar], a
     ; Get the y coordinate of the next row to be rendered
     ldh a, [hCameraYPixel]
-    add $58
+    add SCRN_Y / 2 + $10
     ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     adc $00
@@ -7099,7 +7100,7 @@ ret ;}
     ld [mapUpdate_unusedVar], a
     ; Get the y coordinate of the next row to be rendered
     ldh a, [hCameraYPixel]
-    add $48
+    add SCRN_Y / 2 + $00
     ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     adc $00
@@ -7123,7 +7124,7 @@ ret ;}
     ld [mapUpdate_unusedVar], a
     ; Get x coordinate of the left of the row to be rendered
     ldh a, [hCameraXPixel]
-    sub $80
+    sub SCRN_X / 2 + $30
     ldh [hMapSource.xPixel], a
     ldh a, [hCameraXScreen]
     sbc $00
@@ -7131,7 +7132,7 @@ ret ;}
     ldh [hMapSource.xScreen], a
     ; Get the y coordinate of the row to be rendered
     ldh a, [hCameraYPixel]
-    sub $78
+    sub SCRN_Y / 2 + $30
     ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
@@ -7152,7 +7153,7 @@ ret ;}
     ld [mapUpdate_unusedVar], a
     ; Get the y coordinate of the next row to be rendered
     ldh a, [hCameraYPixel]
-    sub $68
+    sub SCRN_Y / 2 + $20
     ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
@@ -7173,7 +7174,7 @@ ret ;}
     ld [mapUpdate_unusedVar], a
     ; Get the y coordinate of the next row to be rendered
     ldh a, [hCameraYPixel]
-    sub $58
+    sub SCRN_Y / 2 + $10
     ldh [hMapSource.yPixel], a
     ldh a, [hCameraYScreen]
     sbc $00
@@ -8149,7 +8150,7 @@ collision_bombEnemies: ;{ 00:30BB
             jr c, .break
         .endIf:
         ; Iterate to next enemy
-        ld de, ENEMY_SLOT_SIZE ; $0020
+        ld de, enemyDataSlotSize ; $0020
         add hl, de
         ; Exit loop if at end of enemy slots
         ld a, h
@@ -8386,7 +8387,7 @@ collision_projectileEnemies: ;{ 00:31B6 - Projectile/enemy collision function
             jr c, .break
         .endIf:
         ; Iterate to next enemy
-        ld de, ENEMY_SLOT_SIZE ; $0020
+        ld de, enemyDataSlotSize ; $0020
         add hl, de
         ; Exit loop if at end of enemy slots
         ld a, h
@@ -8627,7 +8628,7 @@ collision_samusEnemies: ;{ 00:32AB - Samus enemy collision detection loop
         ld b, a
         ld a, [tileX]
         sub b
-        add $50
+        add SCRN_X / 2
         ldh [hTemp.b], a
 .start:
     ; Set tempY to Samus' postion in camera-space
@@ -8635,7 +8636,7 @@ collision_samusEnemies: ;{ 00:32AB - Samus enemy collision detection loop
     ld b, a
     ldh a, [hSamusYPixel]
     sub b
-    add $48 + $1A ; $62 - This breakdown doesn't seem quite right
+    add SCRN_Y / 2 + OAM_Y_OFS + samusOriginY_toCenter ; $62
     ldh [hTemp.a], a
     
     ; Switch to bank with enemy hitboxes
@@ -8657,7 +8658,7 @@ collision_samusEnemies: ;{ 00:32AB - Samus enemy collision detection loop
             ret c
         .endIf:
         ; Iterate to next enemy
-        ld de, ENEMY_SLOT_SIZE ; $0020
+        ld de, enemyDataSlotSize ; $0020
         add hl, de
         ; Exit if we finished all enemies
         ld a, h
@@ -9017,7 +9018,7 @@ collision_samusEnemiesDown: ;{ 00:348D
 
     ; Set tempY based on Samus' onscreen Y position
     ld a, [samus_onscreenYPos]
-    add $12
+    add samusOriginY_toBottom - samusOriginY_toCenter
     ldh [hTemp.a], a
     
     ; Clear flag
@@ -9029,7 +9030,7 @@ collision_samusEnemiesDown: ;{ 00:348D
     ld b, a
     ldh a, [hSamusXPixel]
     sub b
-    add $60
+    add SCRN_X / 2 + OAM_X_OFS + samusOriginX_toCenter
     ldh [hTemp.b], a
     
     ; Switch to bank with enemy hitboxes
@@ -9068,7 +9069,7 @@ collision_samusEnemiesDown: ;{ 00:348D
             .endIf_A:
         
         ; Iterate to next enemy
-        ld de, ENEMY_SLOT_SIZE ; $0020
+        ld de, enemyDataSlotSize ; $0020
         add hl, de
         ; Exit if we finished all enemies
         ld a, h
@@ -9116,7 +9117,7 @@ collision_samusEnemiesUp: ;{ 00:34EF
     ld b, a
     ldh a, [hSamusXPixel]
     sub b
-    add $60
+    add SCRN_X / 2 + OAM_X_OFS + samusOriginX_toCenter
     ldh [hTemp.b], a
     
     ; Switch to bank with enemy hitboxes
@@ -9135,7 +9136,7 @@ collision_samusEnemiesUp: ;{ 00:34EF
         .endIf:
         
         ; Iterate to next enemy
-        ld de, ENEMY_SLOT_SIZE ; $0020
+        ld de, enemyDataSlotSize ; $0020
         add hl, de
         ; Exit if we finished all enemies
         ld a, h

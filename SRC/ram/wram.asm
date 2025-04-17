@@ -4,7 +4,7 @@
 
 section "WRAM Bank 0 - OAM Buffer", wram0[$C000] ;{
 
-def OAM_MAX = $A0 ; 40 hardware sprites -> 160 bytes
+def OAM_MAX = OAM_COUNT * sizeof_OAM_ATTRS ; 40 hardware sprites -> 160 bytes
 wram_oamBuffer:: ds OAM_MAX ;{ $C000..9F: OAM Entries
 ;    + 0: Y position
 ;    + 1: X position
@@ -452,7 +452,7 @@ enemySpawnFlags:
 
 section "WRAM Bank 0 - Enemy Data Slots", wram0[$C600] ;{
 
-def ENEMY_SLOT_SIZE = $20
+def enemyDataSlotSize = $20
 
 enemyDataSlots: ; $C600;..C7FF ; Enemy data. 20h byte slots
 ;{
@@ -478,22 +478,22 @@ enemyDataSlots: ; $C600;..C7FF ; Enemy data. 20h byte slots
 ;    + 1Eh: AI pointer(?)
 ;}
 
-.slot_0: ds ENEMY_SLOT_SIZE ; $C600
-.slot_1: ds ENEMY_SLOT_SIZE ; $C620
-.slot_2: ds ENEMY_SLOT_SIZE ; $C640
-.slot_3: ds ENEMY_SLOT_SIZE ; $C660
-.slot_4: ds ENEMY_SLOT_SIZE ; $C680
-.slot_5: ds ENEMY_SLOT_SIZE ; $C6A0
-.slot_6: ds ENEMY_SLOT_SIZE ; $C6C0
-.slot_7: ds ENEMY_SLOT_SIZE ; $C6E0
-.slot_8: ds ENEMY_SLOT_SIZE ; $C700
-.slot_9: ds ENEMY_SLOT_SIZE ; $C720
-.slot_A: ds ENEMY_SLOT_SIZE ; $C740
-.slot_B: ds ENEMY_SLOT_SIZE ; $C760
-.slot_C: ds ENEMY_SLOT_SIZE ; $C780
-.slot_D: ds ENEMY_SLOT_SIZE ; $C7A0
-.slot_E: ds ENEMY_SLOT_SIZE ; $C7C0
-.slot_F: ds ENEMY_SLOT_SIZE ; $C7E0
+.slot_0: ds enemyDataSlotSize ; $C600
+.slot_1: ds enemyDataSlotSize ; $C620
+.slot_2: ds enemyDataSlotSize ; $C640
+.slot_3: ds enemyDataSlotSize ; $C660
+.slot_4: ds enemyDataSlotSize ; $C680
+.slot_5: ds enemyDataSlotSize ; $C6A0
+.slot_6: ds enemyDataSlotSize ; $C6C0
+.slot_7: ds enemyDataSlotSize ; $C6E0
+.slot_8: ds enemyDataSlotSize ; $C700
+.slot_9: ds enemyDataSlotSize ; $C720
+.slot_A: ds enemyDataSlotSize ; $C740
+.slot_B: ds enemyDataSlotSize ; $C760
+.slot_C: ds enemyDataSlotSize ; $C780
+.slot_D: ds enemyDataSlotSize ; $C7A0
+.slot_E: ds enemyDataSlotSize ; $C7C0
+.slot_F: ds enemyDataSlotSize ; $C7E0
 .end:
 
 ; Enemy Data Slots used by Queen: {

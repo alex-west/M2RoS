@@ -15,12 +15,12 @@ hInputRisingEdge:: ds 1 ;$FF81: New input
 ;}
 hVBlankDoneFlag:: ds 1 ;$FF82: V-blank handled flag
 
-hUnusedHRAM_1::   ds 9 ; $FF83-$FF8B - 9 unused bytes!?
+ds 9 ; $FF83-$FF8B - 9 unused bytes!?
 hUnusedFlag_1::   ds 1 ; $FF8C: Set to C0h by update in-game timer and wait a frame. Otherwise unused. (Likely meant to be the high byte of the OAM index.)
 
 hOamBufferIndex:: ds 1 ; FF8D: OAM buffer index
 
-hUnusedHRAM_2::   ds 9 ; $FF8E-$FF96 - 9 more unused bytes!?
+ds 9 ; $FF8E-$FF96 - 9 more unused bytes!?
 
 frameCounter::    ds 1 ; $FF97: Frame counter (used by IGT, but not tied to IGT)
 
@@ -75,7 +75,7 @@ gameMode:: ds 1 ; $FF9B ; Game mode
 ;    13h: Credits
 ;}
 
-hUnusedHRAM_3:: ds 4 ; $FF9C-$FF9F - 4 unused bytes
+ds 4 ; $FF9C-$FF9F - 4 unused bytes
 
 OAM_DMA:: ds $0a ; $FFA0-$FFA9: OAM DMA routine
 
@@ -218,9 +218,9 @@ hEnemy:
 ; - Else, drop small health
 ; - Note: Drops have a 50% chance of happening or being nothing
 ;}
-; $FFF6-$FFFB - Unused?
-def hEnemyWramAddrLow  = $FFFC ; WRAM address of current enemy
-def hEnemyWramAddrHigh = $FFFD ;  '' high byte
+ds 6 ; $FFF6-$FFFB - Unused?
+hEnemyWramAddrLow: ds 1 ; WRAM address of current enemy
+hEnemyWramAddrHigh: ds 1 ;  '' high byte
 
-def hEnemy_frameCounter = $FFFE ; Generic frame counter used by enemies - Incremented every other frame
+hEnemy_frameCounter: ds 1 ; Generic frame counter used by enemies - Incremented every other frame
 ;}

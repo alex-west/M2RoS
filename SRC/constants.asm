@@ -26,6 +26,24 @@ def scrollDirBit_down  = 7
 def samus_jumpArrayBaseOffset = $40
 def samus_unmorphJumpTime = $10
 
+; Samus position offsets
+def samusOriginX_toCenter = $08 ; center is 8px to the right of origin
+def samusOriginY_toCenter = $0a ; center is 10px down from origin
+def samusOriginX_toLeft = samusOriginX_toCenter - $05
+def samusOriginX_toRight = samusOriginX_toCenter + $04
+def samusOriginY_toStand = samusOriginY_toCenter - $12
+    def samusOriginY_toStandCheck = samusOriginY_toStand + $08
+def samusOriginY_toCrouch = samusOriginY_toCenter - $08
+    def samusOriginY_toCrouchBG = samusOriginY_toCenter - $0a
+    def samusOriginY_toCrouchCheck = samusOriginY_toCrouch + $06
+def samusOriginY_toNJump = samusOriginY_toCenter - $0a
+    def samusOriginY_toNJumpBG = samusOriginY_toCenter - $06
+def samusOriginY_toSpinJump = samusOriginY_toCenter - $02
+    def samusOriginY_toSpinJumpBG = samusOriginY_toCenter - $00
+def samusOriginY_toMorph = samusOriginY_toCenter + $06
+def samusOriginY_toBottom = samusOriginY_toCenter + $12
+    
+
 ; Samus' Gear constants
 ;  Bitfields
 def itemMask_bomb   = %00000001 ; 01: Bombs
@@ -61,10 +79,3 @@ include "samus/samus_poseConstants.asm"
 
 
 
-; Queen related constants
-
-; First and last tiles to be clear by disintegration animation
-def queenDeath_firstTile = $8B10
-def queenDeath_lastTile = $9570
-def queenDeath_bodyStart = $99A0
-def queenDeath_bodyEnd = $9A80
