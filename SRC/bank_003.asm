@@ -1180,7 +1180,7 @@ queen_initialize: ;{ 03:6D4A
     
     ; Set sprite types for neck
     ld hl, queenActor_neckA + 3 ; $C683
-    ld de, $0020
+    ld de, enemyDataSlotSize
     ld b, $06
     ld a, QUEEN_ACTOR_NECK ; $F0
     .neckLoop:
@@ -1210,7 +1210,7 @@ queen_deactivateActors: ;{ 03:6E12
     .arbitrary: ; 03:6E17
     
     ; Set incrementation value
-    ld de, $0020
+    ld de, enemyDataSlotSize
     ; Set status to $FF (inactive)
     ld a, $ff
     .clearLoop:
@@ -2718,7 +2718,7 @@ queenStateFunc_projectilesActive: ;{ 03:757B - Queen State $15: Projectiles out
     ld [collision_weaponType], a
     
     ; Check if any projectiles are active
-    ld de, $0020
+    ld de, enemyDataSlotSize
     ld hl, queenActor_spitA ; $C740
     ld b, $03
     .loop_A:
@@ -2742,7 +2742,7 @@ ret
 .endState:
     ; Deactivate all projectiles (even though that have to be inactive for us to be here...)
     ld hl, queenActor_spitA ; $C740
-    ld de, $0020
+    ld de, enemyDataSlotSize
     ld b, $03
     .loop_B:
         ld [hl], $ff
@@ -2823,7 +2823,7 @@ queen_drawProjectiles: ;{ 03:75FA
         
         ; Iterate to next blob
         ld a, e
-        add $20
+        add enemyDataSlotSize
         ld e, a
         ; Exit if done
         dec b
@@ -2908,7 +2908,7 @@ queen_handleProjectiles: ;{ 03:7658
         pop bc
         pop hl
         ; Iterate to next projectile
-        ld de, $0020
+        ld de, enemyDataSlotSize
         add hl, de
         dec b
     jr nz, .loop_A
@@ -2951,7 +2951,7 @@ queen_handleProjectiles: ;{ 03:7658
         pop hl
         ; Iterate to next actor
         ld a, l
-        add $20
+        add enemyDataSlotSize
         ld l, a
         ; Iterate to next Samus target
         inc de

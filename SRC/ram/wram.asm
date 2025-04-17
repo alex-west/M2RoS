@@ -4,7 +4,7 @@
 
 section "WRAM Bank 0 - OAM Buffer", wram0[$C000] ;{
 
-def OAM_MAX = $A0 ; 40 hardware sprites -> 160 bytes
+def OAM_MAX = OAM_COUNT * sizeof_OAM_ATTRS ; 40 hardware sprites -> 160 bytes
 wram_oamBuffer:: ds OAM_MAX ;{ $C000..9F: OAM Entries
 ;    + 0: Y position
 ;    + 1: X position

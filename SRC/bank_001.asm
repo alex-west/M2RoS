@@ -887,7 +887,7 @@ drawSamus_common: ;{ 01:4DDF
     ld b, a
     ldh a, [hSamusXPixel]
     sub b
-    add $60
+    add SCRN_X / 2 + OAM_X_OFS + samusOriginX_toCenter
     ldh [hSpriteXPixel], a
     ld [samus_onscreenXPos], a
     ; Set y pos
@@ -895,7 +895,7 @@ drawSamus_common: ;{ 01:4DDF
     ld b, a
     ldh a, [hSamusYPixel]
     sub b
-    add $62
+    add SCRN_Y / 2 + OAM_Y_OFS + samusOriginY_toCenter
     ldh [hSpriteYPixel], a
     ld [samus_onscreenYPos], a
 
@@ -2095,11 +2095,11 @@ samus_layBomb: ;{ 01:53D9 - Lay bombs
     ld [hl+], a
     ; Set ypos
     ldh a, [hSamusYPixel]
-    add $26
+    add OAM_Y_OFS + (samusOriginY_toMorph + samusOriginY_toBottom) / 2
     ld [hl+], a
     ; Set xpos
     ldh a, [hSamusXPixel]
-    add $10
+    add OAM_X_OFS + samusOriginX_toCenter
     ld [hl+], a
     ; Play sound
     ld a, sfx_square1_bombLaid
@@ -2803,24 +2803,24 @@ ret ;}
 
     ; Bounds checking for y position
     ld a, [tileY]
-    sub $10
+    sub OAM_Y_OFS
     and $f0
     ld c, a
     ldh [hTemp.a], a ; Not sure why this is being save to temp
     ldh a, [hSamusYPixel]
-    add $18
+    add OAM_Y_OFS + samusOriginY_toCrouchCheck
     sub c
     cp b
         jr nc, .exit
     
     ; Bounds checking for x position
     ld a, [tileX]
-    sub $08
+    sub OAM_X_OFS
     and $f0
     ld b, a
     ldh [hTemp.b], a ; Not sure why this is being save to temp
     ldh a, [hSamusXPixel]
-    add $0c
+    add OAM_X_OFS + samusOriginX_toLeft + 1
     sub b
     cp $18
         jr nc, .exit

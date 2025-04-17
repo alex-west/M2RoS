@@ -118,7 +118,7 @@ ret
 ; Iterates over every enemy
 processEnemies: ;{ 02:409E
     ; Load sizeOf(enemy struct)
-    ld de, $0020
+    ld de, enemyDataSlotSize
     ; Load first enemy to process (not $C600 we went over the CPU budget for the previous frame)
     ld a, [enemy_pFirstEnemyLow]
     ld l, a
